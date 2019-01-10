@@ -1,0 +1,82 @@
+<div class="row">
+   <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="dashboard_graph">
+         <div class="row x_title">
+            <div class="col-md-6">
+                <h3>Nuevo Reporte</h3>
+            </div>
+         </div>
+          <%= form_with(model: report, local: true, :html => {:id => "contact_form"}) do |form| %>
+            <% if report.errors.any? %>
+              <div id="error_explanation">
+                <h2><%= pluralize(report.errors.count, "error") %> prohibited this report from being saved:</h2>
+
+                <ul>
+                <% report.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+          <div class="col-md-4 no-paddong-left">
+              <label>Fecha del Reporte</label>
+              <%= form.text_field :name, class: "form-control", :placeholder => "Fecha de Reporte", id: "datepicker1" %>
+          </div>  
+
+          <div class="form-group no-paddong-left">
+            <div class="col-md-4 inputGroupContainer no-paddong-left">
+                <label>Tiempo de Trabajo</label>
+                <%= form.text_field :working_time, class: "form-control", :placeholder => "Tiempo de Trabajo", :name => "name" %>
+            </div>
+          </div>
+
+
+            <%= form.hidden_field :user_id ,:value =>  current_user.id %>
+          <div class="form-group col-md-12 no-paddong-left">
+
+            <div class="col-md-12 inputGroupContainer no-paddong-left">
+              <%= form.label "Descripcion del Trabajo" %>
+              <%= form.text_area :work_description, class: "form-control textarea", :rows => 10, :name => "comment"  %>
+            </div>
+          </div>
+
+          <div class="form-group col-md-12 no-paddong-left">
+
+            <div class="col-md-12 inputGroupContainer no-paddong-left">
+              <%= form.label "Descripcion Viatico" %>
+              <%= form.text_area :viatic_description, class: "form-control textarea", :rows => 10, :name => "comment"  %>
+            </div>
+
+          </div>
+
+          <div class="form-group">
+            <div class="col-md-4 inputGroupContainer no-paddong-left">
+              <%= form.label "Valor Total" %>
+              <%= form.number_field :total_value, class: "form-control", :name => "date" %>
+            </div>
+
+            <div class="col-md-4 inputGroupContainer no-paddong-left">
+              <%= form.label "Valor viatico" %>
+              <%= form.number_field :viatic_value, class: "form-control", :name => "date" %>
+            </div>
+          </div>
+
+            <div class="col-md-12 no-paddong-left btn-save">
+              <%= form.submit "Guardar", class: "btn btn-dark" %>
+            </div>
+          <% end %>
+
+      </div>
+   </div>
+</div>
+
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('#datepicker1').datepicker({
+      uiLibrary: 'bootstrap'
+    });
+});
+</script>
+

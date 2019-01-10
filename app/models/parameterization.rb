@@ -1,0 +1,2 @@
+class Parameterization < ApplicationRecord
+end

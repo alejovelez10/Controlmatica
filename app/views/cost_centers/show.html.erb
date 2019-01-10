@@ -1,0 +1,59 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Customer:</strong>
+  <%= @cost_center.customer_id %>
+</p>
+
+<p>
+  <strong>Contact:</strong>
+  <%= @cost_center.contact_id %>
+</p>
+
+<p>
+  <strong>Description:</strong>
+  <%= @cost_center.description %>
+</p>
+
+<p>
+  <strong>Start date:</strong>
+  <%= @cost_center.start_date %>
+</p>
+
+<p>
+  <strong>End date:</strong>
+  <%= @cost_center.end_date %>
+</p>
+
+<p>
+  <strong>Quotation number:</strong>
+  <%= @cost_center.quotation_number %>
+</p>
+
+<p>
+  <strong>Engineering value:</strong>
+  <%= @cost_center.engineering_value %>
+</p>
+
+<p>
+  <strong>Viatic value:</strong>
+  <%= @cost_center.viatic_value %>
+</p>
+
+<p>
+  <strong>Execution state:</strong>
+  <%= @cost_center.execution_state %>
+</p>
+
+<p>
+  <strong>Invoiced state:</strong>
+  <%= @cost_center.invoiced_state %>
+</p>
+
+<p>
+  <strong>Service type:</strong>
+  <%= @cost_center.service_type %>
+</p>
+
+<%= link_to 'Edit', edit_cost_center_path(@cost_center) %> |
+<%= link_to 'Back', cost_centers_path %>
