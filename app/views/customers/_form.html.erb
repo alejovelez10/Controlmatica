@@ -1,5 +1,5 @@
 
-<%= form_with(model: customer, local: true, id: "contact_form") do |form| %>
+<%= form_with(model: customer, local: true,remote: true ,id: "contact_form") do |form| %>
 
   <% if customer.errors.any? %>
     <div id="error_explanation">
@@ -58,13 +58,7 @@
 
   </div>
 
-
-<!--
-  <div class="field">
-    <%= form.label :user_id %>
-    <%= form.number_field :user_id %>
-  </div>
--->
+<%= form.hidden_field :user_id , :value => current_user.id%>
   <div class="col-md-12 no-paddong-left">
     <%= form.submit "Guardar", class: "btn btn-default" %>
     <%= link_to "Volver", :back %>
