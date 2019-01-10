@@ -1,0 +1,59 @@
+<div id="product-modal" class="modal fade">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header padding-lef">
+    
+            <div class="container-fluid padding-lef">
+              <div class="col-md-9 padding-lef">
+                  <% if action_name == "edit"%>
+                    <h4 class="modal-title">Editar Parametrizacion</h4>
+                  <%else%>
+                    <h4 class="modal-title">Crear Nuevo Parametrizacion</h4>
+                  <% end -%>
+              </div>    
+            </div>
+        </div>
+<%= form_with(model: parameterization, local: true) do |form| %>
+ <div class="modal-body">
+  <div class="row">
+    <% if parameterization.errors.any? %>
+      <div id="error_explanation">
+        <h2><%= pluralize(parameterization.errors.count, "error") %> prohibited this parameterization from being saved:</h2>
+
+        <ul>
+        <% parameterization.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="col-md-4 no-paddong-left">
+      <%= form.label :Nombre %>
+      <%= form.text_field :name, class: "form-control" %>
+    </div>
+
+    <%= form.hidden_field :user_id ,:value =>  current_user.id %>
+
+    <div class="col-md-4 no-paddong-left">
+      <%= form.label "Valor Numérico" %>
+      <%= form.number_field :number_value, class: "form-control" %>
+    </div>
+
+    <div class="col-md-4 no-paddong-left">
+      <%= form.label "Valor del Dinero" %>
+      <%= form.number_field :money_value, class: "form-control" %>
+    </div>
+  </div>
+ </div>
+
+        <div class="modal-footer"">
+
+           <%= form.submit "Guardar", class: "btn btn-dark" %>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button> 
+    </div>
+  </div>
+</div>
+<% end %>

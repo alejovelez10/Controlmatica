@@ -1,0 +1,110 @@
+<div class="row">
+   <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="dashboard_graph">
+         <div class="row x_title">
+            <div class="col-md-6">
+                <h3>Nuevo Centro de Costo</h3>
+            </div>
+         </div>
+          <%= form_with(model: cost_center, local: true, :html => {:id => "contact_form"}) do |form| %>
+            <% if cost_center.errors.any? %>
+              <div id="error_explanation">
+                <h2><%= pluralize(cost_center.errors.count, "error") %> prohibited this cost_center from being saved:</h2>
+
+                <ul>
+                <% cost_center.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div class="form-group">
+              <div class="col-md-4 inputGroupContainer no-paddong-left">
+                <label>Cliente</label>
+                <%= select_tag 'customer_id', options_for_select(get_customer.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control", include_blank: true, :name => "select", :prompt => "Seleccione Un Cliente" }%>
+              </div>
+
+              <div class="col-md-4 inputGroupContainer no-paddong-left">
+                <label>Contacto</label>
+                <%= select_tag 'contact_id', options_for_select(get_contact.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control", include_blank: true, :name => "select", :prompt => "Seleccione Un Contacto" }%>
+              </div>
+
+              <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+                <label>Tipo de Servicio</label>
+                <%= select_tag 'service_type', options_for_select(get_contact.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control", include_blank: true, :name => "select", :prompt => "Seleccione Tipo de Servicio" }%>
+              </div>
+            </div>
+
+            <div class="col-md-4 no-paddong-left">
+              <%= form.label "Fecha de inicio" %><br>
+              <%= form.text_field :start_date, class: "form-control", id: "datepicker" %>
+            </div>
+
+            <div class="col-md-4 no-paddong-left">
+              <%= form.label "Fecha final" %><br>
+              <%= form.text_field :end_date, class: "form-control", id: "datepicker1" %>
+            </div>
+
+            <div class="col-md-4 no-paddong-left">
+              <%= form.label "Número de Cotización" %>
+              <%= form.text_field :quotation_number, class: "form-control" %>
+            </div>
+
+
+            <div class="col-md-12 no-paddong-left">
+              <%= form.label "Descripción" %>
+              <%= form.text_area :description, class: "form-control textarea", :rows => 10, :name => "comment"  %>
+              <br>
+            </div>
+
+            <div class="col-md-4  no-paddong-left">
+              <%= form.label "Valor de ingeniería" %>
+              <%= form.text_field :engineering_value, class: "form-control" %>
+            </div>
+
+            <div class="col-md-4">
+              <%= form.label "Valor de viatico" %>
+              <%= form.text_field :viatic_value, class: "form-control" %>
+            </div>
+
+            <div class="col-md-4">
+              <%= form.label "Estado de ejecución" %>
+              <%= form.text_field :execution_state, class: "form-control" %>
+              <br>
+            </div>
+
+            <div class="col-md-4  no-paddong-left">
+              <%= form.label "Estado de facturado" %>
+              <%= form.text_field :invoiced_state, class: "form-control" %>
+              <br>
+            </div>
+
+            <div class="col-md-12 no-paddong-left">
+              <%= form.submit "Guardar"%>
+            </div>
+          <% end %>
+
+        </div>  
+    </div>
+</div>
+
+<script type="text/javascript">
+ // $('.datepicker').datepicker({
+    //format: 'mm/dd/yyyy',
+    //startDate: '-3d'
+//});
+
+$(document).ready(function () {
+    $('#datepicker').datepicker({
+      uiLibrary: 'bootstrap'
+
+    });
+});
+
+$(document).ready(function () {
+    $('#datepicker1').datepicker({
+      uiLibrary: 'bootstrap'
+    });
+});
+</script>

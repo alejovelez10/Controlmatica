@@ -1,0 +1,68 @@
+<div class="x_content">
+
+  <div class="container-fluid no-padding">
+
+    <div class="col-md-8 no-paddong-left">
+          <h1>Clientes Creados</h1>
+          <span class="count"><%= @customers.count %></span>
+          <p id="count-pages"><%= page_customers_info @customers %></p>
+    </div>
+
+    <div class="col-md-4 float margin_top" >
+          <%= link_to 'Nuevo Cliente', new_customer_path, class: "btn-new float" %>
+    </div>
+
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped jambo_table bulk_action">
+      <thead>
+        <tr class="headings">
+        <th>Cliente</th>
+        <th>Nombre</th>
+        <th>telefono</th>
+        <th>Direccion</th>
+        <th>Nit</th>
+        <th>Web</th>
+        <th>Email</th>
+        <th>User</th>
+        <th colspan="3">Acciones</th>
+      </tr>
+    </thead>
+
+  <tbody>
+    <% @customers.each do |customer| %>
+      <tr class="even pointer">
+        <td><%= customer.client %></td>
+        <td><%= customer.name %></td>
+        <td><%= customer.phone %></td>
+        <td><%= customer.address %></td>
+        <td><%= customer.nit %></td>
+        <td><%= customer.web %></td>
+        <td><%= customer.email %></td>
+        <td><%= customer.user_id %></td>
+        <td>
+
+            <%= link_to customer, class: "btn-padding" do %>
+              <i class="far fa-eye"></i>
+            <% end -%>
+
+            <%= link_to edit_customer_path(customer), class: "btn-padding" do %>
+              <i class="fas fa-pencil-alt"></i>
+            <% end -%>
+
+            <%= link_to customer, method: :delete, data: {
+              confirm: '¿Estas Seguro?',
+              'confirm-button-text': 'Borrar',
+              'cancel-button-text': 'Cancelar',
+              'confirm-button-color': '#CC0000',
+               text: 'Recuerda que el registro se borrara permanentemente',
+              'image-url': ''}, class: "btn-delete" do%>
+              <span class="glyphicon glyphicon-trash"></span>
+            <% end -%>
+            
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

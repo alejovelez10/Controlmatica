@@ -1,0 +1,62 @@
+<div class="x_content">
+
+  <div class="container-fluid no-padding">
+
+    <div class="col-md-8 no-paddong-left">
+          <h1>Parametrizacion Creados</h1>
+          <span class="count"><%= @parameterizations.count %></span>
+          <p id="count-pages"><%= page_parameterization_info @parameterizations %></p>
+    </div>
+
+    <div class="col-md-4 float margin_top" >
+          <%= link_to 'Nuevo', new_parameterization_path, class: "btn btn-dark float", remote: true %>
+    </div>
+
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped jambo_table bulk_action">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>User</th>
+      <th>Valor numérico</th>
+      <th>Money value</th>
+      <th class="title">Acciones</th>
+    </tr>
+  </thead>
+
+    <tbody>
+      <% @parameterizations.each do |parameterization| %>
+        <tr>
+          <td><%= parameterization.name %></td>
+          <td><%= parameterization.user_id %></td>
+          <td><%= parameterization.number_value %></td>
+          <td><%= parameterization.money_value %></td>
+          <td>
+
+            <%= link_to parameterization, class: "btn-padding" do %>
+              <i class="far fa-eye"></i>
+            <% end -%>
+
+            <%= link_to edit_parameterization_path(parameterization), class: "btn-padding", remote: true do %>
+              <i class="fas fa-pencil-alt"></i>
+            <% end -%>
+
+            <%= link_to parameterization, method: :delete, data: {
+              confirm: '¿Estas Seguro?',
+              'confirm-button-text': 'Borrar',
+              'cancel-button-text': 'Cancelar',
+              'confirm-button-color': '#CC0000',
+               text: 'Recuerda que el registro se borrara permanentemente',
+              'image-url': ''}, class: "btn-delete" do%>
+              <span class="glyphicon glyphicon-trash"></span>
+            <% end -%>
+            
+        </td>
+
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

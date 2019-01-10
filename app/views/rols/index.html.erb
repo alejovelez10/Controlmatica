@@ -1,0 +1,68 @@
+<div class="x_content">
+
+  <div class="container-fluid no-padding">
+
+    <div class="col-md-8 no-paddong-left">
+          <h1>Roles Creados</h1>
+          <span class="count"><%= @rols.count %></span>
+          <p id="count-pages"><%= page_entries_info @rols %></p>
+    </div>
+
+    <div class="col-md-4 float margin_top" >
+          <%= link_to 'Nuevo Rol', new_rol_path, remote: true, class: "btn-new float" %>
+    </div>
+
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped jambo_table bulk_action">
+      <thead>
+        <tr class="headings">
+          <th class="column-title">Nombre </th>
+          <th class="column-title">Description </th>
+          <th class="column-title title">Acciones </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @rols.each do |rol| %>
+          <tr class="even pointer">
+            <td class=" "><%= rol.name %></td>
+            <td class=" "><%= rol.description %></td>
+            <td class="text-center">
+
+              <%= link_to edit_rol_path(rol), class: "btn-padding", remote: true do %>
+                <i class="fas fa-pencil-alt"></i>
+              <% end -%>
+
+            <%= link_to rol, method: :delete, data: {
+              confirm: '¿Estas Seguro?',
+              'confirm-button-text': 'Borrar',
+              'cancel-button-text': 'Cancelar',
+              'confirm-button-color': '#CC0000',
+               text: 'Recuerda que el registro se borrara permanentemente',
+              'image-url': ''}, class: "btn-delete" do%>
+              <span class="glyphicon glyphicon-trash"></span>
+            <% end -%>
+
+            </td>
+          </tr>
+        <% end -%>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<script type="text/javascript">
+
+  <% if flash[:success] %>
+        toastr["success"]("<%= flash[:success] %>", "Creacion");
+  <% elsif flash[:danger] %>
+        toastr["error"]("<%= flash[:danger] %>", "Eliminacion");
+  <% elsif flash[:update] %>
+        toastr["success"]("<%= flash[:update] %>", "Actualizacion");
+  <% end -%>
+
+</script>
