@@ -1,0 +1,75 @@
+
+<%= form_with(model: customer, local: true, id: "contact_form") do |form| %>
+
+  <% if customer.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h2>
+
+      <ul>
+      <% customer.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <div class="col-md-4 inputGroupContainer no-paddong-left">
+      <label>Cliente</label>
+      <%= form.text_field :client, class: "form-control", :placeholder => "Cliente", :name => "first_name" %>
+    </div>
+
+    <div class="col-md-4 inputGroupContainer no-paddong-left">
+      <label>Nombre</label>
+      <%= form.text_field :name, class: "form-control", :placeholder => "Nombre", :name => "name" %>
+    </div>
+
+    <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+      <label>Email</label>
+      <%= form.email_field :email, class: "form-control", :placeholder => "Email", :name => "email" %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-md-4 inputGroupContainer no-paddong-left">
+      <label>Telefono</label>
+        <%= form.text_field :phone, class: "form-control", :placeholder => "Telefono", :name => "" %>
+    </div>
+
+    <div class="col-md-4 inputGroupContainer no-paddong-left">
+      <label>Direccion de Residencia</label>
+        <%= form.text_field :address, class: "form-control", :placeholder => "Direccion", :name => "" %>
+    </div>
+
+
+    <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+      <label>Nit</label>
+        <%= form.text_field :nit, class: "form-control", :placeholder => "Direccion", :name => "" %>
+    </div>
+
+  </div>
+  
+  <div class="form-group">
+    <div class="col-md-4 inputGroupContainer no-paddong-left">
+      <label>Pagina Web</label>
+      <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web", :name => ""  %>
+      <br>
+    </div>
+
+  </div>
+
+
+<!--
+  <div class="field">
+    <%= form.label :user_id %>
+    <%= form.number_field :user_id %>
+  </div>
+-->
+  <div class="col-md-12 no-paddong-left">
+    <%= form.submit "Guardar", class: "btn btn-default" %>
+    <%= link_to "Volver", :back %>
+  </div>
+
+<% end %>
+
+

@@ -1,0 +1,53 @@
+<div id="product-modal" class="modal fade">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header padding-lef">
+    
+            <div class="container-fluid padding-lef">
+              <div class="col-md-9 padding-lef">
+                  <% if action_name == "edit"%>
+                    <h4 class="modal-title">Editar Rol</h4>
+                  <%else%>
+                    <h4 class="modal-title">Crear Nuevo Rol</h4>
+                  <% end -%>
+              </div>    
+            </div>
+        </div>
+
+<%= form_with(model: rol, local: true, id: "contact_form" , :novalidate => true ) do |form| %>
+ <div class="modal-body">
+    <% if rol.errors.any? %>
+    <div id="error_explanation">
+        <h2><%= pluralize(rol.errors.count, "error") %> prohibited this rol from being saved:</h2>
+
+      <ul>
+        <% rol.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+      <%= form.label :name %>
+      <%= form.text_field :name, class: "form form-control", :autocomplete => :off %>
+      <br>
+  </div>
+
+  <div class="field">
+    <%= form.label :description %><br>
+    <%= form.text_area :description, class: "form form-control", :rows => 10 %>
+  </div>
+        <br>
+
+      </div> 
+        <div class="modal-footer"">
+
+           <%= form.submit "Guardar", class: "btn-modal" %>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button> 
+    </div>
+  </div>
+</div>
+<% end -%>

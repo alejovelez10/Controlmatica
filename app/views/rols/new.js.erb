@@ -1,0 +1,6 @@
+//= require_tree .
+
+$('<%= j render "form", rol: @rol   %>').on('hidden.bs.modal', function (e) {
+$(this).remove();
+$('.modal-backdrop').remove();
+}).modal();

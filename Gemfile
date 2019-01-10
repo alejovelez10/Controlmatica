@@ -1,12 +1,12 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.3.0'
+ruby '2.5.1'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.2.2'
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+gem 'pg'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 # Use SCSS for stylesheets
@@ -18,6 +18,42 @@ gem 'webpacker'
 gem 'webpacker-react', '~> 0.3.2'
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'mini_racer', platforms: :ruby
+# control de usuario
+gem 'devise'
+# Use ActiveStorage variant
+gem 'mini_magick', '~> 4.8'
+#AASM para maquina de estados
+gem "aasm"
+#ingresar con google
+gem 'omniauth-google'
+#mensajes de alerta
+gem 'rails-assets-sweetalert2', '~> 5.1.1', source: 'https://rails-assets.org'
+gem 'sweet-alert2-rails'
+gem 'toastr_rails'
+#subir Archivos
+gem 'carrierwave'
+gem 'file_validators'
+#documentar modelos
+gem 'annotate'
+#Guardar en amazon
+gem 'fog', '~> 1.38'
+gem 'figaro'
+#Sub Formularios
+gem "nested_form", :git => 'https://github.com/ryanb/nested_form.git'
+#paginacion
+gem 'will_paginate'
+gem 'will_paginate-bootstrap'
+#generar pdf
+gem 'wicked_pdf'
+gem 'wkhtmltopdf-binary'
+#jquery
+gem 'jquery-ui-rails'
+gem 'jquery-validation-rails'
+gem 'jquery-rails'
+#Editor texto
+gem 'ckeditor_rails', '~> 4.5', '>= 4.5.10'
+#bootstrap
+gem 'bootstrap-sass', '~> 3.4.0'
 
 # Use CoffeeScript for .coffee assets and views
 gem 'coffee-rails', '~> 4.2'

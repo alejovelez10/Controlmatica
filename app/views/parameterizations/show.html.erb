@@ -1,0 +1,24 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @parameterization.name %>
+</p>
+
+<p>
+  <strong>User:</strong>
+  <%= @parameterization.user_id %>
+</p>
+
+<p>
+  <strong>Number value:</strong>
+  <%= @parameterization.number_value %>
+</p>
+
+<p>
+  <strong>Money value:</strong>
+  <%= @parameterization.money_value %>
+</p>
+
+<%= link_to 'Edit', edit_parameterization_path(@parameterization) %> |
+<%= link_to 'Back', parameterizations_path %>

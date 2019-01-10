@@ -1,0 +1,75 @@
+<div class="x_content">
+
+  <div class="container-fluid no-padding">
+
+    <div class="col-md-8 no-paddong-left">
+          <h1>Centro de Costos Creados</h1>
+          <span class="count"><%= @cost_centers.count %></span>
+          <p id="count-pages"><%= page_cost_centers_info @cost_centers %></p>
+    </div>
+
+    <div class="col-md-4 float margin_top" >
+          <%= link_to 'Nuevo Centro de Costo', new_cost_center_path, class: "btn-new float" %>
+    </div>
+
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped jambo_table bulk_action">
+      <thead>
+    <tr>
+      <th>Cliente</th>
+      <th>Contacto</th>
+      <th>Descripcion</th>
+      <th>Start date</th>
+      <th>End date</th>
+      <th>Número de cotización</th>
+      <th>Valor de ingeniería</th>
+      <th>Valor viatico</th>
+      <th>Estado de ejecución</th>
+      <th>Estado facturado</th>
+      <th>Tipo de Servicio</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @cost_centers.each do |cost_center| %>
+      <tr>
+        <td><%= cost_center.customer_id %></td>
+        <td><%= cost_center.contact_id %></td>
+        <td><%= cost_center.description %></td>
+        <td><%= cost_center.start_date %></td>
+        <td><%= cost_center.end_date %></td>
+        <td><%= cost_center.quotation_number %></td>
+        <td><%= cost_center.engineering_value %></td>
+        <td><%= cost_center.viatic_value %></td>
+        <td><%= cost_center.execution_state %></td>
+        <td><%= cost_center.invoiced_state %></td>
+        <td><%= cost_center.service_type %></td>
+
+        <td>
+
+            <%= link_to cost_center, class: "btn-padding" do %>
+              <i class="far fa-eye"></i>
+            <% end -%>
+
+            <%= link_to edit_cost_center_path(cost_center), class: "btn-padding" do %>
+              <i class="fas fa-pencil-alt"></i>
+            <% end -%>
+
+            <%= link_to cost_center, method: :delete, data: {
+              confirm: '¿Estas Seguro?',
+              'confirm-button-text': 'Borrar',
+              'cancel-button-text': 'Cancelar',
+              'confirm-button-color': '#CC0000',
+               text: 'Recuerda que el registro se borrara permanentemente',
+              'image-url': ''}, class: "btn-delete" do%>
+              <span class="glyphicon glyphicon-trash"></span>
+            <% end -%>
+        </td>
+
+      </tr>
+    <% end %>
+  </tbody>
+</table>
