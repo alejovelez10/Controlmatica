@@ -33,6 +33,7 @@ gem 'toastr_rails'
 #subir Archivos
 gem 'carrierwave'
 gem 'file_validators'
+gem 'chosen-rails'
 #documentar modelos
 gem 'annotate'
 #Guardar en amazon
