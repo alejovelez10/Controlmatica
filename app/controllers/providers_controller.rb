@@ -69,6 +69,6 @@ class ProvidersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def provider_params
-      params.require(:provider).permit(:name, :phone, :address, :nit, :web, :email, :user_id, contacts_attributes: [:id, :name, :phone,:email, :provider_id, :position, :user_id, :_destroy])
+      params.require(:provider).permit(:name, :phone, :address, :nit, :web, :email, :user_id, contacts_attributes: [:id, :name, :phone, :email, :provider_id, :position, :user_id, :_destroy])
     end
 end

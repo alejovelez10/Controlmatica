@@ -1,0 +1,34 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Report date:</strong>
+  <%= @customer_report.report_date %>
+</p>
+
+<p>
+  <strong>Description:</strong>
+  <%= @customer_report.description %>
+</p>
+
+<p>
+  <strong>Token:</strong>
+  <%= @customer_report.token %>
+</p>
+
+<p>
+  <strong>Report state:</strong>
+  <%= @customer_report.report_state %>
+</p>
+
+<p>
+  <strong>Report code:</strong>
+  <%= @customer_report.report_code %>
+</p>
+
+<p>
+  <strong>Customer:</strong>
+  <%= @customer_report.customer_id %>
+</p>
+
+<%= link_to 'Edit', edit_customer_report_path(@customer_report) %> |
+<%= link_to 'Back', customer_reports_path %>

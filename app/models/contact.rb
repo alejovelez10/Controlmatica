@@ -14,6 +14,6 @@
 #
 
 class Contact < ApplicationRecord
-	belongs_to :provider, inverse_of: :contact
-	belongs_to :customer, inverse_of: :contact
+	belongs_to :provider, inverse_of: :contacts
+	#belongs_to :customer, inverse_of: :contacts
 end
