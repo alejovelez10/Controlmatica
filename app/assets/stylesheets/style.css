@@ -3624,6 +3624,7 @@ a.hiddenanchor {
   margin-top: 13px !important;
   margin-right: 39px;
   float: right;
+      text-decoration: underline;
 }
 .separator {
   border-top: 1px solid #D8D8D8;
@@ -4488,11 +4489,10 @@ ul.notifications {
     background: #3f5367;
     color: #fff;
     padding: 7px;
-    font-size: 20px;
+    font-size: 10px;
     margin-left: 10px;
-    top: 0px;
+    top: 1px;
     position: absolute;
-    border-radius: 10px;
 }
 
 #count-pages{
@@ -4502,15 +4502,15 @@ ul.notifications {
 }
 
 .no-paddong-left h1{
-  font-family: 'Oswald', sans-serif;
   display: inline;
+  font-size: 28px;
+    font-weight: bold;
 }
 
 .margin-bottom{
   margin-bottom: 20px !important;
 }
 
-@import url('https://fonts.googleapis.com/css?family=Oswald');
 
 .form-control-feedback {
     position: absolute;
@@ -4537,3 +4537,37 @@ ul.notifications {
 .btn-save{
       margin-top: 21px;
 }
+
+.error{
+  color: red;
+  font-weight: normal;
+}
+
+.error:after{
+    content: "\f071";
+    font-family: FontAwesome;
+    position: relative;
+    right: -148px;
+    top: -25px;
+
+}
+
+.input-group-addon{
+   background: #3f5367;
+   color: #fff;
+   border: 1px;
+}
+
+
+.in-line{
+      display: inline-flex;
+}
+
+.btn-nester{
+      margin-top: 24px;
+}
+
+.web-page{
+  text-decoration: underline;
+}
+

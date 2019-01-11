@@ -1,0 +1,92 @@
+<div class="row">
+   <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="dashboard_graph">
+         <div class="row x_title">
+            <div class="col-md-6 no-paddong-left">
+              <%if action_name == "new" %>
+                <h3>Nuevo Informe de Cliente</h3>
+              <% else %>
+                <h3>Editar Informe de Cliente</h3>
+              <% end -%>
+            </div>
+         </div>
+      <%= form_with(model: customer_report, local: true) do |form| %>
+        <% if customer_report.errors.any? %>
+          <div id="error_explanation">
+            <h2><%= pluralize(customer_report.errors.count, "error") %> prohibited this customer_report from being saved:</h2>
+
+            <ul>
+            <% customer_report.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="col-md-4 no-paddong-left">
+          <%= form.label "Fecha del Reporte" %>
+          <%= form.text_field :report_date, id: "datepicker", class: "form-control" %>
+        </div>
+
+        <div class="col-md-4">
+          <%= form.label "Cliente" %>
+          <%= select_tag 'customer_id', options_for_select(get_customer.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control required", include_blank: true, :title => "Seleccione Un Cliente"  }%>
+        </div>
+
+        <div class="col-md-4">
+          <%= form.label "Codigo del Reporte" %>
+          <%= form.text_field :report_code, class: "form-control" %>
+          <br>
+        </div>
+
+        <div class="col-md-4 no-paddong-left">
+          <%= form.label "Estado del Reporte" %>
+          <%= form.text_field :report_state, class: "form-control" %>
+          <br>
+        </div>
+
+        <div class="col-md-4 no-paddong-left">
+          <label>Reporte</label>
+          <%= form.select :report_ids, get_reports.collect {|c| ["#{c.report_code}", c.id]}, {prompt: false}, {:multiple => true, class: 'form-control chosen-select2'} %>
+        </div>
+
+        <div class="col-md-12 no-paddong-left">
+          <%= form.label "Descripcion" %>
+          <%= form.text_area :description, class: "form-control textarea", :rows => 10  %>
+          <br>
+        </div>
+
+
+        <%= form.hidden_field :token %>
+
+
+
+        <div class="col-md-12 no-paddong-left">
+          <%= form.submit "Guardar", class: "btn btn-dark" %>
+          <%= link_to "Volver", customer_reports_path %>
+        </div>
+      <% end %>
+
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+      $('#datepicker').datepicker({
+        uiLibrary: 'bootstrap'
+
+      });
+  });
+
+ $('.chosen-select2').chosen(
+        {
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+        });
+
+</script>

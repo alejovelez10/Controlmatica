@@ -2,8 +2,12 @@
    <div class="col-md-12 col-sm-12 col-xs-12">
       <div class="dashboard_graph">
          <div class="row x_title">
-            <div class="col-md-6">
+            <div class="col-md-6 no-paddong-left">
+              <% if action_name == "new"%>
                 <h3>Nuevo Reporte</h3>
+                <% else %>
+                <h3>Editar Reporte</h3>
+              <% end -%>
             </div>
          </div>
           <%= form_with(model: report, local: true, :html => {:id => "contact_form"}) do |form| %>
@@ -19,51 +23,54 @@
               </div>
             <% end %>
 
-          <div class="col-md-4 no-paddong-left">
-              <label>Fecha del Reporte</label>
-              <%= form.text_field :name, class: "form-control", :placeholder => "Fecha de Reporte", id: "datepicker1" %>
-          </div>  
+            <div class="col-md-4 no-paddong-left">
+                <label>Fecha del Reporte</label>
+                <%= form.text_field :name, class: "form-control required", :placeholder => "Fecha de Reporte", id: "datepicker", :title => "Es un Campo Obligatorio" %>
+            </div>  
 
-          <div class="form-group no-paddong-left">
-            <div class="col-md-4 inputGroupContainer no-paddong-left">
+ 
+            <div class="col-md-4 no-paddong-left">
                 <label>Tiempo de Trabajo</label>
-                <%= form.text_field :working_time, class: "form-control", :placeholder => "Tiempo de Trabajo", :name => "name" %>
+                <%= form.text_field :working_time, class: "form-control required", :placeholder => "Tiempo de Trabajo", :title => "Es un Campo Obligatorio" %>
+                <br>
             </div>
-          </div>
+
+            <div class="col-md-4 no-paddong-left">
+                <label>Codigo del Reporte</label>
+                <%= form.text_field :report_code, class: "form-control required", :placeholder => "Codigo del Reporte", :title => "Es un Campo Obligatorio" %>
+                <br>
+            </div>
 
 
             <%= form.hidden_field :user_id ,:value =>  current_user.id %>
-          <div class="form-group col-md-12 no-paddong-left">
 
-            <div class="col-md-12 inputGroupContainer no-paddong-left">
+            <div class="col-md-12 no-paddong-left">
               <%= form.label "Descripcion del Trabajo" %>
-              <%= form.text_area :work_description, class: "form-control textarea", :rows => 10, :name => "comment"  %>
-            </div>
-          </div>
-
-          <div class="form-group col-md-12 no-paddong-left">
-
-            <div class="col-md-12 inputGroupContainer no-paddong-left">
-              <%= form.label "Descripcion Viatico" %>
-              <%= form.text_area :viatic_description, class: "form-control textarea", :rows => 10, :name => "comment"  %>
+              <%= form.text_area :work_description, class: "form-control textarea", :rows => 10, :title => "Es un Campo Obligatorio"  %>
+              <br>
             </div>
 
+          <div class="col-md-12 no-paddong-left">
+            <%= form.label "Descripcion Viatico" %>
+            <%= form.text_area :viatic_description, class: "form-control textarea", :rows => 10 , :title => "Es un Campo Obligatorio" %>
+            <br>
           </div>
 
           <div class="form-group">
-            <div class="col-md-4 inputGroupContainer no-paddong-left">
+            <div class="col-md-4 no-paddong-left">
               <%= form.label "Valor Total" %>
-              <%= form.number_field :total_value, class: "form-control", :name => "date" %>
+              <%= form.number_field :total_value, class: "form-control required", :title => "Es un Campo Obligatorio" %>
             </div>
 
-            <div class="col-md-4 inputGroupContainer no-paddong-left">
+            <div class="col-md-4 no-paddong-left">
               <%= form.label "Valor viatico" %>
-              <%= form.number_field :viatic_value, class: "form-control", :name => "date" %>
+              <%= form.number_field :viatic_value, class: "form-control required", :title => "Es un Campo Obligatorio" %>
             </div>
           </div>
 
             <div class="col-md-12 no-paddong-left btn-save">
               <%= form.submit "Guardar", class: "btn btn-dark" %>
+              <%= link_to "Volver", reports_path %>
             </div>
           <% end %>
 
@@ -73,10 +80,12 @@
 
 
 <script type="text/javascript">
-  $(document).ready(function () {
-    $('#datepicker1').datepicker({
-      uiLibrary: 'bootstrap'
-    });
-});
-</script>
+  $('#contact_form').validate();
 
+  $(document).ready(function () {
+    $('#datepicker').datepicker({
+      uiLibrary: 'bootstrap'
+
+    });
+  });
+</script>

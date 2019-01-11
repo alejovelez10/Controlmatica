@@ -1,5 +1,5 @@
 
-<%= form_with(model: customer, local: true,remote: true ,id: "contact_form") do |form| %>
+<%= form_with(model: customer, local: true, id: "contact_form") do |form| %>
 
   <% if customer.errors.any? %>
     <div id="error_explanation">
@@ -15,52 +15,44 @@
 
   <div class="form-group">
     <div class="col-md-4 inputGroupContainer no-paddong-left">
-      <label>Cliente</label>
-      <%= form.text_field :client, class: "form-control", :placeholder => "Cliente", :name => "first_name" %>
-    </div>
-
-    <div class="col-md-4 inputGroupContainer no-paddong-left">
       <label>Nombre</label>
       <%= form.text_field :name, class: "form-control", :placeholder => "Nombre", :name => "name" %>
     </div>
 
-    <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+    <div class="col-md-4 inputGroupContainer no-paddong-left">
       <label>Email</label>
       <%= form.email_field :email, class: "form-control", :placeholder => "Email", :name => "email" %>
+    </div>
+
+    <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+      <label>Pagina Web</label>
+      <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web" %>
     </div>
   </div>
 
   <div class="form-group">
     <div class="col-md-4 inputGroupContainer no-paddong-left">
       <label>Telefono</label>
-        <%= form.text_field :phone, class: "form-control", :placeholder => "Telefono", :name => "" %>
+        <%= form.text_field :phone, class: "form-control", :placeholder => "Telefono" %>
     </div>
 
     <div class="col-md-4 inputGroupContainer no-paddong-left">
       <label>Direccion de Residencia</label>
-        <%= form.text_field :address, class: "form-control", :placeholder => "Direccion", :name => "" %>
+        <%= form.text_field :address, class: "form-control", :placeholder => "Direccion" %>
     </div>
 
 
     <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
       <label>Nit</label>
-        <%= form.text_field :nit, class: "form-control", :placeholder => "Direccion", :name => "" %>
+        <%= form.text_field :nit, class: "form-control", :placeholder => "Direccion"%>
     </div>
 
   </div>
-  
-  <div class="form-group">
-    <div class="col-md-4 inputGroupContainer no-paddong-left">
-      <label>Pagina Web</label>
-      <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web", :name => ""  %>
-      <br>
-    </div>
 
-  </div>
 
 <%= form.hidden_field :user_id , :value => current_user.id%>
   <div class="col-md-12 no-paddong-left">
-    <%= form.submit "Guardar", class: "btn btn-default" %>
+    <%= form.submit "Guardar", class: "btn btn-dark" %>
     <%= link_to "Volver", :back %>
   </div>
 
