@@ -1,61 +1,110 @@
+<div class="row">
+   <div class="col-md-12 col-sm-12 col-xs-12">
+      <div class="dashboard_graph">
+         <div class="row x_title">
+            <div class="col-md-6 no-paddong-left">
+              <%if action_name == "new" %>
+                <h3>Nuevo Cliente</h3>
+              <% else %>
+                <h3>Editar Cliente</h3>
+              <% end -%>
+            </div>
+         </div>
+      <%= nested_form_for(@customer, local: true, id: "contact_form") do |form| %>
 
-<%= form_with(model: customer, local: true, id: "contact_form") do |form| %>
+        <% if customer.errors.any? %>
+          <div id="error_explanation">
+            <h2><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h2>
 
-  <% if customer.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h2>
+            <ul>
+            <% customer.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+            </ul>
+          </div>
+        <% end %>
 
-      <ul>
-      <% customer.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
+        <div class="form-group">
+          <div class="col-md-4 inputGroupContainer no-paddong-left">
+            <label>Nombre</label>
+            <%= form.text_field :name, class: "form-control", :placeholder => "Nombre" %>
+          </div>
+
+          <div class="col-md-4 inputGroupContainer no-paddong-left">
+            <label>Email</label>
+            <%= form.email_field :email, class: "form-control", :placeholder => "Email" %>
+          </div>
+
+          <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+            <label>Pagina Web</label>
+            <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web" %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="col-md-4 inputGroupContainer no-paddong-left">
+            <label>Telefono</label>
+              <%= form.text_field :phone, class: "form-control", :placeholder => "Telefono" %>
+          </div>
+
+          <div class="col-md-4 inputGroupContainer no-paddong-left">
+            <label>Direccion de Residencia</label>
+              <%= form.text_field :address, class: "form-control", :placeholder => "Direccion" %>
+          </div>
+
+
+          <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+            <label>Nit</label>
+              <%= form.text_field :nit, class: "form-control", :placeholder => "Nit"%>
+          </div>
+
+        </div>
+
+        <%= form.fields_for :contacts do |contact|  %>
+          <div class="clearfix">
+            <div class="col-md-12 col-sm-12 col-xs-12 no-paddong-left in-line" > 
+              <div class="input-group col-md-3 ">
+                <span class="input-group-btn">
+                  <%= contact.link_to_remove :class => "btn btn-danger btn-nester" do %>
+                      <i class="glyphicon glyphicon-trash"></i>
+                  <% end -%>
+                </span>
+                <%= contact.label "Nombre", class: "label-nester" %>
+                <%= contact.text_field :name, :class => 'form-control', :placeholder => "Nombre" %>
+              </div>
+
+              <div class="col-md-3" >
+                  <%= contact.label "Celular" %>
+                  <%= contact.number_field :phone, :class => 'form-control', :placeholder => "Celular" %>
+              </div>
+
+
+              <div class="col-md-4" >
+                  <%= contact.label "Email" %>
+                  <%= contact.email_field :email, :class => 'form-control', autocomplete: "email", :placeholder => "Email" %>
+                  <br>
+              </div>
+
+                <%= contact.hidden_field :user_id ,:value =>  current_user.id %>
+                <%= contact.hidden_field :id, class: "items" if action_name == "edit" %> 
+
+            </div>
+          </div>  
+        <% end %>
+
+        <%= form.link_to_add "Agregar Contacto", :contacts, :class => 'btn btn-dark'  %>
+
+
+
+
+      <%= form.hidden_field :user_id , :value => current_user.id%>
+        <div class="col-md-12 no-paddong-left">
+          <%= form.submit "Guardar", class: "btn btn-dark" %>
+          <%= link_to "Volver", :back %>
+        </div>
+
       <% end %>
-      </ul>
-    </div>
-  <% end %>
 
-  <div class="form-group">
-    <div class="col-md-4 inputGroupContainer no-paddong-left">
-      <label>Nombre</label>
-      <%= form.text_field :name, class: "form-control", :placeholder => "Nombre", :name => "name" %>
-    </div>
-
-    <div class="col-md-4 inputGroupContainer no-paddong-left">
-      <label>Email</label>
-      <%= form.email_field :email, class: "form-control", :placeholder => "Email", :name => "email" %>
-    </div>
-
-    <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
-      <label>Pagina Web</label>
-      <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web" %>
     </div>
   </div>
-
-  <div class="form-group">
-    <div class="col-md-4 inputGroupContainer no-paddong-left">
-      <label>Telefono</label>
-        <%= form.text_field :phone, class: "form-control", :placeholder => "Telefono" %>
-    </div>
-
-    <div class="col-md-4 inputGroupContainer no-paddong-left">
-      <label>Direccion de Residencia</label>
-        <%= form.text_field :address, class: "form-control", :placeholder => "Direccion" %>
-    </div>
-
-
-    <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
-      <label>Nit</label>
-        <%= form.text_field :nit, class: "form-control", :placeholder => "Direccion"%>
-    </div>
-
-  </div>
-
-
-<%= form.hidden_field :user_id , :value => current_user.id%>
-  <div class="col-md-12 no-paddong-left">
-    <%= form.submit "Guardar", class: "btn btn-dark" %>
-    <%= link_to "Volver", :back %>
-  </div>
-
-<% end %>
-
-
+</div>

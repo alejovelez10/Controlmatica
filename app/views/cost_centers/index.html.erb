@@ -39,8 +39,8 @@
         <td><%= cost_center.customer_id %></td>
         <td><%= cost_center.contact_id %></td>
         <td><%= cost_center.description %></td>
-        <td><%= cost_center.start_date %></td>
-        <td><%= cost_center.end_date %></td>
+        <td><%= get_date(cost_center.start_date) %></td>
+        <td><%= get_date(cost_center.end_date) %></td>
         <td><%= cost_center.quotation_number %></td>
         <td><%= cost_center.engineering_value %></td>
         <td><%= cost_center.viatic_value %></td>

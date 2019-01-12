@@ -25,24 +25,19 @@
 
             <div class="col-md-4 no-paddong-left">
                 <label>Fecha del Reporte</label>
-                <%= form.text_field :name, class: "form-control required", :placeholder => "Fecha de Reporte", id: "datepicker", :title => "Es un Campo Obligatorio" %>
+                <%= form.text_field :report_date, class: "form-control required", :placeholder => "Fecha de Reporte", id: "datepicker", :title => "Es un Campo Obligatorio" %>
             </div>  
 
  
             <div class="col-md-4 no-paddong-left">
                 <label>Tiempo de Trabajo</label>
-                <%= form.text_field :working_time, class: "form-control required", :placeholder => "Tiempo de Trabajo", :title => "Es un Campo Obligatorio" %>
-                <br>
-            </div>
-
-            <div class="col-md-4 no-paddong-left">
-                <label>Codigo del Reporte</label>
-                <%= form.text_field :report_code, class: "form-control required", :placeholder => "Codigo del Reporte", :title => "Es un Campo Obligatorio" %>
+                <%= form.number_field :working_time, class: "form-control required", :placeholder => "Tiempo de Trabajo", :title => "Es un Campo Obligatorio" %>
                 <br>
             </div>
 
 
-            <%= form.hidden_field :user_id ,:value =>  current_user.id %>
+            <%= form.hidden_field :report_code, :value => "#FDSE"  %>
+            <%= form.hidden_field :user_id , :value =>  current_user.id %>
 
             <div class="col-md-12 no-paddong-left">
               <%= form.label "Descripcion del Trabajo" %>

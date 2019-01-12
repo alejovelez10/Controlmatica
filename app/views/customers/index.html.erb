@@ -18,7 +18,6 @@
     <table class="table table-striped jambo_table bulk_action">
       <thead>
         <tr class="headings">
-        <th>Cliente</th>
         <th>Nombre</th>
         <th>telefono</th>
         <th>Direccion</th>
@@ -33,7 +32,6 @@
   <tbody>
     <% @customers.each do |customer| %>
       <tr class="even pointer">
-        <td><%= customer.client %></td>
         <td><%= customer.name %></td>
         <td><%= customer.phone %></td>
         <td><%= customer.address %></td>

@@ -15,7 +15,6 @@
 #
 
 class Provider < ApplicationRecord
-
 	has_many :contacts , inverse_of: :provider, dependent: :destroy
 	accepts_nested_attributes_for :contacts, :allow_destroy => true
 end

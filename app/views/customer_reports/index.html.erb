@@ -31,7 +31,7 @@
   <tbody>
     <% @customer_reports.each do |customer_report| %>
       <tr>
-        <td><%= customer_report.report_date %></td>
+        <td><%= get_date(customer_report.report_date) %></td>
         <td><%= customer_report.description %></td>
         <td><%= customer_report.token %></td>
         <td><%= customer_report.report_state %></td>
