@@ -11,9 +11,10 @@
 #  user_id     :integer
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  customer_id :integer
 #
 
 class Contact < ApplicationRecord
-	belongs_to :provider, inverse_of: :contacts
-	#belongs_to :customer, inverse_of: :contacts
+	belongs_to :provider, inverse_of: :contacts, optional: true
+	belongs_to :customer, inverse_of: :contacts, optional: true
 end

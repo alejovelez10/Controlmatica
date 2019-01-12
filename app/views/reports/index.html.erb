@@ -25,7 +25,7 @@
       <th>Viatic value</th>
       <th>Viatic description</th>
       <th>Total value</th>
-      <th colspan="3"></th>
+      <th class="title">Acciones</th>
     </tr>
   </thead>
 
@@ -39,9 +39,28 @@
           <td><%= report.viatic_value %></td>
           <td><%= report.viatic_description %></td>
           <td><%= report.total_value %></td>
-          <td><%= link_to 'Show', report %></td>
-          <td><%= link_to 'Edit', edit_report_path(report) %></td>
-          <td><%= link_to 'Destroy', report, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+
+          <td>
+
+            <%= link_to report, class: "btn-padding" do %>
+              <i class="far fa-eye"></i>
+            <% end -%>
+
+            <%= link_to edit_report_path(report), class: "btn-padding", remote: true do %>
+              <i class="fas fa-pencil-alt"></i>
+            <% end -%>
+
+            <%= link_to report, method: :delete, data: {
+              confirm: '¿Estas Seguro?',
+              'confirm-button-text': 'Borrar',
+              'cancel-button-text': 'Cancelar',
+              'confirm-button-color': '#CC0000',
+               text: 'Recuerda que el registro se borrara permanentemente',
+              'image-url': ''}, class: "btn-delete" do%>
+              <span class="glyphicon glyphicon-trash"></span>
+            <% end -%>
+              
+          </td>
         </tr>
       <% end %>
     </tbody>

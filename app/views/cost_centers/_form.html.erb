@@ -70,19 +70,12 @@
             <div class="col-md-4">
               <%= form.label "Valor de viatico" %>
               <%= form.number_field :viatic_value, class: "form-control", :placeholder => "Valor de viatico" %>
-            </div>
-
-            <div class="col-md-4">
-              <%= form.label "Estado de ejecución" %>
-              <%= form.text_field :execution_state, class: "form-control", :placeholder => "Estado de ejecución" %>
               <br>
             </div>
 
-            <div class="col-md-4  no-paddong-left">
-              <%= form.label "Estado de facturado" %>
-              <%= form.text_field :invoiced_state, class: "form-control", :placeholder => "Estado de facturado" %>
-              <br>
-            </div>
+  
+              <%= form.hidden_field :execution_state %>
+              <%= form.hidden_field :invoiced_state %>
 
             <div class="col-md-12 no-paddong-left">
               <%= form.submit "Guardar", class: "btn btn-dark"%>
