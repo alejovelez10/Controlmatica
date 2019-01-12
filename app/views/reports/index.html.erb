@@ -32,7 +32,7 @@
     <tbody>
       <% @reports.each do |report| %>
         <tr>
-          <td><%= report.report_date %></td>
+          <td><%= get_date(report.report_date) %></td>
           <td><%= report.user_id %></td>
           <td><%= report.working_time %></td>
           <td><%= report.work_description %></td>
