@@ -37,7 +37,7 @@ gem 'chosen-rails'
 #documentar modelos
 gem 'annotate'
 #Guardar en amazon
-gem 'fog', '~> 1.38'
+gem 'fog'
 gem 'figaro'
 #Sub Formularios
 gem "nested_form", :git => 'https://github.com/ryanb/nested_form.git'
