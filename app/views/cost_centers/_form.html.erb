@@ -23,57 +23,75 @@
               </div>
             <% end %>
 
-            <div class="form-group">
+            <div class="row form-group">
               <div class="col-md-4 no-paddong-left">
                 <label>Cliente</label>
-                <%= select_tag 'customer_id', options_for_select(get_customer.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control required", include_blank: true, :title => "Seleccione Un Cliente"  }%>
+                <%= form.select :customer_id,
+                  Customer.all.map { |u| [u.name, u.id] },
+                              { include_blank: "Ingrese Cliente" },
+                              { class: 'form-control', id: ""  }
+                   %>
               </div>
 
-              <div class="col-md-4 no-paddong-left">
+              <div class="row col-md-4 no-paddong-left">
                 <label>Contacto</label>
-                <%= select_tag 'contact_id', options_for_select(get_contact.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control required", include_blank: true, :title => "Seleccione Un Contacto"  }%>
+            
+                <%= form.select :contact_id,
+                  Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
+                              { include_blank: "Ingrese Contacto" },
+                              { class: 'form-control', id: ""  }
+                   %>
               </div>
 
-              <div class="col-md-4 no-paddong-left margin-bottom">
+              <div class="row col-md-4  ">
                 <label>Tipo de Servicio</label>
-                <%= select_tag 'service_type', options_for_select(get_contact.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control required", include_blank: true, :title => "Seleccione Tipo Servicio"  }%>
+                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"]), {},{:class => 'form form-control select', id:"principal"}%>
               </div>
-            </div>
 
+            
+            </div>
+            <div class="row form-group">
+              <div class="col-md-12 no-paddong-left">
+                <%= form.label "Descripción" %>
+                <%= form.text_area :description, class: "form-control textarea", :rows => 3  %>
+               
+              </div>
+             </div>  
+          <div class="row form-group">
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Fecha de inicio" %><br>
-              <%= form.text_field :start_date, class: "form-control", id: "datepicker", :placeholder => "Fecha de inicio"%>
+              <%= form.date_field :start_date, class: "form-control", id: "", :placeholder => "Fecha de inicio"%>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Fecha final" %><br>
-              <%= form.text_field :end_date, class: "form-control", id: "datepicker1", :placeholder => "Fecha final" %>
+              <%= form.date_field :end_date, class: "form-control", id: "", :placeholder => "Fecha final" %>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Número de Cotización" %>
               <%= form.number_field :quotation_number, class: "form-control", :placeholder => "Número de Cotización"  %>
             </div>
+                <br>
+          </div>
 
-
-            <div class="col-md-12 no-paddong-left">
-              <%= form.label "Descripción" %>
-              <%= form.text_area :description, class: "form-control textarea", :rows => 10  %>
-              <br>
-            </div>
+          
+    
+          <div class="row form-group">
 
             <div class="col-md-4  no-paddong-left">
               <%= form.label "Valor de ingeniería" %>
               <%= form.number_field :engineering_value, class: "form-control", :placeholder => "Valor de ingeniería" %>
             </div>
 
-            <div class="col-md-4">
-              <%= form.label "Valor de viatico" %>
+            <div class="col-md-4 no-paddong-left">
+              <%= form.label "Valor de viaticos" %>
               <%= form.number_field :viatic_value, class: "form-control", :placeholder => "Valor de viatico" %>
               <br>
             </div>
 
-  
+           </div>  
+          
               <%= form.hidden_field :execution_state %>
               <%= form.hidden_field :invoiced_state %>
 

@@ -26,41 +26,23 @@
 		<table id="customers">
 			<thead>
 				<tr>
-					<th class="title-header" colspan="1">Fecha</th>
-					<th class="title-header">Horas</th>
-					<th class="title-header">Empleado</th>
-					<th class="title-header">Descripcion</th>
+					<th class="title-header text-center" style=" text-align: center;" colspan="1">FECHA</th>
+					<th class="title-header text-center" style=" text-align: center;">HORAS</th>
+					<th class="title-header text-center" style=" text-align: center;">EMPLEADO</th>
+					<th class="title-header text-center" style=" text-align: center;">DESCRIPCION</th>
 				</tr>
 			</thead>
 
 			<tbody >
+				<% @customer_report.reports.each do |report|%>
 				<tr>
-					<td>adasd</td>
-					<td>12</td>
-					<td>salazar-moncada-estiven@hotmail.com</td>
-					<td>asdasdasdasdasdasdasdadasd</td>
+					<td style="width: 15%; text-align: center;"><%=report.report_date%></td>
+					<td style="width: 10%; text-align: center;"><%=report.working_time%></td>
+					<td style="width: 15%; text-align: center;"><%=report.report_execute.names %> <%=report.report_execute.last_names%></td>
+					<td style="width: 60%"><%=report.work_description%></td>
 				</tr>
-
-				<tr>
-					<td>adasd</td>
-					<td>12</td>
-					<td>salazar-moncada-estiven@hotmail.com</td>
-					<td>asdasdasdasdasdasdasdadasd</td>
-				</tr>
-
-				<tr>
-					<td>adasd</td>
-					<td>12</td>
-					<td>salazar-moncada-estiven@hotmail.com</td>
-					<td>asdasdasdasdasdasdasdadasd</td>
-				</tr>
-
-				<tr>
-					<td>adasd</td>
-					<td>12</td>
-					<td>salazar-moncada-estiven@hotmail.com</td>
-					<td>asdasdasdasdasdasdasdadasd</td>
-				</tr>
+				<%end%>
+		
 			</tbody>
 		</table>
 			<br><br>

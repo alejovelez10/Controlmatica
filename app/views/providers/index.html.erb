@@ -3,7 +3,7 @@
   <div class="container-fluid no-padding">
 
     <div class="col-md-8 no-paddong-left">
-          <h1>Proveedores Creados</h1>
+          <h1>Proveedores</h1>
           <span class="count"><%= @providers.count %></span>
           <p id="count-pages"><%= page_providers_info @providers %></p>
     </div>
@@ -24,7 +24,7 @@
           <th>Nit</th>
           <th>Web</th>
           <th>Email</th>
-          <th>User</th>
+
           <th class="title">Acciones</th>
         </tr>
      </thead>
@@ -38,7 +38,7 @@
         <td><%= provider.nit %></td>
         <td><a class="web-page" href="<%= provider.web %>" target="_blank" title="Ir">Ver Pagina Web</a></td>
         <td><%= provider.email %></td>
-        <td><%= provider.user_id %></td>
+     
         <td>
 
             <%= link_to provider, class: "btn-padding" do %>

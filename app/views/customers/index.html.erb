@@ -3,7 +3,7 @@
   <div class="container-fluid no-padding">
 
     <div class="col-md-8 no-paddong-left">
-          <h1>Clientes Creados</h1>
+          <h1>Clientes </h1>
           <span class="count"><%= @customers.count %></span>
           <p id="count-pages"><%= page_customers_info @customers %></p>
     </div>
@@ -24,7 +24,7 @@
         <th>Nit</th>
         <th>Web</th>
         <th>Email</th>
-        <th>User</th>
+       
         <th colspan="3">Acciones</th>
       </tr>
     </thead>
@@ -38,7 +38,6 @@
         <td><%= customer.nit %></td>
         <td><%= customer.web %></td>
         <td><%= customer.email %></td>
-        <td><%= customer.user_id %></td>
         <td>
 
             <%= link_to customer, class: "btn-padding" do %>

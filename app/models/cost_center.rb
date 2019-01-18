@@ -19,4 +19,7 @@
 #
 
 class CostCenter < ApplicationRecord
+	has_many :reports
+	belongs_to :customer, optional: :true
+	belongs_to :contact, optional: :true
 end

@@ -34,11 +34,11 @@
             <label>Email</label>
             <%= form.email_field :email, class: "form-control", :placeholder => "Email" %>
           </div>
-
-          <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
-            <label>Pagina Web</label>
-            <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web" %>
+         <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+            <label>Nit</label>
+              <%= form.text_field :nit, class: "form-control", :placeholder => "Nit"%>
           </div>
+
         </div>
 
         <div class="form-group">
@@ -48,14 +48,15 @@
           </div>
 
           <div class="col-md-4 inputGroupContainer no-paddong-left">
-            <label>Direccion de Residencia</label>
+            <label>Dirección</label>
               <%= form.text_field :address, class: "form-control", :placeholder => "Direccion" %>
           </div>
 
 
-          <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
-            <label>Nit</label>
-              <%= form.text_field :nit, class: "form-control", :placeholder => "Nit"%>
+          
+           <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+            <label>Pagina Web</label>
+            <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web" %>
           </div>
 
         </div>
@@ -98,7 +99,7 @@
 
 
       <%= form.hidden_field :user_id , :value => current_user.id%>
-        <div class="col-md-12 no-paddong-left">
+        <div class="col-md-12 no-paddong-left" style="margin-top: 20px;padding: 10px 0px;border-top: 1px solid #d0cccc">
           <%= form.submit "Guardar", class: "btn btn-dark" %>
           <%= link_to "Volver", :back %>
         </div>

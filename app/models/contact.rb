@@ -17,4 +17,5 @@
 class Contact < ApplicationRecord
 	belongs_to :provider, inverse_of: :contacts, optional: true
 	belongs_to :customer, inverse_of: :contacts, optional: true
+	has_many :cost_centers
 end

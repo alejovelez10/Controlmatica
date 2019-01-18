@@ -12,6 +12,7 @@ class CreateCostCenters < ActiveRecord::Migration[5.2]
       t.string :execution_state
       t.string :invoiced_state
       t.string :service_type
+      t.string :code
 
       t.timestamps
     end

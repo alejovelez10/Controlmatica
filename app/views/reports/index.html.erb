@@ -13,18 +13,19 @@
     </div>
 
   </div>
-
+  <div class="content">
   <div class="table-responsive">
     <table class="table table-striped jambo_table bulk_action">
   <thead>
     <tr>
-      <th>Report date</th>
-      <th>User</th>
-      <th>Working time</th>
-      <th>Work description</th>
-      <th>Viatic value</th>
-      <th>Viatic description</th>
-      <th>Total value</th>
+      <th>Centro de Costos</th>
+      <th>Fecha de Ejecucion</th>
+      <th>Responsable Ejecucion</th>
+      <th>Horas Laboradas</th>
+      <th>Descripcion del Trabajo</th>
+      <th>Valor de los Viaticos</th>
+      <th>Descripcion de Viaticos</th>
+      <th>Valor del Reporte</th>
       <th class="title">Acciones</th>
     </tr>
   </thead>
@@ -32,13 +33,14 @@
     <tbody>
       <% @reports.each do |report| %>
         <tr>
+          <td><%= report.cost_center.quotation_number %></td>
           <td><%= get_date(report.report_date) %></td>
-          <td><%= report.user_id %></td>
+          <td><%= report.report_execute.names %></td>
           <td><%= report.working_time %></td>
           <td><%= report.work_description %></td>
-          <td><%= report.viatic_value %></td>
+          <td><%= number_to_currency(report.viatic_value, precision: 0) %></td>
           <td><%= report.viatic_description %></td>
-          <td><%= report.total_value %></td>
+          <td><%= number_to_currency(report.total_value, precision: 0) %></td>
 
           <td>
 
@@ -46,7 +48,7 @@
               <i class="far fa-eye"></i>
             <% end -%>
 
-            <%= link_to edit_report_path(report), class: "btn-padding", remote: true do %>
+            <%= link_to edit_report_path(report), class: "btn-padding" do %>
               <i class="fas fa-pencil-alt"></i>
             <% end -%>
 
@@ -66,3 +68,25 @@
     </tbody>
   </table>
 </div>
+</div>
+
+
+<style type="text/css">
+.content
+{
+  max-height: 500px; 
+  height: 500px; 
+  max-width: 100%;
+  
+
+}
+.content table
+{
+  width: 1600px;
+    
+}
+.table-responsive
+{
+  height: 500px;
+}
+</style>

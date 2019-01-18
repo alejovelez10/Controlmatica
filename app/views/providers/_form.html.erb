@@ -33,28 +33,30 @@
       <label>Email</label>
       <%= form.email_field :email, class: "form-control required", :placeholder => "Email", :title => "Es un Campo Obligatorio", autocomplete: "email"  %>
     </div>
-
-    <div class="col-md-4 no-paddong-left margin-bottom">
-      <label>Pagina Web</label>
-      <%= form.url_field :web, class: "form-control required", :placeholder => "Direccion de Pagina Web", :title => "Ingrese Una Direccion"   %>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <div class="col-md-4 no-paddong-left">
+       <div class="col-md-4 no-paddong-left">
       <label>Telefono</label>
         <%= form.number_field :phone, class: "form-control", :placeholder => "Telefono" %>
     </div>
 
+  </div>
+
+  <div class="form-group">
+ 
+
     <div class="col-md-4 no-paddong-left">
-      <label>Direccion de Residencia</label>
+      <label>Direccion</label>
         <%= form.text_field :address, class: "form-control", :placeholder => "Direccion" %>
     </div>
 
 
     <div class="col-md-4 no-paddong-left margin-bottom">
       <label>Nit</label>
-        <%= form.text_field :nit, class: "form-control", :placeholder => "Direccion" %>
+        <%= form.text_field :nit, class: "form-control", :placeholder => "NIT" %>
+    </div>
+
+    <div class="col-md-4 no-paddong-left margin-bottom">
+      <label>Web</label>
+      <%= form.text_field :web, class: "form-control required", :placeholder => "Direccion de Pagina Web", :title => "Ingrese Una Direccion"   %>
     </div>
   </div>
 
@@ -93,7 +95,7 @@
 <%= form.link_to_add "Agregar Contacto", :contacts, :class => 'btn btn-dark'  %>
 
 
-
+<hr>
   
         <%= form.hidden_field :user_id ,:value =>  current_user.id %>
 

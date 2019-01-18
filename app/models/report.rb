@@ -18,4 +18,16 @@
 
 class Report < ApplicationRecord
 	has_and_belongs_to_many :customer_reports
+	belongs_to :cost_center
+	before_save :create_total
+	belongs_to :report_execute, :class_name => 'User'
+
+
+	def create_total
+
+		self.working_value = self.working_time * 10000
+		self.total_value = self.viatic_value + (self.working_time * 10000)
+        
+		
+	end
 end

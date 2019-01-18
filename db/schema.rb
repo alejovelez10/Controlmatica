@@ -18,13 +18,13 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
   create_table "contacts", force: :cascade do |t|
     t.string "name"
     t.string "email"
-    t.integer "phone"
+    t.string "phone"
     t.integer "provider_id"
     t.string "position"
     t.integer "user_id"
+    t.integer "customer_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "customer_id"
   end
 
   create_table "cost_centers", force: :cascade do |t|
@@ -63,9 +63,9 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
   create_table "customers", force: :cascade do |t|
     t.string "client"
     t.string "name"
-    t.integer "phone"
+    t.string "phone"
     t.string "address"
-    t.integer "nit"
+    t.string "nit"
     t.string "web"
     t.string "email"
     t.integer "user_id"
@@ -84,9 +84,9 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
 
   create_table "providers", force: :cascade do |t|
     t.string "name"
-    t.integer "phone"
+    t.string "phone"
     t.string "address"
-    t.integer "nit"
+    t.string "nit"
     t.string "web"
     t.string "email"
     t.integer "user_id"
@@ -98,14 +98,16 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
     t.date "report_date"
     t.integer "user_id"
     t.integer "working_time"
+    t.float "working_value"
     t.text "work_description"
-    t.integer "viatic_value"
+    t.float "viatic_value"
     t.text "viatic_description"
-    t.integer "total_value"
+    t.float "total_value"
     t.integer "cost_center_id"
+    t.integer "report_execute_id"
+    t.string "report_code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "report_code"
   end
 
   create_table "rols", force: :cascade do |t|

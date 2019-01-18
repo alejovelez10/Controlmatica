@@ -16,4 +16,22 @@
 
 class CustomerReport < ApplicationRecord
 	has_and_belongs_to_many :reports, dependent: :destroy
+	has_many :cost_centers
+	belongs_to :customer
+	before_create :generate_token
+	after_create :send_approval_email
+
+
+	def generate_token
+
+		 self.token = SecureRandom.hex(15)
+		
+	end
+
+	def send_approval_email
+
+		CustormerReportMailer.approval_email(self).deliver
+
+		
+	end
 end

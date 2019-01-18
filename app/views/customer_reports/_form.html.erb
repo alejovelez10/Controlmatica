@@ -25,12 +25,16 @@
 
         <div class="col-md-4 no-paddong-left">
           <%= form.label "Fecha del Reporte" %>
-          <%= form.text_field :report_date, id: "datepicker", class: "form-control" %>
+          <%= form.date_field :report_date, id: "", class: "form-control" %>
         </div>
 
         <div class="col-md-4">
           <%= form.label "Cliente" %>
-          <%= select_tag 'customer_id', options_for_select(get_customer.collect{ |u| ["#{u.name}", u.id, ] }),{:class => "form-control required", include_blank: true, :title => "Seleccione Un Cliente"  }%>
+           <%= form.select :customer_id,
+                  Customer.all.map { |u| [u.name, u.id] },
+                              { include_blank: "Cliente" },
+                              { class: 'form-control', id: ""  }
+                   %>
         </div>
 
         <div class="col-md-4">
@@ -45,14 +49,16 @@
           <br>
         </div>
 
-        <div class="col-md-4 no-paddong-left">
+        <div class="col-md-12 no-paddong-left">
           <label>Reporte</label>
           <%= form.select :report_ids, get_reports.collect {|c| ["#{c.report_code}", c.id]}, {prompt: false}, {:multiple => true, class: 'form-control chosen-select2'} %>
-        </div>
 
+        </div>
+         
         <div class="col-md-12 no-paddong-left">
-          <%= form.label "Descripcion" %>
-          <%= form.text_area :description, class: "form-control textarea", :rows => 10  %>
+         <br>
+          <%= form.label "Observaciones" %>
+          <%= form.text_area :description, class: "form-control textarea", :rows => 3  %>
           <br>
         </div>
 
