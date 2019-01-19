@@ -484,7 +484,7 @@ DEPENDENCIES
   devise
   figaro
   file_validators
-  fog (~> 1.38)
+  fog
   jbuilder (~> 2.5)
   jquery-rails
   jquery-ui-rails
