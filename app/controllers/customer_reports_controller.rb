@@ -73,6 +73,24 @@ class CustomerReportsController < ApplicationController
     end
   end
 
+  #Metodos Creados
+
+  def aprobar_informe
+
+    @customer_report = CustomerReport.where(token: params[:token]).first
+    @customer_report.update(report_state: "Aprobado")
+    
+  end
+
+
+
+
+
+
+
+
+  
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_customer_report

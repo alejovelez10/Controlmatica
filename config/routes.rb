@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   get 'contacts/destroy'
   devise_for :users, :controllers => { :registrations => "users/registrations" }
   root 'home#dashboard'
-
+  get 'aprobar_informe/:token', to: 'customer_reports#aprobar_informe', as: 'aprobar_informe'
   get "home/dashboard", to: "home#dashboard", as: "user_home"
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
 

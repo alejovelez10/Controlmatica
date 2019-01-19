@@ -34,7 +34,7 @@
       <tr>
         <td><%= get_date(customer_report.report_date) %></td>
         <td><%= customer_report.description %></td>
-        <td><%= customer_report.token %></td>
+        <td><%= customer_report.token %><%= link_to "Aprobar Informe", aprobar_informe_path(customer_report.token), remote: true %></td>
         <td><%= customer_report.report_state %></td>
         <td><%= customer_report.report_code %></td>
         <td><%= customer_report.customer_id %></td>
