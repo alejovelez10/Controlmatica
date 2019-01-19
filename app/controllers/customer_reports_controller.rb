@@ -1,6 +1,6 @@
 class CustomerReportsController < ApplicationController
   before_action :set_customer_report, only: [:show, :edit, :update, :destroy, :pdf_customer_report]
-
+  
   # GET /customer_reports
   # GET /customer_reports.json
   def index
@@ -81,7 +81,13 @@ class CustomerReportsController < ApplicationController
     @customer_report.update(report_state: "Aprobado")
     
   end
+  
 
+  def vista_aprobacion
+      
+      
+
+  end
 
 
 
