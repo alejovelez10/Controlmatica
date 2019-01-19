@@ -11,6 +11,7 @@ class CreateReports < ActiveRecord::Migration[5.2]
       t.float :total_value
       t.integer :cost_center_id
       t.integer :report_execute_id
+      t.integer :report_code
   
 
       t.timestamps
