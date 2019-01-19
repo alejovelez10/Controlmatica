@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   resources :customer_reports
   get 'aprobar_informe/:token', to: 'customer_reports#aprobar_informe', as: 'aprobar_informe'
-  get 'aproacion_cliente', to: 'customer_reports#vista_aprobacion', as: 'vista_aprobacion'
+  get 'aproacion_cliente/:report/:token', to: 'customer_reports#aproacion_cliente', as: 'aproacion_cliente'
 
 
   resources :parameterizations

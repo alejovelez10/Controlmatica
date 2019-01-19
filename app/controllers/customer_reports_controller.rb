@@ -83,8 +83,10 @@ class CustomerReportsController < ApplicationController
   end
   
 
-  def vista_aprobacion
+  def aproacion_cliente
       
+      @customer_report = params[:report]
+      @token = params[:token]
       
 
   end
