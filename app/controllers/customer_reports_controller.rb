@@ -79,6 +79,7 @@ class CustomerReportsController < ApplicationController
 
     @customer_report = CustomerReport.where(token: params[:token]).first
     @customer_report.update(report_state: "Aprobado")
+    redirect_to aproacion_cliente_path(@customer_report.id, @customer_report.token)
     
   end
   
@@ -87,7 +88,7 @@ class CustomerReportsController < ApplicationController
       
       @customer_report = params[:report]
       @token = params[:token]
-      
+      render  :layout => 'application'
 
   end
 

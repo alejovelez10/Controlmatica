@@ -1,1 +1,8 @@
-<a href="https://controlmaticatest.herokuapp.com/aprobar_informe/a355e0ea22bf9dc57ca6f6c06cf210">APROBAR</a>
+
+<% if Rails.env.production? %> 
+<a href="https://controlmaticatest.herokuapp.com/aprobar_informe/<%=@customer_report.token%>">
+APROBAR</a>
+<%else%>
+<a href="http://localhost:3000/aprobar_informe/<%=@customer_report.token%>">
+APROBAR</a>
+<%end%>
