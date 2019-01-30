@@ -30,9 +30,9 @@
 
         <div class="col-md-4">
           <%= form.label "Cliente" %>
-           <%= form.select :customer_id,
+           <%= form.select :cost_center_id,
                   Customer.all.map { |u| [u.name, u.id] },
-                              { include_blank: "Cliente" },
+                              { include_blank: "Centro de Costos" },
                               { class: 'form-control', id: ""  }
                    %>
         </div>
@@ -48,6 +48,8 @@
           <%= form.text_field :report_state, class: "form-control" %>
           <br>
         </div>
+
+    
 
         <div class="col-md-12 no-paddong-left">
           <label>Reporte</label>

@@ -23,7 +23,7 @@
             </ul>
           </div>
         <% end %>
-
+       <div class="row">
         <div class="form-group">
           <div class="col-md-4 inputGroupContainer no-paddong-left">
             <label>Nombre</label>
@@ -59,8 +59,15 @@
             <%= form.text_field :web, class: "form-control", :placeholder => "Direccion de Pagina Web" %>
           </div>
 
-        </div>
+            <div class="col-md-4 inputGroupContainer no-paddong-left margin-bottom">
+            <label>Prefijo</label>
+            <%= form.text_field :code, class: "form-control", :placeholder => "Prefijo" %>
+          </div>
 
+        </div>
+        </div>
+        <hr>
+ <div class="row">
         <%= form.fields_for :contacts do |contact|  %>
           <div class="clearfix">
             <div class="col-md-12 col-sm-12 col-xs-12 no-paddong-left in-line" > 
@@ -94,7 +101,7 @@
         <% end %>
 
         <%= form.link_to_add "Agregar Contacto", :contacts, :class => 'btn btn-dark'  %>
-
+ </div>
 
 
 

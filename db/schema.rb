@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_12_154609) do
+ActiveRecord::Schema.define(version: 2019_01_29_211611) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -41,6 +41,8 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
     t.string "service_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "count"
+    t.string "code"
   end
 
   create_table "customer_reports", force: :cascade do |t|
@@ -53,6 +55,7 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id"
+    t.integer "cost_center_id"
   end
 
   create_table "customer_reports_reports", id: false, force: :cascade do |t|
@@ -71,6 +74,7 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
   end
 
   create_table "parameterizations", force: :cascade do |t|
@@ -113,6 +117,17 @@ ActiveRecord::Schema.define(version: 2019_01_12_154609) do
   create_table "rols", force: :cascade do |t|
     t.string "name"
     t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "sales_orders", force: :cascade do |t|
+    t.date "created_date"
+    t.string "order_number"
+    t.float "order_value"
+    t.string "state"
+    t.string "order_file"
+    t.integer "cost_center_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

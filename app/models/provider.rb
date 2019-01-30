@@ -4,9 +4,9 @@
 #
 #  id         :bigint(8)        not null, primary key
 #  name       :string
-#  phone      :integer
+#  phone      :string
 #  address    :string
-#  nit        :integer
+#  nit        :string
 #  web        :string
 #  email      :string
 #  user_id    :integer

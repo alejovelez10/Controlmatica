@@ -5,13 +5,13 @@
 #  id          :bigint(8)        not null, primary key
 #  name        :string
 #  email       :string
-#  phone       :integer
+#  phone       :string
 #  provider_id :integer
 #  position    :string
 #  user_id     :integer
+#  customer_id :integer
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
-#  customer_id :integer
 #
 
 class Contact < ApplicationRecord

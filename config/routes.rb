@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :sales_orders
   resources :customer_reports
   get 'aprobar_informe/:token', to: 'customer_reports#aprobar_informe', as: 'aprobar_informe'
   get 'aproacion_cliente/:report/:token', to: 'customer_reports#aproacion_cliente', as: 'aproacion_cliente'

@@ -6,14 +6,16 @@
 #  report_date        :date
 #  user_id            :integer
 #  working_time       :integer
+#  working_value      :float
 #  work_description   :text
-#  viatic_value       :integer
+#  viatic_value       :float
 #  viatic_description :text
-#  total_value        :integer
+#  total_value        :float
 #  cost_center_id     :integer
+#  report_execute_id  :integer
+#  report_code        :string
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
-#  report_code        :string
 #
 
 class Report < ApplicationRecord

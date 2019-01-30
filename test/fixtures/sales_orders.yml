@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  created_date: 2019-01-29
+  order_number: MyString
+  order_value: 1.5
+  state: MyString
+  order_file: MyString
+  cost_center_id: 1
+
+two:
+  created_date: 2019-01-29
+  order_number: MyString
+  order_value: 1.5
+  state: MyString
+  order_file: MyString
+  cost_center_id: 1

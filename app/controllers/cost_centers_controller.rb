@@ -10,6 +10,7 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1
   # GET /cost_centers/1.json
   def show
+    @sales_order = SalesOrder.new
   end
 
   # GET /cost_centers/new
@@ -25,7 +26,7 @@ class CostCentersController < ApplicationController
   # POST /cost_centers.json
   def create
     @cost_center = CostCenter.new(cost_center_params)
-
+   
     respond_to do |format|
       if @cost_center.save
         format.html { redirect_to @cost_center, notice: 'Cost center was successfully created.' }
@@ -69,6 +70,6 @@ class CostCentersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def cost_center_params
-      params.require(:cost_center).permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code)
+      params.require(:cost_center).permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count)
     end
 end

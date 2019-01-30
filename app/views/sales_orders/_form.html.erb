@@ -1,0 +1,100 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Ingresar Orden de Compra</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <%= form_with(model: sales_order, local: true) do |form| %>
+  <% if @sales_order.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(sales_order.errors.count, "error") %> prohibited this sales_order from being saved:</h2>
+
+      <ul>
+      <% sales_order.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+<div class="row">
+  <div class="col-md-6">
+    
+    <div class="form-group">
+    <%= form.label "Fecha de Generación" %>
+    <%= form.date_field :created_date, class: "form form-control" %>
+  </div>
+
+    
+  </div>
+
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Numero de Orden" %>
+    <%= form.text_field :order_number, class: "form form-control" %>
+  </div>
+
+    
+  </div>
+
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Valor" %>
+    <%= form.text_field :order_value, class: "form form-control" %>
+  </div>
+    
+  </div>
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Estado" %>
+    <%= form.text_field :state, class: "form form-control" %>
+  </div>
+
+
+    
+  </div>
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Adjunto" %>
+    <%= form.file_field :order_file, class: "form form-control" %>
+  </div>
+    
+  </div>
+
+  <div class="col-md-6">
+    
+  
+
+  <div class="form-group">
+    <%= form.label "Centro de Costos" %>
+   <%= form.select :cost_center_id,
+                  CostCenter.all.map { |u| [u.code, u.id] },
+                              { include_blank: "Centro de Costos" },
+                              { class: 'form-control', id: ""  }
+     %>
+  </div>
+    
+  </div>
+
+
+
+</div>
+      
+      <div class="modal-footer">
+       <%= form.submit "Guardar" , class: "btn btn-primary" %>
+    
+      </div>
+     <% end %> 
+    </div>
+    </div>
+  </div>
+</div>
+</div>

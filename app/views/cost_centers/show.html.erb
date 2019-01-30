@@ -1,46 +1,232 @@
+
+    <% ing_cotizado = @cost_center.engineering_value
+          ing_real = @cost_center.reports.sum(:working_value)
+          via_cotizado = @cost_center.viatic_value
+          via_real = @cost_center.reports.sum(:viatic_value)
+        %>
 <p id="notice"><%= notice %></p>
 
-<p>
-  <strong>Customer:</strong>
-  <%= @cost_center.customer_id %>
-</p>
+<div class="text-left">
+   <%= link_to 'Editar', edit_cost_center_path(@cost_center) %> |
+   <%= link_to 'Regresar', cost_centers_path %>
 
-<p>
-  <strong>Contact:</strong>
-  <%= @cost_center.contact_id %>
-</p>
+</div>
+<div style="background: white;padding: 10px;">
 
-<p>
-  <strong>Description:</strong>
-  <%= @cost_center.description %>
-</p>
+<div class="row titulos">
+  <div class="col-md-3"><strong> Tipo:</strong> <%= @cost_center.service_type %></div>
+  <div class="col-md-3"><strong>Codigo:</strong> <%= @cost_center.code %></div>
+  <div class="col-md-3"><strong>Cliente:</strong> <%= @cost_center.customer.name %></div>
+  <div class="col-md-3"><strong>Contacto:</strong> <%= @cost_center.contact.name %></div>
+  <div class="col-md-3"><strong>Fecha de Inicio:</strong> <%= get_date(@cost_center.start_date) %></div>
+  <div class="col-md-3"><strong>Fecha Final:</strong> <%= get_date(@cost_center.end_date) %></div>
+  <div class="col-md-3"><strong>Numero de Cotizacion:</strong> <%= @cost_center.quotation_number %></div>
+ </div>
+ <hr>
+  <div class="row titulos"> 
+  <div class="col-md-6"><strong>Descripción: </strong><%= @cost_center.description %></div>
+</div>
+<hr>
 
-<p>
-  <strong>Start date:</strong>
-  <%= @cost_center.start_date %>
-</p>
+ <div class="row valores">
+     
+  <div class="col-md-6">
+     <div class="col-md-12 title1">
+        <strong>Ingenieria</strong><br>
+    </div>
 
-<p>
-  <strong>End date:</strong>
-  <%= @cost_center.end_date %>
-</p>
 
-<p>
-  <strong>Quotation number:</strong>
-  <%= @cost_center.quotation_number %>
-</p>
 
-<p>
-  <strong>Engineering value:</strong>
-  <%= @cost_center.engineering_value %>
-</p>
+    <div class="col-md-12">
+       <div class="col-md-6 "><strong>Cotizado</strong><br>
+          <span> <%= number_to_currency(ing_cotizado , precision: 0) %></span>
+       </div>
+      <div class="col-md-6">   <strong>Ejecutado</strong><br> 
+         <span style="color:<%=color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
+      </div>
+    </div>
 
-<p>
-  <strong>Viatic value:</strong>
-  <%= @cost_center.viatic_value %>
-</p>
+  </div> 
 
-<p>
+  <div class="col-md-6">
+     <div class="col-md-12 title1" >
+        <strong>Viaticos</strong><br>
+    </div>
+
+
+
+    <div class="col-md-12">
+       <div class="col-md-6 " ><strong>Cotizado</strong><br>
+          <span> <%= number_to_currency(via_cotizado , precision: 0) %></span>
+       </div>
+      <div class="col-md-6">   <strong>Ejecutado</strong><br> 
+         <span style="color:<%=color_value(via_cotizado, via_real)%>"> <%= number_to_currency(via_real, precision: 0) %></span>
+      </div>
+    </div>
+
+  </div> 
+
+
+
+</div> 
+<hr>
+<div class="row">
+  
+  <!-- Button trigger modal -->
+  <div class="row">
+
+<div class="col-md-9"><h3>Ordenes de Compra</h3></div>
+<div class="col-md-3"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+  Ingresar Orden de Compra
+</button></div>
+
+</div>
+<hr>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Ingresar Orden de Compra</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <%= form_with(model: @sales_order, local: true) do |form| %>
+  <% if @sales_order.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@sales_order.errors.count, "error") %> prohibited this sales_order from being saved:</h2>
+
+      <ul>
+      <% @sales_order.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+<div class="row">
+  <div class="col-md-6">
+    
+    <div class="form-group">
+    <%= form.label "Fecha de Generación" %>
+    <%= form.date_field :created_date, class: "form form-control" %>
+  </div>
+
+    
+  </div>
+
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Numero de Orden" %>
+    <%= form.text_field :order_number, class: "form form-control" %>
+  </div>
+
+    
+  </div>
+
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Valor" %>
+    <%= form.text_field :order_value, class: "form form-control" %>
+  </div>
+    
+  </div>
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Estado" %>
+    <%= form.text_field :state, class: "form form-control" %>
+  </div>
+
+
+    
+  </div>
+  <div class="col-md-6">
+    
+  <div class="form-group">
+    <%= form.label "Adjunto" %>
+    <%= form.file_field :order_file, class: "form form-control" %>
+  </div>
+    
+  </div>
+
+  <div class="col-md-6">
+    
+  
+
+  <div class="form-group">
+    <%= form.label "Centro de Costos" %>
+   <%= form.select :cost_center_id,
+                  CostCenter.all.map { |u| [u.code, u.id] },
+                              { include_blank: "Centro de Costos" },
+                              { class: 'form-control', id: ""  }
+     %>
+  </div>
+    
+  </div>
+
+
+
+</div>
+      
+      <div class="modal-footer">
+       <%= form.submit "Guardar" , class: "btn btn-primary" %>
+
+      </div>
+     <% end %> 
+    </div>
+    </div>
+  </div>
+</div>
+</div>
+ 
+
+
+  
+  <% @cost_center.sales_orders.each do |sales_order| %>
+     <div class="row order">
+      <div class="col-md-3"><strong> Fecha de Generacion:</strong> <%= sales_order.created_date %></div>
+      <div class="col-md-3"><strong>Numero:</strong> <%= sales_order.order_number %></div>
+      <div class="col-md-3"><strong>Valor:</strong> <%= sales_order.order_value %></div>
+      <div class="col-md-3"><strong>Estado:</strong> <%= sales_order.state %></div>
+      <div class="col-md-12"><hr> </div>
+      <div class="col-md-3"><strong>Adjunto:</strong> <%= sales_order.order_file %></div>
+      <div class="col-md-3"></div>
+      <div class="col-md-3"></div>
+     <div class="col-md-3">
+            <%= link_to sales_order, class: "btn-padding" do %>
+              <i class="far fa-eye"></i>
+            <% end -%>
+
+            <%= link_to edit_sales_order_path(sales_order), remote:true , class: "btn-padding" do %>
+              <i class="fas fa-pencil-alt"></i>
+            <% end -%>
+
+            <%= link_to sales_order, method: :delete, data: {
+              confirm: '¿Estas Seguro?',
+              'confirm-button-text': 'Borrar',
+              'cancel-button-text': 'Cancelar',
+              'confirm-button-color': '#CC0000',
+               text: 'Recuerda que el registro se borrara permanentemente',
+              'image-url': ''}, class: "btn-delete" do%>
+              <span class="glyphicon glyphicon-trash"></span>
+            <% end -%></div>
+    </div>
+    <hr>
+  <% end %>
+
+
+ 
+ 
+
+
+
+
+<!--
   <strong>Execution state:</strong>
   <%= @cost_center.execution_state %>
 </p>
@@ -48,12 +234,30 @@
 <p>
   <strong>Invoiced state:</strong>
   <%= @cost_center.invoiced_state %>
-</p>
+</p>-->
 
-<p>
-  <strong>Service type:</strong>
-  <%= @cost_center.service_type %>
-</p>
 
-<%= link_to 'Edit', edit_cost_center_path(@cost_center) %> |
-<%= link_to 'Back', cost_centers_path %>
+
+<style >
+  .order
+  {
+    background: whitesmoke;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .titulos .col-md-3
+  {
+    padding: 10px;
+  }
+  .valores
+  {
+    padding: 10px;
+    text-align: center;
+    font-size: 18px;
+  }
+  .title1
+  {
+    background: #2a3f54;
+    color: white;
+  }
+</style>
