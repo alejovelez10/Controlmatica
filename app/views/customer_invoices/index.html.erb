@@ -1,0 +1,43 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Customer Invoices</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Cost center</th>
+      <th>Sales order</th>
+      <th>Invoice value</th>
+      <th>Invoice date</th>
+      <th>Delivery certificate file</th>
+      <th>Delivery certificate state</th>
+      <th>Reception report file</th>
+      <th>Reception report state</th>
+      <th>Invoice state</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @customer_invoices.each do |customer_invoice| %>
+      <tr>
+        <td><%= customer_invoice.cost_center_id %></td>
+        <td><%= customer_invoice.sales_order_id %></td>
+        <td><%= customer_invoice.invoice_value %></td>
+        <td><%= customer_invoice.invoice_date %></td>
+        <td><%= customer_invoice.delivery_certificate_file %></td>
+        <td><%= customer_invoice.delivery_certificate_state %></td>
+        <td><%= customer_invoice.reception_report_file %></td>
+        <td><%= customer_invoice.reception_report_state %></td>
+        <td><%= customer_invoice.invoice_state %></td>
+        <td><%= link_to 'Show', customer_invoice %></td>
+        <td><%= link_to 'Edit', edit_customer_invoice_path(customer_invoice) %></td>
+        <td><%= link_to 'Destroy', customer_invoice, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Customer Invoice', new_customer_invoice_path %>

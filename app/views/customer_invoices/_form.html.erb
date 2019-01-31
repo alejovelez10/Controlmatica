@@ -1,0 +1,62 @@
+<%= form_with(model: customer_invoice, local: true) do |form| %>
+  <% if customer_invoice.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(customer_invoice.errors.count, "error") %> prohibited this customer_invoice from being saved:</h2>
+
+      <ul>
+      <% customer_invoice.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :cost_center_id %>
+    <%= form.number_field :cost_center_id %>
+  </div>
+
+  <div class="field">
+    <%= form.label :sales_order_id %>
+    <%= form.number_field :sales_order_id %>
+  </div>
+
+  <div class="field">
+    <%= form.label :invoice_value %>
+    <%= form.text_field :invoice_value %>
+  </div>
+
+  <div class="field">
+    <%= form.label :invoice_date %>
+    <%= form.date_select :invoice_date %>
+  </div>
+
+  <div class="field">
+    <%= form.label :delivery_certificate_file %>
+    <%= form.text_field :delivery_certificate_file %>
+  </div>
+
+  <div class="field">
+    <%= form.label :delivery_certificate_state %>
+    <%= form.text_field :delivery_certificate_state %>
+  </div>
+
+  <div class="field">
+    <%= form.label :reception_report_file %>
+    <%= form.text_field :reception_report_file %>
+  </div>
+
+  <div class="field">
+    <%= form.label :reception_report_state %>
+    <%= form.text_field :reception_report_state %>
+  </div>
+
+  <div class="field">
+    <%= form.label :invoice_state %>
+    <%= form.text_field :invoice_state %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

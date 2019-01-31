@@ -1,0 +1,49 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Cost center:</strong>
+  <%= @customer_invoice.cost_center_id %>
+</p>
+
+<p>
+  <strong>Sales order:</strong>
+  <%= @customer_invoice.sales_order_id %>
+</p>
+
+<p>
+  <strong>Invoice value:</strong>
+  <%= @customer_invoice.invoice_value %>
+</p>
+
+<p>
+  <strong>Invoice date:</strong>
+  <%= @customer_invoice.invoice_date %>
+</p>
+
+<p>
+  <strong>Delivery certificate file:</strong>
+  <%= @customer_invoice.delivery_certificate_file %>
+</p>
+
+<p>
+  <strong>Delivery certificate state:</strong>
+  <%= @customer_invoice.delivery_certificate_state %>
+</p>
+
+<p>
+  <strong>Reception report file:</strong>
+  <%= @customer_invoice.reception_report_file %>
+</p>
+
+<p>
+  <strong>Reception report state:</strong>
+  <%= @customer_invoice.reception_report_state %>
+</p>
+
+<p>
+  <strong>Invoice state:</strong>
+  <%= @customer_invoice.invoice_state %>
+</p>
+
+<%= link_to 'Edit', edit_customer_invoice_path(@customer_invoice) %> |
+<%= link_to 'Back', customer_invoices_path %>

@@ -1,0 +1,23 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  cost_center_id: 1
+  sales_order_id: 1
+  invoice_value: 1.5
+  invoice_date: 2019-01-30
+  delivery_certificate_file: MyString
+  delivery_certificate_state: MyString
+  reception_report_file: MyString
+  reception_report_state: MyString
+  invoice_state: MyString
+
+two:
+  cost_center_id: 1
+  sales_order_id: 1
+  invoice_value: 1.5
+  invoice_date: 2019-01-30
+  delivery_certificate_file: MyString
+  delivery_certificate_state: MyString
+  reception_report_file: MyString
+  reception_report_state: MyString
+  invoice_state: MyString
