@@ -39,10 +39,10 @@ ActiveRecord::Schema.define(version: 2019_01_30_225917) do
     t.string "execution_state"
     t.string "invoiced_state"
     t.string "service_type"
+    t.string "code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "count"
-    t.string "code"
   end
 
   create_table "customer_invoices", force: :cascade do |t|
@@ -123,7 +123,7 @@ ActiveRecord::Schema.define(version: 2019_01_30_225917) do
     t.float "total_value"
     t.integer "cost_center_id"
     t.integer "report_execute_id"
-    t.string "report_code"
+    t.integer "report_code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
