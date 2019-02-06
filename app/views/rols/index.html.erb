@@ -14,38 +14,51 @@
 
   </div>
 
-  <div class="table-responsive">
+  
     <table class="table table-striped jambo_table bulk_action">
       <thead>
         <tr class="headings">
+          <th class="text-center" style="width: 10px;">Acciones</th>
           <th class="column-title">Nombre </th>
           <th class="column-title">Description </th>
-          <th class="column-title title">Acciones </th>
         </tr>
       </thead>
 
       <tbody>
         <% @rols.each do |rol| %>
           <tr class="even pointer">
+          <td style="text-align: center;">
+
+          <div class="dropdown">
+            <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-align-left"></i>
+            </button>
+            <div class="dropdown-menu">
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to edit_rol_path(rol), class: "dropdown-item" do %>
+                  <i class="fas fa-pencil-alt"></i> Editar Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to rol, method: :delete, data: {
+                  confirm: '¿Estas Seguro?',
+                  'confirm-button-text': 'Borrar',
+                  'cancel-button-text': 'Cancelar',
+                  'confirm-button-color': '#CC0000',
+                   text: 'Recuerda que el registro se borrara permanentemente',
+                  'image-url': ''}, class: "dropdown-item" do %>
+                  <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                <% end -%>
+              </div>
+
+            </div>
+          </div>
+
+        </td>
             <td class=" "><%= rol.name %></td>
             <td class=" "><%= rol.description %></td>
-            <td class="text-center">
-
-              <%= link_to edit_rol_path(rol), class: "btn-padding", remote: true do %>
-                <i class="fas fa-pencil-alt"></i>
-              <% end -%>
-
-            <%= link_to rol, method: :delete, data: {
-              confirm: '¿Estas Seguro?',
-              'confirm-button-text': 'Borrar',
-              'cancel-button-text': 'Cancelar',
-              'confirm-button-color': '#CC0000',
-               text: 'Recuerda que el registro se borrara permanentemente',
-              'image-url': ''}, class: "btn-delete" do%>
-              <span class="glyphicon glyphicon-trash"></span>
-            <% end -%>
-
-            </td>
           </tr>
         <% end -%>
 

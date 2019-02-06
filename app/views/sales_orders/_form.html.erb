@@ -78,7 +78,7 @@
    <%= form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code, u.id] },
                               { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: ""  }
+                              { class: 'form-control', id: "", :required => true }
      %>
   </div>
     
@@ -86,12 +86,14 @@
 
 
 
+
 </div>
       
       <div class="modal-footer">
-       <%= form.submit "Guardar" , class: "btn btn-primary" %>
-    
+        <%= form.submit "Guardar" , class: "btn btn-dark" %>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button> 
       </div>
+      
      <% end %> 
     </div>
     </div>

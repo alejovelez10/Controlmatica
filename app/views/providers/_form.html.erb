@@ -24,6 +24,7 @@
   <% end %>
 
   <div class="form-group">
+
     <div class="col-md-4 no-paddong-left">
       <label>Nombre</label>
       <%= form.text_field :name, class: "form-control required", :placeholder => "Nombre", :title => "Es un Campo Obligatorio"  %>
@@ -33,9 +34,11 @@
       <label>Email</label>
       <%= form.email_field :email, class: "form-control required", :placeholder => "Email", :title => "Es un Campo Obligatorio", autocomplete: "email"  %>
     </div>
-       <div class="col-md-4 no-paddong-left">
+
+    <div class="col-md-4 no-paddong-left">
       <label>Telefono</label>
         <%= form.number_field :phone, class: "form-control", :placeholder => "Telefono" %>
+        <br>
     </div>
 
   </div>
