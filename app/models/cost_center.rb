@@ -14,6 +14,7 @@
 #  execution_state   :string
 #  invoiced_state    :string
 #  service_type      :string
+#  code              :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  count             :integer
@@ -23,6 +24,8 @@ class CostCenter < ApplicationRecord
 	has_many :reports  , dependent: :destroy
 	has_many :customer_reports , dependent: :destroy
 	has_many :sales_orders, dependent: :destroy
+	has_many :customer_invoice, dependent: :destroy
+	
 	belongs_to :customer, optional: :true
 	belongs_to :contact, optional: :true
 	before_save :create_code

@@ -68,6 +68,10 @@ class SalesOrdersController < ApplicationController
       @sales_order = SalesOrder.find(params[:id])
     end
 
+    def set_cost_center
+      @cost_center = CostCenter.find(params[:cost_center])
+    end
+
     # Never trust parameters from the scary internet, only allow the white list through.
     def sales_order_params
       params.require(:sales_order).permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id)

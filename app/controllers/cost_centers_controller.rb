@@ -1,5 +1,6 @@
 class CostCentersController < ApplicationController
   before_action :set_cost_center, only: [:show, :edit, :update, :destroy]
+  before_action :set_sales_order, only: [:show]
 
   # GET /cost_centers
   # GET /cost_centers.json
@@ -10,7 +11,7 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1
   # GET /cost_centers/1.json
   def show
-    @sales_order = SalesOrder.new
+    @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id).where(sales_order_id: 2)
   end
 
   # GET /cost_centers/new
@@ -66,6 +67,10 @@ class CostCentersController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_cost_center
       @cost_center = CostCenter.find(params[:id])
+    end
+
+    def set_sales_order
+       @sales_order = SalesOrder.find(params[:id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

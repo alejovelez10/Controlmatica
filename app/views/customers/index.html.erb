@@ -1,5 +1,4 @@
 <div class="x_content">
-
   <div class="container-fluid no-padding">
 
     <div class="col-md-8 no-paddong-left">
@@ -14,51 +13,65 @@
 
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped jambo_table bulk_action">
-      <thead>
+  <table class="table table-striped jambo_table bulk_action">
+    <thead>
         <tr class="headings">
+        <th class="text-center">Acciones</th>
         <th>Nombre</th>
         <th>telefono</th>
         <th>Direccion</th>
         <th>Nit</th>
         <th>Web</th>
         <th>Email</th>
-       
-        <th colspan="3">Acciones</th>
       </tr>
     </thead>
 
   <tbody>
     <% @customers.each do |customer| %>
       <tr class="even pointer">
+              <tr>
+        <td style="text-align: center;">
+
+          <div class="dropdown">
+            <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-align-left"></i>
+            </button>
+            <div class="dropdown-menu">
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to customer, class: "dropdown-item" do %>
+                  <i class="far fa-eye"></i> Ver Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to edit_customer_path(customer), class: "dropdown-item" do %>
+                  <i class="fas fa-pencil-alt"></i> Editar Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to customer, method: :delete, data: {
+                  confirm: '¿Estas Seguro?',
+                  'confirm-button-text': 'Borrar',
+                  'cancel-button-text': 'Cancelar',
+                  'confirm-button-color': '#CC0000',
+                   text: 'Recuerda que el registro se borrara permanentemente',
+                  'image-url': ''}, class: "dropdown-item" do %>
+                  <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                <% end -%>
+              </div>
+
+            </div>
+          </div>
+
+        </td>
         <td><%= customer.name %></td>
         <td><%= customer.phone %></td>
         <td><%= customer.address %></td>
         <td><%= customer.nit %></td>
         <td><%= customer.web %></td>
         <td><%= customer.email %></td>
-        <td>
-
-            <%= link_to customer, class: "btn-padding" do %>
-              <i class="far fa-eye"></i>
-            <% end -%>
-
-            <%= link_to edit_customer_path(customer), class: "btn-padding" do %>
-              <i class="fas fa-pencil-alt"></i>
-            <% end -%>
-
-            <%= link_to customer, method: :delete, data: {
-              confirm: '¿Estas Seguro?',
-              'confirm-button-text': 'Borrar',
-              'cancel-button-text': 'Cancelar',
-              'confirm-button-color': '#CC0000',
-               text: 'Recuerda que el registro se borrara permanentemente',
-              'image-url': ''}, class: "btn-delete" do%>
-              <span class="glyphicon glyphicon-trash"></span>
-            <% end -%>
-            
-        </td>
       </tr>
     <% end %>
   </tbody>

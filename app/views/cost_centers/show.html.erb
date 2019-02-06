@@ -4,29 +4,52 @@
           via_cotizado = @cost_center.viatic_value
           via_real = @cost_center.reports.sum(:viatic_value)
         %>
-<p id="notice"><%= notice %></p>
-
-<div class="text-left">
-   <%= link_to 'Editar', edit_cost_center_path(@cost_center) %> |
-   <%= link_to 'Regresar', cost_centers_path %>
-
-</div>
 <div style="background: white;padding: 10px;">
+  <div class="row titulos">
 
-<div class="row titulos">
-  <div class="col-md-3"><strong> Tipo:</strong> <%= @cost_center.service_type %></div>
-  <div class="col-md-3"><strong>Codigo:</strong> <%= @cost_center.code %></div>
-  <div class="col-md-3"><strong>Cliente:</strong> <%= @cost_center.customer.name %></div>
-  <div class="col-md-3"><strong>Contacto:</strong> <%= @cost_center.contact.name %></div>
-  <div class="col-md-3"><strong>Fecha de Inicio:</strong> <%= get_date(@cost_center.start_date) %></div>
-  <div class="col-md-3"><strong>Fecha Final:</strong> <%= get_date(@cost_center.end_date) %></div>
-  <div class="col-md-3"><strong>Numero de Cotizacion:</strong> <%= @cost_center.quotation_number %></div>
+    <div class="col-md-3">
+      <strong> Tipo:</strong> 
+      <%= @cost_center.service_type %>
+    </div>
+
+    <div class="col-md-3"><strong>Codigo:</strong> 
+      <%= @cost_center.code %>
+    </div>
+
+    <div class="col-md-3">
+      <strong>Cliente:</strong>
+       <%= @cost_center.customer.name %>
+     </div>
+
+    <div class="col-md-3">
+      <strong>Contacto:</strong>
+       <%= @cost_center.contact.name %>
+     </div>
+
+    <div class="col-md-3">
+      <strong>Fecha de Inicio:</strong> 
+      <%= get_date(@cost_center.start_date) %>
+    </div>
+
+    <div class="col-md-3">
+      <strong>Fecha Final:</strong> 
+      <%= get_date(@cost_center.end_date) %>
+    </div>
+
+    <div class="col-md-3">
+      <strong>Numero de Cotizacion:</strong> 
+      <%= @cost_center.quotation_number %>
+    </div>
+
  </div>
- <hr>
+
+  <hr>
+
   <div class="row titulos"> 
-  <div class="col-md-6"><strong>Descripción: </strong><%= @cost_center.description %></div>
-</div>
-<hr>
+    <div class="col-md-6"><strong>Descripción: </strong><%= @cost_center.description %></div>
+  </div>
+
+  <hr>
 
  <div class="row valores">
      
@@ -65,167 +88,254 @@
     </div>
 
   </div> 
-
-
-
 </div> 
 <hr>
+
 <div class="row">
-  
-  <!-- Button trigger modal -->
   <div class="row">
 
-<div class="col-md-9"><h3>Ordenes de Compra</h3></div>
-<div class="col-md-3"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-  Ingresar Orden de Compra
-</button></div>
-
-</div>
-<hr>
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Ingresar Orden de Compra</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <%= form_with(model: @sales_order, local: true) do |form| %>
-  <% if @sales_order.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(@sales_order.errors.count, "error") %> prohibited this sales_order from being saved:</h2>
-
-      <ul>
-      <% @sales_order.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-      </ul>
+    <div class="col-md-7 margin-left">
+      <h3>Ordenes de Compra</h3>
     </div>
-  <% end %>
 
-<div class="row">
-  <div class="col-md-6">
-    
-    <div class="form-group">
-    <%= form.label "Fecha de Generación" %>
-    <%= form.date_field :created_date, class: "form form-control" %>
-  </div>
+    <div class="col-md-3 float">
+       <%= link_to "Ingresar Orden de Compra", new_sales_order_path, remote: true, class: "btn btn-dark" %>
+    </div>
 
-    
-  </div>
-
-  <div class="col-md-6">
-    
-  <div class="form-group">
-    <%= form.label "Numero de Orden" %>
-    <%= form.text_field :order_number, class: "form form-control" %>
-  </div>
-
-    
-  </div>
-
-  <div class="col-md-6">
-    
-  <div class="form-group">
-    <%= form.label "Valor" %>
-    <%= form.text_field :order_value, class: "form form-control" %>
-  </div>
-    
-  </div>
-  <div class="col-md-6">
-    
-  <div class="form-group">
-    <%= form.label "Estado" %>
-    <%= form.text_field :state, class: "form form-control" %>
   </div>
 
 
-    
-  </div>
-  <div class="col-md-6">
-    
-  <div class="form-group">
-    <%= form.label "Adjunto" %>
-    <%= form.file_field :order_file, class: "form form-control" %>
-  </div>
-    
-  </div>
-
-  <div class="col-md-6">
-    
   
+<% @cost_center.sales_orders.each do |sales_order| %>
+  <div class="row order">
 
-  <div class="form-group">
-    <%= form.label "Centro de Costos" %>
-   <%= form.select :cost_center_id,
-                  CostCenter.all.map { |u| [u.code, u.id] },
-                              { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: ""  }
-     %>
+      <div class="col-md-3">
+        <strong> Fecha de Generacion:</strong> 
+        <p><%= get_date(sales_order.created_date) %></p>
+      </div>
+
+      <div class="col-md-3">
+        <strong>Numero:</strong> 
+        <p><%= sales_order.order_number %></p>
+      </div>
+
+      <div class="col-md-3">
+        <strong>Valor:</strong> 
+        <p><%= sales_order.order_value %></p>
+      </div>
+
+      <div class="col-md-1">
+
+        <% if sales_order.order_file.present? %>
+          <label>Archivo</label><br>
+            <%= link_to sales_order.order_file.url(), class: "btn btn-dark", target:"_blank" do %>
+              <i class="fas fa-download"></i>
+            <% end -%>
+        <% end -%>
+
+      </div>
+
+
+      <div class="float">
+        <div class="dropdown">
+
+              <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+                <i class="fas fa-bars"></i>
+              </button>
+              <div class="dropdown-menu">
+
+                <div class="col-md-12 no-padding-left">  
+                  <%= link_to sales_order, class: "dropdown-item" do %>
+                    <i class="far fa-eye"></i> Ver Registro
+                  <% end -%>
+                </div>
+
+                <div class="col-md-12 no-padding-left">  
+                  <%= link_to edit_sales_order_path(sales_order), class: "dropdown-item", remote: true do %>
+                    <i class="fas fa-pencil-alt"></i> Editar Registro
+                  <% end -%>
+                </div>
+
+                <div class="col-md-12 no-padding-left">  
+                  <%= link_to sales_order, method: :delete, data: {
+                    confirm: '¿Estas Seguro?',
+                    'confirm-button-text': 'Borrar',
+                    'cancel-button-text': 'Cancelar',
+                    'confirm-button-color': '#CC0000',
+                     text: 'Recuerda que el registro se borrara permanentemente',
+                    'image-url': ''}, class: "dropdown-item" do %>
+                    <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                  <% end -%>
+                </div>
+
+              </div>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <hr class="hr">
+      </div>
+
+      <div class="col-md-12 no-padding-left">
+
+        <div class="col-md-3 float" style="width: 21%">
+          <%= link_to "Nueva Factura del cliente", new_customer_invoice_path(:cost_center_id => @cost_center.id, :customer_invoice => @customer_invoice.ids), remote: true, class: "btn btn-dark" %>
+        </div>
+        <% if @customer_invoice.any? %>
+        <div class="card card-info col-md-9">
+          <div class="card-body">
+           <% @customer_invoice.each do |customer_invoice| %>
+              <div class="col-md-12"><hr> </div>
+                 <div class="float">
+                    <div class="dropdown">
+
+                          <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+                            <i class="fas fa-bars"></i>
+                          </button>
+                          <div class="dropdown-menu">
+
+                            <div class="col-md-12 no-padding-left">  
+                              <%= link_to customer_invoice, class: "dropdown-item" do %>
+                                <i class="far fa-eye"></i> Ver Registro
+                              <% end -%>
+                            </div>
+
+                            <div class="col-md-12 no-padding-left">  
+                              <%= link_to edit_customer_invoice_path(customer_invoice), class: "dropdown-item", remote: true do %>
+                                <i class="fas fa-pencil-alt"></i> Editar Registro
+                              <% end -%>
+                            </div>
+
+                            <div class="col-md-12 no-padding-left">  
+                              <%= link_to customer_invoice, method: :delete, data: {
+                                confirm: '¿Estas Seguro?',
+                                'confirm-button-text': 'Borrar',
+                                'cancel-button-text': 'Cancelar',
+                                'confirm-button-color': '#CC0000',
+                                 text: 'Recuerda que el registro se borrara permanentemente',
+                                'image-url': ''}, class: "dropdown-item" do %>
+                                <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                              <% end -%>
+                            </div>
+
+                          </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-3">
+                    <strong> Fecha de Factura:</strong> 
+                    <p><%= get_date(customer_invoice.invoice_date) %></p>
+                  </div>
+
+                  <div class="col-md-3">
+                    <strong>Valor de la factura:</strong> 
+                    <p><%= customer_invoice.invoice_value %></p>
+                  </div>
+
+                  <div class="col-md-5">
+
+                    <% if customer_invoice.delivery_certificate_file.present? %>
+                        <%= link_to customer_invoice.delivery_certificate_file.url(), class: "btn btn-dark", target:"_blank" do %>
+                        <i class="fas fa-download"></i> Entrega
+                        <% end -%>
+
+                    <% end -%>
+
+
+                    <% if customer_invoice.reception_report_file.present? %>
+                        <%= link_to customer_invoice.reception_report_file.url(), class: "btn btn-dark", target:"_blank" do %>
+                          <i class="fas fa-download"></i> Recepcion
+                        <% end -%>
+
+                    <% end -%>
+
+                   </div>
+
+                  <div class="col-md-12"><hr> </div>
+
+            <% end %>
+          </div>
+        </div>
+
+        <% end -%>
+
+      </div>
+
   </div>
-    
-  </div>
+  <br>
+<% end %>
 
-
-
-</div>
+<!--
+    <% @cost_center.customer_invoice.each do |customer_invoice| %>
       
-      <div class="modal-footer">
-       <%= form.submit "Guardar" , class: "btn btn-primary" %>
+     <div class="float">
+        <div class="dropdown">
+
+              <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+                <i class="fas fa-bars"></i>
+              </button>
+              <div class="dropdown-menu">
+
+                <div class="col-md-12 no-padding-left">  
+                  <%= link_to customer_invoice, class: "dropdown-item" do %>
+                    <i class="far fa-eye"></i> Ver Registro
+                  <% end -%>
+                </div>
+
+                <div class="col-md-12 no-padding-left">  
+                  <%= link_to edit_customer_invoice_path(customer_invoice), class: "dropdown-item", remote: true do %>
+                    <i class="fas fa-pencil-alt"></i> Editar Registro
+                  <% end -%>
+                </div>
+
+                <div class="col-md-12 no-padding-left">  
+                  <%= link_to customer_invoice, method: :delete, data: {
+                    confirm: '¿Estas Seguro?',
+                    'confirm-button-text': 'Borrar',
+                    'cancel-button-text': 'Cancelar',
+                    'confirm-button-color': '#CC0000',
+                     text: 'Recuerda que el registro se borrara permanentemente',
+                    'image-url': ''}, class: "dropdown-item" do %>
+                    <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                  <% end -%>
+                </div>
+
+              </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <strong> Fecha de Factura:</strong> 
+        <p><%= get_date(customer_invoice.invoice_date) %></p>
+      </div>
+
+      <div class="col-md-3">
+        <strong>Valor de la factura:</strong> 
+        <p><%= customer_invoice.invoice_value %></p>
+      </div>
+
+      <div class="col-md-12"><hr> </div>
+      <div class="col-md-12">
+
+        <% if customer_invoice.delivery_certificate_file.present? %>
+            <%= link_to customer_invoice.delivery_certificate_file.url(), class: "btn btn-dark", target:"_blank" do %>
+            <i class="fas fa-download"></i>
+            <% end -%>
+
+        <% end -%>
+
+
+        <% if customer_invoice.reception_report_file.present? %>
+            <%= link_to customer_invoice.reception_report_file.url(), class: "btn btn-dark", target:"_blank" do %>
+              <i class="fas fa-download"></i>
+            <% end -%>
+
+        <% end -%>
 
       </div>
-     <% end %> 
-    </div>
-    </div>
-  </div>
-</div>
-</div>
- 
-
-
-  
-  <% @cost_center.sales_orders.each do |sales_order| %>
-     <div class="row order">
-      <div class="col-md-3"><strong> Fecha de Generacion:</strong> <%= sales_order.created_date %></div>
-      <div class="col-md-3"><strong>Numero:</strong> <%= sales_order.order_number %></div>
-      <div class="col-md-3"><strong>Valor:</strong> <%= sales_order.order_value %></div>
-      <div class="col-md-3"><strong>Estado:</strong> <%= sales_order.state %></div>
-      <div class="col-md-12"><hr> </div>
-      <div class="col-md-3"><strong>Adjunto:</strong> <%= sales_order.order_file %></div>
-      <div class="col-md-3"></div>
-      <div class="col-md-3"></div>
-     <div class="col-md-3">
-            <%= link_to sales_order, class: "btn-padding" do %>
-              <i class="far fa-eye"></i>
-            <% end -%>
-
-            <%= link_to edit_sales_order_path(sales_order), remote:true , class: "btn-padding" do %>
-              <i class="fas fa-pencil-alt"></i>
-            <% end -%>
-
-            <%= link_to sales_order, method: :delete, data: {
-              confirm: '¿Estas Seguro?',
-              'confirm-button-text': 'Borrar',
-              'cancel-button-text': 'Cancelar',
-              'confirm-button-color': '#CC0000',
-               text: 'Recuerda que el registro se borrara permanentemente',
-              'image-url': ''}, class: "btn-delete" do%>
-              <span class="glyphicon glyphicon-trash"></span>
-            <% end -%></div>
-    </div>
-    <hr>
   <% end %>
-
-
- 
- 
-
-
-
-
+-->
+</div>
 <!--
   <strong>Execution state:</strong>
   <%= @cost_center.execution_state %>
@@ -239,25 +349,53 @@
 
 
 <style >
-  .order
-  {
+
+  .order{
     background: whitesmoke;
     padding: 10px;
     border-radius: 10px;
+    margin-left: 11px;
+    margin-right: 13px;
   }
-  .titulos .col-md-3
-  {
+
+  .card-info{
+    background: #fff;
+    overflow: scroll;
+    max-height: 500px; 
+    height: 142px; 
+    max-width: 100%;
     padding: 10px;
   }
-  .valores
-  {
+
+  .dropdown-menu{
+    padding: 7px;
+    position: absolute;
+    top: 41px;
+    left: -117px;
+  }
+
+  .float{
+    float: right;
+    padding-right: 0px;
+  }
+
+  .margin-left{
+    margin-left: 10px;
+  }
+
+  .titulos .col-md-3{
+    padding: 10px;
+  }
+
+  .valores {
     padding: 10px;
     text-align: center;
     font-size: 18px;
   }
-  .title1
-  {
+
+  .title1 {
     background: #2a3f54;
     color: white;
   }
+
 </style>

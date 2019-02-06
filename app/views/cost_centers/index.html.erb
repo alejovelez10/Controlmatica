@@ -19,6 +19,7 @@
     <table class="table table-striped jambo_table bulk_action">
       <thead>
     <tr>
+      <th style="text-align: center;">Acciones</th>
       <th>Cliente</th>
       <th>Contacto</th>
       <th>Tipo de Servicio</th>
@@ -33,7 +34,6 @@
       <th>Estado de ejecución</th>
       <th>Estado facturado</th>
       
-      <th colspan="3"></th>
     </tr>
   </thead>
 
@@ -45,6 +45,43 @@
           via_cotizado = cost_center.viatic_value
           via_real = cost_center.reports.sum(:viatic_value)
         %>
+
+        <td style="text-align: center;">
+
+          <div class="dropdown">
+            <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-align-left"></i>
+            </button>
+            <div class="dropdown-menu">
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to cost_center, class: "dropdown-item" do %>
+                  <i class="far fa-eye"></i> Ver Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to edit_cost_center_path(cost_center), class: "dropdown-item" do %>
+                  <i class="fas fa-pencil-alt"></i> Editar Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to cost_center, method: :delete, data: {
+                  confirm: '¿Estas Seguro?',
+                  'confirm-button-text': 'Borrar',
+                  'cancel-button-text': 'Cancelar',
+                  'confirm-button-color': '#CC0000',
+                   text: 'Recuerda que el registro se borrara permanentemente',
+                  'image-url': ''}, class: "dropdown-item" do %>
+                  <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                <% end -%>
+              </div>
+
+            </div>
+          </div>
+
+        </td>
         <td><%= cost_center.customer.name %></td>
         <td><%= cost_center.contact.name %></td>
         <td><%= cost_center.service_type %></td>
@@ -59,29 +96,6 @@
         <td style="color:<%=color_value(via_cotizado, via_real)%>"><%=  number_to_currency(via_real , precision: 0)  %></td>
         <td><%= cost_center.execution_state %></td>
         <td><%= cost_center.invoiced_state %></td>
-        
-
-        <td>
-
-            <%= link_to cost_center, class: "btn-padding" do %>
-              <i class="far fa-eye"></i>
-            <% end -%>
-
-            <%= link_to edit_cost_center_path(cost_center), class: "btn-padding" do %>
-              <i class="fas fa-pencil-alt"></i>
-            <% end -%>
-
-            <%= link_to cost_center, method: :delete, data: {
-              confirm: '¿Estas Seguro?',
-              'confirm-button-text': 'Borrar',
-              'cancel-button-text': 'Cancelar',
-              'confirm-button-color': '#CC0000',
-               text: 'Recuerda que el registro se borrara permanentemente',
-              'image-url': ''}, class: "btn-delete" do%>
-              <span class="glyphicon glyphicon-trash"></span>
-            <% end -%>
-        </td>
-
       </tr>
     <% end %>
   </tbody>

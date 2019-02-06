@@ -18,6 +18,7 @@
     <table class="table table-striped jambo_table bulk_action">
   <thead>
     <tr>
+      <th class="text-center">Acciones</th>
       <th>Centro de Costos</th>
       <th>Fecha de Ejecucion</th>
       <th>Responsable Ejecucion</th>
@@ -26,13 +27,48 @@
       <th>Valor de los Viaticos</th>
       <th>Descripcion de Viaticos</th>
       <th>Valor del Reporte</th>
-      <th class="title">Acciones</th>
     </tr>
   </thead>
 
     <tbody>
       <% @reports.each do |report| %>
         <tr>
+           <td style="text-align: center;">
+
+          <div class="dropdown">
+            <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-align-left"></i>
+            </button>
+            <div class="dropdown-menu">
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to report, class: "dropdown-item" do %>
+                  <i class="far fa-eye"></i> Ver Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to edit_report_path(report), class: "dropdown-item" do %>
+                  <i class="fas fa-pencil-alt"></i> Editar Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to report, method: :delete, data: {
+                  confirm: '¿Estas Seguro?',
+                  'confirm-button-text': 'Borrar',
+                  'cancel-button-text': 'Cancelar',
+                  'confirm-button-color': '#CC0000',
+                   text: 'Recuerda que el registro se borrara permanentemente',
+                  'image-url': ''}, class: "dropdown-item" do %>
+                  <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                <% end -%>
+              </div>
+
+            </div>
+          </div>
+
+        </td>
           <td><%= report.cost_center.quotation_number %></td>
           <td><%= get_date(report.report_date) %></td>
           <td><%= report.report_execute.names %></td>
@@ -41,29 +77,8 @@
           <td><%= number_to_currency(report.viatic_value, precision: 0) %></td>
           <td><%= report.viatic_description %></td>
           <td><%= number_to_currency(report.total_value, precision: 0) %></td>
-
-          <td>
-
-            <%= link_to report, class: "btn-padding" do %>
-              <i class="far fa-eye"></i>
-            <% end -%>
-
-            <%= link_to edit_report_path(report), class: "btn-padding" do %>
-              <i class="fas fa-pencil-alt"></i>
-            <% end -%>
-
-            <%= link_to report, method: :delete, data: {
-              confirm: '¿Estas Seguro?',
-              'confirm-button-text': 'Borrar',
-              'cancel-button-text': 'Cancelar',
-              'confirm-button-color': '#CC0000',
-               text: 'Recuerda que el registro se borrara permanentemente',
-              'image-url': ''}, class: "btn-delete" do%>
-              <span class="glyphicon glyphicon-trash"></span>
-            <% end -%>
-              
-          </td>
         </tr>
+        
       <% end %>
     </tbody>
   </table>

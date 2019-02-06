@@ -18,50 +18,70 @@
   <div class="table-responsive">
     <table class="table table-striped jambo_table bulk_action">
       <thead>
-    <tr>
-      <th>Report date</th>
-      <th>Description</th>
-      <th>Token</th>
-      <th>Report state</th>
-      <th>Report code</th>
-      <th>Customer</th>
-      <th colspan="3" class="text-center">Acciones</th>
-    </tr>
-  </thead>
+        <tr>
+          <th class="text-center">Acciones</th>
+          <th>Fecha del Reporte</th>
+          <th>Descripcion</th>
+          <th>Token</th>
+          <th>Estado del Reporte</th>
+          <th>Codigo del Reporte</th>
+          <th>Cliente</th>
+        </tr>
+      </thead>
 
   <tbody>
     <% @customer_reports.each do |customer_report| %>
+
       <tr>
+        <td style="text-align: center;">
+
+          <div class="dropdown">
+            <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-align-left"></i>
+            </button>
+            <div class="dropdown-menu">
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to customer_report, class: "dropdown-item" do %>
+                  <i class="far fa-eye"></i> Ver Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to edit_customer_report_path(customer_report), class: "dropdown-item" do %>
+                  <i class="fas fa-pencil-alt"></i> Editar Registro
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">  
+                <%= link_to customer_report, method: :delete, data: {
+                  confirm: '¿Estas Seguro?',
+                  'confirm-button-text': 'Borrar',
+                  'cancel-button-text': 'Cancelar',
+                  'confirm-button-color': '#CC0000',
+                   text: 'Recuerda que el registro se borrara permanentemente',
+                  'image-url': ''}, class: "dropdown-item" do %>
+                  <span class="glyphicon glyphicon-trash"></span> Eliminar 
+                <% end -%>
+              </div>
+
+              <div class="col-md-12 no-padding-left">
+                <%= link_to customer_pdf_path(customer_report.id, :format => "pdf"), target:"_blank", class: "dropdown-item", title: "Generar Pdf" do %>
+                   <i class="far fa-file-pdf"></i> Generar Pdf
+                <% end -%>
+              </div>
+
+            </div>
+          </div>
+
+        </td>
+
         <td><%= get_date(customer_report.report_date) %></td>
         <td><%= customer_report.description %></td>
         <td><%= link_to "Aprobar", aproacion_cliente_path(customer_report.id,customer_report.token)%></td>
         <td><%= customer_report.report_state %></td>
         <td><%= customer_report.report_code %></td>
         <td><%= customer_report.customer_id %></td>
-        <td  class="text-center">
-          <%= link_to customer_pdf_path(customer_report.id, :format => "pdf"), target:"_blank", class: "btn-padding", title: "Generar Pdf" do%>
-            <i class="far fa-file-pdf"></i>
-          <% end -%>
-
-            <%= link_to customer_report, class: "btn-padding" do %>
-              <i class="far fa-eye"></i>
-            <% end -%>
-
-            <%= link_to edit_customer_report_path(customer_report), class: "btn-padding" do %>
-              <i class="fas fa-pencil-alt"></i>
-            <% end -%>
-
-            <%= link_to customer_report, method: :delete, data: {
-              confirm: '¿Estas Seguro?',
-              'confirm-button-text': 'Borrar',
-              'cancel-button-text': 'Cancelar',
-              'confirm-button-color': '#CC0000',
-               text: 'Recuerda que el registro se borrara permanentemente',
-              'image-url': ''}, class: "btn-delete" do%>
-              <span class="glyphicon glyphicon-trash"></span>
-            <% end -%>
-            
-        </td>
 
       </tr>
     <% end %>
@@ -75,14 +95,12 @@
   max-height: 500px; 
   height: 500px; 
   max-width: 100%;
-  
+   
+}
 
+.table > thead > tr > th{
 }
-.content table
-{
-  width: 2000px;
-    
-}
+
 .table-responsive
 {
   height: 500px;

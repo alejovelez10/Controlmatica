@@ -1,62 +1,95 @@
-<%= form_with(model: customer_invoice, local: true) do |form| %>
-  <% if customer_invoice.errors.any? %>
-    <div id="error_explanation">
-      <h2><%= pluralize(customer_invoice.errors.count, "error") %> prohibited this customer_invoice from being saved:</h2>
+<div id="product-modal" class="modal fade">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header padding-lef">
+    
+            <div class="container-fluid padding-lef">
+              <div class="col-md-9 padding-lef">
+                  <% if action_name == "edit"%>
+                    <h4 class="modal-title">Editar Factura </h4>
+                  <%else%>
+                    <h4 class="modal-title">Crear Nueva Factura</h4>
+                  <% end -%>
+              </div>    
+            </div>
+        </div>
+        <%= form_with(model: customer_invoice, local: true) do |form| %>
+         <div class="modal-body">
+          <% if customer_invoice.errors.any? %>
+            <div id="error_explanation">
+              <h2><%= pluralize(customer_invoice.errors.count, "error") %> prohibited this customer_invoice from being saved:</h2>
 
-      <ul>
-      <% customer_invoice.errors.full_messages.each do |message| %>
-        <li><%= message %></li>
-      <% end %>
-      </ul>
+              <ul>
+              <% customer_invoice.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+              </ul>
+            </div>
+          <% end %>
+          
+          <% if action_name == "new"%>
+            <%= form.hidden_field :cost_center_id, :value => @cost_center.id %>
+            <%= form.hidden_field :sales_order_id, :value => 2 %>
+          <% end -%>
+
+          <div class="col-md-12 no-padding-left">
+
+
+            <div class="col-md-4 no-padding-left">
+              <%= form.label "Fecha de La Factura" %>
+              <%= form.date_field :invoice_date, class: "form form-control" %>
+              <br>
+            </div>
+          </div>
+
+
+          <div class="field">
+            <%= form.label "Valor de la factura" %>
+            <%= form.text_field :invoice_value, class: "form form-control" %>
+            <br>
+          </div>
+
+          <div class="field">
+            <%= form.label "Archivo de certificado de entrega" %>
+            <%= form.file_field :delivery_certificate_file, class: "form form-control" %>
+            <br>
+          </div>
+
+          <div class="field">
+            <%= form.label "Archivo de Informe de recepción" %>
+            <%= form.file_field :reception_report_file, class: "form form-control" %>
+            <br>
+          </div>
+
+          <div class="modal-footer">
+            <%= form.submit "Guardar", class: "btn btn-dark" %>
+             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          </div>
+
+
+        <!--
+
+          <div class="field">
+            <%= form.label :delivery_certificate_state %>
+            <%= form.text_field :delivery_certificate_state %>
+          </div>
+
+          <div class="field">
+            <%= form.label :reception_report_state %>
+            <%= form.text_field :reception_report_state %>
+          </div>
+
+          <div class="field">
+            <%= form.label :invoice_state %>
+            <%= form.text_field :invoice_state %>
+          </div>
+        -->
+
+        <% end %>
+
+      </div>
     </div>
-  <% end %>
-
-  <div class="field">
-    <%= form.label :cost_center_id %>
-    <%= form.number_field :cost_center_id %>
   </div>
-
-  <div class="field">
-    <%= form.label :sales_order_id %>
-    <%= form.number_field :sales_order_id %>
-  </div>
-
-  <div class="field">
-    <%= form.label :invoice_value %>
-    <%= form.text_field :invoice_value %> 
-  </div>
-
-  <div class="field">
-    <%= form.label :invoice_date %>
-    <%= form.date_select :invoice_date %>
-  </div>
-
-  <div class="field">
-    <%= form.label :delivery_certificate_file %>
-    <%= form.text_field :delivery_certificate_file %>
-  </div>
-
-  <div class="field">
-    <%= form.label :delivery_certificate_state %>
-    <%= form.text_field :delivery_certificate_state %>
-  </div>
-
-  <div class="field">
-    <%= form.label :reception_report_file %>
-    <%= form.text_field :reception_report_file %>
-  </div>
-
-  <div class="field">
-    <%= form.label :reception_report_state %>
-    <%= form.text_field :reception_report_state %>
-  </div>
-
-  <div class="field">
-    <%= form.label :invoice_state %>
-    <%= form.text_field :invoice_state %>
-  </div>
-
-  <div class="actions">
-    <%= form.submit %>
-  </div>
-<% end %>
+</div>
