@@ -4,7 +4,7 @@
           via_cotizado = @cost_center.viatic_value
           via_real = @cost_center.reports.sum(:viatic_value)
         %>
-<div style="background: white;padding: 10px;">
+<div class="show-content">
   <div class="row titulos">
 
     <div class="col-md-3">
@@ -38,7 +38,7 @@
 
     <div class="col-md-3">
       <strong>Numero de Cotizacion:</strong> 
-      <%= @cost_center.quotation_number %>
+      <%= @cost_center.quotation_number.gsub(/^\(+|\)+$/, ''); %>
     </div>
 
  </div>
@@ -65,7 +65,7 @@
           <span> <%= number_to_currency(ing_cotizado , precision: 0) %></span>
        </div>
       <div class="col-md-6">   <strong>Ejecutado</strong><br> 
-         <span style="color:<%=color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
+         <span style="color:<%= color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
       </div>
     </div>
 
@@ -179,7 +179,7 @@
       <div class="col-md-12 no-padding-left">
 
         <div class="col-md-3 float" style="width: 21%">
-          <%= link_to "Nueva Factura del cliente", new_customer_invoice_path(:cost_center_id => @cost_center.id, :customer_invoice => @customer_invoice.ids), remote: true, class: "btn btn-dark" %>
+          <%= link_to "Nueva Factura del cliente", new_customer_invoice_path(cost_center_id: @cost_center.id, sales_order: @sales_order.first), remote: true, class: "btn btn-dark" %>
         </div>
         <% if @customer_invoice.any? %>
         <div class="card card-info col-md-9">
@@ -396,6 +396,12 @@
   .title1 {
     background: #2a3f54;
     color: white;
+  }
+
+  .show-content{
+    background: white;
+    padding: 10px;
+    margin-top: 60px;
   }
 
 </style>
