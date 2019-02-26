@@ -156,9 +156,15 @@ $MENU_TOGGLE.on('click', function() {
         if ($BODY.hasClass('nav-md')) {
             $SIDEBAR_MENU.find('li.active ul').hide();
             $SIDEBAR_MENU.find('li.active').addClass('active-sm').removeClass('active');
+            document.getElementById('img-logo').src='http://controlmatica.com.co/templates/controlmatica_template_01_03/favicon.ico'
+            document.getElementById('img-logo').style.width = '66px'
+            document.getElementById('img-logo').style.height = '54px'
         } else {
             $SIDEBAR_MENU.find('li.active-sm ul').show();
             $SIDEBAR_MENU.find('li.active-sm').addClass('active').removeClass('active-sm');
+            document.getElementById('img-logo').src='http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png'
+            document.getElementById('img-logo').style.width = '232px'
+            document.getElementById('img-logo').style.height = '90px'
         }
 
     $BODY.toggleClass('nav-md nav-sm');
