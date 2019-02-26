@@ -70,21 +70,27 @@
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Número de Cotización" %>
-              <input class="form-control required" placeholder="Número de Cotización" type="text" name="cost_center[quotation_number]" data-type="currency" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" id="currency-field" required="true" title="Es un Campo Obligatorio">
+              <%= form.text_field :quotation_number, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+              <%= form.hidden_field :quotation_number, id: "quotation_value" %>
+                          <br>
             </div>
-                <br>
           </div>
 
           <div class="row form-group">
 
             <div class="col-md-4  no-paddong-left">
               <%= form.label "Valor de ingeniería" %>
-              <input class="form-control required" placeholder="Valor de ingeniería" type="text" name="cost_center[engineering_value]" data-type="currency" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" id="currency-field" required="true" title="Es un Campo Obligatorio">
+               <%= form.text_field :engineering_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+              <%= form.hidden_field :engineering_value, id: "engineering_value" %>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Valor de viaticos" %>
-              <input class="form-control required" placeholder="Valor de viaticos" type="text" name="cost_center[viatic_value]" data-type="currency" pattern="^\$\d{1,3}(,\d{3})*(\.\d+)?$" id="currency-field" required="true" title="Es un Campo Obligatorio">
+              <%= form.text_field :viatic_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+              <%= form.hidden_field :viatic_value, id: "viatic_value" %>
               <br>
             </div>
           </div>  
@@ -107,12 +113,39 @@
 $('#contact_form').validate();
 // Jquery Dependency
 
-$("input[data-type='currency']").on({
+$("#cost_center_quotation_number").on({
     keyup: function() {
       formatCurrency($(this));
     },
     blur: function() { 
       formatCurrency($(this), "blur");
+      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
+
+      document.getElementById("quotation_value").value = valor
+    }
+});
+
+$("#cost_center_engineering_value").on({
+    keyup: function() {
+      formatCurrency($(this));
+    },
+    blur: function() { 
+      formatCurrency($(this), "blur");
+      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
+
+      document.getElementById("engineering_value").value = valor
+    }
+});
+
+$("#cost_center_viatic_value").on({
+    keyup: function() {
+      formatCurrency($(this));
+    },
+    blur: function() { 
+      formatCurrency($(this), "blur");
+      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
+
+      document.getElementById("viatic_value").value = valor
     }
 });
 
