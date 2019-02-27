@@ -125,7 +125,7 @@
 
       <div class="col-md-3">
         <strong>Valor:</strong> 
-        <p><%= sales_order.order_value %></p>
+        <p><%=  number_to_currency(sales_order.order_value , precision: 0)%></p>
       </div>
 
       <div class="col-md-1">
@@ -148,19 +148,19 @@
               </button>
               <div class="dropdown-menu">
 
-                <div class="col-md-12 no-padding-left">  
+                <div class="col-md-12 menu">  
                   <%= link_to sales_order, class: "dropdown-item" do %>
                     <i class="far fa-eye"></i> Ver Registro
                   <% end -%>
                 </div>
 
-                <div class="col-md-12 no-padding-left">  
+                <div class="col-md-12 menu">  
                   <%= link_to edit_sales_order_path(sales_order), class: "dropdown-item", remote: true do %>
                     <i class="fas fa-pencil-alt"></i> Editar Registro
                   <% end -%>
                 </div>
 
-                <div class="col-md-12 no-padding-left">  
+                <div class="col-md-12 menu">  
                   <%= link_to sales_order, method: :delete, data: {
                     confirm: '¿Estas Seguro?',
                     'confirm-button-text': 'Borrar',
@@ -198,19 +198,19 @@
                           </button>
                           <div class="dropdown-menu">
 
-                            <div class="col-md-12 no-padding-left">  
+                            <div class="col-md-12 menu">  
                               <%= link_to customer_invoice, class: "dropdown-item" do %>
                                 <i class="far fa-eye"></i> Ver Registro
                               <% end -%>
                             </div>
 
-                            <div class="col-md-12 no-padding-left">  
+                            <div class="col-md-12 menu">  
                               <%= link_to edit_customer_invoice_path(customer_invoice), class: "dropdown-item", remote: true do %>
                                 <i class="fas fa-pencil-alt"></i> Editar Registro
                               <% end -%>
                             </div>
 
-                            <div class="col-md-12 no-padding-left">  
+                            <div class="col-md-12 menu">  
                               <%= link_to customer_invoice, method: :delete, data: {
                                 confirm: '¿Estas Seguro?',
                                 'confirm-button-text': 'Borrar',
@@ -233,7 +233,7 @@
 
                   <div class="col-md-3">
                     <strong>Valor de la factura:</strong> 
-                    <p><%= customer_invoice.invoice_value %></p>
+                    <p><%=  number_to_currency(customer_invoice.invoice_value , precision: 0)%></p>
                   </div>
 
                   <div class="col-md-5">
@@ -407,5 +407,7 @@
     padding: 10px;
     margin-top: 60px;
   }
-
+.menu{
+  padding: 5px 5px;
+}
 </style>

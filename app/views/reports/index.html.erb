@@ -19,6 +19,7 @@
   <thead>
     <tr>
       <th class="text-center">Acciones</th>
+      <th>Codigo</th>
       <th>Centro de Costos</th>
       <th>Fecha de Ejecucion</th>
       <th>Responsable Ejecucion</th>
@@ -41,19 +42,19 @@
             </button>
             <div class="dropdown-menu">
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to report, class: "dropdown-item" do %>
                   <i class="far fa-eye"></i> Ver Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to edit_report_path(report), class: "dropdown-item" do %>
                   <i class="fas fa-pencil-alt"></i> Editar Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to report, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
                   'confirm-button-text': 'Borrar',
@@ -69,6 +70,7 @@
           </div>
 
         </td>
+        <td><%= report.code_report %></td>
           <td><%= report.cost_center.code %></td>
           <td><%= get_date(report.report_date) %></td>
           <td><%= report.report_execute.names %></td>
@@ -103,5 +105,8 @@
 .table-responsive
 {
   height: 500px;
+}
+.menu{
+  padding: 5px 5px;
 }
 </style>

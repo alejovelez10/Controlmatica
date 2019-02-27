@@ -41,19 +41,19 @@
             </button>
             <div class="dropdown-menu">
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to customer_report, class: "dropdown-item" do %>
                   <i class="far fa-eye"></i> Ver Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to edit_customer_report_path(customer_report), class: "dropdown-item" do %>
                   <i class="fas fa-pencil-alt"></i> Editar Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to customer_report, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
                   'confirm-button-text': 'Borrar',
@@ -65,7 +65,7 @@
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">
+              <div class="col-md-12 menu">
                 <%= link_to customer_pdf_path(customer_report.id, :format => "pdf"), target:"_blank", class: "dropdown-item", title: "Generar Pdf" do %>
                    <i class="far fa-file-pdf"></i> Generar Pdf
                 <% end -%>
@@ -112,5 +112,8 @@
 .table-responsive
 {
   height: 500px;
+}
+.menu{
+  padding: 5px 5px;
 }
 </style>

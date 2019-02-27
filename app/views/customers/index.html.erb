@@ -38,19 +38,19 @@
             </button>
             <div class="dropdown-menu">
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to customer, class: "dropdown-item" do %>
                   <i class="far fa-eye"></i> Ver Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to edit_customer_path(customer), class: "dropdown-item" do %>
                   <i class="fas fa-pencil-alt"></i> Editar Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to customer, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
                   'confirm-button-text': 'Borrar',
@@ -76,3 +76,10 @@
     <% end %>
   </tbody>
 </table>
+
+
+<style>
+  .menu{
+  padding: 5px 5px;
+}
+</style>

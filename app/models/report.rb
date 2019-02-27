@@ -23,7 +23,18 @@ class Report < ApplicationRecord
 	belongs_to :cost_center
 	before_save :create_total
 	belongs_to :report_execute, :class_name => 'User'
+	before_save :create_code
 
+	def create_code
+
+		count = Report.maximum(:report_code)
+		customer_prefix = Customer.find(self.cost_center.customer.id).code
+		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count
+	    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
+		
+	end
+
+	
 
 	def create_total
 

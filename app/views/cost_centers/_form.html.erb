@@ -45,7 +45,7 @@
 
               <div class="row col-md-4  ">
                 <label>Tipo de Servicio</label>
-                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"]), {},{class: 'form form-control required', :title => "Es un Campo Obligatorio", :required => true, :prompt => 'Selecciona Un Servicio' }%>
+                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"], "Servicio"), {},{class: 'form form-control required', :title => "Es un Campo Obligatorio", :required => true }%>
               </div>
 
             
@@ -72,7 +72,7 @@
               <%= form.label "Número de Cotización" %>
               <%= form.text_field :quotation_number, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
 
-              <%= form.hidden_field :quotation_number, id: "quotation_value" %>
+             
                           <br>
             </div>
           </div>
@@ -113,17 +113,7 @@
 $('#contact_form').validate();
 // Jquery Dependency
 
-$("#cost_center_quotation_number").on({
-    keyup: function() {
-      formatCurrency($(this));
-    },
-    blur: function() { 
-      formatCurrency($(this), "blur");
-      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
 
-      document.getElementById("quotation_value").value = valor
-    }
-});
 
 $("#cost_center_engineering_value").on({
     keyup: function() {
