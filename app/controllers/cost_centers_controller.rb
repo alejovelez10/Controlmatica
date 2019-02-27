@@ -1,6 +1,6 @@
 class CostCentersController < ApplicationController
   before_action :set_cost_center, only: [:show, :edit, :update, :destroy]
-  #before_action :set_sales_order, only: [:show]
+  before_action :set_sales_order, only: [:show]
 
   # GET /cost_centers
   # GET /cost_centers.json
@@ -11,6 +11,7 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1
   # GET /cost_centers/1.json
   def show
+    #@sales_order = SalesOrder.where(cost_center_id: @cost_centers.id)
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
   end
 

@@ -183,7 +183,7 @@
       <div class="col-md-12 no-padding-left">
 
         <div class="col-md-3 float" style="width: 21%">
-          <%= link_to "Nueva Factura del cliente", new_customer_invoice_path(cost_center_id: @cost_center.id, sales_order: @sales_order.first), remote: true, class: "btn btn-dark" %>
+          <%= link_to "Nueva Factura del cliente", new_customer_invoice_path(cost_center_id: @cost_center.id, sales_order: @cost_center.sales_orders.first ), remote: true, class: "btn btn-dark" %>
         </div>
         <% if @customer_invoice.any? %>
         <div class="card card-info col-md-9">
