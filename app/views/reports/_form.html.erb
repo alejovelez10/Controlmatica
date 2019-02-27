@@ -26,7 +26,7 @@
             <div class="col-md-4 no-paddong-left">
                 <label>Centro de Costos</label>
                 <%= form.select :cost_center_id,
-                  CostCenter.all.map { |u| [u.quotation_number, u.id] },
+                  CostCenter.all.map { |u| [u.code, u.id] },
                               { include_blank: "Centro de Costos" },
                               { class: 'form-control', id: ""  }
                    %>

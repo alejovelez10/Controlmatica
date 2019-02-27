@@ -14,6 +14,7 @@ class SalesOrdersController < ApplicationController
 
   # GET /sales_orders/new
   def new
+    @cost_center = CostCenter.find(params[:cost_center_id])
     @sales_order = SalesOrder.new
   end
 

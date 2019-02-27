@@ -78,7 +78,15 @@
 
         <td><%= get_date(customer_report.report_date) %></td>
         <td><%= customer_report.description %></td>
-        <td><%= link_to "Aprobar", aproacion_cliente_path(customer_report.id,customer_report.token)%></td>
+        <td><%= link_to "Enviar para Aprobaciòn", enviar_aprobacion_path(customer_report.id), remote:true, data: {
+                  confirm: '¿Estas Seguro?',
+                  'confirm-button-text': 'Enviar',
+                  'cancel-button-text': 'Cancelar',
+                  'confirm-button-color': 'green',
+                   text: 'Al aceptar se enviara el correo al cliente',
+                  'image-url': ''}, class: "dropdown-item btn btn-primary"%>
+  
+            </td>
         <td><%= customer_report.report_state %></td>
         <td><%= customer_report.report_code %></td>
         <td><%= customer_report.customer_id %></td>

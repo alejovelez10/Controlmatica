@@ -20,6 +20,7 @@
       <thead>
     <tr>
       <th style="text-align: center;">Acciones</th>
+      <th>Codigo</th>
       <th>Cliente</th>
       <th>Contacto</th>
       <th>Tipo de Servicio</th>
@@ -54,19 +55,19 @@
             </button>
             <div class="dropdown-menu">
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu" >  
                 <%= link_to cost_center, class: "dropdown-item" do %>
                   <i class="far fa-eye"></i> Ver Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to edit_cost_center_path(cost_center), class: "dropdown-item" do %>
                   <i class="fas fa-pencil-alt"></i> Editar Registro
                 <% end -%>
               </div>
 
-              <div class="col-md-12 no-padding-left">  
+              <div class="col-md-12 menu">  
                 <%= link_to cost_center, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
                   'confirm-button-text': 'Borrar',
@@ -82,6 +83,7 @@
           </div>
 
         </td>
+        <td><%= cost_center.code %></td>
         <td><%= cost_center.customer.name %></td>
         <td><%= cost_center.contact.name %></td>
         <td><%= cost_center.service_type %></td>
@@ -119,5 +121,8 @@
 .table-responsive
 {
   height: 500px;
+}
+.menu{
+  padding: 5px 5px;
 }
 </style>

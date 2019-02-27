@@ -40,6 +40,10 @@
       <strong>Numero de Cotizacion:</strong> 
       <%= @cost_center.quotation_number %>
     </div>
+    <div class="col-md-3">
+      <strong>Horas Trabajadas:</strong> 
+      <%= @cost_center.quotation_number %>
+    </div>
 
  </div>
 
@@ -99,7 +103,7 @@
     </div>
 
     <div class="col-md-3 float">
-       <%= link_to "Ingresar Orden de Compra", new_sales_order_path, remote: true, class: "btn btn-dark" %>
+       <%= link_to "Ingresar Orden de Compra", new_sales_order_path(:cost_center_id => @cost_center.id ), remote: true, class: "btn btn-dark" %>
     </div>
 
   </div>

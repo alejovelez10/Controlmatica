@@ -93,7 +93,12 @@ class CustomerReportsController < ApplicationController
   end
 
 
+  def enviar_aprobacion
+  
+       @customer_report = CustomerReport.find(params[:report])
+       CustormerReportMailer.approval_email(@customer_report).deliver
 
+  end
 
 
 

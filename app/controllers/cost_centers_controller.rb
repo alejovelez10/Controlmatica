@@ -11,7 +11,7 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1
   # GET /cost_centers/1.json
   def show
-    @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id).where(sales_order_id: 2)
+    @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
   end
 
   # GET /cost_centers/new
@@ -70,7 +70,7 @@ class CostCentersController < ApplicationController
     end
 
     def set_sales_order
-       @sales_order = SalesOrder.find(params[:id])
+       
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

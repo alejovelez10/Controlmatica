@@ -73,16 +73,7 @@
     
   
 
-  <div class="form-group">
-    <%= form.label "Centro de Costos" %>
-   <%= form.select :cost_center_id,
-                  CostCenter.all.map { |u| [u.code, u.id] },
-                              { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: "", :required => true }
-     %>
-  </div>
-    
-  </div>
+  <%=form.hidden_field :cost_center_id , value: @cost_center.id%>
 
 
 

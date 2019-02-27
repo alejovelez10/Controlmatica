@@ -31,7 +31,7 @@ class CustomerReport < ApplicationRecord
 
 	def send_approval_email
 
-		CustormerReportMailer.approval_email(self).deliver
+		
 
 		
 	end

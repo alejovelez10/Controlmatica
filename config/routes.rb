@@ -19,7 +19,7 @@ Rails.application.routes.draw do
   root 'home#dashboard'
   get "home/dashboard", to: "home#dashboard", as: "user_home"
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
-
+  get 'enviar_aprobacion/:report', to: 'customer_reports#enviar_aprobacion', as: 'enviar_aprobacion'
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end
 

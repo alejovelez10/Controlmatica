@@ -31,7 +31,7 @@
         <div class="col-md-4">
           <%= form.label "Cliente" %>
            <%= form.select :cost_center_id,
-                  Customer.all.map { |u| [u.name, u.id] },
+                  CostCenter.all.map { |u| [u.code , u.id] },
                               { include_blank: "Centro de Costos" },
                               { class: 'form-control', id: ""  }
                    %>

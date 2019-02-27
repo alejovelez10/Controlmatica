@@ -1,8 +1,28 @@
 
+<p>Hola señor Alejandro </p>
+
+<p>Adjunto hay un reporte enviado por david londoño de controlmatica <br> Para aprobar por favor hacer click en el boton</p>
+<br>
 <% if Rails.env.production? %> 
-<a href="https://controlmaticatest.herokuapp.com/aprobar_informe/<%=@customer_report.token%>">
+<a href="https://controlmaticatest.herokuapp.com/aprobar_informe/<%=@customer_report.token%>" style= "  text-decoration:none;
+  background:#54b362;
+  padding:10px 20px;
+  color:white;
+  border-radius:5px;">
 APROBAR</a>
 <%else%>
-<a href="http://localhost:3000/aprobar_informe/<%=@customer_report.token%>">
+
+
+
+<a href="http://localhost:3000/aprobar_informe/<%=@customer_report.token%>" style= "  text-decoration:none;
+  background:#54b362;
+  padding:10px 20px;
+  color:white;
+  border-radius:5px;">
 APROBAR</a>
 <%end%>
+
+<p>Atentamente</p>
+
+
+<s
