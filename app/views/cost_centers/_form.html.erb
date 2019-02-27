@@ -2,7 +2,7 @@
    <div class="col-md-12 col-sm-12 col-xs-12">
       <div class="dashboard_graph">
          <div class="row x_title">
-            <div class="col-md-6">
+            <div class="col-md-6 no-padding-left">
               <%if action_name == "new" %>
                 <h3>Nuevo Centro de Costo</h3>
               <% else %>
@@ -29,7 +29,7 @@
                 <%= form.select :customer_id,
                   Customer.all.map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Cliente" },
-                              { class: 'form-control', id: ""  }
+                              { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
                    %>
               </div>
 
@@ -39,13 +39,13 @@
                 <%= form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
-                              { class: 'form-control', id: ""  }
+                              { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
                    %>
               </div>
 
               <div class="row col-md-4  ">
                 <label>Tipo de Servicio</label>
-                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"]), {},{:class => 'form form-control select', id:"principal"}%>
+                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"]), {},{class: 'form form-control required', :title => "Es un Campo Obligatorio", :required => true, :prompt => 'Selecciona Un Servicio' }%>
               </div>
 
             
@@ -53,44 +53,47 @@
             <div class="row form-group">
               <div class="col-md-12 no-paddong-left">
                 <%= form.label "Descripción" %>
-                <%= form.text_area :description, class: "form-control textarea", :rows => 3  %>
+                <%= form.text_area :description, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true , :rows => 8  %>
                
               </div>
              </div>  
           <div class="row form-group">
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Fecha de inicio" %><br>
-              <%= form.date_field :start_date, class: "form-control", id: "", :placeholder => "Fecha de inicio"%>
+              <%= form.date_field :start_date, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true , :placeholder => "Fecha de inicio"%>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Fecha final" %><br>
-              <%= form.date_field :end_date, class: "form-control", id: "", :placeholder => "Fecha final" %>
+              <%= form.date_field :end_date, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true , :placeholder => "Fecha final" %>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Número de Cotización" %>
-              <%= form.number_field :quotation_number, class: "form-control", :placeholder => "Número de Cotización"  %>
+              <%= form.text_field :quotation_number, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+              <%= form.hidden_field :quotation_number, id: "quotation_value" %>
+                          <br>
             </div>
-                <br>
           </div>
 
-          
-    
           <div class="row form-group">
 
             <div class="col-md-4  no-paddong-left">
               <%= form.label "Valor de ingeniería" %>
-              <%= form.number_field :engineering_value, class: "form-control", :placeholder => "Valor de ingeniería" %>
+               <%= form.text_field :engineering_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+              <%= form.hidden_field :engineering_value, id: "engineering_value" %>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Valor de viaticos" %>
-              <%= form.number_field :viatic_value, class: "form-control", :placeholder => "Valor de viatico" %>
+              <%= form.text_field :viatic_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+              <%= form.hidden_field :viatic_value, id: "viatic_value" %>
               <br>
             </div>
-
-           </div>  
+          </div>  
           
               <%= form.hidden_field :execution_state %>
               <%= form.hidden_field :invoiced_state %>
@@ -106,24 +109,118 @@
 </div>
 
 <script type="text/javascript">
- // $('.datepicker').datepicker({
-    //format: 'mm/dd/yyyy',
-    //startDate: '-3d'
-//});
-
-$(document).ready(function () {
-    $('#datepicker').datepicker({
-      uiLibrary: 'bootstrap'
-
-    });
-});
-
-$(document).ready(function () {
-    $('#datepicker1').datepicker({
-      uiLibrary: 'bootstrap'
-    });
-});
 
 $('#contact_form').validate();
+// Jquery Dependency
+
+$("#cost_center_quotation_number").on({
+    keyup: function() {
+      formatCurrency($(this));
+    },
+    blur: function() { 
+      formatCurrency($(this), "blur");
+      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
+
+      document.getElementById("quotation_value").value = valor
+    }
+});
+
+$("#cost_center_engineering_value").on({
+    keyup: function() {
+      formatCurrency($(this));
+    },
+    blur: function() { 
+      formatCurrency($(this), "blur");
+      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
+
+      document.getElementById("engineering_value").value = valor
+    }
+});
+
+$("#cost_center_viatic_value").on({
+    keyup: function() {
+      formatCurrency($(this));
+    },
+    blur: function() { 
+      formatCurrency($(this), "blur");
+      var valor = this.value.replace(/[.,*+?^${}()|[\]\\]/g, "")
+
+      document.getElementById("viatic_value").value = valor
+    }
+});
+
+
+function formatNumber(n) {
+  // format number 1000000 to 1,234,567
+  return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+
+function formatCurrency(input, blur) {
+  // appends $ to value, validates decimal side
+  // and puts cursor back in right position.
+  
+  // get input value
+  var input_val = input.val();
+  
+  // don't validate empty input
+  if (input_val === "") { return; }
+  
+  // original length
+  var original_len = input_val.length;
+
+  // initial caret position 
+  var caret_pos = input.prop("selectionStart");
+    
+  // check for decimal
+  if (input_val.indexOf(".") >= 0) {
+
+    // get position of first decimal
+    // this prevents multiple decimals from
+    // being entered
+    var decimal_pos = input_val.indexOf(".");
+
+    // split number by decimal point
+    var left_side = input_val.substring(0, decimal_pos);
+    var right_side = input_val.substring(decimal_pos);
+
+    // add commas to left side of number
+    left_side = formatNumber(left_side);
+
+    // validate right side
+    right_side = formatNumber(right_side);
+    
+    // On blur make sure 2 numbers after decimal
+    if (blur === "blur") {
+      right_side += "00";
+    }
+    
+    // Limit decimal to only 2 digits
+    right_side = right_side.substring(0, 2);
+
+    // join number by .
+    input_val = "$" + left_side + "." + right_side;
+
+  } else {
+    // no decimal entered
+    // add commas to number
+    // remove all non-digits
+    input_val = formatNumber(input_val);
+    input_val = "$" + input_val;
+    
+    // final formatting
+  }
+  
+  // send updated string to input
+  input.val(input_val);
+
+  // put caret back in the right position
+  var updated_len = input_val.length;
+  caret_pos = updated_len - original_len + caret_pos;
+  input[0].setSelectionRange(caret_pos, caret_pos);
+}
+
+
+
 
 </script>

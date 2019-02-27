@@ -1,6 +1,6 @@
 class CostCentersController < ApplicationController
   before_action :set_cost_center, only: [:show, :edit, :update, :destroy]
-  before_action :set_sales_order, only: [:show]
+  #before_action :set_sales_order, only: [:show]
 
   # GET /cost_centers
   # GET /cost_centers.json

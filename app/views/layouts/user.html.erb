@@ -35,13 +35,13 @@
     <!-- BOOSTRAMP DATAPIKER -->
   </head>
 
-  <body class="nav-md">  <!-- nav-sm para minimizar el menu y el nav-md para mostrarlo grande  -->
+  <body class="nav-md" id="body-have">  <!-- nav-sm para minimizar el menu y el nav-md para mostrarlo grande  -->
        <div class="container body">
       <div class="main_container">
         <div class="col-md-3 left_col menu_fixed">
           <div class="left_col scroll-view">
             <div class="navbar nav_title" style="border: 0;">
-              <a href="index.html" class="site_title"><i class="fa fa-paw"></i> <span>Gentelella Alela!</span></a>
+              <a href="/home/dashboard" class="site_title"><img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png" id="img-logo"></a>
             </div>
 
             <div class="clearfix"></div>
@@ -52,7 +52,7 @@
                    <%=  current_user.avatar? ? image_tag(current_user.avatar_url(),id: "user-avatar3", class: "img-circle profile_img") : image_tag("https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg", class: "img-circle profile_img")%>
               </div>
               <div class="profile_info">
-                <span>Welcome</span>
+                <span>Bienvenido</span>
                 <h2><%= current_user.names? ? current_user.names : "Usuario" %></h2>
               </div>
             </div>
@@ -173,3 +173,18 @@
   </div>
   </body>
 </html>
+
+
+<style>
+
+  #img-logo{
+    width: 232px;
+    height: 90px;
+  }
+
+  .site_title{
+    padding-left: 0px;
+    height: 132px;
+  }
+
+</style>
