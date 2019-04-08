@@ -3,9 +3,9 @@
   <table id="table">
     <thead>
       <tr>
-        <th class="title" width="40%"><img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png"></th>
-        <th class="title" width="30%" style="font-size: 30px;">REPORTE DE SERVICIO</th>
-        <td class="code" width="30%">Codigo</td>
+        <th class="title" width="20%"><img width="200px" src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png"></th>
+        <th class="title" width="40%" style="font-size: 30px;">REPORTE DE SERVICIO</th>
+        <td class="code" width="20%">Codigo</td>
       </tr>
     </thead>
   </table>
@@ -19,7 +19,7 @@
         <td class="info-td" ></td>
       </tr>
        <tr>
-        <td class="title-td" >Cliente Contacto</td>
+        <td class="title-td" >Cliente </td>
         <td class="info-td" ><%=@customer_report.cost_center.customer.name if @customer_report.cost_center.customer %></th>
         <td class="title-td" >Contacto</td>
         <td class="info-td" ><%=@customer_report.cost_center.contact.name if @customer_report.cost_center.contact %></td>
@@ -114,7 +114,7 @@
 }
 .info-td{
   border-bottom: 1px solid gray;
-  width: 37%;
+  width: 33%;
   padding-right: 20px;
 }
 .table-info td
@@ -128,7 +128,7 @@
   }
   #customers {
     border-collapse: collapse;
-    width: 100%;
+    width: 1200px;
     margin-left: 0px;
   }
   #customers td, #customers th {
@@ -156,13 +156,13 @@
     margin-left: 5px;
   }
   .contenido2{
-    width: 100%;
+    width: 1200px;
     margin-left: 60px;
     margin-top: 15px;
     margin-bottom: 15px;
   }
   .contenido3{
-    width: 100%;
+    width: 1200px;
     margin-left: 5px;
     margin-top: 15px;
     margin-bottom: 15px;
@@ -178,19 +178,19 @@
     margin-bottom: 3px;
   }
   #table{
-    width: 100%;
+    width: 1200px;
     border-collapse: collapse;
   }
   .contenido{
     border: 1px solid black !important;
     padding: 10px !important;
-   
+   width: 1200px;
      
   }
   #title-date{
     border: 1px solid black !important;
     text-align: center;
-    width: 100% !important;
+    width: 1200px !important;
   }
   .title-header{
     text-align: center
@@ -202,6 +202,7 @@
     padding: 20px;
     border: 1px solid black !important;
     text-align: center;
+    width: 30% !important;
   }
   .code{
     border: 1px solid black !important;
