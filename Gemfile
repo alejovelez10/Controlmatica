@@ -46,7 +46,7 @@ gem 'will_paginate'
 gem 'will_paginate-bootstrap'
 #generar pdf
 gem 'wicked_pdf'
-gem 'wkhtmltopdf-binary-edge'
+
 #jquery
 gem 'jquery-ui-rails'
 gem 'jquery-validation-rails'
@@ -91,6 +91,7 @@ group :development do
   gem 'spring'
   gem 'solargraph'
   gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'wkhtmltopdf-binary-edge'
 end
 
 group :test do
@@ -104,6 +105,7 @@ end
 
 group :production do
   gem 'pg'
+  gem 'wkhtmltopdf-binary'
   
 end
 
