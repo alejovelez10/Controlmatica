@@ -2,7 +2,7 @@
 #
 # Table name: cost_centers
 #
-#  id                :bigint(8)        not null, primary key
+#  id                :integer          not null, primary key
 #  customer_id       :integer
 #  contact_id        :integer
 #  description       :text
@@ -18,6 +18,7 @@
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  count             :integer
+#  create_type       :bool
 #
 
 class CostCenter < ApplicationRecord

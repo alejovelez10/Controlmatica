@@ -2,13 +2,13 @@ module CostCentersHelper
 
 	def color_value(cotizado, real)
 
-		if cotizado > real
+		if cotizado >= real
 
-				"green"
-		else
+			"green"
+	else
 
-				"red"
-		end	
+			"red"
+	end	
 			
 	end
 end

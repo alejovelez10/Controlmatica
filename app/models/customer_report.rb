@@ -2,7 +2,7 @@
 #
 # Table name: customer_reports
 #
-#  id             :bigint(8)        not null, primary key
+#  id             :integer          not null, primary key
 #  report_date    :date
 #  description    :text
 #  token          :string

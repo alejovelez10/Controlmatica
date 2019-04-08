@@ -2,7 +2,7 @@
 #
 # Table name: parameterizations
 #
-#  id           :bigint(8)        not null, primary key
+#  id           :integer          not null, primary key
 #  name         :string
 #  user_id      :integer
 #  number_value :integer

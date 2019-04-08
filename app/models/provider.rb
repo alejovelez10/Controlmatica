@@ -2,7 +2,7 @@
 #
 # Table name: providers
 #
-#  id         :bigint(8)        not null, primary key
+#  id         :integer          not null, primary key
 #  name       :string
 #  phone      :string
 #  address    :string

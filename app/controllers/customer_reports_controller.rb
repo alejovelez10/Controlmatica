@@ -113,6 +113,6 @@ class CustomerReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_report_params
-      params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :customer_id, :report_ids => [])
+      params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :customer_id, :cost_center_id, :report_ids => [])
     end
 end

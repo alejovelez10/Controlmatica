@@ -71,7 +71,7 @@
 
         </td>
         <td><%= report.code_report %></td>
-          <td><%= report.cost_center.code %></td>
+          <td><%= report.cost_center.code if report.cost_center %></td>
           <td><%= get_date(report.report_date) %></td>
           <td><%= report.report_execute.names %></td>
           <td><%= report.working_time %></td>
