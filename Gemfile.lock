@@ -540,6 +540,7 @@ GEM
     will_paginate (3.1.7)
     will_paginate-bootstrap (1.0.2)
       will_paginate (>= 3.0.3)
+    wkhtmltopdf-binary (0.12.4)
     wkhtmltopdf-binary-edge (0.12.5.0)
     xml-simple (1.1.5)
     xmlrpc (0.3.0)
@@ -597,6 +598,7 @@ DEPENDENCIES
   wicked_pdf
   will_paginate
   will_paginate-bootstrap
+  wkhtmltopdf-binary
   wkhtmltopdf-binary-edge
 
 RUBY VERSION
