@@ -46,7 +46,7 @@ gem 'will_paginate'
 gem 'will_paginate-bootstrap'
 #generar pdf
 gem 'wicked_pdf'
-gem 'wkhtmltopdf-binary'
+gem 'wkhtmltopdf-binary-edge'
 #jquery
 gem 'jquery-ui-rails'
 gem 'jquery-validation-rails'
