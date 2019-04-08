@@ -22,21 +22,28 @@
                 </ul>
               </div>
             <% end %>
-         
+           <div class="col-md-4 no-paddong-left">
+                <label>Centro de Costos</label>
+                <%= form.select :cost_center_id,
+                  CostCenter.all.map { |u| [u.code, u.id] },
+                              { include_blank: "Centro de Costos" },
+                              { class: 'form-control', id: ""  }
+                   %>
+            </div>  
     <div class="col-md-4 no-paddong-left">
       <label>Nombre del Contacto</label>
       <%= form.text_field :contact_name, class: "form-control ", :placeholder => "Nombre contacto", :title => "Es un Campo Obligatorio"  %>
     </div>
     <div class="col-md-4 no-paddong-left">
-      <label>Cargo</label>
+      <label>Cargo del Contacto</label>
       <%= form.text_field :contact_position, class: "form-control ", :placeholder => "Cargo Contacto", :title => "Es un Campo Obligatorio"  %>
     </div>
     <div class="col-md-4 no-paddong-left">
-      <label>Telefono</label>
+      <label>Telefono del Contacto</label>
       <%= form.text_field :contact_phone, class: "form-control ", :placeholder => "Telefono Contacto", :title => "Es un Campo Obligatorio"  %>
     </div>
     <div class="col-md-4 no-paddong-left">
-      <label>Email</label>
+      <label>Email del Contacto</label>
       <%= form.text_field :contact_email, class: "form-control ", :placeholder => "Email Contacto", :title => "Es un Campo Obligatorio"  %>
     </div>
 
@@ -48,14 +55,7 @@
                               { class: 'form-control', id: ""  }
                    %>
             </div>  
-            <div class="col-md-4 no-paddong-left">
-                <label>Centro de Costos</label>
-                <%= form.select :cost_center_id,
-                  CostCenter.all.map { |u| [u.code, u.id] },
-                              { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: ""  }
-                   %>
-            </div>  
+          
 
 
             <div class="col-md-4 no-paddong-left">
