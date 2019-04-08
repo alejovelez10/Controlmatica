@@ -45,17 +45,7 @@
     </thead>
   </table>
 
-  <div class="contenido2">
-    <p><b>Oficina: </b> <span></span></p> 
-    <p><b>Cliente: </b><span></span></p>
-    <p><b>Contacto: </b><span></span></p>
-  </div>
-  </div>
-
-  <div class="contenido2">
-    <p><b>Contacto: </b></p> <input type="text" name="" value="asdasdasd" id="text-show">
-    <p><b>Contacto: </b></p> <input type="text" name="" value="asdasdasd" id="text-show">
-  </div>
+  <br><br>
 
   <div class="contenido">
     <p align="center"><b>ACTIVIDADES</b></p>
@@ -67,27 +57,53 @@
           <th class="title-header text-center" style=" text-align: center;">HORAS</th>
           <th class="title-header text-center" style=" text-align: center;">EMPLEADO</th>
           <th class="title-header text-center" style=" text-align: center;">DESCRIPCION</th>
+          <th class="title-header text-center" style=" text-align: center;">APROBO</th>
         </tr>
       </thead>
 
       <tbody >
         <% @customer_report.reports.each do |report|%>
         <tr>
-          <td style="width: 15%; text-align: center;"><%=report.report_date%></td>
-          <td style="width: 10%; text-align: center;"><%=report.working_time%></td>
-          <td style="width: 15%; text-align: center;"><%=report.report_execute.names %> <%=report.report_execute.last_names%></td>
-          <td style="width: 60%"><%=report.work_description%></td>
+          <td style="width: 12%; text-align: center;"><%=report.report_date%></td>
+          <td style="width: 12%; text-align: center;"><%=report.working_time%></td>
+          <td style="width: 12%; text-align: center;"><%=report.report_execute.names %> <%=report.report_execute.last_names%></td>
+          <td style="width: 50%"><%=report.work_description%></td>
+          <td style="width: 12%"><%=report.work_description%></td>
         </tr>
         <%end%>
     
       </tbody>
     </table>
       <br><br>
-  <div class="contenido3 move">
-    <h3>EMPLEADO CONTROLMATICA S.A.S</h3>
-    <p><b>Nombre: </b></p> <input type="text" name="" value="asdasdasd" id="text-show"><br><br>
-    <p><b>Firma: </b></p> <input type="text" name="" value="asdasdasd" id="text-show">
-  </div>
+
+      <table id="table" class="table-info move">
+    <thead>
+        <tr>
+        <td class="title-td" colspan="2" > Recibí a conformidad y plena satisfacción  el servicio descrito</td>
+        <td class="title-td" colspan="2">EMPLEADO CONTROLMATICA S.A.S</th>
+    
+      </tr>
+      <tr>
+        <td class="title-td" >Nombre</td>
+        <td class="info-td"></th>
+        <td class="title-td" > Nombre</td>
+        <td class="info-td" ></td>
+      </tr>
+       <tr>
+        <td class="title-td" >Cargo</td>
+        <td class="info-td" ><%=@customer_report.cost_center.customer.name if @customer_report.cost_center.customer %></th>
+        <td class="title-td" >Firma</td>
+        <td class="info-td" ><%=@customer_report.cost_center.contact.name if @customer_report.cost_center.contact %></td>
+      </tr>
+      <tr>
+        <td class="title-td" >Firma </td>
+        <td class="info-td" ></th>
+    
+      </tr>
+       
+  
+    </thead>
+  </table>
 
 
 </div>
@@ -112,8 +128,8 @@
   }
   #customers {
     border-collapse: collapse;
-    width: 99%;
-    margin-left: 5px;
+    width: 100%;
+    margin-left: 0px;
   }
   #customers td, #customers th {
     border: 1px solid black;
@@ -168,9 +184,8 @@
   .contenido{
     border: 1px solid black !important;
     padding: 10px !important;
-      width: 920px;
-      margin-left: 5px;
-      margin-right: 5px;
+   
+     
   }
   #title-date{
     border: 1px solid black !important;
