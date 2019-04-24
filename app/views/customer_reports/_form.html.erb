@@ -28,8 +28,8 @@
           <%= form.date_field :report_date, id: "", class: "form-control" %>
         </div>
 
-        <div class="col-md-4">
-          <%= form.label "Cliente" %>
+        <div class="col-md-4 no-paddong-left">
+          <%= form.label "Centro de costos" %>
            <%= form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code , u.id] },
                               { include_blank: "Centro de Costos" },
@@ -37,13 +37,17 @@
                    %>
         </div>
 
-        <div class="col-md-4">
-          <%= form.label "Codigo del Reporte" %>
-          <%= form.text_field :report_code, class: "form-control" %>
-          <br>
-        </div>
+            <div class="row col-md-4 no-paddong-left">
+                <label>Aprueba el Reporte</label>
+            
+                <%= form.select :contact_id,
+                  Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
+                              { include_blank: "Ingrese Contacto" },
+                              { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
+                   %>
+              </div>
 
-  
+
     
 
         <div class="col-md-12 no-paddong-left">
@@ -59,7 +63,7 @@
           <br>
         </div>
 
-
+        <%= form.hidden_field :user_id ,:value =>  current_user.id %>
         <%= form.hidden_field :token %>
 
 
@@ -93,3 +97,6 @@
         });
 
 </script>
+<style type="text/css">
+  .col-md-4 {margin-bottom: 10px;}
+</style>

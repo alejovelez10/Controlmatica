@@ -68,8 +68,18 @@ class CustomerReportsController < ApplicationController
   def destroy
     @customer_report.destroy
     respond_to do |format|
-      format.html { redirect_to customer_reports_url, notice: 'Customer report was successfully destroyed.' }
-      format.json { head :no_content }
+      
+      format.html { 
+      
+         redirect_to customer_reports_url, notice: 'Customer report was successfully destroyed.' 
+
+      }
+      
+      format.json { 
+      
+        head :no_content 
+
+      }
     end
   end
 
@@ -79,6 +89,12 @@ class CustomerReportsController < ApplicationController
 
     @customer_report = CustomerReport.where(token: params[:token]).first
     @customer_report.update(report_state: "Aprobado")
+    @customer_report.reports.each do |report|
+
+      report.report_sate = true
+      report.save
+
+    end  
     redirect_to aproacion_cliente_path(@customer_report.id, @customer_report.token)
     
   end
@@ -113,6 +129,6 @@ class CustomerReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_report_params
-      params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :customer_id, :cost_center_id, :report_ids => [])
+      params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :customer_id, :contact_id,:user_id ,:cost_center_id, :report_ids => [])
     end
 end

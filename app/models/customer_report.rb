@@ -13,14 +13,18 @@
 #  updated_at     :datetime         not null
 #  user_id        :integer
 #  cost_center_id :integer
+#  contact_id     :integer
 #
 
 class CustomerReport < ApplicationRecord
 	has_and_belongs_to_many :reports, dependent: :destroy
+	belongs_to :user, optional:true
 	belongs_to :cost_center, optional: true
 	belongs_to :customer, optional:true
+	belongs_to :contact, optional: true
 	before_create :generate_token
 	after_create :send_approval_email
+
 
 
 	def generate_token

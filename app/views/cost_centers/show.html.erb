@@ -1,8 +1,23 @@
 
     <% ing_cotizado = @cost_center.engineering_value
+
           ing_real = @cost_center.reports.sum(:working_value)
           via_cotizado = @cost_center.viatic_value
           via_real = @cost_center.reports.sum(:viatic_value)
+
+          horas_eje = @cost_center.reports.sum(:working_time)
+
+          facturacion = @cost_center.customer_invoices.sum(:invoice_value)
+
+          porc_eje =  @cost_center.eng_hours > 0 ? ((horas_eje.to_f/@cost_center.eng_hours)*100).to_i : "N/A"
+
+          porc_via =  via_cotizado > 0 ? ((via_real.to_f/via_cotizado)*100).to_i : "N/A" 
+
+          porc_fac =  @cost_center.quotation_value > 0 ? ((facturacion.to_f/@cost_center.quotation_value)*100).to_i : "N/A" 
+
+
+
+          
         %>
 <div class="show-content">
   <div class="row titulos">
@@ -65,12 +80,24 @@
 
 
     <div class="col-md-12">
-       <div class="col-md-6 "><strong>Cotizado</strong><br>
+       <!--<div class="col-md-6 "><strong>Cotizado</strong><br>
           <span> <%= number_to_currency(ing_cotizado , precision: 0) %></span>
        </div>
       <div class="col-md-6">   <strong>Ejecutado</strong><br> 
          <span style="color:<%= color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
+      </div>-->
+
+      <div class="col-md-4 "><strong>Cotizado</strong><br>
+          <span> <%= @cost_center.eng_hours.to_i %> (horas)</span>
+       </div>
+      <div class="col-md-4">   <strong>Ejecutado</strong><br> 
+         <span style=""> <%= horas_eje%>  (horas)</span>
       </div>
+      <div class="col-md-4">   <strong>Avance</strong><br> 
+         <span style=""> <%= porc_eje%>%</span>
+      </div>
+
+
     </div>
 
   </div> 
@@ -83,16 +110,86 @@
 
 
     <div class="col-md-12">
-       <div class="col-md-6 " ><strong>Cotizado</strong><br>
+       <div class="col-md-4 " ><strong>Cotizado</strong><br>
           <span> <%= number_to_currency(via_cotizado , precision: 0) %></span>
        </div>
-      <div class="col-md-6">   <strong>Ejecutado</strong><br> 
-         <span style="color:<%=color_value(via_cotizado, via_real)%>"> <%= number_to_currency(via_real, precision: 0) %></span>
+      <div class="col-md-4">   <strong>Gastado</strong><br> 
+         <span style=""> <%= number_to_currency(via_real, precision: 0) %></span>
+      </div>
+
+      <div class="col-md-4">   <strong></strong><br> 
+         <span > <%= porc_via %>%</span>
       </div>
     </div>
 
   </div> 
-</div> 
+
+
+
+</div>
+
+<br> <hr>
+
+<div class="row valores">
+     
+  <div class="col-md-6">
+     <div class="col-md-12 title1">
+        <strong>Costos</strong><br>
+    </div>
+
+
+
+    <div class="col-md-12">
+       <!--<div class="col-md-6 "><strong>Cotizado</strong><br>
+          <span> <%= number_to_currency(ing_cotizado , precision: 0) %></span>
+       </div>
+      <div class="col-md-6">   <strong>Ejecutado</strong><br> 
+         <span style="color:<%= color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
+      </div>-->
+
+      <div class="col-md-4 "><strong>Ingenieria Costo</strong><br>
+          <span> <%= number_to_currency(@cost_center.hour_real * horas_eje , precision: 0) %></span>
+       </div>
+      <div class="col-md-4">   <strong>Ingenieria Real</strong><br> 
+         <span style=""> <%= number_to_currency(@cost_center.hour_cotizada * horas_eje , precision: 0)%></span>
+      </div>
+      <div class="col-md-4">   <strong></strong><br> 
+         <span style=""> <%= number_to_currency((@cost_center.hour_cotizada * horas_eje - @cost_center.hour_real * horas_eje), precision: 0) %></span>
+      </div>
+
+
+    </div>
+
+  </div> 
+
+  <div class="col-md-6">
+     <div class="col-md-12 title1" >
+        <strong>Facturacion</strong><br>
+    </div>
+
+
+
+    <div class="col-md-12">
+       <div class="col-md-4 " ><strong>Cotizado</strong><br>
+          <span> <%= number_to_currency(@cost_center.quotation_value, precision: 0) %></span>
+       </div>
+      <div class="col-md-4">   <strong>Facturado</strong><br> 
+         <span style=""> <%= number_to_currency(facturacion , precision: 0) %></span>
+      </div>
+
+      <div class="col-md-4">   <strong></strong><br> 
+         <span > <%= porc_fac %>%</span>
+      </div>
+    </div>
+
+  </div> 
+
+
+  
+</div>
+
+
+<br><br>
 <hr>
 
 <div class="row">
@@ -270,7 +367,7 @@
 <% end %>
 
 <!--
-    <% @cost_center.customer_invoice.each do |customer_invoice| %>
+    <% @cost_center.customer_invoices.each do |customer_invoice| %>
       
      <div class="float">
         <div class="dropdown">

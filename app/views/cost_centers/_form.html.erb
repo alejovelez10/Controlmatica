@@ -70,7 +70,7 @@
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Número de Cotización" %>
-              <%= form.text_field :quotation_number, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+              <%= form.text_field :quotation_number, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
 
              
                           <br>
@@ -80,20 +80,49 @@
           <div class="row form-group">
 
             <div class="col-md-4  no-paddong-left">
-              <%= form.label "Valor de ingeniería" %>
-               <%= form.text_field :engineering_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+              <%= form.label "Valor Cotización" %>
+               <%= form.text_field :quotation_value ,class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
 
-              <%= form.hidden_field :engineering_value, id: "engineering_value" %>
+             
+            </div>
+
+
+            <div class="col-md-4  no-paddong-left">
+              <%= form.label "Horas de ingeniería" %>
+               <%= form.text_field :eng_hours, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+
+             
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Valor de viaticos" %>
-              <%= form.text_field :viatic_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+              <%= form.number_field :viatic_value, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
 
-              <%= form.hidden_field :viatic_value, id: "viatic_value" %>
+           
               <br>
             </div>
           </div>  
+          
+
+          <% if action_name == "edit"%>
+          <div class="row form-group">
+
+            <div class="col-md-4  no-paddong-left">
+              <%= form.label "Valor hora Costo" %>
+               <%= form.text_field :hour_real, class: "form-control ", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
+
+             
+            </div>
+
+            <div class="col-md-4 no-paddong-left">
+              <%= form.label "Valor hora Cotizada" %>
+              <%= form.number_field :hour_cotizada, class: "form-control ", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
+
+           
+              <br>
+            </div>
+          </div>  
+          <%end%>
           
               <%= form.hidden_field :execution_state %>
               <%= form.hidden_field :invoiced_state %>
@@ -127,7 +156,7 @@ $("#cost_center_engineering_value").on({
     }
 });
 
-$("#cost_center_viatic_value").on({
+/*$("#cost_center_viatic_value").on({
     keyup: function() {
       formatCurrency($(this));
     },
@@ -137,7 +166,7 @@ $("#cost_center_viatic_value").on({
 
       document.getElementById("viatic_value").value = valor
     }
-});
+});*/
 
 
 function formatNumber(n) {
