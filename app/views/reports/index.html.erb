@@ -28,6 +28,7 @@
       <th>Valor de los Viaticos</th>
       <th>Descripcion de Viaticos</th>
       <th>Valor del Reporte</th>
+      <th>Estado</th>
     </tr>
   </thead>
 
@@ -79,6 +80,7 @@
           <td><%= number_to_currency(report.viatic_value, precision: 0) %></td>
           <td><%= report.viatic_description %></td>
           <td><%= number_to_currency(report.total_value, precision: 0) %></td>
+           <td><%= report.report_sate ? "Aprobado" : "Sin Aprobar" %></td>
         </tr>
         
       <% end %>

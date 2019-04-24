@@ -1,0 +1,5 @@
+class AddContactToReport < ActiveRecord::Migration[5.2]
+  def change
+    add_column :reports, :contact_id, :integer
+  end
+end

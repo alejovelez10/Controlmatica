@@ -93,6 +93,18 @@
                   <br>
               </div>
 
+
+
+
+             <div class="col-md-4" >
+                  <%= contact.label "Cargo" %>
+                  <%= contact.text_field :position, :class => 'form-control', autocomplete: "Cargo", :placeholder => "Cargo" %>
+                  <br>
+              </div>
+
+
+
+
                 <%= contact.hidden_field :user_id ,:value =>  current_user.id %>
                 <%= contact.hidden_field :id, class: "items" if action_name == "edit" %> 
 

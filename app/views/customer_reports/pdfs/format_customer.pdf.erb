@@ -1,64 +1,75 @@
 <div class="content-table">
-
+<div class="marca_de_agua"><%="APROBADO" if @customer_report.report_state == "Aprobado"%></div>
   <table id="table">
     <thead>
       <tr>
-        <th class="title" width="20%"><img width="200px" src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png"></th>
+        <th class="title" width="40%"><img width="400px" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/433/Captura_de_pantalla_2019-04-09_a_la_s__11.26.05_a._m..png"></th>
         <th class="title" width="40%" style="font-size: 30px;">REPORTE DE SERVICIO</th>
-        <td class="code" width="20%">Codigo</td>
+        <td class="code text-center" width="10%">
+          <table class="rev" >
+            <tr>
+              <td colspan="2">CODIGO</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="border-bottom: 1px solid gray">AUT-04</td>
+            </tr>
+            <tr>
+              <td style="border-right: 1px solid gray">REVISIÓN</td>
+              <td>PÁGINA</td>
+            </tr>
+            <tr>
+              <td style="border-right: 1px solid gray">2</td>
+              <td>__de___</td>
+            </tr>
+          </table>
+        </td>
       </tr>
     </thead>
   </table>
-
+ <br><br>
   <table id="table" class="table-info">
     <thead>
       <tr>
-        <td class="title-td" >Oficina</td>
-        <td class="info-td"></th>
-        <td class="title-td" > N Reporte</td>
-        <td class="info-td" ></td>
-      </tr>
-       <tr>
         <td class="title-td" >Cliente </td>
         <td class="info-td" ><%=@customer_report.cost_center.customer.name if @customer_report.cost_center.customer %></th>
+        <td class="title-td" > N Reporte</td>
+        <td class="info-td" ><%=@customer_report.cost_center.code if @customer_report.cost_center %></td>
+      </tr>
+       <tr>
+        <td class="title-td" >Direccion </td>
+        <td class="info-td" ><%=@customer_report.cost_center.customer.address if @customer_report.cost_center.customer %></th>
         <td class="title-td" >Contacto</td>
         <td class="info-td" ><%=@customer_report.cost_center.contact.name if @customer_report.cost_center.contact %></td>
       </tr>
       <tr>
-        <td class="title-td" >Direccion </td>
-        <td class="info-td" ></th>
-        <td class="title-td" >Telefono</td>
-        <td class="info-td" ></td>
-      </tr>
-        <tr>
         <td class="title-td" >Cotizacion # </td>
-        <td class="info-td" ></th>
-        <td class="title-td" >Forma de Pago</td>
-        <td class="info-td" ></td>
+        <td class="info-td" ><%=@customer_report.cost_center.quotation_number if @customer_report.cost_center %></th>
+        <td class="title-td" >Telefono</td>
+        <td class="info-td" ><%=@customer_report.cost_center.contact.phone if @customer_report.cost_center.contact %></td>
       </tr>
         <tr>
+ 
         <td class="title-td" >Orden de Compra #</td>
         <td class="info-td" ></th>
-        <td class="title-td" >Factura #</td>
-        <td class="info-td" ></td>
       </tr>
+
     </thead>
   </table>
 
-  <br><br>
+  <br><br><br>
 
  
     <table id="customers">
       <thead>
            <tr>
-          <th class="text-center" style=" text-align: center;" colspan="5">ACTIVIDADES</th>
+          <td class="title-header text-center" style=" text-align: center;" colspan="5">ACTIVIDADES</td>
              </tr>
         <tr>
           <th class="title-header text-center" style=" text-align: center;" colspan="1">FECHA</th>
           <th class="title-header text-center" style=" text-align: center;">HORAS</th>
           <th class="title-header text-center" style=" text-align: center;">EMPLEADO</th>
           <th class="title-header text-center" style=" text-align: center;">DESCRIPCION</th>
-          <th class="title-header text-center" style=" text-align: center;">APROBO</th>
+          <th class="title-header text-center" style=" text-align: center;">REVISO</th>
         </tr>
       </thead>
 
@@ -69,7 +80,7 @@
           <td style="width: 12%; text-align: center;"><%=report.working_time%></td>
           <td style="width: 12%; text-align: center;"><%=report.report_execute.names %> <%=report.report_execute.last_names%></td>
           <td style="width: 50%"><%=report.work_description%></td>
-          <td style="width: 12%"><%=report.work_description%></td>
+          <td style="width: 12%"><%=report.contact_name%></td>
         </tr>
         <%end%>
     
@@ -86,15 +97,15 @@
       </tr>
       <tr>
         <td class="title-td" >Nombre</td>
-        <td class="info-td"></th>
+        <td class="info-td"><%=@customer_report.contact.name if @customer_report.contact %></th>
         <td class="title-td" > Nombre</td>
-        <td class="info-td" ></td>
+        <td class="info-td" ><%=@customer_report.user.names%></td>
       </tr>
        <tr>
         <td class="title-td" >Cargo</td>
-        <td class="info-td" ><%=@customer_report.cost_center.customer.name if @customer_report.cost_center.customer %></th>
+        <td class="info-td" ><%=@customer_report.contact.position if @customer_report.contact %></th>
         <td class="title-td" >Firma</td>
-        <td class="info-td" ><%=@customer_report.cost_center.contact.name if @customer_report.cost_center.contact %></td>
+        <td class="info-td" ></td>
       </tr>
       <tr>
         <td class="title-td" >Firma </td>
@@ -125,7 +136,7 @@
 }
   .move{
     position: absolute;
-    top: 1140px;
+    top: 1640px;
   }
   #customers {
     border-collapse: collapse;
@@ -212,4 +223,23 @@
   .only-border{
         border-top: 1px solid black !important; 
   }
+  .rev td
+  {
+    text-align: center;
+    padding: 5px;
+  }
+  .rev
+  {
+    width: 100%;
+  }
+  .marca_de_agua
+  {
+    font-size: 144px;
+    position: absolute;
+    top: 642px;
+    left: 250px;
+    font-family: sans-serif;
+    color: rgba(228, 228, 228, 0.5803921568627451);
+}
+  
 </style>

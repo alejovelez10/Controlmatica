@@ -60,7 +60,17 @@ class ReportsController < ApplicationController
       format.json { head :no_content }
     end
   end
+  
+ 
+ def get_contact
 
+  contact = Contact.find(params[:id])
+
+  render json: contact
+   
+ end
+
+   
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_report
@@ -69,6 +79,6 @@ class ReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def report_params
-      params.require(:report).permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id)
+      params.require(:report).permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id)
     end
 end

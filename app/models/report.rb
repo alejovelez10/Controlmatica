@@ -23,14 +23,18 @@
 #  contact_phone      :string
 #  contact_position   :string
 #  customer_id        :integer
+#  contact_id         :integer
+#  report_sate        :boolean
 #
 
 class Report < ApplicationRecord
 	has_and_belongs_to_many :customer_reports
 	belongs_to :cost_center, optional: true
 	before_save :create_total
+	belongs_to :report, optional: true
 	belongs_to :report_execute, :class_name => 'User'
 	before_create :create_code
+	belongs_to :contact, optional: true
 	before_create :coste_center_verify
 	after_create :save_report_in_cost_center
 
@@ -46,7 +50,7 @@ class Report < ApplicationRecord
 		customer_prefix = Customer.find(self.cost_center.customer.id).code
 		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count
 	    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
-	    self.save
+	   
 		end
 
 		
@@ -66,7 +70,17 @@ class Report < ApplicationRecord
 		puts self.customer_id
 		 if self.cost_center_id == nil
 
-		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,)
+		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0)
+		 end
+		 if self.contact_id == nil
+
+		 	Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email , phone:self.contact_phone, position: self.contact_position,user_id:self.user_id)
+		 else
+		 	contact = Contact.find(self.contact_id)
+		 	self.contact_name = contact.name
+		 	self.contact_position = contact.position
+		 	self.contact_email = contact.email
+		 	self.contact_phone = contact.phone
 		 end
 		
 	end
@@ -77,7 +91,7 @@ class Report < ApplicationRecord
 		puts "22222222222222222"
 		count = Report.maximum(:report_code)
 		customer_prefix = Customer.find(self.cost_center.customer.id).code
-		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count
+		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count+ 1
 	    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
 	    self.save
 		
