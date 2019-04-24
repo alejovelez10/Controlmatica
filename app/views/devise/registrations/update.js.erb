@@ -1,31 +1,21 @@
-
-var actual = document.getElementById("user_current_password").value;
-
-
-if (actual == "" ){
- 		toastr["error"]("Tu Informacion no se Actulizo <br> <b>Debes llenar La 'Contraseña Actual' </b>");	
- 		$("#user_current_password").addClass('form-danger');
-
- 		$("#user_current_password").keydown(function(event) {
-	 		$(this).addClass('success-input')
-	 	});
-
-}else {
+<% if devise_error_messages!.present? %>
+	toastr["error"]("Error <br> <b><%= resource.errors.full_messages.first %></b>");
+<% else %>
 
 
 	 	toastr["success"]("Tu Informacion se Actulizo con <b> Exito!</b>");	
-	 	document.getElementById("user-names").innerHTML = "<%= @user.names %>"
-	 	document.getElementById("names").innerHTML = "<%= @user.names %>"
-	 	document.getElementById("user-email").innerHTML = "<%= @user.email %>"
-	 	document.getElementById("user-document_type").innerHTML = "<%= @user.document_type %>"
-	 	document.getElementById("user-document").innerHTML = "<%= @user.number_document %>"
-	 	document.getElementById("user-birthday").innerHTML = "<%= get_date(@user.birthday) %>"
-	 	document.getElementById("user-avatar1").src = '<%= @user.avatar.url() %>'
-	 	document.getElementById("user-avatar2").src = '<%= @user.avatar.url() %>'
-	 	document.getElementById("user-avatar3").src = '<%= @user.avatar.url() %>'
+	 	document.getElementById("user-names").innerHTML = "<%= @user.names %>";
+	 	document.getElementById("names").innerHTML = "<%= @user.names %>";
+	 	document.getElementById("user-email").innerHTML = "<%= @user.email %>";
+	 	document.getElementById("user-document_type").innerHTML = "<%= @user.document_type %>";
+	 	document.getElementById("user-document").innerHTML = "<%= @user.number_document %>";
+	 	document.getElementById("user-birthday").innerHTML = "<%= get_date(@user.birthday) %>";
+	 	document.getElementById("user-avatar1").src = '<%= @user.avatar.url() %>';
+	 	document.getElementById("user-avatar2").src = '<%= @user.avatar.url() %>';
+	 	document.getElementById("user-avatar3").src = '<%= @user.avatar.url() %>';
 	 	//$(".user-avatar img").css({"background": "url(https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg)"});
-}       
- 	
+     
+<% end %>
 
 
 
