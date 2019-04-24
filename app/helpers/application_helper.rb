@@ -30,6 +30,10 @@ module ApplicationHelper
 		Report.all
 	end
 
+	def get_rol
+		Rol.all
+	end
+
 	def get_date(fecha)
    
 		if fecha != nil

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_30_225917) do
+ActiveRecord::Schema.define(version: 2019_04_23_222109) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -43,6 +43,11 @@ ActiveRecord::Schema.define(version: 2019_01_30_225917) do
     t.datetime "updated_at", null: false
     t.integer "count"
     t.string "code"
+    t.boolean "create_type"
+    t.float "eng_hours"
+    t.float "hour_cotizada"
+    t.float "hour_real"
+    t.float "quotation_value"
   end
 
   create_table "customer_invoices", force: :cascade do |t|
@@ -70,6 +75,7 @@ ActiveRecord::Schema.define(version: 2019_01_30_225917) do
     t.datetime "updated_at", null: false
     t.integer "user_id"
     t.integer "cost_center_id"
+    t.integer "contact_id"
   end
 
   create_table "customer_reports_reports", id: false, force: :cascade do |t|
@@ -126,6 +132,15 @@ ActiveRecord::Schema.define(version: 2019_01_30_225917) do
     t.string "report_code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code_report"
+    t.string "customer_name"
+    t.string "contact_name"
+    t.string "contact_email"
+    t.string "contact_phone"
+    t.string "contact_position"
+    t.integer "customer_id"
+    t.integer "contact_id"
+    t.boolean "report_sate"
   end
 
   create_table "rols", force: :cascade do |t|

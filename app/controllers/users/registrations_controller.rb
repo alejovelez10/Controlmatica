@@ -30,7 +30,16 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # def destroy
   #   super
   # end
-
+  def create_user
+    @users = User.create(user_params)
+    if @users.save
+        redirect_to user_path
+        flash[:success] = "El Registro de creo con"
+      else 
+        puts "noguardaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        flash[:error] = "El Registro No se puedo crear"
+    end
+  end
   # GET /resource/cancel
   # Forces the session data which is usually expired after sign
   # in to be expired now. This is useful if the user wants to
@@ -66,6 +75,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
     def after_update_path_for(resource)
       edit_user_registration_path
+    end
+
+    def user_params
+      params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document)
     end
     
 end

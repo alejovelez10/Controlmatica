@@ -6,4 +6,14 @@ class HomeController < ApplicationController
   def dashboard
   	
   end
+
+
+  def users_new
+  	
+  end
+
+  def index_user
+  	@user = User.all
+  end
+  
 end

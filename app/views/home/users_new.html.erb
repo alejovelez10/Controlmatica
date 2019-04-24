@@ -1,0 +1,89 @@
+<div class="row">
+  <%= form_tag create_user_path, method: :post do %>
+	  <div class="col-md-8 col-sm-12 col-xs-12 margin-bot">
+	    <div class="dashboard_graph">
+
+	    	<div class="row">
+
+	    		<div class="col-md-12 no-padding margin-bot">
+		    		<div class="col-md-4 no-padding-left">
+		    	 		<%= label_tag "Nombre"%>	
+		    			<%= text_field_tag :names, nil, class: "form form-control", :placeholder => "Nombre" %>
+		        	</div>
+
+		    		<div class="col-md-4">
+		    	 		<%= label_tag "Apellido"%>	
+		    			<%= text_field_tag :last_names, nil, class: "form form-control", :placeholder => "Apellido" %>
+		        	</div>
+
+		    		<div class="col-md-4">
+		    	 		<%= label_tag "Email"%>	
+		    			<%= email_field_tag :email, nil, class: "form form-control", :placeholder => "Email" %>
+		        	</div>
+	    		</div>
+
+	    		<div class="col-md-12 no-padding margin-bot">
+		    		<div class="col-md-4 no-padding-left">
+		    	 		<%= label_tag "Tipo de Documento"%>	
+		    			<%= select_tag 'document_type', options_for_select(select_documento),{:class => 'form form-control'}%>
+		        	</div>
+
+		    		<div class="col-md-4">
+		    	 		<%= label_tag "Numero de Documento"%>	
+		    			<%= date_field_tag :number_document, nil, class: "form form-control", :placeholder => "Fecha de Cumpleaños" %>
+		        	</div>
+
+		    		<div class="col-md-4">
+		    	 		<%= label_tag "Cargo"%>	
+		    			<%= select_tag 'rol_id', options_for_select(get_rol.collect{ |u| ["#{u.name}", u.id] },{}), {:multiple => false, class: 'form-control', include_blank: false, id: "validationCustom01", :prompt => 'Selecciona una Opcion' }%>
+		        	</div>
+	    		</div>
+
+		  		<div class="col-md-4 no-padding-left">
+				    <%= label_tag "Contraseña"%>	
+				    <%= password_field_tag :password, nil, class: "form form-control", :placeholder => "Contraseña" %>
+				</div>
+
+				<div class="col-md-4">
+				    <%= label_tag "Confirmar Contraseña"%>	
+				    <%= password_field_tag :password_confirmation, nil, class: "form form-control", :placeholder => "Confirmar Contraseña" %>
+			   	</div>
+
+	    	</div>
+
+	    </div>
+	  </div>
+
+	  <div class="col-md-4 col-sm-12 col-xs-12">
+	  	<div class="dashboard_graph">
+  			<div class="row">
+	  			<div class="col-md-12 text-center margin-bot">
+		           <img  class="user-avatar rounded-circle" id="edit-avatar" src="https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg" alt="" />
+		             <br><br>
+		             <%= file_field_tag :avatar, class: "form form-control", id: "img1" %>
+	          	</div>
+	           <br><br>
+		          <div class="col-md-12 modal-footer">
+		            <%= submit_tag "Guardar", class: "btn btn-warning" %>
+		            <%= link_to "Volver", user_path, class: "btn btn-light" %>
+		          </div>
+  			</div>
+	  	</div>
+	  </div>
+
+   <% end -%>
+</div>
+
+
+<style type="text/css" media="screen">
+
+	.margin-bot{
+		margin-bottom: 30px;
+	}
+
+	#edit-avatar{
+		height: 96px;
+    	border-radius: 50%;
+	}
+
+</style>

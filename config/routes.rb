@@ -15,7 +15,16 @@ Rails.application.routes.draw do
   get 'contacts/index'
   get 'contacts/create'
   get 'contacts/destroy'
+
+
+  get "user/new", to: "home#users_new", as: "new_users"
+  get "user/all", to: "home#index_user", as: "user"
   devise_for :users, :controllers => { :registrations => "users/registrations" }
+
+  devise_scope :user do
+    post "create_user", to: "users/registrations#create_user", as: "create_user" 
+  end
+
   root 'home#dashboard'
   get "home/dashboard", to: "home#dashboard", as: "user_home"
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
