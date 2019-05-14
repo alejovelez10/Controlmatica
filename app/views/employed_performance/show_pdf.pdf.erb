@@ -1,10 +1,10 @@
 <div class="content-table">
-<div class="marca_de_agua"><%="APROBADO" if @customer_report.report_state == "Aprobado"%></div>
+
   <table id="table">
     <thead>
       <tr>
         <th class="title" width="40%"><img width="400px" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/433/Captura_de_pantalla_2019-04-09_a_la_s__11.26.05_a._m..png"></th>
-        <th class="title" width="40%" style="font-size: 30px;">REPORTE DE SERVICIO</th>
+        <th class="title" width="40%" style="font-size: 30px;">REPORTE DE EFICIENCIA</th>
         <td class="code text-center" width="10%">
           <table class="rev" >
             <tr>
@@ -30,28 +30,19 @@
   <table id="table" class="table-info">
     <thead>
       <tr>
-        <td class="title-td" >Cliente </td>
-        <td class="info-td" ><%=@customer_report.cost_center.customer.name if @customer_report.cost_center.customer %></th>
-        <td class="title-td" > N Reporte</td>
-        <td class="info-td" ><%=@customer_report.report_code %></td>
+        <td class="title-td" >Empleado </td>
+        <td class="info-td" ><%=@user.names %></th>
+        <td class="title-td" > </td>
+        <td class="info-td" ></td>
       </tr>
        <tr>
-        <td class="title-td" >Direccion </td>
-        <td class="info-td" ><%=@customer_report.cost_center.customer.address if @customer_report.cost_center.customer %></th>
-        <td class="title-td" >Contacto</td>
-        <td class="info-td" ><%=@customer_report.cost_center.contact.name if @customer_report.cost_center.contact %></td>
+        <td class="title-td" >Fecha Desde </td>
+        <td class="info-td" ><%=@fecha_desde %></th>
+        <td class="title-td" >Fecha Hasta</td>
+        <td class="info-td" ><%=@fecha_hasta %></td>
       </tr>
-      <tr>
-        <td class="title-td" >Cotizacion # </td>
-        <td class="info-td" ><%=@customer_report.cost_center.quotation_number if @customer_report.cost_center %></th>
-        <td class="title-td" >Telefono</td>
-        <td class="info-td" ><%=@customer_report.cost_center.contact.phone if @customer_report.cost_center.contact %></td>
-      </tr>
-        <tr>
- 
-        <td class="title-td" >Orden de Compra #</td>
-        <td class="info-td" ></th>
-      </tr>
+
+    
 
     </thead>
   </table>
@@ -61,61 +52,37 @@
  
     <table id="customers">
       <thead>
-           <tr>
-          <td class="title-header text-center" style=" text-align: center;" colspan="5">ACTIVIDADES</td>
-             </tr>
+    
         <tr>
           <th class="title-header text-center" style=" text-align: center;" colspan="1">FECHA</th>
           <th class="title-header text-center" style=" text-align: center;">HORAS</th>
-          <th class="title-header text-center" style=" text-align: center;">EMPLEADO</th>
-          <th class="title-header text-center" style=" text-align: center;">DESCRIPCION</th>
-          <th class="title-header text-center" style=" text-align: center;">REVISO</th>
+
+          <th class="title-header text-center" style=" text-align: center;">DESCRIPCION ACTIVIDAD</th>
+          <th class="title-header text-center" style=" text-align: center;">DESCRIPCION CENTRO DE COSTO</th>
+          
         </tr>
       </thead>
 
       <tbody >
-        <% @customer_report.reports.each do |report|%>
+        <% @reports.each do |report|%>
         <tr>
-          <td style="width: 12%; text-align: center;"><%=report.report_date%></td>
-          <td style="width: 12%; text-align: center;"><%=report.working_time%></td>
-          <td style="width: 12%; text-align: center;"><%=report.report_execute.names %> <%=report.report_execute.last_names%></td>
-          <td style="width: 50%"><%=report.work_description%></td>
-          <td style="width: 12%"><%=report.contact_name%></td>
+          <td style="width: 10%; text-align: center;"><%=report.report_date.strftime("%d-%m-%Y")%></td>
+          <td style="width: 10%; text-align: center;"><%=report.working_time%></td>
+          <td style="width: 40%"><%=report.work_description%></td>
+          <td style="width: 40%"><%=report.cost_center.description%></td>
+          
         </tr>
         <%end%>
-    
+    	        <tr>
+          <td class="title-header text-center" style=" text-align: center;font-size: 25px;font-weight: bold" colspan="1">TOTAL</td>
+          <td class="title-header text-center" style=" text-align: center;font-size: 25px;font-weight: bold"><%=@reports.sum(:working_time)%></td>
+
+          
+        </tr>
       </tbody>
     </table>
       <br><br>
 
-      <table id="table" class="table-info move">
-    <thead>
-        <tr>
-        <td class="title-td" colspan="2" > Recibí a conformidad y plena satisfacción  el servicio descrito</td>
-        <td class="title-td" colspan="2">EMPLEADO CONTROLMATICA S.A.S</th>
-    
-      </tr>
-      <tr>
-        <td class="title-td" >Nombre</td>
-        <td class="info-td"><%=@customer_report.contact.name if @customer_report.contact %></th>
-        <td class="title-td" > Nombre</td>
-        <td class="info-td" ><%=@customer_report.user.names%></td>
-      </tr>
-       <tr>
-        <td class="title-td" >Cargo</td>
-        <td class="info-td" ><%=@customer_report.contact.position if @customer_report.contact %></th>
-        <td class="title-td" >Firma</td>
-        <td class="info-td" ></td>
-      </tr>
-      <tr>
-        <td class="title-td" >Firma </td>
-        <td class="info-td" ></th>
-    
-      </tr>
-       
-  
-    </thead>
-  </table>
 
 
 </div>

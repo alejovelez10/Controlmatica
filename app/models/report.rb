@@ -70,7 +70,7 @@ class Report < ApplicationRecord
 		puts self.customer_id
 		 if self.cost_center_id == nil
 
-		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0)
+		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0,quotation_value: 0,quotation_number: "Sin numero")
 		 end
 		 if self.contact_id == nil
 
@@ -81,6 +81,7 @@ class Report < ApplicationRecord
 		 	self.contact_position = contact.position
 		 	self.contact_email = contact.email
 		 	self.contact_phone = contact.phone
+		 	CostCenter.last.update(contact_id: contact.id)
 		 end
 		
 	end

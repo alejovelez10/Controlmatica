@@ -14,6 +14,8 @@
 #  user_id        :integer
 #  cost_center_id :integer
 #  contact_id     :integer
+#  count          :integer
+#  approve_date   :date
 #
 
 class CustomerReport < ApplicationRecord
@@ -29,7 +31,10 @@ class CustomerReport < ApplicationRecord
 
 	def generate_token
 
-		 self.token = SecureRandom.hex(15)
+		self.token = SecureRandom.hex(15)
+		count = CustomerReport.where(cost_center_id: self.cost_center_id).maximum(:count)
+		self.count = count == 0  || count.blank? || count.nil?   ?  1 :  count + 1
+		self.report_code = self.cost_center.code + "-" + self.count.to_s
 		
 	end
 
