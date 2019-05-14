@@ -1,7 +1,7 @@
 
-<p>Hola señor Alejandro </p>
 
-<p>Adjunto hay un reporte enviado por david londoño de controlmatica <br> Para aprobar por favor hacer click en el boton</p>
+
+<p>Estimado, adjunto encontrara el reporte de servicio <%=@customer_report.report_code%>, le agredecemos revisar su contenido y confirmar su aprobacion haciendo click en el boton verde. en caso de no estar de acuerdo favor responder este correo con los motivos de la no aceptacion.</p>
 <br>
 <% if Rails.env.production? %> 
 <a href="https://controlmaticatest.herokuapp.com/aprobar_informe/<%=@customer_report.token%>" style= "  text-decoration:none;
@@ -22,7 +22,12 @@ APROBAR</a>
 APROBAR</a>
 <%end%>
 
+<br>
+<br>
 <p>Atentamente</p>
 
 
-<s
+<strong> <%=@customer_report.user.names%></strong> <br><br>
+<img width="200px" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/433/Captura_de_pantalla_2019-04-09_a_la_s__11.26.05_a._m..png">
+
+

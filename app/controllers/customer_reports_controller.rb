@@ -88,7 +88,7 @@ class CustomerReportsController < ApplicationController
   def aprobar_informe
 
     @customer_report = CustomerReport.where(token: params[:token]).first
-    @customer_report.update(report_state: "Aprobado")
+    @customer_report.update(report_state: "Aprobado",approve_date: Date.today)
     @customer_report.reports.each do |report|
 
       report.report_sate = true
@@ -129,6 +129,6 @@ class CustomerReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_report_params
-      params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :customer_id, :contact_id,:user_id ,:cost_center_id, :report_ids => [])
+      params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id,:user_id ,:cost_center_id, :report_ids => [])
     end
 end

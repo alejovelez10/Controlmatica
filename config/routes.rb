@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'employed_performance/show', to: 'employed_performance#show', as: 'employed_performance_show' 
+  get 'employed_performance/info_pdf', to: 'employed_performance#info_pdf', as: 'info_pdf'
   resources :customer_invoices
   resources :sales_orders
   resources :customer_reports

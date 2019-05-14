@@ -15,6 +15,13 @@
 
           porc_fac =  @cost_center.quotation_value > 0 ? ((facturacion.to_f/@cost_center.quotation_value)*100).to_i : "N/A" 
 
+          total_eje = @cost_center.hour_real * horas_eje
+
+          total_cot= @cost_center.hour_cotizada * horas_eje
+
+          total_margen = total_cot - total_eje 
+
+          porc_ejec =  total_cot > 0 ? ((total_margen.to_f/total_cot)*100).to_i : "N/A" 
 
 
           
@@ -150,11 +157,11 @@
       <div class="col-md-4 "><strong>Ingenieria Costo</strong><br>
           <span> <%= number_to_currency(@cost_center.hour_real * horas_eje , precision: 0) %></span>
        </div>
-      <div class="col-md-4">   <strong>Ingenieria Real</strong><br> 
+      <div class="col-md-4">   <strong>Ingenieria Facturada</strong><br> 
          <span style=""> <%= number_to_currency(@cost_center.hour_cotizada * horas_eje , precision: 0)%></span>
       </div>
-      <div class="col-md-4">   <strong></strong><br> 
-         <span style=""> <%= number_to_currency((@cost_center.hour_cotizada * horas_eje - @cost_center.hour_real * horas_eje), precision: 0) %></span>
+      <div class="col-md-4">   <strong>Margen</strong><br> 
+         <span style=""> <%= porc_ejec %>%</span>
       </div>
 
 

@@ -1,3 +1,4 @@
+<%= link_to "Volver", customer_reports_path , class: "btn btn-primary"%>
 <div class="content-table">
 <div class="marca_de_agua"><%="APROBADO" if @customer_report.report_state == "Aprobado"%></div>
   <table id="table">
@@ -33,7 +34,7 @@
         <td class="title-td" >Cliente </td>
         <td class="info-td" ><%=@customer_report.cost_center.customer.name if @customer_report.cost_center.customer %></th>
         <td class="title-td" > N Reporte</td>
-        <td class="info-td" ><%=@customer_report.cost_center.code if @customer_report.cost_center %></td>
+        <td class="info-td" ><%=@customer_report.report_code %></td>
       </tr>
        <tr>
         <td class="title-td" >Direccion </td>

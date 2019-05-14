@@ -22,6 +22,7 @@
 #  eng_hours         :float
 #  hour_cotizada     :float
 #  hour_real         :float
+#  quotation_value   :float
 #
 
 class CostCenter < ApplicationRecord
@@ -32,7 +33,7 @@ class CostCenter < ApplicationRecord
 	
 	belongs_to :customer, optional: :true
 	belongs_to :contact, optional: :true
-	before_save :create_code
+	before_create :create_code
 
 	def create_code
 
