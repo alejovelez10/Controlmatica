@@ -19,6 +19,8 @@ class SalesOrder < ApplicationRecord
 	after_create :change_state_cost_center
 
 
+	
+
 	def change_state_cost_center
 
 		CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")

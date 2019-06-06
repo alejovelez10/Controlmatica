@@ -26,8 +26,11 @@ class CustomerInvoice < ApplicationRecord
 
 
 	def change_state_cost_center
-
+        
+        cost_center = CostCenter.find(self.cost_center_id)
+        customer_invoice = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
+        if (cost_center.quotation_value <= customer_invoice)
 		CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO")
-		
+		end
 	end
 end

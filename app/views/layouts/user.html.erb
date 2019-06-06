@@ -65,7 +65,7 @@
               <div class="menu_section">
                 <h3>General</h3>
                 <ul class="nav side-menu">
-                  <li>
+                  <li style="display: none">
                     <%= link_to root_path do %>
                       <i class="fas fa-tachometer-alt ml"></i> Dashboard
                     <% end -%>
@@ -73,9 +73,7 @@
                   <li><a><i class="fa fa-edit"></i> Configuración <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
 
-                      <li>
-                        <%= link_to "Roles", rols_path %>
-                      </li>
+                     
 
                       <li>
                         <%= link_to "Proveedores", providers_path %>
@@ -90,6 +88,11 @@
                       <li>
                         <%= link_to "Parametrizacion", parameterizations_path %>
                       </li>
+
+                         <li>
+                            <%= link_to  "Usuarios" , user_path %>
+                    
+                        </li>
 
 
                     </ul>
@@ -109,11 +112,7 @@
                          <i class="fas fa-tachometer-alt ml"></i> Reportes de Cliente
                     <% end -%>
                   </li>
-                  <li>
-                    <%= link_to user_path  do %>
-                      <i class="fas fa-users ml"></i> Configuracion de Usuarios
-                    <% end -%>
-                  </li>
+               
 
                      <li>
                     <%= link_to employed_performance_show_path  do %>

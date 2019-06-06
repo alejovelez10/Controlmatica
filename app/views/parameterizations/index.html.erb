@@ -19,8 +19,8 @@
   <thead>
     <tr>
       <th>Name</th>
-      <th>User</th>
-      <th>Valor numérico</th>
+     
+  
       <th>Money value</th>
       <th class="title">Acciones</th>
     </tr>
@@ -30,9 +30,8 @@
       <% @parameterizations.each do |parameterization| %>
         <tr>
           <td><%= parameterization.name %></td>
-          <td><%= parameterization.user_id %></td>
-          <td><%= parameterization.number_value %></td>
-          <td><%= parameterization.money_value %></td>
+
+          <td><%= number_to_currency(parameterization.money_value, presition: 0) %></td>
           <td>
 
             <%= link_to parameterization, class: "btn-padding" do %>
