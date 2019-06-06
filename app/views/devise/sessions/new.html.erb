@@ -19,7 +19,7 @@
 
               <div class="clearfix"></div>
 
-              <div class="separator">
+              <div class="separator" style="display: none;">
                 <p class="change_link">Eres Nuevo?
                   <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
                     <%= link_to "Crear Tu Cuenta", new_registration_path(resource_name) %><br />
