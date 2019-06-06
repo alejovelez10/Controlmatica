@@ -1,0 +1,6 @@
+$('.execution_state<%=@cost_center.id%>').html("FINALIZADO");
+$('.btn-finalizar<%=@cost_center.id%>').hide("");
+
+<%if @fact%>
+$('.invoiced_state<%=@cost_center.id%>').html("POR FACTURAR");
+<%end%>

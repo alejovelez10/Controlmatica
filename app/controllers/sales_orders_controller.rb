@@ -20,6 +20,7 @@ class SalesOrdersController < ApplicationController
 
   # GET /sales_orders/1/edit
   def edit
+     @cost_center = CostCenter.find(@sales_order.cost_center_id)
   end
 
   # POST /sales_orders

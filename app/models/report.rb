@@ -70,8 +70,12 @@ class Report < ApplicationRecord
 		puts self.customer_id
 		 if self.cost_center_id == nil
 
-		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0,quotation_value: 0,quotation_number: "Sin numero")
+		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0,quotation_value: 0,execution_state: "EJECUCION")
+		 
+		 else
+		 	CostCenter.find(self.cost_center_id).update(execution_state:"EJECUCION")
 		 end
+		 
 		 if self.contact_id == nil
 
 		 	Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email , phone:self.contact_phone, position: self.contact_position,user_id:self.user_id)

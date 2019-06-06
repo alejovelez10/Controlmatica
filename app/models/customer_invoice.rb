@@ -20,4 +20,14 @@ class CustomerInvoice < ApplicationRecord
 	mount_uploader :delivery_certificate_file, CertificateUploader
 	mount_uploader :reception_report_file, InformationUploader
 	belongs_to :cost_center , optional: true
+
+
+	after_create :change_state_cost_center
+
+
+	def change_state_cost_center
+
+		CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO")
+		
+	end
 end

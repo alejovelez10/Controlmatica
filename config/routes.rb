@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   resources :customer_reports
   get 'aprobar_informe/:token', to: 'customer_reports#aprobar_informe', as: 'aprobar_informe'
   get 'aproacion_cliente/:report/:token', to: 'customer_reports#aproacion_cliente', as: 'aproacion_cliente'
-
+   get 'cost_centers/change_state_ended/:id', to: 'cost_centers#change_state_ended', as: 'change_state_ended'
 
   resources :parameterizations
   resources :reports
@@ -37,4 +37,5 @@ Rails.application.routes.draw do
 
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end
+
 

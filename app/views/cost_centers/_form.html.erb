@@ -60,17 +60,17 @@
           <div class="row form-group">
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Fecha de inicio" %><br>
-              <%= form.date_field :start_date, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true , :placeholder => "Fecha de inicio"%>
+              <%= form.date_field :start_date, class: "form-control ", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false , :placeholder => "Fecha de inicio"%>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Fecha final" %><br>
-              <%= form.date_field :end_date, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true , :placeholder => "Fecha final" %>
+              <%= form.date_field :end_date, class: "form-control ", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false , :placeholder => "Fecha final" %>
             </div>
 
             <div class="col-md-4 no-paddong-left">
               <%= form.label "Número de Cotización" %>
-              <%= form.text_field :quotation_number, class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
+              <%= form.text_field :quotation_number, class: "form-control ", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
 
              
                           <br>
@@ -81,7 +81,7 @@
 
             <div class="col-md-4  no-paddong-left">
               <%= form.label "Valor Cotización" %>
-               <%= form.text_field :quotation_value ,class: "form-control required", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+               <%= form.text_field :quotation_value ,class: "form-control", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
 
              
             </div>
@@ -123,9 +123,11 @@
             </div>
           </div>  
           <%end%>
-          
-              <%= form.hidden_field :execution_state %>
+              <%if action_name == "new"%>
+              <%= form.hidden_field :execution_state, :value => "PENDIENTE"  %>
+              <%end%>
               <%= form.hidden_field :invoiced_state %>
+
 
             <div class="col-md-12 no-paddong-left">
               <%= form.submit "Guardar", class: "btn btn-dark"%>

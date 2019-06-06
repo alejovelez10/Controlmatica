@@ -34,21 +34,34 @@ class CostCenter < ApplicationRecord
 	belongs_to :customer, optional: :true
 	belongs_to :contact, optional: :true
 	before_create :create_code
+	before_update :change_state
 
 	def create_code
+        
 
 		count = CostCenter.where(service_type: self.service_type).maximum(:count)
 		customer_prefix = Customer.find(self.customer_id).code
-		puts count
-		puts count.blank?
-
-		self.count = count == 0  || count.blank? || count.nil?   ?  1 :  count + 1
-		puts self.count
-		puts "countttttttttttttttttttttt"
+		self.count = count == 0  || count.blank? || count.nil?   ?  1 :  count + 1	
 		prefix = self.service_type.slice(0,3).upcase
 		self.code = prefix + "-" + customer_prefix +"-" + self.count.to_s + "-" + Time.now.year.to_s
 	    self.hour_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
 	    self.hour_cotizada = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
+		self.invoiced_state =   self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA" 
+	end
+
+	def change_state
+		puts("wewewe")
+		puts !self.quotation_number.blank?
+		puts !self.quotation_number.nil?
+		
+		puts self.invoiced_state == "PENDIENTE DE COTIZACION"
+
+		if self.invoiced_state == "PENDIENTE DE COTIZACION"  && !self.quotation_number.blank? && !self.quotation_number.nil?
+			puts("hoasfhasddaslkdjdkljskfa")
+			self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
+
+		end
+
 		
 	end
 

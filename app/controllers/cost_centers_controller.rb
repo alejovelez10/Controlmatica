@@ -64,6 +64,17 @@ class CostCentersController < ApplicationController
     end
   end
 
+  def change_state_ended
+    @cost_center = CostCenter.find(params[:id])
+    state = @cost_center.invoiced_state == "LEGALIZADO" ? "POR FACTURAR" : @cost_center.invoiced_state
+    @fac = @cost_center.invoiced_state == "LEGALIZADO" ? true : false
+    @cost_center.update(execution_state: "FINALIZADO", invoiced_state: state)
+
+    respond_to do |format|
+      format.js
+    end
+    
+  end
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_cost_center

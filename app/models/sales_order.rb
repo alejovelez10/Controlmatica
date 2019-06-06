@@ -16,4 +16,12 @@
 class SalesOrder < ApplicationRecord
 	belongs_to :cost_center , optional: true
 	mount_uploader :order_file, OrderUploader
+	after_create :change_state_cost_center
+
+
+	def change_state_cost_center
+
+		CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+		
+	end
 end

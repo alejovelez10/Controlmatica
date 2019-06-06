@@ -1,3 +1,4 @@
+<%= link_to "Volver", cost_centers_path , class: "btn btn-primary"%>
 
     <% ing_cotizado = @cost_center.engineering_value
 
@@ -28,7 +29,19 @@
         %>
 <div class="show-content">
   <div class="row titulos">
+    <div class="col-md-6 text-center">
+      <strong> Estado Ejecucion:</strong> <br>
+      <%= @cost_center.execution_state %>
+    </div>
 
+    <div class="col-md-6 text-center"><strong>Estado Facturacion:</strong> <br>
+      <%= @cost_center.invoiced_state %>
+    </div>
+ 
+     </div>
+
+        <hr>
+    <div class="row titulos">
     <div class="col-md-3">
       <strong> Tipo:</strong> 
       <%= @cost_center.service_type %>
@@ -509,7 +522,7 @@
   .show-content{
     background: white;
     padding: 10px;
-    margin-top: 60px;
+ 
   }
 .menu{
   padding: 5px 5px;
