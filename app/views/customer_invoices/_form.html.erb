@@ -30,8 +30,8 @@
           <% end %>
           
           <% if action_name == "new"%>
-            <%= form.hidden_field :cost_center_id, :value => @cost_center.id %>
-            <%= form.hidden_field :sales_order_id, :value => 2 %>
+            <%= form.hidden_field :cost_center_id, :value => @cost_center %>
+            <%= form.hidden_field :sales_order_id, :value => @sales_order %>
           <% end -%>
 
           <div class="col-md-12 no-padding-left">

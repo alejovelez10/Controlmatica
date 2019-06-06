@@ -17,7 +17,8 @@ class CustomerInvoicesController < ApplicationController
   # GET /customer_invoices/new
   def new
     @customer_invoice = CustomerInvoice.new
-    @cost_center = CostCenter.find(params[:cost_center_id])
+    @cost_center = params[:cost_center_id]
+    @sales_order = params[:sales_order]
   end
 
   # GET /customer_invoices/1/edit
