@@ -40,7 +40,9 @@ class User < ApplicationRecord
    def create_rol
 
    		if rol_user.present?
-   			Rol.create(name: self.rol_user)
+   			  Rol.create(name: self.rol_user)
+        else
+          Rol.create(name: "Super administrador")
    		end
    	
    end

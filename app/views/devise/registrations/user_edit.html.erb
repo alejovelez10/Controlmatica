@@ -1,28 +1,29 @@
 <div class="row">
-  <%= form_tag create_user_path, method: :post do %>
+  <%= form_tag update_user_path(@user.id), method: :patch  do %>
 	  <div class="col-md-8 col-sm-12 col-xs-12 margin-bot">
 	    <div class="dashboard_graph">
 
 	    	<div class="row">
 	    		<div class="col-md-12 no-padding">
-	    			<h4>Nuevo usuario</h4>
+	    			<h4>Editar a <%= @user.names %></h4>
 	    			<hr>
 	    		</div>
 
 	    		<div class="col-md-12 no-padding margin-bot">
 		    		<div class="col-md-4 no-padding-left">
 		    	 		<%= label_tag "Nombre y apellido"%>	
-		    			<%= text_field_tag :names, nil, class: "form form-control", :placeholder => "" %>
+		    			<%= text_field_tag :names, nil, class: "form form-control", :placeholder => "", :value => @user.names%>
 		        	</div>
 
 		    		<div class="col-md-4">
 		    	 		<%= label_tag "Email"%>	
-		    			<%= email_field_tag :email, nil, class: "form form-control", :placeholder => "" %>
+		    			<%= email_field_tag :email, nil, class: "form form-control", :placeholder => "", :value => @user.email %>
 		        	</div>
+
 
 		        	<div class="col-md-4">
 		    	 		<%= label_tag "Cargo"%>	
-		    	 		<%= select_tag 'rol_user', options_for_select(get_rol_user),{:class => 'form form-control',  :prompt => 'Selecciona un rol '}%>
+		    	 		<%= select_tag 'rol_user', options_for_select(get_rol_user),{:class => 'form form-control',  :prompt => 'Selecciona un cargo '}%>
 		        	</div>
 	    		</div>
 
@@ -34,9 +35,8 @@
 
 		    		<div class="col-md-6">
 		    	 		<%= label_tag "Numero de Documento"%>	
-		    			<%= text_field_tag :number_document, nil, class: "form form-control" %>
+		    			<%= text_field_tag :number_document, nil, class: "form form-control", :value => @user.number_document  %>
 		        	</div>
-
 	    		</div>
 
 	    		<div class="col-md-12 no-padding" style="margin-bottom: 10px;">
@@ -72,7 +72,7 @@
 	          	</div>
 	           <br><br>
 		          <div class="col-md-12 modal-footer">
-		            <%= submit_tag "Guardar", class: "btn btn-warning", id: "btn-save" %>
+		            <%= submit_tag "Actualizar", class: "btn btn-warning", id: "btn-save" %>
 		            <%= link_to "Volver", users_path, class: "btn btn-light" %>
 		          </div>
   			</div>

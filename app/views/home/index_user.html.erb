@@ -21,6 +21,7 @@
 	        <th>Numero de Documento</th>
 	        <th>Rol</th>
 	        <th>Email</th>
+          <th colspan="2" class="text-center">Acciones</th>
       	</tr>
     </thead>
 
@@ -37,11 +38,34 @@
 	        <td><%= user.number_document %></td>
 	        <td class="text-center"><%= user.rol.name if user.rol %></td>
 	        <td><%= user.email %></td>
+
+          <td>
+
+            <a href="/user/<%= user.id %>" class="btn" data-method="delete" data-toggle="tooltip" data-placement="top" title="Eliminar Usuario" data-confirm="Estas Seguro?">
+                              <i class="fas fa-trash-alt"></i>
+            </a>
+          </td>
+
+          <td>
+                        <%= link_to user_edit_path(user.id), data: {toggle: "tooltip", placement: "bottom", turbolinks: false }, title: "Editar", class: "btn" do %>
+                <i class="fas fa-pencil-alt"></i>
+            <% end -%>
+          </td>
       	</tr>
     <% end %>
   </tbody>
 </table>
 
+
+<script type="text/javascript">
+    <% if flash[:success].present? %>
+    toastr["success"]("<%= flash[:success] %>");
+  <% end %>
+
+  <% if flash[:delete].present? %>
+    toastr["info"]("<%= flash[:delete] %>");
+  <% end %>
+</script>
 
 <style>
   .menu{

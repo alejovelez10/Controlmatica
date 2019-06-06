@@ -18,7 +18,30 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   # GET /resource/edit
   def edit
-      flash[:success] = "estiven"
+      puts "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  end
+
+  def user_edit
+    @user = User.find(params[:id])
+    
+  end
+
+  def update_user
+    @user = User.find(params[:id])
+    if @user.update(user_update_params)
+      redirect_to users_path
+      flash[:success] = "¡El registro de #{@user.names} fue actualizado con éxito!"
+      else
+        redirect_to user_edit_path(@user.id)
+    end
+  end
+
+  def delete_user
+    @user = User.find(params[:id])
+    if @user.destroy
+      flash[:delete] = "¡El registro de #{@user.names} fue eliminado con éxito!"
+        redirect_to users_path
+    end
   end
 
   # PUT /resource
@@ -75,6 +98,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
     def after_update_path_for(resource)
       edit_user_registration_path
+    end
+
+    def user_update_params
+      params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user)
     end
 
     def user_params

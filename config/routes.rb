@@ -20,11 +20,14 @@ Rails.application.routes.draw do
 
 
   get "user/new", to: "home#users_new", as: "new_users"
-  get "user/all", to: "home#index_user", as: "user"
+  get "users", to: "home#index_user", as: "users"
   devise_for :users, :controllers => { :registrations => "users/registrations" }
 
   devise_scope :user do
     post "create_user", to: "users/registrations#create_user", as: "create_user" 
+    delete "user/:id", to: "users/registrations#delete_user", as: "delete_user"
+    get "user/:id/edit", to: "users/registrations#user_edit", as: "user_edit"
+    patch "update_user/:id", to: "users/registrations#update_user", as: "update_user"
   end
 
   root 'home#dashboard'
