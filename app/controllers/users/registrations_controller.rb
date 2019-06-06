@@ -28,7 +28,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def update_user
     @user = User.find(params[:id])
-    if @user.update(user_update_params)
+    if @user.update(user_params)
       redirect_to users_path
       flash[:success] = "¡El registro de #{@user.names} fue actualizado con éxito!"
       else
@@ -56,11 +56,12 @@ class Users::RegistrationsController < Devise::RegistrationsController
   def create_user
     @users = User.create(user_params)
     if @users.save
-        redirect_to user_path
-        flash[:success] = "El Registro de creo con"
+        redirect_to users_path
       else 
-        puts "noguardaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        flash[:error] = "El Registro No se puedo crear"
+
+        @users.errors.each do |e|
+            puts e
+        end
     end
   end
   # GET /resource/cancel

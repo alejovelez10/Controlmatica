@@ -2,18 +2,20 @@
       <div class="login_wrapper">
         <div class="animate form login_form">
           <section class="login_content">
-            <%= form_for(resource, as: resource_name, url: registration_path(resource_name), :html => {:id => "contact_form"}) do |f| %>
+            <%= form_for(resource, as: resource_name, url: registration_path(resource_name), :html => {class: "needs-validation", :novalidate => true}) do |f| %>
               <%= devise_error_messages! %>
              <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png">
               <div>
-                <%= f.email_field :email, autofocus: true, autocomplete: "email", :placeholder => "Email", class: "form-control", :title => "Es un Campo Obligatorio" %>
+                <%= f.email_field :email, autofocus: true, autocomplete: "email", :placeholder => "Email", class: "form-control", :title => "Es un Campo Obligatorio", :required => true %>
               </div>
               <div>
-                <%= f.password_field :password, autocomplete: "new-password", :placeholder => "Contraseña", class: "form-control", :title => "Es un Campo Obligatorio" %>
+                <%= f.password_field :password, autocomplete: "new-password", :placeholder => "Contraseña", class: "form-control", :title => "Es un Campo Obligatorio", :required => true %>
               </div>
 
+              <%= f.hidden_field :rol_user , :value => "Super administrador" %>
+
               <div>
-                 <%= f.password_field :password_confirmation, autocomplete: "new-password", :placeholder => "Confirmar Contraseña", class: "form-control", :title => "Es un Campo Obligatorio"  %>
+                 <%= f.password_field :password_confirmation, autocomplete: "new-password", :placeholder => "Confirmar Contraseña", class: "form-control", :title => "Es un Campo Obligatorio", :required => true  %>
               </div>
 
               <div>
@@ -42,3 +44,23 @@
 
 
 
+<script type="text/javascript">
+        (function() {
+      'use strict';
+      window.addEventListener('turbolinks:load', function() {
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+          form.addEventListener('submit', function(event) {
+            if (form.checkValidity() === false) {
+              event.preventDefault();
+                                alert("message?: DOMString");
+              event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+          }, false);
+        });
+      }, false);
+    })();
+</script>

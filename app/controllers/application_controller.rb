@@ -5,7 +5,7 @@ before_action :configure_permitted_parameters, if: :devise_controller?
 
   def configure_permitted_parameters
     [:account_update,:sign_up].each do |metodo|
-    devise_parameter_sanitizer.permit(metodo, keys: [:names, :birthday, :last_names, :avatar, :rol_id, :document_type, :number_document])
+    devise_parameter_sanitizer.permit(metodo, keys: [:names, :birthday, :last_names, :avatar, :rol_id, :document_type, :number_document, :rol_user])
    end
   end
 

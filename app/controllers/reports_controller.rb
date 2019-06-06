@@ -4,7 +4,11 @@ class ReportsController < ApplicationController
   # GET /reports
   # GET /reports.json
   def index
-    @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
+    if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
+      @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
+    elsif current_user.rol_user == "Ingeniero"
+      @reports = Report.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
+    end
   end
 
   # GET /reports/1

@@ -70,7 +70,10 @@
                       <i class="fas fa-tachometer-alt ml"></i> Dashboard
                     <% end -%>
                   </li>
-                  <li><a><i class="fa fa-edit"></i> Configuración <span class="fa fa-chevron-down"></span></a>
+                  <li>
+                                      <% if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial" %>
+                    <a><i class="fa fa-edit"></i> Configuración <span class="fa fa-chevron-down"></span></a>
+                    <% end %>
                     <ul class="nav child_menu">
 
                      
@@ -84,41 +87,49 @@
                       </li>
 
                     
-
-                      <li>
-                        <%= link_to "Parametrizacion", parameterizations_path %>
-                      </li>
-
-                         <li>
-                            <%= link_to  "Usuarios" , users_path %>
-                    
+                      <% if current_user.rol_user == "Comercial" || current_user.rol_user == "Super administrador" %>
+                        <li>
+                          <%= link_to "Parametrizacion", parameterizations_path %>
                         </li>
+                      <% end %>
+
+                      <% if current_user.rol_user == "Super administrador" %>
+                        <li>
+                          <%= link_to  "Usuarios" , users_path %>
+                        </li>
+                      <% end -%>
 
 
                     </ul>
                   </li>
+                  <% if current_user.rol_user == "Comercial" || current_user.rol_user == "Super administrador"%>
                    <li>
                     <%= link_to cost_centers_path do %>
                       <i class="fas fa-tachometer-alt ml" ></i> Centros de Costos
                     <% end -%>
                   </li>
-                <li>
-                    <%= link_to reports_path  do %>
-                      <i class="fas fa-tachometer-alt ml"></i> Reportes de Servicio
-                    <% end -%>
-                  </li>
-                   <li>
-                    <%= link_to customer_reports_path  do %>
-                         <i class="fas fa-tachometer-alt ml"></i> Reportes de Cliente
-                    <% end -%>
-                  </li>
-               
+                  <% end %>
 
+                  <% if current_user.rol_user == "Ingeniero" || current_user.rol_user == "Comercial" %>
+                     <li>
+                        <%= link_to reports_path  do %>
+                          <i class="fas fa-tachometer-alt ml"></i> Reportes de Servicio
+                        <% end -%>
+                      </li>
+
+                       <li>
+                        <%= link_to customer_reports_path  do %>
+                             <i class="fas fa-tachometer-alt ml"></i> Reportes de Cliente
+                        <% end -%>
+                      </li>
+                    <% end %>
+                  <% if current_user.rol_user == "Comercial" || current_user.rol_user == "Super administrador"%>
                      <li>
                     <%= link_to employed_performance_show_path  do %>
                       <i class="fas fa-tachometer-alt"></i> Informes de Rendimiento
                     <% end -%>
                   </li>
+                  <% end %>
                 </ul>
               </div>
             </div>

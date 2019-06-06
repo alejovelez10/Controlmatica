@@ -30,20 +30,9 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   has_many :customer_reports
   has_many :reports 
-  after_create :create_rol
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
     mount_uploader :avatar, AvatarUploader
     belongs_to :rol, optional: true
-   
-   def create_rol
-
-   		if rol_user.present?
-   			  Rol.create(name: self.rol_user)
-        else
-          Rol.create(name: "Super administrador")
-   		end
-   	
-   end
 end
