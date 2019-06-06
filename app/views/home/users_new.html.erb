@@ -35,7 +35,7 @@
 
 		    		<div class="col-md-4">
 		    	 		<%= label_tag "Cargo"%>	
-		    			<%= select_tag 'rol_id', options_for_select(get_rol.collect{ |u| ["#{u.name}", u.id] },{}), {:multiple => false, class: 'form-control', include_blank: false, id: "validationCustom01", :prompt => 'Selecciona una Opcion' }%>
+		    	 		<%= select_tag 'rol_user', options_for_select(get_rol_user),{:class => 'form form-control',  :prompt => 'Selecciona un rol '}%>
 		        	</div>
 	    		</div>
 

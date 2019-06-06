@@ -2,7 +2,7 @@
 #
 # Table name: customer_invoices
 #
-#  id                         :integer          not null, primary key
+#  id                         :bigint(8)        not null, primary key
 #  cost_center_id             :integer
 #  sales_order_id             :integer
 #  invoice_value              :float

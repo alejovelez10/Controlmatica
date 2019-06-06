@@ -78,7 +78,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
 
     def user_params
-      params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document)
+      params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user)
     end
     
 end

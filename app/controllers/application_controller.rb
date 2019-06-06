@@ -29,7 +29,7 @@ before_action :configure_permitted_parameters, if: :devise_controller?
   def after_sign_in_path_for(resource)
  
 	  if user_signed_in?
-	      user_home_path
+	      reports_path
 	    else
 	     root_path            
 	  end 

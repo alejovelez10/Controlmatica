@@ -14,6 +14,14 @@ module ApplicationHelper
 	  	]
 	end
 
+	def get_rol_user
+		[
+	      ['Super administrador', 'Super administrador'],
+	      ['Comercial', 'Comercial'],
+	      ['Ingeniero', 'Ingeniero']
+		]
+	end
+
 	def number_to_currency_br(number)
   		number_to_currency(number, :unit => "", :delimiter => ".")
 	end

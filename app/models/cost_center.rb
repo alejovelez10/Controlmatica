@@ -2,7 +2,7 @@
 #
 # Table name: cost_centers
 #
-#  id                :integer          not null, primary key
+#  id                :bigint(8)        not null, primary key
 #  customer_id       :integer
 #  contact_id        :integer
 #  description       :text
@@ -14,11 +14,11 @@
 #  execution_state   :string
 #  invoiced_state    :string
 #  service_type      :string
-#  code              :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  count             :integer
-#  create_type       :bool
+#  code              :string
+#  create_type       :boolean
 #  eng_hours         :float
 #  hour_cotizada     :float
 #  hour_real         :float

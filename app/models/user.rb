@@ -2,7 +2,7 @@
 #
 # Table name: users
 #
-#  id                     :integer          not null, primary key
+#  id                     :bigint(8)        not null, primary key
 #  email                  :string           default(""), not null
 #  encrypted_password     :string           default(""), not null
 #  reset_password_token   :string
@@ -22,6 +22,7 @@
 #  number_document        :integer
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null
+#  rol_user               :string
 #
 
 class User < ApplicationRecord
@@ -29,10 +30,18 @@ class User < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   has_many :customer_reports
   has_many :reports 
+  after_create :create_rol
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
     mount_uploader :avatar, AvatarUploader
     belongs_to :rol, optional: true
-    
+   
+   def create_rol
+
+   		if rol_user.present?
+   			Rol.create(name: self.rol_user)
+   		end
+   	
+   end
 end

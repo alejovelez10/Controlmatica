@@ -2,7 +2,7 @@
 #
 # Table name: sales_orders
 #
-#  id             :integer          not null, primary key
+#  id             :bigint(8)        not null, primary key
 #  created_date   :date
 #  order_number   :string
 #  order_value    :float
