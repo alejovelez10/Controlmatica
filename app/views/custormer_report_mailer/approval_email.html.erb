@@ -4,7 +4,7 @@
 <p>Estimado, adjunto encontrara el reporte de servicio <%=@customer_report.report_code%>, le agredecemos revisar su contenido y confirmar su aprobacion haciendo click en el boton verde. en caso de no estar de acuerdo favor responder este correo con los motivos de la no aceptacion.</p>
 <br>
 <% if Rails.env.production? %> 
-<a href="https://controlmaticatest.herokuapp.com/aprobar_informe/<%=@customer_report.token%>" style= "  text-decoration:none;
+<a href="https://controlmatica.herokuapp.com/aprobar_informe/<%=@customer_report.token%>" style= "  text-decoration:none;
   background:#54b362;
   padding:10px 20px;
   color:white;
