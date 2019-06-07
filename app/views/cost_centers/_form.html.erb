@@ -81,8 +81,11 @@
 
             <div class="col-md-4  no-paddong-left">
               <%= form.label "Valor Cotización" %>
-               <%= form.text_field :quotation_value ,class: "form-control", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false, :data => {:type => 'currency' }  %>
-
+               <%if action_name == "new"%>
+               <%= form.text_field :quotation_value, value: 0  ,class: "form-control", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+               <%else%>
+                 <%= form.text_field :quotation_value  ,class: "form-control", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, :data => {:type => 'currency' }  %>
+               <%end%>
              
             </div>
 
