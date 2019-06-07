@@ -1,5 +1,6 @@
 class CustomerInvoicesController < ApplicationController
   before_action :set_customer_invoice, only: [:show, :edit, :update, :destroy]
+    before_action :authenticate_user!
   #before_action :set_cost_center, only: [:create, :new]
   #before_action :set_sales, only: [:create, :new]
 

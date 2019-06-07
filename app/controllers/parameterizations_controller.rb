@@ -1,6 +1,6 @@
 class ParameterizationsController < ApplicationController
   before_action :set_parameterization, only: [:show, :edit, :update, :destroy]
-
+    before_action :authenticate_user!
   # GET /parameterizations
   # GET /parameterizations.json
   def index

@@ -1,6 +1,6 @@
 class CustomerReportsController < ApplicationController
   before_action :set_customer_report, only: [:show, :edit, :update, :destroy, :pdf_customer_report]
-  
+    before_action :authenticate_user!
   # GET /customer_reports
   # GET /customer_reports.json
   def index
