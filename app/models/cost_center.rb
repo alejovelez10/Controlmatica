@@ -2,7 +2,7 @@
 #
 # Table name: cost_centers
 #
-#  id                :bigint(8)        not null, primary key
+#  id                :bigint           not null, primary key
 #  customer_id       :integer
 #  contact_id        :integer
 #  description       :text
@@ -35,6 +35,15 @@ class CostCenter < ApplicationRecord
 	belongs_to :contact, optional: :true
 	before_create :create_code
 	before_update :change_state
+
+
+	def self.search(search1, search2, search3, search4)
+		search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
+	    search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
+	    search3 != "" ? (scope :state_execution, -> { where(execution_state: search3) }) : (scope :state_execution, -> { where.not(id: nil) })
+	    search4 != "" ? (scope :state_invoice, -> { where(invoiced_state: search4) }) : (scope :state_invoice, -> { where.not(id: nil) })
+	    descripcion.customer.state_execution.state_invoice
+	end
 
 	def create_code
         

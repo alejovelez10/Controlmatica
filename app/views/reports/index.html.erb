@@ -8,8 +8,42 @@
           <p id="count-pages"><%= page_repor_info @reports %></p>
     </div>
 
-    <div class="col-md-4 float margin_top" >
-          <%= link_to 'Nuevo Reporte', new_report_path, class: "btn-new float" %>
+    <div class="col-md-4 text-right float margin_top" >
+          <button class="btn btn-primary float" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+            <i class="fas fa-search"></i>
+          </button>
+          <%= link_to 'Nuevo Reporte', new_report_path, class: "btn btn-dark" %>
+    </div>
+
+    <div class="<%= params[:search1] || params[:search2] ||  params[:search3] || params[:search4].present? ? "show" : "" %> collapse col-md-12 no-padding" id="collapseExample" style="margin-bottom: 18px;">
+       <%= form_tag reports_path, method: "get" do %>
+          <div class="row">
+            <div class="col-md-3">
+              <%= text_field_tag :search1, nil, class: "form form-control", :placeholder => "Descripcion del Trabajo" %>
+            </div>
+
+            <div class="col-md-3 no-padding-left">
+              <%= select_tag 'search2', options_for_select(User.all.collect{ |u| [u.names, u.id] }),{:class => "form form-control", :prompt => 'Responsable Ejecucion'}%>
+            </div>
+
+            <div class="col-md-2 no-padding-left">
+              <%= date_field_tag :search3, nil, class: "form form-control", :placeholder => "Descripcion del Trabajo" %>
+            </div>
+
+            <div class="col-md-2 no-padding-left">
+              <%= select_tag 'search4', options_for_select(get_state_report),{:class => 'form form-control', :prompt => 'Estado'}%>
+            </div>
+
+            <div class="col-md-2 text-left no-padding-right">
+              <% if params[:search1] || params[:search2] ||  params[:search3] || params[:search4].present? %>
+                <%= link_to reports_path, class: "btn btn-danger" do  %>
+                  <i class="fas fa-times"></i>
+                <% end %>
+              <% end -%>
+              <button class="btn btn-dark"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+          </div>
+       <% end -%>
     </div>
 
   </div>
@@ -73,11 +107,10 @@
               </div>
             </td>
         <% end %>
-        
         <td><%= report.code_report %></td>
           <td><%= report.cost_center.code if report.cost_center %></td>
           <td><%= get_date(report.report_date) %></td>
-          <td><%# report.report_execute.names if report.report_execute.names %></td>
+          <td><%= report.report_execute.names if report.report_execute.names %></td>
           <td><%= report.working_time %></td>
           <td><%= report.work_description %></td>
           <td><%= number_to_currency(report.viatic_value, precision: 0) %></td>
@@ -92,6 +125,12 @@
 </div>
 </div>
 
+<script type="text/javascript">
+  $("#search1").val("<%= params[:search1]%>")
+  $("#search2").val("<%= params[:search2]%>")
+  $("#search3").val("<%= params[:search3]%>")
+  $("#search4").val("<%= params[:search4]%>")
+</script>
 
 <style type="text/css">
 .content

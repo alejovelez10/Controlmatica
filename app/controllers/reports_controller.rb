@@ -5,9 +5,17 @@ class ReportsController < ApplicationController
   # GET /reports.json
   def index
     if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
-      @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
+      if params[:search1] || params[:search2] || params[:search3] || params[:search4]
+        @reports = Report.all.search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
+      else 
+        @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
+      end
     elsif current_user.rol_user == "Ingeniero"
-      @reports = Report.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
+      if params[:search1] || params[:search2] || params[:search3] || params[:search4]
+        @reports = Report.where(user_id: current_user.id).search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
+      else 
+        @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
+      end
     end
   end
 

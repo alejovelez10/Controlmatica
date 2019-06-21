@@ -2,7 +2,7 @@
 #
 # Table name: reports
 #
-#  id                 :bigint(8)        not null, primary key
+#  id                 :bigint           not null, primary key
 #  report_date        :date
 #  user_id            :integer
 #  working_time       :integer
@@ -38,7 +38,13 @@ class Report < ApplicationRecord
 	before_create :coste_center_verify
 	after_create :save_report_in_cost_center
 
-
+	def self.search(search1, search2, search3, search4)
+		search1 != "" ? (scope :descripcion, -> { where("work_description like '%#{search1.downcase}%' or work_description like '%#{search1.upcase}%' or work_description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
+	    search2 != "" ? (scope :responsible, -> { where(report_execute_id: search2) }) : (scope :responsible, -> { where.not(id: nil) })
+	    search3 != " " && search3 != nil && search3 != "" ?  (scope :date_ejecution, -> { where("DATE(report_date) = ?",search3)}) : (scope :date_ejecution, -> { where.not(id: nil)})
+	    search4 != "" ? (scope :state_report, -> { where(report_sate: search4) }) : (scope :state_report, -> { where.not(id: nil) })
+	    descripcion.responsible.date_ejecution.state_report
+	end
 
 	def create_code
        puts self.cost_center.nil?  
@@ -46,7 +52,7 @@ class Report < ApplicationRecord
 		
 		puts "hhahahahjahahahahahahahahah"
 		puts self.cost_center
-		count = Report.maximum(:report_code)
+		count = Report.maximum(:id)
 		customer_prefix = Customer.find(self.cost_center.customer.id).code
 		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count
 	    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
@@ -94,9 +100,9 @@ class Report < ApplicationRecord
 
 		self.cost_center_id = CostCenter.last.id
 		puts "22222222222222222"
-		count = Report.maximum(:report_code)
+		count = Report.maximum(:id)
 		customer_prefix = Customer.find(self.cost_center.customer.id).code
-		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count+ 1
+		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count + 1
 	    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
 	    self.save
 		

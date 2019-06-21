@@ -23,6 +23,37 @@ module ApplicationHelper
 	end
 
 
+	def get_state_report
+		estado = {"Sin Aprobar" => "false" , "Aprobado" => "true"}
+	    return estado
+	end
+
+
+	def get_state_eje
+		[
+	      ['FINALIZADO', 'FINALIZADO'],
+	      ['PENDIENTE', 'PENDIENTE'],
+	      ['EJECUCIÓN', 'EJECUCIÓN']
+		]
+	end
+
+	def get_state_facturacion
+		[
+	      ['FACTURADO', 'FACTURADO'],
+	      ['LEGALIZADO', 'LEGALIZADO'],
+	      ['PENDIENTE DE ORDEN DE COMPRA', 'PENDIENTE DE ORDEN DE COMPRA']
+		]
+	end
+
+	def get_customer_report
+		if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
+	     CustomerReport.all
+	    elsif current_user.rol_user == "Ingeniero"
+	      CustomerReport.where(user_id: current_user.id)
+	    end
+	end
+
+
 	def number_to_currency_br(number)
   		number_to_currency(number, :unit => "", :delimiter => ".")
 	end
@@ -41,6 +72,10 @@ module ApplicationHelper
 
 	def get_rol
 		Rol.all
+	end
+
+	def get_cost_center
+		CostCenter.all
 	end
 
 	def get_date(fecha)

@@ -1,5 +1,5 @@
 class CustomersController < ApplicationController
-  before_action :set_customer, only: [:show, :edit, :update, :destroy]
+  before_action :set_customer, only: [:show, :edit, :update, :destroy, :customer_user]
   before_action :authenticate_user!
   # GET /customers
   # GET /customers.json
@@ -10,6 +10,11 @@ class CustomersController < ApplicationController
   # GET /customers/1
   # GET /customers/1.json
   def show
+  end
+
+
+  def customer_user
+    render :json => CostCenter.where(customer_id: @customer.id)
   end
 
   # GET /customers/new

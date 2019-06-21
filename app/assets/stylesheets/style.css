@@ -2,6 +2,10 @@ td > .open > .dropdown-menu{
   padding: 6px;
 }
 
+.no-padding-right{
+  padding-right: 0px !important;
+}
+
 .left_col {
   background: #2A3F54;
 }

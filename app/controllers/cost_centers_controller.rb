@@ -6,7 +6,11 @@ class CostCentersController < ApplicationController
   # GET /cost_centers
   # GET /cost_centers.json
   def index
-    @cost_centers = CostCenter.all.paginate(:page => params[:page], :per_page => 10)
+    if params[:search1] || params[:search2] || params[:search3] || params[:search4]
+      @cost_centers = CostCenter.all.search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
+    else
+      @cost_centers = CostCenter.all.paginate(:page => params[:page], :per_page => 10)
+    end
   end
 
   # GET /cost_centers/1

@@ -28,7 +28,7 @@
                 <%= form.select :customer_id,
                   Customer.all.map { |u| [u.name, u.id] },
                               { include_blank: "Cliente" },
-                              { class: 'form-control', id: "", required: true  }
+                              { class: 'form-control', id: "cliente_cus", required: true  }
                    %>
             </div>  
          
@@ -43,12 +43,17 @@
                    %>
               </div>
 
-                <div class="col-md-3 no-paddong-left">
+                <div class="col-md-3">
                 <label>Centro de Costos</label>
-                <%= form.select :cost_center_id,
+
+                <select name="report[cost_center_id]" class="form form-control" id="center_selec">
+                  <option>Centro de costos</option>
+                </select>
+
+                <%# form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code, u.id] },
                               { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: ""  }
+                              { class: 'form-control', id: "center_selec"  }
                    %>
             </div>  
 
@@ -108,7 +113,7 @@
               
             </div>
 
-            <%= form.hidden_field :report_code, :value => "#FDSE"  %>
+            <%= form.hidden_field :report_code, :value => 0  %>
             <%= form.hidden_field :user_id , :value =>  current_user.id %>
 
             <div class="col-md-8 no-paddong-left">
@@ -149,15 +154,22 @@
 <script type="text/javascript">
   $('#contact_form').validate();
 
-  $(document).ready(function () {
-    $('#datepicker').datepicker({
-      uiLibrary: 'bootstrap'
+ $('#cliente_cus').on('change', function() {
+      valor = $(this).val();
+      $(".option_selec").remove();
+      $.get('/customer_user/' + valor, function(data,status){
 
-    });
-  });
+          for (var i=0; i<data.length; i++) { 
+            $('#center_selec').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].code  + '</option>');
+          }
 
+      })
 
+    })
 
+  //$('#cliente_cus').change(function(){
+   //console.log("adasdasdasdasd")
+  //})
   $('.contact').change(function(){
 
       id = $(this).val();
@@ -174,6 +186,7 @@
 
 
   })
+
 </script>
 
 <style type="text/css">
