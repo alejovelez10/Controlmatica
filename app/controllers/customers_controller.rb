@@ -1,5 +1,5 @@
 class CustomersController < ApplicationController
-  before_action :set_customer, only: [:show, :edit, :update, :destroy, :customer_user, :get_client]
+  before_action :set_customer, only: [:show, :edit, :update, :destroy, :customer_user, :get_client, :report_user]
   before_action :authenticate_user!
   # GET /customers
   # GET /customers.json
@@ -26,6 +26,10 @@ class CustomersController < ApplicationController
       format.js
     end 
     @contacts_user = @customer.contacts
+  end
+
+  def report_user
+    render :json => @customer.contacts  
   end
 
   # GET /customers/new

@@ -48,8 +48,11 @@
 
             <div class="row col-md-3">
                 <label>Aprueba el Reporte</label>
+                <select name="customer_report[contact_id]" class="form form-control" id="user-reports">
+                  <option>Contactos</option>
+                </select>
             
-                <%= form.select :contact_id,
+                <%# form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
                               { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
@@ -111,11 +114,20 @@
       valor = $(this).val();
       $(".option_selec").remove();
       $.get('/customer_cost_center/' + valor, function(data,status){
-        console.log(data);
         for (let i = 0; i < data.length; i++) {
           $('#center_selec').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].code  + '</option>');
           
         }
+
+      $.get('/report_user/' + valor, function(data,status){
+        console.log(data)
+        for (let i = 0; i < data.length; i++) {
+          $('#user-reports').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].name  + '</option>');
+          
+        }
+      });
+
+
 
       })
     })

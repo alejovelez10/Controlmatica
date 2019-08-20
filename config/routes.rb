@@ -21,6 +21,8 @@ Rails.application.routes.draw do
   get "customer_cost_center/:id", to: "cost_centers#customer_cost_center", as: "customer_cost_center"
   get "get_client/:id", to: "customers#get_client", as: "get_client"
 
+  get "report_user/:id", to: "customers#report_user", as: "report_user"
+
   get "user/new", to: "home#users_new", as: "new_users"
   get "users", to: "home#index_user", as: "users"
   devise_for :users, :controllers => { :registrations => "users/registrations" }
