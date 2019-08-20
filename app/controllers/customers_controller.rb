@@ -1,5 +1,5 @@
 class CustomersController < ApplicationController
-  before_action :set_customer, only: [:show, :edit, :update, :destroy, :customer_user]
+  before_action :set_customer, only: [:show, :edit, :update, :destroy, :customer_user, :get_client]
   before_action :authenticate_user!
   # GET /customers
   # GET /customers.json
@@ -19,6 +19,13 @@ class CustomersController < ApplicationController
     end 
     
     @centro = CostCenter.where(customer_id: @customer.id)
+  end
+
+  def get_client
+    respond_to do |format|
+      format.js
+    end 
+    @contacts_user = @customer.contacts
   end
 
   # GET /customers/new

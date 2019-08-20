@@ -18,7 +18,8 @@ Rails.application.routes.draw do
   resources :rols , :except => [:show]
 
 
-  get "cost_center_customer/:id", to: "cost_centers#cost_center_customer", as: "cost_center_customer"
+  get "customer_cost_center/:id", to: "cost_centers#customer_cost_center", as: "customer_cost_center"
+  get "get_client/:id", to: "customers#get_client", as: "get_client"
 
   get "user/new", to: "home#users_new", as: "new_users"
   get "users", to: "home#index_user", as: "users"

@@ -38,6 +38,13 @@ class CustomerReport < ApplicationRecord
 		
 	end
 
+	def self.search(search1, search2)
+		search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
+	    search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
+	    descripcion.customer
+	end
+	
+
 	def send_approval_email
 
 		

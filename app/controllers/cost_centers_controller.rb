@@ -20,9 +20,11 @@ class CostCentersController < ApplicationController
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
   end
 
-  def cost_center_customer
-    render :json => @cost_center.customer
+  def customer_cost_center
+    @customer = Customer.find(params[:id])
+    render :json => CostCenter.where(customer_id: @customer.id)
   end
+  
 
   # GET /cost_centers/new
   def new

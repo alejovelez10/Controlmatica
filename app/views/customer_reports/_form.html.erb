@@ -25,23 +25,23 @@
 
 
         <div class="col-md-3" style="margin-bottom: 20px;">
-          <%= form.label "Centro de costos" %>
-           <%= form.select :cost_center_id,
-                  CostCenter.all.map { |u| [u.code , u.id] },
-                              { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: "centro-costo"  }
+          <label>Nombre de Cliente</label>
+
+           <%= form.select :customer_id,
+                  Customer.all.map { |u| [u.code , u.id] },
+                              { include_blank: "Cliente" },
+                              { class: 'form-control', id: "centro_client"  }
                    %>
         </div>
 
         <div class="col-md-3" style="margin-bottom: 20px;">
-          <%= form.label "Cliente" %>
-            <select class="form-control" id="customer" name="customer_report[customer_id]">
-              <option value="">Cliente</option>
-            </select>
-
-           <%# form.select :customer_id,
-                  Customer.all.map { |u| [u.code , u.id] },
-                              { include_blank: "Cliente" },
+          <%= form.label "Centro de costos" %>
+              <select name="customer_report[cost_center_id]" class="form form-control" id="center_selec">
+                  <option>Centro de costos</option>
+                </select>
+           <%# form.select :cost_center_id,
+                  CostCenter.all.map { |u| [u.code , u.id] },
+                              { include_blank: "Centro de Costos" },
                               { class: 'form-control', id: ""  }
                    %>
         </div>
@@ -107,11 +107,16 @@
 
     */
 
-    $('#centro-costo').on('change', function() {
+    $('#centro_client').on('change', function() {
       valor = $(this).val();
       $(".option_selec").remove();
-      $.get('/cost_center_customer/' + valor, function(data,status){
-        $('#customer').append('<option class="option_selec" value=' + data.id +'>' + data.name  + '</option>');
+      $.get('/customer_cost_center/' + valor, function(data,status){
+        console.log(data);
+        for (let i = 0; i < data.length; i++) {
+          $('#center_selec').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].code  + '</option>');
+          
+        }
+
       })
     })
 

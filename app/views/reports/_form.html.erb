@@ -33,10 +33,13 @@
             </div>  
          
 
-                        <div class="row col-md-3 " style="margin-top: 10px;">
+              <div class="row col-md-3 add_client" style="margin-top: 10px;">
                 <label>Contacto Cliente</label>
-            
-                <%= form.select :contact_id,
+                <select name="report[contact_id]" class="form chosen-select2 form-control contact" id="center_selec">
+                  <option>Contactos</option>
+                </select>
+
+                <%# form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
                               { class: 'form-control chosen-select2 contact', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false  }
@@ -155,32 +158,19 @@
 <script type="text/javascript">
   $('#contact_form').validate();
 
- $('#cliente_cus').on('change', function() {
+    $('#cliente_cus').on('change', function() {
+
       valor = $(this).val();
       $(".option_selec").remove();
       $.get('/customer_user/' + valor, function(data,status){})
+
+      $.get('/get_client/' + valor, function(data,status){})
 
     })
 
   //$('#cliente_cus').change(function(){
    //console.log("adasdasdasdasd")
   //})
-  $('.contact').change(function(){
-
-      id = $(this).val();
-      console.log(id);
-
-      $.get('/get_contact/' + id, function(data,status){
-
-          $('#contact_name').val(data.name);
-          $('#contact_email').val(data.email);
-          $('#contact_phone').val(data.phone);
-          $('#contact_position').val(data.position);
-
-      })
-
-
-  })
 
    $('.chosen-select2').chosen(
         {
