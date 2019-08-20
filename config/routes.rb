@@ -16,10 +16,9 @@ Rails.application.routes.draw do
   resources :customers
   resources :providers
   resources :rols , :except => [:show]
-  get 'contacts/index'
-  get 'contacts/create'
-  get 'contacts/destroy'
 
+
+  get "cost_center_customer/:id", to: "cost_centers#cost_center_customer", as: "cost_center_customer"
 
   get "user/new", to: "home#users_new", as: "new_users"
   get "users", to: "home#index_user", as: "users"

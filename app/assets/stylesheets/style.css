@@ -4355,7 +4355,7 @@ ul.notifications {
 /*--------------------------------------- Adicionales ---------------------------------------------- */
 
 .no-paddong-left{
-  padding-left: 0px;
+  padding-left: 0px !important;
 }
 
 .user-avatar img{

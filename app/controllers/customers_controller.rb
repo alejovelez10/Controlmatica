@@ -14,7 +14,11 @@ class CustomersController < ApplicationController
 
 
   def customer_user
-    render :json => CostCenter.where(customer_id: @customer.id)
+    respond_to do |format|
+      format.js
+    end 
+    
+    @centro = CostCenter.where(customer_id: @customer.id)
   end
 
   # GET /customers/new

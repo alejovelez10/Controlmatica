@@ -1,8 +1,8 @@
 <div class="row">
    <div class="col-md-12 col-sm-12 col-xs-12">
       <div class="dashboard_graph">
-         <div class="row x_title">
-            <div class="col-md-6 no-paddong-left">
+         <div class="row x_title ">
+            <div class="col-md-6">
               <%if action_name == "new" %>
                 <h3>Nuevo Informe de Cliente</h3>
               <% else %>
@@ -23,21 +23,30 @@
           </div>
         <% end %>
 
-        <div class="col-md-4 no-paddong-left">
-          <%= form.label "Fecha del Reporte" %>
-          <%= form.date_field :report_date, id: "", class: "form-control" %>
-        </div>
 
-        <div class="col-md-4 no-paddong-left">
+        <div class="col-md-3" style="margin-bottom: 20px;">
           <%= form.label "Centro de costos" %>
            <%= form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code , u.id] },
                               { include_blank: "Centro de Costos" },
+                              { class: 'form-control', id: "centro-costo"  }
+                   %>
+        </div>
+
+        <div class="col-md-3" style="margin-bottom: 20px;">
+          <%= form.label "Cliente" %>
+            <select class="form-control" id="customer" name="customer_report[customer_id]">
+              <option value="">Cliente</option>
+            </select>
+
+           <%# form.select :customer_id,
+                  Customer.all.map { |u| [u.code , u.id] },
+                              { include_blank: "Cliente" },
                               { class: 'form-control', id: ""  }
                    %>
         </div>
 
-            <div class="row col-md-4 no-paddong-left">
+            <div class="row col-md-3">
                 <label>Aprueba el Reporte</label>
             
                 <%= form.select :contact_id,
@@ -47,16 +56,20 @@
                    %>
               </div>
 
+        <div class="col-md-3">
+          <%= form.label "Fecha del Reporte" %>
+          <%= form.date_field :report_date, id: "", class: "form-control" %>
+        </div>
 
     
 
-        <div class="col-md-12 no-paddong-left">
-          <label>Reporte</label>
+        <div class="col-md-12" style="margin-top: 10px; margin-bottom: 10px;">
+          <label>Reporte</label><br>
           <%= form.select :report_ids, get_reports.collect {|c| ["#{c.code_report}", c.id]}, {prompt: false}, {:multiple => true, class: 'form-control chosen-select2'} %>
 
         </div>
          
-        <div class="col-md-12 no-paddong-left">
+        <div class="col-md-12">
          <br>
           <%= form.label "Observaciones" %>
           <%= form.text_area :description, class: "form-control textarea", :rows => 3  %>
@@ -68,7 +81,7 @@
 
 
 
-        <div class="col-md-12 no-paddong-left">
+        <div class="col-md-12">
           <%= form.submit "Guardar", class: "btn btn-dark" %>
           <%= link_to "Volver", customer_reports_path %>
         </div>
@@ -79,12 +92,36 @@
 </div>
 
 <script type="text/javascript">
+  /*
+    $('#centro-costo').on('change', function() {
+      valor = $(this).val();
+      //$(".option_selec").remove();
+      $.get('/cost_center_customer/' + valor, function(data,status){
+        for (var i=0; i<data.length; i++) { 
+          console.log(data)
+          $('#cliente').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].name  + '</option>');
+        }
+      })
+
+    })
+
+    */
+
+    $('#centro-costo').on('change', function() {
+      valor = $(this).val();
+      $(".option_selec").remove();
+      $.get('/cost_center_customer/' + valor, function(data,status){
+        $('#customer').append('<option class="option_selec" value=' + data.id +'>' + data.name  + '</option>');
+      })
+    })
+
   $(document).ready(function () {
       $('#datepicker').datepicker({
         uiLibrary: 'bootstrap'
 
       });
   });
+
 
  $('.chosen-select2').chosen(
         {

@@ -1,5 +1,5 @@
 class CostCentersController < ApplicationController
-  before_action :set_cost_center, only: [:show, :edit, :update, :destroy]
+  before_action :set_cost_center, only: [:show, :edit, :update, :destroy, :cost_center_customer]
   before_action :set_sales_order, only: [:show]
   before_action :authenticate_user!
 
@@ -18,6 +18,10 @@ class CostCentersController < ApplicationController
   def show
     #@sales_order = SalesOrder.where(cost_center_id: @cost_centers.id)
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
+  end
+
+  def cost_center_customer
+    render :json => @cost_center.customer
   end
 
   # GET /cost_centers/new
