@@ -30,13 +30,13 @@
            <%= form.select :customer_id,
                   Customer.all.map { |u| [u.code , u.id] },
                               { include_blank: "Cliente" },
-                              { class: 'form-control', id: "centro_client"  }
+                              { class: 'form-control chosen-select2', id: "centro_client"  }
                    %>
         </div>
 
-        <div class="col-md-3" style="margin-bottom: 20px;">
+        <div class="col-md-3 add_centro" style="margin-bottom: 20px;">
           <%= form.label "Centro de costos" %>
-              <select name="customer_report[cost_center_id]" class="form form-control" id="center_selec">
+              <select name="customer_report[cost_center_id]" class="form form-control chosen-select2" id="center_selec">
                   <option>Centro de costos</option>
                 </select>
            <%# form.select :cost_center_id,
@@ -46,9 +46,9 @@
                    %>
         </div>
 
-            <div class="row col-md-3">
+            <div class="col-md-3 add_customer">
                 <label>Aprueba el Reporte</label>
-                <select name="customer_report[contact_id]" class="form form-control" id="user-reports">
+                <select name="customer_report[contact_id]" class="form form-control chosen-select2" id="user-reports">
                   <option>Contactos</option>
                 </select>
             
@@ -113,23 +113,9 @@
     $('#centro_client').on('change', function() {
       valor = $(this).val();
       $(".option_selec").remove();
-      $.get('/customer_cost_center/' + valor, function(data,status){
-        for (let i = 0; i < data.length; i++) {
-          $('#center_selec').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].code  + '</option>');
-          
-        }
+      $.get('/customer_cost_center/' + valor, function(data,status){})
+      $.get('/report_user/' + valor, function(data,status){});
 
-      $.get('/report_user/' + valor, function(data,status){
-        console.log(data)
-        for (let i = 0; i < data.length; i++) {
-          $('#user-reports').append('<option class="option_selec" value=' + data[i].id +'>' + data[i].name  + '</option>');
-          
-        }
-      });
-
-
-
-      })
     })
 
   $(document).ready(function () {

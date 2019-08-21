@@ -21,8 +21,12 @@ class CostCentersController < ApplicationController
   end
 
   def customer_cost_center
-    @customer = Customer.find(params[:id])
-    render :json => CostCenter.where(customer_id: @customer.id)
+    respond_to do |format|
+      format.js
+    end
+
+    customer = Customer.find(params[:id])
+    @centro = CostCenter.where(customer_id: customer.id)
   end
   
 

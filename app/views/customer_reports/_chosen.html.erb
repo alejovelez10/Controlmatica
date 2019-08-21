@@ -1,8 +1,7 @@
-<label>Aprueba el Reporte</label>
-<select name="customer_report[contact_id]" class="form form-control chosen-select2" id="user-reports">
-    <option>Contactos</option>
-	<% customers.each do |centro| %>
-		<option value="<%= centro.id %>"><%= centro.name %></option>
+<label>Centro de Costos</label>
+<select name="report[cost_center_id]" class="form chosen-select2 form-control">
+	<% centro_costo.each do |centro| %>
+		<option value="<%= centro.id %>"><%= centro.code %></option>
 	<% end -%>
 </select>
 

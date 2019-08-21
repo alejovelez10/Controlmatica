@@ -29,7 +29,10 @@ class CustomersController < ApplicationController
   end
 
   def report_user
-    render :json => @customer.contacts  
+    respond_to do |format|
+      format.js
+    end 
+    @centro = @customer.contacts  
   end
 
   # GET /customers/new
