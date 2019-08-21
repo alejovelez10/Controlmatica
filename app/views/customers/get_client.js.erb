@@ -1,1 +1,12 @@
-$(".add_client").html("<%= j render 'chosen_client', clients: @contacts_user %>");
+<% if params[:location].present? %>
+    var select = '<label>Contacto</label>' +
+                  '<select name="cost_center[contact_id]" class="form form-control chosen-select2 valid" id="user-reports" aria-invalid="false">' +
+                    	'<% @contacts_user.where.not(customer_id: nil).each do |cliente| %>' +
+                            '<option value="<%= cliente.id %>"><%= cliente.name %></option>' +
+                        '<% end -%>' +
+                 '</select>';
+
+    $(".add_client").html(select);
+<% else %>
+    $(".add_client").html("<%= j render 'chosen_client', clients: @contacts_user %>");
+<% end %>

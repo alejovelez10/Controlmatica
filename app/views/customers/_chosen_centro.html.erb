@@ -1,0 +1,20 @@
+<label>Centro de Costos</label>
+<select name="report[cost_center_id]" class="form chosen-select2 form-control" id="center_selec">
+    <option>Centro de costos</option>
+	<% centro_costo.each do |centro| %>
+		<option value="<%= centro.id %>"><%= centro.code %></option>
+	<% end -%>
+</select>
+
+<script type="text/javascript">
+	   $('.chosen-select2').chosen(
+        {
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+        });
+
+</script>

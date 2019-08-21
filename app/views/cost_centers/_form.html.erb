@@ -29,14 +29,17 @@
                 <%= form.select :customer_id,
                   Customer.all.map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Cliente" },
-                              { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
+                              { class: 'form-control required', id: "cliente_cus", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
                    %>
               </div>
 
-              <div class="row col-md-4 no-paddong-left">
+              <div class="row col-md-4 add_client">
                 <label>Contacto</label>
+                <select name="cost_center[contact_id]" class="form form-control chosen-select2" id="user-reports">
+                  <option>Contactos</option>
+                </select>
             
-                <%= form.select :contact_id,
+                <%# form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
                               { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
@@ -143,6 +146,14 @@
 </div>
 
 <script type="text/javascript">
+
+    $('#cliente_cus').on('change', function() {
+
+      valor = $(this).val();
+      $(".option_selec").remove();
+      $.get('/get_client/' + valor + "/" + "centro", function(data,status){})
+
+    })
 
 $('#contact_form').validate();
 // Jquery Dependency

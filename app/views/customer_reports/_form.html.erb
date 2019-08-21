@@ -28,13 +28,13 @@
           <label>Nombre de Cliente</label>
 
            <%= form.select :customer_id,
-                  Customer.all.map { |u| [u.code , u.id] },
+                  Customer.all.map { |u| [u.name , u.id] },
                               { include_blank: "Cliente" },
                               { class: 'form-control chosen-select2', id: "centro_client"  }
                    %>
         </div>
 
-        <div class="col-md-3 add_centro" style="margin-bottom: 20px;">
+        <div class="col-md-3 add_client" style="margin-bottom: 20px;">
           <%= form.label "Centro de costos" %>
               <select name="customer_report[cost_center_id]" class="form form-control chosen-select2" id="center_selec">
                   <option>Centro de costos</option>
