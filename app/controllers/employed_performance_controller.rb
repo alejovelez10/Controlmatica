@@ -10,7 +10,7 @@ class EmployedPerformanceController < ApplicationController
   	@user = User.find(params[:user_id])
   	@fecha_desde = params[:fecha_desde]
   	@fecha_hasta = params[:fecha_hasta]
-  	@reports = @user.reports.where("report_date >= ?" ,@fecha_desde).where("report_date <= ?" , @fecha_hasta).order(report_date: :asc)
+  	@reports = Report.where(report_execute: @user).where("report_date >= ?" ,@fecha_desde).where("report_date <= ?" , @fecha_hasta).order(report_date: :asc)
 
 
 

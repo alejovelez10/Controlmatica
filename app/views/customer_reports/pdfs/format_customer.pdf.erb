@@ -44,13 +44,15 @@
       <tr>
         <td class="title-td" >Cotizacion # </td>
         <td class="info-td" ><%=@customer_report.cost_center.quotation_number if @customer_report.cost_center %></th>
-        <td class="title-td" >Telefono</td>
+        <td class="title-td" >Telefono del contacto</td>
         <td class="info-td" ><%=@customer_report.cost_center.contact.phone if @customer_report.cost_center.contact %></td>
       </tr>
         <tr>
  
         <td class="title-td" >Orden de Compra #</td>
-        <td class="info-td" ></th>
+        <td class="info-td" >  <%@customer_report.cost_center.sales_orders.each_with_index do |order, index|%>
+              <%= "," if index != 0%><%=order.order_number%>
+          <%end%></th>
       </tr>
 
     </thead>
