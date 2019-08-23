@@ -1,5 +1,6 @@
-<% if params[:location].present? %>
-    var select = '<label>Reporte</label>' '<br>' +
+$(".add_client").html("<%= j render 'chosen_centro', centro_costo: @centro %>");
+
+    var select = '<label>Reporte</label>' + '<br>' +
                   '<select name="customer_report[report_ids][]" multiple="multiple" class="form form-control chosen-select2 valid" id="user-reports" aria-invalid="false">' +
                     	'<% @report.where.not(customer_id: nil).each do |cliente| %>' +
                             '<option value="<%= cliente.id %>"><%= cliente.code_report %></option>' +
@@ -15,7 +16,6 @@
 					'});' +
                  '</script>';
 
-	$(".add_report").html(select);
-<% end %>
 
-$(".add_client").html("<%= j render 'chosen_centro', centro_costo: @centro %>");
+
+$(".add_report").html(select);

@@ -27,10 +27,7 @@ class CostCentersController < ApplicationController
 
     customer = Customer.find(params[:id])
     @centro = CostCenter.where(customer_id: customer.id)
-
-    if params[:location].present?
-      @report = Report.where(customer_id: customer.id)
-    end
+    @report = Report.where(customer_id: customer.id)
   end
   
 
