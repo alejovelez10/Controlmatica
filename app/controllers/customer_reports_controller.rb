@@ -43,6 +43,9 @@ class CustomerReportsController < ApplicationController
 
   # GET /customer_reports/1/edit
   def edit
+    @centro = CostCenter.where(customer_id: @customer_report.customer.id)
+    @contacts_user = @customer_report.customer.contacts
+    #@reportes = @customer_repore.Report.
   end
 
   # POST /customer_reports

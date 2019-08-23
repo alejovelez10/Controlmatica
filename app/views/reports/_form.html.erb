@@ -35,20 +35,40 @@
 
               <div class="row col-md-3 add_client" style="margin-top: 10px;">
                 <label>Contacto Cliente</label>
+                <% if action_name == "new" %>
                   <%= form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
                               { class: 'form-control chosen-select2 contact', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false  }
                    %>
+
+                <% else %>
+
+                <%= form.select :contact_id,
+                  @contacts_user.where.not(customer_id: nil).map { |u| [u.name, u.id] },
+                              { include_blank: "Ingrese Contacto" },
+                              { class: 'form-control chosen-select2 contact', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false  }
+                   %>
+
+                <% end -%>
               </div>
 
                 <div class="col-md-3 add_centro" style="margin-top: 10px;">
                 <label>Centro de Costos</label>
+                <% if action_name == "new" %>
                   <%= form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code, u.id] },
                               { include_blank: "Centro de Costos" },
                               { class: 'form-control chosen-select2', id: "center_selec"  }
                    %>
+
+                <% else %>
+                  <%= form.select :cost_center_id,
+                  @centro.map { |u| [u.code, u.id] },
+                              { include_blank: "Centro de Costos" },
+                              { class: 'form-control chosen-select2', id: "center_selec"  }
+                   %>
+                <% end %>
             </div>  
 
    

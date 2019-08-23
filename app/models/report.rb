@@ -30,6 +30,7 @@
 class Report < ApplicationRecord
 	has_and_belongs_to_many :customer_reports
 	belongs_to :cost_center, optional: true
+	belongs_to :customer
 	before_save :create_total
 	belongs_to :report, optional: true
 	belongs_to :report_execute, :class_name => 'User'
