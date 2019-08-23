@@ -66,16 +66,21 @@ class Report < ApplicationRecord
 	
 
 	def create_total
-        cost_center = CostCenter.find(self.cost_center_id)
-		self.working_value = self.working_time * cost_center.hour_real
-		self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
-        
+		if self.cost_center_id != nil
+	        cost_center = CostCenter.find(self.cost_center_id)
+			self.working_value = self.working_time * cost_center.hour_real
+			self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
+        else
+        	self.working_value = 0
+			self.total_value = 0
+        end
 		
 	end
 
 	def coste_center_verify
-		puts "3333333333333333"
-		puts self.customer_id
+		
+		 puts "3333333333333333"
+		 puts self.customer_id
 		 if self.cost_center_id == nil
 
 		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0,quotation_value: 0,execution_state: "EJECUCION")
@@ -85,8 +90,7 @@ class Report < ApplicationRecord
 		 end
 		 
 		 if self.contact_id == nil
-
-		 	Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email , phone:self.contact_phone, position: self.contact_position,user_id:self.user_id)
+			Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email , phone:self.contact_phone, position: self.contact_position,user_id:self.user_id)
 		 else
 		 	contact = Contact.find(self.contact_id)
 		 	self.contact_name = contact.name
@@ -100,13 +104,15 @@ class Report < ApplicationRecord
 
 	def save_report_in_cost_center
 
-		self.cost_center_id = CostCenter.last.id
-		puts "22222222222222222"
-		count = Report.maximum(:id)
-		customer_prefix = Customer.find(self.cost_center.customer.id).code
-		self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count + 1
-	    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
-	    self.save
+		if cost_center_id == nil 
+			self.cost_center_id = CostCenter.last.id
+			puts "22222222222222222"
+			count = Report.maximum(:id)
+			customer_prefix = Customer.find(self.cost_center.customer.id).code
+			self.report_code = count == 0  || count.blank? || count.nil?   ?  1 :  count + 1
+		    self.code_report = "REP-" + customer_prefix +"-"+ self.report_code.to_s + "-" + Time.now.year.to_s
+		    self.save
+		end
 		
 	end
 end
