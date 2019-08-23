@@ -29,7 +29,7 @@
                 <%= form.select :customer_id,
                   Customer.all.map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Cliente" },
-                              { class: 'form-control required', id: "cliente_cus", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
+                              { class: 'form-control required chosen-select2', id: "cliente_cus", :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
                    %>
               </div>
 
@@ -50,7 +50,7 @@
 
               <div class="row col-md-4  ">
                 <label>Tipo de Servicio</label>
-                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"], "Servicio"), {},{class: 'form form-control required', :title => "Es un Campo Obligatorio", :required => true, id: "value-service" }%>
+                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"], "Servicio"), {},{class: 'form form-control required chosen-select2', :title => "Es un Campo Obligatorio", :required => true, id: "value-service" }%>
               </div>
 
             
@@ -164,6 +164,19 @@ if ("<%= action_name%>" == "edit"){
 
 $('#contact_form').validate();
 // Jquery Dependency
+
+
+ $('.chosen-select2').chosen(
+        {
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+        });
+
+
 
 
 
