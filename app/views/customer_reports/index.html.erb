@@ -38,7 +38,7 @@
             </div>
 
           <div class="col-md-4">
-              <%= select_tag 'search2', options_for_select(get_customer.collect{ |u| [u.name, u.id] }),{:class => "form form-control", :prompt => 'Selecciona un cliente'}%>
+              <%= select_tag 'search2', options_for_select(get_customer.collect{ |u| [u.name, u.id] }),{:class => "form form-control chosen-select2", :prompt => 'Selecciona un cliente'}%>
             </div>
 
             <div class="col-md-3 text-right">
@@ -161,6 +161,11 @@
    
 }
 
+.chosen-container-single .chosen-single{
+  border-radius: initial;
+  height: 34px;
+}
+
 .table > thead > tr > th{
 }
 
@@ -174,6 +179,16 @@
 </style>
 
 <script>
+
+    $('.chosen-select2').chosen({
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          width: 400,
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+  });
 
 <% if params[:search2].present? %>
   $("#search2").val("<%= params[:search2] %>")

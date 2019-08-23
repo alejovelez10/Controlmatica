@@ -23,7 +23,7 @@
             </div>
 
             <div class="col-md-3 no-padding-left">
-              <%= select_tag 'search2', options_for_select(User.all.collect{ |u| [u.names, u.id] }),{:class => "form form-control", :prompt => 'Responsable Ejecucion'}%>
+              <%= select_tag 'search2', options_for_select(User.all.collect{ |u| [u.names, u.id] }),{:class => "form form-control chosen-select1", :prompt => 'Responsable Ejecucion'}%>
             </div>
 
             <div class="col-md-2 no-padding-left">
@@ -31,7 +31,7 @@
             </div>
 
             <div class="col-md-2 no-padding-left">
-              <%= select_tag 'search4', options_for_select(get_state_report),{:class => 'form form-control', :prompt => 'Estado'}%>
+              <%= select_tag 'search4', options_for_select(get_state_report),{:class => 'form form-control chosen-select2', :prompt => 'Estado'}%>
             </div>
 
             <div class="col-md-2 text-left no-padding-right">
@@ -130,6 +130,26 @@
   $("#search2").val("<%= params[:search2]%>")
   $("#search3").val("<%= params[:search3]%>")
   $("#search4").val("<%= params[:search4]%>")
+
+  $('.chosen-select1').chosen({
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          width: 242,
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+  });
+
+  $('.chosen-select2').chosen({
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          width: 174,
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+  });
 </script>
 
 <style type="text/css">
@@ -140,6 +160,11 @@
   max-width: 100%;
   
 
+}
+
+.chosen-container-single .chosen-single{
+  border-radius: initial;
+  height: 34px;
 }
 .content table
 {

@@ -24,15 +24,15 @@
             </div>
 
             <div class="col-md-3 no-padding-left">
-              <%= select_tag 'search2', options_for_select(get_customer.collect{ |u| [u.name, u.id] }),{:class => "form form-control", :prompt => 'Selecciona un cliente'}%>
+              <%= select_tag 'search2', options_for_select(get_customer.collect{ |u| [u.name, u.id] }),{:class => "form form-control chosen-select1", :prompt => 'Selecciona un cliente'}%>
             </div>
 
             <div class="col-md-3 no-padding-left">
-              <%= select_tag 'search3', options_for_select(get_state_eje),{:class => 'form form-control', :prompt => 'Estado de ejecución'}%>
+              <%= select_tag 'search3', options_for_select(get_state_eje),{:class => 'form form-control chosen-select2', :prompt => 'Estado de ejecución'}%>
             </div>
 
             <div class="col-md-2 no-padding-left">
-              <%= select_tag 'search4', options_for_select(get_state_facturacion),{:class => 'form form-control', :prompt => 'Estado facturado'}%>
+              <%= select_tag 'search4', options_for_select(get_state_facturacion),{:class => 'form form-control chosen-select3', :prompt => 'Estado facturado'}%>
             </div>
 
             <div class="col-md-2 text-left no-padding-right">
@@ -150,6 +150,11 @@
   
 
 }
+
+.chosen-container-single .chosen-single{
+  border-radius: initial;
+  height: 34px;
+}
 .content table
 {
   width: 2000px;
@@ -165,6 +170,38 @@
 </style>
 
 <script type="text/javascript">
+      $('.chosen-select1').chosen({
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          width: 242,
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+  });
+
+
+    $('.chosen-select2').chosen({
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          width: 244,
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+  });
+
+
+    $('.chosen-select3').chosen({
+
+          allow_single_deselect: true,
+          no_results_text: 'No hay resultados',
+          width: 173,
+          placeholder_text_single: "Seleccione una opción",
+          placeholder_text_multiple: "Seleccione una varias opciones"
+
+  });
+
   $("#search1").val("<%= params[:search1]%>")
   $("#search2").val("<%= params[:search2]%>")
   $("#search3").val("<%= params[:search3]%>")
