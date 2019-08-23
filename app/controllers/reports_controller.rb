@@ -12,9 +12,9 @@ class ReportsController < ApplicationController
       end
     elsif current_user.rol_user == "Ingeniero"
       if params[:search1] || params[:search2] || params[:search3] || params[:search4]
-        @reports = Report.where(user_id: current_user.id).search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
+        @reports = Report.where(report_execute_id: current_user.id).search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
       else 
-        @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
+        @reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
       end
     end
   end

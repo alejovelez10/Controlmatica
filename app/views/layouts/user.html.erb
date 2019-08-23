@@ -123,7 +123,7 @@
                         <% end -%>
                       </li>
                     <% end %>
-                  <% if current_user.rol_user == "Super administrador" %>
+                  <% if current_user.rol_user == "Super administrador" || current_user.rol_user == "Ingeniero" %>
                      <li>
                     <%= link_to employed_performance_show_path  do %>
                       <i class="fas fa-tachometer-alt"></i> Informes de Rendimiento

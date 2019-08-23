@@ -103,6 +103,7 @@
                 <% end -%>
               </div>
 
+              <% if current_user.rol_user == "Super administrador" %>
               <div class="col-md-12 menu">  
                 <%= link_to cost_center, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
@@ -114,6 +115,7 @@
                   <span class="glyphicon glyphicon-trash"></span> Eliminar 
                 <% end -%>
               </div>
+              <%end%>
 
             </div>
           </div>
@@ -129,7 +131,7 @@
         <td><%= cost_center.quotation_number %></td>
         <td><%=  number_to_currency(ing_cotizado, precision: 0) %></td>
         
-        <td style="color:<%=color_value(ing_cotizado, ing_real)%>"><%=  number_to_currency(ing_real , precision: 0) %></td>
+        <td style="color:<%=color_value(ing_cotizado, ing_real)%>"><%=  number_to_currency(ing_cotizado , precision: 0) %></td>
         <td><%=  number_to_currency(via_cotizado , precision: 0) %></td>
         <td style="color:<%= color_value(via_cotizado, via_real)%>"><%=  number_to_currency(via_real , precision: 0)  %></td>
         <td><%= link_to "Finalizar", change_state_ended_path(cost_center.id), remote:true , class: "btn btn-primary btn-finalizar#{cost_center.id}" if cost_center.execution_state == "EJECUCION"%></td>

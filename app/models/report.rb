@@ -49,7 +49,8 @@ class Report < ApplicationRecord
 
 	def create_code
        puts self.cost_center.nil?  
-		if self.cost_center != nil 
+  
+		if self.cost_center != nil && self.cost_center_id == "Centro de costos"
 		
 		puts "hhahahahjahahahahahahahahah"
 		puts self.cost_center
@@ -66,7 +67,7 @@ class Report < ApplicationRecord
 	
 
 	def create_total
-		if self.cost_center_id != nil
+		if self.cost_center_id != nil  && self.cost_center_id != 0
 	        cost_center = CostCenter.find(self.cost_center_id)
 			self.working_value = self.working_time * cost_center.hour_real
 			self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
@@ -80,8 +81,9 @@ class Report < ApplicationRecord
 	def coste_center_verify
 		
 		 puts "3333333333333333"
+
 		 puts self.customer_id
-		 if self.cost_center_id == nil
+		 if self.cost_center_id == nil || self.cost_center_id == 0
 
 		 	CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type:false,viatic_value: 0,engineering_value:0,eng_hours: 0,quotation_value: 0,execution_state: "EJECUCION")
 		 

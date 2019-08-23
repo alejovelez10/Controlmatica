@@ -52,9 +52,9 @@
     <table class="table table-striped jambo_table bulk_action">
   <thead>
     <tr>
-      <% if current_user.rol_user == "Super administrador" %>
+    
         <th class="text-center">Acciones</th>
-      <% end %>
+  
       <th>Codigo</th>
       <th>Centro de Costos</th>
       <th>Fecha de Ejecucion</th>
@@ -71,7 +71,7 @@
     <tbody>
       <% @reports.each do |report| %>
         <tr>
-          <% if current_user.rol_user == "Super administrador" %>
+          
             <td style="text-align: center;">
               <div class="dropdown">
                 <button type="button" class="btn btn-dark  dropdown-toggle" data-toggle="dropdown">
@@ -79,18 +79,18 @@
                 </button>
                 <div class="dropdown-menu">
 
-                  <div class="col-md-12 menu">  
+                 <!-- <div class="col-md-12 menu">  
                     <%= link_to report, class: "dropdown-item" do %>
                       <i class="far fa-eye"></i> Ver Registro
                     <% end -%>
-                  </div>
+                  </div>-->
 
                   <div class="col-md-12 menu">  
                     <%= link_to edit_report_path(report), class: "dropdown-item" do %>
                       <i class="fas fa-pencil-alt"></i> Editar Registro
                     <% end -%>
                   </div>
-
+                 <% if current_user.rol_user == "Super administrador" %>
                   <div class="col-md-12 menu">  
                     <%= link_to report, method: :delete, data: {
                       confirm: '¿Estas Seguro?',
@@ -102,11 +102,12 @@
                       <span class="glyphicon glyphicon-trash"></span> Eliminar 
                     <% end -%>
                   </div>
+                  <%end%>
 
                 </div>
               </div>
             </td>
-        <% end %>
+      
         <td><%= report.code_report %></td>
           <td><%= report.cost_center.code if report.cost_center %></td>
           <td><%= get_date(report.report_date) %></td>
