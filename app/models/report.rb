@@ -66,12 +66,13 @@ class Report < ApplicationRecord
 	
 
 	def create_total
-
-		self.working_value = self.working_time * 10000
-		self.total_value = self.viatic_value + (self.working_time * 10000)
+        cost_center = CostCenter.find(self.cost_center_id)
+		self.working_value = self.working_time * cost_center.hour_real
+		self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
         
 		
 	end
+
 	def coste_center_verify
 		puts "3333333333333333"
 		puts self.customer_id
