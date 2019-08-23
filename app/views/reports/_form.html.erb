@@ -35,11 +35,7 @@
 
               <div class="row col-md-3 add_client" style="margin-top: 10px;">
                 <label>Contacto Cliente</label>
-                <select name="report[contact_id]" class="form chosen-select2 form-control contact" id="center_selec">
-                  <option>Contactos</option>
-                </select>
-
-                <%# form.select :contact_id,
+                  <%= form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
                               { class: 'form-control chosen-select2 contact', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false  }
@@ -48,15 +44,10 @@
 
                 <div class="col-md-3 add_centro" style="margin-top: 10px;">
                 <label>Centro de Costos</label>
-
-                <select name="report[cost_center_id]" class="form chosen-select2 form-control" id="center_selec">
-                  <option>Centro de costos</option>
-                </select>
-
-                <%# form.select :cost_center_id,
+                  <%= form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code, u.id] },
                               { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: "center_selec"  }
+                              { class: 'form-control chosen-select2', id: "center_selec"  }
                    %>
             </div>  
 

@@ -35,9 +35,11 @@
 
               <div class="row col-md-4 add_client">
                 <label>Contacto</label>
-                <select name="cost_center[contact_id]" class="form form-control chosen-select2" id="user-reports">
-                  <option>Contactos</option>
-                </select>
+                <%= form.select :contact_id,
+                  Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
+                              { include_blank: "Ingrese Contacto" },
+                              { class: 'form-control chosen-select2 contact', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => false  }
+                   %>
             
                 <%# form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
@@ -48,7 +50,7 @@
 
               <div class="row col-md-4  ">
                 <label>Tipo de Servicio</label>
-                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"], "Servicio"), {},{class: 'form form-control required', :title => "Es un Campo Obligatorio", :required => true }%>
+                   <%= form.select 'service_type', options_for_select(["Servicio", "Venta" , "Proyecto"], "Servicio"), {},{class: 'form form-control required', :title => "Es un Campo Obligatorio", :required => true, id: "value-service" }%>
               </div>
 
             
@@ -137,7 +139,7 @@
 
             <div class="col-md-12 no-paddong-left">
               <%= form.submit "Guardar", class: "btn btn-dark"%>
-              <%= link_to "Volver", :back %>
+              <%= link_to "Volver", cost_centers_path %>
             </div>
           <% end %>
 
@@ -154,6 +156,11 @@
       $.get('/get_client/' + valor + "/" + "centro", function(data,status){})
 
     })
+
+
+if ("<%= action_name%>" == "edit"){
+  $("#value-service").val("<%= @cost_center.service_type %>")
+}
 
 $('#contact_form').validate();
 // Jquery Dependency

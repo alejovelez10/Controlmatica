@@ -36,26 +36,20 @@
 
         <div class="col-md-3 add_client" style="margin-bottom: 20px;">
           <%= form.label "Centro de costos" %>
-              <select name="customer_report[cost_center_id]" class="form form-control chosen-select2" id="center_selec">
-                  <option>Centro de costos</option>
-                </select>
-           <%# form.select :cost_center_id,
+           <%= form.select :cost_center_id,
                   CostCenter.all.map { |u| [u.code , u.id] },
                               { include_blank: "Centro de Costos" },
-                              { class: 'form-control', id: ""  }
+                              { class: 'form-control chosen-select2', id: "center_selec"  }
                    %>
         </div>
 
             <div class="col-md-3 add_customer">
                 <label>Aprueba el Reporte</label>
-                <select name="customer_report[contact_id]" class="form form-control chosen-select2" id="user-reports">
-                  <option>Contactos</option>
-                </select>
             
-                <%# form.select :contact_id,
+                <%= form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
                               { include_blank: "Ingrese Contacto" },
-                              { class: 'form-control required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true  }
+                              { class: 'form-control chosen-select2 required', :autocomplete => :off, :title => "Es un Campo Obligatorio", :required => true, id: "user-reports"  }
                    %>
               </div>
 
