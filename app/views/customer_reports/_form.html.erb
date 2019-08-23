@@ -82,7 +82,7 @@
 
     
 
-        <div class="col-md-12" style="margin-top: 10px; margin-bottom: 10px;">
+        <div class="col-md-12 add_report" style="margin-top: 10px; margin-bottom: 10px;">
           <label>Reporte</label><br>
           <%= form.select :report_ids, get_reports.collect {|c| ["#{c.code_report}", c.id]}, {prompt: false}, {:multiple => true, class: 'form-control chosen-select2'} %>
 
@@ -129,7 +129,7 @@
     $('#centro_client').on('change', function() {
       valor = $(this).val();
       $(".option_selec").remove();
-      $.get('/customer_cost_center/' + valor, function(data,status){})
+      $.get('/customer_cost_center/' + valor + "/" + "customer_r", function(data,status){})
       $.get('/report_user/' + valor, function(data,status){});
 
     })
