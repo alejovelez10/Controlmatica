@@ -60,6 +60,7 @@ class CostCenter < ApplicationRecord
 
 	def change_state
 		puts("wewewe")
+		self.engineering_value = self.hour_cotizada * self.eng_hours
 		puts !self.quotation_number.blank?
 		puts !self.quotation_number.nil?
 		
