@@ -1,4 +1,5 @@
 <%= link_to "Volver", cost_centers_path , class: "btn btn-primary"%>
+<%= link_to "Editar", edit_cost_center_path(@cost_center.id) , class: "btn btn-primary"%>
 
     <% ing_cotizado = @cost_center.engineering_value
 
@@ -11,6 +12,11 @@
           facturacion = @cost_center.customer_invoices.sum(:invoice_value)
 
           porc_eje =  @cost_center.eng_hours > 0 ? ((horas_eje.to_f/@cost_center.eng_hours)*100).to_i : "N/A"
+
+          costo_real_en_dinero = @cost_center.hour_real * horas_eje
+          costo_en_dinero = @cost_center.hour_real * @cost_center.eng_hours
+
+          porc_eje_costo =  costo_en_dinero > 0 ? (((costo_real_en_dinero.to_f/costo_en_dinero)*100)).to_i : "N/A"
 
           porc_via =  via_cotizado > 0 ? ((via_real.to_f/via_cotizado)*100).to_i : "N/A" 
 
@@ -167,14 +173,14 @@
          <span style="color:<%= color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
       </div>-->
 
-      <div class="col-md-4 "><strong>Ingenieria Costo</strong><br>
-          <span> <%= number_to_currency(@cost_center.hour_real * horas_eje , precision: 0) %></span>
+      <div class="col-md-4 "><strong>Ingenieria Cotizada</strong><br>
+          <span> <%= number_to_currency(costo_en_dinero , precision: 0) %></span>
        </div>
       <div class="col-md-4">   <strong>Ingenieria Ejecutada</strong><br> 
-         <span style=""> <%= number_to_currency(@cost_center.hour_cotizada * horas_eje , precision: 0)%></span>
+         <span style=""> <%= number_to_currency(costo_real_en_dinero , precision: 0)%></span>
       </div>
-      <div class="col-md-4">   <strong>Margen</strong><br> 
-         <span style=""> <%= porc_ejec %>%</span>
+      <div class="col-md-4">   <strong>Avance</strong><br> 
+         <span style=""> <%= porc_eje_costo  %>%</span>
       </div>
 
 
