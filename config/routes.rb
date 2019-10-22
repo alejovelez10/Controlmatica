@@ -13,9 +13,11 @@ Rails.application.routes.draw do
   resources :parameterizations
   resources :reports
   resources :cost_centers
-  resources :customers
+  resources :customer_user
   resources :providers
   resources :rols , :except => [:show]
+
+  default_url_options :host => 'controlmatica.herokuapp.com'
 
 
   get "customer_cost_center/:id(/:location)", to: "cost_centers#customer_cost_center", as: "customer_cost_center"
