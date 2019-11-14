@@ -1,11 +1,19 @@
 class CustomersController < ApplicationController
   before_action :set_customer, only: [:show, :edit, :update, :destroy, :customer_user, :get_client, :report_user]
   before_action :authenticate_user!
+  skip_before_action :verify_authenticity_token
+
   # GET /customers
   # GET /customers.json
   def index
     @customers = Customer.all.paginate(:page => params[:page], :per_page => 10)
   end
+
+  def get_customers
+    customers = Customer.all
+    render :json => customers
+  end
+  
 
   # GET /customers/1
   # GET /customers/1.json
@@ -77,10 +85,10 @@ class CustomersController < ApplicationController
   # DELETE /customers/1
   # DELETE /customers/1.json
   def destroy
-    @customer.destroy
-    respond_to do |format|
-      format.html { redirect_to customers_url, notice: 'Customer was successfully destroyed.' }
-      format.json { head :no_content }
+    if @customer.destroy
+      render :json => @customer
+    else 
+      render :json => @customer.errors.full_messages
     end
   end
 

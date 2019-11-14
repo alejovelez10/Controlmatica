@@ -1,11 +1,18 @@
 class ProvidersController < ApplicationController
   before_action :set_provider, only: [:show, :edit, :update, :destroy]
     before_action :authenticate_user!
+    skip_before_action :verify_authenticity_token
   # GET /providers
   # GET /providers.json
   def index
     @providers = Provider.all.paginate(:page => params[:page], :per_page => 10)
   end
+
+  def get_providers
+    providers = Provider.all
+    render :json => providers
+  end
+  
 
   # GET /providers/1
   # GET /providers/1.json
@@ -54,12 +61,13 @@ class ProvidersController < ApplicationController
   # DELETE /providers/1
   # DELETE /providers/1.json
   def destroy
-    @provider.destroy
-    respond_to do |format|
-      format.html { redirect_to providers_path, notice: 'Provider was successfully destroyed.' }
-      format.json { head :no_content }
+    if @provider.destroy
+      render :json => @provider
+    else 
+      render :json => @provider.errors.full_messages
     end
   end
+
 
   private
     # Use callbacks to share common setup or constraints between actions.

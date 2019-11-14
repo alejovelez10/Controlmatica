@@ -43,6 +43,7 @@ gem 'figaro'
 gem "nested_form", :git => 'https://github.com/ryanb/nested_form.git'
 #paginacion
 gem 'will_paginate'
+gem 'react-rails'
 gem 'will_paginate-bootstrap'
 #generar pdf
 gem 'wicked_pdf'
@@ -54,7 +55,7 @@ gem 'jquery-rails'
 #Editor texto
 gem 'ckeditor_rails', '~> 4.5', '>= 4.5.10'
 #bootstrap
-gem 'bootstrap-sass', '~> 3.4.0'
+gem 'bootstrap', '~> 4.3.1'
 
 # Use CoffeeScript for .coffee assets and views
 gem 'coffee-rails', '~> 4.2'

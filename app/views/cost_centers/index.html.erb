@@ -1,3 +1,7 @@
+<%= javascript_pack_tag 'ConstCenter' %> 
+<%= react_component('ConstCenter', usuario: current_user) %>
+
+<!--
 <div class="x_content">
 
   <div class="container-fluid no-padding">
@@ -57,11 +61,8 @@
       <th style="text-align: center;">Acciones</th>
       <th>Codigo</th>
       <th>Cliente</th>
-      <!--<th>Contacto</th>-->
       <th>Tipo de Servicio</th>
        <th>Descripcion</th>
-       <!--<th>Fecha de Inicio</th>-->
-       <!--<th>Fecha Final</th>-->
       <th>Número de cotización</th>
       <th>$ Ingeniería Cotizado</th>
       <th>$ Ingeniería Ejecutado</th>
@@ -123,11 +124,8 @@
         </td>
         <td><%= cost_center.code %></td>
         <td><%= cost_center.customer.name if cost_center.customer %></td>
-         <!--<td><%# cost_center.contact.name if cost_center.contact%></td>-->
         <td><%= cost_center.service_type %></td>
        <td><%= cost_center.description %></td>
-         <!--<td><%# get_date(cost_center.start_date) %></td>-->
-         <!--<td><%# get_date(cost_center.end_date) %></td>-->
         <td><%= cost_center.quotation_number %></td>
         <td><%=  number_to_currency(ing_cotizado, precision: 0) %></td>
         
@@ -209,3 +207,5 @@
   $("#search3").val("<%= params[:search3]%>")
   $("#search4").val("<%= params[:search4]%>")
 </script>
+
+-->

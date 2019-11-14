@@ -1,3 +1,179 @@
 // Place all the styles related to the home controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+
+.order{
+    background: whitesmoke;
+    padding: 10px;
+    border-radius: 10px;
+    margin-left: 11px;
+    margin-right: 13px;
+  }
+
+  .card-info{
+    background: #fff;
+    overflow: scroll;
+    max-height: 500px; 
+    height: 142px; 
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  .dropdown-menu{
+    padding: 7px;
+    position: absolute;
+    top: 41px;
+    left: -117px;
+  }
+
+  .float{
+    float: right;
+    padding-right: 0px;
+  }
+
+  .margin-left{
+    margin-left: 10px;
+  }
+
+  .titulos .col-md-3{
+    padding: 10px;
+  }
+
+  .valores {
+    padding: 10px;
+    text-align: center;
+    font-size: 18px;
+  }
+
+  .title1 {
+    background: #2a3f54;
+    color: white;
+  }
+
+  .show-content{
+    background: white;
+    padding: 10px;
+ 
+  }
+.menu{
+  padding: 5px 5px;
+}
+
+
+.card-show{
+    border-top: 4px solid #2a3f53 !important;
+}
+
+.card-table{
+  border-top: 4px solid #2a3f53 !important;
+}
+
+.tr-title{
+  background: #2a3f53;
+  color: #ffff;
+}
+
+
+.swal2-icon.swal2-warning{
+  font-size: 19px !important;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.4em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+
+.btn-secondary{
+  background: #2a3f53 !important;
+  color: #ffff;
+}
+
+.btn-secondary:hover{
+  color: #ffff !important;
+}
+
+.error-class{
+  border: 1px solid red !important;
+}
+
+.background-show{
+  background: #e5e5e5;
+}
+
+.title-modal{
+    background: #2a3f53;
+    color: #ffff;
+    border: 1px solid;
+}
+
+.validate-label{
+  color: red !important;
+}
+
+.img-user {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+}
+
+.color-password{
+  color: #44a353;
+}
+
+.color-falsePassword{
+  color: #ff0017;
+}
+
+.img-user-create {
+  height: 160px;
+  border-radius: 50%;
+}
+
+.btn-password {
+  float: right;
+  position: relative;
+  top: -28px;
+  color: #ced4da;
+  left: -12px;
+  cursor: pointer;
+}
+
+.content-table {
+  max-width: 100% !important;
+  margin: 0px 0px 0px 0px !important;
+  overflow-x: auto;
+}
+
+.table-width{
+  width: 220% !important;
+  max-width: 220% !important;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px #fff; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #2a3f53; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3f53; 
+}
+

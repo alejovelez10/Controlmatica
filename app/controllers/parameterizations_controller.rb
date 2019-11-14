@@ -1,11 +1,19 @@
 class ParameterizationsController < ApplicationController
   before_action :set_parameterization, only: [:show, :edit, :update, :destroy]
     before_action :authenticate_user!
+    skip_before_action :verify_authenticity_token
   # GET /parameterizations
   # GET /parameterizations.json
   def index
     @parameterizations = Parameterization.all.paginate(:page => params[:page], :per_page => 10)
   end
+
+  def get_parameterizations
+    parameterizations = Parameterization.all
+    render :json => parameterizations
+  end
+  
+
 
   # GET /parameterizations/1
   # GET /parameterizations/1.json
@@ -24,40 +32,54 @@ class ParameterizationsController < ApplicationController
   # POST /parameterizations
   # POST /parameterizations.json
   def create
-    @parameterization = Parameterization.new(parameterization_params)
+    valor1 = parameterization_params["money_value"].gsub('$','').gsub(',','')
+    params["money_value"] = valor1
 
-    respond_to do |format|
+    @parameterization = Parameterization.create(parameterization_params)
+
       if @parameterization.save
-        format.html { redirect_to parameterizations_path, notice: 'Parameterization was successfully created.' }
-        format.json { render :show, status: :created, location: @parameterization }
+        render :json => {
+          message: "¡El Registro fue creado con exito!",
+          type: "success"
+        }
       else
-        format.html { render :new }
-        format.json { render json: @parameterization.errors, status: :unprocessable_entity }
+        render :json => {
+          message: "¡El Registro no fue creado!",
+          type: "error",
+          message_error: @parameterization.errors.full_messages
+        }
       end
-    end
+  	
   end
 
   # PATCH/PUT /parameterizations/1
   # PATCH/PUT /parameterizations/1.json
+
   def update
-    respond_to do |format|
-      if @parameterization.update(parameterization_params)
-        format.html { redirect_to parameterizations_path, notice: 'Parameterization was successfully updated.' }
-        format.json { render :show, status: :ok, location: @parameterization }
-      else
-        format.html { render :edit }
-        format.json { render json: @parameterization.errors, status: :unprocessable_entity }
-      end
+    valor1 = parameterization_params["money_value"].gsub('$','').gsub(',','')
+    params["money_value"] = valor1
+    
+    if @parameterization.update(parameterization_params) 
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @parameterization.errors.full_messages
+      }
     end
   end
 
   # DELETE /parameterizations/1
   # DELETE /parameterizations/1.json
   def destroy
-    @parameterization.destroy
-    respond_to do |format|
-      format.html { redirect_to parameterizations_url, notice: 'Parameterization was successfully destroyed.' }
-      format.json { head :no_content }
+    if @parameterization.destroy
+      render :json => @parameterization
+    else 
+      render :json => @parameterization.errors.full_messages
     end
   end
 
@@ -69,6 +91,6 @@ class ParameterizationsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def parameterization_params
-      params.require(:parameterization).permit(:name, :user_id, :number_value, :money_value)
+      params.permit(:name, :user_id, :number_value, :money_value)
     end
 end

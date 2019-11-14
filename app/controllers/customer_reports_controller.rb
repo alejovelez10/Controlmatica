@@ -19,6 +19,13 @@ class CustomerReportsController < ApplicationController
     end
   end
 
+  def get_customer_reports
+    customer_reports = CustomerReport.all.to_json( :include => [:customer] )
+    customer_reports = JSON.parse(customer_reports)
+    render :json => customer_reports
+  end
+  
+
   # GET /customer_reports/1
   # GET /customer_reports/1.json
   def show

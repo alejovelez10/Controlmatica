@@ -1,5 +1,81 @@
 module ApplicationHelper
 
+	def controller_name_helper(controller,action)
+        if controller == "providers" && action == "index"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-user'></i> Proveedores" + "</h1>" + "<p>" + "Gestiona a todos los usuarios" + "</p>"
+ 
+        elsif controller == "customers" && action == "index"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Clientes " + "</h1>" + "<p>" + "Crea los roles corporativos" + "</p>"
+
+        elsif controller == "parameterizations" && action = "index"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-layer-group'></i> Parametrizaciones " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+            
+        elsif controller == "home"  && action = "users"
+            card = "<h1>" + " <i class='fas fa-handshake'></i> Usuarios " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+
+        elsif controller == "customer_reports" && action == "index"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Informes de Clientes " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+
+        elsif controller == "cost_centers"  && action == "index"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+
+        elsif controller == "cost_centers" && action == "show"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Editar cuenta " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+
+        elsif controller == "bankings"
+            card = "<h1>" + " <i class='fas fa-university'></i> Bancarizacion " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+
+        elsif controller == "home" && action == "index"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Publicaciones " + "</h1>" + "<p>" + "Crea los roles corporativos" + "</p>"
+        
+
+
+        else
+            "Proyectos"
+        end
+ 
+    end
+    
+
+    def breadcrumb_actions(controller,action)
+        if controller == "views" && action == "index"
+            card = "<li class='breadcrumb-item'> <a href='/users/index'>Index</a></li>"
+ 
+        elsif controller == "rols" && action == "index" 
+            card = "<li class='breadcrumb-item'> <a href='/rols'>Index</a></li>"
+
+        elsif controller == "module_controls" && action == "index"
+            card = "<li class='breadcrumb-item'> <a href='/module_controls'>Index</a></li>"
+
+        elsif controller == "home" && action == "dasboard"
+            card = "<li class='breadcrumb-item'> <a href='/dasboard'>Home</a></li>"
+        
+        elsif controller == "module_controls" && action == "show"
+            card = "<li class='breadcrumb-item'> <a href='/module_controls'>Index</a></li> <li class='breadcrumb-item'> <a href='/module_controls/'>show</a></li>"
+
+
+        elsif controller == "agreements"
+            card = "<li class='breadcrumb-item'> <a href='/agreements'>Index</a></li>"
+
+        elsif controller == "partners"
+            card = "<li class='breadcrumb-item'> <a href='/partners'>Index</a></li>"
+            
+
+        elsif controller == "registrations" && action == "edit"
+            card = "<li class='breadcrumb-item'> <a href='/users/edit'>Editar</a></li>"
+
+        elsif controller == "bankings"
+            card = "<li class='breadcrumb-item'> <a href='/users/edit'>Informacion</a></li>"
+
+        elsif controller == "home" && action == "index"
+            card = "<li class='breadcrumb-item'> <a href='/'>Index</a></li>"
+
+        
+        else
+            ""
+        end
+    end
+
 	def select_documento
 		[
 	      ['Cédula de Ciudadanía', 'Cédula de Ciudadanía'],

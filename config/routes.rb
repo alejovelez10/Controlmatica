@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+
+  get "get_show_center/:id", to: "cost_centers#get_show_center"
   get "employed_performance/show", to: "employed_performance#show", as: "employed_performance_show"
   get "employed_performance/info_pdf", to: "employed_performance#info_pdf", as: "info_pdf"
   resources :customer_invoices
@@ -33,7 +35,21 @@ Rails.application.routes.draw do
     delete "user/:id", to: "users/registrations#delete_user", as: "delete_user"
     get "user/:id/edit", to: "users/registrations#user_edit", as: "user_edit"
     patch "update_user/:id", to: "users/registrations#update_user", as: "update_user"
+    get "menu/:id/:name", to: "users/registrations#menu", as: "menu"
+    get "get_users", to: "users/registrations#get_users"
   end
+
+
+  #react routes 
+
+  get "get_parameterizations", to: "parameterizations#get_parameterizations"
+  get "get_providers", to: "providers#get_providers"
+  get "get_customers", to: "customers#get_customers"
+  get "get_customer_reports", to: "customer_reports#get_customer_reports" 
+  get "get_cost_centers", to: "cost_centers#get_cost_centers" 
+  get "get_sales_order/:id", to: "sales_orders#get_sales_order" 
+
+
 
   root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"

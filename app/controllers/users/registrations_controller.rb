@@ -2,6 +2,7 @@
 
 class Users::RegistrationsController < Devise::RegistrationsController
   respond_to :html, :js, :only => [:new, :update, :create]
+  skip_before_action :verify_authenticity_token, :only => [:delete_user, :create_user]
 
   # before_action :configure_sign_up_params, only: [:create]
   # before_action :configure_account_update_params, only: [:update]
@@ -26,6 +27,11 @@ class Users::RegistrationsController < Devise::RegistrationsController
     
   end
 
+  def menu
+    @user = User.find(params[:id])
+    @user.update(menu: params[:name])
+  end
+
   def update_user
     @user = User.find(params[:id])
     if @user.update(user_params)
@@ -39,9 +45,28 @@ class Users::RegistrationsController < Devise::RegistrationsController
   def delete_user
     @user = User.find(params[:id])
     if @user.destroy
-      flash[:delete] = "¡El registro de #{@user.names} fue eliminado con éxito!"
-        redirect_to users_path
+        render :json => @user
+    else
+        render :json => @user.errors.full_messages
     end
+  end
+
+  def get_users
+    if params[:name] || params[:email] || params[:rol_id] || params[:state] || params[:number_document]
+      @users = User.all.paginate(page: params[:page], :per_page => 30).search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document])
+      @users_total = User.all.search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document]).count
+
+    elsif params[:filter]
+      @users = User.all.paginate(page: params[:page], :per_page => params[:filter])
+      @users_total = User.all.count
+    else
+      @users = User.all.paginate(page: params[:page], :per_page => 30).order(id: :desc)
+      @users_total = User.all.count
+    end
+
+    @users =  @users.to_json(:include => [:rol => {:only =>[:name]}])
+    @users = JSON.parse(@users)
+    render :json => { users_paginate: @users, users_total: @users_total }
   end
 
   # PUT /resource

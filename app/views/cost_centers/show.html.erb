@@ -1,5 +1,8 @@
-<%= link_to "Volver", cost_centers_path , class: "btn btn-primary"%>
-<%= link_to "Editar", edit_cost_center_path(@cost_center.id) , class: "btn btn-primary"%>
+<%= javascript_pack_tag 'ConstCenterShow' %> 
+<%= react_component('ConstCenterShow', cost_center: @cost_center, usuario: current_user) %>
+
+<%# link_to "Volver", cost_centers_path , class: "btn btn-primary"%>
+<%# link_to "Editar", edit_cost_center_path(@cost_center.id) , class: "btn btn-primary"%>
 
     <% ing_cotizado = @cost_center.engineering_value
 
@@ -33,6 +36,8 @@
 
           
         %>
+
+<!--
 <div class="show-content">
   <div class="row titulos">
     <div class="col-md-6 text-center">
@@ -111,7 +116,7 @@
        </div>
       <div class="col-md-6">   <strong>Ejecutado</strong><br> 
          <span style="color:<%= color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
-      </div>-->
+      </div>
 
       <div class="col-md-4 "><strong>Cotizado</strong><br>
           <span> <%= @cost_center.eng_hours.to_i %> (horas)</span>
@@ -171,7 +176,7 @@
        </div>
       <div class="col-md-6">   <strong>Ejecutado</strong><br> 
          <span style="color:<%= color_value(ing_cotizado, ing_real)%>"> <%= number_to_currency(ing_real, precision: 0) %></span>
-      </div>-->
+      </div>
 
       <div class="col-md-4 "><strong>Ingenieria Cotizada</strong><br>
           <span> <%= number_to_currency(costo_en_dinero , precision: 0) %></span>
@@ -461,7 +466,7 @@
 
       </div>
   <% end %>
--->
+
 </div>
 <!--
   <strong>Execution state:</strong>
@@ -471,66 +476,5 @@
 <p>
   <strong>Invoiced state:</strong>
   <%= @cost_center.invoiced_state %>
-</p>-->
-
-
-
-<style >
-
-  .order{
-    background: whitesmoke;
-    padding: 10px;
-    border-radius: 10px;
-    margin-left: 11px;
-    margin-right: 13px;
-  }
-
-  .card-info{
-    background: #fff;
-    overflow: scroll;
-    max-height: 500px; 
-    height: 142px; 
-    max-width: 100%;
-    padding: 10px;
-  }
-
-  .dropdown-menu{
-    padding: 7px;
-    position: absolute;
-    top: 41px;
-    left: -117px;
-  }
-
-  .float{
-    float: right;
-    padding-right: 0px;
-  }
-
-  .margin-left{
-    margin-left: 10px;
-  }
-
-  .titulos .col-md-3{
-    padding: 10px;
-  }
-
-  .valores {
-    padding: 10px;
-    text-align: center;
-    font-size: 18px;
-  }
-
-  .title1 {
-    background: #2a3f54;
-    color: white;
-  }
-
-  .show-content{
-    background: white;
-    padding: 10px;
- 
-  }
-.menu{
-  padding: 5px 5px;
-}
-</style>
+</p>
+-->

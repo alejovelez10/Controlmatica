@@ -1,15 +1,19 @@
+<%= javascript_pack_tag 'Parameterizations' %> 
+<%= react_component('Parameterizations', usuario: current_user) %>
+<!--
+
 <div class="x_content">
 
   <div class="container-fluid no-padding">
 
     <div class="col-md-8 no-paddong-left">
           <h1>Parametrizacion Creados</h1>
-          <span class="count"><%= @parameterizations.count %></span>
-          <p id="count-pages"><%= page_parameterization_info @parameterizations %></p>
+          <span class="count"><%# @parameterizations.count %></span>
+          <p id="count-pages"><%# page_parameterization_info @parameterizations %></p>
     </div>
 
     <div class="col-md-4 float margin_top" >
-          <%= link_to 'Nuevo', new_parameterization_path, class: "btn btn-dark float", remote: true %>
+          <%# link_to 'Nuevo', new_parameterization_path, class: "btn btn-dark float", remote: true %>
     </div>
 
   </div>
@@ -27,22 +31,22 @@
   </thead>
 
     <tbody>
-      <% @parameterizations.each do |parameterization| %>
+      <%# @parameterizations.each do |parameterization| %>
         <tr>
-          <td><%= parameterization.name %></td>
+          <td><%# parameterization.name %></td>
 
-          <td><%= number_to_currency(parameterization.money_value, presition: 0) %></td>
+          <td><%# number_to_currency(parameterization.money_value, presition: 0) %></td>
           <td>
 
-            <%= link_to parameterization, class: "btn-padding" do %>
+            <%# link_to parameterization, class: "btn-padding" do %>
               <i class="far fa-eye"></i>
-            <% end -%>
+            <%# end -%>
 
-            <%= link_to edit_parameterization_path(parameterization), class: "btn-padding", remote: true do %>
+            <%# link_to edit_parameterization_path(parameterization), class: "btn-padding", remote: true do %>
               <i class="fas fa-pencil-alt"></i>
-            <% end -%>
+            <%# end -%>
 
-            <%= link_to parameterization, method: :delete, data: {
+            <%# link_to parameterization, method: :delete, data: {
               confirm: '¿Estas Seguro?',
               'confirm-button-text': 'Borrar',
               'cancel-button-text': 'Cancelar',
@@ -50,12 +54,13 @@
                text: 'Recuerda que el registro se borrara permanentemente',
               'image-url': ''}, class: "btn-delete" do%>
               <span class="glyphicon glyphicon-trash"></span>
-            <% end -%>
+            <%# end -%>
             
         </td>
 
         </tr>
-      <% end %>
+      <%# end %>
     </tbody>
   </table>
 </div>
+-->

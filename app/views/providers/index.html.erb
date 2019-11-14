@@ -1,15 +1,19 @@
+<%= javascript_pack_tag 'Providers' %> 
+<%= react_component('Providers', usuario: current_user) %>
+
+<!--
 <div class="x_content">
 
   <div class="container-fluid no-padding">
 
     <div class="col-md-8 no-paddong-left">
           <h1>Proveedores</h1>
-          <span class="count"><%= @providers.count %></span>
-          <p id="count-pages"><%= page_providers_info @providers %></p>
+          <span class="count"><%# @providers.count %></span>
+          <p id="count-pages"><%# page_providers_info @providers %></p>
     </div>
 
     <div class="col-md-4 float margin_top" >
-          <%= link_to 'Nuevo Proveedor', new_provider_path, class: "btn btn-dark float" %>
+          <%# link_to 'Nuevo Proveedor', new_provider_path, class: "btn btn-dark float" %>
     </div>
 
   </div>
@@ -28,7 +32,7 @@
      </thead>
 
   <tbody>
-    <% @providers.each do |provider| %>
+    <%# @providers.each do |provider| %>
       <tr>
         <td style="text-align: center;">
 
@@ -39,19 +43,19 @@
             <div class="dropdown-menu">
 
               <div class="col-md-12 no-padding-left">  
-                <%= link_to provider, class: "dropdown-item" do %>
+                <%# link_to provider, class: "dropdown-item" do %>
                   <i class="far fa-eye"></i> Ver Registro
-                <% end -%>
+                <%# end -%>
               </div>
 
               <div class="col-md-12 no-padding-left">  
-                <%= link_to edit_provider_path(provider), class: "dropdown-item" do %>
+                <%# link_to edit_provider_path(provider), class: "dropdown-item" do %>
                   <i class="fas fa-pencil-alt"></i> Editar Registro
-                <% end -%>
+                <%# end -%>
               </div>
 
               <div class="col-md-12 no-padding-left">  
-                <%= link_to provider, method: :delete, data: {
+                <%# link_to provider, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
                   'confirm-button-text': 'Borrar',
                   'cancel-button-text': 'Cancelar',
@@ -59,7 +63,7 @@
                    text: 'Recuerda que el registro se borrara permanentemente',
                   'image-url': ''}, class: "dropdown-item" do %>
                   <span class="glyphicon glyphicon-trash"></span> Eliminar 
-                <% end -%>
+                <%# end -%>
               </div>
 
             </div>
@@ -67,15 +71,15 @@
 
         </td>
 
-        <td><%= provider.name %></td>
-        <td><%= provider.phone %></td>
-        <td><%= provider.address %></td>
-        <td><%= provider.nit %></td>
-        <td><%= provider.web %></td>
-        <td><%= provider.email %></td>
+        <td><%# provider.name %></td>
+        <td><%# provider.phone %></td>
+        <td><%# provider.address %></td>
+        <td><%# provider.nit %></td>
+        <td><%# provider.web %></td>
+        <td><%# provider.email %></td>
     
       </tr>
-    <% end %>
+    <%# end %>
   </tbody>
 </table>
-
+-->

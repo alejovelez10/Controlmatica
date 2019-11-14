@@ -1,6 +1,7 @@
 class CustomerInvoicesController < ApplicationController
   before_action :set_customer_invoice, only: [:show, :edit, :update, :destroy]
     before_action :authenticate_user!
+    skip_before_action :verify_authenticity_token
   #before_action :set_cost_center, only: [:create, :new]
   #before_action :set_sales, only: [:create, :new]
 
@@ -28,19 +29,26 @@ class CustomerInvoicesController < ApplicationController
 
   # POST /customer_invoices
   # POST /customer_invoices.json
-  def create
-    @customer_invoice = CustomerInvoice.new(customer_invoice_params)
 
-    respond_to do |format|
+  def create
+    valor1 = customer_invoice_params["invoice_value"].gsub('$','').gsub(',','')
+    params["invoice_value"] = valor1
+
+    @customer_invoice = CustomerInvoice.create(customer_invoice_params)
+
       if @customer_invoice.save
-        format.html { redirect_to cost_center_path(@customer_invoice.cost_center_id), notice: 'Customer invoice was successfully created.' }
-        format.json { render :show, status: :created, location: @customer_invoice }
-        format.js
+        render :json => {
+          message: "¡El Registro fue creado con exito!",
+          type: "success"
+        }
       else
-        format.html { render :new }
-        format.json { render json: @customer_invoice.errors, status: :unprocessable_entity }
+        render :json => {
+          message: "¡El Registro no fue creado!",
+          type: "error",
+          message_error: @customer_invoice.errors.full_messages
+        }
       end
-    end
+  	
   end
 
   # PATCH/PUT /customer_invoices/1
@@ -86,6 +94,6 @@ class CustomerInvoicesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_invoice_params
-      params.require(:customer_invoice).permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state)
+      params.permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state)
     end
 end
