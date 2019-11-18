@@ -206,7 +206,7 @@ class table extends React.Component {
 
   render() {
     return (
-      <div className="tile">
+      <React.Fragment>
         <FormCreate
           toggle={this.toggle}
           backdrop={this.state.backdrop}
@@ -228,7 +228,7 @@ class table extends React.Component {
                     </div>
 
                     <div className="col-md-4 text-right">
-                        <button className="btn btn-secondary" onClick={() => this.toggle("new")}>Nuevo Informe</button>
+                        <a href={"/customer_reports/new"} className="btn btn-secondary">Nuevo Informe</a>
                     </div>
                 </div>
             </div>
@@ -331,7 +331,7 @@ class table extends React.Component {
                 <td colSpan="8" className="text-center">
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
-                        <button className="btn btn-secondary mt-3" onClick={() => this.toggle("new")}>Nuevo Informe</button>
+                        <a className="btn btn-secondary mt-3" href={"/customer_reports/new"}>Nuevo Informe</a>
                   </div>
                 </td>
               </tr>
@@ -340,7 +340,7 @@ class table extends React.Component {
         </table>
 
         </div>
-      </div>
+      </React.Fragment>
     );
   }
 }

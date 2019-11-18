@@ -215,7 +215,7 @@ class table extends React.Component {
 
   render() {
     return (
-      <div className="tile">
+      <React.Fragment>
         <FormCreate
           toggle={this.toggle}
           backdrop={this.state.backdrop}
@@ -366,7 +366,7 @@ class table extends React.Component {
         </table>
 
         </div>
-      </div>
+      </React.Fragment>
     );
   }
 }

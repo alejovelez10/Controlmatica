@@ -89,7 +89,7 @@ class FormCreate extends React.Component {
   render() {
     return (
       <div>
-        <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-lg modal-dialog-centered" backdrop={this.props.backdrop}>
+        <Modal isOpen={this.props.modal} toggle={() => this.props.toggle("close")} className="modal-lg modal-dialog-centered" backdrop={this.props.backdrop}>
           <ModalHeader className="title-modal"  toggle={() => this.props.toggle("close")}><i className="fas fa-money-check-alt mr-2"></i> {this.props.titulo}</ModalHeader>
           
             <ModalBody>
@@ -190,8 +190,8 @@ class FormCreate extends React.Component {
                       <tr>
                         <th>Fecha</th>
                         <th>Valor</th>
-                        <th>Certificado de entrega</th>
-                        <th>Informe de recepción</th>
+                        <th className="text-center">Certificado de entrega</th>
+                        <th className="text-center">Informe de recepción</th>
                         {this.state.id != "" &&
                           <th></th>
                         }
@@ -210,12 +210,12 @@ class FormCreate extends React.Component {
                                   <input 
                                     type="date" 
                                     className="form form-control" 
-                                    name="date_detail"
+                                    name="invoice_date"
                                     onChange={this.handleChangeUpdate}
-                                    value={this.state.formUpdate.date_detail}
+                                    value={this.state.formUpdate.invoice_date}
                                   />
                               ) : (
-                                  <p>{accion.date_detail}</p>
+                                  <p>{accion.invoice_date}</p>
                                 
                               )}
                             </td>
@@ -223,39 +223,41 @@ class FormCreate extends React.Component {
                             <td>
                             {this.state.id == accion.id ? (
                                 <NumberFormat 
-                                  name="value"
+                                  name="invoice_value"
                                   thousandSeparator={true} 
                                   onChange={this.handleChangeUpdate}
-                                  value={this.state.formUpdate.value}
+                                  value={this.state.formUpdate.invoice_value}
                                   prefix={'$'} 
                                   className="form form-control" 
                                   placeholder="Valor"
                                 /> 
                               ) : (
-                                  <p><NumberFormat value={accion.value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></p>
+                                  <p><NumberFormat value={accion.invoice_value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></p>
                                 
                               )}
 
                             </td>
 
 
-                            <td>
-                              {this.state.id == accion.id ? (
-                                    <input 
-                                      type="text" 
-                                      className="form form-control" 
-                                      name="voucher"
-                                      placeholder="Comprobante"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.voucher}
-                                    />
-                                ) : (
-                                    <p>{accion.voucher}</p>
-                                  
-                              )}
+                            <td className="text-center">
+                                    {accion.delivery_certificate_file.url != null ? (
+                                        <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.delivery_certificate_file.url} data-original-title="Descargar Archivo" >
+                                          <i className="fas fa-download"></i>
+                                        </a>
+                                    ) : (
+                                      <i className="fas fa-times color-false"></i>
+                                    )}
                             </td>
 
-                            <td></td>
+                            <td className="text-center">
+                                    {accion.reception_report_file.url != null ? (
+                                        <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.reception_report_file.url} data-original-title="Descargar Archivo" >
+                                          <i className="fas fa-download"></i>
+                                        </a>
+                                    ) : (
+                                      <i className="fas fa-times color-false"></i>
+                                    )}
+                            </td>
 
                             {this.state.id != "" &&
                               <td style={{width: "118px"}}>
@@ -285,7 +287,7 @@ class FormCreate extends React.Component {
                                         Editar
                                       </button>
 
-                                      <button onClick={() => this.props.delete(accion.id)} className="dropdown-item">
+                                      <button onClick={() => this.props.delete(accion)} className="dropdown-item">
                                         Eliminar
                                       </button>
 

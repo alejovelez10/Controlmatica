@@ -75,7 +75,9 @@
   </div>
 <hr>
   <div class="row">
-    <p style="font-size: 18px;">Si no tiene contacto ingresalo manualmente</p>
+    <div class="col-md-12">
+      <p style="font-size: 18px;">Si no tiene contacto ingresalo manualmente</p>
+    </div>
   </div>
   <br>  
   <div class="row">
@@ -138,25 +140,25 @@
             </div>
           </div>
           <hr>
-            <div class="row">
-          <div class="form-group">
-            <div class="col-md-3 no-paddong-left">
-              <%= form.label "Valor de Viaticos" %>
-              <%= form.number_field :viatic_value, class: "form-control required", :title => "Es un Campo Obligatorio" %>
-            </div>
-          </div>
-           <%= form.hidden_field :user_id ,:value =>  current_user.id %>
-          <div class="col-md-8 no-paddong-left">
-        
-            <%= form.label "Descripcion Viaticos" %>
-            <%= form.text_area :viatic_description, class: "form-control textarea", :rows => 3 , :title => "Es un Campo Obligatorio" %>
-       
+
+          <div class="row">
+              <div class="col-md-4">
+                <%= form.label "Valor de Viaticos" %>
+                <%= form.number_field :viatic_value, class: "form-control required", :title => "Es un Campo Obligatorio" %>
+              </div>
+
+              <%= form.hidden_field :user_id ,:value =>  current_user.id %>
+              <div class="col-md-8 no-paddong-left">
+                <%= form.label "Descripcion Viaticos" %>
+                <%= form.text_area :viatic_description, class: "form-control textarea", :rows => 3 , :title => "Es un Campo Obligatorio" %>
+              </div>
+
           </div>
 
-</div>
-            <div class="col-md-12 no-paddong-left btn-save">
-              <%= form.submit "Guardar", class: "btn btn-dark" %>
+          </div>
+            <div class="modal-footer mt-4 pr-0">
               <%= link_to "Volver", reports_path %>
+              <%= form.submit "Guardar", class: "btn btn-dark" %>
             </div>
 
           <% end %>

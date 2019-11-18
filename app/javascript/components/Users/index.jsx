@@ -139,10 +139,10 @@ class index extends React.Component {
           />
         </div>*/}
 
-        <div className="row">
-          <div className="col-md-12">
-            <div className="tile">
-              <div className="tile-body">
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="card card-table">
+                    <div className="card-body">
                 {
                   this.state.isLoaded == true ? (
                     <Table 

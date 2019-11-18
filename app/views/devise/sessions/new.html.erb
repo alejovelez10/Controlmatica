@@ -1,8 +1,5 @@
 
-
-   <div>
-      <div class="login_wrapper">
-        <%if notice.present? %>
+        <% if notice.present? %>
           <div class="container" style="margin-bottom: 50px">
               <div class="col-md-12" style="padding: 0;">
                 <div id="notice" class="alert alert-warning alert-dismissible">
@@ -13,43 +10,32 @@
               
               </div>
             </div>
-          <%end%>
-        <div class="animate form login_form">
-          <section class="login_content">
-            <%= form_for(resource, as: resource_name, url: session_path(resource_name), :html => {:id => "contact_form"}) do |f| %>
-             <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png">
-              <div>
-                <%= f.email_field :email, autofocus: true, autocomplete: "email", :placeholder => "Email", class: "form-control" %>
-              </div>
-              <div>
-                <%= f.password_field :password, autocomplete: "current-password", :placeholder => "Contraseña", class: "form-control" %>
-              </div>
-              <div>
-                <%= f.submit "Ingresar", class: "btn btn-dark" %>
-                <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
-                  <%= link_to "Olvidaste tu Contraseña?", new_password_path(resource_name), class: "reset_pass" %><br />
-                <% end -%>
-              </div>
+        <% end%>
 
-              <div class="clearfix"></div>
-
-              <div class="separator" style="display: none;">
-                <p class="change_link">Eres Nuevo?
-                  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
-                    <%= link_to "Crear Tu Cuenta", new_registration_path(resource_name) %><br />
-                  <% end -%>
-                </p>
-
-                <div class="clearfix"></div>
-                <br />
-
-                <div>
-              
-                  <p>©2019 Controlmatica Todos Los Derechos Reservados.</p>
-                </div>
-              </div>
-           <% end %>
-          </section>
-        </div>
+    <section class="login-content">
+      <div class="logo">
+        <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png">
       </div>
-    </div>
+      <div class="login-box">
+        <%= form_for(resource, as: resource_name, url: session_path(resource_name), :html => {class: "login-form"}) do |f| %>
+          <div class="form-group">
+            <label class="control-label">Email</label>
+            <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", :placeholder => "Email" %>
+          </div>
+          <div class="form-group">
+            <label class="control-label">contraseña</label>
+            <%= f.password_field :password, autocomplete: "current-password", class: "form-control", :placeholder => "Contraseña" %>
+          </div>
+          <div class="col-md-12 text-center mb-4">
+              <p class="semibold-text mb-2">
+                <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+                  <%= link_to "Olvidó su contraseña?", new_password_path(resource_name) %><br />
+                <% end %>
+              </p>
+          </div>
+          <div class="form-group btn-container">
+            <%= f.submit "Ingresar", class: "btn btn-secondary btn-block" %>
+          </div>
+        <% end %>
+      </div>
+    </section>

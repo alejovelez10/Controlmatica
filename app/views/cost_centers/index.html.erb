@@ -1,5 +1,5 @@
 <%= javascript_pack_tag 'ConstCenter' %> 
-<%= react_component('ConstCenter', usuario: current_user) %>
+<%= react_component('ConstCenter', usuario: current_user, clientes: get_customer) %>
 
 <!--
 <div class="x_content">
@@ -132,7 +132,7 @@
         <td style="color:<%=color_value(ing_cotizado, ing_real)%>"><%=  number_to_currency(ing_cotizado , precision: 0) %></td>
         <td><%=  number_to_currency(via_cotizado , precision: 0) %></td>
         <td style="color:<%= color_value(via_cotizado, via_real)%>"><%=  number_to_currency(via_real , precision: 0)  %></td>
-        <td><%= link_to "Finalizar", change_state_ended_path(cost_center.id), remote:true , class: "btn btn-primary btn-finalizar#{cost_center.id}" if cost_center.execution_state == "EJECUCION"%></td>
+        <td><%= link_to "Finalizar", change_state_ended_path(cost_center.id), remote:true , class: "btn btn-primary btn-finalizar#{cost_center.id}" if cost_center.execution_state == "EJECUCION" %></td>
         <td><span class="execution_state<%=cost_center.id%>"> <%= cost_center.execution_state %></span></td>
         <td><span class="invoiced_state<%=cost_center.id%>"></span> <%= cost_center.invoiced_state %></td>
       </tr>

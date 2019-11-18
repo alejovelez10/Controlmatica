@@ -1,119 +1,128 @@
 <div class="row">
-  <div class="col-md-8 col-sm-12 col-xs-12">
-    <div class="dashboard_graph">
-      <legend>Edita Tu Cuenta <p id="user-names" class="names"><%= current_user.names? ? current_user.names : "Usuario" %></p> </legend>
+  <div class="col-md-8">
+    <div class="card card-table">
+      <div class="card-body">
 
-      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, remote: true }) do |f| %>
-        <%= devise_error_messages! %>
+        <div class="dashboard_graph">
+          <legend>Edita Tu Cuenta <%= current_user.names? ? current_user.names : "Usuario" %></legend>
 
-        <div class="col-md-4 no-paddong-left">
-          <%= f.label :email %>
-          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form form-control" %>
-        </div>
+          <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, remote: true }) do |f| %>
+            <%= devise_error_messages! %>
 
-        <div class="col-md-4 no-paddong-left">
-          <%= f.label "Nombre y Apellido" %><br />
-          <%= f.text_field :names, autocomplete: "new-password", class: "form form-control" %>
-        </div>
+            <div class="col-md-4">
+              <%= f.label :email %>
+              <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form form-control" %>
+            </div>
 
-        <div class="col-md-4 no-paddong-left">
-          <%= f.label :Avatar %><br />
-          <%= f.file_field :avatar, class: "fom form-control"  %>
-          <br>
-        </div>
+            <div class="col-md-4">
+              <%= f.label "Nombre y Apellido" %><br />
+              <%= f.text_field :names, autocomplete: "new-password", class: "form form-control" %>
+            </div>
 
-        <div class="col-md-4 no-paddong-left">
-          <%= f.label "Tipo de Documento" %><br />
-          <%= f.select 'document_type', options_for_select(select_documento), {},{:class => 'form-control', id: "validationCustom01" }%>
-        </div>
+            <div class="col-md-4">
+              <%= f.label :Avatar %><br />
+              <%= f.file_field :avatar, class: "fom form-control"  %>
+              <br>
+            </div>
 
-        <div class="col-md-4 no-paddong-left">
-          <%= f.label "Numero de Documento" %><br />
-          <%= f.number_field :number_document, autocomplete: "new-password", class: "fom form-control"  %>
-        </div>
+            <div class="col-md-4">
+              <%= f.label "Tipo de Documento" %><br />
+              <%= f.select 'document_type', options_for_select(select_documento), {},{:class => 'form-control', id: "validationCustom01" }%>
+            </div>
 
-        <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-          <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-        <% end %>
-<!--
-        <div class="col-md-5 no-paddong-left ">
-          <%= f.label :password %> <i>()</i><br />
-          <%= f.password_field :password, autocomplete: "new-password", class: "form form-control" %>
-        </div>
+            <div class="col-md-4">
+              <%= f.label "Numero de Documento" %><br />
+              <%= f.number_field :number_document, autocomplete: "new-password", class: "fom form-control"  %>
+            </div>
 
-        <div class="col-md-3 no-paddong-left ">
-          <%= f.label :password_confirmation %><br />
-          <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
-        </div>
--->
-        <div class="col-md-4 no-paddong-left ">
-          <%= f.label "Fecha de Nacimiento" %>
-          <%= f.date_field :birthday, class: "form-control"  %>
-          <br>
-        </div>
-
-        <div class="col-md-4 no-paddong-left ">
-          <%= f.label "Contraseña Actual", id: "label-password" %>
-          <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control"  %>
-          <br>
-        </div>
-
-        <div class="col-md-12 no-paddong-left ">
-
-            <%= button_tag( :class => "btn btn-success") do %>
-                <i class="far fa-bookmark"></i> Guardar
+            <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+              <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
             <% end %>
+    <!--
+            <div class="col-md-5 no-paddong-left ">
+              <%= f.label :password %> <i>()</i><br />
+              <%= f.password_field :password, autocomplete: "new-password", class: "form form-control" %>
+            </div>
 
-            <%= link_to "Volver", :back, class: "btn btn-light" %>
+            <div class="col-md-3 no-paddong-left ">
+              <%= f.label :password_confirmation %><br />
+              <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control" %>
+            </div>
+    -->
+            <div class="col-md-4">
+              <%= f.label "Fecha de Nacimiento" %>
+              <%= f.date_field :birthday, class: "form-control"  %>
+              <br>
+            </div>
+
+            <div class="col-md-4">
+              <%= f.label "Contraseña Actual", id: "label-password" %>
+              <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control"  %>
+              <br>
+            </div>
+
+            <div class="col-md-12">
+
+                <%= button_tag( :class => "btn btn-success") do %>
+                    <i class="far fa-bookmark"></i> Guardar
+                <% end %>
+
+                <%= link_to "Volver", :back, class: "btn btn-light" %>
+            </div>
+
+          <% end %>
+
         </div>
-
-      <% end %>
-
+      </div>
     </div>
   </div>
 
 
   <div class="col-md-4">
-      <div class="dashboard_graph">
+    <div class="card card-table">
+      <div class="card-body">
 
-        <div class="user-avatar text-center">
-            <h3 align="center" id="names"><%= current_user.names? ? current_user.names : "Usuario" %></h3>
-            <%=  current_user.avatar? ? image_tag(current_user.avatar_url(),id: "user-avatar1") : image_tag("https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg")%>
-            
+        <div class="dashboard_graph">
+
+          <div class="user-avatar text-center">
+              <h3 align="center" id="names"><%= current_user.names? ? current_user.names : "Usuario" %></h3>
+              <%=  current_user.avatar? ? image_tag(current_user.avatar_url(),id: "user-avatar1") : image_tag("https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg")%>
+              
+          </div>
+          <br>
+
+          <div class="row">
+
+              <div class="col-md-12 margin">
+                <legend>Informacion Personal</legend>
+                <p><i class="fas fa-user"> <%= current_user.names? ? current_user.names : "Usuario" %></i></p>
+
+              </div>
+
+              <div class="col-md-12 margin">
+                <i class="fas fa-envelope"></i> <p id="user-email"> <%= current_user.email %> </p>
+              </div>
+
+              <div class="col-md-12 margin">
+                <i class="fas fa-id-card"></i> <p id="user-document_type"><%= current_user.document_type %></p>
+              </div>
+
+              <div class="col-md-12 margin">
+                <i class="fas fa-user"></i> <p id="user-document"> <%= number_to_currency_br(current_user.number_document) %></p>
+              </div>
+
+              <div class="col-md-12 margin">
+                <i class="fas fa-birthday-cake"></i> <p id="user-birthday"> <%= get_date(current_user.birthday) %></p>
+              </div>
+
+          </div>     
+
         </div>
-        <br>
-
-      <div class="row">
-
-          <div class="col-md-12 margin">
-            <legend>Informacion Personal</legend>
-            <i class="fas fa-user"></i> <p id="user-names"> <%= current_user.names? ? current_user.names : "Usuario" %></p>  
-
-          </div>
-
-          <div class="col-md-12 margin">
-            <i class="fas fa-envelope"></i> <p id="user-email"> <%= current_user.email %> </p>
-          </div>
-
-          <div class="col-md-12 margin">
-            <i class="fas fa-id-card"></i> <p id="user-document_type"><%= current_user.document_type %></p>
-          </div>
-
-          <div class="col-md-12 margin">
-            <i class="fas fa-user"></i> <p id="user-document"> <%= number_to_currency_br(current_user.number_document) %></p>
-          </div>
-
-          <div class="col-md-12 margin">
-            <i class="fas fa-birthday-cake"></i> <p id="user-birthday"> <%= get_date(current_user.birthday) %></p>
-          </div>
-
-       </div>     
-
       </div>
+    </div>
   </div>
 
-
-  <div class="col-md-8 col-sm-12 col-xs-12 margin-top-user">
+  <div class="col-md-12 col-sm-12 col-xs-12 margin-top-user">
     <div class="dashboard_graph">
       <legend>Eliminar Cuenta</legend>
       <p>Recuerda que al eliminar tu cuenta.. se eliminara todo el progreso que tengas dentro de la Aplicaccion</p><br>
@@ -130,7 +139,6 @@
 
     </div>
   </div>
-
 </div>
 
 

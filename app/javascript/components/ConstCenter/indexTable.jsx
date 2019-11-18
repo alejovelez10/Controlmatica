@@ -1,6 +1,7 @@
 import React from 'react';
 import Table from "../ConstCenter/tableIndex";
 import NumberFormat from 'react-number-format';
+import Filter from "../ConstCenter/FormFilter"
 
 class indexTable extends React.Component {
     constructor(props){
@@ -8,7 +9,14 @@ class indexTable extends React.Component {
 
         this.state = {
             data: [],
-            isLoaded: false
+            isLoaded: false,
+            show_filter: false,
+            formFilter: {
+              descripcion: "",
+              customer_id: "",
+              execution_state: "",
+              invoiced_state: ""
+            }
         }
     }
 
@@ -46,10 +54,10 @@ class indexTable extends React.Component {
 
     this.setState({
       formFilter: {
-        date_of_entry: "",
-        value: "",
-        number_account: "",
-        voucher_number: ""
+        descripcion: "",
+        customer_id: "",
+        execution_state: "",
+        invoiced_state: ""
       }
 
     })
@@ -61,10 +69,10 @@ class indexTable extends React.Component {
   cancelFilter = () => {
     this.setState({
       formFilter: {
-        date_of_entry: "",
-        value: "",
-        number_account: "",
-        voucher_number: ""
+        descripcion: "",
+        customer_id: "",
+        execution_state: "",
+        invoiced_state: ""
       }
 
     })
@@ -72,31 +80,8 @@ class indexTable extends React.Component {
     this.loadData();
   }
 
-  change = e => {
-    this.setState({
-      countPage: e.target.value,
-      activePage: this.state.countPage
-    });
-    fetch("/get_payments?filter=" + e.target.value)
-    .then(response => response.json())
-    .then(data => {
-      this.setState({
-        data: data.users_paginate,
-        users_total: data.users_total,
-        activePage: 1
-      });
-    });
-  }
+
   
-  handlePageChange = pageNumber => {
-    this.setState({ activePage: pageNumber });
-    fetch(`/get_incomes?page=${pageNumber}&filter=${this.state.countPage}`) 
-      .then(response => response.json())
-      .then(data => {
-        this.setState({ data: data.users_paginate });
-      });
-     
-  };
 
   handleChangeFilter = e => {
     this.setState({
@@ -107,17 +92,15 @@ class indexTable extends React.Component {
     });
   };
 
+
   HandleClickFilter = e => {
-    fetch(`/get_incomes/${this.props.agreement.id}?date_of_entry=${this.state.formFilter.date_of_entry}&value=${this.state.formFilter.value}&number_account=${this.state.formFilter.number_account}&voucher_number=${this.state.formFilter.voucher_number}`)
+    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
-          data: data.income_paginate,
-          users_total: data.income_total,
-          activePage: 1
+          data: data,
         });
       });
-   
   };
 
 
@@ -125,7 +108,19 @@ class indexTable extends React.Component {
         return (
             <React.Fragment>
 
-    
+              <div style={{ display: this.state.show_filter == true ? "block" : "none" }}>
+              
+              <Filter
+                onChangeFilter={this.handleChangeFilter}
+                formValuesFilter={this.state.formFilter}
+                onClick={this.HandleClickFilter}
+                cancelFilter={this.cancelFilter}
+                closeFilter={this.showFilter}
+                clientes={this.props.clientes}
+              />
+            </div>
+
+
               <div className="row">
                 <div className="col-md-12">
                   <div className="card card-table">
@@ -138,6 +133,7 @@ class indexTable extends React.Component {
                                 dataActions={this.state.data} 
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
+                                show={this.showFilter}
                             />
 
                         ) : (

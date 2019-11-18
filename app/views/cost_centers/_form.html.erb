@@ -2,7 +2,7 @@
    <div class="col-md-12 col-sm-12 col-xs-12">
       <div class="dashboard_graph">
          <div class="row x_title">
-            <div class="col-md-6 no-padding-left">
+            <div class="col-md-6 no-padding-left mb-4">
               <%if action_name == "new" %>
                 <h3>Nuevo Centro de Costo</h3>
               <% else %>
@@ -24,7 +24,7 @@
             <% end %>
 
             <div class="row form-group">
-              <div class="col-md-4 no-paddong-left">
+              <div class="col-md-4">
                 <label>Cliente</label>
                 <%= form.select :customer_id,
                   Customer.all.map { |u| [u.name, u.id] },
@@ -33,7 +33,7 @@
                    %>
               </div>
 
-              <div class="row col-md-4 add_client">
+              <div class="col-md-4 add_client">
                 <label>Contacto</label>
                 <%= form.select :contact_id,
                   Contact.where.not(customer_id: nil).map { |u| [u.name, u.id] },
@@ -137,9 +137,9 @@
               <%= form.hidden_field :invoiced_state %>
 
 
-            <div class="col-md-12 no-paddong-left">
-              <%= form.submit "Guardar", class: "btn btn-dark"%>
+            <div class="modal-footer pr-0">
               <%= link_to "Volver", cost_centers_path %>
+                            <%= form.submit "Guardar", class: "btn btn-dark"%>
             </div>
           <% end %>
 

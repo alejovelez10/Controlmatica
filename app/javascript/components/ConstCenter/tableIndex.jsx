@@ -55,6 +55,13 @@ class tableIndex extends React.Component {
                     </div>
 
                     <div className="col-md-4 text-right mt-1 mb-1">      
+                          <button
+                            className="btn btn-light mr-3"
+                            onClick={this.props.show}
+                            disabled={this.props.dataActions.length >= 1 ? false : true}
+                          >
+                            Filtros <i class="fas fa-search ml-2"></i>
+                          </button>
                           <a href="/cost_centers/new" className="btn btn-secondary">Nuevo centro de costo</a>
                     </div>
 
@@ -69,6 +76,7 @@ class tableIndex extends React.Component {
               >
                 <thead>
                   <tr className="tr-title">
+                    <th style={{width: "60px"}} className="text-center">Acciones</th>
                     <th>Codigo</th>
                     <th>Cliente</th>
                     <th>Tipo de Servicio</th>
@@ -81,7 +89,6 @@ class tableIndex extends React.Component {
                     <th>¿Finalizo?</th>
                     <th>Estado de ejecución</th>
                     <th>Estado facturado</th>
-                    <th style={{width: "60px"}} className="text-center">Acciones</th>
                   </tr>
                 </thead>
 
@@ -89,20 +96,7 @@ class tableIndex extends React.Component {
                   {this.props.dataActions.length >= 1 ? (
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
-                        <th>{accion.code}</th>
-                        <th>{accion.customer.name}</th>
-                        <th>{accion.service_type}</th>
-                        <th>{accion.description}</th>
-                        <th>{accion.quotation_number}</th>
-                        <th>{accion.id}</th>
-                        <th>{accion.id}</th>
-                        <th>{accion.id}</th>
-                        <th>{accion.id}</th>
-                        <th>{accion.id}</th>
-                        <th>{accion.id}</th>
-                        <th>{accion.id}</th>
-  
-                        <td className="text-center" style={{ width: "10px"}}>   
+                      <td className="text-center" style={{ width: "10px"}}>   
                         <div
                             className="btn-group"
                             role="group"
@@ -136,7 +130,24 @@ class tableIndex extends React.Component {
                             </div>
                           </div>  
                         </td>
-                      
+                        <th>{accion.code}</th>
+                        <th>{accion.customer != undefined ? accion.customer.name : ""}</th>
+                        <th>{accion.service_type}</th>
+                        <th>{accion.description}</th>
+                        <th>{accion.quotation_number}</th>
+                        <th><NumberFormat value={accion.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th>{accion.id}</th>
+                        <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th>{accion.id}</th>
+                        <th>
+                          {accion.execution_state == "EJECUCION" ? (
+                            <button>Finalizar</button>
+                          ) : (
+                            <button>Finalizado</button>
+                          )}
+                        </th>
+                        <th>{accion.execution_state}</th>
+                        <th>{accion.invoiced_state}</th>                      
                       </tr>
                     ))
                   ) : (

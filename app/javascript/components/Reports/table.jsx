@@ -1,6 +1,7 @@
 import React from "react";
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
+import NumberFormat from 'react-number-format';
 
 class table extends React.Component {
     constructor(props) {
@@ -65,24 +66,35 @@ class table extends React.Component {
                     </div>
 
                     <div className="col-md-4 text-right">
-                        <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
+                    <button
+                      className="btn btn-light mr-3"
+                      onClick={this.props.show}
+                      disabled={this.props.dataActions.length >= 1 ? false : true}
+                    >
+                      Filtros <i class="fas fa-search ml-2"></i>
+                    </button>
+                        <a href="/reports/new" className="btn btn-secondary" >Nuevo Reporte</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div className="content">
+        <div className="content-table">
 
-        <table className="table table-hover table-bordered" id="sampleTable">
+        <table className="table table-hover table-bordered table-width" id="sampleTable">
           <thead>
             <tr className="tr-title">
-              <th>Nombre</th>
-              <th>Telefono</th>
-              <th>Dirección</th>
-              <th>Nit</th>
-              <th>Web</th>
-              <th>Email</th>
               <th className="text-center">Acciones</th>
+              <th>Codigo</th>
+              <th>Centro de Costos</th>
+              <th>Fecha de Ejecucion</th>
+              <th>Responsable Ejecucion</th>
+              <th>Horas Laboradas</th>
+              <th>Descripcion del Trabajo</th>
+              <th>Valor de los Viaticos</th>
+              <th>Descripcion de Viaticos</th>
+              <th>Valor del Reporte</th>
+              <th>Estado</th>
             </tr>
           </thead>
 
@@ -90,14 +102,6 @@ class table extends React.Component {
             {this.props.dataActions.length >= 1 ? (
               this.props.dataActions.map(accion => (
                 <tr key={accion.id}>
-                  <td>{accion.name}</td>
-                  <td>{accion.phone}</td>
-                  <td>{accion.address}</td>
-                  <td>{accion.nit}</td>
-                  <td>{accion.web}</td>
-                  <td>{accion.email}</td>
-
-
                   <td className="text-right" style={{ width: "10px" }}>
                     <div
                       className="btn-group"
@@ -117,7 +121,7 @@ class table extends React.Component {
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
                             <a
-                              href={`/customers/${accion.id}/edit`}
+                              href={`/reports/${accion.id}/edit`}
                               className="dropdown-item"
                             >
                               Editar
@@ -134,6 +138,16 @@ class table extends React.Component {
                       </div>
                     </div>
                   </td>
+                  <td>{accion.code_report}</td>
+                  <td>{accion.cost_center.code}</td>
+                  <td>{accion.report_date}</td>
+                  <td>{accion.report_execute.name}</td>
+                  <td>{accion.working_time}</td>
+                  <td>{accion.work_description}</td>
+                  <td><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                  <td>{accion.viatic_description}</td>
+                  <td><NumberFormat value={accion.total_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                  <td>{accion.report_sate ? "Aprobado" : "Sin Aprobar"}</td>
                 </tr>
               ))
             ) : (
@@ -141,7 +155,7 @@ class table extends React.Component {
                 <td colSpan="8" className="text-center">
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
-                        <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
+                        <a href="/reports/new" className="btn btn-secondary" >Nuevo Reporte</a>
                   </div>
                 </td>
               </tr>

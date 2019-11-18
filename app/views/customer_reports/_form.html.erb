@@ -1,8 +1,9 @@
 <div class="row">
    <div class="col-md-12 col-sm-12 col-xs-12">
       <div class="dashboard_graph">
+
          <div class="row x_title ">
-            <div class="col-md-6">
+            <div class="col-md-6 mb-4">
               <%if action_name == "new" %>
                 <h3>Nuevo Informe de Cliente</h3>
               <% else %>
@@ -10,6 +11,7 @@
               <% end -%>
             </div>
          </div>
+
       <%= form_with(model: customer_report, local: true) do |form| %>
         <% if customer_report.errors.any? %>
           <div id="error_explanation">
@@ -24,7 +26,8 @@
         <% end %>
 
 
-        <div class="col-md-3" style="margin-bottom: 20px;">
+        <div class="row">
+            <div class="col-md-3" style="margin-bottom: 20px;">
           <label>Nombre de Cliente</label>
 
            <%= form.select :customer_id,
@@ -94,15 +97,16 @@
           <%= form.text_area :description, class: "form-control textarea", :rows => 3  %>
           <br>
         </div>
+        </div>
 
         <%= form.hidden_field :user_id ,:value =>  current_user.id %>
         <%= form.hidden_field :token %>
 
 
 
-        <div class="col-md-12">
-          <%= form.submit "Guardar", class: "btn btn-dark" %>
+        <div class="modal-footer pr-0">
           <%= link_to "Volver", customer_reports_path %>
+          <%= form.submit "Guardar", class: "btn btn-dark" %>
         </div>
       <% end %>
 

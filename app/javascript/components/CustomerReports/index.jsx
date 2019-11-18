@@ -33,6 +33,8 @@ class index extends React.Component {
             <React.Fragment>
               <div className="row">
                 <div className="col-md-12">
+                  <div className="card card-table">
+                    <div className="card-body">
       
                       <Table 
                         dataActions={this.state.data} 
@@ -43,7 +45,9 @@ class index extends React.Component {
       
                     </div>
                   </div>
-
+                </div>
+              </div>
+              
             </React.Fragment>
 
         )

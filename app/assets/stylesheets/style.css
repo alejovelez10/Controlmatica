@@ -6,7 +6,6 @@
  * ================================*/
 
 @import url(https://fonts.googleapis.com/css?family=Lato:300,400,400i,700);
-@import url(https://fonts.googleapis.com/css?family=Niconne);
 
 /*!
  * Bootstrap v4.1.1 (https://getbootstrap.com/)
@@ -5306,14 +5305,14 @@ input[type="button"].btn-block {
 
 .badge-primary {
     color: #FFF;
-    background-color: #45a453;
+    background-color: #2a3f53;
 }
 
 .badge-primary[href]:hover,
 .badge-primary[href]:focus {
     color: #FFF;
     text-decoration: none;
-    background-color: #45a453;
+    background-color: #2a3f53;
 }
 
 .badge-secondary {

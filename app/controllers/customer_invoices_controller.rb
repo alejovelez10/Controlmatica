@@ -69,11 +69,10 @@ class CustomerInvoicesController < ApplicationController
   # DELETE /customer_invoices/1
   # DELETE /customer_invoices/1.json
   def destroy
-    cost_center_id = @customer_invoice.cost_center_id
-    @customer_invoice.destroy
-    respond_to do |format|
-      format.html { redirect_to cost_center_path(cost_center_id), notice: 'Customer invoice was successfully destroyed.' }
-      format.json { head :no_content }
+    if @customer_invoice.destroy
+      render :json => @customer_invoice
+    else 
+      render :json => @customer_invoice.errors.full_messages
     end
   end
 

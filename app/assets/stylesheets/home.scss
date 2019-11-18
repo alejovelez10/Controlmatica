@@ -93,8 +93,9 @@
 
 
 .btn-secondary{
-  background: #2a3f53 !important;
+  background: #fabd39 !important;
   color: #ffff;
+  border-color: #fabd39 !important;
 }
 
 .btn-secondary:hover{
@@ -115,7 +116,7 @@
     border: 1px solid;
 }
 
-.validate-label{
+.validate-label, .color-false{
   color: red !important;
 }
 
@@ -177,3 +178,9 @@
   background: #2a3f53; 
 }
 
+
+.user-avatar img {
+  border-radius: 50%;
+  height: 176px;
+  width: 182px;
+}

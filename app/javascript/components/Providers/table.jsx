@@ -57,7 +57,7 @@ class table extends React.Component {
 
   render() {
     return (
-      <div className="tile">
+      <React.Fragment>
         <div className="row mb-4">
             <div className="col-md-12">
                 <div className="row">
@@ -151,7 +151,7 @@ class table extends React.Component {
         </table>
 
         </div>
-      </div>
+      </React.Fragment>
     );
   }
 }

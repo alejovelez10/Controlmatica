@@ -1,5 +1,6 @@
 import React from 'react';
 import {Card, CardImg, CardText, CardBody,CardTitle, CardSubtitle, Button} from 'reactstrap';
+import NumberFormat from 'react-number-format';
 
 class Show extends React.Component {
     render() {
@@ -13,57 +14,57 @@ class Show extends React.Component {
 
                                 <div class="col-md-3 text-center">
                                     <strong> Estado Ejecucion</strong> <br/>
-                                    <p>{this.props.data_info.execution_state}</p>{/*<%= @cost_center.execution_state %>*/}
+                                    <p>{this.props.data_info.execution_state}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Estado Facturacion</strong><br/>
-                                    <p>{this.props.data_info.invoiced_state}</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.invoiced_state}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Tipo</strong><br/>
-                                    <p>{this.props.data_info.service_type}</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.service_type}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Codigo</strong><br/>
-                                    <p>{this.props.data_info.code}</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.code}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Cliente</strong> <br/>
-                                    <p>Estiven(poner cliente)</p>{/*<%= @cost_center.execution_state %>*/}
+                                    <p>{this.props.data_info.customer.name}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Contacto</strong><br/>
-                                    <p>Estiven(poner cliente)</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : ""}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Fecha de Inicio</strong><br/>
-                                    <p>23/12/1202</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.start_date}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Fecha Final</strong><br/>
-                                    <p>23/12/1202</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.end_date}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Numero de Cotizacion</strong><br/>
-                                    <p>{this.props.data_info.quotation_number}</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.quotation_number}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Horas Trabajadas</strong><br/>
-                                    <p>{this.props.data_info.quotation_number}</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.quotation_number}</p>
                                 </div>
 
                                 <div class="col-md-3 text-center">
                                     <strong>Descripción</strong><br/>
-                                    <p>{this.props.data_info.description}</p>{/*<%= @cost_center.invoiced_state %>*/}
+                                    <p>{this.props.data_info.description}</p>
                                 </div>
 
                             </div>
@@ -93,12 +94,12 @@ class Show extends React.Component {
 
                                         <div className="col-md-4 text-center">
                                             <strong>Ejecutado</strong><br/> 
-                                            <span>{/*<%= horas_eje %>*/}  (horas)</span>
+                                            <span>{this.props.horas_eje/*<%= horas_eje %> */}  (horas)</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">
                                             <strong>Avance</strong><br/> 
-                                            <span>{/*<%= porc_eje %> */}%</span>
+                                            <span>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
                                         </div>
                                     </div>
                             
@@ -119,17 +120,17 @@ class Show extends React.Component {
                                     <div className="row">
                                         <div className="col-md-4 text-center" >
                                             <strong>Cotizado</strong><br/>
-                                            <span>0{/*<%= number_to_currency(via_cotizado , precision: 0) %>*/} </span>
+                                            <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
                                             <strong>Gastado</strong><br/>
-                                            <span>0{/*<%= number_to_currency(via_real, precision: 0) %>*/}</span>
+                                            <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
                                         </div>
                                 
                                         <div className="col-md-4 text-center"> 
                                             <strong></strong><br/>
-                                            <span>0{/*<%= porc_via %>*/}%</span>
+                                            <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -148,17 +149,17 @@ class Show extends React.Component {
                                     <div className="row">
                                         <div className="col-md-4 text-center">
                                             <strong>Ing Cotizada</strong><br/>
-                                            <span>0{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
+                                            <span><NumberFormat value={this.props.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">
                                             <strong>Ing Ejecutada</strong><br/> 
-                                            <span>0{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
+                                            <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
                                             <strong>Avance</strong><br/> 
-                                            <span>0{/*<%= porc_eje_costo  %>*/}%</span>
+                                            <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
                                         </div>
                                     </div>
 
@@ -177,17 +178,17 @@ class Show extends React.Component {
                                     <div className="row">
                                         <div className="col-md-4 text-center">
                                             <strong>Cotizado</strong><br/> 
-                                            <span>0{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                                            <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
                                             <strong>Facturado</strong><br/> 
-                                            <span>0{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                            <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
                                             <strong></strong><br/> 
-                                            <span>0{/*<%= porc_fac %>*/}%</span>
+                                            <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
                                         </div>
                                     </div>
 

@@ -17,8 +17,8 @@ class FormCreate extends React.Component {
             <ModalBody>
 
             <div className="row">
-                <div className="col-md-6">
-                  <label>Nombre <small className="validate-label">*</small></label>
+                <div className="col-md-4">
+                  <label>Nombre de Cliente <small className="validate-label">*</small></label>
 
                     <input
                       type="text"
@@ -32,8 +32,8 @@ class FormCreate extends React.Component {
 
                 </div>
 
-                  <div className="col-md-6">
-                  <label>Valor monetario<small className="validate-label">*</small></label>
+                <div className="col-md-4">
+                  <label>Centro de costos <small className="validate-label">*</small></label>
                     <NumberFormat 
                       name="money_value"
                       thousandSeparator={true} 
@@ -42,6 +42,57 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.money_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor monetario"
+                    /> 
+                  </div>
+
+                  <div className="col-md-4">
+                  <label>Aprueba el Reporte <small className="validate-label">*</small></label>
+                    <NumberFormat 
+                      name="money_value"
+                      thousandSeparator={true} 
+                      prefix={'$'} 
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.money_value == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.money_value}
+                      onChange={this.props.onChangeForm}
+                      placeholder="Valor monetario"
+                    /> 
+                  </div>
+
+                  <div className="col-md-4">
+                  <label>Fecha del reporte <small className="validate-label">*</small></label>
+                    <NumberFormat 
+                      name="money_value"
+                      thousandSeparator={true} 
+                      prefix={'$'} 
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.money_value == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.money_value}
+                      onChange={this.props.onChangeForm}
+                      placeholder="Valor monetario"
+                    /> 
+                  </div>
+
+                  <div className="col-md-4">
+                  <label>Reportes<small className="validate-label">*</small></label>
+                    <NumberFormat 
+                      name="money_value"
+                      thousandSeparator={true} 
+                      prefix={'$'} 
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.money_value == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.money_value}
+                      onChange={this.props.onChangeForm}
+                      placeholder="Valor monetario"
+                    /> 
+                  </div>
+
+
+                  <div className="col-md-12 mt-4">
+                  <label>Observaciones<small className="validate-label">*</small></label>
+                    <textarea 
+                      name="Observaciones"
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.money_value == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.money_value}
+                      onChange={this.props.onChangeForm}
+                      placeholder="Observaciones"
                     /> 
                   </div>
 

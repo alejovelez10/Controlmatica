@@ -48,6 +48,7 @@ Rails.application.routes.draw do
   get "get_customer_reports", to: "customer_reports#get_customer_reports" 
   get "get_cost_centers", to: "cost_centers#get_cost_centers" 
   get "get_sales_order/:id", to: "sales_orders#get_sales_order" 
+  get "get_reports", to: "reports#get_reports" 
 
 
 

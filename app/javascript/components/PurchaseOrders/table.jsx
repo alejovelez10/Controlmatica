@@ -313,21 +313,27 @@ class table extends React.Component {
 
   /* facturaaaaaaaaaaaaaaaaaaaaaaaaaaaaa datos*/
 
-  showIncomeDetail(accion,estado){
+
+
+  loadTableIncome = (accion) => {
+    fetch("/get_sales_order/" + accion.id)
+    .then(response => response.json())
+    .then(data => {
+      this.setState({
+        modalIncome: true,  
+        action: accion, 
+        title: "Facturas",
+        data_incomes: data,
+        formInvoice: {
+          sales_order_id: accion.id
+        }
+      })
+    });
+  }
+
+  showIncomeDetail = (estado,accion) =>{
     if (estado == "open") {
-      fetch("/get_sales_order/" + accion.id)
-      .then(response => response.json())
-      .then(data => {
-        this.setState({
-          modalIncome: true,  
-          action: accion, 
-          title: "Facturas",
-          data_incomes: data,
-          formInvoice: {
-            sales_order_id: accion.id
-          }
-        })
-      });
+      this.loadTableIncome(accion)
     }else if(estado == "close"){
       this.setState({ modalIncome: false, action: {}, ErrorValuesIncome: true })
       console.log("closeeeeee")
@@ -353,9 +359,9 @@ class table extends React.Component {
         .catch(error => console.error("Error:", error))
         .then(data => {
 
-          this.props.loadDataTable();
+          this.loadTableIncome(this.state.action)
 
-          this.MessageSucces("¡El Registro fue creado con exito!");
+          this.MessageSucces(data.message, data.type, data.message_error)
 
           this.setState({
             modal: false,
@@ -392,6 +398,34 @@ class table extends React.Component {
       }
     });
   };
+
+  deleteInvoice = (accion) => {
+    Swal.fire({
+      title: 'Estas seguro?',
+      text: "El registro sera eliminado para siempre!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#009688',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Si'
+    }).then((result) => {
+      if (result.value) {
+        fetch("/customer_invoices/" + accion.id, {
+          method: 'delete'
+      }).then(response => response.json())
+      .then(response => {
+        this.loadTableIncome(this.state.action)
+        
+        Swal.fire(
+          'Borrado!',
+          '¡El registro fue eliminado con exito!',
+          'success'
+        )
+      });
+      }
+    })
+
+  }
 
   validationFormInvoice = () => {
     if (this.state.formInvoice.invoice_date != "" && 
@@ -469,6 +503,7 @@ class table extends React.Component {
                 titulo={this.state.title}
                 errorValues={this.state.ErrorValuesInvoice}
                 dataIncomes={this.state.data_incomes}
+                delete={this.deleteInvoice}
             /> 
 
             
@@ -555,10 +590,10 @@ class table extends React.Component {
                                 {this.state.id == accion.id && (
                                       <React.Fragment>
                                         <button className="btn btn-secondary" onClick={() => this.updateInfo()}>
-                                          <i class="fas fa-check"></i>
+                                          <i className="fas fa-check"></i>
                                         </button>
                                         <button className="btn btn-danger ml-2" onClick={() => this.setState({ id: ""})}>
-                                          <i class="fas fa-times"></i>
+                                          <i className="fas fa-times"></i>
                                         </button>
                                       </React.Fragment>
                                 )}
@@ -583,7 +618,7 @@ class table extends React.Component {
                                 <i className="fas fa-bars"></i>
                               </button>
                               <div className="dropdown-menu dropdown-menu-right">
-                                <button onClick={() => this.showIncomeDetail(accion, "open")} className="dropdown-item">
+                                <button onClick={() => this.showIncomeDetail("open",accion)} className="dropdown-item">
                                   Gestionar
                                 </button>     
 

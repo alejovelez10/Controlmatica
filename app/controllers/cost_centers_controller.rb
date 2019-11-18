@@ -14,12 +14,11 @@ class CostCentersController < ApplicationController
   end
 
   def get_cost_centers
-    if params[:name] || params[:email] || params[:rol_id] || params[:state] || params[:number_document]
-      @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 30).search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document])
-      @cost_centers_total = CostCenter.all.search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document]).count
+    if params[:descripcion] || params[:customer_id] || params[:execution_state] || params[:invoiced_state]
+      @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 30).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state])
+      @cost_centers_total = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state]).count
 
     elsif params[:filter]
-
       @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => params[:filter])
       @cost_centers_total = CostCenter.all.count
       
@@ -29,6 +28,12 @@ class CostCentersController < ApplicationController
       @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 30).order(id: :desc)
       @cost_centers_total = CostCenter.all.count
     end
+
+    #ing_cotizado = cost_center.engineering_value
+    #ing_real = cost_center.reports.sum(:working_value)
+    #via_cotizado = cost_center.viatic_value
+    #via_real = cost_center.reports.sum(:viatic_value)
+  
 
     @cost_centers =  @cost_centers.to_json( :include => [:customer] )
     @cost_centers = JSON.parse(@cost_centers)
@@ -84,10 +89,27 @@ class CostCentersController < ApplicationController
 
     porc_ejec =  total_cot > 0 ? ((total_margen.to_f/total_cot)*100).to_i : "N/A" 
 
+    cost_center = @cost_center.to_json( :include => { :customer => { :only =>[:name] }, :contact => { :only =>[:name] } })
 
+    cost_center = JSON.parse(cost_center)
+    
     render :json => {
-      data_show: @cost_center,
+      data_show: cost_center,
       data_orders: @cost_center.sales_orders,
+
+      horas_eje: horas_eje,
+      porc_eje: porc_eje,
+      
+      via_cotizado: via_cotizado,
+      via_real: via_real,
+      porc_via: porc_via,
+
+      costo_en_dinero: costo_en_dinero,
+      costo_real_en_dinero: costo_real_en_dinero,
+      porc_eje_costo: porc_eje_costo,
+
+      facturacion: facturacion,
+      porc_fac: porc_fac
     }
     
   end
