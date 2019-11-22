@@ -226,19 +226,37 @@ class CostCentersController < ApplicationController
   	
   end
 
+
   # PATCH/PUT /cost_centers/1
   # PATCH/PUT /cost_centers/1.json
   def update
-    respond_to do |format|
-      if @cost_center.update(cost_center_params)
-        format.html { redirect_to @cost_center, notice: 'Cost center was successfully updated.' }
-        format.json { render :show, status: :ok, location: @cost_center }
-      else
-        format.html { render :edit }
-        format.json { render json: @cost_center.errors, status: :unprocessable_entity }
-      end
+    if cost_center_params["viatic_value"].class.to_s != "Integer" 
+      valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
+      params["viatic_value"] = valor1
+
+    elsif cost_center_params["quotation_value"].class.to_s != "Integer"
+      valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
+      params["quotation_value"] = valor2
+      
+    elsif cost_center_params["quotation_number"].class.to_s != "Integer"
+      valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
+      params["quotation_number"] = valor3
+    end
+
+    if @cost_center.update(cost_center_params) 
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @cost_center.errors.full_messages
+      }
     end
   end
+
 
   # DELETE /cost_centers/1
   # DELETE /cost_centers/1.json
@@ -254,11 +272,10 @@ class CostCentersController < ApplicationController
     @cost_center = CostCenter.find(params[:id])
     state = @cost_center.invoiced_state == "LEGALIZADO" ? "POR FACTURAR" : @cost_center.invoiced_state
     @fac = @cost_center.invoiced_state == "LEGALIZADO" ? true : false
+
     @cost_center.update(execution_state: "FINALIZADO", invoiced_state: state)
 
-    respond_to do |format|
-      format.js
-    end
+    render :json => true
     
   end
   private

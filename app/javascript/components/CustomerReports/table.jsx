@@ -3,6 +3,7 @@ import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import FormCreate from "../CustomerReports/FormCreate";
 import NumberFormat from "react-number-format";
+import { endianness } from "os";
 
 class table extends React.Component {
   constructor(props) {
@@ -157,8 +158,8 @@ class table extends React.Component {
       cancelButtonColor: "#d33",
       confirmButtonText: "Si"
     }).then(result => {
-      if (result.value) {
-        fetch("/parameterizations/" + id, {
+      if (result.value) {   
+        fetch("/customer_reports/" + id, {
           method: "delete"
         })
           .then(response => response.json())
@@ -175,32 +176,95 @@ class table extends React.Component {
     });
   };
 
+
   sendReques = (accion) => {
+    let timerInterval
+
     Swal.fire({
-        title: "Estas seguro?",
-        text: "Al aceptar se enviara el correo al cliente!",
-        type: "info",
-        showCancelButton: true,
-        confirmButtonColor: "#009688",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Si"
-      }).then(result => {
-        if (result.value) {
-          fetch(`/enviar_aprobacion/${accion.id}`, {
-            method: "GET"
+      title: "Estas seguro?",
+      text: "Al aceptar se enviara el correo al cliente!",
+      type: "info",
+      showCancelButton: true,
+      confirmButtonColor: "#009688",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Si"
+    }).then(result => {
+      if (result.value) {
+
+        fetch(`/enviar_aprobacion/${accion.id}`, {
+          method: "GET"
+        })
+
+        .then(response => response.json())
+        .then(data => {
+            this.props.loadInfo();
+            this.MessageSucces(data.message, data.type, data.message_error)
+      
+        });
+
+        Swal.fire({
+          title: 'Enviando...',
+          html: 'El correo se estan enviando, espera <b></b> minutos',
+          timer: 4300,
+          timerProgressBar: true,
+          onBeforeOpen: () => {
+            Swal.showLoading()
+            timerInterval = setInterval(() => {
+              Swal.getContent().querySelector('b')
+                .textContent = Swal.getTimerLeft()
+            }, 100)
+          },
+          onClose: () => {
+            clearInterval(timerInterval)
+          }
+        }).then((result) => {
+          if (
+            result.dismiss === Swal.DismissReason.timer
+          ) {
+            console.log('I was closed by the timer') // eslint-disable-line
+          }
+        })
+
+    
+      }
+    })
+  }
+
+  /*
+    Swal.queue([{
+      title: "Estas seguro?",
+      text: "Al aceptar se enviara el correo al cliente!",
+      type: "info",
+      showCancelButton: true,
+      confirmButtonColor: "#009688",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Si",
+      showLoaderOnConfirm: true,
+      preConfirm: () => {
+        return fetch(`/enviar_aprobacion/${accion.id}`, {
+          method: "GET"
+        }).then(response => response.json())
+          .then(data => {
+            this.props.loadInfo();
+            this.MessageSucces(data.message, data.type, data.message_error)
+          }).catch(() => {
+            Swal.insertQueueStep({
+              icon: 'error',
+              title: 'Unable to get your public IP'
+            })
           })
-            .then(response => response.json())
-            .then(response => {
-              this.props.loadInfo();
-  
-              Swal.fire(
-                "Borrado!",
-                "¡El registro fue eliminado con exito!",
-                "success"
-              );
-            });
-        }
-      });
+      }
+    }])
+  */
+
+  getState(accion){
+    if (accion.report_state == "Aprobado") {
+      return "Aprobado por el cliente"
+    }else if (accion.report_state == "Enviado al Cliente"){
+      return "Enviado para Aprobaciòn"
+    }else{
+      return "Enviar para Aprobaciòn"
+    }
   }
 
 
@@ -262,8 +326,9 @@ class table extends React.Component {
                         onClick={() => this.sendReques(accion)}
                         className="btn btn-success"
                         style={{width: "220px"}}
+                        disabled={accion.report_state == "Aprobado" || accion.report_state == "Enviado al Cliente" ? true : false }
                     >
-                        Enviar para Aprobaciòn
+                        {this.getState(accion)}
                     </button>
                   </td>
 
@@ -290,13 +355,6 @@ class table extends React.Component {
                           <i className="fas fa-bars"></i>
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
-
-                            <a
-                              href={`/customer_reports/${accion.id}`}
-                              className="dropdown-item"
-                            >
-                              Ver registro
-                            </a>
 
                             <a
                               href={`/customer_reports/${accion.id}/edit`}

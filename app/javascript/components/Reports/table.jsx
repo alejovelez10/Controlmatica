@@ -88,7 +88,8 @@ class table extends React.Component {
     if (this.state.formContact.contact_name != "" && 
         this.state.formContact.contact_position != "" &&
         this.state.formContact.contact_phone != "" &&
-        this.state.formContact.contact_email != "" 
+        this.state.formContact.contact_email != "" &&
+        this.state.form.customer_id != ""
         ) {
       console.log("los campos estan llenos")
       this.setState({ ErrorValuesContact: true })
@@ -166,14 +167,6 @@ class table extends React.Component {
         customer_id: selectedOption.value
       },
 
-      formContact: {
-        contact_name: "",
-        contact_position: "",
-        contact_phone: "",
-        contact_email: "",
-        customer_id: selectedOption.value,
-      },
-
     });
   };
 
@@ -224,10 +217,17 @@ class table extends React.Component {
 
   toggle(from) {
     if (from == "edit") {
-      this.setState({ modeEdit: true });
+      this.setState({ 
+        modeEdit: true,
+        ErrorValuesContact: true,
+        ErrorValues: true,
+      });
     } else if (from == "new") {
       this.setState({
         modeEdit: false,
+        ErrorValuesContact: true,
+        ErrorValues: true,
+        state_create: false,
         form: {
           customer_id: "",
           contact_id: "",
@@ -249,6 +249,20 @@ class table extends React.Component {
           contact_email: "",
           customer_id: "",
         },
+  
+        selectedOptionContact: {
+          contact_id: "",
+          label: "Seleccionar Contacto"
+        },
+  
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
+  
+        dataContact: [],
+        dataCostCenter: []
+
       });
     } else {
       this.setState({ stateSearch: false });

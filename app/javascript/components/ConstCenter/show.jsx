@@ -36,57 +36,57 @@ class Show extends React.Component {
 
                                 <div className="col-md-3 text-center">
                                     <strong> Estado Ejecucion</strong> <br/>
-                                    <p>{this.props.data_info.execution_state}</p>
+                                    <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Estado Facturacion</strong><br/>
-                                    <p>{this.props.data_info.invoiced_state}</p>
+                                    <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Tipo</strong><br/>
-                                    <p>{this.props.data_info.service_type}</p>
+                                    <p>{this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Codigo</strong><br/>
-                                    <p>{this.props.data_info.code}</p>
+                                    <p>{this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Cliente</strong> <br/>
-                                    <p>{this.props.data_info.customer.name}</p>
+                                    <p>{this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Contacto</strong><br/>
-                                    <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : ""}</p>
+                                    <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Fecha de Inicio</strong><br/>
-                                    <p>{this.props.data_info.start_date}</p>
+                                    <p>{this.props.data_info.start_date != undefined ? this.props.data_info.start_date : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Fecha Final</strong><br/>
-                                    <p>{this.props.data_info.end_date}</p>
+                                    <p>{this.props.data_info.end_date != undefined ? this.props.data_info.end_date : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Numero de Cotizacion</strong><br/>
-                                    <p>{this.props.data_info.quotation_number}</p>
+                                    <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Horas Trabajadas</strong><br/>
-                                    <p>{this.props.data_info.quotation_number}</p>
+                                    <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "CARGANDO.."}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Descripción</strong><br/>
-                                    <p>{this.props.data_info.description}</p>
+                                    <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "CARGANDO.."}</p>
                                 </div>
 
                             </div>

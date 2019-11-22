@@ -29,10 +29,18 @@ class MaterialsController < ApplicationController
   end
 
   def update
+    if material_params["amount"].class.to_s != "Integer" 
+      valor1 = material_params["amount"].gsub('$','').gsub(',','')
+      params["amount"] = valor1
 
-      valor1 = material_params["value"].gsub('$','').gsub(',','')
-      params["value"] = valor1
-
+    elsif material_params["provider_invoice_number"].class.to_s != "Integer"
+      valor2 = material_params["provider_invoice_number"].gsub('$','').gsub(',','')
+      params["provider_invoice_number"] = valor2
+      
+    elsif material_params["provider_invoice_value"].class.to_s != "Integer"
+      valor3 = material_params["provider_invoice_value"].gsub('$','').gsub(',','')
+      params["provider_invoice_value"] = valor3
+    end
 
     if @material.update(material_params) 
       render :json => {

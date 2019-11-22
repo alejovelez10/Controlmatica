@@ -11,5 +11,6 @@
 #
 
 class ModuleControl < ApplicationRecord
-    has_many :accion_modules, dependent: :destroy
+  has_many :accion_modules, dependent: :destroy
+  belongs_to :user
 end

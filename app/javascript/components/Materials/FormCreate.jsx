@@ -29,7 +29,7 @@ class FormCreate extends React.Component {
                 </div>
                 
                 <div className="col-md-4 mb-4">
-                <label>Cantidad <small className="validate-label">*</small></label>
+                <label>Numero de ordenes <small className="validate-label">*</small></label>
                   <input
                     type="number"
                     name="sales_number"

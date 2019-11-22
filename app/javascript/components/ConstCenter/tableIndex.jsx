@@ -248,8 +248,33 @@ class tableIndex extends React.Component {
     }
   };
 
+  updateState = (accion) => {
+    Swal.fire({
+      title: 'Estas seguro?',
+      text: "El registro sera actualizado!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#009688',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Si'
+    }).then((result) => {
+      if (result.value) {
+        fetch("/cost_centers/change_state_ended/" + accion.id, {
+          method: 'GET'
+      }).then(response => response.json())
+      .then(response => {
+        this.props.loadInfo()
+        
+        Swal.fire(
+          'Actualizado!',
+          '¡El registro fue actualizado con exito!',
+          'success'
+        )
+      });
+      }
+    })
 
-
+  }
 
   delete = (id) => {
     Swal.fire({
@@ -276,6 +301,29 @@ class tableIndex extends React.Component {
       });
       }
     })
+
+  }
+
+
+  get_btn(accion){
+    if (accion.execution_state == "FINALIZADO" && accion.invoiced_state == "FACTURADO") {
+      return ""  
+
+    }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "PENDIENTE DE COTIZACION"){
+      return ""
+
+    }else if(accion.execution_state == "EJECUCION" && accion.invoiced_state == "PENDIENTE DE ORDEN DE COMPRA"){
+      return <button className="btn btn-primary" onClick={() => this.updateState(accion)}>Finalizar</button> 
+
+    }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "LEGALIZADO"){
+      return ""
+
+    }else if(accion.execution_state == "EJECUCION" && accion.invoiced_state == "PENDIENTE DE COTIZACION"){
+      return <button className="btn btn-primary" onClick={() => this.updateState(accion)}>Finalizar</button> 
+
+    }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "POR FACTURAR"){
+      return ""
+    }
 
   }
 
@@ -349,9 +397,9 @@ class tableIndex extends React.Component {
                     <th>$ Ingeniería Ejecutado</th>
                     <th>$ Viaticos Cotizado</th>
                     <th>$ Viaticos Real</th>
-                    <th>¿Finalizo?</th>
-                    <th>Estado de ejecución</th>
-                    <th>Estado facturado</th>
+                    <th className="text-center" style={{ width: "2%"}}>¿Finalizo?</th>
+                    <th className="text-center" style={{ width: "4%"}}>Estado de ejecución</th>
+                    <th className="text-center" style={{ width: "8%"}}>Estado facturado</th>
                   </tr>
                 </thead>
 
@@ -402,15 +450,13 @@ class tableIndex extends React.Component {
                         <th>{accion.id}</th>
                         <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th>{accion.id}</th>
+                        
                         <th>
-                          {accion.execution_state == "EJECUCION" ? (
-                            <button>Finalizar</button>
-                          ) : (
-                            <button>Finalizado</button>
-                          )}
+                          {this.get_btn(accion)}
                         </th>
-                        <th>{accion.execution_state}</th>
-                        <th>{accion.invoiced_state}</th>                      
+
+                        <th className="text-center">{accion.execution_state}</th>
+                        <th className="text-center">{accion.invoiced_state}</th>                      
                       </tr>
                     ))
                   ) : (

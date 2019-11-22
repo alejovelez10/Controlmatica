@@ -137,7 +137,6 @@ class index extends React.Component {
     render() {
         return (
             <React.Fragment>
-                {this.state.isLoaded == true ? (
                     <ShowInfo 
                         data_info={this.state.data_show}
 
@@ -157,11 +156,6 @@ class index extends React.Component {
                         materials_state={true}
                         
                     />
-                  ) : (
-                    <div className="col-md-12 text-center p-0">
-                          <p>Cargando..</p>
-                    </div>
-                )}
         
 
               <div className="row mt-5">

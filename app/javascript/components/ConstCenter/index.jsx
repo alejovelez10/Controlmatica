@@ -153,9 +153,7 @@ class index extends React.Component {
     render() {
         return (
             <React.Fragment>
-              {this.props.estados.login_module == true ? (
-                <React.Fragment>
-                  {this.state.isLoaded == true ? (
+   
                       <ShowInfo 
                           data_info={this.state.data_show}
 
@@ -175,22 +173,7 @@ class index extends React.Component {
                           sales_orders_state={true}
                           
                       />
-                    ) : (
-                      <div className="col-md-12 text-center p-0">
-                            <p>Cargando..</p>
-                      </div>
-                  )}
-
-                </React.Fragment>
-
-                ) : (
-
-                  <React.Fragment>
-                      
-                  </React.Fragment>
-
-                )}
-        
+ 
 
               <div className="row mt-5">
                 <div className="col-md-12">

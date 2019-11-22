@@ -30,10 +30,13 @@ class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   has_many :customer_reports
-  has_many :reports 
+  has_many :reports
+  has_many :accion_modules
+  has_many :module_controls
+
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-    mount_uploader :avatar, AvatarUploader
-    belongs_to :rol, optional: true
+  mount_uploader :avatar, AvatarUploader
+  belongs_to :rol, optional: true
 end

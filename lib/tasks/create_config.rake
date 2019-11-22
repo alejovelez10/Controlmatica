@@ -4,7 +4,7 @@ namespace :create_config do
 
         ModuleControl.destroy_all
         
-        user = User.find_by_email("salazar-moncada-estiven@hotmail.com")
+        user = User.find_by_email("alejovelez10@gmail.com")
 
         providers = ModuleControl.create(name: "Proveedores", user_id: user.id)
 
@@ -85,10 +85,10 @@ namespace :create_config do
 
         if customer_reports
             AccionModule.create(name: "Ingreso al modulo", module_control_id: customer_reports.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Crear", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: customer_reports.id, user_id: user.id)
-            AccionModule.create(name: "Ver registro", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Generar pdf", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Enviar para aprobaciòn", module_control_id: customer_reports.id, user_id: user.id)
         end

@@ -140,6 +140,14 @@
                   <% end -%>
                 </li>
             <% end %>
+            
+            <% if authorization_modules || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to module_controls_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Modulos y Acciones</span>
+                <% end -%>
+              </li>
+            <% end %>
 
 
             </ul>

@@ -2,6 +2,7 @@ import React from "react";
 import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import FormCreate from "../Materials/FormCreate"
+import ShowInfo from "../Materials/ShowInfo"
 import NumberFormat from 'react-number-format';
 
 
@@ -14,6 +15,7 @@ class table extends React.Component {
         modal: false,
         backdrop: "static",
         modeEdit: false,
+        modalShow: false,
         action: {},
         title: "Nuevo convenio",
         id: "",
@@ -86,7 +88,7 @@ class table extends React.Component {
     if (this.validationForm() == true) {
       if(this.state.modeEdit == true){
         
-        fetch("/payments/" + this.state.action.id, {
+        fetch("/materials/" + this.state.action.id, {
           method: 'PATCH', // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
@@ -168,17 +170,17 @@ class table extends React.Component {
 
       this.setState({
         action: modulo,
-        title: "Editar pago",
+        title: "Editar Materiales",
         form: {
-          provider_id: "",
-          sales_date: "",
-          sales_number: "",
-          amount: "",
-          delivery_date: "",
-          sales_state: "",
-          description: "",
-          provider_invoice_number: "",
-          provider_invoice_value: "",
+          provider_id: modulo.provider_id,
+          sales_date: modulo.sales_date,
+          sales_number: modulo.sales_number,
+          amount: modulo.amount,
+          delivery_date: modulo.delivery_date,
+          sales_state: modulo.sales_state,
+          description: modulo.description,
+          provider_invoice_number: modulo.provider_invoice_number,
+          provider_invoice_value: modulo.provider_invoice_value,
           user_id: this.props.usuario.id,
           cost_center_id: this.props.cost_center.id
         },
@@ -262,11 +264,11 @@ class table extends React.Component {
 
   }
 
-  show(estado){
+  show = (estado, info) =>{
     if (estado == "open") {
-      this.setState({ modal: true, action: info })
+      this.setState({ modalShow: true, action: info })
     }else if(estado == "close"){
-      this.setState({ modal: false, action: {}, ErrorValues: true })
+      this.setState({ modalShow: false, action: {}})
     }
   }
 
@@ -312,6 +314,16 @@ class table extends React.Component {
                 providers={this.props.providers}
             />
 
+
+            <ShowInfo
+                toggle={this.show}
+                backdrop={this.state.backdrop}
+                modal={this.state.modalShow}
+                infoShow={this.state.action}
+                titulo={"Informacion detallada"}
+            
+            />
+
             <div className="content">
             
               <table
@@ -323,9 +335,6 @@ class table extends React.Component {
                     <th>Fecha de Generacion</th>
                     <th>Numero</th>
                     <th>Valor</th>
-                     {this.state.id != "" &&
-                          <th></th>
-                      }
                     <th style={{width: "60px"}} className="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -335,73 +344,26 @@ class table extends React.Component {
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
                         <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="date" 
-                                      className="form form-control" 
-                                      name="created_date"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.created_date}
-                                    />
-                                ) : (
-                                    <p>{accion.created_date}</p>
+                                    <p>{accion.sales_date}</p>
                                   
-                          )}
-                          
+ 
                         </td>
 
                         <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="number" 
-                                      className="form form-control" 
-                                      name="order_number"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.order_number}
-                                    />
-                                ) : (
-                                    <p>{accion.order_number}</p>
-                                  
-                          )}
+
+                                    <p>{accion.sales_number}</p>
                         </td>
                         
                         <td>
-                          {this.state.id == accion.id ? (
-                                  <NumberFormat 
-                                  name="order_value"
-                                  thousandSeparator={true} 
-                                  prefix={'$'} 
-                                  className={`form form-control`}
-                                  value={this.state.formUpdate.order_value}
-                                  onChange={this.handleChangeUpdate}
-                                  placeholder="Valor total"
-                                /> 
-                                ) : (
+  
                                   <NumberFormat
-                                  value={accion.order_value}
+                                  value={accion.amount}
                                   displayType={"text"}
                                   thousandSeparator={true}
                                   prefix={"$"}
                                 />
-                                  
-                          )}
 
                         </td>
-
-                          {this.state.id != "" &&
-                              <td style={{width: "118px"}}>
-                                {this.state.id == accion.id && (
-                                      <React.Fragment>
-                                        <button className="btn btn-secondary" onClick={() => this.updateInfo()}>
-                                          <i className="fas fa-check"></i>
-                                        </button>
-                                        <button className="btn btn-danger ml-2" onClick={() => this.setState({ id: ""})}>
-                                          <i className="fas fa-times"></i>
-                                        </button>
-                                      </React.Fragment>
-                                )}
-                              </td>
-                          }
   
                         <td className="text-center" style={{ width: "10px"}}>   
                         <div
@@ -423,7 +385,14 @@ class table extends React.Component {
                               <div className="dropdown-menu dropdown-menu-right">
 
                                 {this.props.estados.edit == true && (  
-                                  <button onClick={() => this.editTable(accion)} className="dropdown-item">
+                                  <button onClick={() => this.show("open", accion)} className="dropdown-item">
+                                    Ver informaciom
+                                  </button>
+                                )}
+
+
+                                {this.props.estados.edit == true && (  
+                                  <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>
                                 )}

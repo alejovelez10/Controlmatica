@@ -12,6 +12,7 @@
 #
 
 class AccionModule < ApplicationRecord
-    belongs_to :module_control
-    has_and_belongs_to_many :rols
+  belongs_to :module_control
+  has_and_belongs_to_many :rols
+  belongs_to :user
 end

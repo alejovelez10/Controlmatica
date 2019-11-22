@@ -4,7 +4,18 @@ class ModuleControlsController < ApplicationController
     skip_before_action :verify_authenticity_token
   
     def index
+      contractors = ModuleControl.find_by_name("Contratistas")
 
+      create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
+      edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
+      delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
+  
+      @estados = {      
+        create: (current_user.rol.name == "Administrador" ? true : create),
+        edit: (current_user.rol.name == "Administrador" ? true : edit),
+        delete: (current_user.rol.name == "Administrador" ? true : delete),
+        gestionar: (current_user.rol.name == "Administrador" ? true : true)
+      }
     end
   
     def get_actions

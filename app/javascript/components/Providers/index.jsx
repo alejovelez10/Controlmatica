@@ -83,12 +83,11 @@ class index extends React.Component {
                                       <input type="text" name="name" style={{ height: "37px" }} className="form-control" onChange={this.handleChange} value={this.state.formSearch.name} placeholder="Buscador" />
 
                                       <div className="input-group-append">
-                                        
-                                        {this.state.formSearch.name.length > 5 && (
+                                      
                                           <button className="btn btn-secondary" onClick={this.HandleClickFilter}>
                                             <i className="fas fa-search"></i>
                                           </button>
-                                        )}
+                                      
 
                                         {this.state.stateSearchCancel == true && (
                                           <button className="btn btn-danger" onClick={this.CancelFilter} type="button">Cancel</button>

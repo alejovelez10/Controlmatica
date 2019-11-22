@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-
   get "get_show_center/:id", to: "cost_centers#get_show_center"
   get "employed_performance/show", to: "employed_performance#show", as: "employed_performance_show"
   get "employed_performance/info_pdf", to: "employed_performance#info_pdf", as: "info_pdf"
@@ -25,7 +24,6 @@ Rails.application.routes.draw do
   resources :materials
   resources :contractors
 
-
   default_url_options :host => "controlmatica.herokuapp.com"
 
   get "customer_cost_center/:id(/:location)", to: "cost_centers#customer_cost_center", as: "customer_cost_center"
@@ -45,32 +43,30 @@ Rails.application.routes.draw do
     get "menu/:id/:name", to: "users/registrations#menu", as: "menu"
     get "get_users", to: "users/registrations#get_users"
   end
-  
 
   post "create_contact", to: "customers#create_contact"
-  #react routes 
+  #react routes
 
   get "get_parameterizations", to: "parameterizations#get_parameterizations"
   get "get_providers", to: "providers#get_providers"
   get "get_customers", to: "customers#get_customers"
-  get "get_customer_reports", to: "customer_reports#get_customer_reports" 
-  get "get_cost_centers", to: "cost_centers#get_cost_centers" 
-  get "get_sales_order/:id", to: "sales_orders#get_sales_order" 
-  get "get_reports", to: "reports#get_reports" 
-  get "get_rols", to: "rols#get_rols" 
+  get "get_customer_reports", to: "customer_reports#get_customer_reports"
+  get "get_cost_centers", to: "cost_centers#get_cost_centers"
+  get "get_sales_order/:id", to: "sales_orders#get_sales_order"
+  get "get_reports", to: "reports#get_reports"
+  get "get_rols", to: "rols#get_rols"
 
   get "get_contractors/:id", to: "cost_centers#get_contractors"
   get "get_materials/:id", to: "cost_centers#get_materials"
 
   get "get_accions", to: "accion_modules#get_accions", as: "get_accions"
   get "get_accion_modules/:id", to: "module_controls#get_accion_modules", as: "get_accion_modules"
-  
+
   get "cost_centers/materials/:id", to: "cost_centers#materials"
   get "cost_centers/contractors/:id", to: "cost_centers#contractors"
   get "get_roles", to: "home#get_roles"
-  
 
-
+  get "modules", to: "module_controls#get_actions", as: "modules"
 
   root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"
