@@ -16,7 +16,7 @@
           <button class="btn btn-primary float" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
             <i class="fas fa-search"></i>
           </button>
-          <%= link_to 'Nuevo Centro de Costo', new_cost_center_path, class: "btn btn-dark float" %>
+          <%# link_to 'Nuevo Centro de Costo', new_cost_center_path, class: "btn btn-dark float" %>
     </div>
 
 
@@ -93,20 +93,20 @@
             <div class="dropdown-menu">
 
               <div class="col-md-12 menu" >  
-                <%= link_to cost_center, class: "dropdown-item" do %>
+                <%# link_to cost_center, class: "dropdown-item" do %>
                   <i class="far fa-eye"></i> Ver Registro
-                <% end -%>
+                <%# end -%>
               </div>
 
               <div class="col-md-12 menu">  
-                <%= link_to edit_cost_center_path(cost_center), class: "dropdown-item" do %>
+                <%# link_to edit_cost_center_path(cost_center), class: "dropdown-item" do %>
                   <i class="fas fa-pencil-alt"></i> Editar Registro
-                <% end -%>
+                <%# end -%>
               </div>
 
-              <% if current_user.rol_user == "Super administrador" %>
+              <%# if current_user.rol_user == "Super administrador" %>
               <div class="col-md-12 menu">  
-                <%= link_to cost_center, method: :delete, data: {
+                <%# link_to cost_center, method: :delete, data: {
                   confirm: '¿Estas Seguro?',
                   'confirm-button-text': 'Borrar',
                   'cancel-button-text': 'Cancelar',
@@ -114,25 +114,25 @@
                    text: 'Recuerda que el registro se borrara permanentemente',
                   'image-url': ''}, class: "dropdown-item" do %>
                   <span class="glyphicon glyphicon-trash"></span> Eliminar 
-                <% end -%>
+                <%# end -%>
               </div>
-              <%end%>
+              <%#end%>
 
             </div>
           </div>
 
         </td>
-        <td><%= cost_center.code %></td>
-        <td><%= cost_center.customer.name if cost_center.customer %></td>
-        <td><%= cost_center.service_type %></td>
-       <td><%= cost_center.description %></td>
-        <td><%= cost_center.quotation_number %></td>
-        <td><%=  number_to_currency(ing_cotizado, precision: 0) %></td>
+        <td><%# cost_center.code %></td>
+        <td><%# cost_center.customer.name if cost_center.customer %></td>
+        <td><%# cost_center.service_type %></td>
+       <td><%# cost_center.description %></td>
+        <td><%# cost_center.quotation_number %></td>
+        <td><%#  number_to_currency(ing_cotizado, precision: 0) %></td>
         
-        <td style="color:<%=color_value(ing_cotizado, ing_real)%>"><%=  number_to_currency(ing_cotizado , precision: 0) %></td>
-        <td><%=  number_to_currency(via_cotizado , precision: 0) %></td>
-        <td style="color:<%= color_value(via_cotizado, via_real)%>"><%=  number_to_currency(via_real , precision: 0)  %></td>
-        <td><%= link_to "Finalizar", change_state_ended_path(cost_center.id), remote:true , class: "btn btn-primary btn-finalizar#{cost_center.id}" if cost_center.execution_state == "EJECUCION" %></td>
+        <td style="color:<%#color_value(ing_cotizado, ing_real)%>"><%=  number_to_currency(ing_cotizado , precision: 0) %></td>
+        <td><%#  number_to_currency(via_cotizado , precision: 0) %></td>
+        <td style="color:<%# color_value(via_cotizado, via_real)%>"><%=  number_to_currency(via_real , precision: 0)  %></td>
+        <td><%# link_to "Finalizar", change_state_ended_path(cost_center.id), remote:true , class: "btn btn-primary btn-finalizar#{cost_center.id}" if cost_center.execution_state == "EJECUCION" %></td>
         <td><span class="execution_state<%=cost_center.id%>"> <%= cost_center.execution_state %></span></td>
         <td><span class="invoiced_state<%=cost_center.id%>"></span> <%= cost_center.invoiced_state %></td>
       </tr>
@@ -202,10 +202,10 @@
 
   });
 
-  $("#search1").val("<%= params[:search1]%>")
-  $("#search2").val("<%= params[:search2]%>")
-  $("#search3").val("<%= params[:search3]%>")
-  $("#search4").val("<%= params[:search4]%>")
+  $("#search1").val("<%# params[:search1]%>")
+  $("#search2").val("<%# params[:search2]%>")
+  $("#search3").val("<%# params[:search3]%>")
+  $("#search4").val("<%# params[:search4]%>")
 </script>
 
 -->

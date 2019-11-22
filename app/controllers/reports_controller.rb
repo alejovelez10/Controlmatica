@@ -1,6 +1,8 @@
 class ReportsController < ApplicationController
   before_action :set_report, only: [:show, :edit, :update, :destroy]
   before_action :authenticate_user!
+  skip_before_action :verify_authenticity_token
+
   # GET /reports
   # GET /reports.json
   def index
@@ -58,33 +60,50 @@ class ReportsController < ApplicationController
 
   # POST /reports
   # POST /reports.json
-  def create
-    @report = Report.new(report_params)
 
-    respond_to do |format|
+  def create
+    valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
+    params["viatic_value"] = valor1
+    
+    @report = Report.create(report_params)
+
       if @report.save
-        format.html { redirect_to reports_url, notice: 'Report was successfully created.' }
-        format.json { render :show, status: :created, location: @report }
+        render :json => {
+          message: "¡El Registro fue creado con exito!",
+          type: "success"
+        }
       else
-        format.html { render :new }
-        format.json { render json: @report.errors, status: :unprocessable_entity }
+        render :json => {
+          message: "¡El Registro no fue creado!",
+          type: "error",
+          message_error: @report.errors.full_messages
+        }
       end
-    end
+  	
   end
+
 
   # PATCH/PUT /reports/1
   # PATCH/PUT /reports/1.json
+
   def update
-    respond_to do |format|
-      if @report.update(report_params)
-        format.html { redirect_to reports_url, notice: 'Report was successfully updated.' }
-        format.json { render :show, status: :ok, location: @report }
-      else
-        format.html { render :edit }
-        format.json { render json: @report.errors, status: :unprocessable_entity }
-      end
+    valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
+    params["viatic_value"] = valor1
+    
+    if @report.update(report_params) 
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @parameterization.errors.full_messages
+      }
     end
   end
+
 
   # DELETE /reports/1
   # DELETE /reports/1.json

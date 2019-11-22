@@ -369,10 +369,12 @@ class table extends React.Component {
               sales_order_id: "",
               invoice_date: "",
               invoice_value: "",
-              delivery_certificate_file: {},
-              reception_report_file: {},
               cost_center_id: this.props.cost_center.id
-            }
+            },
+
+            delivery_certificate_file: null,
+            reception_report_file: null,
+            
           });
         });
       }
@@ -458,8 +460,10 @@ class table extends React.Component {
                       </h2>
                     </div>
 
-                    <div className="col-md-4 text-right mt-1 mb-1">      
-                          <button type="button" onClick={() => this.toggle("new")} data-toggle="modal" data-target="#exampleModal" className="btn btn-secondary">Nueva orden de pago</button>
+                    <div className="col-md-4 text-right mt-1 mb-1">  
+                        {this.props.estados.create == true && (     
+                          <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Nueva orden de pago</button>
+                        )}
                     </div>
 
                 </div>
@@ -618,17 +622,24 @@ class table extends React.Component {
                                 <i className="fas fa-bars"></i>
                               </button>
                               <div className="dropdown-menu dropdown-menu-right">
-                                <button onClick={() => this.showIncomeDetail("open",accion)} className="dropdown-item">
-                                  Gestionar
-                                </button>     
 
-                                <button onClick={() => this.editTable(accion)} className="dropdown-item">
-                                  Editar
-                                </button>
+                                {this.props.estados.gestionar == true && (
+                                  <button onClick={() => this.showIncomeDetail("open",accion)} className="dropdown-item">
+                                    Gestionar
+                                  </button>     
+                                )}
 
-                                <button onClick={() => this.delete(accion.id)} className="dropdown-item">
-                                  Eliminar
-                                </button>
+                                {this.props.estados.edit == true && (
+                                  <button onClick={() => this.editTable(accion)} className="dropdown-item">
+                                    Editar
+                                  </button>
+                                )}
+
+                                {this.props.estados.delete == true && (
+                                  <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                                    Eliminar
+                                  </button>
+                                )}
 
                               </div>
                             </div>
@@ -641,7 +652,9 @@ class table extends React.Component {
                     <td colSpan="8" className="text-center">
                         <div className="text-center mt-1 mb-1">
                         <h4>Ordenes de Compra</h4>
-                        <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary" data-toggle="modal" data-target="#exampleModal">Nueva orden de pago</button>
+                          {this.props.estados.create == true && (
+                            <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Nueva orden de pago</button>
+                          )}
                         </div>
                     </td>
                   )}

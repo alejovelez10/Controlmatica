@@ -70,7 +70,7 @@
 }
 
 .tr-title{
-  background: #2a3f53;
+  background: #cacaca;
   color: #ffff;
 }
 
@@ -93,9 +93,9 @@
 
 
 .btn-secondary{
-  background: #fabd39 !important;
+  background: #4b5f70 !important;
   color: #ffff;
-  border-color: #fabd39 !important;
+  border-color: #4b5f70 !important;
 }
 
 .btn-secondary:hover{
@@ -183,4 +183,13 @@
   border-radius: 50%;
   height: 176px;
   width: 182px;
+}
+
+input[type="file"] label{
+    position: relative;
+    height: 100%;
+    width: auto;
+    opacity: 0;
+    -moz-opacity: 0;
+    filter:progid:DXImageTransform.Microsoft.Alpha(opacity=0);
 }

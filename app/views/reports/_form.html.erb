@@ -175,8 +175,10 @@
 
       valor = $(this).val();
       $(".option_selec").remove();
-      $.get('/customer_user/' + valor, function(data,status){})
 
+
+      $.get('/customer_user/' + valor, function(data,status){})
+      
       $.get('/get_client/' + valor, function(data,status){})
 
     })

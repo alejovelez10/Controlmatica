@@ -30,6 +30,8 @@ class CostCenter < ApplicationRecord
   has_many :customer_reports, dependent: :destroy
   has_many :sales_orders, dependent: :destroy
   has_many :customer_invoices, dependent: :destroy
+  has_many :materials, dependent: :destroy
+  has_many :contractors, dependent: :destroy
 
   belongs_to :customer, optional: :true
   belongs_to :contact, optional: :true

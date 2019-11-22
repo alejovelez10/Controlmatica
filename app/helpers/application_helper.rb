@@ -14,7 +14,7 @@ module ApplicationHelper
             card = "<h1>" + " <i class='fas fa-handshake'></i> Usuarios " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
 
         elsif controller == "customer_reports" && action == "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Informes de Clientes " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Reportes de clientes" + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
 
         elsif controller == "cost_centers"  && action == "index"
             card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
@@ -154,6 +154,11 @@ module ApplicationHelper
 		CostCenter.all
 	end
 
+	def get_provider
+		Provider.all
+	end
+	
+
 	def get_date(fecha)
    
 		if fecha != nil
@@ -167,6 +172,70 @@ module ApplicationHelper
 		#dias[ds] + ", " +
 		end 
 	end
+
+	def authorization_providers
+        providers = ModuleControl.find_by_name("Proveedores")
+        current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Ingreso al modulo").exists?
+	end
+
+
+	def authorization_customers
+        customers = ModuleControl.find_by_name("Clientes")
+        current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
+	end
+
+
+	def authorization_parameterizations
+        parameterizations = ModuleControl.find_by_name("Parametrizaciones")
+        current_user.rol.accion_modules.where(module_control_id: parameterizations.id).where(name: "Ingreso al modulo").exists?
+	end
+
+
+    def authorization_users
+        usuarios = ModuleControl.find_by_name("Usuarios")
+        current_user.rol.accion_modules.where(module_control_id: usuarios.id).where(name: "Ingreso al modulo").exists?
+    end
+
+    def authorization_rols
+        roles = ModuleControl.find_by_name("Roles")
+        current_user.rol.accion_modules.where(module_control_id: roles.id).where(name: "Ingreso al modulo").exists?
+    end
+
+    def authorization_modules
+        modules = ModuleControl.find_by_name("Modulos y Acciones")
+        current_user.rol.accion_modules.where(module_control_id: modules.id).where(name: "Ingreso al modulo").exists?
+	end
+
+	def authorization_cost_center
+        cost_center = ModuleControl.find_by_name("Centro de Costos")
+        current_user.rol.accion_modules.where(module_control_id: cost_center.id).where(name: "Ingreso al modulo").exists?
+	end
+
+	def authorization_report
+        report = ModuleControl.find_by_name("Reportes de servicios")
+        current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ingreso al modulo").exists?
+	end
+
+
+	def authorization_customer_reports
+        customer_reports = ModuleControl.find_by_name("Reportes de clientes")
+        current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Ingreso al modulo").exists?
+	end
+
+	def authorization_employed_performance
+        employed_performance = ModuleControl.find_by_name("Informe de rendimiento")
+        current_user.rol.accion_modules.where(module_control_id: employed_performance.id).where(name: "Ingreso al modulo").exists?
+	end
+
+
+	def authorization_config
+		authorization_providers && authorization_customers && authorization_parameterizations && authorization_users && authorization_rols
+	end
+	
+
+
+
+
 
 	def page_entries_info(collection, options = {})
 	  entry_name = options[:entry_name] || (collection.empty?? 'Roles' :

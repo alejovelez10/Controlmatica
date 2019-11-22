@@ -99,6 +99,8 @@ class index extends React.Component {
                         loadInfo={this.loadData}
                         usuario={this.props.usuario}
                         show={this.showFilter}
+                        clientes={this.props.clientes}
+                        users={this.props.users}
                       />
                     
       

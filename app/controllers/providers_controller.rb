@@ -9,7 +9,11 @@ class ProvidersController < ApplicationController
   end
 
   def get_providers
-    providers = Provider.all
+    if params[:name].present?
+      providers = Provider.search(params[:name])
+    else
+      providers = Provider.all
+    end
     render :json => providers
   end
   

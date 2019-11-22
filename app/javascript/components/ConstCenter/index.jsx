@@ -153,29 +153,42 @@ class index extends React.Component {
     render() {
         return (
             <React.Fragment>
-                {this.state.isLoaded == true ? (
-                    <ShowInfo 
-                        data_info={this.state.data_show}
+              {this.props.estados.login_module == true ? (
+                <React.Fragment>
+                  {this.state.isLoaded == true ? (
+                      <ShowInfo 
+                          data_info={this.state.data_show}
 
-                        horas_eje={this.state.horas_eje}
-                        porc_eje={this.state.porc_eje}
-                        
-                        via_cotizado={this.state.via_cotizado}
-                        via_real={this.state.via_real}
-                        porc_via={this.state.porc_via}
+                          horas_eje={this.state.horas_eje}
+                          porc_eje={this.state.porc_eje}
+                          
+                          via_cotizado={this.state.via_cotizado}
+                          via_real={this.state.via_real}
+                          porc_via={this.state.porc_via}
 
-                        costo_en_dinero={this.state.costo_en_dinero}
-                        costo_real_en_dinero={this.state.costo_real_en_dinero}
-                        porc_eje_costo={this.state.porc_eje_costo}
+                          costo_en_dinero={this.state.costo_en_dinero}
+                          costo_real_en_dinero={this.state.costo_real_en_dinero}
+                          porc_eje_costo={this.state.porc_eje_costo}
 
-                        porc_fac={this.state.porc_fac}
-                        facturacion={this.state.facturacion}
-                        
-                    />
-                  ) : (
-                    <div className="col-md-12 text-center p-0">
-                          <p>Cargando..</p>
-                    </div>
+                          porc_fac={this.state.porc_fac}
+                          facturacion={this.state.facturacion}
+                          sales_orders_state={true}
+                          
+                      />
+                    ) : (
+                      <div className="col-md-12 text-center p-0">
+                            <p>Cargando..</p>
+                      </div>
+                  )}
+
+                </React.Fragment>
+
+                ) : (
+
+                  <React.Fragment>
+                      
+                  </React.Fragment>
+
                 )}
         
 
@@ -192,6 +205,7 @@ class index extends React.Component {
                                 cost_center={this.state.data_show}
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
+                                estados={this.props.estados}
                             />
 
                         ) : (

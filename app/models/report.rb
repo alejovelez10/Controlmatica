@@ -25,6 +25,7 @@
 #  customer_id        :integer
 #  contact_id         :integer
 #  report_sate        :boolean
+#  count              :integer
 #
 
 class Report < ApplicationRecord

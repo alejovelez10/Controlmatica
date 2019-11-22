@@ -57,20 +57,6 @@ class table extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <div className="row mb-4">
-            <div className="col-md-12">
-                <div className="row">
-                    <div className="col-md-8">
-
-                    </div>
-
-                    <div className="col-md-4 text-right">
-                        <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div className="content">
 
         <table className="table table-hover table-bordered" id="sampleTable">

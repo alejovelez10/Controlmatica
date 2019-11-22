@@ -10,7 +10,11 @@ class CustomersController < ApplicationController
   end
 
   def get_customers
-    customers = Customer.all
+    if params[:name].present?
+      customers = Customer.search(params[:name])
+    else
+      customers = Customer.all
+    end
     render :json => customers
   end
   
@@ -21,20 +25,33 @@ class CustomersController < ApplicationController
   end
 
 
-  def customer_user
-    respond_to do |format|
-      format.js
-    end 
-    
-    @centro = CostCenter.where(customer_id: @customer.id)
+  def customer_user    
+    render :json => @centro = CostCenter.where(customer_id: @customer.id)
   end
 
   def get_client
-    respond_to do |format|
-      format.js
-    end 
-    @contacts_user = @customer.contacts
+    render :json => @contacts_user = @customer.contacts.where.not(name: "")
   end
+
+  def create_contact
+    @create_contact = Contact.create(customer_id: params[:customer_id], name: params[:contact_name], email: params[:contact_email], phone: params[:contact_phone], position:  params[:contact_position], user_id: current_user.id)
+    
+      if @create_contact.save
+        render :json => {
+          message: "¡El Registro fue creado con exito!",
+          type: "success",
+          register: @create_contact
+        }
+      else
+        render :json => {
+          message: "¡El Registro no fue creado!",
+          type: "error",
+          message_error: @create_contact.errors.full_messages
+        }
+      end
+  	
+  end
+  
 
   def report_user
     respond_to do |format|
@@ -99,6 +116,11 @@ class CustomersController < ApplicationController
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
+
+    def create_customer
+      params.permit(:client, :name, :code,:phone, :address, :nit, :web, :email, :user_id)
+    end
+
     def customer_params
       params.require(:customer).permit(:client, :name, :code,:phone, :address, :nit, :web, :email, :user_id, contacts_attributes: [:id, :name, :phone, :email, :customer_id, :position, :user_id, :_destroy])
     end

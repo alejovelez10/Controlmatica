@@ -13,6 +13,7 @@ class table extends React.Component {
     }
 
 
+
   MessageSucces = (name_success, type, error_message) => {
         Swal.fire({
         position: "center",
@@ -58,19 +59,7 @@ class table extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <div className="row mb-4">
-            <div className="col-md-12">
-                <div className="row">
-                    <div className="col-md-8">
 
-                    </div>
-
-                    <div className="col-md-4 text-right">
-                        <a href="/providers/new" className="btn btn-secondary" >Nuevo Proveedor</a>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div className="content">
 

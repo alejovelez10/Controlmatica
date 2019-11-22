@@ -9,7 +9,11 @@ class ParameterizationsController < ApplicationController
   end
 
   def get_parameterizations
-    parameterizations = Parameterization.all
+    if params[:name].present?
+      parameterizations = Parameterization.search(params[:name])
+    else
+      parameterizations = Parameterization.all
+    end
     render :json => parameterizations
   end
   

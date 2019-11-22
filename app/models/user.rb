@@ -23,6 +23,7 @@
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null
 #  rol_user               :string
+#  menu                   :string           default("nav-sm")
 #
 
 class User < ApplicationRecord

@@ -21,4 +21,9 @@ class Customer < ApplicationRecord
 	has_many :customer_reports, dependent: :destroy
 	has_many :reports
 	accepts_nested_attributes_for :contacts, :allow_destroy => true
+
+	def self.search(search1)
+		search1 != "" ? (scope :nombre, -> { where("name like '%#{search1.downcase}%' or name like '%#{search1.upcase}%' or name like '%#{search1.capitalize}%' ") }) : (scope :nombre, -> { where.not(id: nil) })
+		nombre
+	end
 end

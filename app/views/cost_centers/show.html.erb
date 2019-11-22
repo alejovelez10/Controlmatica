@@ -1,5 +1,5 @@
 <%= javascript_pack_tag 'ConstCenterShow' %> 
-<%= react_component('ConstCenterShow', cost_center: @cost_center, usuario: current_user) %>
+<%= react_component('ConstCenterShow', cost_center: @cost_center, usuario: current_user, estados: @estados) %>
 
 <%# link_to "Volver", cost_centers_path , class: "btn btn-primary"%>
 <%# link_to "Editar", edit_cost_center_path(@cost_center.id) , class: "btn btn-primary"%>

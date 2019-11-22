@@ -1,5 +1,5 @@
 <%= javascript_pack_tag 'Reports' %> 
-<%= react_component('Reports', usuario: current_user, users: User.all) %>
+<%= react_component('Reports', usuario: current_user, users: User.all, clientes: get_customer) %>
 <!--
 <div class="x_content">
 

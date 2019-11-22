@@ -2,15 +2,104 @@ import React from "react";
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import NumberFormat from 'react-number-format';
+import FormCreate from '../Reports/FormCreate'
 
 class table extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            action: {},
+          action: {},
+          title: "Nuevo reporte",
+          modeEdit: false,
+          ErrorValues: true,
+          ErrorValuesContact: true,
+          modal: false,
+          backdrop: "static",
+
+          state_create: false,
+
+          form: {
+            customer_id: "",
+            contact_id: "",
+            cost_center_id: "",
+            report_date: "",
+            report_execute_id: "",
+            working_time: "",
+            work_description: "",
+            viatic_value: "",
+            viatic_description: "",
+            report_code: 0,
+            user_id: this.props.usuario.id,
+          },
+
+          formContact: {
+            contact_name: "",
+            contact_position: "",
+            contact_phone: "",
+            contact_email: "",
+            customer_id: "",
+          },
+
+          selectedOption: {
+            customer_id: "",
+            label: "Buscar cliente"
+          },
+  
+          selectedOptionContact: {
+            contact_id: "",
+            label: "Seleccionar Contacto"
+          },
+
+          selectedOptionCentro: {
+            cost_center_id: "",
+            label: "Centro de costo"
+          },
+
+          dataContact: [],
+          clients: [],
+          dataCostCenter: []
         }
+
+        this.toggle = this.toggle.bind(this);
     }
+
+  validationForm = () => {
+    if (this.state.form.customer_id != "" && 
+        this.state.form.contact_id != "" &&
+        this.state.form.report_date != "" &&
+        this.state.form.report_execute_id != "" &&
+        this.state.form.working_time != "" &&
+        this.state.form.work_description != "" &&
+        this.state.form.viatic_value != "" 
+      ) {
+            console.log("los campos estan llenos")
+        this.setState({ ErrorValues: true })
+        return true
+    }else{
+        console.log("los campos no se han llenado")
+        this.setState({ ErrorValues: false })
+        return false
+        
+    }
+  }
+
+  validationFormContact = () => {
+    if (this.state.formContact.contact_name != "" && 
+        this.state.formContact.contact_position != "" &&
+        this.state.formContact.contact_phone != "" &&
+        this.state.formContact.contact_email != "" 
+        ) {
+      console.log("los campos estan llenos")
+      this.setState({ ErrorValuesContact: true })
+      return true
+    }else{
+      console.log("los campos no se han llenado")
+      this.setState({ ErrorValuesContact: false })
+      return false
+      
+    }
+  }
 
 
   MessageSucces = (name_success, type, error_message) => {
@@ -22,7 +111,231 @@ class table extends React.Component {
         showConfirmButton: false,
         timer: 1500
         });
+  }
+
+  componentDidMount(){
+    let array = []
+
+    this.props.clientes.map((item) => (
+      array.push({label: item.name, value: item.id})
+    ))
+
+    this.setState({
+        clients: array
+    })
+  
+  }
+
+  handleChangeAutocomplete = selectedOption => {
+    let array = []
+    let arrayCentro = []
+
+    fetch(`/get_client/${selectedOption.value}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+
+      data.map((item) => (
+        array.push({label: item.name, value: item.id})
+      ))
+
+      this.setState({
+        dataContact: array
+      })
+
+    });
+
+    fetch(`/customer_user/${selectedOption.value}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log(data)
+
+      data.map((item) => (
+        arrayCentro.push({label: item.code, value: item.id})
+      ))
+
+      this.setState({
+        dataCostCenter: arrayCentro
+      })
+    });
+
+    this.setState({
+      selectedOption,
+      form: {
+        ...this.state.form,
+        customer_id: selectedOption.value
+      },
+
+      formContact: {
+        contact_name: "",
+        contact_position: "",
+        contact_phone: "",
+        contact_email: "",
+        customer_id: selectedOption.value,
+      },
+
+    });
+  };
+
+  handleChangeAutocompleteContact = selectedOptionContact => {
+    this.setState({
+      selectedOptionContact,
+      form: {
+        ...this.state.form,
+        contact_id: selectedOptionContact.value
+      }
+    });
+  };
+
+  handleChangeAutocompleteCentro = selectedOptionCenter => {
+    this.setState({
+      selectedOptionCenter,
+      form: {
+        ...this.state.form,
+        cost_center_id: selectedOptionCenter.value
+      }
+    });
+  };
+
+
+
+
+  handleSubmit = e => {
+    e.preventDefault();
+  };
+
+  handleChange = e => {
+    this.setState({
+      form: {
+        ...this.state.form,
+        [e.target.name]: e.target.value
+      }
+    });
+  };
+
+  handleChangeContact = e =>{
+    this.setState({
+      formContact: {
+        ...this.state.formContact,
+        [e.target.name]: e.target.value
+      }
+    });
+  }
+
+  toggle(from) {
+    if (from == "edit") {
+      this.setState({ modeEdit: true });
+    } else if (from == "new") {
+      this.setState({
+        modeEdit: false,
+        form: {
+          customer_id: "",
+          contact_id: "",
+          cost_center_id: "",
+          report_date: "",
+          report_execute_id: "",
+          working_time: "",
+          work_description: "",
+          viatic_value: "",
+          viatic_description: "",
+          report_code: 0,
+          user_id: this.props.usuario.id,
+        },
+
+        formContact: {
+          contact_name: "",
+          contact_position: "",
+          contact_phone: "",
+          contact_email: "",
+          customer_id: "",
+        },
+      });
+    } else {
+      this.setState({ stateSearch: false });
+      if (this.state.modeEdit === true) {
+        this.setState({ modeEdit: false });
+      } else {
+        this.setState({ modeEdit: true });
+      }
+
     }
+
+    this.setState(prevState => ({
+      modal: !prevState.modal
+    }));
+  }
+
+
+  updateValues(){
+    this.setState({
+      modal: false,
+
+      formContact: {
+        contact_name: "",
+        contact_position: "",
+        contact_phone: "",
+        contact_email: "",
+        customer_id: "",
+      },
+
+      selectedOption: {
+        customer_id: "",
+        label: "Buscar cliente"
+      },
+
+      selectedOptionContact: {
+        contact_id: "",
+        label: "Seleccionar Contacto"
+      },
+
+      selectedOptionCentro: {
+        cost_center_id: "",
+        label: "Centro de costo"
+      },
+
+      dataContact: [],
+      clients: [],
+      dataCostCenter: []
+    });
+  }
+
+  HandleClick = e => {
+    if (this.validationForm() == true) {
+      if (this.state.modeEdit == true) {
+        fetch("/reports/" + this.state.action.id, {
+          method: "PATCH", // or 'PUT'
+          body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then(res => res.json())
+          .catch(error => console.error("Error:", error))
+          .then(data => {
+            this.props.loadInfo();
+            this.updateValues()
+            this.MessageSucces(data.message, data.type, data.message_error);
+          });
+
+      } else {
+        fetch("/reports", {
+          method: "POST", // or 'PUT'
+          body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then(res => res.json())
+          .catch(error => console.error("Error:", error))
+          .then(data => {
+            this.props.loadInfo();
+            this.updateValues()
+            this.MessageSucces(data.message, data.type, data.message_error);
+
+          });
+      }
+    }
+  };
 
 
   delete = id => {
@@ -53,11 +366,114 @@ class table extends React.Component {
     });
   };
 
+  HandleClickContact = () => {
+    let array = []
+
+    if (this.validationFormContact() == true) {
+      fetch("/create_contact", {
+        method: 'POST', // or 'PUT'
+        body: JSON.stringify(this.state.formContact), // data can be `string` or {object}!
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }).then(res => res.json())
+        .catch(error => console.error('Error:', error))
+        .then(data => {
+          this.MessageSucces(data.message, data.type, data.message_error)
+
+          array.push({label: data.register.name, value: data.register.id})
+
+          this.setState({ 
+            state_create: true,
+            dataContact: array
+          })
+        
+        });
+    }
+  }
+
+  edit = modulo => {
+    console.log(modulo)
+    if(this.state.modeEdit === true){
+      this.setState({modeEdit: false})
+    }else{
+      this.setState({modeEdit: true})
+    }
+
+    this.toggle("edit")
+
+      this.setState({
+        action: modulo,
+        title: "Editar a " + modulo.code,
+        form: {
+          customer_id: modulo.customer_id,
+          contact_id: modulo.contact_id,
+          cost_center_id: modulo.cost_center_id,
+          report_date: modulo.report_date,
+          report_execute_id: modulo.report_execute_id,
+          working_time: modulo.working_time,
+          work_description: modulo.work_description,
+          viatic_value: modulo.viatic_value,
+          viatic_description: modulo.viatic_description,
+          report_code: modulo.report_code,
+          user_id: this.props.usuario.id,
+        },
+        
+        }
+        
+      )
+      
+  };
+
 
 
   render() {
     return (
       <React.Fragment>
+
+        <FormCreate
+          toggle={this.toggle}
+          backdrop={this.state.backdrop}
+          modal={this.state.modal}
+
+          onChangeForm={this.handleChange}
+          formValues={this.state.form}
+          submit={this.HandleClick}
+          FormSubmit={this.handleSubmit}
+          titulo={this.state.title}
+          nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
+          errorValues={this.state.ErrorValues}
+          users={this.props.users}
+
+          /* CONTACT FORM */
+          
+          formContactValues={this.state.formContact}
+          FormSubmitContact={this.HandleClickContact}
+          create_state={this.state.state_create}
+          errorValuesContact={this.state.ErrorValuesContact}
+          onChangeFormContact={this.handleChangeContact}
+
+          /* AUTOCOMPLETE CLIENTE */
+
+          clientes={this.state.clients}
+          onChangeAutocomplete={this.handleChangeAutocomplete}
+          formAutocomplete={this.state.selectedOption}
+
+           /* AUTOCOMPLETE CONTACTO */
+
+          contacto={this.state.dataContact}
+          onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+          formAutocompleteContact={this.state.selectedOptionContact}
+
+          /* AUTOCOMPLETE CENTRO DE COSTO */
+
+          centro={this.state.dataCostCenter}
+          onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+          formAutocompleteCentro={this.state.selectedOptionCentro}
+
+        />
+
+
         <div className="row mb-4">
             <div className="col-md-12">
                 <div className="row">
@@ -71,9 +487,9 @@ class table extends React.Component {
                       onClick={this.props.show}
                       disabled={this.props.dataActions.length >= 1 ? false : true}
                     >
-                      Filtros <i class="fas fa-search ml-2"></i>
+                      Filtros <i className="fas fa-search ml-2"></i>
                     </button>
-                        <a href="/reports/new" className="btn btn-secondary" >Nuevo Reporte</a>
+                        <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo reporte</button>
                     </div>
                 </div>
             </div>
@@ -121,7 +537,7 @@ class table extends React.Component {
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
                             <a
-                              href={`/reports/${accion.id}/edit`}
+                              onClick={() => this.edit(accion)}
                               className="dropdown-item"
                             >
                               Editar
@@ -152,10 +568,10 @@ class table extends React.Component {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="text-center">
+                <td colSpan="11" className="text-center">
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
-                        <a href="/reports/new" className="btn btn-secondary" >Nuevo Reporte</a>
+                      <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo reporte</button>
                   </div>
                 </td>
               </tr>

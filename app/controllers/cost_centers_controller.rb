@@ -1,7 +1,8 @@
 class CostCentersController < ApplicationController
-  before_action :set_cost_center, only: [:show, :edit, :update, :destroy, :cost_center_customer, :get_show_center]
+  before_action :set_cost_center, only: [:show, :edit, :update, :destroy, :cost_center_customer, :get_show_center, :get_contractors, :get_materials]
   before_action :set_sales_order, only: [:show]
   before_action :authenticate_user!
+  skip_before_action :verify_authenticity_token
 
   # GET /cost_centers
   # GET /cost_centers.json
@@ -44,7 +45,22 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1
   # GET /cost_centers/1.json
   def show
-    #@sales_order = SalesOrder.where(cost_center_id: @cost_centers.id)
+    sales_orders = ModuleControl.find_by_name("Ordenes de Compra")
+
+    login_module = current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Ingreso al modulo").exists?
+    create = current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Eliminar").exists?
+    gestionar = current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Gestionar").exists?
+
+    @estados = {    
+      login_module: (current_user.rol.name == "Administrador" ? true : login_module),
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      gestionar: (current_user.rol.name == "Administrador" ? true : gestionar)
+    }
+
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
   end
 
@@ -113,6 +129,50 @@ class CostCentersController < ApplicationController
     }
     
   end
+
+  def materials
+    materials = ModuleControl.find_by_name("Materiales")
+
+    create = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+
+    @cost_center = CostCenter.find(params[:id])
+  end
+
+  def contractors
+    contractors = ModuleControl.find_by_name("Contratistas")
+
+    create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+
+    @cost_center = CostCenter.find(params[:id])
+  end
+
+  def get_contractors
+    render :json => @cost_center.contractors
+  end
+
+  def get_materials
+    render :json => @cost_center.materials
+  end
+  
+  
+  
+  
   
 
   # GET /cost_centers/new
@@ -140,6 +200,32 @@ class CostCentersController < ApplicationController
     end
   end
 
+  def create
+    valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
+    valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
+    valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
+
+    params["viatic_value"] = valor1
+    params["quotation_value"] = valor2
+    params["quotation_number"] = valor3
+
+    @cost_center = CostCenter.create(cost_center_params)
+
+      if @cost_center.save
+        render :json => {
+          message: "¡El Registro fue creado con exito!",
+          type: "success"
+        }
+      else
+        render :json => {
+          message: "¡El Registro no fue creado!",
+          type: "error",
+          message_error: @cost_center.errors.full_messages
+        }
+      end
+  	
+  end
+
   # PATCH/PUT /cost_centers/1
   # PATCH/PUT /cost_centers/1.json
   def update
@@ -157,10 +243,10 @@ class CostCentersController < ApplicationController
   # DELETE /cost_centers/1
   # DELETE /cost_centers/1.json
   def destroy
-    @cost_center.destroy
-    respond_to do |format|
-      format.html { redirect_to cost_centers_url, notice: 'Cost center was successfully destroyed.' }
-      format.json { head :no_content }
+    if @cost_center.destroy
+      render :json => @cost_center
+    else 
+      render :json => @cost_center.errors.full_messages
     end
   end
 

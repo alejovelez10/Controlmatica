@@ -134,6 +134,7 @@ class indexTable extends React.Component {
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
                                 show={this.showFilter}
+                                clientes={this.props.clientes}
                             />
 
                         ) : (

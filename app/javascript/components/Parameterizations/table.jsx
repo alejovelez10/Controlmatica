@@ -229,19 +229,7 @@ class table extends React.Component {
           errorValues={this.state.ErrorValues}
         />
 
-        <div className="row mb-4">
-            <div className="col-md-12">
-                <div className="row">
-                    <div className="col-md-8">
-
-                    </div>
-
-                    <div className="col-md-4 text-right">
-                        <button className="btn btn-secondary" onClick={() => this.toggle("new")}>Nueva Parametrizacion</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
         <div className="content">
 
