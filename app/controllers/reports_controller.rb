@@ -47,16 +47,16 @@ class ReportsController < ApplicationController
   def get_reports
     if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
       if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate]
-        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] } })
+        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
       else 
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] }, :report_execute => { :only =>[:name] } })
+        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
         #.to_json( :include => [:cost_center] )
       end
     elsif current_user.rol_user == "Ingeniero"
       if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate]
-        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] } })
+        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
       else 
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] } })
+        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
       end
     end
 
@@ -100,7 +100,6 @@ class ReportsController < ApplicationController
   # PATCH/PUT /reports/1.json
 
   def update
-
     if report_params["viatic_value"].class.to_s != "Integer" 
       valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
       params["viatic_value"] = valor1
