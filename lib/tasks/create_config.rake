@@ -77,6 +77,7 @@ namespace :create_config do
 
         if report
             AccionModule.create(name: "Ingreso al modulo", module_control_id: report.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: report.id, user_id: user.id)            
             AccionModule.create(name: "Crear", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: report.id, user_id: user.id)

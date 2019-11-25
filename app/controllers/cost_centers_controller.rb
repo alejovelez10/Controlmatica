@@ -228,11 +228,6 @@ class CostCentersController < ApplicationController
       params["quotation_value"] = valor2
     end
 
-    if params["quotation_number"].present?
-      valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
-      params["quotation_number"] = valor3
-    end
-
     if params["work_force_contractor"].present?
       valor4 = cost_center_params["work_force_contractor"].gsub('$','').gsub(',','')
       params["work_force_contractor"] = valor4
@@ -283,10 +278,6 @@ class CostCentersController < ApplicationController
     elsif cost_center_params["quotation_value"].class.to_s != "Integer"
       valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
       params["quotation_value"] = valor2
-      
-    elsif cost_center_params["quotation_number"].class.to_s != "Integer"
-      valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
-      params["quotation_number"] = valor3
     
     elsif cost_center_params["work_force_contractor"].class.to_s != "Integer"
       valor4 = cost_center_params["work_force_contractor"].gsub('$','').gsub(',','')
