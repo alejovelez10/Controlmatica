@@ -306,10 +306,7 @@ class table extends React.Component {
         cost_center_id: "",
         label: "Centro de costo"
       },
-
-      dataContact: [],
-      clients: [],
-      dataCostCenter: []
+      
     });
   }
 

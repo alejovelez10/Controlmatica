@@ -218,13 +218,42 @@ class CostCentersController < ApplicationController
   end
 
   def create
-    valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
-    valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
-    valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
+    if params["viatic_value"].present?
+      valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
+      params["viatic_value"] = valor1
+    end
 
-    params["viatic_value"] = valor1
-    params["quotation_value"] = valor2
-    params["quotation_number"] = valor3
+    if params["quotation_value"].present?
+      valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
+      params["quotation_value"] = valor2
+    end
+
+    if params["quotation_number"].present?
+      valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
+      params["quotation_number"] = valor3
+    end
+
+    if params["work_force_contractor"].present?
+      valor4 = cost_center_params["work_force_contractor"].gsub('$','').gsub(',','')
+      params["work_force_contractor"] = valor4
+    end
+
+    if params["hours_contractor_invoices"].present?
+      valor5 = cost_center_params["hours_contractor_invoices"].gsub('$','').gsub(',','')
+      params["hours_contractor_invoices"] = valor5
+    end
+
+    if params["hours_contractor_real"].present?
+      valor6 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
+      params["hours_contractor_real"] = valor6
+    end
+
+    if params["materials_value"].present?
+      valor7 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
+      params["materials_value"] = valor7
+    end
+
+  
 
     @cost_center = CostCenter.create(cost_center_params)
 
@@ -258,7 +287,24 @@ class CostCentersController < ApplicationController
     elsif cost_center_params["quotation_number"].class.to_s != "Integer"
       valor3 = cost_center_params["quotation_number"].gsub('$','').gsub(',','')
       params["quotation_number"] = valor3
+    
+    elsif cost_center_params["work_force_contractor"].class.to_s != "Integer"
+      valor4 = cost_center_params["work_force_contractor"].gsub('$','').gsub(',','')
+      params["work_force_contractor"] = valor4
+    
+    elsif cost_center_params["hours_contractor_invoices"].class.to_s != "Integer"
+      valor5 = cost_center_params["hours_contractor_invoices"].gsub('$','').gsub(',','')
+      params["hours_contractor_invoices"] = valor5
+
+    elsif cost_center_params["hours_contractor_real"].class.to_s != "Integer"
+      valor6 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
+      params["hours_contractor_real"] = valor6
+
+    elsif cost_center_params["materials_value"].class.to_s != "Integer"
+      valor7 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
+      params["materials_value"] = valor7
     end
+
 
     if @cost_center.update(cost_center_params) 
       render :json => {
@@ -307,6 +353,6 @@ class CostCentersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def cost_center_params
-      params.permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value)
+      params.permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value, :user_id, :work_force_contractor, :hours_contractor_invoices, :hours_contractor_real, :materials_value)
     end
 end

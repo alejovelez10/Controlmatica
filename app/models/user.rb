@@ -33,6 +33,7 @@ class User < ApplicationRecord
   has_many :reports
   has_many :accion_modules
   has_many :module_controls
+  has_many :cost_centers
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable

@@ -28,6 +28,7 @@
 #  hours_contractor_invoices :float
 #  hours_contractor_real     :float
 #  materials_value           :float
+#  user_id                   :integer
 #
 
 class CostCenter < ApplicationRecord
@@ -40,6 +41,8 @@ class CostCenter < ApplicationRecord
 
   belongs_to :customer, optional: :true
   belongs_to :contact, optional: :true
+  belongs_to :user, optional: :true
+  
   before_create :create_code
   before_update :change_state
 
