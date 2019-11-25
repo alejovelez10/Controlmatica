@@ -45,6 +45,20 @@ class ReportsController < ApplicationController
   end
 
   def get_reports
+    report = ModuleControl.find_by_name("Reportes de servicios")
+    estado = current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ver todos").exists?
+    validate = (current_user.rol.name == "Administrador" ? true : estado)
+
+    if validate
+      if params[:search1] || params[:search2]
+        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
+      else
+        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
+      end
+    end
+    
+
+=begin
     if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
       if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate]
         reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
@@ -59,7 +73,7 @@ class ReportsController < ApplicationController
         reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
       end
     end
-
+=end
     reports = JSON.parse(reports)
     render :json => reports
   end
