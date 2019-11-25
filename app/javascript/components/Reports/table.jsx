@@ -578,7 +578,7 @@ class table extends React.Component {
                   <td>{accion.code_report}</td>
                   <td>{accion.cost_center.code}</td>
                   <td>{accion.report_date}</td>
-                  <td>{accion.report_execute.name}</td>
+                  <td>{accion.report_execute != undefined ? accion.report_execute.name : "" }</td>
                   <td>{accion.working_time}</td>
                   <td>{accion.work_description}</td>
                   <td><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>

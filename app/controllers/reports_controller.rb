@@ -49,7 +49,7 @@ class ReportsController < ApplicationController
       if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate]
         reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] } })
       else 
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] } })
+        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:name] }, :report_execute => { :only =>[:name] } })
         #.to_json( :include => [:cost_center] )
       end
     elsif current_user.rol_user == "Ingeniero"
@@ -100,8 +100,11 @@ class ReportsController < ApplicationController
   # PATCH/PUT /reports/1.json
 
   def update
-    valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
-    params["viatic_value"] = valor1
+
+    if report_params["viatic_value"].class.to_s != "Integer" 
+      valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
+      params["viatic_value"] = valor1
+    end
     
     if @report.update(report_params) 
       render :json => {
@@ -146,6 +149,6 @@ class ReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def report_params
-      params.require(:report).permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id)
+      params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id)
     end
 end
