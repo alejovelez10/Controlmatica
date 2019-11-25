@@ -43,6 +43,7 @@ class index extends React.Component {
                         showFilter={this.change}
                         loadInfo={this.loadData}
                         usuario={this.props.usuario}
+                        estados={this.props.estados}
                       />
                     
       

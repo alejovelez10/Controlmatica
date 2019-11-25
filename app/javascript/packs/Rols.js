@@ -7,7 +7,6 @@ class Rols extends React.Component {
   
  
   render() {
-  
     return (
          <Index usuario={this.props.current_user} estados={this.props.estados}/>
     );

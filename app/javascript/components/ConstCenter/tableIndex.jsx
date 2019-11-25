@@ -50,8 +50,15 @@ class tableIndex extends React.Component {
   }
 
   validationForm = () => {
-    if (this.state.form.name != "" && 
-        this.state.form.money_value != "" 
+    if (this.state.form.customer_id != "" && 
+        this.state.form.contact_id != "" && 
+        this.state.form.service_type != "" && 
+        this.state.form.start_date != "" && 
+        this.state.form.end_date != "" && 
+        this.state.form.quotation_number != "" &&
+        this.state.form.quotation_value != "" && 
+        this.state.form.eng_hours != "" && 
+        this.state.form.viatic_value != "" 
         ) {
           console.log("los campos estan llenos")
       this.setState({ ErrorValues: true })
@@ -304,6 +311,40 @@ class tableIndex extends React.Component {
 
   }
 
+  edit = modulo => {
+    console.log(modulo)
+    if(this.state.modeEdit === true){
+      this.setState({modeEdit: false})
+    }else{
+      this.setState({modeEdit: true})
+    }
+
+    this.toggle("edit")
+
+      this.setState({
+        action: modulo,
+        title: "Editar Centro de costo",
+        form: {
+          customer_id: modulo.customer_id,
+          contact_id: modulo.contact_id,
+          service_type: modulo.service_type,
+          user_id: this.props.usuario.id,
+          description: modulo.description,
+          start_date: modulo.start_date,
+          end_date: modulo.end_date,
+          quotation_number: modulo.quotation_number,
+          quotation_value: modulo.quotation_value,
+          eng_hours: modulo.eng_hours,
+          viatic_value: modulo.viatic_value,
+          execution_state: "PENDIENTE",
+        },
+        
+        }
+        
+      )
+      
+  };
+
 
   get_btn(accion){
     if (accion.execution_state == "FINALIZADO" && accion.invoiced_state == "FACTURADO") {
@@ -324,7 +365,6 @@ class tableIndex extends React.Component {
     }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "POR FACTURAR"){
       return ""
     }
-
   }
 
   render() {
@@ -373,7 +413,10 @@ class tableIndex extends React.Component {
                           >
                             Filtros <i className="fas fa-search ml-2"></i>
                           </button>
+
+                        {this.props.estados.create == true && (
                           <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo centro de costo</button>
+                        )}
                     </div>
 
                 </div>
@@ -397,9 +440,11 @@ class tableIndex extends React.Component {
                     <th>$ Ingeniería Ejecutado</th>
                     <th>$ Viaticos Cotizado</th>
                     <th>$ Viaticos Real</th>
-                    <th className="text-center" style={{ width: "2%"}}>¿Finalizo?</th>
-                    <th className="text-center" style={{ width: "4%"}}>Estado de ejecución</th>
-                    <th className="text-center" style={{ width: "8%"}}>Estado facturado</th>
+                    {this.props.estados.ending == true && (
+                      <th className="text-center" style={{ width: "2%"}}>¿Finalizo?</th>
+                    )}
+                    <th className="text-center" style={{ width: "6%"}}>Estado de ejecución</th>
+                    <th className="text-center" style={{ width: "11%"}}>Estado facturado</th>
                   </tr>
                 </thead>
 
@@ -425,17 +470,24 @@ class tableIndex extends React.Component {
                                 <i className="fas fa-bars"></i>
                               </button>
                               <div className="dropdown-menu dropdown-menu-right">
-                                <a href={`/cost_centers/${accion.id}`} target="_blank" className="dropdown-item">
-                                  Gestionar
-                                </a>    
 
-                                <a href={`/cost_centers/${accion.id}/edit`} className="dropdown-item">
-                                  Editar
-                                </a>
+                                {this.props.estados.manage_module == true && (
+                                  <a href={`/cost_centers/${accion.id}`} target="_blank" className="dropdown-item">
+                                    Gestionar
+                                  </a>    
+                                )}
 
-                                <button onClick={() => this.delete(accion.id)} className="dropdown-item">
-                                  Eliminar
-                                </button>
+                                {this.props.estados.edit == true && (
+                                  <button onClick={() => this.edit(accion)} className="dropdown-item">
+                                    Editar
+                                  </button>
+                                )}
+
+                                {this.props.estados.delete == true && (
+                                  <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                                    Eliminar
+                                  </button>
+                                )}
 
                               </div>
                             </div>
@@ -450,10 +502,12 @@ class tableIndex extends React.Component {
                         <th>{accion.id}</th>
                         <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th>{accion.id}</th>
-                        
-                        <th>
-                          {this.get_btn(accion)}
-                        </th>
+
+                        {this.props.estados.ending == true && (
+                          <th>
+                            {this.get_btn(accion)}
+                          </th>
+                        )}
 
                         <th className="text-center">{accion.execution_state}</th>
                         <th className="text-center">{accion.invoiced_state}</th>                      
@@ -463,7 +517,9 @@ class tableIndex extends React.Component {
                     <td colSpan="8" className="text-center">
                         <div className="text-center mt-1 mb-1">
                         <h4>No hay registros</h4>
-                        <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo centro de costo</button>
+                        {this.props.estados.create == true && (
+                          <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo centro de costo</button>
+                        )}
                         </div>
                     </td>
                   )}

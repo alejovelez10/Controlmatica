@@ -5,6 +5,18 @@ class ParameterizationsController < ApplicationController
   # GET /parameterizations
   # GET /parameterizations.json
   def index
+    parameterizations = ModuleControl.find_by_name("Parametrizaciones")
+
+    create = current_user.rol.accion_modules.where(module_control_id: parameterizations.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: parameterizations.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: parameterizations.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+
     @parameterizations = Parameterization.all.paginate(:page => params[:page], :per_page => 10)
   end
 

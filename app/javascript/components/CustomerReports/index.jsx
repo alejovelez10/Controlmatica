@@ -40,6 +40,7 @@ class index extends React.Component {
                         dataActions={this.state.data} 
                         loadInfo={this.loadData}
                         usuario={this.props.usuario}
+                        estados={this.props.estados}
                       />
                     
       

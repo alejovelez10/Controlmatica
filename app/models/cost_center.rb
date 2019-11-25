@@ -2,27 +2,32 @@
 #
 # Table name: cost_centers
 #
-#  id                :bigint           not null, primary key
-#  customer_id       :integer
-#  contact_id        :integer
-#  description       :text
-#  start_date        :date
-#  end_date          :date
-#  quotation_number  :string
-#  engineering_value :float
-#  viatic_value      :float
-#  execution_state   :string
-#  invoiced_state    :string
-#  service_type      :string
-#  created_at        :datetime         not null
-#  updated_at        :datetime         not null
-#  count             :integer
-#  code              :string
-#  create_type       :boolean
-#  eng_hours         :float
-#  hour_cotizada     :float
-#  hour_real         :float
-#  quotation_value   :float
+#  id                        :bigint           not null, primary key
+#  customer_id               :integer
+#  contact_id                :integer
+#  description               :text
+#  start_date                :date
+#  end_date                  :date
+#  quotation_number          :string
+#  engineering_value         :float
+#  viatic_value              :float
+#  execution_state           :string
+#  invoiced_state            :string
+#  service_type              :string
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  count                     :integer
+#  code                      :string
+#  create_type               :boolean
+#  eng_hours                 :float
+#  hour_cotizada             :float
+#  hour_real                 :float
+#  quotation_value           :float
+#  work_force_contractor     :float
+#  hours_contractor          :integer
+#  hours_contractor_invoices :float
+#  hours_contractor_real     :float
+#  materials_value           :float
 #
 
 class CostCenter < ApplicationRecord

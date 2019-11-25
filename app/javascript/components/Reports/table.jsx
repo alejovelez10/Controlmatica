@@ -503,7 +503,9 @@ class table extends React.Component {
                     >
                       Filtros <i className="fas fa-search ml-2"></i>
                     </button>
+                      {this.props.estados.create == true && (
                         <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo reporte</button>
+                      )}
                     </div>
                 </div>
             </div>
@@ -550,19 +552,24 @@ class table extends React.Component {
                           <i className="fas fa-bars"></i>
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
+
+                          {this.props.estados.edit == true && (
                             <a
                               onClick={() => this.edit(accion)}
                               className="dropdown-item"
                             >
                               Editar
                             </a>
+                          )}
 
+                          {this.props.estados.delete == true && (
                             <button
                               onClick={() => this.delete(accion.id)}
                               className="dropdown-item"
                             >
                               Eliminar
                             </button>
+                          )}
 
                         </div>
                       </div>
@@ -585,7 +592,9 @@ class table extends React.Component {
                 <td colSpan="11" className="text-center">
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
-                      <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo reporte</button>
+                    {this.props.estados.create == true && (
+                      <button onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo reporte</button>
+                    )}
                   </div>
                 </td>
               </tr>

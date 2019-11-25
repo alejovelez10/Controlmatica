@@ -320,19 +320,24 @@ class table extends React.Component {
                           <i className="fas fa-bars"></i>
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
+
+                          {this.props.estados.edit == true &&(
                             <button
                               onClick={() => this.editTable(accion)}
                               className="dropdown-item"
                             >
                               Editar
                             </button>
-
+                          )}
+                            
+                          {this.props.estados.delete == true &&(
                             <button
                               onClick={() => this.delete(accion.id)}
                               className="dropdown-item"
                             >
                               Eliminar
                             </button>
+                          )}
 
                         </div>
                       </div>
@@ -345,7 +350,9 @@ class table extends React.Component {
                 <td colSpan="8" className="text-center">
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
+                      {this.props.estados.create == true &&(
                         <button className="btn btn-secondary mt-3" onClick={() => this.toggle("new")}>Nueva Parametrizacion</button>
+                      )}
                   </div>
                 </td>
               </tr>

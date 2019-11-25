@@ -101,7 +101,9 @@ class index extends React.Component {
                                 </div>
 
                                 <div className="col-md-4 text-right">
+                                  {this.props.estados.create == true && (
                                     <button className="btn btn-secondary" onClick={() => this.child.toggle("new")}>Nueva Parametrizacion</button>
+                                  )}
                                 </div>
 
                             </div>
@@ -113,6 +115,7 @@ class index extends React.Component {
                         loadInfo={this.loadData}
                         usuario={this.props.usuario}
                         ref={(element)  => {this.child = element}}
+                        estados={this.props.estados}
                       />
                     
       

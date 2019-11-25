@@ -18,6 +18,22 @@ class CustomerReportsController < ApplicationController
         @customer_reports = CustomerReport.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
       end
     end
+
+    customer_reports = ModuleControl.find_by_name("Reportes de clientes")
+
+    create = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Eliminar").exists?
+    generate_pdf = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Generar pdf").exists?
+    send_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Enviar para aprobaciòn").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      generate_pdf: (current_user.rol.name == "Administrador" ? true : generate_pdf),
+      send_email: (current_user.rol.name == "Administrador" ? true : send_email) 
+    }
   end
 
   def get_customer_reports

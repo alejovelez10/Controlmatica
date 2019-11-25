@@ -9,7 +9,7 @@ class Users extends React.Component {
   render() {
   
     return (
-       <Index rols={this.props.rol}/>
+       <Index rols={this.props.rol} estados={this.props.estados}/>
     );
   }
 }

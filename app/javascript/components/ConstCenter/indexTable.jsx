@@ -47,26 +47,25 @@ class indexTable extends React.Component {
       
   showFilter = (valor) => {
     if (valor == true) {
-      this.setState({ show_filter: false });
+      this.setState({ 
+        show_filter: false,
+        formFilter: {
+          descripcion: "",
+          customer_id: "",
+          execution_state: "",
+          invoiced_state: ""
+        }
+    
+      });
+
+      this.loadData();
     }else{
       this.setState({ show_filter: true });
     }
-
-    this.setState({
-      formFilter: {
-        descripcion: "",
-        customer_id: "",
-        execution_state: "",
-        invoiced_state: ""
-      }
-
-    })
-
-
-    this.loadData();
   }
   
   cancelFilter = () => {
+    console.log("cancelFilter")
     this.setState({
       formFilter: {
         descripcion: "",
@@ -135,6 +134,7 @@ class indexTable extends React.Component {
                                 usuario={this.props.usuario}
                                 show={this.showFilter}
                                 clientes={this.props.clientes}
+                                estados={this.props.estados}
                             />
 
                         ) : (

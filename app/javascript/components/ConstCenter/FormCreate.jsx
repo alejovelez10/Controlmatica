@@ -29,7 +29,7 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocomplete}
                         options={this.props.clientes}
                         autoFocus={false}
-                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cliente == "" ? "error-class" : ""}`}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.customer_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocomplete}
                       />
                 </div>
@@ -45,7 +45,7 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocompleteContact}
                         options={this.props.contacto}
                         autoFocus={false}
-                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cliente == "" ? "error-class" : ""}`}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.contact_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocompleteContact}
                       />
 
@@ -66,10 +66,10 @@ class FormCreate extends React.Component {
 
 
                   <div className="col-md-12 mt-4">
-                  <label>Descripción <small className="validate-label">*</small></label>
+                  <label>Descripción</label>
                     <textarea 
                       name="description"
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.description == "" ? "error-class" : ""}`}
+                      className={`form form-control`}
                       value={this.props.formValues.description}
                       onChange={this.props.onChangeForm}
                       rows="5"

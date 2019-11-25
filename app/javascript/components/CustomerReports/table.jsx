@@ -306,7 +306,9 @@ class table extends React.Component {
               <th>Creado</th>
               <th>Codigo</th>
               <th>Descripcion</th>
-              <th style={{width: "220px"}}>Token</th>
+              {this.props.estados.send_email == true && (  
+                <th style={{width: "220px"}}>Enviar para aprobaciòn</th>
+              )}
               <th>Estado</th>
               <th>Fecha Aprobacion</th>
               <th>Cliente</th>
@@ -321,16 +323,19 @@ class table extends React.Component {
                     <td>{accion.report_date}</td>
                     <td>{accion.report_code}</td>
                     <td>{accion.description}</td>
-                  <td> 
-                    <button
-                        onClick={() => this.sendReques(accion)}
-                        className="btn btn-success"
-                        style={{width: "220px"}}
-                        disabled={accion.report_state == "Aprobado" || accion.report_state == "Enviado al Cliente" ? true : false }
-                    >
-                        {this.getState(accion)}
-                    </button>
-                  </td>
+
+                  {this.props.estados.send_email == true && (  
+                    <td> 
+                      <button
+                          onClick={() => this.sendReques(accion)}
+                          className="btn btn-success"
+                          style={{width: "220px"}}
+                          disabled={accion.report_state == "Aprobado" || accion.report_state == "Enviado al Cliente" ? true : false }
+                      >
+                          {this.getState(accion)}
+                      </button>
+                    </td>
+                  )}
 
                   <td>{accion.report_state}</td>
                   <td>{accion.approve_date}</td>
@@ -355,28 +360,34 @@ class table extends React.Component {
                           <i className="fas fa-bars"></i>
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
+                          
+                            {this.props.estados.edit == true && (
+                              <a
+                                href={`/customer_reports/${accion.id}/edit`}
+                                className="dropdown-item"
+                              >
+                                Editar
+                              </a>
+                            )}
 
-                            <a
-                              href={`/customer_reports/${accion.id}/edit`}
-                              className="dropdown-item"
-                            >
-                              Editar
-                            </a>
+                            {this.props.estados.delete == true && (
+                              <button
+                                onClick={() => this.delete(accion.id)}
+                                className="dropdown-item"
+                              >
+                                Eliminar
+                              </button>
+                            )}
 
-                            <button
-                              onClick={() => this.delete(accion.id)}
-                              className="dropdown-item"
-                            >
-                              Eliminar
-                            </button>
-
-                            <a
-                              href={`/customer_pdf/${accion.id}.pdf`}
-                              className="dropdown-item"
-                              target="_blank"
-                            >
-                              Generar pdf
-                            </a>
+                            {this.props.estados.generate_pdf == true && (
+                              <a
+                                href={`/customer_pdf/${accion.id}.pdf`}
+                                className="dropdown-item"
+                                target="_blank"
+                              >
+                                Generar pdf
+                              </a>
+                            )}
 
                         </div>
                       </div>
@@ -389,7 +400,9 @@ class table extends React.Component {
                 <td colSpan="8" className="text-center">
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
+                      {this.props.estados.create == true && (
                         <a className="btn btn-secondary mt-3" href={"/customer_reports/new"}>Nuevo Informe</a>
+                      )}
                   </div>
                 </td>
               </tr>

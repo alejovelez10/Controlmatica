@@ -102,7 +102,9 @@ class index extends React.Component {
                                 </div>
 
                                 <div className="col-md-4 text-right">
+                                  {this.props.estados.create == true && (
                                     <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
+                                  )}
                                 </div>
                             </div>
                         </div>
@@ -112,6 +114,7 @@ class index extends React.Component {
                         dataActions={this.state.data} 
                         loadInfo={this.loadData}
                         usuario={this.props.usuario}
+                        estados={this.props.estados}
                       />
                     
       

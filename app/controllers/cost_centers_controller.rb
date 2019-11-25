@@ -12,10 +12,27 @@ class CostCentersController < ApplicationController
     else
       @cost_centers = CostCenter.all.paginate(:page => params[:page], :per_page => 10)
     end
+
+    cost_centers = ModuleControl.find_by_name("Centro de Costos")
+
+    create = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Eliminar").exists?
+    manage_module = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Gestionar modulo").exists?
+    ending = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      manage_module: (current_user.rol.name == "Administrador" ? true : manage_module),
+      ending: (current_user.rol.name == "Administrador" ? true : ending)
+    }
   end
 
   def get_cost_centers
     if params[:descripcion] || params[:customer_id] || params[:execution_state] || params[:invoiced_state]
+
       @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 30).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state])
       @cost_centers_total = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state]).count
 

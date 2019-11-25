@@ -4,7 +4,17 @@ class RolsController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def index
+    roles = ModuleControl.find_by_name("Roles")
 
+    create = current_user.rol.accion_modules.where(module_control_id: roles.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: roles.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: roles.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
   end
   
 

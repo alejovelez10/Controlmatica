@@ -425,7 +425,9 @@ class table extends React.Component {
                   </div>
 
                   <div className="col-md-6 text-right">
-                    <button className="btn btn-secondary" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
+                    {this.props.estados.create == true &&(
+                      <button className="btn btn-secondary" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
+                    )}
                   </div>
 
                 </div>
@@ -484,22 +486,24 @@ class table extends React.Component {
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
                           
-
+                          {this.props.estados.edit == true &&(
                             <button
                               onClick={() => this.edit(user)}
                               className="dropdown-item"
                             >
                               Editar
                             </button>
+                          )}
 
 
-
+                          {this.props.estados.delete == true &&(
                             <button
                               onClick={() => this.delete(user.id)}
                               className="dropdown-item"
                             >
                               Eliminar
                             </button>
+                           )}
 
 
                         </div>

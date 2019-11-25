@@ -19,6 +19,19 @@ class ReportsController < ApplicationController
         @reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
       end
     end
+
+    reports = ModuleControl.find_by_name("Reportes de clientes")
+
+    create = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+    }
+
   end
 
   # GET /reports/1

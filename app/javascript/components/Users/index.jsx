@@ -155,6 +155,7 @@ class index extends React.Component {
                       isLoaded={this.state.isLoaded}
                       rols={this.props.rols}
                       all_users ={this.state.users_total}
+                      estados={this.props.estados}
                     />
                   ) : (
 

@@ -101,6 +101,7 @@ class index extends React.Component {
                         show={this.showFilter}
                         clientes={this.props.clientes}
                         users={this.props.users}
+                        estados={this.props.estados}
                       />
                     
       

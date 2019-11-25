@@ -6,7 +6,7 @@ class ConstCenter extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <Index usuario={this.props.usuario} clientes={this.props.clientes} />
+                <Index usuario={this.props.usuario} clientes={this.props.clientes} estados={this.props.estados}/>
             </React.Fragment>
         );
     }

@@ -5,6 +5,18 @@ class ProvidersController < ApplicationController
   # GET /providers
   # GET /providers.json
   def index
+    providers = ModuleControl.find_by_name("Proveedores")
+
+    create = current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+
     @providers = Provider.all.paginate(:page => params[:page], :per_page => 10)
   end
 

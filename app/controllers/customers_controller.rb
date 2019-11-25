@@ -6,6 +6,18 @@ class CustomersController < ApplicationController
   # GET /customers
   # GET /customers.json
   def index
+    customers = ModuleControl.find_by_name("Clientes")
+
+    create = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+
     @customers = Customer.all.paginate(:page => params[:page], :per_page => 10)
   end
 

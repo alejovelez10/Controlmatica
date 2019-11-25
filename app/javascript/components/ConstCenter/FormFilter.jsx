@@ -40,7 +40,7 @@ class FormFilter extends Component {
                       name="descripcion"
                       placeholder="Descripcion"
                       onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.work_description}
+                      value={this.props.formValuesFilter.descripcion}
                     />
                   </div>
 

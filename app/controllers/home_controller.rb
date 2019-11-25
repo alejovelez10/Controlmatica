@@ -30,6 +30,18 @@ class HomeController < ApplicationController
   
 
   def index_user
+    users = ModuleControl.find_by_name("Usuarios")
+
+    create = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+
   	@user = User.all
   end
   
