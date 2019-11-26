@@ -41,6 +41,8 @@ class index extends React.Component {
                         loadInfo={this.loadData}
                         usuario={this.props.usuario}
                         estados={this.props.estados}
+                        clientes={this.props.clientes}
+                        contacts={this.props.contacts}
                       />
                     
       

@@ -1,7 +1,7 @@
 class SalesOrdersController < ApplicationController
   before_action :set_sales_order, only: [:show, :edit, :update, :destroy]
   before_action :authenticate_user!
-  skip_before_action :verify_authenticity_token, :only => [:create, :destroy]
+  skip_before_action :verify_authenticity_token, :only => [:create, :destroy, :update]
   # GET /sales_orders
   # GET /sales_orders.json
   def index
@@ -57,25 +57,35 @@ class SalesOrdersController < ApplicationController
   # PATCH/PUT /sales_orders/1
   # PATCH/PUT /sales_orders/1.json
   def update
-    respond_to do |format|
-      if @sales_order.update(sales_order_params)
-        format.html { redirect_to cost_center_path(@sales_order.cost_center_id), notice: 'Sales order was successfully updated.' }
-        format.json { render :show, status: :ok, location: @sales_order }
-      else
-        format.html { render :edit }
-        format.json { render json: @sales_order.errors, status: :unprocessable_entity }
+
+    if params["order_value"].present?
+      if sales_order_params["order_value"].class.to_s != "Integer"
+        valor1 = sales_order_params["order_value"].gsub('$','').gsub(',','')
+        params["order_value"] = valor1
       end
+    end
+
+    if @sales_order.update(sales_order_params) 
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @sales_order.errors.full_messages
+      }
     end
   end
 
   # DELETE /sales_orders/1
   # DELETE /sales_orders/1.json
   def destroy
-    cost_center_id = @sales_order.cost_center_id
-    @sales_order.destroy
-    respond_to do |format|
-      format.html { redirect_to cost_center_path(cost_center_id), notice: 'Sales order was successfully destroyed.' }
-      format.json { head :no_content }
+    if @sales_order.destroy
+      render :json => @sales_order
+    else 
+      render :json => @sales_order.errors.full_messages
     end
   end
 

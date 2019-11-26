@@ -99,7 +99,7 @@ class Show extends React.Component {
 
                         <div className="row valores">
      
-                            <div className="col-md-6 mb-5">
+                            <div className="col-md-6 mb-4">
                                 <div className="col-md-12 title1 text-center">
                                     <strong>Ingenieria</strong><br/> 
                                 </div>
@@ -131,7 +131,7 @@ class Show extends React.Component {
                             </div>
                          
                         
-                            <div className="col-md-6 mb-5">
+                            <div className="col-md-6 mb-4">
                                 <div className="col-md-12 title1 text-center">
                                     <strong>Viaticos</strong><br/>
                                 </div>
@@ -217,6 +217,61 @@ class Show extends React.Component {
                                 </div>
 
                             </div> 
+
+
+                            <div className="col-md-6 mt-4">
+                                <div className="col-md-12 title1 text-center">
+                                    <strong>Materiales</strong><br/>
+                                </div>
+
+
+
+                                <div className="col-md-12 background-show">
+                                    <div className="row">
+                                        <div className="col-md-6 text-center">
+                                            <strong>Cotizados</strong><br/> 
+                                            <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                                        </div>
+
+                                        <div className="col-md-6 text-center">   
+                                            <strong>Comprados</strong><br/> 
+                                            <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div> 
+
+
+                            <div className="col-md-6 mt-4">
+                                <div className="col-md-12 title1 text-center">
+                                    <strong>Contratistas</strong><br/>
+                                </div>
+
+
+
+                                <div className="col-md-12 background-show">
+                                    <div className="row">
+                                        <div className="col-md-6 text-center">
+                                            <strong>Cotizado</strong><br/> 
+                                            <span><NumberFormat value={this.props.data_info.hours_contractor_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                                        </div>
+
+                                        <div className="col-md-6 text-center">   
+                                            <strong>Real</strong><br/> 
+                                            <span><NumberFormat value={this.props.sum_contractors} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div> 
+
+
+
+
+
 
                             <div className="col-md-12 text-center mt-5">
 

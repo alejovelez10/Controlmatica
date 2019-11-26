@@ -25,10 +25,21 @@ class tableIndex extends React.Component {
           start_date: "",
           end_date: "",
           quotation_number: "",
-          quotation_value: "",
-          eng_hours: "",
           viatic_value: "",
           execution_state: "PENDIENTE",
+
+          eng_hours: "",
+          hour_real: "",
+          hour_cotizada: "",
+
+
+          hours_contractor: "",
+          hours_contractor_real: "",
+          hours_contractor_invoices: "",
+
+          materials_value: "",
+          viatic_value: "",
+          quotation_value: "",
         },
 
         selectedOption: {
@@ -157,15 +168,26 @@ class tableIndex extends React.Component {
           customer_id: "",
           contact_id: "",
           service_type: "",
+          user_id: this.props.usuario.id,
           description: "",
           start_date: "",
           end_date: "",
           quotation_number: "",
-          quotation_value: "",
-          eng_hours: "",
           viatic_value: "",
-          user_id: this.props.usuario.id,
           execution_state: "PENDIENTE",
+
+          eng_hours: "",
+          hour_real: "",
+          hour_cotizada: "",
+
+
+          hours_contractor: "",
+          hours_contractor_real: "",
+          hours_contractor_invoices: "",
+
+          materials_value: "",
+          viatic_value: "",
+          quotation_value: "",
         }
       });
     } else {
@@ -186,7 +208,7 @@ class tableIndex extends React.Component {
   HandleClick = e => {
     if (this.validationForm() == true) {
       if (this.state.modeEdit == true) {
-        fetch("/payments/" + this.state.action.id, {
+        fetch("/cost_centers/" + this.state.action.id, {
           method: "PATCH", // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
@@ -210,11 +232,34 @@ class tableIndex extends React.Component {
                 start_date: "",
                 end_date: "",
                 quotation_number: "",
-                quotation_value: "",
-                eng_hours: "",
                 viatic_value: "",
                 execution_state: "PENDIENTE",
+      
+                eng_hours: "",
+                hour_real: "",
+                hour_cotizada: "",
+      
+      
+                hours_contractor: "",
+                hours_contractor_real: "",
+                hours_contractor_invoices: "",
+      
+                materials_value: "",
+                viatic_value: "",
+                quotation_value: "",
               },
+
+              selectedOption: {
+                customer_id: "",
+                label: "Buscar cliente"
+              },
+      
+              selectedOptionContact: {
+                contact_id: "",
+                label: "Seleccionar Contacto"
+              },
+
+              
             });
           });
 
@@ -244,11 +289,33 @@ class tableIndex extends React.Component {
                 start_date: "",
                 end_date: "",
                 quotation_number: "",
-                quotation_value: "",
-                eng_hours: "",
                 viatic_value: "",
                 execution_state: "PENDIENTE",
+      
+                eng_hours: "",
+                hour_real: "",
+                hour_cotizada: "",
+      
+      
+                hours_contractor: "",
+                hours_contractor_real: "",
+                hours_contractor_invoices: "",
+      
+                materials_value: "",
+                viatic_value: "",
+                quotation_value: "",
               },
+
+              selectedOption: {
+                customer_id: "",
+                label: "Buscar cliente"
+              },
+      
+              selectedOptionContact: {
+                contact_id: "",
+                label: "Seleccionar Contacto"
+              },
+
             });
           });
       }
@@ -333,10 +400,23 @@ class tableIndex extends React.Component {
           start_date: modulo.start_date,
           end_date: modulo.end_date,
           quotation_number: modulo.quotation_number,
-          quotation_value: modulo.quotation_value,
-          eng_hours: modulo.eng_hours,
           viatic_value: modulo.viatic_value,
           execution_state: "PENDIENTE",
+
+          eng_hours: modulo.eng_hours,
+          hour_real: modulo.hour_real,
+          hour_cotizada: modulo.hour_cotizada,
+
+
+          hours_contractor: modulo.hours_contractor,
+          hours_contractor_real: modulo.hours_contractor_real,
+          hours_contractor_invoices: modulo.hours_contractor_invoices,
+
+          materials_value: modulo.materials_value,
+          viatic_value: modulo.viatic_value,
+          quotation_value: modulo.quotation_value,
+
+
         },
         
         }

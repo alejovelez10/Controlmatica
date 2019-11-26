@@ -98,6 +98,7 @@ class table extends React.Component {
           .catch(error => console.error('Error:', error))
           .then(data => {
             this.props.loadInfo()
+            this.props.loadShow()
             this.MessageSucces(data.message, data.type, data.message_error)
 
             this.setState({
@@ -133,6 +134,7 @@ class table extends React.Component {
           .catch(error => console.error("Error:", error))
           .then(data => {
             this.props.loadInfo()
+            this.props.loadShow()
 
             this.MessageSucces(data.message, data.type, data.message_error)
 
@@ -252,6 +254,7 @@ class table extends React.Component {
       }).then(response => response.json())
       .then(response => {
         this.props.loadInfo()
+        this.props.loadShow()
         
         Swal.fire(
           'Borrado!',

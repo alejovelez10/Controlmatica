@@ -51,7 +51,7 @@ class FormCreate extends React.Component {
                   </div>
 
                   <div className="col-md-4">
-                  <input
+                      <input
                         type="hidden"
                         name="cost_center_id"
                         value={this.props.formAutocompleteCentro.cost_center_id}

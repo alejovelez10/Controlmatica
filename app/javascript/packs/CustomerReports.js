@@ -6,7 +6,7 @@ class CustomerReports extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <Index usuario={this.props.usuario} estados={this.props.estados}/>
+                <Index usuario={this.props.usuario} estados={this.props.estados} clientes={this.props.clientes} contacts={this.props.contacts}/>
             </React.Fragment>
         );
     }

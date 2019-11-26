@@ -20,7 +20,17 @@ module ApplicationHelper
             card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
 
         elsif controller == "cost_centers" && action == "show"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde ordenes de compra" + "</p>"
+		
+		
+		
+		elsif controller == "cost_centers" && action == "materials"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde materiales" + "</p>"
+
+		elsif controller == "cost_centers" && action == "contractors"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde contratistas" + "</p>"
+
+			
 
         elsif controller == "reports" && action == "index"
             card = "<h1>" + " <i class='fas fa-university'></i> Reportes " + "</h1>" + "<p>" + "añde mas socios" + "</p>"

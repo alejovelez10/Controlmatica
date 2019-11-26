@@ -114,84 +114,48 @@ class FormCreate extends React.Component {
                   </div>
 
 
-                  <div className="col-md-4 mt-4">
-                  <label>Valor cotización<small className="validate-label">*</small></label>
-                    <NumberFormat 
-                      name="quotation_value"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.quotation_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.quotation_value}
-                      onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
-                    /> 
-                  </div>
+                  {/* HR */}
+                    <div className="col-md-12 mt-4 mb-4">
+                      <hr/>
+                    </div>
+                  {/* HR */}
 
-                  <div className="col-md-4 mt-4">
-                  <label>Horas de ingeniería <small className="validate-label">*</small></label>
+
+                  <div className="col-md-4">
+                  <label>Horas ingeniería <small className="validate-label">*</small></label>
                     <input 
                       name="eng_hours"
                       type="number"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.eng_hours == "" ? "error-class" : ""}`}
                       value={this.props.formValues.eng_hours}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
-                    /> 
-                  </div>
-
-                  <div className="col-md-4 mt-4">
-                  <label>Valor de viaticos <small className="validate-label">*</small></label>
-                    <NumberFormat 
-                      name="viatic_value"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
-                      onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
-                    /> 
-                  </div>
-
-                  <div className="col-md-12 mt-4 mb-4">
-                     <hr/>
-                  </div>
-
-                  <div className="col-md-4">
-                  <label>Horas ingeniería <small className="validate-label">*</small></label>
-                    <NumberFormat 
-                      name="viatic_value"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
-                      onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Horas ingeniería"
                     /> 
                   </div>
 
                   <div className="col-md-4">
                   <label>Valor hora costo <small className="validate-label">*</small></label>
                     <NumberFormat 
-                      name="viatic_value"
+                      name="hour_real"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hour_real == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.hour_real}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Valor hora costo"
                     /> 
                   </div>
 
                   <div className="col-md-4">
                   <label>Hora valor cotizada<small className="validate-label">*</small></label>
                     <NumberFormat 
-                      name="viatic_value"
+                      name="hour_cotizada"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hour_cotizada == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.hour_cotizada}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Hora valor cotizada"
                     /> 
                   </div>
 
@@ -203,40 +167,39 @@ class FormCreate extends React.Component {
 
                   <div className="col-md-4">
                   <label>Horas Contratista <small className="validate-label">*</small></label>
-                    <NumberFormat 
-                      name="viatic_value"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                    <input 
+                      name="hours_contractor"
+                      type="number"
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.hours_contractor}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Horas Contratista"
                     /> 
                   </div>
 
                   <div className="col-md-4">
                   <label>Valor hora Costo<small className="validate-label">*</small></label>
                     <NumberFormat 
-                      name="viatic_value"
+                      name="hours_contractor_real"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor_real == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.hours_contractor_real}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Valor hora Costo"
                     /> 
                   </div>
 
                   <div className="col-md-4">
                   <label>Valor hora cotizada<small className="validate-label">*</small></label>
                     <NumberFormat 
-                      name="viatic_value"
+                      name="hours_contractor_invoices"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor_invoices == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.hours_contractor_invoices}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Valor hora cotizada"
                     /> 
                   </div>
 
@@ -250,13 +213,13 @@ class FormCreate extends React.Component {
                   <div className="col-md-4">
                   <label>Valor materiales <small className="validate-label">*</small></label>
                     <NumberFormat 
-                      name="viatic_value"
+                      name="materials_value"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.materials_value == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.materials_value}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Valor materiales"
                     /> 
                   </div>
 
@@ -269,33 +232,22 @@ class FormCreate extends React.Component {
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
                       value={this.props.formValues.viatic_value}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Valor Viaticos"
                     /> 
                   </div>
 
                   <div className="col-md-4">
                   <label>Total Cotizacion<small className="validate-label">*</small></label>
                     <NumberFormat 
-                      name="viatic_value"
+                      name="quotation_value"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.quotation_value == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.quotation_value}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder="Total Cotizacion"
                     /> 
                   </div>
-
-
-
-
-
-
-
-                  
-
-
-
             </div>
 
               {this.props.errorValues == false && (

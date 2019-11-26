@@ -134,7 +134,6 @@ class table extends React.Component {
     fetch(`/get_client/${selectedOption.value}`)
     .then(response => response.json())
     .then(data => {
-      console.log(data)
 
       data.map((item) => (
         array.push({label: item.name, value: item.id})
@@ -149,7 +148,6 @@ class table extends React.Component {
     fetch(`/customer_user/${selectedOption.value}`)
     .then(response => response.json())
     .then(data => {
-      console.log(data)
 
       data.map((item) => (
         arrayCentro.push({label: item.code, value: item.id})
@@ -158,6 +156,7 @@ class table extends React.Component {
       this.setState({
         dataCostCenter: arrayCentro
       })
+      
     });
 
     this.setState({
@@ -166,6 +165,12 @@ class table extends React.Component {
         ...this.state.form,
         customer_id: selectedOption.value
       },
+
+      formContact: {
+        ...this.state.formContact,
+        customer_id: selectedOption.value
+      },
+
 
     });
   };
@@ -221,6 +226,7 @@ class table extends React.Component {
         modeEdit: true,
         ErrorValuesContact: true,
         ErrorValues: true,
+
       });
     } else if (from == "new") {
       this.setState({
@@ -415,7 +421,7 @@ class table extends React.Component {
 
       this.setState({
         action: modulo,
-        title: "Editar a " + modulo.code,
+        title: "Editar Reporte",
         form: {
           customer_id: modulo.customer_id,
           contact_id: modulo.contact_id,
@@ -428,6 +434,16 @@ class table extends React.Component {
           viatic_description: modulo.viatic_description,
           report_code: modulo.report_code,
           user_id: this.props.usuario.id,
+        },
+
+        selectedOption: {
+          customer_id: "",
+          label: `${modulo.customer.name}`
+        },
+
+        selectedOptionContact: {
+          contact_id: "",
+          label: `${modulo.contact.name}`
         },
         
         }

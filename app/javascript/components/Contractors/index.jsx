@@ -23,7 +23,10 @@ class index extends React.Component {
             porc_eje_costo: 0,
 
             facturacion: 0,
-            porc_fac: 0
+            porc_fac: 0,
+
+            sum_materials: 0,
+            sum_contractors: 0
         }
     }
 
@@ -45,7 +48,10 @@ class index extends React.Component {
             porc_eje_costo: data.porc_eje_costo,
 
             facturacion: data.facturacion,
-            porc_fac: data.porc_fac
+            porc_fac: data.porc_fac,
+
+            sum_materials: data.sum_materials,
+            sum_contractors: data.sum_contractors
           });
         });
     }
@@ -177,6 +183,10 @@ class index extends React.Component {
 
                         porc_fac={this.state.porc_fac}
                         facturacion={this.state.facturacion}
+
+                        sum_materials={this.state.sum_materials}
+                        sum_contractors={this.state.sum_contractors}
+                        
                         contractors_state={true}
                         
                     />
@@ -194,6 +204,7 @@ class index extends React.Component {
                                 dataActions={this.state.data} 
                                 cost_center={this.state.data_show}
                                 loadInfo={this.loadDataTable}
+                                loadShow={this.loadData}
                                 usuario={this.props.usuario}
                                 estados={this.props.estados}
                             />

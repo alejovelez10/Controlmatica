@@ -284,7 +284,7 @@ class table extends React.Component {
   }
 
   updateInfo = () => {
-    fetch("/income_details/" + this.state.id, {
+    fetch("/sales_orders/" + this.state.id, {
       method: 'PATCH', // or 'PUT'
       body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
       headers: {
@@ -294,7 +294,6 @@ class table extends React.Component {
       .catch(error => console.error('Error:', error))
       .then(data => {
         this.props.loadInfo()
-        this.props.MessageSucces(data.message, data.type, data.message_error)
 
         this.setState({
           id: "",

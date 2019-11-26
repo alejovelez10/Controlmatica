@@ -23,54 +23,148 @@ class table extends React.Component {
         contact_id: "",
         report_date: "",
         description: "",
-        report_ids: "",
+        report_ids: [],
         user_id: this.props.usuario.id,
       },
+
+      selectedOption: {
+        customer_id: "",
+        label: "Buscar cliente"
+      },
+
+      selectedOptionContact: {
+        contact_id: "",
+        label: "Aprueba el Reporte"
+      },
+
+      selectedOptionCentro: {
+        cost_center_id: "",
+        label: "Centro de costo"
+      },
+
+      selectedOptionReports: {
+        report_ids: "",
+        label: "Reportes"
+      },
+
+      clients: [],
+      dataCostCenter: [],
+      dataReports: [],
+      dataContact: []
 
     };
 
     this.toggle = this.toggle.bind(this);
   }
 
-  validationForm = () => {
-    if (this.state.form.name != "" && 
-        this.state.form.money_value != "" 
-        ) {
-          console.log("los campos estan llenos")
-      this.setState({ ErrorValues: true })
-      return true
-    }else{
-      console.log("los campos no se han llenado")
-      this.setState({ ErrorValues: false })
-      return false
+  handleChangeAutocomplete = selectedOption => {
+    let arrayCentro = []
+    let arrayReport = []
+
+    fetch(`/customer_cost_center/${selectedOption.value}/customer_r`)
+    .then(response => response.json())
+    .then(data => {
+
+      data.data_cost_center.map((item) => (
+        arrayCentro.push({label: item.code, value: item.id})
+      ))
+
+      data.data_reports.map((item) => (
+        arrayReport.push({label: item.code_report, value: item.id})
+      ))
+
+    
+      this.setState({
+        dataCostCenter: arrayCentro,
+        dataReports: arrayReport
+      })
       
-    }
-  }
-
-
-  openModal(name) {
-    if (name == "edit") {
-      this.setState({
-        modeEdit: false
-      });
-    } else {
-
-      this.setState({
-        title: "Nuevo rol",
-        modeEdit: false,
-        form: {
-          name: "",
-          description: "",
-          user_id: this.props.usuario.id,
-          accion_module_ids: []
-        }
-      });
-    }
+    });
 
     this.setState({
-      modalIsOpen: true
+      selectedOption,
+      form: {
+        ...this.state.form,
+        customer_id: selectedOption.value
+      }
     });
+
+  };
+
+  handleChangeAutocompleteReport = selectedOptionReport => {
+    this.setState({
+      selectedOptionReport,
+      form: {
+        ...this.state.form,
+        report_ids: selectedOptionReport.value
+      }
+    });
+  };
+
+  handleChangeAutocompleteCentro = selectedOptionCenter => {
+    this.setState({
+      selectedOptionCenter,
+      form: {
+        ...this.state.form,
+        cost_center_id: selectedOptionCenter.value
+      }
+    });
+  };
+
+  handleChangeAutocompleteContact = selectedOptionContact => {
+    this.setState({
+      selectedOptionContact,
+      form: {
+        ...this.state.form,
+        contact_id: selectedOptionContact.value
+      }
+    });
+  };
+  
+
+  validationForm = () => {
+    if (this.state.form.customer_id != "" && 
+        this.state.form.contact_id != "" &&
+        this.state.form.report_date != "" &&
+        this.state.form.report_execute_id != "" &&
+        this.state.form.working_time != "" &&
+        this.state.form.work_description != "" &&
+        this.state.form.viatic_value != "" 
+      ) {
+            console.log("los campos estan llenos")
+        this.setState({ ErrorValues: true })
+        return true
+    }else{
+        console.log("los campos no se han llenado")
+        this.setState({ ErrorValues: false })
+        return false
+        
+    }
   }
+
+  componentDidMount(){
+    let array = []
+    let arrayContact = []
+
+    this.props.clientes.map((item) => (
+      array.push({label: item.name, value: item.id})
+    ))
+
+    this.setState({
+        clients: array
+    })
+
+
+    this.props.contacts.map((item) => (
+      arrayContact.push({label: item.name, value: item.id})
+    ))
+
+    this.setState({
+      dataContact: arrayContact
+    })
+  
+  }
+
 
   MessageSucces = (name_success, type, error_message) => {
         Swal.fire({
@@ -98,55 +192,81 @@ class table extends React.Component {
 
   HandleClick = e => {
     if (this.validationForm() == true) {
-      fetch("/parameterizations", {
-        method: "POST", // or 'PUT'
-        body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
-          this.props.loadInfo();
-
-          this.MessageSucces(data.message, data.type, data.message_error)
-
-          this.setState({
-            modal: false,
-            form: {
-                customer_id: "",
-                cost_center_id: "",
-                contact_id: "",
-                report_date: "",
-                description: "",
-                report_ids: "",
-                user_id: this.props.usuario.id,
-              },
+      if (this.state.modeEdit == true) {
+        fetch("/reports/" + this.state.action.id, {
+          method: "PATCH", // or 'PUT'
+          body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then(res => res.json())
+          .catch(error => console.error("Error:", error))
+          .then(data => {
+            this.props.loadInfo();
+            this.updateValues()
+            this.MessageSucces(data.message, data.type, data.message_error);
           });
-        });
+
+      } else {
+        fetch("/reports", {
+          method: "POST", // or 'PUT'
+          body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then(res => res.json())
+          .catch(error => console.error("Error:", error))
+          .then(data => {
+            this.props.loadInfo();
+            this.updateValues()
+            this.MessageSucces(data.message, data.type, data.message_error);
+
+          });
+      }
     }
   };
 
   toggle(from) {
-    if(from == "new"){
+    if (from == "edit") {
+      this.setState({ 
+        modeEdit: true,
+        ErrorValues: true,
+
+      });
+    } else if (from == "new") {
       this.setState({
-        title: "Nuevo Informe",
+        modeEdit: false,
+        ErrorValues: true,
+        title: "Nuevo Reporte de cliente",
+
         form: {
-            customer_id: "",
-            cost_center_id: "",
-            contact_id: "",
-            report_date: "",
-            description: "",
-            report_ids: "",
-            user_id: this.props.usuario.id,
-          },
-      })
+          customer_id: "",
+          cost_center_id: "",
+          contact_id: "",
+          report_date: "",
+          description: "",
+          report_ids: "",
+          user_id: this.props.usuario.id,
+        },
+
+      });
+    } else {
+      this.setState({ stateSearch: false });
+      if (this.state.modeEdit === true) {
+        this.setState({ modeEdit: false });
+      } else {
+        this.setState({ modeEdit: true });
+      }
+
     }
+
     this.setState(prevState => ({
       modal: !prevState.modal
     }));
   }
+
 
   delete = id => {
     Swal.fire({
@@ -282,6 +402,32 @@ class table extends React.Component {
           titulo={this.state.title}
           nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
           errorValues={this.state.ErrorValues}
+
+          /* AUTOCOMPLETE CLIENTE */
+
+          clientes={this.state.clients}
+          onChangeAutocomplete={this.handleChangeAutocomplete}
+          formAutocomplete={this.state.selectedOption}
+
+          /* AUTOCOMPLETE CENTRO DE COSTO */
+
+          centro={this.state.dataCostCenter}
+          onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+          formAutocompleteCentro={this.state.selectedOptionCentro}
+
+          /* AUTOCOMPLETE REPORTS */
+
+          reports={this.state.dataReports}
+          onChangeAutocompleteReports={this.handleChangeAutocompleteReport}
+          formAutocompleteReport={this.state.selectedOptionReports}
+
+          /* AUTOCOMPLETE CONTACT */
+
+          contacts={this.state.dataContact}
+          onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+          formAutocompleteContact={this.state.selectedOptionContact}
+
+
         />
 
         <div className="row mb-4">
@@ -292,7 +438,9 @@ class table extends React.Component {
                     </div>
 
                     <div className="col-md-4 text-right">
-                        <a href={"/customer_reports/new"} className="btn btn-secondary">Nuevo Informe</a>
+                      {this.props.estados.create == true && (
+                        <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo Informe</button>
+                      )}
                     </div>
                 </div>
             </div>
@@ -401,7 +549,7 @@ class table extends React.Component {
                   <div className="text-center mt-4 mb-4">
                     <h4>No hay registros</h4>
                       {this.props.estados.create == true && (
-                        <a className="btn btn-secondary mt-3" href={"/customer_reports/new"}>Nuevo Informe</a>
+                        <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo Informe</button>
                       )}
                   </div>
                 </td>
