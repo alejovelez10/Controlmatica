@@ -41,7 +41,7 @@ class FormCreate extends React.Component {
                         name="cost_center_id"
                         value={this.props.formAutocompleteCentro.cost_center_id}
                       />
-                      <label>Cliente <small className="validate-label">*</small></label>
+                      <label>Centro de costo <small className="validate-label">*</small></label>
                       <Select
                         onChange={this.props.onChangeAutocomplete}
                         options={this.props.centro}
@@ -75,7 +75,6 @@ class FormCreate extends React.Component {
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_date == "" ? "error-class" : ""}`}
                       value={this.props.formValues.report_date}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
                     /> 
                   </div>
 
@@ -88,10 +87,13 @@ class FormCreate extends React.Component {
                       <label>Reportes <small className="validate-label">*</small></label>
                       <Select
                         onChange={this.props.onChangeAutocompleteReports}
+                        isMulti
+                        closeMenuOnSelect={false}
+                        name="colors"
+                        defaultValue={[this.props.reports[0], this.props.reports[1]]}
                         options={this.props.reports}
-                        autoFocus={false}
-                        className={`link-form ${this.props.errorValues == false && this.props.formValues.report_ids == "" ? "error-class" : ""}`}
-                        value={this.props.formAutocompleteReport}
+                        className="basic-multi-select"
+                        classNamePrefix="select"
                       />
                   </div>
 
@@ -99,10 +101,10 @@ class FormCreate extends React.Component {
                   <div className="col-md-12 mt-4">
                   <label>Observaciones<small className="validate-label">*</small></label>
                     <textarea 
-                      name="Observaciones"
+                      name="description"
                       rows="6"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.money_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.money_value}
+                      value={this.props.formValues.description}
                       onChange={this.props.onChangeForm}
                       placeholder="Observaciones"
                     /> 

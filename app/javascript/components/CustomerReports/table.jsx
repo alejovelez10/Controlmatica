@@ -3,7 +3,6 @@ import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import FormCreate from "../CustomerReports/FormCreate";
 import NumberFormat from "react-number-format";
-import { endianness } from "os";
 
 class table extends React.Component {
   constructor(props) {
@@ -19,7 +18,7 @@ class table extends React.Component {
 
       form: {
         customer_id: "",
-        cost_center_id: "",
+        cost_center_id: 43,
         contact_id: "",
         report_date: "",
         description: "",
@@ -92,21 +91,28 @@ class table extends React.Component {
   };
 
   handleChangeAutocompleteReport = selectedOptionReport => {
+    let array = []
+  
+    selectedOptionReport.map((item) => (
+      array.push(item.value)
+    ))
+
+    console.log(array)
+
     this.setState({
-      selectedOptionReport,
       form: {
         ...this.state.form,
-        report_ids: selectedOptionReport.value
+        report_ids: array
       }
-    });
+    })
   };
 
-  handleChangeAutocompleteCentro = selectedOptionCenter => {
+  handleChangeAutocompleteCentro = selectedOptionCentro => {
     this.setState({
-      selectedOptionCenter,
+      selectedOptionCentro,
       form: {
         ...this.state.form,
-        cost_center_id: selectedOptionCenter.value
+        cost_center_id: selectedOptionCentro.value
       }
     });
   };
@@ -190,10 +196,44 @@ class table extends React.Component {
     });
   };
 
+  updateValues = () => {
+    this.setState({
+      form: {
+        customer_id: "",
+        cost_center_id: 43,
+        contact_id: "",
+        report_date: "",
+        description: "",
+        report_ids: [],
+        user_id: this.props.usuario.id,
+      },
+
+      selectedOption: {
+        customer_id: "",
+        label: "Buscar cliente"
+      },
+
+      selectedOptionContact: {
+        contact_id: "",
+        label: "Aprueba el Reporte"
+      },
+
+      selectedOptionCentro: {
+        cost_center_id: "",
+        label: "Centro de costo"
+      },
+
+      selectedOptionReports: {
+        report_ids: "",
+        label: "Reportes"
+      },
+    })
+  }
+
   HandleClick = e => {
     if (this.validationForm() == true) {
       if (this.state.modeEdit == true) {
-        fetch("/reports/" + this.state.action.id, {
+        fetch("/customer_reports/" + this.state.action.id, {
           method: "PATCH", // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
@@ -209,7 +249,7 @@ class table extends React.Component {
           });
 
       } else {
-        fetch("/reports", {
+        fetch("/customer_reports", {
           method: "POST", // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
@@ -243,7 +283,7 @@ class table extends React.Component {
 
         form: {
           customer_id: "",
-          cost_center_id: "",
+          cost_center_id: 43,
           contact_id: "",
           report_date: "",
           description: "",
@@ -267,6 +307,39 @@ class table extends React.Component {
     }));
   }
 
+  edit = modulo => {
+    console.log(modulo)
+    if(this.state.modeEdit === true){
+      this.setState({modeEdit: false})
+    }else{
+      this.setState({modeEdit: true})
+    }
+
+    this.toggle("edit")
+
+      this.setState({
+        action: modulo,
+        title: "Editar Reporte",
+          form: {
+            customer_id: modulo.customer_id,
+            cost_center_id: 43,
+            contact_id: modulo.contact_id,
+            report_date: modulo.report_date,
+            description: modulo.description,
+            report_ids: modulo.report_ids,
+            user_id: this.props.usuario.id,
+          },
+
+          selectedOption: {
+            customer_id: "asdasdasdasd",
+            label: "Buscar cliente"
+          },
+        
+        }
+        
+      )
+      
+  };
 
   delete = id => {
     Swal.fire({
@@ -350,7 +423,7 @@ class table extends React.Component {
     })
   }
 
-  /*
+  /*asdasd
     Swal.queue([{
       title: "Estas seguro?",
       text: "Al aceptar se enviara el correo al cliente!",
@@ -375,6 +448,8 @@ class table extends React.Component {
           })
       }
     }])
+
+    asdasd
   */
 
   getState(accion){
@@ -511,7 +586,7 @@ class table extends React.Component {
                           
                             {this.props.estados.edit == true && (
                               <a
-                                href={`/customer_reports/${accion.id}/edit`}
+                                onClick={() => this.edit(accion)}
                                 className="dropdown-item"
                               >
                                 Editar

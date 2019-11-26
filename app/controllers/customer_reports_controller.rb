@@ -85,31 +85,38 @@ class CustomerReportsController < ApplicationController
   # POST /customer_reports
   # POST /customer_reports.json
   def create
-    @customer_report = CustomerReport.new(customer_report_params)
+    @customer_report = CustomerReport.create(customer_report_params)
 
-    respond_to do |format|
-      if @customer_report.save
-        format.html { redirect_to customer_reports_path, notice: "Customer report was successfully created." }
-        format.json { render :show, status: :created, location: @customer_report }
-      else
-        format.html { render :new }
-        format.json { render json: @customer_report.errors, status: :unprocessable_entity }
-      end
+    if @customer_report.save
+      render :json => {
+        message: "¡El Registro fue creado con exito!",
+        type: "success"
+      }
+    else
+      render :json => {
+        message: "¡El Registro no fue creado!",
+        type: "error",
+        message_error: @customer_report.errors.full_messages
+      }
     end
   end
 
   # PATCH/PUT /customer_reports/1
   # PATCH/PUT /customer_reports/1.json
   def update
-    respond_to do |format|
-      if @customer_report.update(customer_report_params)
-        format.html { redirect_to @customer_report, notice: "Customer report was successfully updated." }
-        format.json { render :show, status: :ok, location: @customer_report }
-      else
-        format.html { render :edit }
-        format.json { render json: @customer_report.errors, status: :unprocessable_entity }
-      end
+    if @customer_report.update(customer_report_params) 
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @customer_report.errors.full_messages
+      }
     end
+
   end
 
   # DELETE /customer_reports/1
@@ -165,6 +172,6 @@ class CustomerReportsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def customer_report_params
-    params.require(:customer_report).permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :report_ids => [])
+    params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :report_ids => [])
   end
 end
