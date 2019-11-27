@@ -22,8 +22,8 @@ class HomeController < ApplicationController
     materiales = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Ingreso al modulo").exists?
 
     render :json => {      
-      contractors: (current_user.rol.name == "Administrador" ? true : contractors),
-      materials: (current_user.rol.name == "Administrador" ? true : materials),
+      contractors: (current_user.rol.name == "Administrador" ? true : contatistas),
+      materials: (current_user.rol.name == "Administrador" ? true : materiales),
       sales_orders: (current_user.rol.name == "Administrador" ? true : ordenes)
     }
   end

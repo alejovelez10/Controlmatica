@@ -17,6 +17,7 @@ class Show extends React.Component {
         fetch("/get_roles")
         .then(response => response.json())
         .then(data => {
+            console.log(data)
           this.setState({
             show_btn_materiales: data.materials,
             show_btn_ordenes_compra: data.sales_orders,
@@ -220,6 +221,7 @@ class Show extends React.Component {
 
                                 <div className="col-md-12 background-show">
                                     <div className="row">
+
                                         <div className="col-md-4 text-center">
                                             <strong>Cotizados</strong><br/> 
                                             <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
@@ -229,10 +231,12 @@ class Show extends React.Component {
                                             <strong>Comprados</strong><br/> 
                                             <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
                                         </div>
+
                                         <div className="col-md-4 text-center">   
                                             <strong></strong><br/> 
                                             <span>{this.props.porc_mat}%</span>
                                         </div>
+
                                     </div>
 
                                 </div>
@@ -293,7 +297,7 @@ class Show extends React.Component {
                                 {this.state.show_btn_contratista == true && (
                                     <a 
                                         href={`/cost_centers/contractors/${this.props.data_info.id}`} 
-                                        className={this.props.contractors_state == true ? "btn btn-secondary" : "btn btn-outline-secondary"}>Contratista
+                                        className={this.props.contractors_state == true ? `btn btn-secondary ${this.state.show_btn_materiales == false ? "ml-3" : "" }` : `btn btn-outline-secondary ${this.state.show_btn_materiales == false ? "ml-3" : "" }`}>Contratista
                                     </a>
                                 )}
 

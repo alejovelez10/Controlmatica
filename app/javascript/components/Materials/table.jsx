@@ -310,7 +310,7 @@ class table extends React.Component {
             <thead>
               <tr className="tr-title">
                 <th style={{width:"15%"}}>Fecha de Orden</th>
-                <th style={{width:"10%"}}>Numero de orden</th>
+                <th style={{width:"13%"}}>Numero de orden</th>
                 <th style={{width:"10%"}}>Valor</th>
                 <th style={{width:"35%"}}>Descripción</th>
                 <th style={{width:"15%"}}>Fecha Entrega</th>

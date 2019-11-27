@@ -133,7 +133,7 @@ class CostCentersController < ApplicationController
 
     sum_materials = @cost_center.materials.sum(:amount)  #Material.where(cost_center_id: @cost_center.id).sum(:amount)
 
-    porc_mat =  @cost_center.materials_value > 0 ? ((sum_materials.to_f/@cost_center.materials_value)*100).to_i : "N/A" 
+    porc_mat =  (@cost_center.materials_value != nil ? @cost_center.materials_value : 0 )> 0 ? ((sum_materials.to_f/@cost_center.materials_value)*100).to_i : "N/A" 
 
 
     sum_contractors =  @cost_center.contractors.sum(:ammount)  #Contractor.where(cost_center_id: @cost_center.id).sum(:ammount)
@@ -162,7 +162,7 @@ class CostCentersController < ApplicationController
       sum_materials: sum_materials,
       sum_contractors: sum_contractors,
       
-      porc_mat: porc_mat
+      porc_mat: (porc_mat != nil ? porc_mat : 0)
 
 
       

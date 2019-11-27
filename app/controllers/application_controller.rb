@@ -27,12 +27,19 @@ before_action :configure_permitted_parameters, if: :devise_controller?
     end
 
   def after_sign_in_path_for(resource)
+	reports = ModuleControl.find_by_name("Reportes de servicios")
+    estado = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ingreso al modulo").exists?
+    validate = (current_user.rol.name == "Administrador" ? true : estado)
  
-	  if user_signed_in?
-	      reports_path
-	    else
-	     root_path            
-	  end 
+	if user_signed_in?
+		if validate
+			reports_path
+		else
+			root_path
+		end
+	else
+	    root_path            
+	end 
   end
 
 end

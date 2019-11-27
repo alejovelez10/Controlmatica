@@ -33,7 +33,7 @@ module ApplicationHelper
 			
 
         elsif controller == "reports" && action == "index"
-            card = "<h1>" + " <i class='fas fa-university'></i> Reportes " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+            card = "<h1>" + " <i class='fas fa-university'></i> Reportes de servicios " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
 
         elsif controller == "employed_performance" && action == "show"
             card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Informe de rendimiento" + "</h1>" + "<p>" + "Crea los roles corporativos" + "</p>"
@@ -239,7 +239,7 @@ module ApplicationHelper
 
 
 	def authorization_config
-		authorization_providers && authorization_customers && authorization_parameterizations && authorization_users && authorization_rols
+		authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador"
 	end
 	
 

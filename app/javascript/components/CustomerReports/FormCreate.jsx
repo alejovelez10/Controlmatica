@@ -6,6 +6,13 @@ import Select from "react-select";
 class FormCreate extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      option: [{ label: "nombre", value: "sdaasdadasd"}, { label: "nombre", value: "sdaasdadasd"}]
+    }
+
+    console.log(this.props.editValuesReport)
+
   }
 
   render() {
@@ -89,8 +96,8 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocompleteReports}
                         isMulti
                         closeMenuOnSelect={false}
-                        name="colors"
-                        defaultValue={[this.props.reports[0], this.props.reports[1]]}
+                        name="report_ids"
+                        defaultValue={[this.props.editValuesReport[0], this.props.editValuesReport[1]]}
                         options={this.props.reports}
                         className="basic-multi-select"
                         classNamePrefix="select"

@@ -18,7 +18,7 @@ class table extends React.Component {
 
       form: {
         customer_id: "",
-        cost_center_id: 43,
+        cost_center_id: "",
         contact_id: "",
         report_date: "",
         description: "",
@@ -49,7 +49,8 @@ class table extends React.Component {
       clients: [],
       dataCostCenter: [],
       dataReports: [],
-      dataContact: []
+      dataContact: [],
+      dataReportEdit: []
 
     };
 
@@ -200,7 +201,7 @@ class table extends React.Component {
     this.setState({
       form: {
         customer_id: "",
-        cost_center_id: 43,
+        cost_center_id: "",
         contact_id: "",
         report_date: "",
         description: "",
@@ -227,6 +228,8 @@ class table extends React.Component {
         report_ids: "",
         label: "Reportes"
       },
+
+      modal: false
     })
   }
 
@@ -283,7 +286,7 @@ class table extends React.Component {
 
         form: {
           customer_id: "",
-          cost_center_id: 43,
+          cost_center_id: "",
           contact_id: "",
           report_date: "",
           description: "",
@@ -308,7 +311,17 @@ class table extends React.Component {
   }
 
   edit = modulo => {
-    console.log(modulo)
+    let arrayContact = []
+
+    modulo.reports.map((item) => (
+      arrayContact.push({label: item.code_report, value: item.id})
+    ))
+
+    this.setState({
+      dataReportEdit: arrayContact
+    })
+  
+
     if(this.state.modeEdit === true){
       this.setState({modeEdit: false})
     }else{
@@ -322,7 +335,7 @@ class table extends React.Component {
         title: "Editar Reporte",
           form: {
             customer_id: modulo.customer_id,
-            cost_center_id: 43,
+            cost_center_id: modulo.cost_center_id,
             contact_id: modulo.contact_id,
             report_date: modulo.report_date,
             description: modulo.description,
@@ -331,8 +344,18 @@ class table extends React.Component {
           },
 
           selectedOption: {
-            customer_id: "asdasdasdasd",
-            label: "Buscar cliente"
+            customer_id: modulo.customer_id,
+            label: `${modulo.customer != undefined ? modulo.customer.name : ""}`
+          },
+    
+          selectedOptionContact: {
+            contact_id: modulo.contact_id,
+            label: `${modulo.contact != undefined ? modulo.contact.name : ""}`
+          },
+    
+          selectedOptionCentro: {
+            cost_center_id: modulo.cost_center_id,
+            label: `${modulo.cost_center != undefined ? modulo.cost_center.code : ""}`
           },
         
         }
@@ -500,6 +523,8 @@ class table extends React.Component {
           contacts={this.state.dataContact}
           onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
           formAutocompleteContact={this.state.selectedOptionContact}
+
+          editValuesReport={this.state.dataReportEdit}
 
 
         />
