@@ -19,6 +19,7 @@ class formCreate extends React.Component {
 
               <div className="col-md-6 mb-4">
                 <label>Fecha de generación <small className="validate-label">*</small></label>
+                    <input
                     type="date"
                     name="created_date"
                     value={this.props.formValues.created_date}
