@@ -37,16 +37,19 @@ class CustomerReportsController < ApplicationController
   end
 
   def get_customer_reports
-    customer_reports = ModuleControl.find_by_name("Reportes de clientes")
-    estado = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Ver todos").exists?
+    customer_reports_find = ModuleControl.find_by_name("Reportes de clientes")
+    estado = current_user.rol.accion_modules.where(module_control_id: customer_reports_find.id).where(name: "Ver todos").exists?
     validate = (current_user.rol.name == "Administrador" ? true : estado)
     
     if validate
       if params[:search1] || params[:search2]
         customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10).search(params[:search1], params[:search2]).to_json(:include => [:customer])
+        
       else
         customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10).to_json(:include => [:customer])
       end
+    else 
+      customer_reports = CustomerReport.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json(:include => [:customer])
     end
   
     customer_reports = JSON.parse(customer_reports)
