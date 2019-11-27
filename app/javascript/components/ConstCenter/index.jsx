@@ -25,7 +25,8 @@ class index extends React.Component {
             facturacion: 0,
             porc_fac: 0,
             sum_materials: 0,
-            sum_contractors: 0
+            sum_contractors: 0,
+            porc_mat: 0,
         }
     }
 
@@ -52,7 +53,9 @@ class index extends React.Component {
             porc_fac: data.porc_fac,
 
             sum_materials: data.sum_materials,
-            sum_contractors: data.sum_contractors
+            sum_contractors: data.sum_contractors,
+            porc_mat: data.porc_mat
+
 
           });
 
@@ -178,6 +181,7 @@ class index extends React.Component {
                           facturacion={this.state.facturacion}
 
                           sum_materials={this.state.sum_materials}
+                          porc_mat={this.state.porc_mat}
                           sum_contractors={this.state.sum_contractors}
 
                           sales_orders_state={true}
@@ -199,6 +203,8 @@ class index extends React.Component {
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
                                 estados={this.props.estados}
+                                hours_real={this.props.hours_real}
+                                hours_invoices={this.props.hours_invoices}
                             />
 
                         ) : (

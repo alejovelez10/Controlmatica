@@ -59,9 +59,9 @@ class FormCreate extends React.Component {
                           onChange={this.props.onChangeForm}
                         >
                           <option value="">Seleccione un tipo</option>
-                          <option value="Servicio">Servicio</option>
-                          <option value="Venta">Venta</option>
-                          <option value="Proyecto">Proyecto</option>
+                          <option value="SERVICIO">SERVICIO</option>
+                          <option value="VENTA">VENTA</option>
+                          <option value="PROYECTO">PROYECTO</option>
                       </select> 
                   </div>
 

@@ -1,8 +1,8 @@
 // Place all the styles related to the home controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
-
-
+@import url('https://fonts.googleapis.com/css?family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Orbitron|Poppins&display=swap');
 .order{
     background: whitesmoke;
     padding: 10px;
@@ -47,7 +47,7 @@
   }
 
   .title1 {
-    background: #2a3f54;
+    background: #4b5e71;
     color: white;
   }
 
@@ -192,4 +192,24 @@ input[type="file"] label{
     opacity: 0;
     -moz-opacity: 0;
     filter:progid:DXImageTransform.Microsoft.Alpha(opacity=0);
+}
+
+.table th{
+
+  font-weight: initial !important;
+}
+
+.image-logo{
+  width: 33px;
+  margin-top: 1px;
+  
+}
+.logo-text{
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+}
+.text-logo{
+  text-shadow:2px 2px #FF0000;
+  color: black;
 }

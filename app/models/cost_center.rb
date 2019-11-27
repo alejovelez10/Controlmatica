@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
+#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
-#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -29,6 +29,9 @@
 #  hours_contractor_real     :float
 #  materials_value           :float
 #  user_id                   :integer
+#  sum_materials             :string
+#  sum_contractors           :string
+#  sum_executed              :string
 #
 
 class CostCenter < ApplicationRecord
@@ -42,7 +45,7 @@ class CostCenter < ApplicationRecord
   belongs_to :customer, optional: :true
   belongs_to :contact, optional: :true
   belongs_to :user, optional: :true
-  
+
   before_create :create_code
   before_update :change_state
 
@@ -55,6 +58,11 @@ class CostCenter < ApplicationRecord
   end
 
   def create_code
+    self.sum_executed = 0
+    self.sum_contractors = 0
+    self.sum_materials = 0
+    self.sum_viatic = 0
+
     count = CostCenter.where(service_type: self.service_type).where(customer_id: self.customer_id).maximum(:count)
     customer_prefix = Customer.find(self.customer_id).code
     self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1

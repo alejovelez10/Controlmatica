@@ -13,7 +13,7 @@
 #  total_value        :float
 #  cost_center_id     :integer
 #  report_execute_id  :integer
-#  report_code        :string
+#  report_code        :integer
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  code_report        :string
@@ -86,16 +86,16 @@ class Report < ApplicationRecord
       CostCenter.find(self.cost_center_id).update(execution_state: "EJECUCION")
     end
 
-    if self.contact_id == nil
-      Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
-    else
-      contact = Contact.find(self.contact_id)
-      self.contact_name = contact.name
-      self.contact_position = contact.position
-      self.contact_email = contact.email
-      self.contact_phone = contact.phone
-      CostCenter.last.update(contact_id: contact.id)
-    end
+    #if self.contact_id == nil
+      #Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
+    #else
+      #contact = Contact.find(self.contact_id)
+      #self.contact_name = contact.name
+      #self.contact_position = contact.position
+      #self.contact_email = contact.email
+      #self.contact_phone = contact.phone
+      #CostCenter.last.update(contact_id: contact.id)
+    #end
   end
 
   def save_report_in_cost_center

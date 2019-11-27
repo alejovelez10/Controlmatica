@@ -12,7 +12,7 @@ class CostCentersController < ApplicationController
     else
       @cost_centers = CostCenter.all.paginate(:page => params[:page], :per_page => 10)
     end
-
+    
     cost_centers = ModuleControl.find_by_name("Centro de Costos")
 
     create = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Crear").exists?
@@ -20,6 +20,9 @@ class CostCentersController < ApplicationController
     delete = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Eliminar").exists?
     manage_module = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Gestionar modulo").exists?
     ending = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar").exists?
+
+    @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
+    @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -53,7 +56,10 @@ class CostCentersController < ApplicationController
     #via_real = cost_center.reports.sum(:viatic_value)
   
 
-    @cost_centers =  @cost_centers.to_json( :include => [:customer] )
+    @cost_centers =  @cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] } })
+
+    
+
     @cost_centers = JSON.parse(@cost_centers)
     render :json => {cost_centers_paginate: @cost_centers, cost_centers_total: @cost_centers_total }
   end
@@ -126,6 +132,10 @@ class CostCentersController < ApplicationController
     cost_center = @cost_center.to_json( :include => { :customer => { :only =>[:name] }, :contact => { :only =>[:name] } })
 
     sum_materials = @cost_center.materials.sum(:amount)  #Material.where(cost_center_id: @cost_center.id).sum(:amount)
+
+    porc_mat =  @cost_center.materials_value > 0 ? ((sum_materials.to_f/@cost_center.materials_value)*100).to_i : "N/A" 
+
+
     sum_contractors =  @cost_center.contractors.sum(:ammount)  #Contractor.where(cost_center_id: @cost_center.id).sum(:ammount)
 
 
@@ -150,7 +160,11 @@ class CostCentersController < ApplicationController
       facturacion: facturacion,
       porc_fac: porc_fac,
       sum_materials: sum_materials,
-      sum_contractors: sum_contractors
+      sum_contractors: sum_contractors,
+      
+      porc_mat: porc_mat
+
+
       
     }
     
@@ -212,21 +226,13 @@ class CostCentersController < ApplicationController
 
   # POST /cost_centers
   # POST /cost_centers.json
-  def create
-    @cost_center = CostCenter.new(cost_center_params)
-   
-    respond_to do |format|
-      if @cost_center.save
-        format.html { redirect_to @cost_center, notice: 'Cost center was successfully created.' }
-        format.json { render :show, status: :created, location: @cost_center }
-      else
-        format.html { render :new }
-        format.json { render json: @cost_center.errors, status: :unprocessable_entity }
-      end
-    end
-  end
+
 
   def create
+
+
+
+
     if params["viatic_value"].present?
       valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
       params["viatic_value"] = valor1
@@ -240,13 +246,17 @@ class CostCentersController < ApplicationController
 
 
     if params["hour_real"].present?
-      valor3 = cost_center_params["hour_real"].gsub('$','').gsub(',','')
-      params["hour_real"] = valor3
+      if cost_center_params["hour_real"].class.to_s != "Integer" 
+        valor3 = cost_center_params["hour_real"].gsub('$','').gsub(',','')
+        params["hour_real"] = valor3
+      end
     end
 
     if params["hour_cotizada"].present?
-      valor4 = cost_center_params["hour_cotizada"].gsub('$','').gsub(',','')
-      params["hour_cotizada"] = valor4
+      if cost_center_params["hour_cotizada"].class.to_s != "Integer" 
+        valor4 = cost_center_params["hour_cotizada"].gsub('$','').gsub(',','')
+        params["hour_cotizada"] = valor4
+      end
     end
 
     if params["hours_contractor_real"].present?

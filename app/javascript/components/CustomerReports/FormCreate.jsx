@@ -11,7 +11,7 @@ class FormCreate extends React.Component {
   render() {
     return (
       <React.Fragment>
-        <Modal returnFocusAfterClose={true} isOpen={this.props.modal} className="modal-dialog-centered" toggle={this.props.toggle} backdrop={this.props.backdrop}>
+        <Modal returnFocusAfterClose={true} isOpen={this.props.modal} className="modal-lg modal-dialog-centered" toggle={this.props.toggle} backdrop={this.props.backdrop}>
           <ModalHeader className="title-modal" toggle={this.props.toggle}> <i className="app-menu__icon fa fa-street-view mr-2"></i> {this.props.titulo} </ModalHeader>
 
           <form onSubmit={this.props.FormSubmit}>
@@ -43,7 +43,7 @@ class FormCreate extends React.Component {
                       />
                       <label>Centro de costo <small className="validate-label">*</small></label>
                       <Select
-                        onChange={this.props.onChangeAutocomplete}
+                        onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}
                         autoFocus={false}
                         className={`link-form ${this.props.errorValues == false && this.props.formValues.customer_id == "" ? "error-class" : ""}`}

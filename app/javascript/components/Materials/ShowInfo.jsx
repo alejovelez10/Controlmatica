@@ -26,12 +26,12 @@ class ShowInfo extends React.Component {
               <div className="row">
 
                 <div className="col-md-4 mb-4">
-                    <h6 className="colorTitle">Fecha de venta</h6>
+                    <h6 className="colorTitle">Fecha Orden</h6>
                     <p className="mb-0">{this.props.infoShow.sales_date}</p>
                 </div>
 
                 <div className="col-md-4 mb-4">
-                    <h6 className="colorTitle">Numero de ordenes</h6>
+                    <h6 className="colorTitle">Numero de orden</h6>
                     <p className="mb-0">{this.props.infoShow.sales_number}</p>
                 </div>
 
@@ -52,12 +52,12 @@ class ShowInfo extends React.Component {
                 </div>
 
                 <div className="col-md-4 mb-4">
-                    <h6 className="colorTitle">Proveedor número de factura</h6>
+                    <h6 className="colorTitle">Número de factura</h6>
                     <p className="mb-0">{this.props.infoShow.provider_invoice_number}</p>
                 </div>
 
                 <div className="col-md-4 mb-4">
-                    <h6 className="colorTitle">Valor de factura del proveedor</h6>
+                    <h6 className="colorTitle">Valor de factura </h6>
                     <p className="mb-0"><NumberFormat value={this.props.infoShow.provider_invoice_value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></p>
                 </div>
 

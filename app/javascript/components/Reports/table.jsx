@@ -176,6 +176,7 @@ class table extends React.Component {
   };
 
   handleChangeAutocompleteContact = selectedOptionContact => {
+    console.log("hola soy contact");
     this.setState({
       selectedOptionContact,
       form: {
@@ -185,12 +186,13 @@ class table extends React.Component {
     });
   };
 
-  handleChangeAutocompleteCentro = selectedOptionCenter => {
+  handleChangeAutocompleteCentro = selectedOptionCentro => {
+    console.log("hola soy center");
     this.setState({
-      selectedOptionCenter,
+      selectedOptionCentro,
       form: {
         ...this.state.form,
-        cost_center_id: selectedOptionCenter.value
+        cost_center_id: selectedOptionCentro.value
       }
     });
   };

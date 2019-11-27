@@ -65,55 +65,22 @@ class FormCreate extends React.Component {
                         value={this.props.formAutocompleteCentro}
                       />
                   </div>
-
-                  <div className="col-md-4 mt-4">
-                    <label>Fecha del reporte <small className="validate-label">*</small></label>
-                      <input
-                        type="date"
-                        name="report_date"
-                        value={this.props.formValues.report_date}
-                        onChange={this.props.onChangeForm}
-                        className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_date == "" ? "error-class" : ""}`}
-                        autoComplete="off"
-                      />
-                  </div>
-
-                  <div className="col-md-4 mt-4">
-                    <label>Responsable de Ejecucion</label>
-
-                    <select 
-                      name="report_execute_id" 
-                      value={this.props.formValues.report_execute_id}
-                      onChange={this.props.onChangeForm}
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_execute_id == "" ? "error-class" : ""}`}
-                    >
-                      <option value="">Seleccione un nombre</option>
-                      {
-                        this.props.users.map(item => (
-                            <React.Fragment>
-                                <option value={item.id}>{item.names}</option>
-                            </React.Fragment>
-                        ))
-                      }
-                  </select> 
-                </div>
-                
-                
-                  <div className="col-md-4 mt-4 text-center">
+                  <div className="col-md-4 text-center"></div>
+                  
+                  <div className="col-md-4 ">
                     {this.props.create_state == false && (
                         <a data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                            Si no tiene contacto ingresalo manualmente
+                            Crear contacto
                         </a>
                     )}
                   </div>
+                  <div className="col-md-4 mt-4 text-center"></div>
+
 
                   {this.props.create_state == false && (
                     <div className="collapse col-md-12" id="collapseExample">
                         <div className="row">
 
-                            <div className="col-md-12 mt-4">
-                                <hr/>
-                            </div>
 
                             <div className="col-md-4 mt-4">
                                 <label>Nombre del Contacto</label>
@@ -166,12 +133,51 @@ class FormCreate extends React.Component {
                             </div>
 
                             <div className="col-md-8 text-right">
-                                <label className="btn btn-secondary mt-5 mb-0" onClick={this.props.FormSubmitContact}>{this.props.nameSubmit}</label>
+                                <label className="btn btn-secondary mt-5 mb-0" onClick={this.props.FormSubmitContact}>{this.props.nameSubmit} Contacto</label>
                             </div>
 
                         </div>
                     </div>
                   )}
+                  <div className="col-md-12">
+                                <hr/>
+                            </div>
+
+                  <div className="col-md-4 mt-4">
+                    <label>Fecha del reporte <small className="validate-label">*</small></label>
+                      <input
+                        type="date"
+                        name="report_date"
+                        value={this.props.formValues.report_date}
+                        onChange={this.props.onChangeForm}
+                        className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_date == "" ? "error-class" : ""}`}
+                        autoComplete="off"
+                      />
+                  </div>
+
+                  <div className="col-md-4 mt-4">
+                    <label>Responsable de Ejecucion</label>
+
+                    <select 
+                      name="report_execute_id" 
+                      value={this.props.formValues.report_execute_id}
+                      onChange={this.props.onChangeForm}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_execute_id == "" ? "error-class" : ""}`}
+                    >
+                      <option value="">Seleccione un nombre</option>
+                      {
+                        this.props.users.map(item => (
+                            <React.Fragment>
+                                <option value={item.id}>{item.names}</option>
+                            </React.Fragment>
+                        ))
+                      }
+                  </select> 
+                </div>
+                
+                
+                 
+               
 
                   
                   <div className="col-md-12 mt-4">
@@ -187,7 +193,7 @@ class FormCreate extends React.Component {
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.working_time == "" ? "error-class" : ""}`}
                       value={this.props.formValues.working_time}
                       onChange={this.props.onChangeForm}
-                      placeholder="Valor monetario"
+                      placeholder=""
                     /> 
                   </div>
 

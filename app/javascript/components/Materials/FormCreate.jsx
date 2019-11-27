@@ -18,7 +18,7 @@ class FormCreate extends React.Component {
               <div className="row">
 
               <div className="col-md-4 mb-4">
-                <label>Fecha de venta <small className="validate-label">*</small></label>
+                <label>Fecha de orden <small className="validate-label">*</small></label>
                   <input
                     type="date"
                     name="sales_date"
@@ -29,14 +29,14 @@ class FormCreate extends React.Component {
                 </div>
                 
                 <div className="col-md-4 mb-4">
-                <label>Numero de ordenes <small className="validate-label">*</small></label>
+                <label>Numero de orden <small className="validate-label">*</small></label>
                   <input
-                    type="number"
+                    type="text"
                     name="sales_number"
                     value={this.props.formValues.sales_number}
                     onChange={this.props.onChangeForm}
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.sales_number == "" ? "error-class" : ""}`}
-                    placeholder="Cantidad"
+                    placeholder="Numero de orden"
                   />
                 </div>
 
@@ -49,12 +49,12 @@ class FormCreate extends React.Component {
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.amount == "" ? "error-class" : ""}`}
                     value={this.props.formValues.amount}
                     onChange={this.props.onChangeForm}
-                    placeholder="Valor total"
+                    placeholder="Valor"
                   /> 
                 </div>
 
                 <div className="col-md-4 mb-4">
-                <label>Fecha de entrega <small className="validate-label">*</small></label>
+                <label>Fecha estimada de entrega <small className="validate-label">*</small></label>
                   <input
                     type="date"
                     name="delivery_date"
@@ -86,20 +86,20 @@ class FormCreate extends React.Component {
 
 
                 <div className="col-md-4 mb-4">
-                <label>Proveedor número de factura<small className="validate-label">*</small></label>
-                  <NumberFormat 
+                <label>Numero de factura <small className="validate-label">*</small></label>
+                  <input 
                     name="provider_invoice_number"
                     thousandSeparator={true} 
-                    prefix={'$'} 
+                  
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.provider_invoice_number == "" ? "error-class" : ""}`}
                     value={this.props.formValues.provider_invoice_number}
                     onChange={this.props.onChangeForm}
-                    placeholder="Valor total"
+                    placeholder="Numero facura"
                   /> 
                 </div>
 
                 <div className="col-md-4 mb-4">
-                <label>Valor de factura del proveedor<small className="validate-label">*</small></label>
+                <label>Valor de factura<small className="validate-label">*</small></label>
                   <NumberFormat 
                     name="provider_invoice_value"
                     thousandSeparator={true} 

@@ -29,8 +29,8 @@ class tableIndex extends React.Component {
           execution_state: "PENDIENTE",
 
           eng_hours: "",
-          hour_real: "",
-          hour_cotizada: "",
+          hour_real: this.props.hours_real,
+          hour_cotizada: this.props.hours_invoices,
 
 
           hours_contractor: "",
@@ -44,7 +44,7 @@ class tableIndex extends React.Component {
 
         selectedOption: {
           customer_id: "",
-          label: "Buscar cliente"
+          label: "Seleccionar cliente"
         },
 
         selectedOptionContact: {
@@ -177,8 +177,8 @@ class tableIndex extends React.Component {
           execution_state: "PENDIENTE",
 
           eng_hours: "",
-          hour_real: "",
-          hour_cotizada: "",
+          hour_real: this.props.hours_real,
+          hour_cotizada: this.props.hours_invoices,
 
 
           hours_contractor: "",
@@ -236,8 +236,8 @@ class tableIndex extends React.Component {
                 execution_state: "PENDIENTE",
       
                 eng_hours: "",
-                hour_real: "",
-                hour_cotizada: "",
+                hour_real: this.props.hours_real,
+                hour_cotizada: this.props.hours_invoices,
       
       
                 hours_contractor: "",
@@ -251,7 +251,7 @@ class tableIndex extends React.Component {
 
               selectedOption: {
                 customer_id: "",
-                label: "Buscar cliente"
+                label: "Selecciona cliente"
               },
       
               selectedOptionContact: {
@@ -389,6 +389,14 @@ class tableIndex extends React.Component {
     this.toggle("edit")
 
       this.setState({
+        selectedOption: {
+          value: modulo.customer_id,
+          label: modulo.customer.name
+        },
+        selectedOptionContact: {
+          value: modulo.contact.customer_id,
+          label: modulo.contact.name
+        },
         action: modulo,
         title: "Editar Centro de costo",
         form: {
@@ -475,6 +483,7 @@ class tableIndex extends React.Component {
           contacto={this.state.dataContact}
           onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
           formAutocompleteContact={this.state.selectedOptionContact}
+          
 
           
         />
@@ -513,7 +522,7 @@ class tableIndex extends React.Component {
                     <th style={{width: "60px"}} className="text-center">Acciones</th>
                     <th>Codigo</th>
                     <th>Cliente</th>
-                    <th>Tipo de Servicio</th>
+                    <th>Tipo</th>
                     <th>Descripcion</th>
                     <th>Número de cotización</th>
                     <th>$ Ingeniería Cotizado</th>
@@ -579,9 +588,9 @@ class tableIndex extends React.Component {
                         <th>{accion.description}</th>
                         <th>{accion.quotation_number}</th>
                         <th><NumberFormat value={accion.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th>{accion.id}</th>
+                        <th><NumberFormat value={accion.sum_executed} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th>{accion.id}</th>
+                        <th><NumberFormat value={accion.sum_viatic} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
 
                         {this.props.estados.ending == true && (
                           <th>
@@ -594,7 +603,8 @@ class tableIndex extends React.Component {
                       </tr>
                     ))
                   ) : (
-                    <td colSpan="8" className="text-center">
+                    <tr>
+                    <td colSpan="13" className="text-center">
                         <div className="text-center mt-1 mb-1">
                         <h4>No hay registros</h4>
                         {this.props.estados.create == true && (
@@ -602,6 +612,7 @@ class tableIndex extends React.Component {
                         )}
                         </div>
                     </td>
+                    </tr>
                   )}
                   
                 </tbody>

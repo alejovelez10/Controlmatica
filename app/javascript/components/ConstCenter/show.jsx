@@ -33,7 +33,15 @@ class Show extends React.Component {
 
                         <div className="col-md-12">
                             <div className="row">
-
+                            <div className="col-md-12 text-center">
+                                  
+                                  <h5>{this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."} / {this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."} ({this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."})</h5>
+                              </div>
+                            </div>
+                            <hr/>
+                            <div className="row">
+                          
+                      
                                 <div className="col-md-3 text-center">
                                     <strong> Estado Ejecucion</strong> <br/>
                                     <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
@@ -44,20 +52,9 @@ class Show extends React.Component {
                                     <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
                                 </div>
 
-                                <div className="col-md-3 text-center">
-                                    <strong>Tipo</strong><br/>
-                                    <p>{this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."}</p>
-                                </div>
+                           
 
-                                <div className="col-md-3 text-center">
-                                    <strong>Codigo</strong><br/>
-                                    <p>{this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."}</p>
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Cliente</strong> <br/>
-                                    <p>{this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."}</p>
-                                </div>
+                               
 
                                 <div className="col-md-3 text-center">
                                     <strong>Contacto</strong><br/>
@@ -80,11 +77,6 @@ class Show extends React.Component {
                                 </div>
 
                                 <div className="col-md-3 text-center">
-                                    <strong>Horas Trabajadas</strong><br/>
-                                    <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "CARGANDO.."}</p>
-                                </div>
-
-                                <div className="col-md-3 text-center">
                                     <strong>Descripción</strong><br/>
                                     <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "CARGANDO.."}</p>
                                 </div>
@@ -101,7 +93,7 @@ class Show extends React.Component {
      
                             <div className="col-md-6 mb-4">
                                 <div className="col-md-12 title1 text-center">
-                                    <strong>Ingenieria</strong><br/> 
+                                    <strong>Ingenieria(Horas)</strong><br/> 
                                 </div>
                     
                 
@@ -111,12 +103,12 @@ class Show extends React.Component {
                                     <div className="row">
                                         <div className="col-md-4 text-center">
                                             <strong>Cotizado</strong><br/> 
-                                            <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} (horas)</span>
+                                            <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} </span>
                                         </div>
 
                                         <div className="col-md-4 text-center">
                                             <strong>Ejecutado</strong><br/> 
-                                            <span>{this.props.horas_eje/*<%= horas_eje %> */}  (horas)</span>
+                                            <span>{this.props.horas_eje/*<%= horas_eje %> */} </span>
                                         </div>
 
                                         <div className="col-md-4 text-center">
@@ -162,7 +154,7 @@ class Show extends React.Component {
      
                             <div className="col-md-6">
                                 <div className="col-md-12 title1 text-center">
-                                    <strong>Costos</strong><br/>
+                                    <strong>Ingenieria($)</strong><br/>
                                 </div>
 
 
@@ -228,14 +220,18 @@ class Show extends React.Component {
 
                                 <div className="col-md-12 background-show">
                                     <div className="row">
-                                        <div className="col-md-6 text-center">
+                                        <div className="col-md-4 text-center">
                                             <strong>Cotizados</strong><br/> 
                                             <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
                                         </div>
 
-                                        <div className="col-md-6 text-center">   
+                                        <div className="col-md-4 text-center">   
                                             <strong>Comprados</strong><br/> 
                                             <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                        </div>
+                                        <div className="col-md-4 text-center">   
+                                            <strong></strong><br/> 
+                                            <span>{this.props.porc_mat}%</span>
                                         </div>
                                     </div>
 
@@ -253,13 +249,17 @@ class Show extends React.Component {
 
                                 <div className="col-md-12 background-show">
                                     <div className="row">
-                                        <div className="col-md-6 text-center">
+                                        <div className="col-md-4 text-center">
                                             <strong>Cotizado</strong><br/> 
                                             <span><NumberFormat value={this.props.data_info.hours_contractor_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
                                         </div>
-
-                                        <div className="col-md-6 text-center">   
+                                        <div className="col-md-4 text-center">   
                                             <strong>Real</strong><br/> 
+                                            <span><NumberFormat value={this.props.sum_contractors} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                        </div>
+
+                                        <div className="col-md-4 text-center">   
+                                        <strong></strong><br/> 
                                             <span><NumberFormat value={this.props.sum_contractors} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
                                         </div>
                                     </div>

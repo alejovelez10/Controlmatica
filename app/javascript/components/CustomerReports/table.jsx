@@ -210,7 +210,7 @@ class table extends React.Component {
 
       selectedOption: {
         customer_id: "",
-        label: "Buscar cliente"
+        label: "Seleccionar cliente"
       },
 
       selectedOptionContact: {
@@ -398,7 +398,6 @@ class table extends React.Component {
         Swal.fire({
           title: 'Enviando...',
           html: 'El correo se estan enviando, espera <b></b> minutos',
-          timer: 4300,
           timerProgressBar: true,
           onBeforeOpen: () => {
             Swal.showLoading()
