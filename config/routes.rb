@@ -56,14 +56,14 @@ Rails.application.routes.draw do
   get "get_reports", to: "reports#get_reports"
   get "get_rols", to: "rols#get_rols"
 
-  get "get_contractors/:id", to: "cost_centers#get_contractors"
-  get "get_materials/:id", to: "cost_centers#get_materials"
+  get "get_contractors", to: "contractors#get_contractors"
+  get "get_materials", to: "materials#get_materials"
 
   get "get_accions", to: "accion_modules#get_accions", as: "get_accions"
   get "get_accion_modules/:id", to: "module_controls#get_accion_modules", as: "get_accion_modules"
 
   get "cost_centers/materials/:id", to: "cost_centers#materials"
-  get "cost_centers/contractors/:id", to: "cost_centers#contractors"
+  get "contractors", to: "cost_centers#contractors"
   get "get_roles", to: "home#get_roles"
 
   get "modules", to: "module_controls#get_actions", as: "modules"

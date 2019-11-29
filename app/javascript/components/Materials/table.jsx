@@ -31,8 +31,16 @@ class table extends React.Component {
         provider_invoice_number: "",
         provider_invoice_value: "",
         user_id: this.props.usuario.id,
-        cost_center_id: this.props.cost_center.id
-      }
+        cost_center_id: ""
+      },
+
+      selectedOptionCentro: {
+        cost_center_id: "",
+        label: "Centro de costo"
+      },
+
+      dataCostCenter: []
+
     };
 
     this.toggle = this.toggle.bind(this);
@@ -49,6 +57,28 @@ class table extends React.Component {
       title: name_success,
       showConfirmButton: false,
       timer: 1500
+    });
+  };
+
+  componentDidMount(){
+    let array = []
+
+    this.props.cost_center.map((item) => (
+      array.push({label: item.code, value: item.id})
+    ))
+
+    this.setState({
+      dataCostCenter: array
+    })
+  }
+
+  handleChangeAutocompleteCentro = selectedOptionCentro => {
+    this.setState({
+      selectedOptionCentro,
+      form: {
+        ...this.state.form,
+        cost_center_id: selectedOptionCentro.value
+      }
     });
   };
 
@@ -95,7 +125,6 @@ class table extends React.Component {
           .catch(error => console.error("Error:", error))
           .then(data => {
             this.props.loadInfo();
-            this.props.loadShow();
             this.MessageSucces(data.message, data.type, data.message_error);
 
             this.setState({
@@ -111,7 +140,7 @@ class table extends React.Component {
                 provider_invoice_number: "",
                 provider_invoice_value: "",
                 user_id: this.props.usuario.id,
-                cost_center_id: this.props.cost_center.id
+                ccost_center_id: ""
               }
             });
           });
@@ -127,7 +156,6 @@ class table extends React.Component {
           .catch(error => console.error("Error:", error))
           .then(data => {
             this.props.loadInfo();
-            this.props.loadShow();
 
             this.MessageSucces(data.message, data.type, data.message_error);
 
@@ -144,7 +172,7 @@ class table extends React.Component {
                 provider_invoice_number: "",
                 provider_invoice_value: "",
                 user_id: this.props.usuario.id,
-                cost_center_id: this.props.cost_center.id
+                cost_center_id: ""
               }
             });
           });
@@ -175,8 +203,14 @@ class table extends React.Component {
         provider_invoice_number: modulo.provider_invoice_number,
         provider_invoice_value: modulo.provider_invoice_value,
         user_id: this.props.usuario.id,
-        cost_center_id: this.props.cost_center.id
-      }
+        cost_center_id: modulo.cost_center_id
+      },
+
+      selectedOptionCentro: {
+        cost_center_id: modulo.cost_center_id,
+        label: `${modulo.cost_center != undefined ? modulo.cost_center.code : ""}`
+      },
+
     });
   };
 
@@ -198,7 +232,7 @@ class table extends React.Component {
           provider_invoice_number: "",
           provider_invoice_value: "",
           user_id: this.props.usuario.id,
-          cost_center_id: this.props.cost_center.id
+          cost_center_id: ""
         }
       });
     } else {
@@ -235,7 +269,6 @@ class table extends React.Component {
           .then(response => response.json())
           .then(response => {
             this.props.loadInfo();
-            this.props.loadShow();
 
             Swal.fire(
               "Borrado!",
@@ -269,6 +302,15 @@ class table extends React.Component {
             </div>
 
             <div className="col-md-4 text-right mt-1 mb-1">
+              
+              <button
+                className="btn btn-light mr-3"
+                onClick={this.props.show}
+                disabled={this.props.dataActions.length >= 1 ? false : true}
+              >
+                Filtros <i className="fas fa-search ml-2"></i>
+              </button>
+
               {this.props.estados.create == true && (
                 <button
                   type="button"
@@ -295,6 +337,13 @@ class table extends React.Component {
           errorValues={this.state.ErrorValues}
           modeEdit={this.state.modeEdit}
           providers={this.props.providers}
+
+          /* AUTOCOMPLETE CENTRO DE COSTO */
+
+          centro={this.state.dataCostCenter}
+          onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+          formAutocompleteCentro={this.state.selectedOptionCentro}
+          
         />
 
         <ShowInfo
@@ -309,10 +358,12 @@ class table extends React.Component {
           <table className="table table-hover table-bordered" id="sampleTable">
             <thead>
               <tr className="tr-title">
-                <th style={{width:"15%"}}>Fecha de Orden</th>
-                <th style={{width:"13%"}}>Numero de orden</th>
+                <th style={{width:"15%"}}>Centro de costo</th>
+                <th style={{width:"15%"}}>Proveedor</th>
+                <th style={{width:"16%"}}>Numero de orden</th>
                 <th style={{width:"10%"}}>Valor</th>
-                <th style={{width:"35%"}}>Descripción</th>
+                <th style={{width:"19%"}}>Descripción</th>
+                <th style={{width:"15%"}}>Fecha de Orden</th>
                 <th style={{width:"15%"}}>Fecha Entrega</th>
                 <th style={{ width: "5%" }} className="text-center">
                   Acciones
@@ -324,28 +375,13 @@ class table extends React.Component {
               {this.props.dataActions.length >= 1 ? (
                 this.props.dataActions.map(accion => (
                   <tr key={accion.id}>
-                    <td>
-                      <p>{accion.sales_date}</p>
-                    </td>
-
-                    <td>
-                      <p>{accion.sales_number}</p>
-                    </td>
-
-                    <td>
-                      <NumberFormat
-                        value={accion.amount}
-                        displayType={"text"}
-                        thousandSeparator={true}
-                        prefix={"$"}
-                      />
-                    </td>
-                    <td>
-                      <p>{accion.description}</p>
-                    </td>
-                    <td>
-                    <p>{accion.delivery_date}</p>
-                    </td>
+                    <td>{accion.cost_center.code}</td>
+                    <td>{accion.provider.name}</td>
+                    <td>{accion.sales_number}</td>
+                    <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                    <td>{accion.description}</td>
+                    <td>{accion.sales_date}</td>
+                    <td>{accion.delivery_date}</td>
                   
 
                     <td className="text-center" style={{ width: "10px" }}>

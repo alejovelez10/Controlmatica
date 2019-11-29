@@ -16,6 +16,7 @@
 
 class Provider < ApplicationRecord
 	has_many :contacts , inverse_of: :provider, dependent: :destroy
+	has_many :materials
 	accepts_nested_attributes_for :contacts, :allow_destroy => true
 
 	def self.search(search1)

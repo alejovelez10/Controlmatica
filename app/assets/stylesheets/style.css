@@ -489,6 +489,7 @@ mark,
 .treeview-menu {
     padding-left: 0;
     list-style: none;
+    padding: 0px !important;
 }
 
 .list-inline {
@@ -12590,7 +12591,7 @@ be a descendant of the grid when it is being dragged.
     .sidebar-mini.sidenav-toggled .treeview-menu {
         position: absolute;
         left: 50px;
-        min-width: 180px;
+        min-width: 220px;
         padding: 12px 0;
         opacity: 0;
         border-bottom-right-radius: 4px;

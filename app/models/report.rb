@@ -13,7 +13,7 @@
 #  total_value        :float
 #  cost_center_id     :integer
 #  report_execute_id  :integer
-#  report_code        :integer
+#  report_code        :string
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  code_report        :string

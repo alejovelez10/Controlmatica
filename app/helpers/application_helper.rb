@@ -24,13 +24,12 @@ module ApplicationHelper
 		
 		
 		
-		elsif controller == "cost_centers" && action == "materials"
-			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde materiales" + "</p>"
+		elsif controller == "materials" && action == "index"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Materiales " + "</h1>" + "<p>" + "añde materiales" + "</p>"
 
-		elsif controller == "cost_centers" && action == "contractors"
-			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde contratistas" + "</p>"
-
-			
+		elsif controller == "contractors" && action == "index"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion de Tableristas " + "</h1>" + "<p>" + "añde contratistas" + "</p>"
+	
 
         elsif controller == "reports" && action == "index"
             card = "<h1>" + " <i class='fas fa-university'></i> Reportes de servicios " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
@@ -166,6 +165,10 @@ module ApplicationHelper
 
 	def get_provider
 		Provider.all
+	end
+
+	def get_users
+		User.all
 	end
 	
 

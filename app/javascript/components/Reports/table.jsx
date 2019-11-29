@@ -368,7 +368,7 @@ class table extends React.Component {
       confirmButtonText: "Si"
     }).then(result => {
       if (result.value) {
-        fetch("/customers/" + id, {
+        fetch("/reports/" + id, {
           method: "delete"
         })
           .then(response => response.json())
@@ -439,12 +439,12 @@ class table extends React.Component {
         },
 
         selectedOption: {
-          customer_id: "",
+          customer_id: modulo.customer_id,
           label: `${modulo.customer.name}`
         },
 
         selectedOptionContact: {
-          contact_id: "",
+          contact_id: modulo.contact_id,
           label: `${modulo.contact.name}`
         },
         

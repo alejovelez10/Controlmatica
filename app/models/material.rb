@@ -20,4 +20,13 @@
 
 class Material < ApplicationRecord
     belongs_to :cost_center
+    belongs_to :provider
+
+    def self.search(search1, search2, search3)
+        search1 != "" ? (scope :proveedor, -> { where(provider_id: search1) }) : (scope :proveedor, -> { where.not(id: nil) })
+        search2 != " " && search2 != nil && search2 != "" ? (scope :date, -> { where("DATE(sales_date) = ?", search2) }) : (scope :date, -> { where.not(id: nil) })
+        search3 != "" ? (scope :descripcion, -> { where("description like '%#{search3.downcase}%' or description like '%#{search3.upcase}%' or description like '%#{search3.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
+        proveedor.date.descripcion
+    end
+    
 end

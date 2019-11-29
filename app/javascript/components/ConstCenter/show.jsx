@@ -9,7 +9,6 @@ class Show extends React.Component {
         this.state = {
             show_btn_materiales: false,
             show_btn_ordenes_compra: false,
-            show_btn_contratista: false,
         }
     }
 
@@ -21,7 +20,6 @@ class Show extends React.Component {
           this.setState({
             show_btn_materiales: data.materials,
             show_btn_ordenes_compra: data.sales_orders,
-            show_btn_contratista: data.contractors,
           });
         });
     }
@@ -290,14 +288,6 @@ class Show extends React.Component {
                                     <a 
                                         href={`/cost_centers/materials/${this.props.data_info.id}`} 
                                         className={this.props.materials_state == true ? "btn btn-secondary mr-3 ml-3" : "btn btn-outline-secondary mr-3 ml-3"}>Materiales
-                                    </a>
-                                )}
-
-
-                                {this.state.show_btn_contratista == true && (
-                                    <a 
-                                        href={`/cost_centers/contractors/${this.props.data_info.id}`} 
-                                        className={this.props.contractors_state == true ? `btn btn-secondary ${this.state.show_btn_materiales == false ? "ml-3" : "" }` : `btn btn-outline-secondary ${this.state.show_btn_materiales == false ? "ml-3" : "" }`}>Contratista
                                     </a>
                                 )}
 

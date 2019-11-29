@@ -97,7 +97,14 @@ class FormCreate extends React.Component {
                         isMulti
                         closeMenuOnSelect={false}
                         name="report_ids"
-                        defaultValue={[this.props.editValuesReport[0], this.props.editValuesReport[1]]}
+                        defaultValue={[
+                            this.props.editValuesReport[0], 
+                            this.props.editValuesReport[1], 
+                            this.props.editValuesReport[2], 
+                            this.props.editValuesReport[3], 
+                            this.props.editValuesReport[4], 
+                            this.props.editValuesReport[5]
+                        ]}
                         options={this.props.reports}
                         className="basic-multi-select"
                         classNamePrefix="select"

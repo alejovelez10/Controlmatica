@@ -3,6 +3,31 @@ class ContractorsController < ApplicationController
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
 
+  def index
+    contractors = ModuleControl.find_by_name("Contratistas")
+
+    create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+  end
+
+  def get_contractors
+    if params[:user_execute_id] || params[:sales_date]
+      contractor = Contractor.search(params[:user_execute_id], params[:sales_date]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+    else
+      contractor = Contractor.all.to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+    end
+    
+    contractor = JSON.parse(contractor)
+    render :json => contractor
+  end
+
   def create
     valor1 = contractor_params["ammount"].gsub('$','').gsub(',','')
     params["ammount"] = valor1
@@ -24,10 +49,11 @@ class ContractorsController < ApplicationController
   end
 
   def update
-
-    if contractor_params["ammount"].class.to_s != "Integer"
-      valor1 = contractor_params["ammount"].gsub('$','').gsub(',','')
-      params["ammount"] = valor1
+    if params["ammount"].present?
+      if contractor_params["ammount"].class.to_s != "Integer"
+        valor1 = contractor_params["ammount"].gsub('$','').gsub(',','')
+        params["ammount"] = valor1
+      end
     end
 
     if @contractor.update(contractor_params) 
@@ -58,6 +84,6 @@ class ContractorsController < ApplicationController
   end
 
   def contractor_params
-    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id)
+    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id)
   end
 end

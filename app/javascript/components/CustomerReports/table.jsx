@@ -229,7 +229,8 @@ class table extends React.Component {
         label: "Reportes"
       },
 
-      modal: false
+      dataReportEdit: [],
+
     })
   }
 
@@ -249,6 +250,7 @@ class table extends React.Component {
             this.props.loadInfo();
             this.updateValues()
             this.MessageSucces(data.message, data.type, data.message_error);
+            this.setState({modal: false})
           });
 
       } else {
@@ -265,6 +267,7 @@ class table extends React.Component {
             this.props.loadInfo();
             this.updateValues()
             this.MessageSucces(data.message, data.type, data.message_error);
+            this.setState({modal: false})
 
           });
       }
@@ -283,18 +286,8 @@ class table extends React.Component {
         modeEdit: false,
         ErrorValues: true,
         title: "Nuevo Reporte de cliente",
-
-        form: {
-          customer_id: "",
-          cost_center_id: "",
-          contact_id: "",
-          report_date: "",
-          description: "",
-          report_ids: "",
-          user_id: this.props.usuario.id,
-        },
-
       });
+      this.updateValues()
     } else {
       this.setState({ stateSearch: false });
       if (this.state.modeEdit === true) {
@@ -424,10 +417,6 @@ class table extends React.Component {
           timerProgressBar: true,
           onBeforeOpen: () => {
             Swal.showLoading()
-            timerInterval = setInterval(() => {
-              Swal.getContent().querySelector('b')
-                .textContent = Swal.getTimerLeft()
-            }, 100)
           },
           onClose: () => {
             clearInterval(timerInterval)

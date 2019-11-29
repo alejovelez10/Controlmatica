@@ -139,10 +139,10 @@ class ReportsController < ApplicationController
   # DELETE /reports/1
   # DELETE /reports/1.json
   def destroy
-    @report.destroy
-    respond_to do |format|
-      format.html { redirect_to reports_url, notice: 'Report was successfully destroyed.' }
-      format.json { head :no_content }
+    if @report.destroy
+      render :json => @report
+    else 
+      render :json => @report.errors.full_messages
     end
   end
   

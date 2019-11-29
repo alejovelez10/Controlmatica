@@ -24,8 +24,11 @@ class table extends React.Component {
           sales_number: "",
           sales_date: "",
           ammount: "",
+          description: "",
+          hours: "",
           user_id: this.props.usuario.id,
-          cost_center_id: this.props.cost_center.id
+          cost_center_id: "",
+          user_execute_id: "",
         },
 
         formUpdate: {
@@ -33,8 +36,21 @@ class table extends React.Component {
           sales_date: "",
           ammount: "",
           user_id: this.props.usuario.id,
-          cost_center_id: this.props.cost_center.id
+          cost_center_id: ""
         },
+
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
+
+        selectedOptionUsers: {
+          user_execute_id: "",
+          label: "Horas trabajadas por"
+        },
+
+        dataCostCenter: [],
+        dataUsers: []
 
 
     }
@@ -53,6 +69,45 @@ class table extends React.Component {
         timer: 1500
         });
     }
+
+  
+    componentDidMount(){
+      let array = []
+      let arrayUsers = []
+
+      this.props.cost_center.map((item) => (
+        array.push({label: item.code, value: item.id})
+      ))
+
+      this.props.users.map((item) => (
+        arrayUsers.push({label: item.names, value: item.id})
+      ))
+
+      this.setState({
+        dataCostCenter: array,
+        dataUsers: arrayUsers
+      })
+    }
+
+    handleChangeAutocompleteCentro = selectedOptionCentro => {
+      this.setState({
+        selectedOptionCentro,
+        form: {
+          ...this.state.form,
+          cost_center_id: selectedOptionCentro.value
+        }
+      });
+    };
+
+    handleChangeAutocompleteUsers = selectedOptionUsers => {
+      this.setState({
+        selectedOptionUsers,
+        form: {
+          ...this.state.form,
+          user_execute_id: selectedOptionUsers.value
+        }
+      });
+    };
 
 
   handleSubmit = e => {
@@ -99,7 +154,6 @@ class table extends React.Component {
           .catch(error => console.error('Error:', error))
           .then(data => {
             this.props.loadInfo()
-            this.props.loadShow()
             this.MessageSucces(data.message, data.type, data.message_error)
 
             this.setState({
@@ -108,8 +162,11 @@ class table extends React.Component {
                 sales_number: "",
                 sales_date: "",
                 ammount: "",
+                description: "",
+                hours: "",
                 user_id: this.props.usuario.id,
-                cost_center_id: this.props.cost_center.id
+                cost_center_id: "",
+                user_execute_id: "",
             }
             });
 
@@ -128,8 +185,6 @@ class table extends React.Component {
           .catch(error => console.error("Error:", error))
           .then(data => {
             this.props.loadInfo()
-            this.props.loadShow()
-
             this.MessageSucces(data.message, data.type, data.message_error)
 
             this.setState({
@@ -138,8 +193,11 @@ class table extends React.Component {
                   sales_number: "",
                   sales_date: "",
                   ammount: "",
+                  description: "",
+                  hours: "",
                   user_id: this.props.usuario.id,
-                  cost_center_id: this.props.cost_center.id
+                  cost_center_id: "",
+                  user_execute_id: "",
               }
             });
           });
@@ -159,15 +217,27 @@ class table extends React.Component {
 
       this.setState({
         action: modulo,
-        title: "Editar pago",
+        title: "Editar tablerista",
         form:{
-            voucher_outflow: modulo.voucher_outflow,
-            payment_date: modulo.payment_date,
-            payment_number: modulo.payment_number,
-            value_paid: modulo.value_paid,
+            sales_number: modulo.sales_number,
+            sales_date: modulo.sales_date,
+            ammount: modulo.ammount,
+            description: modulo.description,
+            hours: modulo.hours,
             user_id: this.props.usuario.id,
-            cost_center_id: this.props.cost_center.id
-          }
+            cost_center_id: modulo.cost_center_id,
+            user_execute_id: modulo.user_execute_id,
+        },
+
+        selectedOptionCentro: {
+          cost_center_id: modulo.cost_center_id,
+          label: `${modulo.cost_center != undefined ? modulo.cost_center.code : "Centro de costo"}`
+        },
+
+        selectedOptionUsers: {
+          user_execute_id: modulo.user_execute_id,
+          label: `${modulo.user_execute != undefined ? modulo.user_execute.names : "Horas trabajadas por"}`
+        },
           
         }
         
@@ -184,13 +254,16 @@ class table extends React.Component {
 
       this.setState({
         modeEdit: false ,
-        title: "Agregar contratista",
+        title: "Agregar tablerista",
         form: {
           sales_number: "",
           sales_date: "",
           ammount: "",
+          description: "",
+          hours: "",
           user_id: this.props.usuario.id,
-          cost_center_id: this.props.cost_center.id
+          cost_center_id: "",
+          user_execute_id: "",
       }
       })
 
@@ -229,8 +302,6 @@ class table extends React.Component {
       }).then(response => response.json())
       .then(response => {
         this.props.loadInfo()
-        this.props.loadShow()
-        
         Swal.fire(
           'Borrado!',
           '¡El registro fue eliminado con exito!',
@@ -243,53 +314,7 @@ class table extends React.Component {
   }
 
 
-  handleChangeUpdate = e => {
-    this.setState({
-      formUpdate: {
-        ...this.state.formUpdate,
-        [e.target.name]: e.target.value
-      }
-    });
-  };
-
-  editTable = (accion) =>{
-    this.setState({
-      id: accion.id,
-      formUpdate: {
-        sales_number: accion.sales_number,
-        sales_date: accion.sales_date,
-        ammount: accion.ammount,
-        user_id: this.props.usuario.id,
-        cost_center_id: this.props.cost_center.id
-      }
-    })
-  }
-
-  updateInfo = () => {
-    fetch("/contractors/" + this.state.id, {
-      method: 'PATCH', // or 'PUT'
-      body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    }).then(res => res.json())
-      .catch(error => console.error('Error:', error))
-      .then(data => {
-        this.props.loadInfo()
-
-        this.setState({
-          id: "",
-          formUpdate: {
-            sales_number: "",
-            sales_date: "",
-            ammount: "",
-            user_id: this.props.usuario.id,
-            cost_center_id: this.props.cost_center.id
-          }
-        });
-
-      });
-  }
+  /* asd*/
 
 
   render() {
@@ -301,14 +326,22 @@ class table extends React.Component {
                     <div className="col-md-8 text-left">
                       <h2>
                         <span className="badge badge-secondary">
-                            Contratistas <i className="fas fa-users ml-2"></i>
+                            Tableristas <i className="fas fa-users ml-2"></i>
                         </span>
                       </h2>
                     </div>
 
                     <div className="col-md-4 text-right mt-1 mb-1">
+                    <button
+                      className="btn btn-light mr-3"
+                      onClick={this.props.show}
+                      disabled={this.props.dataActions.length >= 1 ? false : true}
+                    >
+                      Filtros <i className="fas fa-search ml-2"></i>
+                    </button>
+
                       {this.props.estados.create == true && (      
-                        <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Agregar contratistas</button>
+                        <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Agregar tablerista</button>
                       )}
                     </div>
 
@@ -316,7 +349,6 @@ class table extends React.Component {
             </div>
 
             <FormCreate
-
                 toggle={this.toggle}
                 backdrop={this.state.backdrop}
                 modal={this.state.modal}
@@ -330,6 +362,19 @@ class table extends React.Component {
                 nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
                 errorValues={this.state.ErrorValues}
                 modeEdit={this.state.modeEdit}
+
+                /* AUTOCOMPLETE CENTRO DE COSTO */
+
+                centro={this.state.dataCostCenter}
+                onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                formAutocompleteCentro={this.state.selectedOptionCentro}
+
+                /* AUTOCOMPLETE USERS */
+
+                users={this.state.dataUsers}
+                onChangeAutocompleteUsers={this.handleChangeAutocompleteUsers}
+                formAutocompleteUsers={this.state.selectedOptionUsers}
+
             />
 
             <div className="content">
@@ -340,13 +385,12 @@ class table extends React.Component {
               >
                 <thead>
                   <tr className="tr-title">
-                    <th>Fecha de Generacion</th>
-                    <th>Numero</th>
-                    <th>Valor</th>
-                     {this.state.id != "" &&
-                          <th></th>
-                      }
-                    <th style={{width: "60px"}} className="text-center">Acciones</th>
+                    <th style={{ width: "10%" }} >Fescha</th>
+                    <th style={{ width: "13%" }} >Centro de costo</th>
+                    <th style={{ width: "7%" }} >Horas</th>
+                    <th style={{ width: "16%" }} >Trabajo realizado por</th>
+                    <th style={{ width: "16%" }} >Descripcion</th>
+                    <th style={{width: "1%"}} className="text-center">Acciones</th>
                   </tr>
                 </thead>
 
@@ -354,74 +398,11 @@ class table extends React.Component {
                   {this.props.dataActions.length >= 1 ? (
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
-                        <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="date" 
-                                      className="form form-control" 
-                                      name="sales_date"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.sales_date}
-                                    />
-                                ) : (
-                                    <p>{accion.sales_date}</p>
-                                  
-                          )}
-                          
-                        </td>
-
-                        <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="number" 
-                                      className="form form-control" 
-                                      name="sales_number"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.sales_number}
-                                    />
-                                ) : (
-                                    <p>{accion.sales_number}</p>
-                                  
-                          )}
-                        </td>
-                        
-                        <td>
-                          {this.state.id == accion.id ? (
-                                  <NumberFormat 
-                                  name="ammount"
-                                  thousandSeparator={true} 
-                                  prefix={'$'} 
-                                  className={`form form-control`}
-                                  value={this.state.formUpdate.ammount}
-                                  onChange={this.handleChangeUpdate}
-                                  placeholder="Valor total"
-                                /> 
-                                ) : (
-                                  <NumberFormat
-                                  value={accion.ammount}
-                                  displayType={"text"}
-                                  thousandSeparator={true}
-                                  prefix={"$"}
-                                />
-                                  
-                          )}
-
-                        </td>
-
-                          {this.state.id != "" &&
-                              <td style={{width: "118px"}}>
-                                {this.state.id == accion.id && (
-                                      <React.Fragment>
-                                        <button className="btn btn-secondary" onClick={() => this.updateInfo()}>
-                                          <i className="fas fa-check"></i>
-                                        </button>
-                                        <button className="btn btn-danger ml-2" onClick={() => this.setState({ id: ""})}>
-                                          <i className="fas fa-times"></i>
-                                        </button>
-                                      </React.Fragment>
-                                )}
-                              </td>
-                          }
+                        <td>{accion.sales_date}</td>
+                        <td>{accion.cost_center != undefined ? accion.cost_center.code : ""}</td>                        
+                        <td>{accion.hours}</td>
+                        <td>{accion.user_execute != undefined ? accion.user_execute.names : ""}</td>
+                        <td>{accion.description}</td>
   
                         <td className="text-center" style={{ width: "10px"}}>   
                         <div
@@ -442,7 +423,7 @@ class table extends React.Component {
                               </button>
                               <div className="dropdown-menu dropdown-menu-right"> 
                                 {this.props.estados.edit == true && (   
-                                  <button onClick={() => this.editTable(accion)} className="dropdown-item">
+                                  <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>
                                 )}
@@ -463,9 +444,9 @@ class table extends React.Component {
                   ) : (
                     <td colSpan="8" className="text-center">
                         <div className="text-center mt-1 mb-1">
-                        <h4>No hay contratistas</h4>
+                        <h4>No hay tableristas</h4>
                           {this.props.estados.create == true && (  
-                            <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary mt-3 mb-3">Agregar contratistas</button>
+                            <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary mt-3 mb-3">Agregar tablerista</button>
                           )}
                         </div>
                     </td>

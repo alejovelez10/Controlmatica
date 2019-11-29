@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
-#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
+#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -32,6 +32,7 @@
 #  sum_materials             :string
 #  sum_contractors           :string
 #  sum_executed              :string
+#  sum_viatic                :float
 #
 
 class CostCenter < ApplicationRecord

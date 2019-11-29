@@ -1,2 +1,2 @@
-<h1>Contractors#index</h1>
-<p>Find me in app/views/contractors/index.html.erb</p>
+<%= javascript_pack_tag 'Contractors' %> 
+<%= react_component('Contractors',cost_center: get_cost_center, users: get_users, usuario: current_user, estados: @estados) %>

@@ -3,6 +3,32 @@ class MaterialsController < ApplicationController
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
 
+  def index
+    materials = ModuleControl.find_by_name("Materiales")
+
+    create = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
+
+    @estados = {      
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete)
+    }
+  end
+
+  def get_materials
+    if params[:provider_id] || params[:sales_date] || params[:description]
+      materials = Material.search(params[:provider_id], params[:sales_date], params[:description]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+    else
+      materials = Material.all.to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+    end
+    
+    materials = JSON.parse(materials)
+    render :json => materials
+  end
+  
+
   def create
     valor1 = material_params["amount"].gsub('$','').gsub(',','')
     valor2 = material_params["provider_invoice_value"].gsub('$','').gsub(',','')

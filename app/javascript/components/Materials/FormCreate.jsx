@@ -1,7 +1,7 @@
 import React from 'react';
 import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
-
+import Select from "react-select";
 
 class FormCreate extends React.Component {
   constructor(props) {
@@ -16,6 +16,42 @@ class FormCreate extends React.Component {
           <form onSubmit={this.props.FormSubmit}>
             <ModalBody>
               <div className="row">
+
+              <div className="col-md-4 mb-4">
+                  <label>Proveedor</label>
+                  <select 
+                      name="provider_id" 
+                      className={`form form-control`}
+                      value={this.props.formValues.provider_id}
+                      onChange={this.props.onChangeForm}
+                    >
+                      <option value="">Seleccione un nombre</option>
+                      {
+                        this.props.providers.map(item => (
+                            <React.Fragment>
+                                <option value={item.id}>{item.name}</option>
+                            </React.Fragment>
+                        ))
+                      }
+                  </select> 
+                </div>
+
+
+              <div className="col-md-4">
+                      <input
+                        type="hidden"
+                        name="cost_center_id"
+                        value={this.props.formAutocompleteCentro.cost_center_id}
+                      />
+                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteCentro}
+                        options={this.props.centro}
+                        autoFocus={false}
+                        className={`link-form`}
+                        value={this.props.formAutocompleteCentro}
+                      />
+                  </div>
 
               <div className="col-md-4 mb-4">
                 <label>Fecha de orden <small className="validate-label">*</small></label>
@@ -64,25 +100,6 @@ class FormCreate extends React.Component {
                   />
                 </div>
                 
-
-                <div className="col-md-4 mb-4">
-                  <label>Proveedor</label>
-                  <select 
-                      name="provider_id" 
-                      className={`form form-control`}
-                      value={this.props.formValues.provider_id}
-                      onChange={this.props.onChangeForm}
-                    >
-                      <option value="">Seleccione un nombre</option>
-                      {
-                        this.props.providers.map(item => (
-                            <React.Fragment>
-                                <option value={item.id}>{item.name}</option>
-                            </React.Fragment>
-                        ))
-                      }
-                  </select> 
-                </div>
 
 
                 <div className="col-md-4 mb-4">

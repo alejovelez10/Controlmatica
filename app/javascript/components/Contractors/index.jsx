@@ -1,65 +1,27 @@
 import React from 'react';
 import Table from "../Contractors/table";
 import NumberFormat from 'react-number-format';
-import ShowInfo from "../ConstCenter/show"
+import Filter from "../Contractors/FormFilter"
 
 class index extends React.Component {
     constructor(props){
         super(props)
 
         this.state = {
-            data_show: [],
-            data: [],
-            isLoaded: false,
-            horas_eje: 0,
-            porc_eje: 0,
+          data: [],
+          show_filter: false,
+          formFilter: {
+            user_execute_id: "",
+          }
 
-            via_cotizado: 0,
-            via_real: 0,
-            porc_via: 0,
-
-            costo_en_dinero: 0,
-            costo_real_en_dinero: 0,
-            porc_eje_costo: 0,
-
-            facturacion: 0,
-            porc_fac: 0,
-
-            sum_materials: 0,
-            sum_contractors: 0
         }
     }
 
-    loadData = () => {
-        fetch("/get_show_center/" + this.props.cost_center.id)
-        .then(response => response.json())
-        .then(data => {
-          this.setState({
-            data_show: data.data_show,
-            horas_eje: data.horas_eje,
-            porc_eje: data.porc_eje,
-            
-            via_cotizado: data.via_cotizado,
-            via_real: data.via_real,
-            porc_via: data.porc_via,
-
-            costo_en_dinero: data.costo_en_dinero,
-            costo_real_en_dinero: data.costo_real_en_dinero,
-            porc_eje_costo: data.porc_eje_costo,
-
-            facturacion: data.facturacion,
-            porc_fac: data.porc_fac,
-
-            sum_materials: data.sum_materials,
-            sum_contractors: data.sum_contractors
-          });
-        });
-    }
-
     loadDataTable = () => {
-      fetch("/get_contractors/" + this.props.cost_center.id)
+      fetch("/get_contractors/")
       .then(response => response.json())
       .then(data => {
+        console.log(data)
         this.setState({
           data: data
         });
@@ -75,7 +37,6 @@ class index extends React.Component {
     }
     
     componentDidMount() {
-        this.loadData();
         this.loadDataTable();
     }
 
@@ -89,31 +50,15 @@ class index extends React.Component {
 
     this.setState({
       formFilter: {
-        date_of_entry: "",
-        value: "",
-        number_account: "",
-        voucher_number: ""
+        user_execute_id: ""
       }
 
     })
 
 
-    this.loadData();
+    this.loadDataTable();
   }
   
-  cancelFilter = () => {
-    this.setState({
-      formFilter: {
-        date_of_entry: "",
-        value: "",
-        number_account: "",
-        voucher_number: ""
-      }
-
-    })
-
-    this.loadData();
-  }
 
   change = e => {
     this.setState({
@@ -151,13 +96,11 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_incomes/${this.props.agreement.id}?date_of_entry=${this.state.formFilter.date_of_entry}&value=${this.state.formFilter.value}&number_account=${this.state.formFilter.number_account}&voucher_number=${this.state.formFilter.voucher_number}`)
+    fetch(`/get_contractors?user_execute_id=${this.state.formFilter.user_execute_id}&value=${this.state.formFilter.date}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
-          data: data.income_paginate,
-          users_total: data.income_total,
-          activePage: 1
+          data: data
         });
       });
    
@@ -167,32 +110,18 @@ class index extends React.Component {
     render() {
         return (
             <React.Fragment>
-                    <ShowInfo 
-                        data_info={this.state.data_show}
+              <div style={{ display: this.state.show_filter == true ? "block" : "none" }}>
+                <Filter
+                  onChangeFilter={this.handleChangeFilter}
+                  formValuesFilter={this.state.formFilter}
+                  onClick={this.HandleClickFilter}
+                  cancelFilter={this.cancelFilter}
+                  closeFilter={this.showFilter}
+                  users={this.props.users}
+                />
+              </div>
 
-                        horas_eje={this.state.horas_eje}
-                        porc_eje={this.state.porc_eje}
-                        
-                        via_cotizado={this.state.via_cotizado}
-                        via_real={this.state.via_real}
-                        porc_via={this.state.porc_via}
-
-                        costo_en_dinero={this.state.costo_en_dinero}
-                        costo_real_en_dinero={this.state.costo_real_en_dinero}
-                        porc_eje_costo={this.state.porc_eje_costo}
-
-                        porc_fac={this.state.porc_fac}
-                        facturacion={this.state.facturacion}
-
-                        sum_materials={this.state.sum_materials}
-                        sum_contractors={this.state.sum_contractors}
-                        
-                        contractors_state={true}
-                        
-                    />
-        
-
-              <div className="row mt-5">
+              <div className="row">
                 <div className="col-md-12">
                   <div className="card card-table">
                     <div className="card-body">
@@ -202,11 +131,12 @@ class index extends React.Component {
                         this.state.isLoaded == true ? (
                             <Table 
                                 dataActions={this.state.data} 
-                                cost_center={this.state.data_show}
                                 loadInfo={this.loadDataTable}
-                                loadShow={this.loadData}
                                 usuario={this.props.usuario}
                                 estados={this.props.estados}
+                                cost_center={this.props.cost_center}
+                                users={this.props.users}
+                                show={this.showFilter}
                             />
 
                         ) : (

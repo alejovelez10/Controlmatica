@@ -107,8 +107,7 @@ class indexTable extends React.Component {
         return (
             <React.Fragment>
 
-              <div style={{ display: this.state.show_filter == true ? "block" : "none" }}>
-              
+            <div style={{ display: this.state.show_filter == true ? "block" : "none" }}>
               <Filter
                 onChangeFilter={this.handleChangeFilter}
                 formValuesFilter={this.state.formFilter}

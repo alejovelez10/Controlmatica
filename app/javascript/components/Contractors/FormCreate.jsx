@@ -1,7 +1,7 @@
 import React from 'react';
 import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
-
+import Select from "react-select";
 
 class FormCreate extends React.Component {
   constructor(props) {
@@ -18,7 +18,7 @@ class FormCreate extends React.Component {
               <div className="row">
 
               <div className="col-md-6 mb-4">
-                <label>Fecha de venta <small className="validate-label">*</small></label>
+                <label>Fecha<small className="validate-label">*</small></label>
                   <input
                     type="date"
                     name="sales_date"
@@ -27,29 +27,63 @@ class FormCreate extends React.Component {
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.sales_date == "" ? "error-class" : ""}`}
                   />
                 </div>
-                
+
+                <div className="col-md-6">
+                      <input
+                        type="hidden"
+                        name="cost_center_id"
+                        value={this.props.formAutocompleteCentro.cost_center_id}
+                      />
+                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteCentro}
+                        options={this.props.centro}
+                        autoFocus={false}
+                        className={`link-form`}
+                        value={this.props.formAutocompleteCentro}
+                      />
+                  </div>
+              
+
+                                
                 <div className="col-md-6 mb-4">
-                <label>Numero de ventas <small className="validate-label">*</small></label>
+                <label>Horas trabajadas<small className="validate-label">*</small></label>
                   <input
                     type="number"
-                    name="sales_number"
-                    value={this.props.formValues.sales_number}
+                    name="hours"
+                    value={this.props.formValues.hours}
                     onChange={this.props.onChangeForm}
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.sales_number == "" ? "error-class" : ""}`}
-                    placeholder="Numero de ventas"
+                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours == "" ? "error-class" : ""}`}
+                    placeholder="Horas trabajadas"
                   />
                 </div>
 
-                <div className="col-md-12 mt-2">
-                <label>Valor<small className="validate-label">*</small></label>
-                  <NumberFormat 
-                    name="ammount"
-                    thousandSeparator={true} 
-                    prefix={'$'} 
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.ammount == "" ? "error-class" : ""}`}
-                    value={this.props.formValues.ammount}
+                <div className="col-md-6">
+                      <input
+                        type="hidden"
+                        name="user_execute_id"
+                        value={this.props.formAutocompleteUsers.user_execute_id}
+                      />
+                      <label>Horas trabajadas por <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteUsers}
+                        options={this.props.users}
+                        autoFocus={false}
+                        className={`link-form`}
+                        value={this.props.formAutocompleteUsers}
+                      />
+                  </div>
+
+
+                <div className="col-md-12 mt-3">
+                <label>Descripcion</label>
+                  <textarea 
+                    name="description"
+                    className={`form form-control`}
+                    value={this.props.formValues.description}
                     onChange={this.props.onChangeForm}
-                    placeholder="Valor"
+                    placeholder="Descripcion.."
+                    rows="4"
                   /> 
                 </div>
 
