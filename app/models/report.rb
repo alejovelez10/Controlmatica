@@ -13,7 +13,7 @@
 #  total_value        :float
 #  cost_center_id     :integer
 #  report_execute_id  :integer
-#  report_code        :string
+#  report_code        :integer
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  code_report        :string
@@ -39,6 +39,10 @@ class Report < ApplicationRecord
   belongs_to :contact, optional: true
   before_create :coste_center_verify
   after_create :save_report_in_cost_center
+  after_destroy :calculate_cost_destroy
+  after_save :calculatate_update
+
+
 
   def self.search(search1, search2, search3, search4)
     puts "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -87,14 +91,14 @@ class Report < ApplicationRecord
     end
 
     #if self.contact_id == nil
-      #Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
+    #Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
     #else
-      #contact = Contact.find(self.contact_id)
-      #self.contact_name = contact.name
-      #self.contact_position = contact.position
-      #self.contact_email = contact.email
-      #self.contact_phone = contact.phone
-      #CostCenter.last.update(contact_id: contact.id)
+    #contact = Contact.find(self.contact_id)
+    #self.contact_name = contact.name
+    #self.contact_position = contact.position
+    #self.contact_email = contact.email
+    #self.contact_phone = contact.phone
+    #CostCenter.last.update(contact_id: contact.id)
     #end
   end
 
@@ -107,6 +111,28 @@ class Report < ApplicationRecord
       self.report_code = count == 0 || count.blank? || count.nil? ? 1 : count + 1
       self.code_report = "REP-" + customer_prefix + "-" + self.report_code.to_s + "-" + Time.now.year.to_s
       self.save
+    
+     
     end
+    
+  end
+
+  def calculatate_update
+    unless self.cost_center_id == nil || self.cost_center_id == 0
+    
+    cost_center = CostCenter.find(self.cost_center_id)
+    working_value = cost_center.reports.sum(:working_value)
+    viatic_value = cost_center.reports.sum(:viatic_value)
+    cost_center.update(sum_materials_costo: working_value, sum_viatic: viatic_value)
+    puts "ñaslkfjsakfjadsñlfjasñljfkoñsadjflkasdjflkasfjlksajflkasjfklsajfklsajfklasdjfklasjfklasjfasñfjals"
+    end
+  
+  end
+
+  def calculate_cost_destroy
+    cost_center = CostCenter.find(self.cost_center_id_was)
+    working_value = cost_center.reports.sum(:working_value)
+    viatic_value = cost_center.reports.sum(:viatic_value)
+    cost_center.update(sum_materials_costo: working_value, sum_viatic: viatic_value)
   end
 end

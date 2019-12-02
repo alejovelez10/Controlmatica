@@ -26,6 +26,12 @@ class index extends React.Component {
             porc_fac: 0,
             sum_materials: 0,
             sum_contractors: 0,
+            porc_eje_contractor:0,
+            hours_contractor:0,
+            hours_eje_contractor:0,
+            costo_en_dinero_contractor: 0,
+            costo_real_en_dinero_contractor: 0,
+            porc_eje_costo_contractor:0,
             porc_mat: 0,
         }
     }
@@ -54,7 +60,13 @@ class index extends React.Component {
 
             sum_materials: data.sum_materials,
             sum_contractors: data.sum_contractors,
-            porc_mat: data.porc_mat
+            porc_mat: data.porc_mat,
+            hours_contractor: data.hours_contractor,
+            hours_eje_contractor: data.hours_eje_contractor,
+            porc_eje_contractor: data.porc_eje_contractor,
+            costo_en_dinero_contractor: data.costo_en_dinero_contractor,
+            costo_real_en_dinero_contractor: data.costo_real_en_dinero_contractor,
+            porc_eje_costo_contractor:data.porc_eje_costo_contractor
 
 
           });
@@ -185,6 +197,13 @@ class index extends React.Component {
                           sum_contractors={this.state.sum_contractors}
 
                           sales_orders_state={true}
+
+                          hours_contractor= {this.state.hours_contractor}
+                          hours_eje_contractor = {this.state.hours_eje_contractor}
+                          porc_eje_contractor = {this.state.porc_eje_contractor}
+                          costo_en_dinero_contractor={this.state.costo_en_dinero_contractor}
+                          costo_real_en_dinero_contractor={this.state.costo_real_en_dinero_contractor}
+                          porc_eje_costo_contractor={this.state.porc_eje_costo_contractor}
                           
                       />
                       {this.props.estados.login_module == true && (

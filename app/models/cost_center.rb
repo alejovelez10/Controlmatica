@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
+#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
-#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -33,6 +33,12 @@
 #  sum_contractors           :string
 #  sum_executed              :string
 #  sum_viatic                :float
+#  ingenieria_total_costo    :float            default(0.0)
+#  sum_materials_costo       :float            default(0.0)
+#  sum_materials_cot         :float            default(0.0)
+#  contractor_total_costo    :float            default(0.0)
+#  sum_contractor_costo      :float            default(0.0)
+#  sum_contractor_cot        :float            default(0.0)
 #
 
 class CostCenter < ApplicationRecord
@@ -50,6 +56,8 @@ class CostCenter < ApplicationRecord
   before_create :create_code
   before_update :change_state
 
+  before_save :calculate_costo
+
   def self.search(search1, search2, search3, search4)
     search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
@@ -64,6 +72,12 @@ class CostCenter < ApplicationRecord
     self.sum_materials = 0
     self.sum_viatic = 0
 
+    self.ingenieria_total_costo = self.eng_hours * self.hour_real
+    self.engineering_value = self.eng_hours * self.hour_cotizada
+
+    self.contractor_total_costo = self.eng_hours * self.hour_real
+    self.work_force_contractor = self.eng_hours * self.hour_cotizada
+
     count = CostCenter.where(service_type: self.service_type).where(customer_id: self.customer_id).maximum(:count)
     customer_prefix = Customer.find(self.customer_id).code
     self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
@@ -72,6 +86,14 @@ class CostCenter < ApplicationRecord
     self.hour_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     self.hour_cotizada = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
     self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
+  end
+
+  def calculate_costo
+    self.ingenieria_total_costo = self.eng_hours * self.hour_real
+    self.engineering_value = self.eng_hours * self.hour_cotizada
+
+    self.contractor_total_costo = self.eng_hours * self.hour_real
+    self.work_force_contractor = self.eng_hours * self.hour_cotizada
   end
 
   def change_state

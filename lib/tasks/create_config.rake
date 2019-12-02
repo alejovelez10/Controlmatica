@@ -4,8 +4,12 @@ namespace :create_config do
 
         ModuleControl.destroy_all
         
-        user = User.find_by_email("salazar-moncada-estiven@hotmail.com")
+        user = User.find_by_email("alejovelez10@gmail.com")
 
+        rol = Rol.create(name: "Administrador")
+
+        User.all.update(rol_id: rol.id)
+        
         providers = ModuleControl.create(name: "Proveedores", user_id: user.id)
 
         if providers

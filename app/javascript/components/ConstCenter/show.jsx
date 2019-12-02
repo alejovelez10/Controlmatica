@@ -92,7 +92,7 @@ class Show extends React.Component {
      
                             <div className="col-md-6 mb-4">
                                 <div className="col-md-12 title1 text-center">
-                                    <strong>Ingenieria(Horas)</strong><br/> 
+                                    <strong>Ingenieria(Ejecución)</strong><br/> 
                                 </div>
                     
                 
@@ -122,38 +122,12 @@ class Show extends React.Component {
                             </div>
                          
                         
-                            <div className="col-md-6 mb-4">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Viaticos</strong><br/>
-                                </div>
-                        
-                        
-                            
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-                                        <div className="col-md-4 text-center" >
-                                            <strong>Cotizado</strong><br/>
-                                            <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Gastado</strong><br/>
-                                            <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
-                                        </div>
-                                
-                                        <div className="col-md-4 text-center"> 
-                                            <strong></strong><br/>
-                                            <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
+                     
 
      
                             <div className="col-md-6">
                                 <div className="col-md-12 title1 text-center">
-                                    <strong>Ingenieria($)</strong><br/>
+                                    <strong>Ingenieria(Costos)</strong><br/>
                                 </div>
 
 
@@ -166,12 +140,12 @@ class Show extends React.Component {
                                         </div>
 
                                         <div className="col-md-4 text-center">
-                                            <strong>Ing Ejecutada</strong><br/> 
+                                            <strong>Ing costo</strong><br/> 
                                             <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
-                                            <strong>Avance</strong><br/> 
+                                            <strong>Margen</strong><br/> 
                                             <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
                                         </div>
                                     </div>
@@ -180,9 +154,14 @@ class Show extends React.Component {
 
                             </div> 
 
+              
+
+
+                       
+
                             <div className="col-md-6">
                                 <div className="col-md-12 title1 text-center">
-                                    <strong>Facturacion</strong><br/>
+                                    <strong>Tableristas(Ejecución)</strong><br/>
                                 </div>
 
 
@@ -191,17 +170,44 @@ class Show extends React.Component {
                                     <div className="row">
                                         <div className="col-md-4 text-center">
                                             <strong>Cotizado</strong><br/> 
-                                            <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                                            <span>{this.props.hours_contractor}</span>
+                                        </div>
+                                        <div className="col-md-4 text-center">   
+                                            <strong>Ejecutado</strong><br/> 
+                                            <span>{this.props.hours_eje_contractor}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
-                                            <strong>Facturado</strong><br/> 
-                                            <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                        <strong>Avance</strong><br/> 
+                                            <span>{this.props.porc_eje_contractor}</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div> 
+                            <div className="col-md-6">
+                                <div className="col-md-12 title1 text-center">
+                                    <strong>Tableristas(Costos)</strong><br/>
+                                </div>
+
+
+
+                                <div className="col-md-12 background-show">
+                                    <div className="row">
+                                        <div className="col-md-4 text-center">
+                                            <strong>Ing Cotizada</strong><br/>
+                                            <span><NumberFormat value={this.props.costo_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
+                                        </div>
+
+                                        <div className="col-md-4 text-center">
+                                            <strong>Ing costo</strong><br/> 
+                                            <span><NumberFormat value={this.props.costo_real_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
-                                            <strong></strong><br/> 
-                                            <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
+                                            <strong>Margen</strong><br/> 
+                                            <span>{this.props.porc_eje_costo_contractor}%</span>
                                         </div>
                                     </div>
 
@@ -231,7 +237,7 @@ class Show extends React.Component {
                                         </div>
 
                                         <div className="col-md-4 text-center">   
-                                            <strong></strong><br/> 
+                                            <strong>Margen</strong><br/> 
                                             <span>{this.props.porc_mat}%</span>
                                         </div>
 
@@ -241,28 +247,58 @@ class Show extends React.Component {
 
                             </div> 
 
+                            <div className="col-md-6 mt-4">
+                                <div className="col-md-12 title1 text-center">
+                                    <strong>Viaticos</strong><br/>
+                                </div>
+                        
+                        
+                            
+                                <div className="col-md-12 background-show">
+                                    <div className="row">
+                                        <div className="col-md-4 text-center" >
+                                            <strong>Cotizado</strong><br/>
+                                            <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
+                                        </div>
+
+                                        <div className="col-md-4 text-center">   
+                                            <strong>Gastado</strong><br/>
+                                            <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
+                                        </div>
+                                
+                                        <div className="col-md-4 text-center"> 
+                                            <strong>Avance</strong><br/>
+                                            <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
 
                             <div className="col-md-6 mt-4">
                                 <div className="col-md-12 title1 text-center">
-                                    <strong>Contratistas</strong><br/>
+                                    <strong>Facturacion</strong><br/>
                                 </div>
 
-
+                            
 
                                 <div className="col-md-12 background-show">
                                     <div className="row">
                                         <div className="col-md-4 text-center">
                                             <strong>Cotizado</strong><br/> 
-                                            <span><NumberFormat value={this.props.data_info.hours_contractor_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                                        </div>
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Real</strong><br/> 
-                                            <span><NumberFormat value={this.props.sum_contractors} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                            <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">   
-                                        <strong></strong><br/> 
-                                            <span><NumberFormat value={this.props.sum_contractors} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                            <strong>Facturado</strong><br/> 
+                                            <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                                        </div>
+
+                                        <div className="col-md-4 text-center">   
+                                            <strong>Avance</strong><br/> 
+                                            <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
                                         </div>
                                     </div>
 
@@ -284,12 +320,8 @@ class Show extends React.Component {
                                     </a>
                                 )}
 
-                                {this.state.show_btn_materiales == true && (
-                                    <a 
-                                        href={`/cost_centers/materials/${this.props.data_info.id}`} 
-                                        className={this.props.materials_state == true ? "btn btn-secondary mr-3 ml-3" : "btn btn-outline-secondary mr-3 ml-3"}>Materiales
-                                    </a>
-                                )}
+                               
+                             
 
                             </div>
 

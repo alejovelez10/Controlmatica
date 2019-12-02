@@ -107,15 +107,26 @@ class CostCentersController < ApplicationController
     via_real = @cost_center.reports.sum(:viatic_value)
 
     horas_eje = @cost_center.reports.sum(:working_time)
+    hours_eje_contractor = @cost_center.contractors.sum(:hours)
+
+    
 
     facturacion = @cost_center.customer_invoices.sum(:invoice_value)
 
-    porc_eje =  @cost_center.eng_hours > 0 ? ((horas_eje.to_f/@cost_center.eng_hours)*100).to_i : "N/A"
+    porc_eje =  @cost_center.eng_hours > 0 ? (((horas_eje.to_f/@cost_center.eng_hours))*100).to_i : "N/A"
+
+    porc_eje_contractor =  @cost_center.hours_contractor > 0 ? (((hours_eje_contractor.to_f/@cost_center.hours_contractor))*100).to_i : "N/A"
 
     costo_real_en_dinero = @cost_center.hour_real * horas_eje
     costo_en_dinero = @cost_center.hour_real * @cost_center.eng_hours
 
-    porc_eje_costo =  costo_en_dinero > 0 ? (((costo_real_en_dinero.to_f/costo_en_dinero)*100)).to_i : "N/A"
+    costo_real_en_dinero_contractor = @cost_center.hours_contractor_real * hours_eje_contractor
+    costo_en_dinero_contractor = @cost_center.hours_contractor_real * @cost_center.hours_contractor
+
+    porc_eje_costo =  costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f/costo_en_dinero))*100)).to_i : "N/A"
+
+    porc_eje_costo_contractor =  costo_en_dinero_contractor > 0 ? (((1 - (costo_real_en_dinero_contractor.to_f/costo_en_dinero_contractor))*100)).to_i : "N/A"
+
 
     porc_via =  via_cotizado > 0 ? ((via_real.to_f/via_cotizado)*100).to_i : "N/A" 
 
@@ -127,13 +138,13 @@ class CostCentersController < ApplicationController
 
     total_margen = total_cot - total_eje 
 
-    porc_ejec =  total_cot > 0 ? ((total_margen.to_f/total_cot)*100).to_i : "N/A" 
+    porc_ejec =  total_cot > 0 ? ( (total_margen.to_f/total_cot)*100).to_i : "N/A" 
 
     cost_center = @cost_center.to_json( :include => { :customer => { :only =>[:name] }, :contact => { :only =>[:name] } })
 
     sum_materials = @cost_center.materials.sum(:amount)  #Material.where(cost_center_id: @cost_center.id).sum(:amount)
 
-    porc_mat =  (@cost_center.materials_value != nil ? @cost_center.materials_value : 0 )> 0 ? ((sum_materials.to_f/@cost_center.materials_value)*100).to_i : "N/A" 
+    porc_mat =  (@cost_center.materials_value != nil ? @cost_center.materials_value : 0 )> 0 ? ((1- (sum_materials.to_f/@cost_center.materials_value))*100).to_i : "N/A" 
 
 
     sum_contractors =  @cost_center.contractors.sum(:ammount)  #Contractor.where(cost_center_id: @cost_center.id).sum(:ammount)
@@ -153,6 +164,16 @@ class CostCentersController < ApplicationController
       via_real: via_real,
       porc_via: porc_via,
 
+
+
+      porc_eje_contractor: porc_eje_contractor,
+      hours_eje_contractor: hours_eje_contractor,
+      hours_contractor: @cost_center.hours_contractor,
+
+      costo_en_dinero_contractor: costo_en_dinero_contractor,
+      costo_real_en_dinero_contractor: costo_real_en_dinero_contractor,
+      porc_eje_costo_contractor: porc_eje_costo_contractor,
+
       costo_en_dinero: costo_en_dinero,
       costo_real_en_dinero: costo_real_en_dinero,
       porc_eje_costo: porc_eje_costo,
@@ -161,6 +182,7 @@ class CostCentersController < ApplicationController
       porc_fac: porc_fac,
       sum_materials: sum_materials,
       sum_contractors: sum_contractors,
+     
       
       porc_mat: (porc_mat != nil ? porc_mat : 0)
 

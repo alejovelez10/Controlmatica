@@ -154,38 +154,18 @@
           </li>
       <% end %>
 
-      <% if authorization_config %>
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Centro de costo</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-            <ul class="treeview-menu">
+  
 
             <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
               <li>
                 <%= link_to cost_centers_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Registros</span>
+                  <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Centros de costos</span>
                 <% end -%>
               </li>
             <% end %>
 
-            <% if authorization_customers || current_user.rol.name == "Administrador" %>
-              <li>
-                <%= link_to contractors_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-street-view"></i><span class="app-menu__label pl-0">Tableristas</span>
-                <% end -%>
-              </li>
-            <% end %>
-
-            <% if authorization_parameterizations || current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to materials_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label pl-0">Materiales</span>
-                  <% end -%>
-                </li>
-            <% end %>
-
-            </ul>
-          </li>
-      <% end %>
-
+       
+            
 
         <% if authorization_report || current_user.rol.name == "Administrador" %>
           <li>
@@ -194,6 +174,23 @@
             <% end -%>
           </li>
         <% end %>
+
+        <% if authorization_customers || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to contractors_path, class: "app-menu__item" do %>
+            <i class="app-menu__icon fa fa-th"></i><span class="app-menu__label pl-0">Registro Tablerista</span>
+          <% end -%>
+        </li>
+      <% end %>
+
+      <% if authorization_parameterizations || current_user.rol.name == "Administrador" %>
+          <li>
+            <%= link_to materials_path, class: "app-menu__item" do %>
+              <i class="app-menu__icon fas fa-dolly"></i><span class="app-menu__label pl-0">Registro Materiales</span>
+            <% end -%>
+          </li>
+      <% end %>
+
         
         <% if authorization_customer_reports || current_user.rol.name == "Administrador" %>
           <li>
