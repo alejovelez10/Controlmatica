@@ -36,7 +36,7 @@ class formCreate extends React.Component {
                     value={this.props.formValues.order_number}
                     onChange={this.props.onChangeForm}
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.order_number == "" ? "error-class" : ""}`}
-                    placeholder="Numero de pago"
+                    placeholder="Numero de orden"
                   />
                 </div>
 
@@ -49,7 +49,7 @@ class formCreate extends React.Component {
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.order_value == "" ? "error-class" : ""}`}
                     value={this.props.formValues.order_value}
                     onChange={this.props.onChangeForm}
-                    placeholder="Valor total"
+                    placeholder="Valor"
                   /> 
                 </div>
 

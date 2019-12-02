@@ -166,14 +166,14 @@ class FormCreate extends React.Component {
                   {/* HR */}
 
                   <div className="col-md-4">
-                  <label>Horas Contratista <small className="validate-label">*</small></label>
+                  <label>Horas tablerista <small className="validate-label">*</small></label>
                     <input 
                       name="hours_contractor"
                       type="number"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hours_contractor}
                       onChange={this.props.onChangeForm}
-                      placeholder="Horas Contratista"
+                      placeholder="Horas tablerista"
                     /> 
                   </div>
 

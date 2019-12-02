@@ -196,12 +196,12 @@ class Show extends React.Component {
                                 <div className="col-md-12 background-show">
                                     <div className="row">
                                         <div className="col-md-4 text-center">
-                                            <strong>Ing Cotizada</strong><br/>
+                                            <strong>Tab Cotizada</strong><br/>
                                             <span><NumberFormat value={this.props.costo_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
                                         </div>
 
                                         <div className="col-md-4 text-center">
-                                            <strong>Ing costo</strong><br/> 
+                                            <strong>Tab costo</strong><br/> 
                                             <span><NumberFormat value={this.props.costo_real_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
                                         </div>
 
