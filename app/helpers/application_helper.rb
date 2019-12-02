@@ -2,40 +2,40 @@ module ApplicationHelper
 
 	def controller_name_helper(controller,action)
         if controller == "providers" && action == "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-user'></i> Proveedores" + "</h1>" + "<p>" + "Gestiona a todos los usuarios" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-user'></i> Proveedores" + "</h1>" + "<p>" + "Gestiona tus proveedores" + "</p>"
  
         elsif controller == "customers" && action == "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Clientes " + "</h1>" + "<p>" + "Crea los roles corporativos" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Clientes " + "</h1>" + "<p>" + "Gestiona tus clientes" + "</p>"
 
         elsif controller == "parameterizations" && action = "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-layer-group'></i> Parametrizaciones " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-layer-group'></i> Parametrizaciones " + "</h1>" + "<p>" + "Parametriza tu aplicación" + "</p>"
             
         elsif controller == "home"  && action = "users"
-            card = "<h1>" + " <i class='fas fa-handshake'></i> Usuarios " + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+            card = "<h1>" + " <i class='fas fa-handshake'></i> Usuarios " + "</h1>" + "<p>" + "Gestiona tus usuarios" + "</p>"
 
         elsif controller == "customer_reports" && action == "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Reportes de clientes" + "</h1>" + "<p>" + "Crea y lleva control de los modulos" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Reportes de clientes" + "</h1>" + "<p>" + "Crea y envia reportes a tus clientes" + "</p>"
 
         elsif controller == "cost_centers"  && action == "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
 
         elsif controller == "cost_centers" && action == "show"
-			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "añde ordenes de compra" + "</p>"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "Analiza como va tu proyecto" + "</p>"
 		
 		
 		
 		elsif controller == "materials" && action == "index"
-			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Materiales " + "</h1>" + "<p>" + "añde materiales" + "</p>"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Materiales " + "</h1>" + "<p>" + "Gestiona tus materiales" + "</p>"
 
 		elsif controller == "contractors" && action == "index"
-			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion de Tableristas " + "</h1>" + "<p>" + "añde contratistas" + "</p>"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion de Tableristas " + "</h1>" + "<p>" + "Gestiona tus tableristas" + "</p>"
 	
 
         elsif controller == "reports" && action == "index"
-            card = "<h1>" + " <i class='fas fa-university'></i> Reportes de servicios " + "</h1>" + "<p>" + "añde mas socios" + "</p>"
+            card = "<h1>" + " <i class='fas fa-university'></i> Reportes de servicios " + "</h1>" + "<p>" + "Gestiona los reportes de servicios" + "</p>"
 
         elsif controller == "employed_performance" && action == "show"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Informe de rendimiento" + "</h1>" + "<p>" + "Crea los roles corporativos" + "</p>"
+            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Informe de rendimiento" + "</h1>" + "<p>" + "" + "</p>"
         
 
 
