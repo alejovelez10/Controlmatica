@@ -624,7 +624,7 @@ class table extends React.Component {
 
                                 {this.props.estados.gestionar == true && (
                                   <button onClick={() => this.showIncomeDetail("open",accion)} className="dropdown-item">
-                                    Gestionar
+                                    Facturas
                                   </button>     
                                 )}
 
