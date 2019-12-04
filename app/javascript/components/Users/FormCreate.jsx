@@ -76,7 +76,7 @@ class FormCreate extends React.Component {
                           value={this.props.formValues.document_type}
                           onChange={this.props.onChangeForm}
                         >
-
+                          <option value="">Seleccione un tipo</option>
                           <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
                           <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
                           <option value="Registro Civil de Nacimiento">Registro Civil de Nacimiento</option>

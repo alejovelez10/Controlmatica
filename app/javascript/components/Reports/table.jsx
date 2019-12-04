@@ -532,16 +532,16 @@ class table extends React.Component {
           <thead>
             <tr className="tr-title">
               <th className="text-center">Acciones</th>
-              <th>Codigo</th>
-              <th>Centro de Costos</th>
-              <th>Fecha de Ejecucion</th>
-              <th>Responsable Ejecucion</th>
-              <th>Horas Laboradas</th>
+              <th style={{width: "6%"}}>Codigo</th>
+              <th style={{width: "6%"}}>Centro de Costos</th>
+              <th style={{width: "7%"}}>Fecha de Ejecucion</th>
+              <th style={{width: "8%"}}>Responsable Ejecucion</th>
+              <th style={{width: "6%"}}>Horas Laboradas</th>
               <th>Descripcion del Trabajo</th>
-              <th>Valor de los Viaticos</th>
-              <th>Descripcion de Viaticos</th>
-              <th>Valor del Reporte</th>
-              <th>Estado</th>
+              <th style={{width: "7%"}}>Valor de los Viaticos</th>
+              <th style={{width: "8%"}}>Descripcion de Viaticos</th>
+              <th style={{width: "6%"}}>Valor del Reporte</th>
+              <th style={{width: "5%"}}>Estado</th>
             </tr>
           </thead>
 

@@ -3,7 +3,8 @@ import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import FormUser from "../Users/FormCreate";
 
-class table extends React.Component {
+
+class Table extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -45,7 +46,7 @@ class table extends React.Component {
   };
 
   passwordConfirmationValidate = () => {
-    var regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/
+    var regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/
 
     if (regex.test(this.state.form.password_confirmation)){
       console.log("el campo de confirmacion de contraseña es correcto" + this.state.form.password_confirmation)   
@@ -112,7 +113,8 @@ class table extends React.Component {
   }
 
   edit = user => {
-        if(this.state.modeEdit === true){
+    console.log(user)
+    if(this.state.modeEdit === true){
       this.setState({modeEdit: false})
     }else{
       this.setState({modeEdit: true})
@@ -121,18 +123,26 @@ class table extends React.Component {
     this.toggle("edit")
     
     this.setState({
+
       user: user,
-      title: "Editar a " + user.names,
+      title: "Editar a " + user.email,
       form: {
-        names: user.names,
+        names: user.name,
         email: user.email,
-        avatar: {},
+        avatar: user.avatar.url,
         number_document: user.number_document,
         document_type: user.document_type,
         password: "",
         password_confirmation: "",
         rol_id: user.rol_id
       },
+
+      selectedOption: {
+        label: `${user.rol != undefined ? user.rol.name : "Sin rol"}`,
+        value: user.rol != undefined ? user.rol.id : ""
+      }
+
+
     });
   };
 
@@ -152,8 +162,8 @@ class table extends React.Component {
 
   handleChange = e => {
     if (e.target.name == "password") {
-      var regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,}$/
-
+      var regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/
+      //(?=.*[@$!%*_?&])
       if (regex.test(e.target.value)){
         console.log("el campo de contraseña es correcto" + e.target.value)   
         this.setState({passwor: true})
@@ -181,13 +191,13 @@ class table extends React.Component {
   };
 
   validationForm = () => {
-    if (this.state.form.names != "" &&  
+    if (this.state.form.name != "" &&  
         this.state.form.email != "" && 
-        this.state.form.document_type != "" &&
+        this.state.form.phone != "" && 
+        this.state.form.state != "" && 
         this.state.form.number_document != "" && 
-        this.state.form.rol_id != "" && 
-        this.state.form.password != "" &&
-        this.state.form.password_confirmation != ""
+        this.state.form.rol_id != "" 
+
         ) {
     console.log("los campos estan llenos")
       this.setState({ ErrorValues: true })
@@ -228,6 +238,7 @@ class table extends React.Component {
           this.MessageSucces("¡El Registro fue actualizado con exito!");
 
           this.setState({
+            user: {},
             modal: false,
             form: {
               names: "",
@@ -239,6 +250,12 @@ class table extends React.Component {
               password_confirmation: "",
               rol_id: ""
             },
+
+            selectedOption: {
+              rol_id: "",
+              label: "Selecionar"
+            },
+
           });
         });
     } else {
@@ -300,6 +317,11 @@ class table extends React.Component {
           password_confirmation: "",
           rol_id: ""
         },
+
+        selectedOption: {
+          rol_id: "",
+          label: "Selecionar"
+        },
       })
 
     }else{
@@ -310,6 +332,7 @@ class table extends React.Component {
       }
 
       this.setState({
+        user: {},
         ErrorValues: true,
         passwor: true
       })
@@ -337,52 +360,50 @@ class table extends React.Component {
       <React.Fragment>
         <div className="col-md-12 pr-0 mb-3">
           <div className="row">
-            <div className="col-md-8 text-left pl-0">
-                <div  className="col-md-4 pl-0">
-                    <select
-                    id="lang"
-                    className="form form-control"
-                    onChange={this.props.showFilter}
-                    >
-                    <option value="">Cantidad</option>
+            <div className="col-md-2 text-left pl-0">
+                <select
+                  id="lang"
+                  className="form form-control"
+                  onChange={this.props.showFilter}
+                >
+                  <option value="">Cantidad</option>
 
-                    {
-                        this.props.all_users >= 5 &&
-                        <option value="5">5</option>
-                    }
+                  {
+                    this.props.all_users >= 5 &&
+                    <option value="5">5</option>
+                  }
 
-                    {
-                        this.props.all_users >= 10 &&
-                        <option value="10">10</option>
-                    }
+                  {
+                    this.props.all_users >= 10 &&
+                    <option value="10">10</option>
+                  }
 
-                    {
-                        this.props.all_users >= 15 &&
-                        <option value="15">15</option>
-                    }
+                  {
+                    this.props.all_users >= 15 &&
+                    <option value="15">15</option>
+                  }
 
-                    {
-                        this.props.all_users >= 20 &&
-                        <option value="20">20</option>
-                    }
+                  {
+                    this.props.all_users >= 20 &&
+                    <option value="20">20</option>
+                  }
 
-                    {
-                        this.props.all_users >= 25 &&
-                        <option value="25">25</option>
-                    }
+                  {
+                    this.props.all_users >= 25 &&
+                    <option value="25">25</option>
+                  }
 
-                    {
-                        this.props.all_users >= 50 &&
-                        <option value="50">50</option>
-                    }
+                  {
+                    this.props.all_users >= 50 &&
+                    <option value="50">50</option>
+                  }
 
-                    {
-                        this.props.all_users >= 100 &&
-                        <option value="100">100</option>
-                    }
-                    
-                    </select>
-                </div>
+                  {
+                    this.props.all_users >= 100 &&
+                    <option value="100">100</option>
+                  }
+                  
+                </select>
             </div>
  
               <FormUser
@@ -415,24 +436,15 @@ class table extends React.Component {
 
               />
 
-            <div className="col-md-4 text-right">
-                <div className="row">
+            <div className="col-md-10 text-right btn-search">
+              {this.props.estados.create == true && (
+                <button className="btn btn-primary mr-2" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
+              )}
+              <button className="btn btn-primary" onClick={this.props.show}>
+                Filtros
+              </button>
 
-                  <div className="col-md-6 text-right">
-                    {/*<button className="btn btn-primary" onClick={this.props.show}>
-                        Filtros
-                  </button>*/}
-                  </div>
-
-                  <div className="col-md-6 text-right">
-                    {this.props.estados.create == true &&(
-                      <button className="btn btn-secondary" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
-                    )}
-                  </div>
-
-                </div>
             </div>
-
           </div>
         </div>
 
@@ -440,7 +452,7 @@ class table extends React.Component {
 
         <table className="table table-hover table-bordered" id="sampleTable">
           <thead>
-            <tr className="tr-title">
+            <tr>
               <th className="text-center">Avatar</th>
               <th>Nombre</th>
               <th>Email</th>
@@ -462,10 +474,10 @@ class table extends React.Component {
                   <td>{user.names}</td>
                   <td>{user.email}</td>
                   <td>{user.rol != undefined ? user.rol.name : "Sin rol"}</td>
-                  <td>{user.document_type}</td>
                   <td>
-                     {user.number_document}
+                    {user.document_type}
                   </td>
+                  <td>{user.number_document}</td>
 
                   <td className="text-right" style={{ width: "10px" }}>
                     <div
@@ -475,7 +487,7 @@ class table extends React.Component {
                     >
                       <div className="btn-group" role="group">
                         <button
-                          className="btn btn-secondary"
+                          className="btn btn-primary"
                           id="btnGroupDrop1"
                           type="button"
                           data-toggle="dropdown"
@@ -486,7 +498,7 @@ class table extends React.Component {
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
                           
-                          {this.props.estados.edit == true &&(
+                          {this.props.estados.edit == true && (
                             <button
                               onClick={() => this.edit(user)}
                               className="dropdown-item"
@@ -495,16 +507,16 @@ class table extends React.Component {
                             </button>
                           )}
 
+                          {this.props.estados.edit == true && (
 
-                          {this.props.estados.delete == true &&(
                             <button
                               onClick={() => this.delete(user.id)}
                               className="dropdown-item"
                             >
                               Eliminar
                             </button>
-                           )}
 
+                          )}
 
                         </div>
                       </div>
@@ -535,4 +547,8 @@ class table extends React.Component {
   }
 }
 
-export default table;
+export default Table;
+
+
+
+
