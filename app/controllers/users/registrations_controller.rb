@@ -2,7 +2,7 @@
 
 class Users::RegistrationsController < Devise::RegistrationsController
   respond_to :html, :js, :only => [:new, :update, :create]
-  skip_before_action :verify_authenticity_token, :only => [:delete_user, :create_user]
+  skip_before_action :verify_authenticity_token, :only => [:delete_user, :create_user, :update_user]
 
   # before_action :configure_sign_up_params, only: [:create]
   # before_action :configure_account_update_params, only: [:update]
@@ -34,13 +34,30 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def update_user
     @user = User.find(params[:id])
-    if @user.update(user_params)
-      redirect_to users_path
-      flash[:success] = "¡El registro de #{@user.names} fue actualizado con éxito!"
-      else
-        redirect_to user_edit_path(@user.id)
+
+    puts "klsñhlksadjfñlkasdjñlasdjkñladskjñadskljkadskñlfjdsñkldsajkñlafdjkñl"
+    if user_params["password"].length == 0
+      params_new =  user_update_params
+    else
+      params_new = user_params
+    end
+
+    if @user.update(params_new)
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @cost_center.errors.full_messages
+      }
     end
   end
+
+  #venta o proyecto, los centros de costos, en materiales, en tableristas proyectos, reportes proyectos y servicios 
+  #cuando es servicio solo muestra horas ingeneria, cuando es venta solo muestra horas de ingeria,  Valor Viaticos Total Cotizacion, cuando es venta ,muestra materiales, total cotizacion, cuando es proyecto si deja todo, el show tambien 
 
   def delete_user
     @user = User.find(params[:id])
