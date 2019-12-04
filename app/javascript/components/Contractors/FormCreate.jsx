@@ -49,7 +49,7 @@ class FormCreate extends React.Component {
                 <div className="col-md-6 mb-4">
                 <label>Horas trabajadas<small className="validate-label">*</small></label>
                   <input
-                    type="number"
+                    type="text"
                     name="hours"
                     value={this.props.formValues.hours}
                     onChange={this.props.onChangeForm}

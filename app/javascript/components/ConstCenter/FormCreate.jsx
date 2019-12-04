@@ -125,7 +125,7 @@ class FormCreate extends React.Component {
                   <label>Horas ingeniería <small className="validate-label">*</small></label>
                     <input 
                       name="eng_hours"
-                      type="number"
+                      type="text"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.eng_hours == "" ? "error-class" : ""}`}
                       value={this.props.formValues.eng_hours}
                       onChange={this.props.onChangeForm}
@@ -169,7 +169,7 @@ class FormCreate extends React.Component {
                   <label>Horas tablerista <small className="validate-label">*</small></label>
                     <input 
                       name="hours_contractor"
-                      type="number"
+                      type="text"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hours_contractor}
                       onChange={this.props.onChangeForm}

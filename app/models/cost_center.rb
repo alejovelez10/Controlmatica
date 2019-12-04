@@ -24,7 +24,7 @@
 #  hour_real                 :float
 #  quotation_value           :float
 #  work_force_contractor     :float
-#  hours_contractor          :integer
+#  hours_contractor          :float
 #  hours_contractor_invoices :float
 #  hours_contractor_real     :float
 #  materials_value           :float
@@ -39,6 +39,7 @@
 #  contractor_total_costo    :float            default(0.0)
 #  sum_contractor_costo      :float            default(0.0)
 #  sum_contractor_cot        :float            default(0.0)
+#  sum_materials_value       :float            default(0.0)
 #
 
 class CostCenter < ApplicationRecord
@@ -75,8 +76,8 @@ class CostCenter < ApplicationRecord
     self.ingenieria_total_costo = self.eng_hours * self.hour_real
     self.engineering_value = self.eng_hours * self.hour_cotizada
 
-    self.contractor_total_costo = self.eng_hours * self.hour_real
-    self.work_force_contractor = self.eng_hours * self.hour_cotizada
+    self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
+    self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
 
     count = CostCenter.where(service_type: self.service_type).where(customer_id: self.customer_id).maximum(:count)
     customer_prefix = Customer.find(self.customer_id).code
@@ -92,8 +93,8 @@ class CostCenter < ApplicationRecord
     self.ingenieria_total_costo = self.eng_hours * self.hour_real
     self.engineering_value = self.eng_hours * self.hour_cotizada
 
-    self.contractor_total_costo = self.eng_hours * self.hour_real
-    self.work_force_contractor = self.eng_hours * self.hour_cotizada
+    self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
+    self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
   end
 
   def change_state
