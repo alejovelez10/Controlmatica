@@ -179,7 +179,7 @@ class FormCreate extends React.Component {
                   </div>
                 </div>
 
-                  {this.props.formValues.password.length >= 1 && (
+                {this.props.formValues.password.length >= 1 && (
                     <React.Fragment>
                       {this.props.passworState == false && (
                         <div className="col-md-12 mt-1">
@@ -189,11 +189,11 @@ class FormCreate extends React.Component {
                             <div className="row">
                               <div className="col-md-6">
                                 <ul>
-                                  <li className={this.props.formValues.password.length > 10 ? "color-password" : "color-falsePassword"}>Mínimo 10 caracteres</li>
+                                  <li className={this.props.formValues.password.length >= 6 ? "color-password" : "color-falsePassword"}>Mínimo 6 caracteres</li>
                                   <li className={(/[A-Z]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Al menos una letra mayúscula</li>
                                   <li className={(/[a-z]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Una letra minúscula</li>
                                   <li className={(/[0-9]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Un número</li>
-                                  <li className={(/[@$!%*?]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Un carácter especial(@$!%*?)</li>
+                                  {/*<li className={(/[@$!%*_?]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Un carácter especial(@$!%*_?)</li>*/}
                                 </ul>
                               </div>
                             </div>
