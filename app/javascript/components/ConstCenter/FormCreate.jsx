@@ -118,7 +118,9 @@ class FormCreate extends React.Component {
                     <div className="col-md-12 mt-4 mb-4">
                       <hr/>
                     </div>
-                  {/* HR */}
+                  {/* {this.props.formValues.service_type} HR */}
+
+              
 
 
                   <div className="col-md-4">
