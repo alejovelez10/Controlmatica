@@ -14,19 +14,17 @@
 #
 
 class SalesOrder < ApplicationRecord
-	belongs_to :cost_center , optional: true
-	mount_uploader :order_file, OrderUploader
-	after_create :change_state_cost_center
-	has_many :customer_invoices
+  belongs_to :cost_center, optional: true
+  mount_uploader :order_file, OrderUploader
+  after_create :change_state_cost_center
+  has_many :customer_invoices
 
+  def change_state_cost_center
+    cost_center = CostCenter.find(self.cost_center_id)
 
-	def change_state_cost_center
-		cost_center = CostCenter.find(self.cost_center_id)
-
-		sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
-		if (cost_center.quotation_value <= sales_order)
-			CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
-		end
-		
-	end
+    sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
+    if (cost_center.quotation_value <= sales_order)
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+    end
+  end
 end

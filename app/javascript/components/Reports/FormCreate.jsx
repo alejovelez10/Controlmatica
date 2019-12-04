@@ -189,7 +189,7 @@ class FormCreate extends React.Component {
                   <label>Tiempo de Trabajo (Horas)<small className="validate-label">*</small></label>
                     <input 
                       name="working_time"
-                      type="number"
+                      type="text"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.working_time == "" ? "error-class" : ""}`}
                       value={this.props.formValues.working_time}
                       onChange={this.props.onChangeForm}
