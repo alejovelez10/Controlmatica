@@ -88,7 +88,24 @@ class FormFilter extends Component {
                         <option value="Si Aprobado">Si Aprobado</option>
                     </select>
                   </div>
-
+                  
+                  <div className="col-md-3 imput-filter mt-3">
+                    <label>Centro de costo</label>
+                      <select name="cost_center_id" 
+                        className="form form-control"
+                        onChange={this.props.onChangeFilter}
+                        value={this.props.formValuesFilter.cost_center_id}
+                      >
+                        <option value="">Seleccione un ingreso</option>
+                        {
+                          this.props.cost_centers.map(item => (
+                              <React.Fragment>
+                                  <option value={item.id}>{item.code}</option>
+                              </React.Fragment>
+                          ))
+                        }
+                      </select>
+                    </div>
 
 
 

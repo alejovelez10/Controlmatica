@@ -13,7 +13,8 @@ class index extends React.Component {
               work_description: "",
               report_execute_id: "",
               date_ejecution: "",
-              report_sate: ""
+              report_sate: "",
+              cost_center_id: ""
             }
         }
     }
@@ -48,7 +49,8 @@ class index extends React.Component {
           work_description: "",
           report_execute_id: "",
           date_ejecution: "",
-          report_sate: ""
+          report_sate: "",
+          cost_center_id: ""
         }
       })
       
@@ -64,7 +66,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}`)
+      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -86,6 +88,7 @@ class index extends React.Component {
                   cancelFilter={this.cancelFilter}
                   closeFilter={this.showFilter}
                   users={this.props.users}
+                  cost_centers={this.props.cost_centers}
                 />
               </div>
 

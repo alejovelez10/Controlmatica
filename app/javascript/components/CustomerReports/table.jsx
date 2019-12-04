@@ -526,6 +526,14 @@ class table extends React.Component {
                     </div>
 
                     <div className="col-md-4 text-right">
+                    <button
+                      className="btn btn-light mr-3"
+                      onClick={this.props.show}
+                      disabled={this.props.dataActions.length >= 1 ? false : true}
+                    >
+                      Filtros <i className="fas fa-search ml-2"></i>
+                    </button>
+                    
                       {this.props.estados.create == true && (
                         <button  onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo Informe</button>
                       )}

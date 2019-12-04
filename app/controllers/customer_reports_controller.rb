@@ -42,9 +42,8 @@ class CustomerReportsController < ApplicationController
     validate = (current_user.rol.name == "Administrador" ? true : estado)
     
     if validate
-      if params[:search1] || params[:search2]
-        customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10).search(params[:search1], params[:search2]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
-        
+      if params[:cost_center_id] || params[:customer_id] || params[:state]
+        customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
       else
         customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
       end

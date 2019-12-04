@@ -18,8 +18,8 @@ class ContractorsController < ApplicationController
   end
 
   def get_contractors
-    if params[:user_execute_id] || params[:sales_date]
-      contractor = Contractor.search(params[:user_execute_id], params[:sales_date]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+    if params[:user_execute_id] || params[:sales_date] || params[:cost_center_id]
+      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
     else
       contractor = Contractor.all.to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
     end

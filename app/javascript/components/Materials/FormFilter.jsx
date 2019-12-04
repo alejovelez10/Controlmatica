@@ -72,6 +72,25 @@ class FormFilter extends Component {
                       value={this.props.formValuesFilter.sales_date}
                     />
                 </div>
+
+                <div className="col-md-3">
+                <label>Centro de costo</label>
+
+                      <select name="cost_center_id" 
+                        className="form form-control"
+                        onChange={this.props.onChangeFilter}
+                        value={this.props.formValuesFilter.cost_center_id}
+                      >
+                        <option value="">Seleccione un ingreso</option>
+                        {
+                          this.props.cost_centers.map(item => (
+                              <React.Fragment>
+                                  <option value={item.id}>{item.code}</option>
+                              </React.Fragment>
+                          ))
+                        }
+                  </select>
+                </div>
     
               
                 <div className="col-md-12 mt-4">

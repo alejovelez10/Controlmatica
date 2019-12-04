@@ -38,10 +38,11 @@ class CustomerReport < ApplicationRecord
 		
 	end
 
-	def self.search(search1, search2)
-		search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-	    search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
-	    descripcion.customer
+	def self.search(search1, search2, search3)
+		search1 != "" ? (scope :centro, -> { where(cost_center_id: search1) }) : (scope :centro, -> { where.not(id: nil) })
+		search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
+		search3 != "" ? (scope :estado, -> { where("report_state like '%#{search3.downcase}%' or report_state like '%#{search3.upcase}%' or report_state like '%#{search3.capitalize}%' ") }) : (scope :estado, -> { where.not(id: nil) })
+	    centro.customer.estado
 	end
 	
 

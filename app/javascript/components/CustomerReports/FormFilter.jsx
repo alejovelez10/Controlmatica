@@ -31,36 +31,7 @@ class FormFilter extends Component {
             <div className="tile-body">
               <form onSubmit={this.handleSubmit}>
                 <div className="row">
-
-                <div className="col-md-3 imput-filter">
-                    <label>Trabajadas por</label>
-                      <select name="user_execute_id" 
-                        className="form form-control"
-                        onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.user_execute_id}
-                      >
-                        <option value="">Seleccione un trabajador</option>
-                        {
-                          this.props.users.map(item => (
-                              <React.Fragment>
-                                  <option value={item.id}>{item.names}</option>
-                              </React.Fragment>
-                          ))
-                        }
-                      </select>
-                </div>
-
-                <div className="col-md-3">
-                   <label>Fecha creacion</label>
-                    <input
-                      className="form form-control"
-                      type="date"
-                      name="sales_date"
-                      onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.sales_date}
-                    />
-                </div>
-
+                    
                 <div className="col-md-3">
                 <label>Centro de costo</label>
 
@@ -79,6 +50,40 @@ class FormFilter extends Component {
                         }
                   </select>
                 </div>
+
+                <div className="col-md-3 imput-filter">
+                    <label>Cliente</label>
+                      <select name="customer_id" 
+                        className="form form-control"
+                        onChange={this.props.onChangeFilter}
+                        value={this.props.formValuesFilter.customer_id}
+                      >
+                        <option value="">Seleccione un cliente</option>
+                        {
+                          this.props.clientes.map(item => (
+                              <React.Fragment>
+                                  <option value={item.id}>{item.name}</option>
+                              </React.Fragment>
+                          ))
+                        }
+                      </select>
+                </div>
+
+                <div className="col-md-3">
+                <label>Estado</label>
+
+                      <select name="state" 
+                        className="form form-control"
+                        onChange={this.props.onChangeFilter}
+                        value={this.props.formValuesFilter.state}
+                      >
+                        <option value="">Seleccione un estado</option>
+                        <option value="Aprobado">Aprobado</option>
+                        <option value="Enviado al Cliente">Enviado al Cliente</option>
+
+                  </select>
+                </div>
+
     
               
                 <div className="col-md-12 mt-4">

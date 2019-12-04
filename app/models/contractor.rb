@@ -23,10 +23,11 @@ class Contractor < ApplicationRecord
   after_save :calculate_cost
   after_destroy :calculate_cost_destroy
 
-  def self.search(search1, search2)
+  def self.search(search1, search2, search3)
     search1 != "" ? (scope :execute_user, -> { where(user_execute_id: search1) }) : (scope :execute_user, -> { where.not(id: nil) })
     search2 != " " && search2 != nil && search2 != "" ? (scope :date, -> { where("DATE(sales_date) = ?", search2) }) : (scope :date, -> { where.not(id: nil) })
-    execute_user.date
+    search3 != "" ? (scope :centro, -> { where(cost_center_id: search3) }) : (scope :centro, -> { where.not(id: nil) })
+    execute_user.date.centro
   end
 
   def calculate_cost

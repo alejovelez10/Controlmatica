@@ -18,8 +18,8 @@ class MaterialsController < ApplicationController
   end
 
   def get_materials
-    if params[:provider_id] || params[:sales_date] || params[:description]
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+    if params[:provider_id] || params[:sales_date] || params[:description] || params[:cost_center_id]
+      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
     else
       materials = Material.all.to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
     end

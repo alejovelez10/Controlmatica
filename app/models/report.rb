@@ -44,16 +44,13 @@ class Report < ApplicationRecord
 
 
 
-  def self.search(search1, search2, search3, search4)
-    puts "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    puts search1
-    puts "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    puts search2
+  def self.search(search1, search2, search3, search4, search5)
     search1 != "" ? (scope :descripcion, -> { where("work_description like '%#{search1.downcase}%' or work_description like '%#{search1.upcase}%' or work_description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search2 != "" ? (scope :responsible, -> { where(report_execute_id: search2) }) : (scope :responsible, -> { where.not(id: nil) })
     search3 != " " && search3 != nil && search3 != "" ? (scope :date_ejecution, -> { where("DATE(report_date) = ?", search3) }) : (scope :date_ejecution, -> { where.not(id: nil) })
     search4 != "" ? (scope :state_report, -> { where(report_sate: search4) }) : (scope :state_report, -> { where.not(id: nil) })
-    descripcion.responsible.date_ejecution.state_report
+    search5 != "" ? (scope :centro, -> { where(cost_center_id: search5) }) : (scope :centro, -> { where.not(id: nil) })
+    descripcion.responsible.date_ejecution.state_report.centro
   end
 
   def create_code

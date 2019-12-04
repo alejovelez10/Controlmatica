@@ -14,6 +14,7 @@ class index extends React.Component {
               provider_id: "",
               sales_date: "",
               description: "",
+              cost_center_id: "",
             }
 
         }
@@ -45,6 +46,7 @@ class index extends React.Component {
             provider_id: "",
             sales_date: "",
             description: "",
+            cost_center_id: ""
           }
       
         });
@@ -97,7 +99,7 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}`)
+    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -119,6 +121,7 @@ class index extends React.Component {
                   cancelFilter={this.cancelFilter}
                   closeFilter={this.showFilter}
                   providers={this.props.providers}
+                  cost_centers={this.props.cost_center}
                 />
               </div>
             
