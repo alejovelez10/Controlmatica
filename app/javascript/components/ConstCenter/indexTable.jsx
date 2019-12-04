@@ -97,7 +97,7 @@ class indexTable extends React.Component {
       .then(response => response.json())
       .then(data => {
         this.setState({
-          data: data,
+          data: data.cost_centers_paginate,
         });
       });
   };

@@ -35,7 +35,6 @@ class CostCentersController < ApplicationController
 
   def get_cost_centers
     if params[:descripcion] || params[:customer_id] || params[:execution_state] || params[:invoiced_state]
-
       @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 30).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state])
       @cost_centers_total = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state]).count
 
