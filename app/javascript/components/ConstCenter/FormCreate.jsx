@@ -9,17 +9,24 @@ class FormCreate extends React.Component {
   }
 
   getChangeInput = () =>{
-    return(
-      <React.Fragment>
-        {this.services()}
-        {this.sale()}
-        {this.draft()}
-      </React.Fragment>
-    )
+    if (this.props.formValues.service_type == "SERVICIO") {
+      return this.services()
+    }else if(this.props.formValues.service_type == "VENTA"){
+      return this.sale()
+    }else if(this.props.formValues.service_type == "PROYECTO"){
+      return(
+        <React.Fragment>
+          {this.services()}
+          {this.sale()}
+          {this.draft()}
+        </React.Fragment>
+      )
+    }
+       
+        
   }
 
   services = () => { //servicio
-    if (this.props.formValues.service_type == "SERVICIO") {
       return(
         <React.Fragment>
           <div className="col-md-4">
@@ -62,13 +69,44 @@ class FormCreate extends React.Component {
               placeholder="Hora valor cotizada"
             /> 
           </div>
+
+          {/* HR */}
+            <div className="col-md-12 mt-4 mb-4">
+              <hr/>
+            </div>
+          {/* HR */}
+
+          <div className="col-md-4">
+            <label>Valor Viaticos<small className="validate-label">*</small></label>
+            <NumberFormat 
+              name="viatic_value"
+              thousandSeparator={true} 
+              prefix={'$'} 
+              className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
+              value={this.props.formValues.viatic_value}
+              onChange={this.props.onChangeForm}
+              placeholder="Valor Viaticos"
+            /> 
+          </div>
+
+          <div className="col-md-4">
+              <label>Total Cotizacion<small className="validate-label">*</small></label>
+
+              <NumberFormat 
+                name="quotation_value"
+                thousandSeparator={true} 
+                prefix={'$'} 
+                className={`form form-control ${this.props.errorValues == false && this.props.formValues.quotation_value == "" ? "error-class" : ""}`}
+                value={this.props.formValues.quotation_value}
+                onChange={this.props.onChangeForm}
+                placeholder="Total Cotizacion"
+              /> 
+            </div>
         </React.Fragment>
       )
-    }
   }
 
   sale = () => { //venta
-    if (this.props.formValues.service_type == "VENTA") {
       return(
         <React.Fragment>
           <div className="col-md-4">
@@ -84,18 +122,8 @@ class FormCreate extends React.Component {
             /> 
           </div>
 
-          <div className="col-md-4">
-            <label>Valor Viaticos<small className="validate-label">*</small></label>
-            <NumberFormat 
-              name="viatic_value"
-              thousandSeparator={true} 
-              prefix={'$'} 
-              className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-              value={this.props.formValues.viatic_value}
-              onChange={this.props.onChangeForm}
-              placeholder="Valor Viaticos"
-            /> 
-          </div>
+          {this.props.formValues.service_type == "PROYECTO" ? <div className="col-md-12 mt-4 mb-4"> <hr/> </div> : ""}
+
 
             <div className="col-md-4">
               <label>Total Cotizacion<small className="validate-label">*</small></label>
@@ -113,12 +141,10 @@ class FormCreate extends React.Component {
 
         </React.Fragment>
       )
-    }
       //cuando es venta solo muestra horas de ingeria,  Valor Viaticos Total Cotizacion, 
   }
 
   draft = () => { //proyecto
-    if (this.props.formValues.service_type == "PROYECTO") {
       return(
         <React.Fragment>
           <div className="col-md-4">
@@ -134,19 +160,6 @@ class FormCreate extends React.Component {
             /> 
           </div>
 
-          {/*<div className="col-md-4">
-            <label>Valor Viaticos<small className="validate-label">*</small></label>
-            <NumberFormat 
-              name="viatic_value"
-              thousandSeparator={true} 
-              prefix={'$'} 
-              className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-              value={this.props.formValues.viatic_value}
-              onChange={this.props.onChangeForm}
-              placeholder="Valor Viaticos"
-            /> 
-          </div>*/}
-
           <div className="col-md-4">
             <label>Total Cotizacion<small className="validate-label">*</small></label>
             <NumberFormat 
@@ -161,7 +174,6 @@ class FormCreate extends React.Component {
           </div>
         </React.Fragment>
       )
-    }
     //cuando es PROYECTO ,muestra materiales, total cotizacion, cuando es proyecto si deja todo, el show tambien 
   }
 
@@ -277,7 +289,7 @@ class FormCreate extends React.Component {
                     <div className="col-md-12 mt-4 mb-4">
                       <hr/>
                     </div>
-                  {/* {this.props.formValues.service_type} HR */}
+                  {/* HR */}
 
                   {
                     /*#venta o proyecto, los centros de costos, en materiales, en tableristas proyectos, reportes proyectos y servicios 
