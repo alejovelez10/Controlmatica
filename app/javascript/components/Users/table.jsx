@@ -438,12 +438,8 @@ class Table extends React.Component {
 
             <div className="col-md-10 text-right btn-search">
               {this.props.estados.create == true && (
-                <button className="btn btn-primary mr-2" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
+                <button className="btn btn-secondary" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
               )}
-              <button className="btn btn-primary" onClick={this.props.show}>
-                Filtros
-              </button>
-
             </div>
           </div>
         </div>
@@ -487,7 +483,7 @@ class Table extends React.Component {
                     >
                       <div className="btn-group" role="group">
                         <button
-                          className="btn btn-primary"
+                          className="btn btn-secondary"
                           id="btnGroupDrop1"
                           type="button"
                           data-toggle="dropdown"
