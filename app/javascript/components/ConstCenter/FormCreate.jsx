@@ -16,8 +16,6 @@ class FormCreate extends React.Component {
     }else if(this.props.formValues.service_type == "PROYECTO"){
       return(
         <React.Fragment>
-          {this.services()}
-          {this.sale()}
           {this.draft()}
         </React.Fragment>
       )
