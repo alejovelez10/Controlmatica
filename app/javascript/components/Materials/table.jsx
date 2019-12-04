@@ -359,12 +359,14 @@ class table extends React.Component {
             <thead>
               <tr className="tr-title">
                 <th style={{width:"15%"}}>Centro de costo</th>
-                <th style={{width:"15%"}}>Proveedor</th>
-                <th style={{width:"16%"}}>Numero de orden</th>
+                <th style={{width:"12%"}}>Proveedor</th>
+                <th style={{width:"12%"}}># Orden</th>
                 <th style={{width:"10%"}}>Valor</th>
                 <th style={{width:"19%"}}>Descripción</th>
-                <th style={{width:"15%"}}>Fecha de Orden</th>
-                <th style={{width:"15%"}}>Fecha Entrega</th>
+                <th style={{width:"12%"}}>Fecha de Orden</th>
+                <th style={{width:"12%"}}>Fecha Entrega</th>
+                <th style={{width:"12%"}}>Valor Factura</th>
+                <th style={{width:"10%"}}>Estado</th>
                 <th style={{ width: "5%" }} className="text-center">
                   Acciones
                 </th>
@@ -382,6 +384,9 @@ class table extends React.Component {
                     <td>{accion.description}</td>
                     <td>{accion.sales_date}</td>
                     <td>{accion.delivery_date}</td>
+                   
+                    <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                    <td>{accion.sales_state}</td>
                   
 
                     <td className="text-center" style={{ width: "10px" }}>
