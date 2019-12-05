@@ -31,14 +31,6 @@ class table extends React.Component {
           user_execute_id: "",
         },
 
-        formUpdate: {
-          sales_number: "",
-          sales_date: "",
-          ammount: "",
-          user_id: this.props.usuario.id,
-          cost_center_id: ""
-        },
-
         selectedOptionCentro: {
           cost_center_id: "",
           label: "Centro de costo"
@@ -124,9 +116,11 @@ class table extends React.Component {
   };
 
   validationForm = () => {
-    if (this.state.form.created_date != "" && 
-        this.state.form.order_number != "" &&
-        this.state.form.order_value != "" 
+    if (this.state.form.sales_date != "" && 
+        this.state.form.cost_center_id != "" &&
+        this.state.form.hours != "" &&
+        this.state.form.user_execute_id != "" &&
+        this.state.form.description != "" 
   
         ) {
     console.log("los campos estan llenos")

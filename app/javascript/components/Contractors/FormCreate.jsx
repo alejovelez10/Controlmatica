@@ -39,7 +39,7 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}
                         autoFocus={false}
-                        className={`link-form`}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocompleteCentro}
                       />
                   </div>
@@ -69,7 +69,7 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocompleteUsers}
                         options={this.props.users}
                         autoFocus={false}
-                        className={`link-form`}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.user_execute_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocompleteUsers}
                       />
                   </div>
@@ -79,7 +79,7 @@ class FormCreate extends React.Component {
                 <label>Descripcion</label>
                   <textarea 
                     name="description"
-                    className={`form form-control`}
+                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.description == "" ? "error-class" : ""}`}
                     value={this.props.formValues.description}
                     onChange={this.props.onChangeForm}
                     placeholder="Descripcion.."
