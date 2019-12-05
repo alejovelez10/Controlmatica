@@ -1,9 +1,10 @@
 class EmployedPerformanceController < ApplicationController
     before_action :authenticate_user!
+
   def show
-
-
-
+    informe = ModuleControl.find_by_name("Informe de rendimiento")
+    estado = current_user.rol.accion_modules.where(module_control_id: informe.id).where(name: "Ingreso al modulo").exists?
+    @validate = (current_user.rol.name == "Administrador" ? true : estado)
   end
 
   def info_pdf

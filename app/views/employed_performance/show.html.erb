@@ -7,7 +7,7 @@
             <div class="card-body">
                <%= form_tag info_pdf_path(format: :pdf),  method: :get  do%>
 
-               <% if current_user.rol_user != "Ingeniero"%>
+               <% if @validate %>
                   <div class="form-group">   
                      <label>Seleccione Empleado</label>
                      <%= select_tag 'user_id', options_for_select(User.all.collect{ |u| [u.names, u.id] }),{:class => "form1 form form-control", :prompt => 'Selecciona un Empleado', id: "", :required => true}%>
@@ -18,14 +18,14 @@
 
                <div class="form-group">
                   <label>Seleccione Desde</label>
-                  <%= date_field_tag :fecha_desde,nil ,class: "form form-control"%>
+                  <%= date_field_tag :fecha_desde,nil ,class: "form form-control", :required => true%>
                </div>
                
                <div class="form-group">
                   <label>Seleccione Fecha Hasta</label>
-                  <%= date_field_tag :fecha_hasta,nil, class: "form form-control"%>
+                  <%= date_field_tag :fecha_hasta,nil, class: "form form-control", :required => true%>
                </div>
-                  <%= submit_tag "Generar", :formtarget => "_blank" , class: "btn btn-secondary btn-lg btn-block"%>
+                  <%= button_tag "Generar", :formtarget => "_blank" , class: "btn btn-secondary btn-lg btn-block", disabled: false %>
                <% end %>
             </div>
          </div>
