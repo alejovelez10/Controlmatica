@@ -102,13 +102,14 @@ class CostCentersController < ApplicationController
     ing_cotizado = @cost_center.engineering_value
 
     ing_real = @cost_center.reports.sum(:working_value)
+
     via_cotizado = @cost_center.viatic_value
+
+    
     via_real = @cost_center.reports.sum(:viatic_value)
 
     horas_eje = @cost_center.reports.sum(:working_time)
     hours_eje_contractor = @cost_center.contractors.sum(:hours)
-
-    
 
     facturacion = @cost_center.customer_invoices.sum(:invoice_value)
 
@@ -125,7 +126,6 @@ class CostCentersController < ApplicationController
     porc_eje_costo =  costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f/costo_en_dinero))*100)).to_i : "N/A"
 
     porc_eje_costo_contractor =  costo_en_dinero_contractor > 0 ? (((1 - (costo_real_en_dinero_contractor.to_f/costo_en_dinero_contractor))*100)).to_i : "N/A"
-
 
     porc_via =  via_cotizado > 0 ? ((via_real.to_f/via_cotizado)*100).to_i : "N/A" 
 

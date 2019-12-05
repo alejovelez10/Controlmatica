@@ -4,7 +4,7 @@
 <%# link_to "Volver", cost_centers_path , class: "btn btn-primary"%>
 <%# link_to "Editar", edit_cost_center_path(@cost_center.id) , class: "btn btn-primary"%>
 
-    <% ing_cotizado = @cost_center.engineering_value
+    <%# ing_cotizado = @cost_center.engineering_value
 
           ing_real = @cost_center.reports.sum(:working_value)
           via_cotizado = @cost_center.viatic_value
@@ -35,4 +35,4 @@
 
 
           
-        %>
+    %>

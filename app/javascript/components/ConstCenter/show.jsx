@@ -24,6 +24,388 @@ class Show extends React.Component {
         });
     }
 
+
+    getCards(){
+        if (this.props.data_info.service_type == "SERVICIO") {
+            return this.getServices()
+        }else if(this.props.data_info.service_type == "VENTA"){
+            return this.getSale()
+        }else if(this.props.data_info.service_type == "PROYECTO"){
+            return this.getDraft()
+        }
+    }
+
+    getServices = () => {
+        return(
+            <React.Fragment>
+                <div className="col-md-6 mb-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Ingenieria(Ejecución)</strong><br/> 
+                    </div>
+                                                
+                    <div className="col-md-12 background-show"> 
+                        <div className="row">
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                    <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} </span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Ejecutado</strong><br/> 
+                                <span>{this.props.horas_eje/*<%= horas_eje %> */} </span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Avance</strong><br/> 
+                                <span>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
+                            </div>
+                        </div>
+                            
+                            
+                    </div>
+                </div>
+                         
+                <div className="col-md-6">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Ingenieria(Costos)</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Ing Cotizada</strong><br/>
+                                <span><NumberFormat value={this.props.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Ing costo</strong><br/> 
+                                <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Margen</strong><br/> 
+                                <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Viaticos</strong><br/>
+                    </div>
+                                
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center" >
+                                <strong>Cotizado</strong><br/>
+                                <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Gastado</strong><br/>
+                                <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
+                            </div>
+                                
+                            <div className="col-md-4 text-center"> 
+                                <strong>Avance</strong><br/>
+                                <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Facturacion</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Facturado</strong><br/> 
+                                <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Avance</strong><br/> 
+                                <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </React.Fragment>
+        )
+    }
+
+    getSale = () => {
+        return(
+            <React.Fragment>
+                                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Materiales</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizados</strong><br/> 
+                                <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Comprados</strong><br/> 
+                                <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Margen</strong><br/> 
+                                <span>{this.props.porc_mat}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Facturacion</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Facturado</strong><br/> 
+                                <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Avance</strong><br/> 
+                                <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+            </React.Fragment>
+        )
+    }
+
+    getDraft = () => {
+        return(
+            <React.Fragment>
+
+                <div className="col-md-6 mb-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Ingenieria(Ejecución)</strong><br/> 
+                    </div>
+                                                
+                    <div className="col-md-12 background-show"> 
+                        <div className="row">
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                    <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} </span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Ejecutado</strong><br/> 
+                                <span>{this.props.horas_eje/*<%= horas_eje %> */} </span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Avance</strong><br/> 
+                                <span>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
+                            </div>
+                        </div>
+                            
+                            
+                    </div>
+                </div>
+                         
+                <div className="col-md-6">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Ingenieria(Costos)</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Ing Cotizada</strong><br/>
+                                <span><NumberFormat value={this.props.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Ing costo</strong><br/> 
+                                <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Margen</strong><br/> 
+                                <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+
+                <div className="col-md-6">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Tableristas(Ejecución)</strong><br/>
+                    </div>
+                                
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                <span>{this.props.hours_contractor}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Ejecutado</strong><br/> 
+                                <span>{this.props.hours_eje_contractor}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Avance</strong><br/> 
+                                <span>{this.props.porc_eje_contractor}</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div> 
+
+                <div className="col-md-6">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Tableristas(Costos)</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Tab Cotizada</strong><br/>
+                                <span><NumberFormat value={this.props.costo_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">
+                                <strong>Tab costo</strong><br/> 
+                                <span><NumberFormat value={this.props.costo_real_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Margen</strong><br/> 
+                                <span>{this.props.porc_eje_costo_contractor}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div> 
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Materiales</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizados</strong><br/> 
+                                <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Comprados</strong><br/> 
+                                <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Margen</strong><br/> 
+                                <span>{this.props.porc_mat}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div> 
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Viaticos</strong><br/>
+                    </div>
+                                
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center" >
+                                <strong>Cotizado</strong><br/>
+                                <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Gastado</strong><br/>
+                                <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
+                            </div>
+                                
+                            <div className="col-md-4 text-center"> 
+                                <strong>Avance</strong><br/>
+                                <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Facturacion</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Facturado</strong><br/> 
+                                <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Avance</strong><br/> 
+                                <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                
+            </React.Fragment>
+        )
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -89,243 +471,22 @@ class Show extends React.Component {
                         </div>*/}
 
                         <div className="row valores">
-     
-                            <div className="col-md-6 mb-4">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Ingenieria(Ejecución)</strong><br/> 
-                                </div>
-                    
-                
-                            
-                                <div className="col-md-12 background-show">
-                         
-                                    <div className="row">
-                                        <div className="col-md-4 text-center">
-                                            <strong>Cotizado</strong><br/> 
-                                            <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} </span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">
-                                            <strong>Ejecutado</strong><br/> 
-                                            <span>{this.props.horas_eje/*<%= horas_eje %> */} </span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">
-                                            <strong>Avance</strong><br/> 
-                                            <span>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
-                                        </div>
-                                    </div>
-                            
-                            
-                                </div>
-
-                            </div>
-                         
-                        
-                     
-
-     
-                            <div className="col-md-6">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Ingenieria(Costos)</strong><br/>
-                                </div>
-
-
-
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-                                        <div className="col-md-4 text-center">
-                                            <strong>Ing Cotizada</strong><br/>
-                                            <span><NumberFormat value={this.props.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">
-                                            <strong>Ing costo</strong><br/> 
-                                            <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Margen</strong><br/> 
-                                            <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div> 
-
-              
-
-
-                       
-
-                            <div className="col-md-6">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Tableristas(Ejecución)</strong><br/>
-                                </div>
-
-
-
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-                                        <div className="col-md-4 text-center">
-                                            <strong>Cotizado</strong><br/> 
-                                            <span>{this.props.hours_contractor}</span>
-                                        </div>
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Ejecutado</strong><br/> 
-                                            <span>{this.props.hours_eje_contractor}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                        <strong>Avance</strong><br/> 
-                                            <span>{this.props.porc_eje_contractor}</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div> 
-                            <div className="col-md-6">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Tableristas(Costos)</strong><br/>
-                                </div>
-
-
-
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-                                        <div className="col-md-4 text-center">
-                                            <strong>Tab Cotizada</strong><br/>
-                                            <span><NumberFormat value={this.props.costo_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">
-                                            <strong>Tab costo</strong><br/> 
-                                            <span><NumberFormat value={this.props.costo_real_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Margen</strong><br/> 
-                                            <span>{this.props.porc_eje_costo_contractor}%</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div> 
-
-
-                            <div className="col-md-6 mt-4">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Materiales</strong><br/>
-                                </div>
-
-
-
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-
-                                        <div className="col-md-4 text-center">
-                                            <strong>Cotizados</strong><br/> 
-                                            <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Comprados</strong><br/> 
-                                            <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Margen</strong><br/> 
-                                            <span>{this.props.porc_mat}%</span>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div> 
-
-                            <div className="col-md-6 mt-4">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Viaticos</strong><br/>
-                                </div>
-                        
-                        
-                            
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-                                        <div className="col-md-4 text-center" >
-                                            <strong>Cotizado</strong><br/>
-                                            <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Gastado</strong><br/>
-                                            <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></span>
-                                        </div>
-                                
-                                        <div className="col-md-4 text-center"> 
-                                            <strong>Avance</strong><br/>
-                                            <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-
-
-                            <div className="col-md-6 mt-4">
-                                <div className="col-md-12 title1 text-center">
-                                    <strong>Facturacion</strong><br/>
-                                </div>
-
-                            
-
-                                <div className="col-md-12 background-show">
-                                    <div className="row">
-                                        <div className="col-md-4 text-center">
-                                            <strong>Cotizado</strong><br/> 
-                                            <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Facturado</strong><br/> 
-                                            <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/>{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                                        </div>
-
-                                        <div className="col-md-4 text-center">   
-                                            <strong>Avance</strong><br/> 
-                                            <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                            </div> 
-
-
-
-
-
+                            {this.props.data_info.service_type != "" && (
+                                <React.Fragment>
+                                    {this.getCards()}
+                                </React.Fragment>
+                            )}
 
                             <div className="col-md-12 text-center mt-5">
-
                                 {this.state.show_btn_ordenes_compra == true && (
                                     <a 
                                         href={`/cost_centers/${this.props.data_info.id}`} 
                                         className={this.props.sales_orders_state == true ? "btn btn-secondary" : "btn btn-outline-secondary"}>Ordenes de Compras
                                     </a>
                                 )}
-
-                               
-                             
-
                             </div>
-
                         </div> 
+
                     </CardBody>
                 </Card>
             </React.Fragment>

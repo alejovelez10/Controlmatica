@@ -24,22 +24,22 @@ class tableIndex extends React.Component {
           description: "",
           start_date: "",
           end_date: "",
-          quotation_number: "",
-          viatic_value: "",
+          quotation_number: "0.0",
+          viatic_value: "0.0",
           execution_state: "PENDIENTE",
 
-          eng_hours: "",
+          eng_hours: "0.0",
           hour_real: this.props.hours_real,
           hour_cotizada: this.props.hours_invoices,
 
 
-          hours_contractor: "",
-          hours_contractor_real: "",
-          hours_contractor_invoices: "",
+          hours_contractor: "0.0",
+          hours_contractor_real: "0.0",
+          hours_contractor_invoices: "0.0",
 
-          materials_value: "",
-          viatic_value: "",
-          quotation_value: "",
+          materials_value: "0.0",
+          viatic_value: "0.0",
+          quotation_value: "0.0",
         },
 
         selectedOption: {
@@ -172,23 +172,34 @@ class tableIndex extends React.Component {
           description: "",
           start_date: "",
           end_date: "",
-          quotation_number: "",
-          viatic_value: "",
+          quotation_number: "0.0",
+          viatic_value: "0.0",
           execution_state: "PENDIENTE",
 
-          eng_hours: "",
+          eng_hours: "0.0",
           hour_real: this.props.hours_real,
           hour_cotizada: this.props.hours_invoices,
 
 
-          hours_contractor: "",
-          hours_contractor_real: "",
-          hours_contractor_invoices: "",
+          hours_contractor: "0.0",
+          hours_contractor_real: "0.0",
+          hours_contractor_invoices: "0.0",
 
-          materials_value: "",
-          viatic_value: "",
-          quotation_value: "",
-        }
+          materials_value: "0.0",
+          viatic_value: "0.0",
+          quotation_value: "0.0",
+        },
+
+        selectedOption: {
+          customer_id: "",
+          label: "Seleccionar cliente"
+        },
+
+        selectedOptionContact: {
+          contact_id: "",
+          label: "Seleccionar Contacto"
+        },
+
       });
     } else {
       this.setState({ stateSearch: false });
@@ -231,22 +242,22 @@ class tableIndex extends React.Component {
                 description: "",
                 start_date: "",
                 end_date: "",
-                quotation_number: "",
-                viatic_value: "",
+                quotation_number: "0.0",
+                viatic_value: "0.0",
                 execution_state: "PENDIENTE",
       
-                eng_hours: "",
+                eng_hours: "0.0",
                 hour_real: this.props.hours_real,
                 hour_cotizada: this.props.hours_invoices,
       
       
-                hours_contractor: "",
-                hours_contractor_real: "",
-                hours_contractor_invoices: "",
+                hours_contractor: "0.0",
+                hours_contractor_real: "0.0",
+                hours_contractor_invoices: "0.0",
       
-                materials_value: "",
-                viatic_value: "",
-                quotation_value: "",
+                materials_value: "0.0",
+                viatic_value: "0.0",
+                quotation_value: "0.0",
               },
 
               selectedOption: {
@@ -288,22 +299,22 @@ class tableIndex extends React.Component {
                 description: "",
                 start_date: "",
                 end_date: "",
-                quotation_number: "",
-                viatic_value: "",
+                quotation_number: "0.0",
+                viatic_value: "0.0",
                 execution_state: "PENDIENTE",
       
-                eng_hours: "",
-                hour_real: "",
-                hour_cotizada: "",
+                eng_hours: "0.0",
+                hour_real: this.props.hours_real,
+                hour_cotizada: this.props.hours_invoices,
       
       
-                hours_contractor: "",
-                hours_contractor_real: "",
-                hours_contractor_invoices: "",
+                hours_contractor: "0.0",
+                hours_contractor_real: "0.0",
+                hours_contractor_invoices: "0.0",
       
-                materials_value: "",
-                viatic_value: "",
-                quotation_value: "",
+                materials_value: "0.0",
+                viatic_value: "0.0",
+                quotation_value: "0.0",
               },
 
               selectedOption: {
