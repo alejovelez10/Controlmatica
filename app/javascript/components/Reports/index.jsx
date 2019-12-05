@@ -15,7 +15,14 @@ class index extends React.Component {
               date_ejecution: "",
               report_sate: "",
               cost_center_id: ""
-            }
+            },
+
+            selectedOptionCentro: {
+              cost_center_id: "",
+              label: "Centro de costo"
+            },
+      
+            dataCostCenter: []
         }
     }
 
@@ -34,7 +41,28 @@ class index extends React.Component {
     
     componentDidMount() {
         this.loadData();
+
+        let array = []
+
+        this.props.cost_centers.map((item) => (
+          array.push({label: item.code, value: item.id})
+        ))
+    
+        this.setState({
+          dataCostCenter: array
+        })
     }
+
+    handleChangeAutocompleteCentro = selectedOptionCentro => {
+      this.setState({
+        selectedOptionCentro,
+        formFilter: {
+          ...this.state.formFilter,
+          cost_center_id: selectedOptionCentro.value
+        }
+      });
+      
+    };
 
     showFilter = valor => {
       if (valor == true) {
@@ -51,7 +79,12 @@ class index extends React.Component {
           date_ejecution: "",
           report_sate: "",
           cost_center_id: ""
-        }
+        },
+
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
       })
       
     };
@@ -89,6 +122,12 @@ class index extends React.Component {
                   closeFilter={this.showFilter}
                   users={this.props.users}
                   cost_centers={this.props.cost_centers}
+
+                  /* AUTOCOMPLETE CENTRO DE COSTO */
+
+                  centro={this.state.dataCostCenter}
+                  onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                  formAutocompleteCentro={this.state.selectedOptionCentro}
                 />
               </div>
 

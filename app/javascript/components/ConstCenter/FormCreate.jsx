@@ -326,6 +326,7 @@ class FormCreate extends React.Component {
                           className={`form form-control ${this.props.errorValues == false && this.props.formValues.service_type == "" ? "error-class" : ""}`}
                           value={this.props.formValues.service_type}
                           onChange={this.props.onChangeForm}
+                          disabled={this.props.modeEdit == true ? true : false}
                         >
                           <option value="">Seleccione un tipo</option>
                           <option value="SERVICIO">SERVICIO</option>

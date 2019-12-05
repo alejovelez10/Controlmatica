@@ -32,7 +32,7 @@ class FormFilter extends Component {
               <form onSubmit={this.handleSubmit}>
                 <div className="row">
 
-                <div className="col-md-3 imput-filter">
+                <div className="col-md-2 imput-filter">
                     <label>Proveedor</label>
                       <select name="provider_id" 
                         className="form form-control"
@@ -62,7 +62,7 @@ class FormFilter extends Component {
                     />
                 </div>
 
-                <div className="col-md-3">
+                <div className="col-md-2">
                    <label>Fecha de Orden</label>
                     <input
                       className="form form-control"
@@ -74,22 +74,36 @@ class FormFilter extends Component {
                 </div>
 
                 <div className="col-md-3">
-                <label>Centro de costo</label>
+                      <input
+                        type="hidden"
+                        name="cost_center_id"
+                        value={this.props.formAutocompleteCentro.cost_center_id}
+                      />
+                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteCentro}
+                        options={this.props.centro}
+                        autoFocus={false}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
+                        value={this.props.formAutocompleteCentro}
+                      />
+                  </div>
 
-                      <select name="cost_center_id" 
+                  <div className="col-md-2 imput-filter">
+                    <label>Estado de compra</label>
+                      <select 
+                        name="estado" 
                         className="form form-control"
                         onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.cost_center_id}
+                        value={this.props.formValuesFilter.estado}
                       >
-                        <option value="">Seleccione un ingreso</option>
-                        {
-                          this.props.cost_centers.map(item => (
-                              <React.Fragment>
-                                  <option value={item.id}>{item.code}</option>
-                              </React.Fragment>
-                          ))
-                        }
-                  </select>
+                        <option value="">Seleccione un estado</option>
+                        <option value="PROCESADO">PROCESADO</option>
+                        <option value="INGRESADO TOTAL">INGRESADO TOTAL</option>
+                        <option value="INGRESADO CON MAYOR VALOR EN FACTURA">INGRESADO CON MAYOR VALOR EN FACTURA</option>
+                        <option value="INGRESADO PARCIAL">INGRESADO PARCIAL</option>
+
+                      </select>
                 </div>
     
               

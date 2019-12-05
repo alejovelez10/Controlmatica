@@ -15,7 +15,15 @@ class index extends React.Component {
               sales_date: "",
               description: "",
               cost_center_id: "",
-            }
+              estado: "",
+            },
+
+            selectedOptionCentro: {
+              cost_center_id: "",
+              label: "Centro de costo"
+            },
+      
+            dataCostCenter: []
 
         }
     }
@@ -46,8 +54,14 @@ class index extends React.Component {
             provider_id: "",
             sales_date: "",
             description: "",
-            cost_center_id: ""
-          }
+            cost_center_id: "",
+            estado: ""
+          },
+
+          selectedOptionCentro: {
+            cost_center_id: "",
+            label: "Centro de costo"
+          },
       
         });
   
@@ -60,7 +74,27 @@ class index extends React.Component {
     
     componentDidMount() {
         this.loadDataTable();
+        let array = []
+
+        this.props.cost_center.map((item) => (
+          array.push({label: item.code, value: item.id})
+        ))
+    
+        this.setState({
+          dataCostCenter: array
+        })
     }
+
+    handleChangeAutocompleteCentro = selectedOptionCentro => {
+      this.setState({
+        selectedOptionCentro,
+        formFilter: {
+          ...this.state.formFilter,
+          cost_center_id: selectedOptionCentro.value
+        }
+      });
+    };
+  
 
       
   change = e => {
@@ -99,14 +133,13 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}`)
+    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
           data: data,
         });
       });
-   
   };
 
 
@@ -122,6 +155,13 @@ class index extends React.Component {
                   closeFilter={this.showFilter}
                   providers={this.props.providers}
                   cost_centers={this.props.cost_center}
+
+                  /* AUTOCOMPLETE CENTRO DE COSTO */
+
+                  centro={this.state.dataCostCenter}
+                  onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                  formAutocompleteCentro={this.state.selectedOptionCentro}
+
                 />
               </div>
             

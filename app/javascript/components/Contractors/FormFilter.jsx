@@ -62,23 +62,20 @@ class FormFilter extends Component {
                 </div>
 
                 <div className="col-md-3">
-                <label>Centro de costo</label>
-
-                      <select name="cost_center_id" 
-                        className="form form-control"
-                        onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.cost_center_id}
-                      >
-                        <option value="">Seleccione un ingreso</option>
-                        {
-                          this.props.cost_centers.map(item => (
-                              <React.Fragment>
-                                  <option value={item.id}>{item.code}</option>
-                              </React.Fragment>
-                          ))
-                        }
-                  </select>
-                </div>
+                      <input
+                        type="hidden"
+                        name="cost_center_id"
+                        value={this.props.formAutocompleteCentro.cost_center_id}
+                      />
+                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteCentro}
+                        options={this.props.centro}
+                        autoFocus={false}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
+                        value={this.props.formAutocompleteCentro}
+                      />
+                  </div>
     
               
                 <div className="col-md-12 mt-4">

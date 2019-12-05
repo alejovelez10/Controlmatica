@@ -234,41 +234,74 @@ class tableIndex extends React.Component {
     }
   }
 
-        /*
-
-        hours_contractor: ""
-hours_contractor_invoices: ""
-hours_contractor_real: ""
-materials_value: ""
-
-
-
-          eng_hours
-          hour_real
-          hour_cotizada
-
-          hours_contractor
-          hours_contractor_real
-          hours_contractor_invoices
-
-          materials_value
-          viatic_value
-          quotation_value
-        */
-
   handleChange = e => {
     if (e.target.name == "service_type") {
 
      if (e.target.value == "VENTA"){
+       
       this.setState({
         form:{
           ...this.state.form,
-         eng_hours: '10',
-         hour_real: '40',
-         service_type: e.target.value
+          eng_hours: "0.0",
+          hour_real: "0.0",
+          hour_cotizada: "0.0",
+
+          hours_contractor: "0.0",
+          hours_contractor_real: "0.0",
+          hours_contractor_invoices: "0.0",
+  
+          materials_value: "",
+          quotation_value: "",
+
+          viatic_value: "0.0",
+          service_type: e.target.value
         }
       })
-     }
+
+     }else if (e.target.value == "SERVICIO"){
+
+      this.setState({
+        form:{
+          ...this.state.form,
+          eng_hours: "",
+          viatic_value: "",
+          quotation_value: "",
+
+          hour_real: this.props.hours_real,
+          hour_cotizada: this.props.hours_invoices,
+
+          hours_contractor: "0.0",
+          hours_contractor_real: "0.0",
+          hours_contractor_invoices: "0.0",
+  
+          materials_value: "0.0",
+          service_type: e.target.value
+        }
+      })
+
+     }else if (e.target.value == "PROYECTO"){
+
+      this.setState({
+        form:{
+          ...this.state.form,
+          eng_hours: "",
+          hour_real: this.props.hours_real,
+          hour_cotizada: this.props.hours_invoices,
+
+          hours_contractor: "",
+          hours_contractor_real: "",
+          hours_contractor_invoices: "",
+  
+          materials_value: "",
+
+          viatic_value: "",
+          quotation_value: "",
+          service_type: e.target.value
+        }
+      })
+
+    }
+
     }else{
 
       this.setState({
@@ -532,6 +565,7 @@ materials_value: ""
           titulo={this.state.title}
           nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
           errorValues={this.state.ErrorValues}
+          modeEdit={this.state.modeEdit}
           
 
           /* AUTOCOMPLETE CLIENTE */
