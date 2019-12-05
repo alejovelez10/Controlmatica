@@ -101,15 +101,17 @@ class table extends React.Component {
       this.state.form.cost_center_id != "" &&
       this.state.form.sales_date != "" &&
       this.state.form.sales_number != "" &&
-      this.state.form.amount != "" &&
+      this.state.form.amount.length != 0  &&
       this.state.form.delivery_date != "" &&
-      this.state.form.provider_invoice_value != "" &&
+      this.state.form.provider_invoice_value.length != 0 &&
       this.state.form.description != "" 
     ) {
+      
       console.log("los campos estan llenos");
       this.setState({ ErrorValues: true });
       return true;
     } else {
+     
       console.log("los campos no se han llenado");
       this.setState({ ErrorValues: false });
       return false;
@@ -120,7 +122,7 @@ class table extends React.Component {
     if (this.validationForm() == true) {
       if (this.state.modeEdit == true) {
         fetch("/materials/" + this.state.action.id, {
-          method: "PATCH", // or 'PUT'
+          method: "PATCH", 
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
             "Content-Type": "application/json"

@@ -55,15 +55,16 @@ class MaterialsController < ApplicationController
   end
 
   def update
-    if material_params["amount"].class.to_s != "Integer" 
+
+
+  if material_params["amount"].class.to_s != "Integer"  &&  material_params["amount"].class.to_s != "Float" 
+      puts "asñljadñlfjadslfkñjasñjlkfdjskldsñlfal"
       valor1 = material_params["amount"].gsub('$','').gsub(',','')
       params["amount"] = valor1
   end
-  if material_params["provider_invoice_number"].class.to_s != "Integer"
-      valor2 = material_params["provider_invoice_number"].gsub('$','').gsub(',','')
-      params["provider_invoice_number"] = valor2
-  end     
-  if material_params["provider_invoice_value"].class.to_s != "Integer"
+
+
+  if material_params["provider_invoice_value"].class.to_s != "Integer" &&  material_params["provider_invoice_value"].class.to_s != "Float"
       valor3 = material_params["provider_invoice_value"].gsub('$','').gsub(',','')
       params["provider_invoice_value"] = valor3
   end
