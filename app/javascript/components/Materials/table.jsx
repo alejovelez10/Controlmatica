@@ -97,9 +97,14 @@ class table extends React.Component {
 
   validationForm = () => {
     if (
-      this.state.form.created_date != "" &&
-      this.state.form.order_number != "" &&
-      this.state.form.order_value != ""
+      this.state.form.provider_id != "" &&
+      this.state.form.cost_center_id != "" &&
+      this.state.form.sales_date != "" &&
+      this.state.form.sales_number != "" &&
+      this.state.form.amount != "" &&
+      this.state.form.delivery_date != "" &&
+      this.state.form.provider_invoice_value != "" &&
+      this.state.form.description != "" 
     ) {
       console.log("los campos estan llenos");
       this.setState({ ErrorValues: true });
@@ -141,7 +146,12 @@ class table extends React.Component {
                 provider_invoice_value: "",
                 user_id: this.props.usuario.id,
                 ccost_center_id: ""
-              }
+              },
+
+              selectedOptionCentro: {
+                cost_center_id: "",
+                label: "Centro de costo"
+              },
             });
           });
       } else {
@@ -173,7 +183,12 @@ class table extends React.Component {
                 provider_invoice_value: "",
                 user_id: this.props.usuario.id,
                 cost_center_id: ""
-              }
+              },
+
+              selectedOptionCentro: {
+                cost_center_id: "",
+                label: "Centro de costo"
+              },
             });
           });
       }
@@ -233,7 +248,12 @@ class table extends React.Component {
           provider_invoice_value: "",
           user_id: this.props.usuario.id,
           cost_center_id: ""
-        }
+        },
+
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
       });
     } else {
       if (this.state.modeEdit === true) {
@@ -440,7 +460,7 @@ class table extends React.Component {
                   </tr>
                 ))
               ) : (
-                <td colSpan="8" className="text-center">
+                <td colSpan="10" className="text-center">
                   <div className="text-center mt-1 mb-1">
                     <h4>No hay materiales</h4>
                     {this.props.estados.create == true && (

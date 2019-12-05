@@ -21,7 +21,7 @@ class FormCreate extends React.Component {
                   <label>Proveedor</label>
                   <select 
                       name="provider_id" 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.provider_id == "" ? "error-class" : ""}`}
                       value={this.props.formValues.provider_id}
                       onChange={this.props.onChangeForm}
                     >
@@ -48,7 +48,7 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}
                         autoFocus={false}
-                        className={`link-form`}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocompleteCentro}
                       />
                   </div>
@@ -108,7 +108,7 @@ class FormCreate extends React.Component {
                     name="provider_invoice_number"
                     thousandSeparator={true} 
                   
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.provider_invoice_number == "" ? "error-class" : ""}`}
+                    className={`form form-control`}
                     value={this.props.formValues.provider_invoice_number}
                     onChange={this.props.onChangeForm}
                     placeholder="Numero facura"
@@ -132,12 +132,11 @@ class FormCreate extends React.Component {
                 <div className="col-md-12">
                 <label>Descripcion</label>
                   <textarea
-                    type="date"
                     name="description"
                     rows="5"
                     value={this.props.formValues.description}
                     onChange={this.props.onChangeForm}
-                    className={`form form-control`}
+                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.description == "" ? "error-class" : ""}`}
                   />
                 </div>
 

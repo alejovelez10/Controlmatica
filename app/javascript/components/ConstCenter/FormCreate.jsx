@@ -104,16 +104,18 @@ class FormCreate extends React.Component {
       return(
         <React.Fragment>
           <div className="col-md-4">
-            <label>Horas ingeniería <small className="validate-label">*</small></label>
+            <label>Valor materiales <small className="validate-label">*</small></label>
 
-            <input 
-              name="eng_hours"
-              type="text"
+            <NumberFormat 
+              name="materials_value"
+              thousandSeparator={true} 
+              prefix={'$'} 
               className={`form form-control`}
-              value={this.props.formValues.eng_hours}
+              value={this.props.formValues.materials_value}
               onChange={this.props.onChangeForm}
-              placeholder="Horas ingeniería"
-            /> 
+              placeholder="Valor materiales"
+            />
+             
           </div>
 
           {this.props.formValues.service_type == "PROYECTO" ? <div className="col-md-12 mt-4 mb-4"> <hr/> </div> : ""}
