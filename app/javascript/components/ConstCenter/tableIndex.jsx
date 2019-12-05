@@ -201,7 +201,6 @@ class tableIndex extends React.Component {
 
   removeValues = (remove) => {
     if (remove) {
-      console.log("removeValues")
       this.setState({
         form: {
           customer_id: "",
@@ -213,24 +212,23 @@ class tableIndex extends React.Component {
           quotation_number: "",
           execution_state: "PENDIENTE",
   
-          eng_hours: (this.state.form.service_type == "SERVICIO" || this.state.form.service_type == "PROYECTO"  || this.state.form.service_type == "VENTA"  ? "" : "0.0"),
+          eng_hours: "",
 
-          hour_real: (this.state.form.service_type == "PROYECTO" ? "" : this.props.hours_real),
-          hour_cotizada: (this.state.form.service_type == "PROYECTO" ? "" : this.props.hours_invoices),
+          hour_real: this.props.hours_real,
+          hour_cotizada: this.props.hours_invoices,
   
-          hours_contractor: (this.state.form.service_type == "PROYECTO" || this.state.form.service_type == "VENTA" ? "" : "0.0"),
-          hours_contractor_real: (this.state.form.service_type == "PROYECTO" || this.state.form.service_type == "VENTA" ? "" : "0.0"),
-          hours_contractor_invoices: (this.state.form.service_type == "PROYECTO" || this.state.form.service_type == "VENTA" ? "" : "0.0"),
+          hours_contractor: "",
+          hours_contractor_real: "",
+          hours_contractor_invoices: "",
   
-          materials_value: (this.state.form.service_type == "VENTA" || this.state.form.service_type == "PROYECTO" ? "" : "0.0"),
+          materials_value: "",
 
-          viatic_value: (this.state.form.service_type == "SERVICIO" || this.state.form.service_type == "PROYECTO" ? "" : "0.0"),
-          quotation_value: (this.state.form.service_type == "SERVICIO" || this.state.form.service_type == "VENTA" || this.state.form.service_type == "PROYECTO" ? "" : "0.0")
+          viatic_value: "",
+          quotation_value: "",
+        },
 
-        }
+        ErrorValues: true,
       }) 
-
-      console.log(this.state.form)
     }
   }
 
