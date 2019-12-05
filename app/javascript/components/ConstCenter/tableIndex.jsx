@@ -65,11 +65,11 @@ class tableIndex extends React.Component {
         this.state.form.contact_id != "" && 
         this.state.form.service_type != "" && 
         this.state.form.start_date != "" && 
-        this.state.form.end_date != "" && 
-        this.state.form.quotation_number != "" &&
-        this.state.form.quotation_value != "" && 
-        this.state.form.eng_hours != "" && 
-        this.state.form.viatic_value != "" 
+        this.state.form.end_date != "" 
+        //this.state.form.quotation_number != "" &&
+        //this.state.form.quotation_value != "" && 
+        //this.state.form.eng_hours != "" && 
+        //this.state.form.viatic_value != "" 
         ) {
           console.log("los campos estan llenos")
       this.setState({ ErrorValues: true })

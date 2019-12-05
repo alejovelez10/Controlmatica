@@ -209,57 +209,50 @@ class CostCentersController < ApplicationController
 
 
 
-    if params["viatic_value"].present?
+    if params["viatic_value"] != "nil" || params["viatic_value"] != ""
       valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
       params["viatic_value"] = valor1
     end
 
-    if params["quotation_value"].present?
+    if params["quotation_value"] != "nil" || params["quotation_value"] != ""
       valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
       params["quotation_value"] = valor2
     end
 
-
-
-    if params["hour_real"].present?
+    if params["hour_real"] != "nil" || params["hour_real"] != ""
       if cost_center_params["hour_real"].class.to_s != "Integer" && cost_center_params["hour_real"].class.to_s != "Float" 
         valor3 = cost_center_params["hour_real"].gsub('$','').gsub(',','')
         params["hour_real"] = valor3
       end
     end
 
-    
-
-    if params["hour_cotizada"].present?
+    if params["hour_cotizada"] != "nil" || params["hour_cotizada"] != ""
       if cost_center_params["hour_cotizada"].class.to_s != "Integer" && cost_center_params["hour_cotizada"].class.to_s != "Float"
         valor4 = cost_center_params["hour_cotizada"].gsub('$','').gsub(',','')
         params["hour_cotizada"] = valor4
       end
     end
 
-
-    
-
-    if params["hours_contractor_real"].present?
+    if params["hours_contractor_real"] != "nil" || params["hours_contractor_real"] != ""
       if cost_center_params["hours_contractor_real"].class.to_s != "Integer" && cost_center_params["hours_contractor_real"].class.to_s != "Float" 
       valor5 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
       params["hours_contractor_real"] = valor5
       end
     end
 
-    if params["hours_contractor_invoices"].present?
+    if params["hours_contractor_invoices"] != "nil" || params["hours_contractor_invoices"] != ""
       if cost_center_params["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params["hours_contractor_invoices"].class.to_s != "Float" 
       valor6 = cost_center_params["hours_contractor_invoices"].gsub('$','').gsub(',','')
       params["hours_contractor_invoices"] = valor6
       end
     end
 
-    if params["materials_value"].present?
+    if params["materials_value"] != "nil" || params["materials_value"] != ""
       valor7 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
       params["materials_value"] = valor7
     end
 
-    if params["quotation_value"].present?
+    if params["quotation_value"]  != "nil" || params["quotation_value"] != ""
       valor8 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
       params["quotation_value"] = valor8
     end
@@ -310,7 +303,6 @@ class CostCentersController < ApplicationController
         params["hour_cotizada"] = valor7
       end
       
-
       if cost_center_params["hours_contractor_real"].class.to_s != "Integer" && cost_center_params["hours_contractor_real"].class.to_s != "Float" 
         valor4 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
         params["hours_contractor_real"] = valor4

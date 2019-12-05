@@ -73,11 +73,12 @@ class CostCenter < ApplicationRecord
     self.sum_materials = 0
     self.sum_viatic = 0
 
-    self.ingenieria_total_costo = self.eng_hours * self.hour_real
-    self.engineering_value = self.eng_hours * self.hour_cotizada
-
-    self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
-    self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+    if self.service_type == "PROYECTO"
+      self.ingenieria_total_costo = self.eng_hours * self.hour_real
+      self.engineering_value = self.eng_hours * self.hour_cotizada
+      self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
+      self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+    end
 
     count = CostCenter.where(service_type: self.service_type).where(customer_id: self.customer_id).maximum(:count)
     customer_prefix = Customer.find(self.customer_id).code
@@ -90,11 +91,12 @@ class CostCenter < ApplicationRecord
   end
 
   def calculate_costo
-    self.ingenieria_total_costo = self.eng_hours * self.hour_real
-    self.engineering_value = self.eng_hours * self.hour_cotizada
-
-    self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
-    self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+    if self.service_type == "PROYECTO"
+      self.ingenieria_total_costo = self.eng_hours * self.hour_real
+      self.engineering_value = self.eng_hours * self.hour_cotizada
+      self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
+      self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+    end
   end
 
   def change_state
