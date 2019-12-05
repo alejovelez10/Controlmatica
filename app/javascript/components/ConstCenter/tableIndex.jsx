@@ -411,18 +411,18 @@ class tableIndex extends React.Component {
           viatic_value: modulo.viatic_value,
           execution_state: "PENDIENTE",
 
-          eng_hours: modulo.eng_hours,
-          hour_real: modulo.hour_real,
-          hour_cotizada: modulo.hour_cotizada,
+          eng_hours: modulo.eng_hours != undefined ? modulo.eng_hours : "" ,
+          hour_real: modulo.hour_real != undefined ? modulo.hour_real : "",
+          hour_cotizada: modulo.hour_cotizada != undefined ? modulo.hour_cotizada : "",
 
 
-          hours_contractor: modulo.hours_contractor,
-          hours_contractor_real: modulo.hours_contractor_real,
-          hours_contractor_invoices: modulo.hours_contractor_invoices,
+          hours_contractor: modulo.hours_contractor != undefined ? modulo.hours_contractor : "",
+          hours_contractor_real: modulo.hours_contractor_real != undefined ? modulo.hours_contractor_real : "",
+          hours_contractor_invoices: modulo.hours_contractor_invoices != undefined ? modulo.hours_contractor_invoices : "",
 
-          materials_value: modulo.materials_value,
-          viatic_value: modulo.viatic_value,
-          quotation_value: modulo.quotation_value,
+          materials_value: modulo.materials_value != undefined ? modulo.materials_value : "",
+          viatic_value: modulo.viatic_value != undefined ? modulo.viatic_value : "",
+          quotation_value: modulo.quotation_value != undefined ? modulo.quotation_value : "",
 
 
         },
