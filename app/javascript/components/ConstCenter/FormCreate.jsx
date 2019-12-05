@@ -20,7 +20,7 @@ class FormCreate extends React.Component {
         
   }
 
-  services = () => { //servicio
+  services = () => { //servic
       return(
         <React.Fragment>
           <div className="col-md-4">
@@ -110,7 +110,7 @@ class FormCreate extends React.Component {
               name="materials_value"
               thousandSeparator={true} 
               prefix={'$'} 
-              className={`form form-control`}
+              className={`form form-control ${this.props.errorValues == false && this.props.formValues.materials_value == "" ? "error-class" : ""}`}
               value={this.props.formValues.materials_value}
               onChange={this.props.onChangeForm}
               placeholder="Valor materiales"
@@ -128,7 +128,7 @@ class FormCreate extends React.Component {
                 name="quotation_value"
                 thousandSeparator={true} 
                 prefix={'$'} 
-                className={`form form-control`}
+                className={`form form-control ${this.props.errorValues == false && this.props.formValues.quotation_value == "" ? "error-class" : ""}`}
                 value={this.props.formValues.quotation_value}
                 onChange={this.props.onChangeForm}
                 placeholder="Total Cotizacion"
@@ -148,7 +148,7 @@ class FormCreate extends React.Component {
                     <input 
                       name="eng_hours"
                       type="text"
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.eng_hours == "" ? "error-class" : ""}`}
                       value={this.props.formValues.eng_hours}
                       onChange={this.props.onChangeForm}
                       placeholder="Horas ingeniería"
@@ -161,7 +161,7 @@ class FormCreate extends React.Component {
                       name="hour_real"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hour_real == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hour_real}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora costo"
@@ -174,7 +174,7 @@ class FormCreate extends React.Component {
                       name="hour_cotizada"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hour_cotizada == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hour_cotizada}
                       onChange={this.props.onChangeForm}
                       placeholder="Hora valor cotizada"
@@ -192,7 +192,7 @@ class FormCreate extends React.Component {
                     <input 
                       name="hours_contractor"
                       type="text"
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hours_contractor}
                       onChange={this.props.onChangeForm}
                       placeholder="Horas tablerista"
@@ -205,7 +205,7 @@ class FormCreate extends React.Component {
                       name="hours_contractor_real"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor_real == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hours_contractor_real}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora Costo"
@@ -218,7 +218,7 @@ class FormCreate extends React.Component {
                       name="hours_contractor_invoices"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor_invoices == "" ? "error-class" : ""}`}
                       value={this.props.formValues.hours_contractor_invoices}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora cotizada"
@@ -238,7 +238,7 @@ class FormCreate extends React.Component {
                       name="materials_value"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.materials_value == "" ? "error-class" : ""}`}
                       value={this.props.formValues.materials_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor materiales"
@@ -251,7 +251,7 @@ class FormCreate extends React.Component {
                       name="viatic_value"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
                       value={this.props.formValues.viatic_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor Viaticos"
@@ -264,7 +264,7 @@ class FormCreate extends React.Component {
                       name="quotation_value"
                       thousandSeparator={true} 
                       prefix={'$'} 
-                      className={`form form-control`}
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.quotation_value == "" ? "error-class" : ""}`}
                       value={this.props.formValues.quotation_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Total Cotizacion"

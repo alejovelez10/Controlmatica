@@ -25,7 +25,6 @@ class tableIndex extends React.Component {
           start_date: "",
           end_date: "",
           quotation_number: "0.0",
-          viatic_value: "0.0",
           execution_state: "PENDIENTE",
 
           eng_hours: "0.0",
@@ -65,17 +64,68 @@ class tableIndex extends React.Component {
         this.state.form.contact_id != "" && 
         this.state.form.service_type != "" && 
         this.state.form.start_date != "" && 
-        this.state.form.end_date != "" 
-        //this.state.form.quotation_number != "" &&
-        //this.state.form.quotation_value != "" && 
-        //this.state.form.eng_hours != "" && 
-        //this.state.form.viatic_value != "" 
+        this.state.form.end_date != "" &&
+        this.state.form.quotation_number != "" &&
+
+
+        this.state.form.eng_hours != "" && 
+        this.state.form.hour_real != "" &&
+        this.state.form.hour_cotizada != "" &&
+
+        this.state.form.hours_contractor != "" && 
+        this.state.form.hours_contractor_real != "" &&
+        this.state.form.hours_contractor_invoices != "" &&
+
+        this.state.form.materials_value != "" && 
+        this.state.form.viatic_value != "" &&
+        this.state.form.quotation_value != ""
+
+        
+        
+        //servicios 
+
+      
+
+        
+
+
+        /*
+          eng_hours
+          hour_real
+          hour_cotizada
+          viatic_value
+          quotation_value
+        */
+
+        //VENTA 
+
+        /*
+          materials_value
+          quotation_value
+        */
+
+        //PROYECTO 
+
+        /*
+          eng_hours
+          hour_real
+          hour_cotizada
+          hours_contractor
+          hours_contractor_real
+          hours_contractor_invoices
+          materials_value
+          viatic_value
+          quotation_value
+        */
+
+
         ) {
           console.log("los campos estan llenos")
       this.setState({ ErrorValues: true })
       return true
     }else{
       console.log("los campos no se han llenado")
+      console.log(this.state.form)
       this.setState({ ErrorValues: false })
       return false
       
@@ -149,14 +199,90 @@ class tableIndex extends React.Component {
     e.preventDefault();
   };
 
+  removeValues = (remove) => {
+    if (remove) {
+      console.log("removeValues")
+      this.setState({
+        form: {
+          customer_id: "",
+          contact_id: "",
+          user_id: this.props.usuario.id,
+          description: "",
+          start_date: "",
+          end_date: "",
+          quotation_number: "",
+          execution_state: "PENDIENTE",
+  
+          eng_hours: (this.state.form.service_type == "SERVICIO" || this.state.form.service_type == "PROYECTO"  || this.state.form.service_type == "VENTA"  ? "" : "0.0"),
+
+          hour_real: (this.state.form.service_type == "PROYECTO" ? "" : this.props.hours_real),
+          hour_cotizada: (this.state.form.service_type == "PROYECTO" ? "" : this.props.hours_invoices),
+  
+          hours_contractor: (this.state.form.service_type == "PROYECTO" || this.state.form.service_type == "VENTA" ? "" : "0.0"),
+          hours_contractor_real: (this.state.form.service_type == "PROYECTO" || this.state.form.service_type == "VENTA" ? "" : "0.0"),
+          hours_contractor_invoices: (this.state.form.service_type == "PROYECTO" || this.state.form.service_type == "VENTA" ? "" : "0.0"),
+  
+          materials_value: (this.state.form.service_type == "VENTA" || this.state.form.service_type == "PROYECTO" ? "" : "0.0"),
+
+          viatic_value: (this.state.form.service_type == "SERVICIO" || this.state.form.service_type == "PROYECTO" ? "" : "0.0"),
+          quotation_value: (this.state.form.service_type == "SERVICIO" || this.state.form.service_type == "VENTA" || this.state.form.service_type == "PROYECTO" ? "" : "0.0")
+
+        }
+      }) 
+
+      console.log(this.state.form)
+    }
+  }
+
+        /*
+
+        hours_contractor: ""
+hours_contractor_invoices: ""
+hours_contractor_real: ""
+materials_value: ""
+
+
+
+          eng_hours
+          hour_real
+          hour_cotizada
+
+          hours_contractor
+          hours_contractor_real
+          hours_contractor_invoices
+
+          materials_value
+          viatic_value
+          quotation_value
+        */
+
   handleChange = e => {
-    this.setState({
-      form: {
-        ...this.state.form,
-        [e.target.name]: e.target.value
-      }
-    });
+    if (e.target.name == "service_type") {
+
+     if (e.target.value == "VENTA"){
+      this.setState({
+        form:{
+          ...this.state.form,
+         eng_hours: '10',
+         hour_real: '40',
+         service_type: e.target.value
+        }
+      })
+     }
+    }else{
+
+      this.setState({
+
+        form: {
+          ...this.state.form,
+          [e.target.name]: e.target.value
+        }
+      });
+
+    }
+
   };
+
 
   toggle(from) {
     if (from == "edit") {
@@ -164,43 +290,18 @@ class tableIndex extends React.Component {
     } else if (from == "new") {
       this.setState({
         modeEdit: false,
-        form: {
-          customer_id: "",
-          contact_id: "",
-          service_type: "",
-          user_id: this.props.usuario.id,
-          description: "",
-          start_date: "",
-          end_date: "",
-          quotation_number: "0.0",
-          viatic_value: "0.0",
-          execution_state: "PENDIENTE",
-
-          eng_hours: "0.0",
-          hour_real: this.props.hours_real,
-          hour_cotizada: this.props.hours_invoices,
-
-
-          hours_contractor: "0.0",
-          hours_contractor_real: "0.0",
-          hours_contractor_invoices: "0.0",
-
-          materials_value: "0.0",
-          viatic_value: "0.0",
-          quotation_value: "0.0",
-        },
-
         selectedOption: {
           customer_id: "",
-          label: "Seleccionar cliente"
+          label: "Buscar cliente"
         },
-
+  
         selectedOptionContact: {
           contact_id: "",
           label: "Seleccionar Contacto"
         },
-
       });
+
+      this.removeValues(true)
     } else {
       this.setState({ stateSearch: false });
       if (this.state.modeEdit === true) {
@@ -234,49 +335,23 @@ class tableIndex extends React.Component {
 
             this.setState({
               modal: false,
-              form: {
-                customer_id: "",
-                contact_id: "",
-                service_type: "",
-                user_id: this.props.usuario.id,
-                description: "",
-                start_date: "",
-                end_date: "",
-                quotation_number: "0.0",
-                viatic_value: "0.0",
-                execution_state: "PENDIENTE",
-      
-                eng_hours: "0.0",
-                hour_real: this.props.hours_real,
-                hour_cotizada: this.props.hours_invoices,
-      
-      
-                hours_contractor: "0.0",
-                hours_contractor_real: "0.0",
-                hours_contractor_invoices: "0.0",
-      
-                materials_value: "0.0",
-                viatic_value: "0.0",
-                quotation_value: "0.0",
-              },
-
               selectedOption: {
                 customer_id: "",
-                label: "Selecciona cliente"
+                label: "Buscar cliente"
               },
-      
+        
               selectedOptionContact: {
                 contact_id: "",
                 label: "Seleccionar Contacto"
               },
-
-              
             });
+
+            this.removeValues(true)
           });
 
       } else {
         fetch("/cost_centers", {
-          method: "POST", // or 'PUT'
+          method: "POST", // 
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
             "Content-Type": "application/json"
@@ -285,49 +360,25 @@ class tableIndex extends React.Component {
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
-            this.props.loadInfo();
 
+            this.props.loadInfo();
+            this.removeValues(true)
             this.MessageSucces(data.message, data.type, data.message_error);
 
             this.setState({
               modal: false,
-              form: {
-                customer_id: "",
-                contact_id: "",
-                service_type: "",
-                user_id: this.props.usuario.id,
-                description: "",
-                start_date: "",
-                end_date: "",
-                quotation_number: "0.0",
-                viatic_value: "0.0",
-                execution_state: "PENDIENTE",
-      
-                eng_hours: "0.0",
-                hour_real: this.props.hours_real,
-                hour_cotizada: this.props.hours_invoices,
-      
-      
-                hours_contractor: "0.0",
-                hours_contractor_real: "0.0",
-                hours_contractor_invoices: "0.0",
-      
-                materials_value: "0.0",
-                viatic_value: "0.0",
-                quotation_value: "0.0",
-              },
-
               selectedOption: {
                 customer_id: "",
                 label: "Buscar cliente"
               },
-      
+        
               selectedOptionContact: {
                 contact_id: "",
                 label: "Seleccionar Contacto"
               },
-
             });
+
+          
           });
       }
     }
