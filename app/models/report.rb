@@ -59,7 +59,9 @@ class Report < ApplicationRecord
     if self.cost_center_id != nil && self.cost_center_id != "Centro de costos" && self.cost_center_id != 0
       puts "hhahahahjahahahahahahahahah"
       puts self.cost_center
-      count = Report.maximum(:id)
+      
+      count = Report.where(customer_id: self.customer_id).maximum(:count)
+      self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
       customer_prefix = Customer.find(self.cost_center.customer.id).code
       self.report_code = count == 0 || count.blank? || count.nil? ? 1 : count
       self.code_report = "REP-" + customer_prefix + "-" + self.report_code.to_s + "-" + Time.now.year.to_s
@@ -81,8 +83,16 @@ class Report < ApplicationRecord
     puts "3333333333333333"
 
     puts self.customer_id
-    if self.cost_center_id == nil || self.cost_center_id == 0
-      CostCenter.create(customer_id: self.customer_id, service_type: "Servicio", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, quotation_value: 0, execution_state: "EJECUCION")
+    if self.cost_center_id == nil || self.cost_center_id == 0  
+      costcenter = CostCenter.create(contact_id:  self.contact_id, customer_id: self.customer_id, service_type: "SERVICIO", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, hour_real: 0.0, hour_cotizada:0.0, quotation_value: 0, execution_state: "EJECUCION",work_force_contractor: 0.0, hours_contractor:0.0,hours_contractor_invoices:0.0,hours_contractor_real:0.0,materials_value:0.0,sum_materials:0.0,sum_contractors:0.0,sum_executed:0.0, sum_viatic:self.viatic_value, sum_materials_costo:0.0,sum_materials_cot:0.0, contractor_total_costo:0.0, sum_contractor_costo:0.0,sum_contractor_cot:0.0,sum_materials_value:0.0,ingenieria_total_costo:0.0)
+      self.cost_center_id = costcenter.id
+      
+      count = Report.where(customer_id: self.customer_id).maximum(:count)
+      self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
+      customer_prefix = Customer.find(costcenter.customer.id).code
+      self.report_code = count == 0 || count.blank? || count.nil? ? 1 : count + 1
+      self.code_report = "REP-" + customer_prefix + "-" + self.report_code.to_s + "-" + Time.now.year.to_s
+    
     else
       CostCenter.find(self.cost_center_id).update(execution_state: "EJECUCION")
     end
@@ -100,17 +110,7 @@ class Report < ApplicationRecord
   end
 
   def save_report_in_cost_center
-    if self.cost_center_id == nil || self.cost_center_id == 0
-      self.cost_center_id = CostCenter.last.id
-      puts "22222222222222222"
-      count = Report.where(customer_id: self.customer_id).maximum(:id)
-      customer_prefix = Customer.find(self.cost_center.customer.id).code
-      self.report_code = count == 0 || count.blank? || count.nil? ? 1 : count + 1
-      self.code_report = "REP-" + customer_prefix + "-" + self.report_code.to_s + "-" + Time.now.year.to_s
-      self.save
-    
-     
-    end
+
     
   end
 
