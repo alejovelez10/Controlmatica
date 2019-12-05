@@ -63,7 +63,7 @@ class Report < ApplicationRecord
       count = Report.where(customer_id: self.customer_id).maximum(:count)
       self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
       customer_prefix = Customer.find(self.cost_center.customer.id).code
-      self.code_report = "REP-" + customer_prefix + "-" + self.report_code.to_s + "-" + Time.now.year.to_s
+      self.code_report = "REP-" + customer_prefix + "-" + self.count.to_s + "-" + Time.now.year.to_s
     end
   end
 
@@ -89,7 +89,7 @@ class Report < ApplicationRecord
       count = Report.where(customer_id: self.customer_id).maximum(:count)
       self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
       customer_prefix = Customer.find(costcenter.customer.id).code
-      self.code_report = "REP-" + customer_prefix + "-" + self.report_code.to_s + "-" + Time.now.year.to_s
+      self.code_report = "REP-" + customer_prefix + "-" + self.count.to_s + "-" + Time.now.year.to_s
     
     else
       CostCenter.find(self.cost_center_id).update(execution_state: "EJECUCION")
