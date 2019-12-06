@@ -107,7 +107,7 @@ class FormCreate extends React.Component {
                         <form onSubmit={this.props.FormSubmit}>
                           <div className="row">
 
-                            <div className="col-md-6">
+                            <div className="col-md-4">
                             <label>Fecha de Factura<small className="validate-label">*</small></label>
                               <input
                                 type="date"
@@ -120,7 +120,7 @@ class FormCreate extends React.Component {
                             </div>
                             
 
-                            <div className="col-md-6">
+                            <div className="col-md-4">
                             <label>Valor <small className="validate-label">*</small></label>
                               <NumberFormat 
                                 name="invoice_value"
@@ -132,6 +132,20 @@ class FormCreate extends React.Component {
                                 placeholder="Valor"
                               /> 
                             </div>
+
+                            <div className="col-md-4">
+                            <label>Numero de factura <small className="validate-label">*</small></label>
+                              <input 
+                                name="number_invoice"
+                                type="text"
+                                onChange={this.props.onChangeForm}
+                                value={this.props.formValues.number_invoice}
+                                className={`form form-control ${this.props.errorValues == false && this.props.formValues.number_invoice == "" ? "error-class" : ""}`}
+                                placeholder="Numero de factura"
+                              /> 
+                            </div>
+
+                            
 
                             <div className="col-md-6 mt-4">
                             <label>Archivo de certificado de entrega <small className="validate-label">*</small></label>
@@ -188,16 +202,17 @@ class FormCreate extends React.Component {
                   >
                     <thead>
                       <tr>
-                        <th>Fecha</th>
-                        <th>Valor</th>
-                        <th className="text-center">Certificado de entrega</th>
-                        <th className="text-center">Informe de recepción</th>
+                        <th style={{ width: "13%" }}>Fecha</th>
+                        <th style={{ width: "13%" }}>Valor</th>
+                        <th style={{ width: "21%" }}>Numero de factura</th>
+                        <th style={{ width: "12%" }} className="text-center">Certificado de entrega</th>
+                        <th style={{ width: "14%" }} className="text-center">Informe de recepción</th>
                         {this.state.id != "" &&
                           <th></th>
                         }
 
                         
-                        <th className="text-center">Acciones</th>
+                        <th style={{ width: "1%" }} className="text-center">Acciones</th>
                       </tr>
                     </thead>
 
@@ -236,6 +251,10 @@ class FormCreate extends React.Component {
                                 
                               )}
 
+                            </td>
+
+                            <td>
+                              <p>{accion.number_invoice}</p>
                             </td>
 
 

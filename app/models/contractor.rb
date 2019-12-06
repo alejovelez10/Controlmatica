@@ -11,7 +11,7 @@
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null
 #  description     :text
-#  hours           :integer
+#  hours           :float
 #  user_execute_id :integer
 #
 

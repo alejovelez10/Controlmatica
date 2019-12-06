@@ -29,6 +29,7 @@ class table extends React.Component {
             created_date: "",
             order_number: "",
             order_value: "",
+            order_file: {},
             user_id: this.props.usuario.id,
             cost_center_id: this.props.cost_center.id
         },
@@ -46,6 +47,7 @@ class table extends React.Component {
           sales_order_id: "",
           invoice_date: "",
           invoice_value: "",
+          number_invoice: "",
           delivery_certificate_file: {},
           reception_report_file: {},
           cost_center_id: this.props.cost_center.id
@@ -100,6 +102,14 @@ class table extends React.Component {
   }
 
   HandleClick = e => {
+    const formData = new FormData();
+    formData.append("created_date", this.state.form.created_date);
+    formData.append("order_number", this.state.form.order_number);
+    formData.append("order_value", this.state.form.order_value);
+    formData.append("order_file", this.state.order_file == undefined ? "" : this.state.order_file);
+    formData.append("user_id", this.props.usuario.id);
+    formData.append("cost_center_id", this.props.cost_center.id);
+
     if (this.validationForm() == true) {
       if(this.state.modeEdit == true){
         
@@ -121,6 +131,7 @@ class table extends React.Component {
                 created_date: "",
                 order_number: "",
                 order_value: "",
+                order_file: {},
                 user_id: this.props.usuario.id,
                 cost_center_id: this.props.cost_center.id
             }
@@ -128,15 +139,13 @@ class table extends React.Component {
 
           });
 
-      }else{
-        fetch("/sales_orders", {
-          method: 'POST', // or 'PUT'
-          body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-          headers: {
-            'Content-Type': 'application/json',
-          }
-          
-        })
+      }else{          
+          fetch("/sales_orders", {
+            method: "POST", // or 'PUT'
+            body: formData, // data can be `string` or {object}!
+            headers: {}
+          })
+
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
@@ -284,12 +293,18 @@ class table extends React.Component {
   }
 
   updateInfo = () => {
+    const formData = new FormData();
+    formData.append("created_date", this.state.formUpdate.created_date);
+    formData.append("order_number", this.state.formUpdate.order_number);
+    formData.append("order_value", this.state.formUpdate.order_value);
+    formData.append("order_file", this.state.order_file == undefined ? "" : this.state.order_file);
+    formData.append("user_id", this.props.usuario.id);
+    formData.append("cost_center_id", this.props.cost_center.id);
+
     fetch("/sales_orders/" + this.state.id, {
       method: 'PATCH', // or 'PUT'
-      body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
-      headers: {
-        'Content-Type': 'application/json',
-      }
+      body: formData, // data can be `string` or {object}!
+      headers: {}
     }).then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(data => {
@@ -301,6 +316,7 @@ class table extends React.Component {
             created_date: "",
             order_number: "",
             order_value: "",
+            order_file: {},
             user_id: this.props.usuario.id,
             cost_center_id: this.props.cost_center.id
           }
@@ -318,11 +334,13 @@ class table extends React.Component {
     fetch("/get_sales_order/" + accion.id)
     .then(response => response.json())
     .then(data => {
+      console.log(data.sales_order)
+
       this.setState({
         modalIncome: true,  
         action: accion, 
         title: "Facturas",
-        data_incomes: data,
+        data_incomes: data.sales_order,
         formInvoice: {
           sales_order_id: accion.id
         }
@@ -345,6 +363,7 @@ class table extends React.Component {
     formData.append("invoice_date", this.state.formInvoice.invoice_date);
     formData.append("invoice_value", this.state.formInvoice.invoice_value);
     formData.append("sales_order_id", this.state.formInvoice.sales_order_id);
+    formData.append("number_invoice", this.state.formInvoice.number_invoice);
     formData.append("cost_center_id", this.props.cost_center.id);
     formData.append("delivery_certificate_file", this.state.delivery_certificate_file == undefined ? "" : this.state.delivery_certificate_file);
     formData.append("reception_report_file", this.state.reception_report_file == undefined ? "" : this.state.reception_report_file);
@@ -367,6 +386,7 @@ class table extends React.Component {
             formInvoice: {
               sales_order_id: "",
               invoice_date: "",
+              number_invoice: "",
               invoice_value: "",
               cost_center_id: this.props.cost_center.id
             },
@@ -388,6 +408,12 @@ class table extends React.Component {
   handleFileDeliveryCertificate = e => {
     this.setState({
       delivery_certificate_file: e.target.files[0]
+    });
+  };
+
+  handleFileOrderFile = e => {
+    this.setState({
+      order_file: e.target.files[0]
     });
   };
 
@@ -483,6 +509,8 @@ class table extends React.Component {
                 nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
                 errorValues={this.state.ErrorValues}
                 modeEdit={this.state.modeEdit}
+
+                onChangehandleFileOrderFile={this.handleFileOrderFile}
             />
 
 
@@ -511,7 +539,7 @@ class table extends React.Component {
 
             
 
-
+{/**/}
             <div className="content">
             
               <table
@@ -520,12 +548,14 @@ class table extends React.Component {
               >
                 <thead>
                   <tr className="tr-title">
-                    <th>Fecha de Generacion</th>
+                    <th style={{width: "20%"}}>Fecha de Generacion</th>
                     <th>Numero</th>
                     <th>Valor</th>
+                    <th>Archivo</th>
                      {this.state.id != "" &&
                           <th></th>
                       }
+                  
                     <th style={{width: "60px"}} className="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -586,6 +616,31 @@ class table extends React.Component {
                                   
                           )}
 
+                        </td>
+
+                        <td>
+                          {this.state.id == accion.id ? (
+                                    <input 
+                                      type="file" 
+                                      className="form form-control" 
+                                      name="order_file"
+                                      onChange={this.handleFileOrderFile}
+                                    />
+                                ) : (
+
+                                <React.Fragment>
+                                  {accion.order_file.url != null ? (
+                                          <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.order_file.url} data-original-title="Descargar Archivo" >
+                                            <i className="fas fa-download"></i>
+                                          </a>
+                                        ) : (
+                                          <i className="fas fa-times color-false"></i>
+                                  )}
+                                </React.Fragment>
+
+                                  
+                          )}
+                          
                         </td>
 
                           {this.state.id != "" &&

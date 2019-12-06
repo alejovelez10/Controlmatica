@@ -38,7 +38,7 @@ class CustomersController < ApplicationController
 
 
   def customer_user    
-    render :json => @centro = CostCenter.where(customer_id: @customer.id)
+    render :json => @centro = CostCenter.where(customer_id: @customer.id).filter
   end
 
   def get_client

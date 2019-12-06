@@ -69,7 +69,7 @@ class CustomerInvoicesController < ApplicationController
   # DELETE /customer_invoices/1
   # DELETE /customer_invoices/1.json
   def destroy
-    if @customer_invoice.destroy
+    if @customer_invoice.destroyc
       render :json => @customer_invoice
     else 
       render :json => @customer_invoice.errors.full_messages
@@ -93,6 +93,6 @@ class CustomerInvoicesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_invoice_params
-      params.permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state)
+      params.permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state, :number_invoice)
     end
 end

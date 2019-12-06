@@ -40,7 +40,7 @@ class formCreate extends React.Component {
                   />
                 </div>
 
-                <div className="col-md-12 mt-2">
+                <div className="col-md-6 mt-2">
                 <label>Valor<small className="validate-label">*</small></label>
                   <NumberFormat 
                     name="order_value"
@@ -51,6 +51,18 @@ class formCreate extends React.Component {
                     onChange={this.props.onChangeForm}
                     placeholder="Valor"
                   /> 
+                </div>
+
+                <div className="col-md-6 mt-2">
+                  <label>Archivo<small className="validate-label">*</small></label>
+
+                  <input
+                    type="file"
+                    name="reception_report_file"
+                    onChange={this.props.onChangehandleFileOrderFile}
+                    className={`form form-control`}
+                    placeholder="Comprobante"
+                  />
                 </div>
 
 

@@ -50,7 +50,7 @@ class SalesOrdersController < ApplicationController
 
   def get_sales_order
     sales_order = SalesOrder.find(params[:id]).customer_invoices
-    render :json => sales_order
+    render :json => {sales_order: sales_order}
   end
   
 

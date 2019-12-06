@@ -258,18 +258,20 @@ class table extends React.Component {
           customer_id: "",
         },
   
+        selectedOption: {
+          customer_id: "",
+          label: "Buscar cliente"
+        },
+
         selectedOptionContact: {
           contact_id: "",
           label: "Seleccionar Contacto"
         },
-  
+
         selectedOptionCentro: {
           cost_center_id: "",
           label: "Centro de costo"
         },
-  
-        dataContact: [],
-        dataCostCenter: []
 
       });
     } else {

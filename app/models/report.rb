@@ -5,7 +5,7 @@
 #  id                 :bigint           not null, primary key
 #  report_date        :date
 #  user_id            :integer
-#  working_time       :integer
+#  working_time       :float
 #  working_value      :float
 #  work_description   :text
 #  viatic_value       :float
@@ -13,7 +13,7 @@
 #  total_value        :float
 #  cost_center_id     :integer
 #  report_execute_id  :integer
-#  report_code        :integer
+#  report_code        :string
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  code_report        :string

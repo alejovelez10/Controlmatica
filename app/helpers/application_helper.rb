@@ -7,10 +7,10 @@ module ApplicationHelper
         elsif controller == "customers" && action == "index"
             card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Clientes " + "</h1>" + "<p>" + "Gestiona tus clientes" + "</p>"
 
-        elsif controller == "parameterizations" && action = "index"
+        elsif controller == "parameterizations" && action == "index"
             card = "<h1>" + " <i class='app-menu__icon fa fa-layer-group'></i> Parametrizaciones " + "</h1>" + "<p>" + "Parametriza tu aplicación" + "</p>"
             
-        elsif controller == "home"  && action = "users"
+        elsif controller == "home"  && action == "users"
             card = "<h1>" + " <i class='fas fa-handshake'></i> Usuarios " + "</h1>" + "<p>" + "Gestiona tus usuarios" + "</p>"
 
         elsif controller == "customer_reports" && action == "index"
@@ -169,6 +169,14 @@ module ApplicationHelper
 
 	def get_users
 		User.all
+	end
+
+	def get_center_tableristas
+		CostCenter.where(service_type: "PROYECTO")
+	end
+
+	def get_center_materials
+		CostCenter.where("service_type like 'VENTA' or service_type like 'PROYECTO'") 
 	end
 	
 
