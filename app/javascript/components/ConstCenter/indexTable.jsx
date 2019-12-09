@@ -2,6 +2,7 @@ import React from 'react';
 import Table from "../ConstCenter/tableIndex";
 import NumberFormat from 'react-number-format';
 import Filter from "../ConstCenter/FormFilter"
+import Pagination from "react-js-pagination";
 
 class indexTable extends React.Component {
     constructor(props){
@@ -16,7 +17,11 @@ class indexTable extends React.Component {
               customer_id: "",
               execution_state: "",
               invoiced_state: ""
-            }
+            },
+
+            activePage: 1,
+            cost_centers_total: 0, 
+            countPage: 10,
         }
     }
 
@@ -27,6 +32,7 @@ class indexTable extends React.Component {
 
           this.setState({
             data: data.cost_centers_paginate,
+            cost_centers_total: data.cost_centers_total
           });
 
           setTimeout(() => {
@@ -102,6 +108,32 @@ class indexTable extends React.Component {
       });
   };
 
+  change = e => {
+    this.setState({
+      countPage: e.target.value,
+      activePage: this.state.countPage
+    });
+    fetch("/get_cost_centers?filter=" + e.target.value)
+    .then(response => response.json())
+    .then(data => {
+      this.setState({
+        data: data.cost_centers_paginate,
+        cost_centers_total: data.cost_centers_total,
+        activePage: 1
+      });
+    });
+  }
+  
+  handlePageChange = pageNumber => {
+    this.setState({ activePage: pageNumber });
+    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}`) 
+      .then(response => response.json())
+      .then(data => {
+        this.setState({ data: data.cost_centers_paginate });
+      });
+     
+  };
+
 
     render() {
         return (
@@ -145,6 +177,32 @@ class indexTable extends React.Component {
                                 </div>
                             )
                         }
+
+                      <div className="col-md-12" style={{ marginTop: "50px" }}>
+                        <div className="row">
+
+                          <div className="col-md-9 text-left pl-0">
+                              <p>
+                                  Mostrando {this.state.data.length} de {this.state.cost_centers_total}
+                              </p>
+                          </div>
+
+                          <div className="col-md-3 p-0 text-right">
+                            <Pagination
+                              hideNavigation
+                              activePage={this.state.activePage}
+                              itemsCountPerPage={this.state.countPage}
+                              itemClass="page-item"
+                              innerClass="pagination"
+                              linkClass="page-link"
+                              totalItemsCount={this.state.cost_centers_total}
+                              pageRangeDisplayed={this.state.countPage}
+                              onChange={this.handlePageChange}
+                            />
+                          </div>
+
+                        </div>
+                      </div>
 
       
                     </div>

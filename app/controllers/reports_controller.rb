@@ -50,35 +50,43 @@ class ReportsController < ApplicationController
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
     if validate
+
       if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate] || params[:cost_center_id]
-        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id]).count
+
+      elsif params[:filter]
+        reports = Report.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total = Report.all.count
+
       else
-        reports = Report.all.paginate(:page => params[:page], :per_page => 100).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total =  Report.all.count
       end
-    else 
-      reports = Report.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 100).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+
+    else
+
+      if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate] || params[:cost_center_id]
+        reports = Report.where(user_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total = Report.where(user_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id]).count
+
+      elsif params[:filter]
+        reports = Report.where(user_id: current_user.id).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total = Report.where(user_id: current_user.id).count
+
+      else
+        reports = Report.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total =  Report.where(user_id: current_user.id).count
+      end
+
     end
     
 
-=begin
-    if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
-      if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate]
-        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
-      else 
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
-        #.to_json( :include => [:cost_center] )
-      end
-    elsif current_user.rol_user == "Ingeniero"
-      if params[:work_description] || params[:report_execute_id] || params[:date_ejecution] || params[:report_sate]
-        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate]).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
-      else 
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :report_execute => { :only =>[:names] } })
-      end
-    end
-=end
+
     reports = JSON.parse(reports)
-    render :json => reports
+    render :json => {reports_paginate: reports, reports_total: reports_total}
   end
+    
   
 
   # GET /reports/1/edit

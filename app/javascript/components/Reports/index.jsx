@@ -1,6 +1,7 @@
 import React from 'react';
 import Table from "../Reports/table";
 import Filter from "../Reports/FormFilter"
+import Pagination from "react-js-pagination";
 
 class index extends React.Component {
     constructor(props){
@@ -17,6 +18,10 @@ class index extends React.Component {
               cost_center_id: ""
             },
 
+            activePage: 1,
+            reports_total: 0, 
+            countPage: 10,
+
             selectedOptionCentro: {
               cost_center_id: "",
               label: "Centro de costo"
@@ -32,7 +37,8 @@ class index extends React.Component {
         .then(data => {
           console.log(data)
           this.setState({
-            data: data
+            data: data.reports_paginate,
+            reports_total: data.reports_total
           });
         });
 
@@ -103,9 +109,35 @@ class index extends React.Component {
         .then(response => response.json())
         .then(data => {
           this.setState({
-            data: data,
+            data: data.reports_paginate,
           });
         });
+    };
+
+    change = e => {
+      this.setState({
+        countPage: e.target.value,
+        activePage: this.state.countPage
+      });
+      fetch("/get_reports?filter=" + e.target.value)
+      .then(response => response.json())
+      .then(data => {
+        this.setState({
+          data: data.reports_paginate,
+          reports_total: data.reports_total,
+          activePage: 1
+        });
+      });
+    }
+    
+    handlePageChange = pageNumber => {
+      this.setState({ activePage: pageNumber });
+      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
+        .then(response => response.json())
+        .then(data => {
+          this.setState({ data: data.reports_paginate });
+        });
+       
     };
 
 
@@ -145,6 +177,32 @@ class index extends React.Component {
                         users={this.props.users}
                         estados={this.props.estados}
                       />
+
+                      <div className="col-md-12" style={{ marginTop: "50px" }}>
+                        <div className="row">
+
+                          <div className="col-md-9 text-left pl-0">
+                              <p>
+                                  Mostrando {this.state.data.length} de {this.state.reports_total}
+                              </p>
+                          </div>
+
+                          <div className="col-md-3 p-0 text-right">
+                            <Pagination
+                              hideNavigation
+                              activePage={this.state.activePage}
+                              itemsCountPerPage={this.state.countPage}
+                              itemClass="page-item"
+                              innerClass="pagination"
+                              linkClass="page-link"
+                              totalItemsCount={this.state.reports_total}
+                              pageRangeDisplayed={this.state.countPage}
+                              onChange={this.handlePageChange}
+                            />
+                          </div>
+
+                        </div>
+                      </div>   
                     
       
                     </div>

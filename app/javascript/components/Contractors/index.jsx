@@ -2,6 +2,7 @@ import React from 'react';
 import Table from "../Contractors/table";
 import NumberFormat from 'react-number-format';
 import Filter from "../Contractors/FormFilter"
+import Pagination from "react-js-pagination";
 
 class index extends React.Component {
     constructor(props){
@@ -15,6 +16,10 @@ class index extends React.Component {
             sales_date: "",
             cost_center_id: "",
           },
+
+          activePage: 1,
+          contractors_total: 0, 
+          countPage: 10,
 
           selectedOptionCentro: {
             cost_center_id: "",
@@ -32,7 +37,8 @@ class index extends React.Component {
       .then(data => {
         console.log(data)
         this.setState({
-          data: data
+          data: data.contractors_paginate,
+          contractors_total: data.contractors_total,
         });
 
         setTimeout(() => {
@@ -100,12 +106,12 @@ class index extends React.Component {
       countPage: e.target.value,
       activePage: this.state.countPage
     });
-    fetch("/get_payments?filter=" + e.target.value)
+    fetch("/get_contractors?filter=" + e.target.value)
     .then(response => response.json())
     .then(data => {
       this.setState({
-        data: data.users_paginate,
-        users_total: data.users_total,
+        data: data.contractors_paginate,
+        contractors_total: data.contractors_total,
         activePage: 1
       });
     });
@@ -113,10 +119,10 @@ class index extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_incomes?page=${pageNumber}&filter=${this.state.countPage}`) 
+    fetch(`/get_contractors?page=${pageNumber}&filter=${this.state.countPage}`) 
       .then(response => response.json())
       .then(data => {
-        this.setState({ data: data.users_paginate });
+        this.setState({ data: data.contractors_paginate });
       });
      
   };
@@ -135,7 +141,8 @@ class index extends React.Component {
       .then(response => response.json())
       .then(data => {
         this.setState({
-          data: data
+          data: data.contractors_paginate,
+          contractors_total: data.contractors_total,
         });
       });
    
@@ -188,6 +195,32 @@ class index extends React.Component {
                                 </div>
                             )
                         }
+
+                        <div className="col-md-12" style={{ marginTop: "50px" }}>
+                          <div className="row">
+
+                            <div className="col-md-9 text-left pl-0">
+                                <p>
+                                    Mostrando {this.state.data.length} de {this.state.contractors_total}
+                                </p>
+                            </div>
+
+                            <div className="col-md-3 p-0 text-right">
+                              <Pagination
+                                hideNavigation
+                                activePage={this.state.activePage}
+                                itemsCountPerPage={this.state.countPage}
+                                itemClass="page-item"
+                                innerClass="pagination"
+                                linkClass="page-link"
+                                totalItemsCount={this.state.contractors_total}
+                                pageRangeDisplayed={this.state.countPage}
+                                onChange={this.handlePageChange}
+                              />
+                            </div>
+
+                          </div>
+                        </div>
 
       
                     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import Table from "../CustomerReports/table";
 import Filter from "../CustomerReports/FormFilter"
+import Pagination from "react-js-pagination";
 
 class index extends React.Component {
     constructor(props){
@@ -13,7 +14,11 @@ class index extends React.Component {
               cost_center_id: "",
               customer_id: "",
               state: "",
-            }  
+            },
+
+            activePage: 1,
+            customer_reports_total: 0, 
+            countPage: 10,
         }
     }
 
@@ -23,7 +28,8 @@ class index extends React.Component {
         .then(data => {
           console.log(data)
           this.setState({
-            data: data
+            data: data.customer_reports_paginate,
+            customer_reports_total: data.customer_reports_total
           });
         });
 
@@ -67,10 +73,36 @@ class index extends React.Component {
         .then(response => response.json())
         .then(data => {
           this.setState({
-            data: data
+            data: data.customer_reports_paginate,
           });
         });
      
+    };
+
+    change = e => {
+      this.setState({
+        countPage: e.target.value,
+        activePage: this.state.countPage
+      });
+      fetch("/get_customer_reports?filter=" + e.target.value)
+      .then(response => response.json())
+      .then(data => {
+        this.setState({
+          data: data.customer_reports_paginate,
+          customer_reports_total: data.customer_reports_total,
+          activePage: 1
+        });
+      });
+    }
+    
+    handlePageChange = pageNumber => {
+      this.setState({ activePage: pageNumber });
+      fetch(`/get_customer_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
+        .then(response => response.json())
+        .then(data => {
+          this.setState({ data: data.customer_reports_paginate });
+        });
+       
     };
 
 
@@ -102,6 +134,32 @@ class index extends React.Component {
                         contacts={this.props.contacts}
                         show={this.showFilter}
                       />
+
+                      <div className="col-md-12" style={{ marginTop: "50px" }}>
+                        <div className="row">
+
+                          <div className="col-md-9 text-left pl-0">
+                              <p>
+                                  Mostrando {this.state.data.length} de {this.state.customer_reports_total}
+                              </p>
+                          </div>
+
+                          <div className="col-md-3 p-0 text-right">
+                            <Pagination
+                              hideNavigation
+                              activePage={this.state.activePage}
+                              itemsCountPerPage={this.state.countPage}
+                              itemClass="page-item"
+                              innerClass="pagination"
+                              linkClass="page-link"
+                              totalItemsCount={this.state.customer_reports_total}
+                              pageRangeDisplayed={this.state.countPage}
+                              onChange={this.handlePageChange}
+                            />
+                          </div>
+
+                        </div>
+                      </div>
                     
       
                     </div>

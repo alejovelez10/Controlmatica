@@ -20,12 +20,20 @@ class MaterialsController < ApplicationController
   def get_materials
     if params[:provider_id] || params[:sales_date] || params[:description] || params[:cost_center_id] || params[:estado]
       materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+      materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado]).count
+
+    elsif params[:filter]
+      materials = Material.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+      materials_total = Material.all.count
+
     else
-      materials = Material.all.to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+      materials = Material.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+      materials_total =  Material.all.count
     end
     
     materials = JSON.parse(materials)
-    render :json => materials
+
+    render :json => {materials_paginate: materials, materials_total: materials_total }
   end
   
 

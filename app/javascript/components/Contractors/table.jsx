@@ -161,7 +161,17 @@ class table extends React.Component {
                 user_id: this.props.usuario.id,
                 cost_center_id: "",
                 user_execute_id: "",
-            }
+            },
+
+            selectedOptionCentro: {
+              cost_center_id: "",
+              label: "Centro de costo"
+            },
+    
+            selectedOptionUsers: {
+              user_execute_id: "",
+              label: "Horas trabajadas por"
+            },
             });
 
           });
@@ -192,7 +202,17 @@ class table extends React.Component {
                   user_id: this.props.usuario.id,
                   cost_center_id: "",
                   user_execute_id: "",
-              }
+              },
+
+              selectedOptionCentro: {
+                cost_center_id: "",
+                label: "Centro de costo"
+              },
+      
+              selectedOptionUsers: {
+                user_execute_id: "",
+                label: "Horas trabajadas por"
+              },
             });
           });
       }
