@@ -39,7 +39,6 @@ class CostCentersController < ApplicationController
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
     if validate
-      puts "admin"
       if params[:descripcion] || params[:customer_id] || params[:execution_state] || params[:invoiced_state]
         @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state])
         @cost_centers_total = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state]).count
