@@ -91,7 +91,7 @@
 
         <div>
           <p class="app-sidebar__user-name"><%= current_user.names ? current_user.names : "Usuario" %></p>
-          <p class="app-sidebar__user-designation" style="color:#a09e9e">Administrador</p>
+          <p class="app-sidebar__user-designation" style="color:#a09e9e"><%= current_user.rol.name ? current_user.rol.name : "No hay rol" %></p>
         </div>
       </div>
 
