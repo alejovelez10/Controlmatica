@@ -175,7 +175,7 @@
           </li>
         <% end %>
 
-        <% if authorization_customers || current_user.rol.name == "Administrador" %>
+        <% if authorization_contractors || current_user.rol.name == "Administrador" %>
         <li>
           <%= link_to contractors_path, class: "app-menu__item" do %>
             <i class="app-menu__icon fa fa-th"></i><span class="app-menu__label pl-0">Registro Tablerista</span>

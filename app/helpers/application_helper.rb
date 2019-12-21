@@ -254,7 +254,7 @@ module ApplicationHelper
 	end
 
 
-	def authorization_customer_reports
+	def authorization_customer_reports	
         customer_reports = ModuleControl.find_by_name("Reportes de clientes")
 		if current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Ingreso al modulo").exists?
 			true
@@ -264,6 +264,13 @@ module ApplicationHelper
 	def authorization_employed_performance
         employed_performance = ModuleControl.find_by_name("Informe de rendimiento")
 		if current_user.rol.accion_modules.where(module_control_id: employed_performance.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+	def authorization_contractors
+        contractors = ModuleControl.find_by_name("Contratistas")
+		if current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Ingreso al modulo").exists?
 			true
         end
 	end
