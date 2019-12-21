@@ -127,7 +127,7 @@ class Table extends React.Component {
       user: user,
       title: "Editar a " + user.email,
       form: {
-        names: user.name,
+        names: user.names,
         email: user.email,
         avatar: user.avatar.url,
         number_document: user.number_document,
