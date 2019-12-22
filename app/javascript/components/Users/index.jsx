@@ -82,7 +82,7 @@ class index extends React.Component {
       countPage: e.target.value,
       activePage: this.state.countPage
     });
-    fetch("/users/get_users?filter=" + e.target.value)
+    fetch("/get_users?filter=" + e.target.value)
     .then(response => response.json())
     .then(data => {
       this.setState({
@@ -95,7 +95,7 @@ class index extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/users/get_users?page=${pageNumber}&filter=${this.state.countPage}`) 
+    fetch(`/get_users?page=${pageNumber}&filter=${this.state.countPage}`) 
       .then(response => response.json())
       .then(data => {
         this.setState({ data: data.users_paginate });
@@ -113,7 +113,7 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/users/get_users?name=${this.state.formFilter.name}&email=${this.state.formFilter.email}&rol_id=${this.state.formFilter.rol_id}&state=${this.state.formFilter.state}&number_document=${this.state.formFilter.number_document}`)
+    fetch(`/get_users?name=${this.state.formFilter.name}&email=${this.state.formFilter.email}&rol_id=${this.state.formFilter.rol_id}&state=${this.state.formFilter.state}&number_document=${this.state.formFilter.number_document}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
