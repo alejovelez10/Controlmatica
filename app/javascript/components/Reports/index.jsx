@@ -176,6 +176,7 @@ class index extends React.Component {
                         clientes={this.props.clientes}
                         users={this.props.users}
                         estados={this.props.estados}
+                        rol={this.props.rol}
                       />
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>

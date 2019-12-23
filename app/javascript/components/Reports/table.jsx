@@ -24,7 +24,7 @@ class table extends React.Component {
             contact_id: "",
             cost_center_id: "",
             report_date: "",
-            report_execute_id: "",
+            report_execute_id: (this.props.rol.name != "Ingeniero" ? "" : this.props.usuario.id),
             working_time: "",
             work_description: "",
             viatic_value: "",
@@ -68,7 +68,6 @@ class table extends React.Component {
     if (this.state.form.customer_id != "" && 
         this.state.form.contact_id != "" &&
         this.state.form.report_date != "" &&
-        this.state.form.report_execute_id != "" &&
         this.state.form.working_time != "" &&
         this.state.form.work_description != "" &&
         this.state.form.viatic_value != "" 
@@ -501,6 +500,8 @@ class table extends React.Component {
           centro={this.state.dataCostCenter}
           onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
           formAutocompleteCentro={this.state.selectedOptionCentro}
+
+          rol={this.props.rol}
 
         />
 

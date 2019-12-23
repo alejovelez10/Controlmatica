@@ -107,7 +107,7 @@ class CostCentersController < ApplicationController
 
     render :json => {
       data_cost_center: centro,
-      data_reports: report
+      data_contact: customer.contacts
     }
   end
 

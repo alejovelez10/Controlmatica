@@ -1,3 +1,3 @@
 <%= javascript_pack_tag 'Reports' %> 
-<%= react_component('Reports', usuario: current_user, users: User.all, clientes: get_customer, estados: @estados, cost_centers: CostCenter.all) %>
+<%= react_component('Reports', usuario: current_user, users: User.all, clientes: get_customer, estados: @estados, cost_centers: CostCenter.all, rol: current_user.rol) %>
 

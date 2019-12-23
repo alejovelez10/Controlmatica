@@ -155,25 +155,29 @@ class FormCreate extends React.Component {
                       />
                   </div>
 
-                  <div className="col-md-4 mt-4">
-                    <label>Responsable de Ejecucion</label>
+                  {this.props.rol.name != "Ingeniero" && (
 
-                    <select 
-                      name="report_execute_id" 
-                      value={this.props.formValues.report_execute_id}
-                      onChange={this.props.onChangeForm}
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_execute_id == "" ? "error-class" : ""}`}
-                    >
-                      <option value="">Seleccione un nombre</option>
-                      {
-                        this.props.users.map(item => (
-                            <React.Fragment>
-                                <option value={item.id}>{item.names}</option>
-                            </React.Fragment>
-                        ))
-                      }
-                  </select> 
-                </div>
+                      <div className="col-md-4 mt-4">
+                        <label>Responsable de Ejecucion</label>
+
+                        <select 
+                          name="report_execute_id" 
+                          value={this.props.formValues.report_execute_id}
+                          onChange={this.props.onChangeForm}
+                          className={`form form-control ${this.props.errorValues == false && this.props.formValues.report_execute_id == "" ? "error-class" : ""}`}
+                        >
+                          <option value="">Seleccione un nombre</option>
+                          {
+                            this.props.users.map(item => (
+                                <React.Fragment>
+                                    <option value={item.id}>{item.names}</option>
+                                </React.Fragment>
+                            ))
+                          }
+                      </select> 
+                    </div>
+
+                 )}
                 
                 
                  

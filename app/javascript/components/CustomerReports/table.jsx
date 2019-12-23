@@ -60,6 +60,7 @@ class table extends React.Component {
 
   handleChangeAutocomplete = selectedOption => {
     let arrayCentro = []
+    let arrayContact = []
 
     fetch(`/customer_cost_center/${selectedOption.value}/customer_r`)
     .then(response => response.json())
@@ -68,9 +69,14 @@ class table extends React.Component {
       data.data_cost_center.map((item) => (
         arrayCentro.push({label: item.code, value: item.id})
       ))
+
+      data.data_contact.map((item) => (
+        arrayContact.push({label: item.name, value: item.id})
+      ))
     
       this.setState({
-        dataCostCenter: arrayCentro
+        dataCostCenter: arrayCentro,
+        dataContact: arrayContact
       })
       
     });
@@ -161,7 +167,7 @@ class table extends React.Component {
 
   componentDidMount(){
     let array = []
-    let arrayContact = []
+    //let arrayContact = []
 
     this.props.clientes.map((item) => (
       array.push({label: item.name, value: item.id})
@@ -171,7 +177,7 @@ class table extends React.Component {
         clients: array
     })
 
-
+  /*
     this.props.contacts.map((item) => (
       arrayContact.push({label: item.name, value: item.id})
     ))
@@ -179,7 +185,7 @@ class table extends React.Component {
     this.setState({
       dataContact: arrayContact
     })
-  
+  */
   }
 
 
