@@ -26,13 +26,15 @@ class CustomerReportsController < ApplicationController
     delete = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Eliminar").exists?
     generate_pdf = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Generar pdf").exists?
     send_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Enviar para aprobaciòn").exists?
+    edit_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar email").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       generate_pdf: (current_user.rol.name == "Administrador" ? true : generate_pdf),
-      send_email: (current_user.rol.name == "Administrador" ? true : send_email) 
+      send_email: (current_user.rol.name == "Administrador" ? true : send_email),
+      edit_email: (current_user.rol.name == "Administrador" ? true : edit_email),
     }
   end
 
@@ -214,6 +216,13 @@ class CustomerReportsController < ApplicationController
   
     CustormerReportMailer.approval_email(@customer_report).deliver
   end
+
+
+  def get_report_value
+    cost_center = CostCenter.find(params[:id])
+    render :json => cost_center.reports
+  end
+  
 
   private
 

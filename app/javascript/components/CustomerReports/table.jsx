@@ -60,7 +60,6 @@ class table extends React.Component {
 
   handleChangeAutocomplete = selectedOption => {
     let arrayCentro = []
-    let arrayReport = []
 
     fetch(`/customer_cost_center/${selectedOption.value}/customer_r`)
     .then(response => response.json())
@@ -69,15 +68,9 @@ class table extends React.Component {
       data.data_cost_center.map((item) => (
         arrayCentro.push({label: item.code, value: item.id})
       ))
-
-      data.data_reports.map((item) => (
-        arrayReport.push({label: item.code_report, value: item.id})
-      ))
-
     
       this.setState({
-        dataCostCenter: arrayCentro,
-        dataReports: arrayReport
+        dataCostCenter: arrayCentro
       })
       
     });
@@ -110,6 +103,22 @@ class table extends React.Component {
   };
 
   handleChangeAutocompleteCentro = selectedOptionCentro => {
+    let arrayReport = []
+
+    fetch(`/get_report_value/${selectedOptionCentro.value}`)
+    .then(response => response.json())
+    .then(data => {
+
+      data.map((item) => (
+        arrayReport.push({label: item.code_report, value: item.id})
+      ))
+
+      this.setState({
+        dataReports: arrayReport
+      })
+      
+    });
+
     this.setState({
       selectedOptionCentro,
       form: {
@@ -517,6 +526,7 @@ class table extends React.Component {
           formAutocompleteContact={this.state.selectedOptionContact}
 
           editValuesReport={this.state.dataReportEdit}
+          estados={this.props.estados}
 
 
         />

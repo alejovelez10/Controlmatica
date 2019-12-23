@@ -56,6 +56,8 @@ Rails.application.routes.draw do
   get "get_reports", to: "reports#get_reports"
   get "get_rols", to: "rols#get_rols"
 
+  get "get_report_value/:id", to: "customer_reports#get_report_value"
+
   get "get_contractors", to: "contractors#get_contractors"
   get "get_materials", to: "materials#get_materials"
 

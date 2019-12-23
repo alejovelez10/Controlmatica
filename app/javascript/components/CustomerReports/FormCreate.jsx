@@ -85,16 +85,18 @@ class FormCreate extends React.Component {
                     /> 
                   </div>
 
-                  <div className="col-md-4 mt-3 mb-3">
-                    <label>Envia el reporte <small className="validate-label">*</small></label>
-                      <input 
-                        name="email"
-                        type="text"
-                        className={`form form-control`}
-                        value={this.props.formValues.email}
-                        onChange={this.props.onChangeForm}
-                      /> 
-                  </div>
+                  {this.props.estados.edit_email == true && (
+                    <div className="col-md-4 mt-3 mb-3">
+                      <label>Envia el reporte <small className="validate-label">*</small></label>
+                        <input 
+                          name="email"
+                          type="text"
+                          className={`form form-control`}
+                          value={this.props.formValues.email}
+                          onChange={this.props.onChangeForm}
+                        /> 
+                    </div>
+                  )}
 
 
 
