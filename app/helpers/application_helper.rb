@@ -269,7 +269,7 @@ module ApplicationHelper
 	end
 
 	def authorization_contractors
-        contractors = ModuleControl.find_by_name("Contratistas")
+        contractors = ModuleControl.find_by_name("Tableristas")
 		if current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Ingreso al modulo").exists?
 			true
         end

@@ -58,7 +58,7 @@ class FormCreate extends React.Component {
                       />
                   </div>
 
-                  <div className="col-md-6 mt-3 mb-3">
+                  <div className="col-md-4 mt-3 mb-3">
                       <input
                         type="hidden"
                         name="contact_id"
@@ -74,7 +74,7 @@ class FormCreate extends React.Component {
                       />
                   </div>
 
-                  <div className="col-md-6 mt-3 mb-3">
+                  <div className="col-md-4 mt-3 mb-3">
                   <label>Fecha del reporte <small className="validate-label">*</small></label>
                     <input 
                       name="report_date"
@@ -84,6 +84,19 @@ class FormCreate extends React.Component {
                       onChange={this.props.onChangeForm}
                     /> 
                   </div>
+
+                  <div className="col-md-4 mt-3 mb-3">
+                    <label>Envia el reporte <small className="validate-label">*</small></label>
+                      <input 
+                        name="email"
+                        type="text"
+                        className={`form form-control`}
+                        value={this.props.formValues.email}
+                        onChange={this.props.onChangeForm}
+                      /> 
+                  </div>
+
+
 
                   <div className="col-md-12">
                     <input

@@ -4,7 +4,7 @@ class ContractorsController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def index
-    contractors = ModuleControl.find_by_name("Contratistas")
+    contractors = ModuleControl.find_by_name("Tableristas")
 
     create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
     edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?

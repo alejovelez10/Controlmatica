@@ -22,6 +22,7 @@ class table extends React.Component {
         contact_id: "",
         report_date: "",
         description: "",
+        email: "ejemplo@hotmail.com",
         report_ids: [],
         user_id: this.props.usuario.id,
       },
@@ -205,6 +206,7 @@ class table extends React.Component {
         contact_id: "",
         report_date: "",
         description: "",
+        email: "ejemplo@hotmail.com",
         report_ids: [],
         user_id: this.props.usuario.id,
       },
@@ -333,6 +335,7 @@ class table extends React.Component {
             report_date: modulo.report_date,
             description: modulo.description,
             report_ids: modulo.report_ids,
+            email: "ejemplo@hotmail.com",
             user_id: this.props.usuario.id,
           },
 

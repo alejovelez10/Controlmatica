@@ -105,7 +105,7 @@ namespace :create_config do
             AccionModule.create(name: "Ingreso al modulo", module_control_id: employed_performance.id, user_id: user.id)
         end
 
-        contractors = ModuleControl.create(name: "Contratistas", user_id: user.id)
+        contractors = ModuleControl.create(name: "Tableristas", user_id: user.id)
 
         if contractors
             AccionModule.create(name: "Ingreso al modulo", module_control_id: contractors.id, user_id: user.id)
