@@ -85,6 +85,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: report.id, user_id: user.id)
+            AccionModule.create(name: "Ver Responsables", module_control_id: report.id, user_id: user.id)
         end
 
         customer_reports = ModuleControl.create(name: "Reportes de clientes", user_id: user.id)
@@ -103,6 +104,7 @@ namespace :create_config do
 
         if employed_performance
             AccionModule.create(name: "Ingreso al modulo", module_control_id: employed_performance.id, user_id: user.id)
+            AccionModule.create(name: "Ver Responsables", module_control_id: employed_performance.id, user_id: user.id)
         end
 
         contractors = ModuleControl.create(name: "Tableristas", user_id: user.id)

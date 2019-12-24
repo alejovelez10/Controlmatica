@@ -502,6 +502,7 @@ class table extends React.Component {
           formAutocompleteCentro={this.state.selectedOptionCentro}
 
           rol={this.props.rol}
+          estados={this.props.estados}
 
         />
 

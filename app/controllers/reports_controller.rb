@@ -25,11 +25,14 @@ class ReportsController < ApplicationController
     create = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Crear").exists?
     edit = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Eliminar").exists?
+    responsible = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver Responsables").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
+      responsible: (current_user.rol.name == "Administrador" ? true : responsible),
+
     }
 
   end

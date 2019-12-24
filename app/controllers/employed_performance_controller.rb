@@ -3,7 +3,7 @@ class EmployedPerformanceController < ApplicationController
 
   def show
     informe = ModuleControl.find_by_name("Informe de rendimiento")
-    estado = current_user.rol.accion_modules.where(module_control_id: informe.id).where(name: "Ingreso al modulo").exists?
+    estado = current_user.rol.accion_modules.where(module_control_id: informe.id).where(name: "Ver Responsables").exists?
     @validate = (current_user.rol.name == "Administrador" ? true : estado)
   end
 

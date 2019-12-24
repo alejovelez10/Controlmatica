@@ -155,7 +155,7 @@ class FormCreate extends React.Component {
                       />
                   </div>
 
-                  {this.props.rol.name != "Ingeniero" && (
+                  {this.props.estados.responsible == true && (
 
                       <div className="col-md-4 mt-4">
                         <label>Responsable de Ejecucion</label>
