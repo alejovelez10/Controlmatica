@@ -39,6 +39,9 @@ class tableIndex extends React.Component {
           materials_value: "0.0",
           viatic_value: "0.0",
           quotation_value: "0.0",
+
+          displacement_hours: "0.0",
+          value_displacement_hours: "0.0"
         },
 
         selectedOption: {
@@ -78,7 +81,10 @@ class tableIndex extends React.Component {
 
         this.state.form.materials_value != "" && 
         this.state.form.viatic_value != "" &&
-        this.state.form.quotation_value != ""
+        this.state.form.quotation_value != "" &&
+
+        this.state.form.displacement_hours != "" &&
+        this.state.form.value_displacement_hours != ""
 
         ) {
           console.log("los campos estan llenos")
@@ -186,6 +192,9 @@ class tableIndex extends React.Component {
 
           viatic_value: "",
           quotation_value: "",
+
+          displacement_hours: "",
+          value_displacement_hours: "",
         },
 
         ErrorValues: true,
@@ -212,6 +221,9 @@ class tableIndex extends React.Component {
           materials_value: "",
           quotation_value: "",
 
+          displacement_hours: "0.0",
+          value_displacement_hours: "0.0",
+
           viatic_value: "0.0",
           service_type: e.target.value
         }
@@ -232,6 +244,9 @@ class tableIndex extends React.Component {
           hours_contractor: "0.0",
           hours_contractor_real: "0.0",
           hours_contractor_invoices: "0.0",
+
+          displacement_hours: "0.0",
+          value_displacement_hours: "0.0",
   
           materials_value: "0.0",
           service_type: e.target.value
@@ -250,6 +265,9 @@ class tableIndex extends React.Component {
           hours_contractor: "",
           hours_contractor_real: "",
           hours_contractor_invoices: "",
+
+          displacement_hours: "",
+          value_displacement_hours: "",
   
           materials_value: "",
 

@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
-#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
+#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -40,6 +40,8 @@
 #  sum_contractor_costo      :float            default(0.0)
 #  sum_contractor_cot        :float            default(0.0)
 #  sum_materials_value       :float            default(0.0)
+#  displacement_hours        :float
+#  value_displacement_hours  :float
 #
 
 class CostCenter < ApplicationRecord
@@ -89,6 +91,12 @@ class CostCenter < ApplicationRecord
     self.hour_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     self.hour_cotizada = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
     self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
+
+    if self.displacement_hours.present? || self.value_displacement_hours.present?
+      valor = self.displacement_hours * self.value_displacement_hours
+      self.offset_value = valor
+    end
+
   end
 
   def calculate_costo

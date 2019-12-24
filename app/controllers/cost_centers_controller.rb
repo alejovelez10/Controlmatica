@@ -271,7 +271,15 @@ class CostCentersController < ApplicationController
       params["quotation_value"] = valor8
     end
 
-  
+    if params["displacement_hours"]  != "nil" || params["displacement_hours"] != ""
+      valor9 = cost_center_params["displacement_hours"].gsub('$','').gsub(',','')
+      params["displacement_hours"] = valor9
+    end
+
+    if params["value_displacement_hours"]  != "nil" || params["value_displacement_hours"] != ""
+      valo10 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
+      params["value_displacement_hours"] = valo10
+    end
 
     @cost_center = CostCenter.create(cost_center_params)
 
@@ -295,7 +303,7 @@ class CostCentersController < ApplicationController
   # PATCH/PUT /cost_centers/1.json
   def update
 
-    if params[:viatic_value] || params[:quotation_value] || params[:hour_real] || params[:hours_contractor_real] || params[:hours_contractor_invoices] || params[:materials_value] 
+    if params[:viatic_value] || params[:quotation_value] || params[:hour_real] || params[:hours_contractor_real] || params[:hours_contractor_invoices] || params[:materials_value] || params[:displacement_hours] || params[:value_displacement_hours]
 
       if cost_center_params["viatic_value"].class.to_s != "Integer" && cost_center_params["viatic_value"].class.to_s != "Float" 
         valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
@@ -330,6 +338,16 @@ class CostCentersController < ApplicationController
       if cost_center_params["materials_value"].class.to_s != "Integer" && cost_center_params["materials_value"].class.to_s != "Float" 
         valor6 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
         params["materials_value"] = valor6
+      end
+
+      if cost_center_params["displacement_hours"].class.to_s != "Integer" && cost_center_params["displacement_hours"].class.to_s != "Float" 
+        valor7 = cost_center_params["displacement_hours"].gsub('$','').gsub(',','')
+        params["displacement_hours"] = valor7
+      end
+
+      if cost_center_params["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" 
+        valor8 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
+        params["value_displacement_hours"] = valor8
       end
 
     end
@@ -381,6 +399,6 @@ class CostCentersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def cost_center_params
-      params.permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value, :user_id, :work_force_contractor, :hours_contractor_invoices, :hours_contractor_real, :materials_value, :hours_contractor)
+      params.permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value, :user_id, :work_force_contractor, :hours_contractor_invoices, :hours_contractor_real, :materials_value, :hours_contractor, :displacement_hours, :value_displacement_hours, :offset_value)
     end
 end
