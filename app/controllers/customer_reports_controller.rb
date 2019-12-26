@@ -5,20 +5,6 @@ class CustomerReportsController < ApplicationController
   # GET /customer_reports
   # GET /customer_reports.json
   def index
-    if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
-      if params[:search1] || params[:search2]
-        @customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10).search(params[:search1], params[:search2])
-      else
-        @customer_reports = CustomerReport.all.paginate(:page => params[:page], :per_page => 10)
-      end
-    elsif current_user.rol_user == "Ingeniero"
-      if params[:search1] || params[:search2]
-        @customer_reports = CustomerReport.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10).search(params[:search1], params[:search2])
-      else
-        @customer_reports = CustomerReport.where(user_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-      end
-    end
-
     customer_reports = ModuleControl.find_by_name("Reportes de clientes")
 
     create = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Crear").exists?
@@ -27,6 +13,7 @@ class CustomerReportsController < ApplicationController
     generate_pdf = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Generar pdf").exists?
     send_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Enviar para aprobaciòn").exists?
     edit_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar email").exists?
+    download_file = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Descargar excel").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -35,6 +22,7 @@ class CustomerReportsController < ApplicationController
       generate_pdf: (current_user.rol.name == "Administrador" ? true : generate_pdf),
       send_email: (current_user.rol.name == "Administrador" ? true : send_email),
       edit_email: (current_user.rol.name == "Administrador" ? true : edit_email),
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
   end
 
@@ -115,6 +103,114 @@ class CustomerReportsController < ApplicationController
                :show_as_html => params[:debug].present?
       end
     end
+  end
+
+  def download_file
+    customer_reports_find = ModuleControl.find_by_name("Reportes de clientes")
+    estado = current_user.rol.accion_modules.where(module_control_id: customer_reports_find.id).where(name: "Ver todos").exists?
+    validate = (current_user.rol.name == "Administrador" ? true : estado)
+
+    if validate
+      customer_reports = CustomerReport.all
+    else
+      customer_reports = CustomerReport.where(user_id: current_user.id)
+    end 
+
+    respond_to do |format|
+
+      format.xls do
+      
+        task = Spreadsheet::Workbook.new
+        sheet = task.create_worksheet
+        
+        rows_format = Spreadsheet::Format.new color: :black,
+        weight: :normal,
+        size: 13,
+        align: :left
+
+        customer_reports.each.with_index(1) do |task, i|
+      
+          position = sheet.row(i)
+          
+          sheet.row(1).default_format = rows_format    
+          position[0] = task.report_date
+          position[1] = task.report_code
+          position[2] = task.description
+          position[3] = ""
+          position[4] = task.report_state
+          position[5] = task.approve_date
+          position[6] = task.customer.present? ? task.customer.name : ""
+          
+          
+          sheet.row(i).height = 25
+          sheet.column(i).width = 40
+          sheet.row(i).default_format = rows_format
+        
+        end
+        
+        
+        
+        head_format = Spreadsheet::Format.new color: :white,      
+        weight: :bold,
+        size: 12,      
+        pattern_bg_color: :xls_color_10,    
+        pattern: 2,      
+        vertical_align: :middle,      
+        align: :left
+        
+        
+        
+        position = sheet.row(0)
+        
+        position[0] = "Creado"
+        position[1] = "Codigo"
+        position[2] = "Descripcion"
+        position[3] = "Enviar para aprobaciòn"
+        position[4] = "Estado"
+        position[5] = "Fecha Aprobacion"
+        position[6] = "Cliente"
+        
+        
+        
+        
+        sheet.row(0).height = 20
+        sheet.column(0).width = 40
+        
+        
+        
+        sheet.column(1).width = 40
+        
+        sheet.column(2).width = 40
+        
+        sheet.column(3).width = 40
+        
+        sheet.column(4).width = 40
+        
+        sheet.column(5).width = 40
+        
+        sheet.column(6).width = 40
+        
+        sheet.column(7).width = 40
+        
+        sheet.column(8).width = 40
+        
+        sheet.column(9).width = 40
+        
+        sheet.column(10).width = 40
+        
+        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+        
+        
+        
+        temp_file = StringIO.new
+        
+        task.write(temp_file)
+        
+        send_data(temp_file.string, :filename => "Reportes_de_clientes.xls", :disposition => 'inline')
+        
+        end  
+    end
+
   end
 
   # GET /customer_reports/new

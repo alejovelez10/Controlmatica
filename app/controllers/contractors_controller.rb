@@ -9,11 +9,13 @@ class ContractorsController < ApplicationController
     create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
     edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
+    download_file = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Descargar excel").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete)
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
   end
 
@@ -34,6 +36,102 @@ class ContractorsController < ApplicationController
     contractor = JSON.parse(contractor)
 
     render :json => {contractors_paginate: contractor, contractors_total: contractor_total}
+  end
+
+  def download_file
+    contractor = Contractor.all
+    respond_to do |format|
+
+      format.xls do
+      
+        task = Spreadsheet::Workbook.new
+        sheet = task.create_worksheet
+        
+        rows_format = Spreadsheet::Format.new color: :black,
+        weight: :normal,
+        size: 13,
+        align: :left
+
+        contractor.each.with_index(1) do |task, i|
+      
+          position = sheet.row(i)
+          
+          sheet.row(1).default_format = rows_format    
+          position[0] = task.sales_date
+          position[1] = task.cost_center.present? ? task.cost_center.code : ""
+          position[2] = task.hours
+          position[3] = task.user_execute.present? ? task.user_execute.names : ""
+          position[4] = task.description
+          
+          
+          
+          sheet.row(i).height = 25
+          sheet.column(i).width = 40
+          sheet.row(i).default_format = rows_format
+        
+        end
+        
+        
+        
+        head_format = Spreadsheet::Format.new color: :white,      
+        weight: :bold,
+        size: 12,      
+        pattern_bg_color: :xls_color_10,    
+        pattern: 2,      
+        vertical_align: :middle,      
+        align: :left
+        
+        
+        
+        position = sheet.row(0)
+        
+        position[0] = "Fecha"
+        position[1] = "Centro de costo"
+        position[2] = "Horas"
+        position[3] = "Trabajo realizado por"
+        position[4] = "Descripcion"
+        
+        
+        
+        
+        sheet.row(0).height = 20
+        sheet.column(0).width = 40
+        
+        
+        
+        sheet.column(1).width = 40
+        
+        sheet.column(2).width = 40
+        
+        sheet.column(3).width = 40
+        
+        sheet.column(4).width = 40
+        
+        sheet.column(5).width = 40
+        
+        sheet.column(6).width = 40
+        
+        sheet.column(7).width = 40
+        
+        sheet.column(8).width = 40
+        
+        sheet.column(9).width = 40
+        
+        sheet.column(10).width = 40
+        
+        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+        
+        
+        
+        temp_file = StringIO.new
+        
+        task.write(temp_file)
+        
+        send_data(temp_file.string, :filename => "Tableristas.xls", :disposition => 'inline')
+        
+        end  
+    end
+
   end
 
   def create

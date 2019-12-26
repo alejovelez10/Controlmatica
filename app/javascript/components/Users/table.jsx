@@ -437,6 +437,15 @@ class Table extends React.Component {
               />
 
             <div className="col-md-10 text-right btn-search">
+              {this.props.estados.download_file == true && (
+                <a
+                  className=" mr-2"
+                  href={`/download_file/users.xls`}
+                  target="_blank"
+                >
+                  <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                </a>
+              )}
               {this.props.estados.create == true && (
                 <button className="btn btn-secondary" color="danger" onClick={() => this.toggle("new")}>Nuevo usuario</button>
               )}

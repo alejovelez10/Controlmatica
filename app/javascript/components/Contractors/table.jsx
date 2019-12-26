@@ -354,6 +354,16 @@ class table extends React.Component {
                       Filtros <i className="fas fa-search ml-2"></i>
                     </button>
 
+                      {this.props.estados.download_file == true && (
+                        <a
+                          className=" mr-2"
+                          href={`/download_file/contractors.xls`}
+                          target="_blank"
+                        >
+                              <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                        </a>
+                      )}
+
                       {this.props.estados.create == true && (      
                         <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Agregar tablerista</button>
                       )}
@@ -399,7 +409,7 @@ class table extends React.Component {
               >
                 <thead>
                   <tr className="tr-title">
-                    <th style={{ width: "10%" }} >Fescha</th>
+                    <th style={{ width: "10%" }} >Fecha</th>
                     <th style={{ width: "13%" }} >Centro de costo</th>
                     <th style={{ width: "7%" }} >Horas</th>
                     <th style={{ width: "16%" }} >Trabajo realizado por</th>

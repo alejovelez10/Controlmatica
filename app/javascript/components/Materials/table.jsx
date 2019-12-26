@@ -333,6 +333,16 @@ class table extends React.Component {
                 Filtros <i className="fas fa-search ml-2"></i>
               </button>
 
+              {this.props.estados.download_file == true && (
+                <a
+                  className=" mr-2"
+                  href={`/download_file/materials.xls`}
+                  target="_blank"
+                >
+                  <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                </a>
+              )}
+
               {this.props.estados.create == true && (
                 <button
                   type="button"

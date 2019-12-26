@@ -11,12 +11,14 @@ class ReportsController < ApplicationController
     edit = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Eliminar").exists?
     responsible = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver Responsables").exists?
+    download_file = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Descargar excel").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       responsible: (current_user.rol.name == "Administrador" ? true : responsible),
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
   end
 
@@ -71,6 +73,121 @@ class ReportsController < ApplicationController
 
     reports = JSON.parse(reports)
     render :json => {reports_paginate: reports, reports_total: reports_total}
+  end
+
+  def download_file
+    report = ModuleControl.find_by_name("Reportes de servicios")
+    estado = current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ver todos").exists?
+    validate = (current_user.rol.name == "Administrador" ? true : estado)
+
+    if validate
+      report_show = Report.all
+    else
+      report_show = Report.where(user_id: current_user.id)
+    end
+
+    respond_to do |format|
+
+      format.xls do
+      
+        task = Spreadsheet::Workbook.new
+        sheet = task.create_worksheet
+        
+        rows_format = Spreadsheet::Format.new color: :black,
+        weight: :normal,
+        size: 13,
+        align: :left
+
+        report_show.each.with_index(1) do |task, i|
+      
+          position = sheet.row(i)
+          
+          sheet.row(1).default_format = rows_format    
+          position[0] = task.code_report
+          position[1] = task.cost_center.present? ? task.cost_center.code : ""
+          position[2] = task.report_date
+          position[3] = task.report_execute.present? ? task.report_execute.names : ""
+          position[4] = task.working_time
+          position[5] = task.work_description
+          position[6] = task.viatic_value
+          position[7] = task.viatic_description
+          position[8] = task.total_value
+          position[9] = task.report_sate ? "Aprobado" : "Sin Aprobar"
+          
+          
+          
+          sheet.row(i).height = 25
+          sheet.column(i).width = 40
+          sheet.row(i).default_format = rows_format
+        
+        end
+        
+        
+        
+        head_format = Spreadsheet::Format.new color: :white,      
+        weight: :bold,
+        size: 12,      
+        pattern_bg_color: :xls_color_10,    
+        pattern: 2,      
+        vertical_align: :middle,      
+        align: :left
+        
+        
+        
+        position = sheet.row(0)
+        
+        position[0] = "Codigo"
+        position[1] = "Centro de Costos"
+        position[2] = "Fecha de Ejecucion"
+        position[3] = "Responsable Ejecucion"
+        position[4] = "Horas Laboradas"
+        position[5] = "Descripcion del Trabajo"
+        position[6] = "Valor de los Viaticos"
+        position[7] = "Descripcion de Viaticos"
+        position[8] = "Valor del Reporte"
+        position[9] = "Estado"
+        
+        
+        
+        
+        sheet.row(0).height = 20
+        sheet.column(0).width = 40
+        
+        
+        
+        sheet.column(1).width = 40
+        
+        sheet.column(2).width = 40
+        
+        sheet.column(3).width = 40
+        
+        sheet.column(4).width = 40
+        
+        sheet.column(5).width = 40
+        
+        sheet.column(6).width = 40
+        
+        sheet.column(7).width = 40
+        
+        sheet.column(8).width = 40
+        
+        sheet.column(9).width = 40
+        
+        sheet.column(10).width = 40
+        
+        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+        
+        
+        
+        temp_file = StringIO.new
+        
+        task.write(temp_file)
+        
+        send_data(temp_file.string, :filename => "Reportes_de_servicios.xls", :disposition => 'inline')
+        
+        end  
+    end
+
   end
     
   
@@ -142,11 +259,8 @@ class ReportsController < ApplicationController
   
  
  def get_contact
-
   contact = Contact.find(params[:id])
-
   render json: contact
-   
  end
 
    

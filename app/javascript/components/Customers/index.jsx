@@ -102,6 +102,15 @@ class index extends React.Component {
                                 </div>
 
                                 <div className="col-md-4 text-right">
+                                  {this.props.estados.download_file == true && (
+                                      <a
+                                        className=" mr-2"
+                                        href={`/download_file/customers.xls`}
+                                        target="_blank"
+                                      >
+                                        <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                                      </a>
+                                  )}
                                   {this.props.estados.create == true && (
                                     <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
                                   )}

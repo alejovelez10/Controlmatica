@@ -289,6 +289,31 @@ module ApplicationHelper
 			true
 		end
 	end
+
+
+	def get_state_center(accion)
+		
+		if (accion.execution_state == "FINALIZADO" && accion.invoiced_state == "FACTURADO")
+			return ""  
+	  
+		  elsif(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "PENDIENTE DE COTIZACION")
+			return ""
+	  
+		  elsif(accion.execution_state == "EJECUCION" && accion.invoiced_state == "PENDIENTE DE ORDEN DE COMPRA")
+			return "Finalizar"
+	  
+		  elsif(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "LEGALIZADO")
+			return ""
+	  
+		  elsif(accion.execution_state == "EJECUCION" && accion.invoiced_state == "PENDIENTE DE COTIZACION")
+			return "Finalizar"
+	  
+		  elsif(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "POR FACTURAR")
+			return ""
+		end
+
+	end
+	
 	
 
 

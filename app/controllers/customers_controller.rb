@@ -11,14 +11,114 @@ class CustomersController < ApplicationController
     create = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Crear").exists?
     edit = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Eliminar").exists?
+    download_file = current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Descargar excel").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete)
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
 
     @customers = Customer.all.paginate(:page => params[:page], :per_page => 10)
+  end
+
+  def download_file
+    customers = Customer.all
+    respond_to do |format|
+
+      format.xls do
+      
+        task = Spreadsheet::Workbook.new
+        sheet = task.create_worksheet
+        
+        rows_format = Spreadsheet::Format.new color: :black,
+        weight: :normal,
+        size: 13,
+        align: :left
+
+        customers.each.with_index(1) do |task, i|
+      
+          position = sheet.row(i)
+          
+          sheet.row(1).default_format = rows_format    
+          position[0] = task.name
+          position[1] = task.phone
+          position[2] = task.address
+          position[3] = task.nit
+          position[4] = task.web
+          position[5] = task.email
+          
+          
+          
+          sheet.row(i).height = 25
+          sheet.column(i).width = 40
+          sheet.row(i).default_format = rows_format
+        
+        end
+        
+        
+        
+        head_format = Spreadsheet::Format.new color: :white,      
+        weight: :bold,
+        size: 12,      
+        pattern_bg_color: :xls_color_10,    
+        pattern: 2,      
+        vertical_align: :middle,      
+        align: :left
+        
+        
+        
+        position = sheet.row(0)
+        
+        position[0] = "Nombre"
+        position[1] = "Telefono"
+        position[2] = "Dirección"
+        position[3] = "Nit"
+        position[4] = "Web"
+        position[5] = "Email"
+        
+        
+        
+        
+        sheet.row(0).height = 20
+        sheet.column(0).width = 40
+        
+        
+        
+        sheet.column(1).width = 40
+        
+        sheet.column(2).width = 40
+        
+        sheet.column(3).width = 40
+        
+        sheet.column(4).width = 40
+        
+        sheet.column(5).width = 40
+        
+        sheet.column(6).width = 40
+        
+        sheet.column(7).width = 40
+        
+        sheet.column(8).width = 40
+        
+        sheet.column(9).width = 40
+        
+        sheet.column(10).width = 40
+        
+        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+        
+        
+        
+        temp_file = StringIO.new
+        
+        task.write(temp_file)
+        
+        send_data(temp_file.string, :filename => "Clientes.xls", :disposition => 'inline')
+        
+        end  
+    end
+
   end
 
   def get_customers

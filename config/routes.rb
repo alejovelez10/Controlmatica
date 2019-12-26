@@ -70,6 +70,22 @@ Rails.application.routes.draw do
 
   get "modules", to: "module_controls#get_actions", as: "modules"
 
+
+  #DESCARGAS DE EXEL
+
+  get "download_file/providers", to: "providers#download_file"
+  get "download_file/customers", to: "customers#download_file"
+  get "download_file/users", to: "home#download_file"
+  get "download_file/cost_centers", to: "cost_centers#download_file"
+  get "download_file/reports", to: "reports#download_file"
+  get "download_file/contractors", to: "contractors#download_file"
+  get "download_file/materials", to: "materials#download_file"
+  get "download_file/customer_reports", to: "customer_reports#download_file"
+
+
+
+  
+
   root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"

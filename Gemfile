@@ -57,6 +57,8 @@ gem 'ckeditor_rails', '~> 4.5', '>= 4.5.10'
 #bootstrap
 gem 'bootstrap', '~> 4.3.1'
 
+gem 'spreadsheet', '~> 1.2', '>= 1.2.5'
+
 # Use CoffeeScript for .coffee assets and views
 gem 'coffee-rails', '~> 4.2'
 # Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks

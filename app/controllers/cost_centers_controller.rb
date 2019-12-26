@@ -3,6 +3,7 @@ class CostCentersController < ApplicationController
   before_action :set_sales_order, only: [:show]
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
+  include ApplicationHelper
 
   # GET /cost_centers
   # GET /cost_centers.json
@@ -20,6 +21,7 @@ class CostCentersController < ApplicationController
     delete = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Eliminar").exists?
     manage_module = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Gestionar modulo").exists?
     ending = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar").exists?
+    download_file = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Descargar excel").exists?
 
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
@@ -29,7 +31,8 @@ class CostCentersController < ApplicationController
       edit: (current_user.rol.name == "Administrador" ? true : edit),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       manage_module: (current_user.rol.name == "Administrador" ? true : manage_module),
-      ending: (current_user.rol.name == "Administrador" ? true : ending)
+      ending: (current_user.rol.name == "Administrador" ? true : ending),
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
   end
 
@@ -296,6 +299,125 @@ class CostCentersController < ApplicationController
         }
       end
   	
+  end
+
+  def download_file
+    centro = ModuleControl.find_by_name("Centro de Costos")
+    estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
+    validate = (current_user.rol.name == "Administrador" ? true : estado)
+
+    if validate
+      centro_show = CostCenter.all
+    else
+      centro_show = CostCenter.where(user_id: current_user.id)
+    end
+
+    respond_to do |format|
+
+      format.xls do
+      
+        task = Spreadsheet::Workbook.new
+        sheet = task.create_worksheet
+        
+        rows_format = Spreadsheet::Format.new color: :black,
+        weight: :normal,
+        size: 13,
+        align: :left
+
+        centro_show.each.with_index(1) do |task, i|
+      
+          position = sheet.row(i)
+          
+          sheet.row(1).default_format = rows_format    
+          position[0] = task.customer.present? ? task.customer.name : ""
+          position[1] = task.service_type
+          position[2] = task.description
+          position[3] = task.quotation_number
+          position[4] = task.engineering_value
+          position[5] = task.sum_executed
+          position[6] = task.viatic_value
+          position[7] = task.sum_viatic
+          position[8] = get_state_center(task)
+          position[9] = task.execution_state
+          position[10] = task.invoiced_state
+          
+          
+          
+          sheet.row(i).height = 25
+          sheet.column(i).width = 40
+          sheet.row(i).default_format = rows_format
+        
+        end
+        
+        
+        
+        head_format = Spreadsheet::Format.new color: :white,      
+        weight: :bold,
+        size: 12,      
+        pattern_bg_color: :xls_color_10,    
+        pattern: 2,      
+        vertical_align: :middle,      
+        align: :left
+        
+        
+        
+        position = sheet.row(0)
+        
+        position[0] = "Codigo"
+        position[1] = "Cliente"
+        position[2] = "Tipo"
+        position[3] = "Descripcion"
+        position[4] = "Número de cotización"
+        position[5] = "$ Ingeniería Cotizado"
+        position[6] = "$ Ingeniería Ejecutado"
+        position[7] = "$ Viaticos Cotizado"
+        position[8] = "$ Viaticos Real"
+        position[9] = "Estado de ejecución"
+        position[10] = "Estado facturado"
+
+        
+        
+        
+        
+        
+        sheet.row(0).height = 20
+        sheet.column(0).width = 40
+        
+        
+        
+        sheet.column(1).width = 40
+        
+        sheet.column(2).width = 40
+        
+        sheet.column(3).width = 40
+        
+        sheet.column(4).width = 40
+        
+        sheet.column(5).width = 40
+        
+        sheet.column(6).width = 40
+        
+        sheet.column(7).width = 40
+        
+        sheet.column(8).width = 40
+        
+        sheet.column(9).width = 40
+        
+        sheet.column(10).width = 40
+        
+        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+        
+        
+        
+        temp_file = StringIO.new
+        
+        task.write(temp_file)
+        
+        send_data(temp_file.string, :filename => "Centro_de_Costo.xls", :disposition => 'inline')
+        
+        end  
+    end
+
   end
 
 
