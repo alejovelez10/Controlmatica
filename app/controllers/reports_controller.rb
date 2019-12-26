@@ -6,21 +6,26 @@ class ReportsController < ApplicationController
   # GET /reports
   # GET /reports.json
   def index
-    if current_user.rol_user == "Super administrador" || current_user.rol_user == "Comercial"
+    reports = ModuleControl.find_by_name("Reportes de servicios")
+    show = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver todos").exists?
+
+    if show
+
       if params[:search1] || params[:search2] || params[:search3] || params[:search4]
         @reports = Report.all.search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
       else 
         @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
       end
-    elsif current_user.rol_user == "Ingeniero"
+
+    else
+
       if params[:search1] || params[:search2] || params[:search3] || params[:search4]
         @reports = Report.where(report_execute_id: current_user.id).search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
       else 
         @reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
       end
-    end
 
-    reports = ModuleControl.find_by_name("Reportes de clientes")
+    end
 
     create = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Crear").exists?
     edit = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar").exists?
@@ -32,7 +37,6 @@ class ReportsController < ApplicationController
       edit: (current_user.rol.name == "Administrador" ? true : edit),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       responsible: (current_user.rol.name == "Administrador" ? true : responsible),
-
     }
 
   end

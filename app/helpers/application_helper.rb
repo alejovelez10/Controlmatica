@@ -276,6 +276,14 @@ module ApplicationHelper
 	end
 
 
+	def authorization_materials
+        materials = ModuleControl.find_by_name("Materiales")
+		if current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+
 	def authorization_config
 		if authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador"
 			true

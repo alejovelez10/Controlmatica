@@ -183,7 +183,7 @@
         </li>
       <% end %>
 
-      <% if authorization_parameterizations || current_user.rol.name == "Administrador" %>
+      <% if authorization_materials || current_user.rol.name == "Administrador" %>
           <li>
             <%= link_to materials_path, class: "app-menu__item" do %>
               <i class="app-menu__icon fas fa-dolly"></i><span class="app-menu__label pl-0">Registro Materiales</span>
