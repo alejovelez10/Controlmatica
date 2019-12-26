@@ -7,26 +7,6 @@ class ReportsController < ApplicationController
   # GET /reports.json
   def index
     reports = ModuleControl.find_by_name("Reportes de servicios")
-    show = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver todos").exists?
-
-    if show
-
-      if params[:search1] || params[:search2] || params[:search3] || params[:search4]
-        @reports = Report.all.search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
-      else 
-        @reports = Report.all.paginate(:page => params[:page], :per_page => 10)
-      end
-
-    else
-
-      if params[:search1] || params[:search2] || params[:search3] || params[:search4]
-        @reports = Report.where(report_execute_id: current_user.id).search(params[:search1],params[:search2],params[:search3],params[:search4]).paginate(:page => params[:page], :per_page => 10)
-      else 
-        @reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-      end
-
-    end
-
     create = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Crear").exists?
     edit = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Eliminar").exists?
@@ -38,7 +18,6 @@ class ReportsController < ApplicationController
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       responsible: (current_user.rol.name == "Administrador" ? true : responsible),
     }
-
   end
 
   # GET /reports/1
