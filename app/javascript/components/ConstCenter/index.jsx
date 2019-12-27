@@ -33,6 +33,8 @@ class index extends React.Component {
             costo_real_en_dinero_contractor: 0,
             porc_eje_costo_contractor:0,
             porc_mat: 0,
+            ejecutado_desplazamiento: 0,
+            porc_desplazamiento: 0,
         }
     }
 
@@ -66,7 +68,10 @@ class index extends React.Component {
             porc_eje_contractor: data.porc_eje_contractor,
             costo_en_dinero_contractor: data.costo_en_dinero_contractor,
             costo_real_en_dinero_contractor: data.costo_real_en_dinero_contractor,
-            porc_eje_costo_contractor:data.porc_eje_costo_contractor
+            porc_eje_costo_contractor:data.porc_eje_costo_contractor,
+
+            ejecutado_desplazamiento_horas: data.ejecutado_desplazamiento_horas,
+            porc_desplazamiento: data.porc_desplazamiento,
 
 
           });
@@ -204,6 +209,10 @@ class index extends React.Component {
                           costo_en_dinero_contractor={this.state.costo_en_dinero_contractor}
                           costo_real_en_dinero_contractor={this.state.costo_real_en_dinero_contractor}
                           porc_eje_costo_contractor={this.state.porc_eje_costo_contractor}
+
+                
+                          ejecutado_desplazamiento_horas= {this.state.ejecutado_desplazamiento_horas}
+                          porc_desplazamiento= {this.state.porc_desplazamiento}
                           
                       />
                       {this.props.estados.login_module == true && (

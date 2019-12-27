@@ -165,6 +165,33 @@ class Show extends React.Component {
 
                 <div className="col-md-6 mt-4">
                     <div className="col-md-12 title1 text-center">
+                        <strong>Desplazamiento</strong><br/>
+                    </div>
+
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                <span>{this.props.data_info.displacement_hours}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Ejecutado</strong><br/> 
+                                <span>{this.props.ejecutado_desplazamiento_horas}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Ejecucion</strong><br/> 
+                                <span>{this.props.porc_desplazamiento}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div> 
+
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
                         <strong>Viaticos</strong><br/>
                     </div>
                                 
@@ -392,7 +419,33 @@ class Show extends React.Component {
                         </div>
                     </div>
                 </div> 
+                <div className="col-md-6 mt-4">
+                    <div className="col-md-12 title1 text-center">
+                        <strong>Desplazamiento</strong><br/>
+                    </div>
 
+                    <div className="col-md-12 background-show">
+                        <div className="row">
+
+                            <div className="col-md-4 text-center">
+                                <strong>Cotizado</strong><br/> 
+                                <span>{this.props.data_info.displacement_hours}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Ejecutado</strong><br/> 
+                                <span>{this.props.ejecutado_desplazamiento_horas}</span>
+                            </div>
+
+                            <div className="col-md-4 text-center">   
+                                <strong>Ejecucion</strong><br/> 
+                                <span>{this.props.porc_desplazamiento}%</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div> 
+                        
                 <div className="col-md-6 mt-4">
                     <div className="col-md-12 title1 text-center">
                         <strong>Materiales</strong><br/>

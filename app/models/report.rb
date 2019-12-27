@@ -73,7 +73,7 @@ class Report < ApplicationRecord
     if self.cost_center_id != nil && self.cost_center_id != 0
       cost_center = CostCenter.find(self.cost_center_id)
       self.working_value = self.working_time * cost_center.hour_real
-      self.value_displacement_hours = self.value_displacement_hours * cost_center.value_displacement_hours
+      self.value_displacement_hours = self.displacement_hours * cost_center.value_displacement_hours
       self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
       
     else

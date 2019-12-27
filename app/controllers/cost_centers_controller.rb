@@ -135,10 +135,16 @@ class CostCentersController < ApplicationController
     #INGENIERIA COSTO
     #costo de horeas ejecutadas en dinero
     cotizado_desplazamiento = @cost_center.offset_value
-    ejecutado_dezplazamiento = @cost_center.reports.sum(:value_displacement_hours)
+    ejecutado_desplazamiento = @cost_center.reports.sum(:value_displacement_hours)
+    ejecutado_desplazamiento_horas = @cost_center.reports.sum(:displacement_hours)
 
-    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).to_i + cotizado_desplazamiento
-    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i + ejecutado_dezplazamiento
+
+    porc_desplazamiento =  @cost_center.displacement_hours > 0 ? (((ejecutado_desplazamiento_horas.to_f/@cost_center.displacement_hours))*100).to_i : "N/A"
+
+    
+
+    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).to_i + @cost_center.offset_value
+    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i + ejecutado_desplazamiento
     porc_eje_costo =  costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f/costo_en_dinero))*100)).to_i : "N/A"
     #FIN INGENIERIA COSTO
 
@@ -199,6 +205,8 @@ class CostCentersController < ApplicationController
 
 
 
+
+
       porc_eje_contractor: porc_eje_contractor,
       hours_eje_contractor: hours_eje_contractor,
       hours_contractor: @cost_center.hours_contractor,
@@ -206,6 +214,12 @@ class CostCentersController < ApplicationController
       costo_en_dinero_contractor: costo_en_dinero_contractor,
       costo_real_en_dinero_contractor: costo_real_en_dinero_contractor,
       porc_eje_costo_contractor: porc_eje_costo_contractor,
+
+
+
+      ejecutado_desplazamiento_horas: ejecutado_desplazamiento_horas,
+      porc_desplazamiento: porc_desplazamiento,
+
 
       costo_en_dinero: costo_en_dinero,
       costo_real_en_dinero: costo_real_en_dinero,
