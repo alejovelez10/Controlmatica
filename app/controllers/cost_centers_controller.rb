@@ -125,22 +125,39 @@ class CostCentersController < ApplicationController
     
     via_real = @cost_center.reports.sum(:viatic_value)
 
+
+    #INGENIERIA EJECUCION
+    #Horas ejecutadas agregadas desde los reportes
     horas_eje = @cost_center.reports.sum(:working_time)
+    porc_eje =  @cost_center.eng_hours > 0 ? (((horas_eje.to_f/@cost_center.eng_hours))*100).to_i : "N/A"
+    #FIN INGENIERIA EJECUCUCION
+
+    #INGENIERIA COSTO
+    #costo de horeas ejecutadas en dinero
+    costo_desplazamiento = @cost_center.offset_value
+
+
+    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).to_i + costo_desplazamiento
+    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i
+    porc_eje_costo =  costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f/costo_en_dinero))*100)).to_i : "N/A"
+    #FIN INGENIERIA COSTO
+
+
     hours_eje_contractor = @cost_center.contractors.sum(:hours)
 
     facturacion = @cost_center.customer_invoices.sum(:invoice_value)
 
-    porc_eje =  @cost_center.eng_hours > 0 ? (((horas_eje.to_f/@cost_center.eng_hours))*100).to_i : "N/A"
+
+   
 
     porc_eje_contractor =  @cost_center.hours_contractor > 0 ? (((hours_eje_contractor.to_f/@cost_center.hours_contractor))*100).to_i : "N/A"
 
-    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i
-    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).to_i
+
 
     costo_real_en_dinero_contractor = (@cost_center.hours_contractor_real * hours_eje_contractor).to_i
     costo_en_dinero_contractor = (@cost_center.hours_contractor_invoices * @cost_center.hours_contractor).to_i
 
-    porc_eje_costo =  costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f/costo_en_dinero))*100)).to_i : "N/A"
+    
 
     porc_eje_costo_contractor =  costo_en_dinero_contractor > 0 ? (((1 - (costo_real_en_dinero_contractor.to_f/costo_en_dinero_contractor))*100)).to_i : "N/A"
 
