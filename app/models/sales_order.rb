@@ -16,7 +16,7 @@
 class SalesOrder < ApplicationRecord
   belongs_to :cost_center, optional: true
   mount_uploader :order_file, OrderUploader
-  after_create :change_state_cost_center
+  after_save :change_state_cost_center
   has_many :customer_invoices
 
   def change_state_cost_center
