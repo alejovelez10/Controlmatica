@@ -510,6 +510,7 @@ class Show extends React.Component {
                                                 <option value="">Seleccione un tipo</option>
                                                 <option value="EJECUCION">EJECUCION</option>
                                                 <option value="FINALIZADO">FINALIZADO</option>
+                                                <option value="PENDIENTE">PENDIENTE</option>
                                             </select> 
                                         ) : (
                                             <React.Fragment>

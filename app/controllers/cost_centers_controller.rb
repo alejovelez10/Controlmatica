@@ -481,7 +481,8 @@ class CostCentersController < ApplicationController
     if @cost_center.update(cost_center_params) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
-        type: "success"
+        type: "success",
+        register: @cost_center
       }
     else 
       render :json => {

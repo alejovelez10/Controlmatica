@@ -17,6 +17,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: providers.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: providers.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: providers.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: providers.id, user_id: user.id)
         end
 
         customers = ModuleControl.create(name: "Clientes", user_id: user.id)
@@ -26,6 +27,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: customers.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: customers.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: customers.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: customers.id, user_id: user.id)
         end
 
         parameterizations = ModuleControl.create(name: "Parametrizaciones", user_id: user.id)
@@ -44,6 +46,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: users.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: users.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: users.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: users.id, user_id: user.id)
         end
 
         rols = ModuleControl.create(name: "Roles", user_id: user.id)
@@ -75,6 +78,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: cost_center.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: cost_center.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: cost_center.id, user_id: user.id)
         end
 
         report = ModuleControl.create(name: "Reportes de servicios", user_id: user.id)
@@ -86,6 +90,7 @@ namespace :create_config do
             AccionModule.create(name: "Eliminar", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Ver Responsables", module_control_id: report.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: report.id, user_id: user.id)
         end
 
         customer_reports = ModuleControl.create(name: "Reportes de clientes", user_id: user.id)
@@ -98,6 +103,7 @@ namespace :create_config do
             AccionModule.create(name: "Editar", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Generar pdf", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Enviar para aprobaciòn", module_control_id: customer_reports.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: customer_reports.id, user_id: user.id)
         end
 
         employed_performance = ModuleControl.create(name: "Informe de rendimiento", user_id: user.id)
@@ -114,6 +120,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: contractors.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: contractors.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: contractors.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: contractors.id, user_id: user.id)
         end
 
 
@@ -124,6 +131,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: materials.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: materials.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: materials.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: materials.id, user_id: user.id)
         end
 
         sales_orders = ModuleControl.create(name: "Ordenes de Compra", user_id: user.id)
@@ -134,6 +142,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: sales_orders.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: sales_orders.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: sales_orders.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: sales_orders.id, user_id: user.id)
         end
 
 
