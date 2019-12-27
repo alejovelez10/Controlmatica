@@ -219,10 +219,9 @@ class FormCreate extends React.Component {
 
                   <div className="col-md-6">
                   <label>Horas de desplazamiento<small className="validate-label">*</small></label>
-                    <NumberFormat 
+                  <input 
                       name="displacement_hours"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
+                      type="number"
                       className={`form form-control ${this.props.errorValues == false && this.props.formValues.displacement_hours == "" ? "error-class" : ""}`}
                       value={this.props.formValues.displacement_hours}
                       onChange={this.props.onChangeForm}

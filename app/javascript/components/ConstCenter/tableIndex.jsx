@@ -496,6 +496,9 @@ class tableIndex extends React.Component {
           hours_contractor_real: modulo.hours_contractor_real != "" ? modulo.hours_contractor_real : "0.0",
           hours_contractor_invoices: modulo.hours_contractor_invoices != "" ? modulo.hours_contractor_invoices : "0.0",
 
+          displacement_hours: modulo.displacement_hours != "" ? modulo.displacement_hours : "0.0",
+          value_displacement_hours: modulo.value_displacement_hours != "" ? modulo.value_displacement_hours : "0.0",
+
           materials_value: modulo.materials_value != "" ? modulo.materials_value : "0.0",
           viatic_value: modulo.viatic_value != "" ? modulo.viatic_value : "0.0",
           quotation_value: modulo.quotation_value != "" ? modulo.quotation_value : "0.0",
