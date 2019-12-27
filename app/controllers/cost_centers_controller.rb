@@ -134,11 +134,11 @@ class CostCentersController < ApplicationController
 
     #INGENIERIA COSTO
     #costo de horeas ejecutadas en dinero
-    costo_desplazamiento = @cost_center.offset_value
+    cotizado_desplazamiento = @cost_center.offset_value
+    ejecutado_dezplazamiento = @cost_center.reports.sum(:value_displacement_hours)
 
-
-    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).to_i + costo_desplazamiento
-    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i
+    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).to_i + cotizado_desplazamiento
+    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i + ejecutado_dezplazamiento
     porc_eje_costo =  costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f/costo_en_dinero))*100)).to_i : "N/A"
     #FIN INGENIERIA COSTO
 

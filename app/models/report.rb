@@ -13,7 +13,7 @@
 #  total_value              :float
 #  cost_center_id           :integer
 #  report_execute_id        :integer
-#  report_code              :string
+#  report_code              :integer
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  code_report              :string
@@ -73,7 +73,9 @@ class Report < ApplicationRecord
     if self.cost_center_id != nil && self.cost_center_id != 0
       cost_center = CostCenter.find(self.cost_center_id)
       self.working_value = self.working_time * cost_center.hour_real
+      self.value_displacement_hours = self.value_displacement_hours * cost_center.value_displacement_hours
       self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
+      
     else
       self.working_value = 0
       self.total_value = 0
