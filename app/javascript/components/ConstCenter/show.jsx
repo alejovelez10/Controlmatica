@@ -86,7 +86,13 @@ class Show extends React.Component {
                   this.setState({
                     state_ejecution: false,
                     invoiced_state: false,
-                    show_btn_update: false
+                    show_btn_update: false,
+
+                    formUpdate: {
+                        execution_state: data.register.execution_state,
+                        invoiced_state: data.register.invoiced_state,
+                        id: data.register.id,
+                    }
                   });   
       
                 });
