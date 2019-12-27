@@ -229,7 +229,7 @@ class FormCreate extends React.Component {
                     /> 
                   </div>
 
-                  <div className="col-md-6">
+                  {/*<div className="col-md-6">
                   <label>Valor hora de desplazamiento<small className="validate-label">*</small></label>
                     <NumberFormat 
                       name="value_displacement_hours"
@@ -240,7 +240,7 @@ class FormCreate extends React.Component {
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora de desplazamiento"
                     /> 
-                  </div>
+                        </div>*/}
                   
                   <div className="col-md-12 mt-4">
                     <hr/>
