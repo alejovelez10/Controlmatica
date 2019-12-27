@@ -42,6 +42,7 @@
 #  sum_materials_value       :float            default(0.0)
 #  displacement_hours        :float
 #  value_displacement_hours  :float
+#  offset_value              :float
 #
 
 class CostCenter < ApplicationRecord
