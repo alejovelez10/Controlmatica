@@ -204,16 +204,6 @@ class ReportsController < ApplicationController
   def create
     valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
     params["viatic_value"] = valor1
-
-    if params["displacement_hours"]  != "nil" || params["displacement_hours"] != ""
-      valor2 = report_params["displacement_hours"].gsub('$','').gsub(',','')
-      params["displacement_hours"] = valor2
-    end
-
-    if params["value_displacement_hours"] != "nil" || params["value_displacement_hours"] != ""
-      valor3 = report_params["value_displacement_hours"].gsub('$','').gsub(',','')
-      params["value_displacement_hours"] = valor3
-    end
     
     @report = Report.create(report_params)
 
@@ -242,15 +232,6 @@ class ReportsController < ApplicationController
       params["viatic_value"] = valor1
     end
 
-    if report_params["displacement_hours"].class.to_s != "Integer" && report_params["displacement_hours"].class.to_s != "Float" && report_params["displacement_hours"].present?
-      valor2 = report_params["displacement_hours"].gsub('$','').gsub(',','')
-      params["displacement_hours"] = valor2
-    end
-
-    if report_params["value_displacement_hours"].class.to_s != "Integer" && report_params["value_displacement_hours"].class.to_s != "Float" && report_params["value_displacement_hours"].present?
-      valor3 = report_params["value_displacement_hours"].gsub('$','').gsub(',','')
-      params["value_displacement_hours"] = valor3
-    end
     
     if @report.update(report_params) 
       render :json => {
