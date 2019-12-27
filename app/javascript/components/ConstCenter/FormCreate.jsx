@@ -70,6 +70,36 @@ class FormCreate extends React.Component {
             </div>
           {/* HR */}
 
+          <div className="col-md-6">
+                  <label>Horas de desplazamiento<small className="validate-label">*</small></label>
+                    <NumberFormat 
+                      name="displacement_hours"
+                      thousandSeparator={true} 
+                      prefix={'$'} 
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.displacement_hours == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.displacement_hours}
+                      onChange={this.props.onChangeForm}
+                      placeholder="Horas de desplazamiento"
+                    /> 
+                  </div>
+
+                  <div className="col-md-6">
+                  <label>Valor hora de desplazamiento<small className="validate-label">*</small></label>
+                    <NumberFormat 
+                      name="value_displacement_hours"
+                      thousandSeparator={true} 
+                      prefix={'$'} 
+                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.value_displacement_hours == "" ? "error-class" : ""}`}
+                      value={this.props.formValues.value_displacement_hours}
+                      onChange={this.props.onChangeForm}
+                      placeholder="Valor hora de desplazamiento"
+                    /> 
+                  </div>
+          {/* HR */}
+          <div className="col-md-12 mt-4 mb-4">
+              <hr/>
+            </div>
+          {/* HR */}
           <div className="col-md-4">
             <label>Valor Viaticos<small className="validate-label">*</small></label>
             <NumberFormat 
