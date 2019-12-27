@@ -329,17 +329,19 @@ class CostCentersController < ApplicationController
           position = sheet.row(i)
           
           sheet.row(1).default_format = rows_format    
-          position[0] = task.customer.present? ? task.customer.name : ""
-          position[1] = task.service_type
-          position[2] = task.description
-          position[3] = task.quotation_number
-          position[4] = task.engineering_value
-          position[5] = task.sum_executed
-          position[6] = task.viatic_value
-          position[7] = task.sum_viatic
-          position[8] = get_state_center(task)
-          position[9] = task.execution_state
-          position[10] = task.invoiced_state
+          position[0] = task.code
+          position[1] = task.customer.present? ? task.customer.name : ""
+          position[2] = task.service_type
+          position[3] = task.description
+          position[4] = task.quotation_number
+
+          position[5] = task.engineering_value
+          position[6] = task.sum_executed
+          position[7] = task.viatic_value
+          position[8] = task.sum_viatic
+          position[9] = get_state_center(task)
+          position[10] = task.execution_state
+          position[11] = task.invoiced_state
           
           
           
@@ -372,8 +374,9 @@ class CostCentersController < ApplicationController
         position[6] = "$ Ingeniería Ejecutado"
         position[7] = "$ Viaticos Cotizado"
         position[8] = "$ Viaticos Real"
-        position[9] = "Estado de ejecución"
-        position[10] = "Estado facturado"
+        position[9] = "¿Finalizo?"
+        position[10] = "Estado de ejecución"
+        position[11] = "Estado facturado"
 
         
         
@@ -404,6 +407,7 @@ class CostCentersController < ApplicationController
         sheet.column(9).width = 40
         
         sheet.column(10).width = 40
+        sheet.column(11).width = 45
         
         sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
         

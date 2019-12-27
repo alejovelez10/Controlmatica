@@ -9,6 +9,15 @@ class Show extends React.Component {
         this.state = {
             show_btn_materiales: false,
             show_btn_ordenes_compra: false,
+            state_ejecution: false,
+            invoiced_state: false,
+            show_btn_update: false,
+
+            formUpdate: {
+                execution_state: this.props.data_info.execution_state,
+                invoiced_state: this.props.data_info.invoiced_state,
+                id: this.props.data_info.id,
+            }
         }
     }
 
@@ -24,6 +33,15 @@ class Show extends React.Component {
         });
     }
 
+    handleChange = e => {
+        this.setState({
+          formUpdate: {
+            ...this.state.formUpdate,
+            [e.target.name]: e.target.value
+          },
+        });
+    };
+
 
     getCards(){
         if (this.props.data_info.service_type == "SERVICIO") {
@@ -32,6 +50,53 @@ class Show extends React.Component {
             return this.getSale()
         }else if(this.props.data_info.service_type == "PROYECTO"){
             return this.getDraft()
+        }
+    }
+
+    changeState = (from) =>{
+        if (from == "invoiced_state") {
+            this.setState({
+                invoiced_state: true,
+            });   
+        }else{
+            this.setState({
+                state_ejecution: true
+            });   
+        }
+
+        this.setState({
+            show_btn_update: true
+        });  
+    }
+
+    SubmitBnt = (from) =>{
+        if (from == "save") {
+
+            fetch("/cost_centers/" + this.props.data_info.id, {
+                method: "PATCH", // or 'PUT'
+                body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
+                headers: {
+                  "Content-Type": "application/json"
+                }
+              })
+                .then(res => res.json())
+                .catch(error => console.error("Error:", error))
+                .then(data => {
+                  this.setState({
+                    state_ejecution: false,
+                    invoiced_state: false,
+                    show_btn_update: false
+                  });   
+      
+                });
+
+
+        }else{
+            this.setState({
+                state_ejecution: false,
+                invoiced_state: false,
+                show_btn_update: false
+            });   
         }
     }
 
@@ -414,28 +479,64 @@ class Show extends React.Component {
 
                         <div className="col-md-12">
                             <div className="row">
-                            <div className="col-md-12 text-center">
-                                  
-                                  <h5>{this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."} / {this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."} ({this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."})</h5>
+                                <div className="col-md-12 text-center">
+                                    <h5>
+                                        {this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."} / {this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."} ({this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."}) 
+
+                                        {this.state.show_btn_update == true && (
+                                            <React.Fragment>
+                                                <button className="btn btn-danger float-right" onClick={() => this.SubmitBnt()}><i className="fas fa-window-close"></i></button>
+                                                <button className="btn btn-secondary float-right mr-2" onClick={() => this.SubmitBnt("save")}>Actualizar</button>
+                                            </React.Fragment>
+                                        )}
+
+                                    </h5>
                               </div>
                             </div>
+
                             <hr/>
                             <div className="row">
                           
                       
-                                <div className="col-md-3 text-center">
+                                <div className="col-md-3 text-center mb-3">
                                     <strong> Estado Ejecucion</strong> <br/>
-                                    <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                        {this.state.state_ejecution == true ? (
+                                            <select 
+                                                name="execution_state" 
+                                                className={`form form-control`}
+                                                value={this.state.formUpdate.execution_state}
+                                                onChange={this.handleChange}
+                                            >
+                                                <option value="">Seleccione un tipo</option>
+                                                <option value="EJECUCION">EJECUCION</option>
+                                                <option value="FINALIZADO">FINALIZADO</option>
+                                            </select> 
+                                        ) : (
+                                            <React.Fragment>
+                                                <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                            </React.Fragment>
+                                        )}
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Estado Facturacion</strong><br/>
-                                    <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                    {this.state.invoiced_state == true ? (
+                                            <select 
+                                                name="invoiced_state" 
+                                                className={`form form-control`}
+                                                value={this.state.formUpdate.invoiced_state}
+                                                onChange={this.handleChange}
+                                            >
+                                                <option value="">Seleccione un tipo</option>
+                                                <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
+                                                <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
+                                            </select> 
+                                    ) : (
+                                            <React.Fragment>
+                                                <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                            </React.Fragment>
+                                    )}
                                 </div>
-
-                           
-
-                               
 
                                 <div className="col-md-3 text-center">
                                     <strong>Contacto</strong><br/>
