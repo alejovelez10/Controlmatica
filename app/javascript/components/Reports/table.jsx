@@ -30,6 +30,8 @@ class table extends React.Component {
             viatic_value: "",
             viatic_description: "",
             report_code: 0,
+            displacement_hours: "",
+            value_displacement_hours: "",
             user_id: this.props.usuario.id,
           },
 
@@ -246,6 +248,8 @@ class table extends React.Component {
           viatic_value: "",
           viatic_description: "",
           report_code: 0,
+          displacement_hours: "",
+          value_displacement_hours: "",
           user_id: this.props.usuario.id,
         },
 
@@ -437,6 +441,8 @@ class table extends React.Component {
           viatic_description: modulo.viatic_description,
           report_code: modulo.report_code,
           user_id: this.props.usuario.id,
+          displacement_hours: modulo.displacement_hours,
+          value_displacement_hours: modulo.value_displacement_hours,
         },
 
         selectedOption: {

@@ -204,6 +204,16 @@ class ReportsController < ApplicationController
   def create
     valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
     params["viatic_value"] = valor1
+
+    if params["displacement_hours"]  != "nil" || params["displacement_hours"] != ""
+      valor2 = report_params["displacement_hours"].gsub('$','').gsub(',','')
+      params["displacement_hours"] = valor2
+    end
+
+    if params["value_displacement_hours"] != "nil" || params["value_displacement_hours"] != ""
+      valor3 = report_params["value_displacement_hours"].gsub('$','').gsub(',','')
+      params["value_displacement_hours"] = valor3
+    end
     
     @report = Report.create(report_params)
 
@@ -230,6 +240,16 @@ class ReportsController < ApplicationController
     if report_params["viatic_value"].class.to_s != "Integer" 
       valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
       params["viatic_value"] = valor1
+    end
+
+    if report_params["displacement_hours"].class.to_s != "Integer" && report_params["displacement_hours"].class.to_s != "Float" && report_params["displacement_hours"].present?
+      valor2 = report_params["displacement_hours"].gsub('$','').gsub(',','')
+      params["displacement_hours"] = valor2
+    end
+
+    if report_params["value_displacement_hours"].class.to_s != "Integer" && report_params["value_displacement_hours"].class.to_s != "Float" && report_params["value_displacement_hours"].present?
+      valor3 = report_params["value_displacement_hours"].gsub('$','').gsub(',','')
+      params["value_displacement_hours"] = valor3
     end
     
     if @report.update(report_params) 
@@ -272,6 +292,9 @@ class ReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def report_params
-      params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id, :count)
+      params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id, :count, :displacement_hours, :value_displacement_hours)
     end
 end
+
+#  displacement_hours       :float
+#  value_displacement_hours :float
