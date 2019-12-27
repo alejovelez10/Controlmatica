@@ -23,7 +23,7 @@ class SalesOrder < ApplicationRecord
     cost_center = CostCenter.find(self.cost_center_id)
 
     sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
-    if (cost_center.quotation_value <= sales_order)
+    if (cost_center.quotation_value <= sales_order + 1000)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
     end
   end
