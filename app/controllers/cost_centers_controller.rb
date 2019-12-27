@@ -431,47 +431,47 @@ class CostCentersController < ApplicationController
 
     if params[:viatic_value] || params[:quotation_value] || params[:hour_real] || params[:hours_contractor_real] || params[:hours_contractor_invoices] || params[:materials_value] || params[:displacement_hours] || params[:value_displacement_hours]
 
-      if cost_center_params["viatic_value"].class.to_s != "Integer" && cost_center_params["viatic_value"].class.to_s != "Float" 
+      if cost_center_params["viatic_value"].class.to_s != "Integer" && cost_center_params["viatic_value"].class.to_s != "Float" && cost_center_params["viatic_value"].present?
         valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
         params["viatic_value"] = valor1
       end
 
-      if cost_center_params["quotation_value"].class.to_s != "Integer" && cost_center_params["quotation_value"].class.to_s != "Float" 
+      if cost_center_params["quotation_value"].class.to_s != "Integer" && cost_center_params["quotation_value"].class.to_s != "Float" && cost_center_params["quotation_value"].present?
         valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
         params["quotation_value"] = valor2
       end
       
-      if cost_center_params["hour_real"].class.to_s != "Integer" && cost_center_params["hour_real"].class.to_s != "Float" 
+      if cost_center_params["hour_real"].class.to_s != "Integer" && cost_center_params["hour_real"].class.to_s != "Float" && cost_center_params["hour_real"].present?
         valor3 = cost_center_params["hour_real"].gsub('$','').gsub(',','')
         params["hour_real"] = valor3
       end
 
-      if cost_center_params["hour_cotizada"].class.to_s != "Integer" && cost_center_params["hour_cotizada"].class.to_s != "Float" 
+      if cost_center_params["hour_cotizada"].class.to_s != "Integer" && cost_center_params["hour_cotizada"].class.to_s != "Float" && cost_center_params["hour_cotizada"].present?
         valor7 = cost_center_params["hour_cotizada"].gsub('$','').gsub(',','')
         params["hour_cotizada"] = valor7
       end
       
-      if cost_center_params["hours_contractor_real"].class.to_s != "Integer" && cost_center_params["hours_contractor_real"].class.to_s != "Float" 
+      if cost_center_params["hours_contractor_real"].class.to_s != "Integer" && cost_center_params["hours_contractor_real"].class.to_s != "Float" && cost_center_params["hours_contractor_real"].present?
         valor4 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
         params["hours_contractor_real"] = valor4
       end
 
-      if cost_center_params["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params["hours_contractor_invoices"].class.to_s != "Float" 
+      if cost_center_params["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params["hours_contractor_invoices"].class.to_s != "Float" && cost_center_params["hours_contractor_invoices"].present?
         valor5 = cost_center_params["hours_contractor_invoices"].gsub('$','').gsub(',','')
         params["hours_contractor_invoices"] = valor5
       end
 
-      if cost_center_params["materials_value"].class.to_s != "Integer" && cost_center_params["materials_value"].class.to_s != "Float" 
+      if cost_center_params["materials_value"].class.to_s != "Integer" && cost_center_params["materials_value"].class.to_s != "Float" && cost_center_params["materials_value"].present?
         valor6 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
         params["materials_value"] = valor6
       end
 
-      if cost_center_params["displacement_hours"].class.to_s != "Integer" && cost_center_params["displacement_hours"].class.to_s != "Float" 
+      if cost_center_params["displacement_hours"].class.to_s != "Integer" && cost_center_params["displacement_hours"].class.to_s != "Float" && cost_center_params["displacement_hours"].present?
         valor7 = cost_center_params["displacement_hours"].gsub('$','').gsub(',','')
         params["displacement_hours"] = valor7
       end
 
-      if cost_center_params["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" 
+      if cost_center_params["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" && cost_center_params["value_displacement_hours"].present?
         valor8 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
         params["value_displacement_hours"] = valor8
       end
