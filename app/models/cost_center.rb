@@ -92,12 +92,6 @@ class CostCenter < ApplicationRecord
     self.hour_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     self.hour_cotizada = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
     self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
-
-    if self.displacement_hours.present? || self.value_displacement_hours.present?
-      valor = self.displacement_hours * self.value_displacement_hours
-      self.offset_value = valor
-    end
-
   end
 
   def calculate_costo
@@ -105,6 +99,11 @@ class CostCenter < ApplicationRecord
     self.engineering_value = self.eng_hours * self.hour_cotizada
     self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
     self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+
+    if self.displacement_hours.present? || self.value_displacement_hours.present?
+      valor = self.displacement_hours * self.value_displacement_hours
+      self.offset_value = valor
+    end
   end
 
   def change_state
