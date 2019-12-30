@@ -88,6 +88,7 @@ class FormFilter extends Component {
                         <option value="">Seleccione un estado</option>
                         <option value="FACTURADO">FACTURADO</option>
                         <option value="LEGALIZADO">LEGALIZADO</option>
+                        <option value="POR FACTURAR">POR FACTURAR</option>
                         <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
                     </select>
                   </div>
