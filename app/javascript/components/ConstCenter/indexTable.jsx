@@ -16,16 +16,31 @@ class indexTable extends React.Component {
               descripcion: "",
               customer_id: "",
               execution_state: "",
-              invoiced_state: "",
-              cliente_name: "",
+              invoiced_state: ""
             },
 
             activePage: 1,
             cost_centers_total: 0, 
             countPage: 10,
-            showInput: false
+
+            selectedOption: {
+              customer_id: "",
+              label: "Buscar cliente"
+            },
+
+            clients: [],
         }
     }
+
+    handleChangeAutocompleteCustomer = selectedOption => {
+      this.setState({
+        selectedOption,
+        formFilter: {
+          ...this.state.formFilter,
+          customer_id: selectedOption.value
+        }
+      });
+    };
 
     loadData = () => {
         fetch("/get_cost_centers")
@@ -49,7 +64,17 @@ class indexTable extends React.Component {
       }
     
     componentDidMount() {
-        this.loadData();
+      let arrayClients = []
+
+      this.props.clientes.map((item) => (
+        arrayClients.push({label: item.name, value: item.id})
+      ))
+  
+      this.setState({
+          clients: arrayClients,
+      })
+
+      this.loadData()
     }
 
       
@@ -61,9 +86,13 @@ class indexTable extends React.Component {
           descripcion: "",
           customer_id: "",
           execution_state: "",
-          invoiced_state: "",
-          cliente_name: "",
-        }
+          invoiced_state: ""
+        },
+
+        selectedOption: {
+          customer_id: "",
+          label: "Buscar cliente"
+        },
     
       });
 
@@ -80,9 +109,13 @@ class indexTable extends React.Component {
         descripcion: "",
         customer_id: "",
         execution_state: "",
-        invoiced_state: "",
-        cliente_name: "",
-      }
+        invoiced_state: ""
+      },
+
+      selectedOption: {
+        customer_id: "",
+        label: "Buscar cliente"
+      },
 
     })
 
@@ -101,21 +134,9 @@ class indexTable extends React.Component {
     });
   };
 
-  handleChangeCheckBox = e => {
-      this.setState({ 
-        showInput: (this.state.showInput == true ? false : true),
-        formFilter: {
-          ...this.state.formFilter,
-          cliente_name: "",
-          customer_id: "",
-        }
-      })
-  };
-
-
 
   HandleClickFilter = e => {
-    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&cliente_name=${this.state.formFilter.cliente_name != undefined ? this.state.formFilter.cliente_name : ""}`)
+    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -161,11 +182,12 @@ class indexTable extends React.Component {
                 formValuesFilter={this.state.formFilter}
                 onClick={this.HandleClickFilter}
                 cancelFilter={this.cancelFilter}
-                closeFilter={this.showFilter}
-                clientes={this.props.clientes}
+                closeFilter={this.showFilter}     
 
-                onChangeCheckBox={this.handleChangeCheckBox}
-                showInput={this.state.showInput}
+
+                formAutocompleteCustomer={this.state.selectedOption}
+                onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
+                clientes={this.state.clients}
               />
             </div>
 
