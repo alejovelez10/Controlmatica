@@ -72,7 +72,7 @@ class CostCenter < ApplicationRecord
     search4 != "" ? (scope :state_invoice, -> { where(invoiced_state: search4) }) : (scope :state_invoice, -> { where.not(id: nil) })
 
     if search5.present?
-      customer = Customer.find_by_name(search5.capitalize!)
+      customer = Customer.find_by_name(search5)
       search5 != "" ? (scope :cliente_name, -> { where(customer_id: (customer.present? ? customer.id : nil )   ) }) : (scope :cliente_name, -> { where.not(id: nil) })
       descripcion.customer.state_execution.state_invoice.cliente_name
     else 
