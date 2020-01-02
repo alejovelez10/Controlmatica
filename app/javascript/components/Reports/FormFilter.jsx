@@ -46,20 +46,18 @@ class FormFilter extends Component {
 
                   <div className="col-md-3 imput-filter">
                     <label>Responsable Ejecucion</label>
-                      <select name="report_execute_id" 
-                        className="form form-control"
-                        onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.report_execute_id}
-                      >
-                        <option value="">Seleccione un ingreso</option>
-                        {
-                          this.props.users.map(item => (
-                              <React.Fragment>
-                                  <option value={item.id}>{item.names}</option>
-                              </React.Fragment>
-                          ))
-                        }
-                      </select>
+                      <input
+                        type="hidden"
+                        name="report_execute_id"
+                        value={this.props.formAutocompleteUser.report_execute_id}
+                      />
+                      <Select
+                        onChange={this.props.onChangeAutocompleteUser}
+                        options={this.props.users}
+                        autoFocus={false}
+                        className={`link-form`}
+                        value={this.props.formAutocompleteUser}
+                      />
                     </div>
 
                 

@@ -26,8 +26,14 @@ class index extends React.Component {
               cost_center_id: "",
               label: "Centro de costo"
             },
+
+            selectedOptionUser :{
+              report_execute_id: "",
+              label: "Responsable Ejecucion",
+            },
       
-            dataCostCenter: []
+            dataCostCenter: [],
+            dataUsers: []
         }
     }
 
@@ -49,13 +55,19 @@ class index extends React.Component {
         this.loadData();
 
         let array = []
+        let arrayUsers = []
 
         this.props.cost_centers.map((item) => (
           array.push({label: item.code, value: item.id})
         ))
+
+        this.props.users.map((item) => (
+          arrayUsers.push({label: item.names, value: item.id})
+        ))
     
         this.setState({
-          dataCostCenter: array
+          dataCostCenter: array,
+          dataUsers: arrayUsers
         })
     }
 
@@ -67,7 +79,16 @@ class index extends React.Component {
           cost_center_id: selectedOptionCentro.value
         }
       });
-      
+    };
+
+    handleChangeAutocompleteUser = selectedOptionUser => {
+      this.setState({
+        selectedOptionUser,
+        formFilter: {
+          ...this.state.formFilter,
+          report_execute_id: selectedOptionUser.value
+        }
+      });
     };
 
     showFilter = valor => {
@@ -91,6 +112,12 @@ class index extends React.Component {
           cost_center_id: "",
           label: "Centro de costo"
         },
+
+        selectedOptionUser :{
+          report_execute_id: "",
+          label: "Responsable Ejecucion",
+        },
+        
       })
       
     };
@@ -152,14 +179,19 @@ class index extends React.Component {
                   onClick={this.HandleClickFilter}
                   cancelFilter={this.cancelFilter}
                   closeFilter={this.showFilter}
-                  users={this.props.users}
+                  
                   cost_centers={this.props.cost_centers}
 
                   /* AUTOCOMPLETE CENTRO DE COSTO */
-
                   centro={this.state.dataCostCenter}
                   onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
                   formAutocompleteCentro={this.state.selectedOptionCentro}
+
+                  /* AUTOCOMPLETE CENTRO DE USERS */
+                  users={this.state.dataUsers}
+                  onChangeAutocompleteUser={this.handleChangeAutocompleteUser}
+                  formAutocompleteUser={this.state.selectedOptionUser}
+
                 />
               </div>
 

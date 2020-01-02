@@ -19,6 +19,20 @@ class index extends React.Component {
             activePage: 1,
             customer_reports_total: 0, 
             countPage: 10,
+
+            dataCostCenter: [],
+            clients: [],
+
+            selectedOptionCentro: {
+              cost_center_id: "",
+              label: "Centro de costo"
+            },
+    
+            selectedOption :{
+              customer_id: "",
+              label: "Buscar cliente",
+            },
+
         }
     }
 
@@ -38,7 +52,43 @@ class index extends React.Component {
     
     componentDidMount() {
         this.loadData();
+
+        let array = []
+        let arrayCustomers = []
+
+        this.props.cost_center.map((item) => (
+          array.push({label: item.code, value: item.id})
+        ))
+
+        this.props.clientes.map((item) => (
+          arrayCustomers.push({label: item.name, value: item.id})
+        ))
+    
+        this.setState({
+          dataCostCenter: array,
+          clients: arrayCustomers
+        })
     }
+
+    handleChangeAutocompleteCentro = selectedOptionCentro => {
+      this.setState({
+        selectedOptionCentro,
+        formFilter: {
+          ...this.state.formFilter,
+          cost_center_id: selectedOptionCentro.value
+        }
+      });
+    };
+
+    handleChangeAutocompleteCustomer = selectedOption => {
+      this.setState({
+        selectedOption,
+        formFilter: {
+          ...this.state.formFilter,
+          customer_id: selectedOption.value
+        }
+      });
+    };
 
     showFilter = (valor) => {
       if (valor == true) {
@@ -52,7 +102,18 @@ class index extends React.Component {
           cost_center_id: "",
           customer_id: "",
           state: "",
-        }  
+        },
+        
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
+
+        selectedOption :{
+          customer_id: "",
+          label: "Buscar cliente",
+        },
+
       })
   
   
@@ -117,6 +178,16 @@ class index extends React.Component {
                   closeFilter={this.showFilter}
                   clientes={this.props.clientes}
                   cost_centers={this.props.cost_center}
+
+                  /* AUTOCOMPLETE CENTRO DE COSTO */
+                  centro={this.state.dataCostCenter}
+                  onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                  formAutocompleteCentro={this.state.selectedOptionCentro}
+
+                  /* AUTOCOMPLETE CUSTOMER */
+                  formAutocompleteCustomer={this.state.selectedOption}
+                  onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
+                  clientes={this.state.clients}
                 />
               </div>
 
