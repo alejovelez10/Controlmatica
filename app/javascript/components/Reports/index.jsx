@@ -15,7 +15,8 @@ class index extends React.Component {
               report_execute_id: "",
               date_ejecution: "",
               report_sate: "",
-              cost_center_id: ""
+              cost_center_id: "",
+              customer_id: ""
             },
 
             activePage: 1,
@@ -31,9 +32,15 @@ class index extends React.Component {
               report_execute_id: "",
               label: "Responsable Ejecucion",
             },
+
+            selectedOption: {
+              customer_id: "",
+              label: "Buscar cliente"
+            },
       
             dataCostCenter: [],
-            dataUsers: []
+            dataUsers: [],
+            clients: [],
         }
     }
 
@@ -56,6 +63,7 @@ class index extends React.Component {
 
         let array = []
         let arrayUsers = []
+        let arrayClients = []
 
         this.props.cost_centers.map((item) => (
           array.push({label: item.code, value: item.id})
@@ -64,10 +72,15 @@ class index extends React.Component {
         this.props.users.map((item) => (
           arrayUsers.push({label: item.names, value: item.id})
         ))
+
+        this.props.clientes.map((item) => (
+          arrayClients.push({label: item.name, value: item.id})
+        ))
     
         this.setState({
           dataCostCenter: array,
-          dataUsers: arrayUsers
+          dataUsers: arrayUsers,
+          clients: arrayClients
         })
     }
 
@@ -87,6 +100,16 @@ class index extends React.Component {
         formFilter: {
           ...this.state.formFilter,
           report_execute_id: selectedOptionUser.value
+        }
+      });
+    };
+
+    handleChangeAutocompleteCustomer = selectedOption => {
+      this.setState({
+        selectedOption,
+        formFilter: {
+          ...this.state.formFilter,
+          customer_id: selectedOption.value
         }
       });
     };
@@ -117,7 +140,12 @@ class index extends React.Component {
           report_execute_id: "",
           label: "Responsable Ejecucion",
         },
-        
+
+        selectedOption: {
+          customer_id: "",
+          label: "Buscar cliente"
+        },
+
       })
       
     };
@@ -132,7 +160,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}`)
+      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -191,6 +219,11 @@ class index extends React.Component {
                   users={this.state.dataUsers}
                   onChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                   formAutocompleteUser={this.state.selectedOptionUser}
+
+                  /* AUTOCOMPLETE CENTRO DE CUSTOMERS */
+                  formAutocompleteCustomer={this.state.selectedOption}
+                  onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
+                  clientes={this.state.clients}
 
                 />
               </div>
