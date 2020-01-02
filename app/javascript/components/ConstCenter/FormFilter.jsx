@@ -45,21 +45,36 @@ class FormFilter extends Component {
                   </div>
 
                   <div className="col-md-3 imput-filter">
-                    <label>Clientes</label>
-                      <select name="customer_id" 
-                        className="form form-control"
-                        onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.customer_id}
-                      >
-                        <option value="">Seleccione un ingreso</option>
-                        {
-                          this.props.clientes.map(item => (
-                              <React.Fragment>
-                                  <option value={item.id}>{item.name}</option>
-                              </React.Fragment>
-                          ))
-                        }
-                      </select>
+                    <label>Escribir cliente? <input type="checkbox" onChange={this.props.onChangeCheckBox} name="vehicle2" value={this.props.showInput == true ? false : true}/> </label>
+                    {this.props.showInput == true ? (
+                      <React.Fragment>
+                        <input
+                          className="form form-control"
+                          type="text"
+                          name="cliente_name"
+                          placeholder="Nombre del ciente"
+                          onChange={this.props.onChangeFilter}
+                          value={this.props.formValuesFilter.cliente_name}
+                        />
+                      </React.Fragment>
+                      ) : (
+                      <React.Fragment>
+                        <select name="customer_id" 
+                          className="form form-control"
+                          onChange={this.props.onChangeFilter}
+                          value={this.props.formValuesFilter.customer_id}
+                        >
+                          <option value="">Seleccione un ingreso</option>
+                          {
+                            this.props.clientes.map(item => (
+                                <React.Fragment>
+                                    <option value={item.id}>{item.name}</option>
+                                </React.Fragment>
+                            ))
+                          }
+                        </select>
+                      </React.Fragment>
+                    )}  
                     </div>
 
                   <div className="col-md-3 imput-filter">

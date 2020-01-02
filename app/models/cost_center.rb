@@ -65,12 +65,19 @@ class CostCenter < ApplicationRecord
   scope :filter, -> { where("service_type like 'PROYECTO' or service_type like 'SERVICIO'") }
   scope :tableristas, -> { where(service_type: "PROYECTO") }
 
-  def self.search(search1, search2, search3, search4)
+  def self.search(search1, search2, search3, search4, search5)
     search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
     search3 != "" ? (scope :state_execution, -> { where(execution_state: search3) }) : (scope :state_execution, -> { where.not(id: nil) })
     search4 != "" ? (scope :state_invoice, -> { where(invoiced_state: search4) }) : (scope :state_invoice, -> { where.not(id: nil) })
-    descripcion.customer.state_execution.state_invoice
+
+    if search5.present?
+      customer = Customer.find_by_name(search5.capitalize!)
+      search5 != "" ? (scope :cliente_name, -> { where(customer_id: (customer.present? ? customer.id : nil )   ) }) : (scope :cliente_name, -> { where.not(id: nil) })
+      descripcion.customer.state_execution.state_invoice.cliente_name
+    else 
+      descripcion.customer.state_execution.state_invoice
+    end
   end
 
   def create_code

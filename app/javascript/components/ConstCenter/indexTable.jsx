@@ -16,12 +16,14 @@ class indexTable extends React.Component {
               descripcion: "",
               customer_id: "",
               execution_state: "",
-              invoiced_state: ""
+              invoiced_state: "",
+              cliente_name: "",
             },
 
             activePage: 1,
             cost_centers_total: 0, 
             countPage: 10,
+            showInput: false
         }
     }
 
@@ -59,7 +61,8 @@ class indexTable extends React.Component {
           descripcion: "",
           customer_id: "",
           execution_state: "",
-          invoiced_state: ""
+          invoiced_state: "",
+          cliente_name: "",
         }
     
       });
@@ -77,7 +80,8 @@ class indexTable extends React.Component {
         descripcion: "",
         customer_id: "",
         execution_state: "",
-        invoiced_state: ""
+        invoiced_state: "",
+        cliente_name: "",
       }
 
     })
@@ -97,9 +101,21 @@ class indexTable extends React.Component {
     });
   };
 
+  handleChangeCheckBox = e => {
+      this.setState({ 
+        showInput: (this.state.showInput == true ? false : true),
+        formFilter: {
+          ...this.state.formFilter,
+          cliente_name: "",
+          customer_id: "",
+        }
+      })
+  };
+
+
 
   HandleClickFilter = e => {
-    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}`)
+    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&cliente_name=${this.state.formFilter.cliente_name != undefined ? this.state.formFilter.cliente_name : ""}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -147,6 +163,9 @@ class indexTable extends React.Component {
                 cancelFilter={this.cancelFilter}
                 closeFilter={this.showFilter}
                 clientes={this.props.clientes}
+
+                onChangeCheckBox={this.handleChangeCheckBox}
+                showInput={this.state.showInput}
               />
             </div>
 
