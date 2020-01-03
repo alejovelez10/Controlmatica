@@ -102,7 +102,7 @@ class CostCenter < ApplicationRecord
     self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
 
     if self.displacement_hours.present? || self.value_displacement_hours.present?
-      valor = self.displacement_hours * self.value_displacement_hours
+      valor = self.displacement_hours * self.hour_real
       self.offset_value = valor
     end
   end
