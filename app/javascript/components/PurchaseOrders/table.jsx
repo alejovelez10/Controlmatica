@@ -205,7 +205,7 @@ class table extends React.Component {
 
       this.setState({
         modeEdit: false ,
-        title: "Nueva orden de pago",
+        title: "Orden de compra",
         form: {
           created_date: "",
           order_number: "",
@@ -487,7 +487,7 @@ class table extends React.Component {
 
                     <div className="col-md-4 text-right mt-1 mb-1">  
                         {this.props.estados.create == true && (     
-                          <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Nueva orden de compra</button>
+                          <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Orden de compra</button>
                         )}
                     </div>
 
@@ -707,7 +707,7 @@ class table extends React.Component {
                         <div className="text-center mt-1 mb-1">
                         <h4>Ordenes de Compra</h4>
                           {this.props.estados.create == true && (
-                            <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Nueva orden de compra</button>
+                            <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Orden de compra</button>
                           )}
                         </div>
                     </td>

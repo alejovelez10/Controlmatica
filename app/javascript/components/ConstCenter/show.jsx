@@ -641,14 +641,14 @@ class Show extends React.Component {
                                 </React.Fragment>
                             )}
 
-                            <div className="col-md-12 text-center mt-5">
+                            {/*<div className="col-md-12 text-center mt-5">
                                 {this.state.show_btn_ordenes_compra == true && (
                                     <a 
                                         href={`/cost_centers/${this.props.data_info.id}`} 
                                         className={this.props.sales_orders_state == true ? "btn btn-secondary" : "btn btn-outline-secondary"}>Ordenes de Compras
                                     </a>
                                 )}
-                            </div>
+                            </div>*/}
                         </div> 
 
                     </CardBody>
