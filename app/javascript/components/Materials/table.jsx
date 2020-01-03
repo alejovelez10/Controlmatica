@@ -4,6 +4,7 @@ import Swal from "sweetalert2/dist/sweetalert2.js";
 import FormCreate from "../Materials/FormCreate";
 import ShowInfo from "../Materials/ShowInfo";
 import NumberFormat from "react-number-format";
+import FormIncomeDetail from "../incomeDetail/formCreate"
 
 class table extends React.Component {
   constructor(props) {
@@ -14,6 +15,11 @@ class table extends React.Component {
       backdrop: "static",
       modeEdit: false,
       modalShow: false,
+
+      modalIncomeDetail: false,
+      ErrorValuesIncome: true,
+      data_incomes: [],
+
       action: {},
       title: "Nuevo convenio",
       id: "",
@@ -28,10 +34,16 @@ class table extends React.Component {
         delivery_date: "",
         sales_state: "",
         description: "",
-        provider_invoice_number: "",
-        provider_invoice_value: "",
         user_id: this.props.usuario.id,
         cost_center_id: ""
+      },
+
+      formCreateIncome: {
+        number: "",
+        value: "",
+        observation: "",
+        material_id: "",
+        user_id: this.props.usuario.id,
       },
 
       selectedOptionCentro: {
@@ -48,17 +60,14 @@ class table extends React.Component {
 
   MessageSucces = (name_success, type, error_message) => {
     Swal.fire({
-      position: "center",
-      type: type,
-      html:
-        "<p>" + error_message != undefined
-          ? error_message
-          : "asdasdasd" + "</p>",
-      title: name_success,
-      showConfirmButton: false,
-      timer: 1500
+    position: "center",
+    type: type,
+    html: '<p>'  + error_message !=  undefined ? error_message : "asdasdasd"  +  '</p>',
+    title: name_success,
+    showConfirmButton: false,
+    timer: 1500
     });
-  };
+  }
 
   componentDidMount(){
     let array = []
@@ -103,7 +112,6 @@ class table extends React.Component {
       this.state.form.sales_number != "" &&
       this.state.form.amount.length != 0  &&
       this.state.form.delivery_date != "" &&
-      this.state.form.provider_invoice_value.length != 0 &&
       this.state.form.description != "" 
     ) {
       
@@ -144,8 +152,6 @@ class table extends React.Component {
                 delivery_date: "",
                 sales_state: "",
                 description: "",
-                provider_invoice_number: "",
-                provider_invoice_value: "",
                 user_id: this.props.usuario.id,
                 ccost_center_id: ""
               },
@@ -181,8 +187,6 @@ class table extends React.Component {
                 delivery_date: "",
                 sales_state: "",
                 description: "",
-                provider_invoice_number: "",
-                provider_invoice_value: "",
                 user_id: this.props.usuario.id,
                 cost_center_id: ""
               },
@@ -217,8 +221,6 @@ class table extends React.Component {
         delivery_date: modulo.delivery_date,
         sales_state: modulo.sales_state,
         description: modulo.description,
-        provider_invoice_number: modulo.provider_invoice_number,
-        provider_invoice_value: modulo.provider_invoice_value,
         user_id: this.props.usuario.id,
         cost_center_id: modulo.cost_center_id
       },
@@ -246,8 +248,6 @@ class table extends React.Component {
           delivery_date: "",
           sales_state: "",
           description: "",
-          provider_invoice_number: "",
-          provider_invoice_value: "",
           user_id: this.props.usuario.id,
           cost_center_id: ""
         },
@@ -309,6 +309,134 @@ class table extends React.Component {
       this.setState({ modalShow: false, action: {} });
     }
   };
+
+
+  /* INCOME DETAIL */
+
+  handleChangeIncomes = e => {
+    this.setState({
+      formCreateIncome: {
+        ...this.state.formCreateIncome,
+        [e.target.name]: e.target.value
+      }
+    });
+  };
+
+  HandleClickIncomes = e =>{
+    if (this.validationFormIncomeDetail() == true) {
+      fetch("/material_invoices", {
+        method: 'POST', // or 'PUT'
+        body: JSON.stringify(this.state.formCreateIncome), // data can be `string` or {object}!
+        headers: {
+          'Content-Type': 'application/json',
+        }
+        
+      })
+        .then(res => res.json())
+        .catch(error => console.error("Error:", error))
+        .then(data => {
+          
+          this.incomeDetail(this.state.id)
+          this.props.loadInfo()
+          this.MessageSucces(data.message, data.type, data.message_error)
+
+          this.setState({
+            formCreateIncome: {
+              date_detail: "",
+              value: "",
+              voucher: "",
+              user_id: this.props.usuario.id,
+            },
+          });
+        });
+    }
+  }
+
+  incomeDetail(accion){
+    fetch("/get_material_invoice/" + accion)
+    .then(response => response.json())
+    .then(data => {
+      this.setState({
+        data_incomes: data,
+        formCreateIncome: {
+          number: "",
+          value: "",
+          observation: "",
+          material_id: accion,
+          user_id: this.props.usuario.id,
+        },
+        id: accion,
+        modalIncomeDetail: true,
+        title: "Agregar Facturas"
+      });
+    });
+  }
+
+  updateInfoIncome = (income) =>{
+    fetch("/update_load/" + income)
+    .then(response => response.json())
+    .then(data => {
+      this.setState({
+        data_incomes: data
+      })
+    });
+  }
+
+
+  showIncomeDetail = (estado) =>{
+    if (estado == "open") {
+      this.setState({ modalIncomeDetail: true, action: info })
+    }else if(estado == "close"){
+      this.setState({ modalIncomeDetail: false, action: {}, ErrorValuesIncome: true })
+    }
+  }
+
+  deleteIncomes = (id) => {
+    Swal.fire({
+      title: 'Estas seguro?',
+      text: "El registro sera eliminado para siempre!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#009688',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Si'
+    }).then((result) => {
+      if (result.value) {
+        fetch("/material_invoices/" + id, {
+          method: 'delete'
+      }).then(response => response.json())
+      .then(response => {
+
+        this.incomeDetail(this.state.id)
+        this.props.loadInfo()
+      
+        Swal.fire(
+          'Borrado!',
+          '¡El registro fue eliminado con exito!',
+          'success'
+        )
+      });
+      }
+    })
+
+  }
+
+
+  validationFormIncomeDetail = () => {
+    if (this.state.formCreateIncome.number != "" &&  
+        this.state.formCreateIncome.value != "" && 
+        this.state.formCreateIncome.observation != "" 
+        ) {
+    console.log("los campos estan llenos " )
+      this.setState({ ErrorValuesIncome: true })
+      return true
+    }else{
+      console.log("los campos no se han llenado")
+      this.setState({ ErrorValuesIncome: false })
+      return false
+      
+    }
+  }
 
   render() {
     return (
@@ -378,6 +506,28 @@ class table extends React.Component {
           
         />
 
+        <FormIncomeDetail
+          toggle={this.showIncomeDetail}
+          backdrop={this.state.backdrop}
+          modal={this.state.modalIncomeDetail}
+          titulo={this.state.title}
+          dataIncomes={this.state.data_incomes}
+          FormSubmit={this.handleSubmit}
+
+          submit={this.HandleClickIncomes}
+          delete={this.deleteIncomes}
+          loadInfo={this.incomeDetail}
+          income={this.state.id}
+          loadData={this.updateInfoIncome}
+          MessageSucces={this.MessageSucces}
+
+
+          onChangeForm={this.handleChangeIncomes}
+          formValues={this.state.formCreateIncome}
+          errorValues={this.state.ErrorValuesIncome}
+          estados={this.props.estados}
+        />
+
         <ShowInfo
           toggle={this.show}
           backdrop={this.state.backdrop}
@@ -397,7 +547,7 @@ class table extends React.Component {
                 <th style={{width:"19%"}}>Descripción</th>
                 <th style={{width:"12%"}}>Fecha de Orden</th>
                 <th style={{width:"12%"}}>Fecha Entrega</th>
-                <th style={{width:"12%"}}>Valor Factura</th>
+                <th style={{width:"12%"}}>Valor Facturas</th>
                 <th style={{width:"10%"}}>Estado</th>
                 <th style={{ width: "5%" }} className="text-center">
                   Acciones
@@ -446,6 +596,12 @@ class table extends React.Component {
                               >
                                 Ver informaciom
                               </button>
+                            )}  
+
+                            {true && (
+                                  <button onClick={() => this.incomeDetail(accion.id)} className="dropdown-item">
+                                    Facturas
+                                  </button>
                             )}
 
                             {this.props.estados.edit == true && (

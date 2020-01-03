@@ -23,6 +23,7 @@ Rails.application.routes.draw do
 
   resources :materials
   resources :contractors
+  resources :material_invoices
 
   default_url_options :host => "controlmatica.herokuapp.com"
 
@@ -69,6 +70,8 @@ Rails.application.routes.draw do
   get "get_roles", to: "home#get_roles"
 
   get "modules", to: "module_controls#get_actions", as: "modules"
+
+  get "get_material_invoice/:id", to: "material_invoices#get_material_invoice"
 
 
   #DESCARGAS DE EXEL

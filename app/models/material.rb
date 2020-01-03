@@ -22,6 +22,7 @@ class Material < ApplicationRecord
   belongs_to :cost_center
   belongs_to :provider
   after_save :calculate_cost
+  has_many :material_invoices, dependent: :destroy
 
   after_destroy :calculate_cost_destroy
   before_save :set_state
@@ -48,6 +49,8 @@ class Material < ApplicationRecord
   end
 
   def set_state
+    self.sales_state = "PROCESADO"
+=begin
     if self.provider_invoice_value > self.amount
       puts "111111111111111"
       self.sales_state = "INGRESADO CON MAYOR VALOR EN FACTURA"
@@ -61,5 +64,6 @@ class Material < ApplicationRecord
       puts "222222"
       self.sales_state = "INGRESADO TOTAL"
     end
+=end
   end
 end

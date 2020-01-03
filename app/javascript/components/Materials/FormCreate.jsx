@@ -99,34 +99,7 @@ class FormCreate extends React.Component {
                     className={`form form-control ${this.props.errorValues == false && this.props.formValues.delivery_date == "" ? "error-class" : ""}`}
                   />
                 </div>
-                
-
-
-                <div className="col-md-4 mb-4">
-                <label>Numero de factura <small className="validate-label">*</small></label>
-                  <input 
-                    name="provider_invoice_number"
-                    thousandSeparator={true} 
-                  
-                    className={`form form-control`}
-                    value={this.props.formValues.provider_invoice_number}
-                    onChange={this.props.onChangeForm}
-                    placeholder="Numero facura"
-                  /> 
-                </div>
-
-                <div className="col-md-4 mb-4">
-                <label>Valor de factura<small className="validate-label">*</small></label>
-                  <NumberFormat 
-                    name="provider_invoice_value"
-                    thousandSeparator={true} 
-                    prefix={'$'} 
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.provider_invoice_value == "" ? "error-class" : ""}`}
-                    value={this.props.formValues.provider_invoice_value}
-                    onChange={this.props.onChangeForm}
-                    placeholder="Valor total"
-                  /> 
-                </div>
+              
                 
 
                 <div className="col-md-12">

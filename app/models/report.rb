@@ -13,7 +13,7 @@
 #  total_value              :float
 #  cost_center_id           :integer
 #  report_execute_id        :integer
-#  report_code              :integer
+#  report_code              :string
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  code_report              :string
@@ -95,20 +95,19 @@ class Report < ApplicationRecord
       self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
       customer_prefix = Customer.find(costcenter.customer.id).code
       self.code_report = "REP-" + customer_prefix + "-" + self.count.to_s + "-" + self.report_date.year.to_s
-    
     else
       CostCenter.find(self.cost_center_id).update(execution_state: "EJECUCION")
     end
 
     #if self.contact_id == nil
-    #Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
+      #Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
     #else
-    #contact = Contact.find(self.contact_id)
-    #self.contact_name = contact.name
-    #self.contact_position = contact.position
-    #self.contact_email = contact.email
-    #self.contact_phone = contact.phone
-    #CostCenter.last.update(contact_id: contact.id)
+      #contact = Contact.find(self.contact_id)
+      #self.contact_name = contact.name
+      #self.contact_position = contact.position
+      #self.contact_email = contact.email
+      #self.contact_phone = contact.phone
+      #CostCenter.last.update(contact_id: contact.id)
     #end
   end
 

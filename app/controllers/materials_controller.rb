@@ -144,12 +144,7 @@ class MaterialsController < ApplicationController
 
   def create
     valor1 = material_params["amount"].gsub('$','').gsub(',','')
-    valor2 = material_params["provider_invoice_value"].gsub('$','').gsub(',','')
-    valor3 = material_params["provider_invoice_number"].gsub('$','').gsub(',','')
-    
     params["amount"] = valor1
-    params["provider_invoice_value"] = valor2
-    params["provider_invoice_number"] = valor3
 
   	@material = Material.create(material_params)
       if @material.save
@@ -175,14 +170,6 @@ class MaterialsController < ApplicationController
       valor1 = material_params["amount"].gsub('$','').gsub(',','')
       params["amount"] = valor1
   end
-
-
-  if material_params["provider_invoice_value"].class.to_s != "Integer" &&  material_params["provider_invoice_value"].class.to_s != "Float"
-      valor3 = material_params["provider_invoice_value"].gsub('$','').gsub(',','')
-      params["provider_invoice_value"] = valor3
-  end
-
-
 
     if @material.update(material_params) 
       render :json => {
