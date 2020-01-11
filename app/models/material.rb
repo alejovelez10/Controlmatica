@@ -49,21 +49,21 @@ class Material < ApplicationRecord
   end
 
   def set_state
-    self.sales_state = "PROCESADO"
-=begin
-    if self.provider_invoice_value > self.amount
-      puts "111111111111111"
+    invoice_total = self.material_invoices.sum(:value)
+    self.provider_invoice_value = invoice_total
+
+    if invoice_total > self.amount
+      puts "111111111111111343434434"
       self.sales_state = "INGRESADO CON MAYOR VALOR EN FACTURA"
-    elsif self.provider_invoice_value < self.amount && self.provider_invoice_value > 0
-      puts "33333333"
+    elsif (invoice_total < self.amount) && invoice_total > 0
+      puts "33333333334334"
       self.sales_state = "INGRESADO PARCIAL"
-    elsif self.provider_invoice_value == 0 || self.provider_invoice_value.nil?
-      puts "222222"
+    elsif invoice_total == 0
+      puts "22222234343434"
       self.sales_state = "PROCESADO"
-    elsif self.provider_invoice_value == 0 || self.provider_invoice_value == self.amount
-      puts "222222"
+    elsif invoice_total == self.amount
+      puts "222222343434"
       self.sales_state = "INGRESADO TOTAL"
     end
-=end
   end
 end

@@ -14,27 +14,13 @@
 #
 
 class MaterialInvoice < ApplicationRecord
-    belongs_to :material
-    after_create :update_values
-    
-    def update_values
-        material = Material.find(self.material_id) 
-        puts "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        puts material.material_invoices.sum(:value)
-        material.update(provider_invoice_value: material.material_invoices.sum(:value))
+  belongs_to :material
+  after_save :update_values
 
-        if self.value > material.amount
-          puts "111111111111111"
-          material.update(sales_state: "INGRESADO CON MAYOR VALOR EN FACTURA")
-        elsif self.value < material.amount && self.value > 0
-          puts "33333333"
-          material.update(sales_state: "INGRESADO PARCIAL")
-        elsif self.value == 0 || self.value.nil?
-          puts "222222"
-          material.update(sales_state: "PROCESADO")
-        elsif self.value == 0 || self.value == material.amount
-          puts "222222"
-          material.update(sales_state: "INGRESADO TOTAL")
-        end
-    end
+  def update_values
+    material = Material.find(self.material_id)
+    puts "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    invoice_total = material.material_invoices.sum(:value)
+    material.update(provider_invoice_value: invoice_total)
+  end
 end
