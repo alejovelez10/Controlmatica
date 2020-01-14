@@ -8,6 +8,10 @@ class MaterialInvoicesController < ApplicationController
     render :json => material_invoice
   end
 
+  def update_load
+    
+  end
+
 
   def create
     valor1 = material_invoice_params["value"].gsub('$','').gsub(',','')

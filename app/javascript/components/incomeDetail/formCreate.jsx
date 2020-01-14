@@ -66,6 +66,7 @@ class formCreate extends React.Component {
     }).then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(data => {
+        console.log("updatadtstdtasdasdasdasd")
         this.props.loadData(this.props.income)
         this.props.MessageSucces(data.message, data.type, data.message_error)
 

@@ -86,6 +86,9 @@ Rails.application.routes.draw do
   get "download_file/customer_reports", to: "customer_reports#download_file"
 
 
+  get "update_load/:id", to: "material_invoices#update_load"
+
+
 
   
 

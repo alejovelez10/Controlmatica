@@ -80,6 +80,12 @@ class CostCenter < ApplicationRecord
     self.sum_materials = 0
     self.sum_viatic = 0
 
+    if self.start_date.present?
+      año = self.start_date
+    else
+      año = Time.now
+    end
+
     self.ingenieria_total_costo = self.eng_hours * self.hour_real
     self.engineering_value = self.eng_hours * self.hour_cotizada
     self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
@@ -89,7 +95,7 @@ class CostCenter < ApplicationRecord
     customer_prefix = Customer.find(self.customer_id).code
     self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
     prefix = self.service_type.slice(0, 3).upcase
-    self.code = prefix + "-" + customer_prefix + "-" + self.count.to_s + "-" + self.start_date.year.to_s
+    self.code = prefix + "-" + customer_prefix + "-" + self.count.to_s + "-" + año.year.to_s
     self.hour_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     self.hour_cotizada = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
     self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
