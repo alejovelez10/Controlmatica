@@ -31,7 +31,7 @@ class table extends React.Component {
             order_value: "",
             order_file: {},
             user_id: this.props.usuario.id,
-            cost_center_id: this.props.cost_center.id
+            cost_center_id: ""
         },
 
         formUpdate: {
@@ -39,7 +39,7 @@ class table extends React.Component {
           order_number: "",
           order_value: "",
           user_id: this.props.usuario.id,
-          cost_center_id: this.props.cost_center.id
+          cost_center_id: ""
         },
 
 
@@ -50,8 +50,16 @@ class table extends React.Component {
           number_invoice: "",
           delivery_certificate_file: {},
           reception_report_file: {},
-          cost_center_id: this.props.cost_center.id
-        }
+          cost_center_id: ""
+        },
+
+        dataCostCenter: [],
+
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
+        
 
     }
 
@@ -101,6 +109,29 @@ class table extends React.Component {
     }
   }
 
+  componentDidMount() {
+    let array = []
+
+    this.props.cost_centers.map((item) => (
+      array.push({label: item.code, value: item.id})
+    ))
+
+    this.setState({
+      dataCostCenter: array,
+    })
+  }
+
+  handleChangeAutocompleteCentro = selectedOptionCentro => {
+    console.log(selectedOptionCentro.value)
+    this.setState({
+      selectedOptionCentro,
+      form: {
+        ...this.state.form,
+        cost_center_id: selectedOptionCentro.value
+      }
+    });
+  };
+
   HandleClick = e => {
     const formData = new FormData();
     formData.append("created_date", this.state.form.created_date);
@@ -108,38 +139,9 @@ class table extends React.Component {
     formData.append("order_value", this.state.form.order_value);
     formData.append("order_file", this.state.order_file == undefined ? "" : this.state.order_file);
     formData.append("user_id", this.props.usuario.id);
-    formData.append("cost_center_id", this.props.cost_center.id);
+    formData.append("cost_center_id", this.state.form.cost_center_id);
 
-    if (this.validationForm() == true) {
-      if(this.state.modeEdit == true){
-        
-        fetch("/payments/" + this.state.action.id, {
-          method: 'PATCH', // or 'PUT'
-          body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }).then(res => res.json())
-          .catch(error => console.error('Error:', error))
-          .then(data => {
-            this.props.loadInfo()
-            this.MessageSucces(data.message, data.type, data.message_error)
-
-            this.setState({
-              modal: false,
-              form: {
-                created_date: "",
-                order_number: "",
-                order_value: "",
-                order_file: {},
-                user_id: this.props.usuario.id,
-                cost_center_id: this.props.cost_center.id
-            }
-            });
-
-          });
-
-      }else{          
+    if (this.validationForm() == true) {      
           fetch("/sales_orders", {
             method: "POST", // or 'PUT'
             body: formData, // data can be `string` or {object}!
@@ -160,41 +162,13 @@ class table extends React.Component {
                   order_number: "",
                   order_value: "",
                   user_id: this.props.usuario.id,
-                  cost_center_id: this.props.cost_center.id
+                  cost_center_id: ""
               }
             });
           });
       }
-    } 
   };
 
-
-  edit = modulo => {
-    if(this.state.modeEdit === true){
-      this.setState({modeEdit: false})
-    }else{
-      this.setState({modeEdit: true})
-    }
-
-    this.toggle("edit")
-
-      this.setState({
-        action: modulo,
-        title: "Editar pago",
-        form:{
-            voucher_outflow: modulo.voucher_outflow,
-            payment_date: modulo.payment_date,
-            payment_number: modulo.payment_number,
-            value_paid: modulo.value_paid,
-            user_id: this.props.usuario.id,
-            cost_center_id: this.props.cost_center.id
-          }
-          
-        }
-        
-      )
-      
-  };
 
 
   toggle(from) {
@@ -211,8 +185,13 @@ class table extends React.Component {
           order_number: "",
           order_value: "",
           user_id: this.props.usuario.id,
-          cost_center_id: this.props.cost_center.id
-      }
+          cost_center_id: ""
+        },
+
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
+        },
       })
 
     }else{
@@ -287,7 +266,7 @@ class table extends React.Component {
         order_number: accion.order_number,
         order_value: accion.order_value,
         user_id: this.props.usuario.id,
-        cost_center_id: this.props.cost_center.id
+        cost_center_id: accion.cost_center_id
       }
     })
   }
@@ -299,7 +278,7 @@ class table extends React.Component {
     formData.append("order_value", this.state.formUpdate.order_value);
     formData.append("order_file", this.state.order_file == undefined ? "" : this.state.order_file);
     formData.append("user_id", this.props.usuario.id);
-    formData.append("cost_center_id", this.props.cost_center.id);
+    formData.append("cost_center_id", this.state.formUpdate.cost_center_id);
 
     fetch("/sales_orders/" + this.state.id, {
       method: 'PATCH', // or 'PUT'
@@ -318,7 +297,7 @@ class table extends React.Component {
             order_value: "",
             order_file: {},
             user_id: this.props.usuario.id,
-            cost_center_id: this.props.cost_center.id
+            cost_center_id: ""
           }
         });
 
@@ -364,7 +343,7 @@ class table extends React.Component {
     formData.append("invoice_value", this.state.formInvoice.invoice_value);
     formData.append("sales_order_id", this.state.formInvoice.sales_order_id);
     formData.append("number_invoice", this.state.formInvoice.number_invoice);
-    formData.append("cost_center_id", this.props.cost_center.id);
+    formData.append("cost_center_id", this.state.formInvoice.cost_center_id);
     formData.append("delivery_certificate_file", this.state.delivery_certificate_file == undefined ? "" : this.state.delivery_certificate_file);
     formData.append("reception_report_file", this.state.reception_report_file == undefined ? "" : this.state.reception_report_file);
 
@@ -388,7 +367,7 @@ class table extends React.Component {
               invoice_date: "",
               number_invoice: "",
               invoice_value: "",
-              cost_center_id: this.props.cost_center.id
+              cost_center_id: ""
             },
 
             delivery_certificate_file: null,
@@ -480,12 +459,18 @@ class table extends React.Component {
                     <div className="col-md-8 text-left">
                       <h2>
                         <span className="badge badge-secondary">
-                          Ordenes de Compra <i className="fas fa-users ml-2"></i>
                         </span>
                       </h2>
                     </div>
 
-                    <div className="col-md-4 text-right mt-1 mb-1">  
+                    <div className="col-md-4 text-right mt-1 mb-1">
+                        <button
+                          className="btn btn-light mr-3"
+                          onClick={this.props.show}
+                          disabled={this.props.dataActions.length >= 1 ? false : true}
+                        >
+                          Filtros <i className="fas fa-search ml-2"></i>
+                        </button>  
                         {this.props.estados.create == true && (     
                           <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Orden de compra</button>
                         )}
@@ -511,6 +496,11 @@ class table extends React.Component {
                 modeEdit={this.state.modeEdit}
 
                 onChangehandleFileOrderFile={this.handleFileOrderFile}
+
+                /* AUTOCOMPLETE CENTRO DE COSTO */
+                centro={this.state.dataCostCenter}
+                onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                formAutocompleteCentro={this.state.selectedOptionCentro}
             />
 
 
@@ -548,6 +538,7 @@ class table extends React.Component {
               >
                 <thead>
                   <tr className="tr-title">
+                    <th style={{width: "13%"}}>Centro de costo</th>
                     <th style={{width: "20%"}}>Fecha de Generacion</th>
                     <th>Numero</th>
                     <th>Valor</th>
@@ -564,6 +555,7 @@ class table extends React.Component {
                   {this.props.dataActions.length >= 1 ? (
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
+                        <td>{accion.cost_center.code}</td>
                         <td>
                           {this.state.id == accion.id ? (
                                     <input 

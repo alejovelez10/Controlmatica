@@ -82,12 +82,11 @@ class Show extends React.Component {
                 .then(res => res.json())
                 .catch(error => console.error("Error:", error))
                 .then(data => {
-                console.log(data)
+                this.props.loadData()
                   this.setState({
                     state_ejecution: false,
                     invoiced_state: false,
                     show_btn_update: false,
-
                     formUpdate: {
                         execution_state: data.register.execution_state,
                         invoiced_state: data.register.invoiced_state,

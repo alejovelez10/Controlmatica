@@ -141,6 +141,7 @@ class indexTable extends React.Component {
       .then(data => {
         this.setState({
           data: data.cost_centers_paginate,
+          cost_centers_total: data.cost_centers_total
         });
       });
   };

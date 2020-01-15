@@ -156,16 +156,21 @@
 
   
 
-            <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
-              <li>
-                <%= link_to cost_centers_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Centros de costos</span>
-                <% end -%>
-              </li>
-            <% end %>
+        <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
+          <li>
+            <%= link_to cost_centers_path, class: "app-menu__item" do %>
+              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Centros de costos</span>
+            <% end -%>
+          </li>
+        <% end %>
 
-       
-            
+        <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
+          <li>
+            <%= link_to sales_orders_path, class: "app-menu__item" do %>
+              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Ordenes de Compra</span>
+            <% end -%>
+          </li>
+        <% end %>
 
         <% if authorization_report || current_user.rol.name == "Administrador" %>
           <li>

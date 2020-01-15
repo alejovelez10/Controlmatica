@@ -213,42 +213,10 @@ class index extends React.Component {
                 
                           ejecutado_desplazamiento_horas= {this.state.ejecutado_desplazamiento_horas}
                           porc_desplazamiento= {this.state.porc_desplazamiento}
+
+                          loadData={this.loadData}
                           
                       />
-                      {this.props.estados.login_module == true && (
-                        <React.Fragment>
-                          <div className="row mt-5">
-                            <div className="col-md-12">
-                              <div className="card card-table">
-                                <div className="card-body">
-
-                                      {this.state.isLoaded == true ? (
-                                          <Table 
-                                              dataActions={this.state.data_purchase_orders} 
-                                              cost_center={this.state.data_show}
-                                              loadInfo={this.loadData}
-                                              usuario={this.props.usuario}
-                                              estados={this.props.estados}
-                                              hours_real={this.props.hours_real}
-                                              hours_invoices={this.props.hours_invoices}
-                                          />
-
-                                      ) : (
-
-                                              <div className="col-md-12 text-center">
-                                                  <p>Cargando....</p>
-                                              </div>
-                                          )
-                                      }
-
-
-                  
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </React.Fragment>
-                      )}
 
             </React.Fragment>
 

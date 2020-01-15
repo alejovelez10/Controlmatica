@@ -1,6 +1,7 @@
 import React from 'react';
 import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
+import Select from "react-select"
 
 
 class formCreate extends React.Component {
@@ -54,6 +55,22 @@ class formCreate extends React.Component {
                 </div>
 
                 <div className="col-md-6 mt-2">
+                      <input
+                        type="hidden"
+                        name="cost_center_id"
+                        value={this.props.formAutocompleteCentro.cost_center_id}
+                      />
+                      <label>Centro de costo </label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteCentro}
+                        options={this.props.centro}
+                        autoFocus={false}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
+                        value={this.props.formAutocompleteCentro}
+                      />
+                </div>
+
+                <div className="col-md-12 mt-2">
                   <label>Archivo<small className="validate-label">*</small></label>
 
                   <input

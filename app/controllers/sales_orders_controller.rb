@@ -5,7 +5,11 @@ class SalesOrdersController < ApplicationController
   # GET /sales_orders
   # GET /sales_orders.json
   def index
-    @sales_orders = SalesOrder.all
+    @estados = {
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+    }
   end
 
   # GET /sales_orders/1
@@ -49,7 +53,13 @@ class SalesOrdersController < ApplicationController
   end
 
   def get_sales_order
-    sales_order = SalesOrder.find(params[:id]).customer_invoices
+    if params[:date_desde] || params[:date_hasta] || params[:number_order] || params[:cost_center_id] 
+      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] } })
+    else
+      sales_order = SalesOrder.all.to_json( :include => { :cost_center => { :only =>[:code] } })
+    end
+    
+    sales_order = JSON.parse(sales_order)
     render :json => {sales_order: sales_order}
   end
   
@@ -101,6 +111,6 @@ class SalesOrdersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def sales_order_params
-      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id)
+      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id)
     end
 end

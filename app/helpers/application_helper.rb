@@ -17,7 +17,11 @@ module ApplicationHelper
             card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Reportes de clientes" + "</h1>" + "<p>" + "Crea y envia reportes a tus clientes" + "</p>"
 
         elsif controller == "cost_centers"  && action == "index"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
+
+		elsif controller == "sales_orders" && action == "index"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Ordenes de Compra " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
+		
 
         elsif controller == "cost_centers" && action == "show"
 			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "Analiza como va tu proyecto" + "</p>"
