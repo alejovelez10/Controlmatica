@@ -19,10 +19,11 @@ class MaterialsController < ApplicationController
     }
   end
 
+
   def get_materials
-    if params[:provider_id] || params[:sales_date] || params[:description] || params[:cost_center_id] || params[:estado]
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
-      materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado]).count
+    if params[:provider_id] || params[:sales_date] || params[:description] || params[:cost_center_id] || params[:estado] || params[:date_desde] || params[:date_hasta]
+      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+      materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta]).count
 
     elsif params[:filter]
       materials = Material.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })

@@ -340,7 +340,7 @@ class table extends React.Component {
                     <div className="col-md-8 text-left">
                       <h2>
                         <span className="badge badge-secondary">
-                            Tableristas <i className="fas fa-users ml-2"></i>
+ 
                         </span>
                       </h2>
                     </div>

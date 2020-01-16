@@ -32,7 +32,7 @@ class FormFilter extends Component {
               <form onSubmit={this.handleSubmit}>
                 <div className="row">
 
-                <div className="col-md-2 imput-filter">
+                <div className="col-md-3 imput-filter">
                     <label>Proveedor</label>
                       <select name="provider_id" 
                         className="form form-control"
@@ -62,7 +62,7 @@ class FormFilter extends Component {
                     />
                 </div>
 
-                <div className="col-md-2">
+                <div className="col-md-3">
                    <label>Fecha de Orden</label>
                     <input
                       className="form form-control"
@@ -89,7 +89,7 @@ class FormFilter extends Component {
                       />
                   </div>
 
-                  <div className="col-md-2 imput-filter">
+                  <div className="col-md-3 imput-filter mt-3">
                     <label>Estado de compra</label>
                       <select 
                         name="estado" 
@@ -105,6 +105,28 @@ class FormFilter extends Component {
 
                       </select>
                 </div>
+
+                <div className="col-md-3 imput-filter mt-3">
+                  <label>Fecha desde</label>
+                    <input
+                      className="form form-control"
+                      type="date"
+                      name="date_desde"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.date_desde}
+                    />
+                  </div>
+
+                  <div className="col-md-3 imput-filter mt-3">
+                  <label>Fecha hasta</label>
+                    <input
+                      className="form form-control"
+                      type="date"
+                      name="date_hasta"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.date_hasta}
+                    />
+                  </div>
     
               
                 <div className="col-md-12 mt-4">

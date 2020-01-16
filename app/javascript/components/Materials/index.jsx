@@ -17,6 +17,8 @@ class index extends React.Component {
               description: "",
               cost_center_id: "",
               estado: "",
+              date_desde: "",
+              date_hasta: "",
             },
 
             activePage: 1,
@@ -61,7 +63,9 @@ class index extends React.Component {
             sales_date: "",
             description: "",
             cost_center_id: "",
-            estado: ""
+            estado: "",
+            date_desde: "",
+            date_hasta: "",
           },
 
           selectedOptionCentro: {
@@ -124,7 +128,10 @@ class index extends React.Component {
     fetch(`/get_materials?page=${pageNumber}&filter=${this.state.countPage}`) 
       .then(response => response.json())
       .then(data => {
-        this.setState({ data: data.materials_paginate });
+        this.setState({ 
+          data: data.materials_paginate,
+          materials_total: data.materials_total,
+        });
       });
      
   };
@@ -139,15 +146,15 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}`)
+    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
           data: data.materials_paginate,
+          materials_total: data.materials_total,
         });
       });
   };
-
 
     render() {
         return (
