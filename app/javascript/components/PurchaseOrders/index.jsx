@@ -137,7 +137,10 @@ class index extends React.Component {
       fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
         .then(response => response.json())
         .then(data => {
-          this.setState({ data: data.sales_orders_total });
+          this.setState({           
+            data: data.sales_order,
+            sales_orders_total: data.sales_orders_total,
+          });
         });
        
     };
