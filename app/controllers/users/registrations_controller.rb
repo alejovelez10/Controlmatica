@@ -47,6 +47,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
       }
+
+      User.get_values(current_user.id)
+
     else 
       render :json => {
         message: "¡El Registro no fue actualizado!",

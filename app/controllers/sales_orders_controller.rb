@@ -6,9 +6,9 @@ class SalesOrdersController < ApplicationController
   # GET /sales_orders.json
   def index
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      create: (current_user.rol.name == "Administrador" ? true : true),
+      edit: (current_user.rol.name == "Administrador" ? true : true),
+      delete: (current_user.rol.name == "Administrador" ? true : true),
     }
   end
 

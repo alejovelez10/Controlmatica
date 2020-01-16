@@ -34,10 +34,19 @@ class User < ApplicationRecord
   has_many :accion_modules
   has_many :module_controls
   has_many :cost_centers
+  has_many :register_edits
+  after_update :see_values
+  before_update :create_register
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
   mount_uploader :avatar, AvatarUploader
   belongs_to :rol, optional: true
+
+  
+  def create_register
+    RegisterEdit.create(user_id: self.id, register_user_id: self.id, state: "pending", date_update: Time.now, oldValues: {name: self.names_was, email: self.email_was, document_type: self.document_type_was, number_document: self.number_document_was, rol_id: self.rol_id_was}, newValues: {name: self.names_change, email: self.email_change, document_type: self.document_type_change, number_document: self.number_document_change, rol_id: self.rol_id_change}, editValues: {name: self.names_changed?, email: self.email_changed?, document_type: self.document_type_changed?, number_document: self.number_document_changed?, rol_id: self.rol_id_changed?} )
+  end
+
 end

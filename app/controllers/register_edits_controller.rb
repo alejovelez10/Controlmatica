@@ -1,0 +1,2 @@
+class RegisterEditsController < ApplicationController
+end
