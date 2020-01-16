@@ -110,6 +110,8 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.sales_order,
+            reports_total: data.sales_orders_total,
+            activePage: 1
           });
         });
     };
@@ -123,8 +125,8 @@ class index extends React.Component {
       .then(response => response.json())
       .then(data => {
         this.setState({
-          data: data.reports_paginate,
-          reports_total: data.reports_total,
+          data: data.sales_order,
+          reports_total: data.sales_orders_total,
           activePage: 1
         });
       });
@@ -135,7 +137,7 @@ class index extends React.Component {
       fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
         .then(response => response.json())
         .then(data => {
-          this.setState({ data: data.reports_paginate });
+          this.setState({ data: data.sales_orders_total });
         });
        
     };

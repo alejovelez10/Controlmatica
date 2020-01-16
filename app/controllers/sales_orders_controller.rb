@@ -53,14 +53,21 @@ class SalesOrdersController < ApplicationController
   end
 
   def get_sales_order
+
     if params[:date_desde] || params[:date_hasta] || params[:number_order] || params[:cost_center_id] 
-      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id]).to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_orders_total = SalesOrder.all.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id]).count
+
+    elsif params[:filter]
+      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_orders_total = SalesOrder.all.count
     else
-      sales_order = SalesOrder.all.to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_orders_total = SalesOrder.all.count
     end
     
     sales_order = JSON.parse(sales_order)
-    render :json => {sales_order: sales_order}
+    render :json => {sales_order: sales_order, sales_orders_total: sales_orders_total}
   end
   
 
