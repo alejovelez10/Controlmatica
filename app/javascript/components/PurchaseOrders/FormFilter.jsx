@@ -39,7 +39,7 @@ class FormFilter extends Component {
                       type="date"
                       name="date_desde"
                       onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.date_hasta}
+                      value={this.props.formValuesFilter.date_desde}
                     />
                   </div>
 

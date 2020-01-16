@@ -18,7 +18,7 @@ class index extends React.Component {
             },
 
             activePage: 1,
-            reports_total: 0, 
+            sales_orders_total: 0, 
             countPage: 10,
             isLoaded: false,
 
@@ -38,8 +38,8 @@ class index extends React.Component {
           console.log(data)
           this.setState({
             data: data.sales_order,
+            sales_orders_total: data.sales_orders_total,
             isLoaded: true,
-            reports_total: data.sales_order.length
           });
         });
 
@@ -110,7 +110,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.sales_order,
-            reports_total: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total,
             activePage: 1
           });
         });
@@ -126,7 +126,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.sales_order,
-          reports_total: data.sales_orders_total,
+          sales_orders_total: data.sales_orders_total,
           activePage: 1
         });
       });
@@ -193,7 +193,7 @@ class index extends React.Component {
 
                           <div className="col-md-9 text-left pl-0">
                               <p>
-                                  Mostrando {this.state.data.length} de {this.state.reports_total}
+                                  Mostrando {this.state.data.length} de {this.state.sales_orders_total}
                               </p>
                           </div>
 
@@ -205,7 +205,7 @@ class index extends React.Component {
                               itemClass="page-item"
                               innerClass="pagination"
                               linkClass="page-link"
-                              totalItemsCount={this.state.reports_total}
+                              totalItemsCount={this.state.sales_orders_total}
                               pageRangeDisplayed={this.state.countPage}
                               onChange={this.handlePageChange}
                             />

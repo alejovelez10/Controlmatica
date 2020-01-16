@@ -61,6 +61,7 @@ class SalesOrdersController < ApplicationController
     elsif params[:filter]
       sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] } })
       sales_orders_total = SalesOrder.all.count
+      
     else
       sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => { :cost_center => { :only =>[:code] } })
       sales_orders_total = SalesOrder.all.count
