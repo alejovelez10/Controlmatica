@@ -134,7 +134,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
+      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({           
