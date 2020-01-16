@@ -13804,3 +13804,13 @@ be a descendant of the grid when it is being dragged.
 .user .user-settings label {
     color: #666;
 }
+
+
+.notification-badge{
+    float: right;
+    position: relative;
+    border-radius: 50%;
+    background-color: #ffbe3b;
+    top: -10px;
+    color: #4b5f70;
+}

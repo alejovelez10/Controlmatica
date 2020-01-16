@@ -21,14 +21,15 @@ class ContractorsController < ApplicationController
 
   def get_contractors
     if params[:user_execute_id] || params[:sales_date] || params[:cost_center_id] || params[:date_desde] || params[:date_hasta]
+      
       contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
       contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta]).count
 
     elsif params[:filter]
       contractor = Contractor.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
       contractor_total = Contractor.all.count
-
     else
+
       contractor = Contractor.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
       contractor_total =  Contractor.all.count
     end
