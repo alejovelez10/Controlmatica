@@ -12289,14 +12289,14 @@ be a descendant of the grid when it is being dragged.
 .app-notification__title {
     padding: 8px 20px;
     text-align: center;
-    background-color: rgba(0, 150, 136, 0.4);
-    color: #333;
+    background-color: rgb(75, 95, 112);
+    color: #ffffff;
 }
 
 .app-notification__footer {
     padding: 8px 20px;
     text-align: center;
-    background-color: #eee;
+    background-color: rgb(75, 95, 112);
 }
 
 .app-notification__content {
