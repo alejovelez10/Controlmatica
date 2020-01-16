@@ -165,6 +165,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.reports_paginate,
+            reports_total: data.reports_total,
           });
         });
     };
@@ -190,7 +191,10 @@ class index extends React.Component {
       fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
         .then(response => response.json())
         .then(data => {
-          this.setState({ data: data.reports_paginate });
+          this.setState({ 
+            data: data.reports_paginate,
+            reports_total: data.reports_total,
+          });
         });
        
     };
