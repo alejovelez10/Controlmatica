@@ -72,6 +72,7 @@ Rails.application.routes.draw do
   get "modules", to: "module_controls#get_actions", as: "modules"
 
   get "get_material_invoice/:id", to: "material_invoices#get_material_invoice"
+  get "get_sales_order_invoice/:id", to: "sales_orders#get_sales_order_invoice"
 
 
   #DESCARGAS DE EXEL
@@ -87,6 +88,10 @@ Rails.application.routes.draw do
 
 
   get "update_load/:id", to: "material_invoices#update_load"
+
+  get "notifications", to: "register_edits#notifications"
+
+  get "get_notifications", to: "register_edits#get_notifications"
 
 
 
