@@ -181,7 +181,7 @@ class Show extends React.Component {
         });
     };
 
-    toggle(from) {
+    toggle = (from) => {
         if (from == "edit") {
           this.setState({ modeEdit: true });
         } else if (from == "new") {
@@ -200,12 +200,7 @@ class Show extends React.Component {
     
           this.removeValues(true)
         } else {
-          this.setState({ stateSearch: false });
-          if (this.state.modeEdit === true) {
-            this.setState({ modeEdit: false });
-          } else {
-            this.setState({ modeEdit: true });
-          }
+
     
         }
     
