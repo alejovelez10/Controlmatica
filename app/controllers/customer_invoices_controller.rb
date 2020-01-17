@@ -69,7 +69,7 @@ class CustomerInvoicesController < ApplicationController
   # DELETE /customer_invoices/1
   # DELETE /customer_invoices/1.json
   def destroy
-    if @customer_invoice.destroyc
+    if @customer_invoice.destroy
       render :json => @customer_invoice
     else 
       render :json => @customer_invoice.errors.full_messages

@@ -13814,3 +13814,8 @@ be a descendant of the grid when it is being dragged.
     top: -10px;
     color: #4b5f70;
 }
+
+.img-info-show{
+    height: 81px;
+    border-radius: 50%;
+}

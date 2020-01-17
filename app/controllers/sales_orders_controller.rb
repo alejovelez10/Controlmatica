@@ -12,6 +12,14 @@ class SalesOrdersController < ApplicationController
     }
   end
 
+  def get_sales_order_invoice
+    sales_orders = SalesOrder.find(params[:id])
+    render :json => {
+      sales_orders: sales_orders.customer_invoices
+    }
+  end
+  
+
   # GET /sales_orders/1
   # GET /sales_orders/1.json
   def show

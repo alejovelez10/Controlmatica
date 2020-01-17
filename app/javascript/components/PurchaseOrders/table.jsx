@@ -310,18 +310,19 @@ class table extends React.Component {
 
 
   loadTableIncome = (accion) => {
-    fetch("/get_sales_order/" + accion.id)
+    fetch("/get_sales_order_invoice/" + accion.id)
     .then(response => response.json())
     .then(data => {
-      console.log(data.sales_order)
+      console.log(data.sales_orders)
 
       this.setState({
         modalIncome: true,  
         action: accion, 
         title: "Facturas",
-        data_incomes: data.sales_order,
+        data_incomes: data.sales_orders,
         formInvoice: {
-          sales_order_id: accion.id
+          sales_order_id: accion.id,
+          cost_center_id: accion.cost_center_id
         }
       })
     });
@@ -669,7 +670,7 @@ class table extends React.Component {
                               </button>
                               <div className="dropdown-menu dropdown-menu-right">
 
-                                {this.props.estados.gestionar == true && (
+                                {true && (
                                   <button onClick={() => this.showIncomeDetail("open",accion)} className="dropdown-item">
                                     Facturas
                                   </button>     

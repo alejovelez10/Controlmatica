@@ -35,13 +35,13 @@ class User < ApplicationRecord
   has_many :module_controls
   has_many :cost_centers
   has_many :register_edits
-  after_update :see_values
+  
   before_update :create_register
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  mount_uploader :avatar, AvatarUploader
+  mount_uploader :avatar, AvatarUploader  
   belongs_to :rol, optional: true
 
   

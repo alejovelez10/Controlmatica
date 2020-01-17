@@ -48,7 +48,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
         type: "success"
       }
 
-      User.get_values(current_user.id)
+      #User.get_values(current_user.id)
 
     else 
       render :json => {
