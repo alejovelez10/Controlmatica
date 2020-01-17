@@ -31,7 +31,8 @@ class table extends React.Component {
             order_value: "",
             order_file: {},
             user_id: this.props.usuario.id,
-            cost_center_id: ""
+            cost_center_id: "",
+            description: "",
         },
 
         formUpdate: {
@@ -140,6 +141,7 @@ class table extends React.Component {
     formData.append("order_file", this.state.order_file == undefined ? "" : this.state.order_file);
     formData.append("user_id", this.props.usuario.id);
     formData.append("cost_center_id", this.state.form.cost_center_id);
+    formData.append("description", this.state.form.description);
 
     if (this.validationForm() == true) {      
           fetch("/sales_orders", {
@@ -162,7 +164,8 @@ class table extends React.Component {
                   order_number: "",
                   order_value: "",
                   user_id: this.props.usuario.id,
-                  cost_center_id: ""
+                  cost_center_id: "",
+                  description: ""
               }
             });
           });
@@ -185,7 +188,8 @@ class table extends React.Component {
           order_number: "",
           order_value: "",
           user_id: this.props.usuario.id,
-          cost_center_id: ""
+          cost_center_id: "",
+          description: ""
         },
 
         selectedOptionCentro: {
@@ -465,6 +469,7 @@ class table extends React.Component {
                     </div>
 
                     <div className="col-md-4 text-right mt-1 mb-1">
+                      
                         <button
                           className="btn btn-light mr-3"
                           onClick={this.props.show}
@@ -472,6 +477,15 @@ class table extends React.Component {
                         >
                           Filtros <i className="fas fa-search ml-2"></i>
                         </button>  
+
+                        <a
+                          className=" mr-2"
+                          href={`/download_file/sales_orders.xls`}
+                          target="_blank"
+                        >
+                          <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                        </a>
+
                         {this.props.estados.create == true && (     
                           <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Orden de compra</button>
                         )}

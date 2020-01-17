@@ -74,6 +74,8 @@ Rails.application.routes.draw do
   get "get_material_invoice/:id", to: "material_invoices#get_material_invoice"
   get "get_sales_order_invoice/:id", to: "sales_orders#get_sales_order_invoice"
 
+  get "update_state/:id", to: "register_edits#update_state"
+
 
   #DESCARGAS DE EXEL
 
@@ -85,6 +87,7 @@ Rails.application.routes.draw do
   get "download_file/contractors", to: "contractors#download_file"
   get "download_file/materials", to: "materials#download_file"
   get "download_file/customer_reports", to: "customer_reports#download_file"
+  get "download_file/sales_orders", to: "sales_orders#download_file"
 
 
   get "update_load/:id", to: "material_invoices#update_load"

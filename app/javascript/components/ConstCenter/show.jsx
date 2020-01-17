@@ -1,6 +1,9 @@
 import React from 'react';
 import {Card, CardImg, CardText, CardBody,CardTitle, CardSubtitle, Button} from 'reactstrap';
 import NumberFormat from 'react-number-format';
+import FormCreate from "./FormCreate";
+import SweetAlert from 'sweetalert2-react';
+import Swal from 'sweetalert2/dist/sweetalert2.js'
 
 class Show extends React.Component {
     constructor(props){
@@ -17,9 +20,108 @@ class Show extends React.Component {
                 execution_state: this.props.data_info.execution_state,
                 invoiced_state: this.props.data_info.invoiced_state,
                 id: this.props.data_info.id,
-            }
+            },
+
+            title: "Nuevo centro de costo",
+            ErrorValues: true,
+            modal: false,
+            backdrop: "static",
+
+            form: {
+                customer_id: this.props.data_info.customer_id,
+                contact_id: this.props.data_info.contact_id,
+                service_type: this.props.data_info.service_type,
+                user_id: this.props.data_info.user_id,
+                description: this.props.data_info.description,
+                start_date: this.props.data_info.start_date,
+                end_date: this.props.data_info.end_date,
+                quotation_number: this.props.data_info.quotation_number,
+                execution_state: this.props.data_info.execution_state,
+      
+                eng_hours: this.props.data_info.eng_hours,
+                hour_real: this.props.data_info.hour_real,
+                hour_cotizada: this.props.data_info.hour_cotizada,
+      
+      
+                hours_contractor: this.props.data_info.hours_contractor,
+                hours_contractor_real: this.props.data_info.hours_contractor_real,
+                hours_contractor_invoices: this.props.data_info.hours_contractor_invoices,
+      
+                materials_value: this.props.data_info.materials_value,
+                viatic_value: this.props.data_info.viatic_value,
+                quotation_value: this.props.data_info.quotation_value,
+      
+                displacement_hours: this.props.data_info.displacement_hours,
+                value_displacement_hours: this.props.data_info.value_displacement_hours,
+            },
+
+            selectedOption: {
+                customer_id: "",
+                label: "Seleccionar cliente"
+            },
+      
+            selectedOptionContact: {
+                contact_id: "",
+                label: "Seleccionar Contacto"
+            },
+      
+            dataContact: [],
+            clients: []
+      
         }
     }
+
+    MessageSucces = (name_success, type, error_message) => {
+        Swal.fire({
+        position: "center",
+        type: type,
+        html: '<p>'  + error_message !=  undefined ? error_message : "asdasdasd"  +  '</p>',
+        title: name_success,
+        showConfirmButton: false,
+        timer: 1500
+        });
+    } 
+
+    handleChangeForm = e => {
+        console.log("handleChangehandleChangehandleChangehandleChangehandleChange")
+          this.setState({
+            form: {
+              ...this.state.form,
+              [e.target.name]: e.target.value
+            }
+          });
+    };
+
+    HandleClick = e => {
+            fetch("/cost_centers/" + this.state.action.id, {
+              method: "PATCH", // or 'PUT'
+              body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+              headers: {
+                "Content-Type": "application/json"
+              }
+            })
+              .then(res => res.json())
+              .catch(error => console.error("Error:", error))
+              .then(data => {
+                this.props.loadData()
+                this.MessageSucces(data.message, data.type, data.message_error);
+    
+                this.setState({
+                  modal: false,
+                  selectedOption: {
+                    customer_id: "",
+                    label: "Buscar cliente"
+                  },
+            
+                  selectedOptionContact: {
+                    contact_id: "",
+                    label: "Seleccionar Contacto"
+                  },
+                });
+    
+              });
+
+      };
 
     componentDidMount(){
         fetch("/get_roles")
@@ -31,7 +133,150 @@ class Show extends React.Component {
             show_btn_ordenes_compra: data.sales_orders,
           });
         });
+
+        let array = []
+
+        this.props.clientes.map((item) => (
+          array.push({label: item.name, value: item.id})
+        ))
+    
+        this.setState({
+            clients: array
+        })
     }
+
+    handleChangeAutocomplete = selectedOption => {
+        let array = []
+    
+        fetch(`/get_client/${selectedOption.value}/centro`)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+    
+          data.map((item) => (
+            array.push({label: item.name, value: item.id})
+          ))
+    
+          this.setState({
+            dataContact: array
+          })
+        });
+    
+        this.setState({
+          selectedOption,
+          form: {
+            ...this.state.form,
+            customer_id: selectedOption.value
+          }
+        });
+    };
+    
+    handleChangeAutocompleteContact = selectedOptionContact => {
+        this.setState({
+          selectedOptionContact,
+          form: {
+            ...this.state.form,
+            contact_id: selectedOptionContact.value
+          }
+        });
+    };
+
+    toggle(from) {
+        if (from == "edit") {
+          this.setState({ modeEdit: true });
+        } else if (from == "new") {
+          this.setState({
+            modeEdit: false,
+            selectedOption: {
+              customer_id: "",
+              label: "Buscar cliente"
+            },
+      
+            selectedOptionContact: {
+              contact_id: "",
+              label: "Seleccionar Contacto"
+            },
+          });
+    
+          this.removeValues(true)
+        } else {
+          this.setState({ stateSearch: false });
+          if (this.state.modeEdit === true) {
+            this.setState({ modeEdit: false });
+          } else {
+            this.setState({ modeEdit: true });
+          }
+    
+        }
+    
+        this.setState(prevState => ({
+          modal: !prevState.modal
+        }));
+    }
+
+    edit = modulo => {
+        console.log(modulo)
+        if(this.state.modeEdit === true){
+          this.setState({modeEdit: false})
+        }else{
+          this.setState({modeEdit: true})
+        }
+    
+        this.toggle("edit")
+    
+          this.setState({
+    
+            selectedOption: {
+              value: modulo.customer_id,
+              label: modulo.customer.name
+            },
+    
+            selectedOptionContact: {
+              value: modulo.contact.customer_id,
+              label: modulo.contact.name
+            },
+    
+            action: modulo,
+            title: "Editar Centro de costo",
+    
+            form: {
+              customer_id: modulo.customer_id,
+              contact_id: modulo.contact_id,
+              service_type: modulo.service_type,
+              user_id: modulo.user_id,
+              description: modulo.description,
+              start_date: modulo.start_date,
+              end_date: modulo.end_date,
+              quotation_number: modulo.quotation_number,
+              viatic_value: modulo.viatic_value,
+              execution_state: "PENDIENTE",
+    
+              eng_hours: modulo.eng_hours != "" ? modulo.eng_hours : "0.0" ,
+              hour_real: modulo.hour_real != "" ? modulo.hour_real : "0.0",
+              hour_cotizada: modulo.hour_cotizada != "" ? modulo.hour_cotizada : "0.0",
+    
+    
+              hours_contractor: modulo.hours_contractor != "" ? modulo.hours_contractor : "0.0",
+              hours_contractor_real: modulo.hours_contractor_real != "" ? modulo.hours_contractor_real : "0.0",
+              hours_contractor_invoices: modulo.hours_contractor_invoices != "" ? modulo.hours_contractor_invoices : "0.0",
+    
+              displacement_hours: modulo.displacement_hours != "" ? modulo.displacement_hours : "0.0",
+              value_displacement_hours: modulo.value_displacement_hours != "" ? modulo.value_displacement_hours : "0.0",
+    
+              materials_value: modulo.materials_value != "" ? modulo.materials_value : "0.0",
+              viatic_value: modulo.viatic_value != "" ? modulo.viatic_value : "0.0",
+              quotation_value: modulo.quotation_value != "" ? modulo.quotation_value : "0.0",
+            },
+            
+            }
+            
+          )
+          
+      };
+    
+    handleSubmit = e => {
+       e.preventDefault();
+    };
 
     handleChange = e => {
         this.setState({
@@ -640,14 +885,40 @@ class Show extends React.Component {
                                 </React.Fragment>
                             )}
 
-                            {/*<div className="col-md-12 text-center mt-5">
-                                {this.state.show_btn_ordenes_compra == true && (
-                                    <a 
-                                        href={`/cost_centers/${this.props.data_info.id}`} 
-                                        className={this.props.sales_orders_state == true ? "btn btn-secondary" : "btn btn-outline-secondary"}>Ordenes de Compras
-                                    </a>
-                                )}
-                            </div>*/}
+                            <FormCreate
+                                toggle={this.toggle}
+                                backdrop={this.state.backdrop}
+                                modal={this.state.modal}
+                                onChangeForm={this.handleChangeForm}
+                                formValues={this.state.form}
+                                submit={this.HandleClick}
+                                FormSubmit={this.handleSubmit}
+
+                                titulo={this.state.title}
+                                nameSubmit={true ? "Actualizar" : "Crear"}
+                                errorValues={this.state.ErrorValues}
+                                modeEdit={true}
+                                
+
+                                /* AUTOCOMPLETE CLIENTE */
+
+                                clientes={this.state.clients}
+                                onChangeAutocomplete={this.handleChangeAutocomplete}
+                                formAutocomplete={this.state.selectedOption}
+
+                                /* AUTOCOMPLETE CONTACTO */
+
+                                contacto={this.state.dataContact}
+                                onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+                                formAutocompleteContact={this.state.selectedOptionContact}
+                                
+                            />
+
+                            <div className="col-md-12 text-center mt-5">
+                                <button onClick={() => this.edit(this.props.data_info)} className="btn btn-secondary">
+                                    Editar información
+                                </button>
+                            </div>
                         </div> 
 
                     </CardBody>

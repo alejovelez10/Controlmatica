@@ -8,8 +8,10 @@ class index extends React.Component {
         super(props)
 
         this.state = {
-            data: [],
+            data_pending: [],
+            data_revised: [],
             show_filter: false,
+
             formFilter: {
               date_desde: "",
               date_hasta: "",
@@ -30,8 +32,9 @@ class index extends React.Component {
         .then(data => {
           console.log(data)
           this.setState({
-            data: data.notifications,
-            notifications_total: data.notifications.length,
+            data_pending: data.notifications_pending,
+            data_revised: data.notifications_revised,
+            notifications_total: data.notifications_pending.length,
             isLoaded: true,
           });
         });
@@ -135,12 +138,15 @@ class index extends React.Component {
       
                         {this.state.isLoaded == true ? (
                             <Table 
-                                dataActions={this.state.data} 
+                                dataPending={this.state.data_pending} 
+                                dataRevised={this.state.data_revised} 
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
                                 estados={this.props.estados}
                                 show={this.showFilter}
-                            />
+                                from={this.props.from}
+                            /> 
+
 
                         ) : (
 
@@ -155,22 +161,8 @@ class index extends React.Component {
 
                           <div className="col-md-9 text-left pl-0">
                               <p>
-                                  Mostrando {this.state.data.length} de {this.state.notifications_total}
+                                  Mostrando {this.state.data_pending.length} de {this.state.notifications_total}
                               </p>
-                          </div>
-
-                          <div className="col-md-3 p-0 text-right">
-                            <Pagination
-                              hideNavigation
-                              activePage={this.state.activePage}
-                              itemsCountPerPage={this.state.countPage}
-                              itemClass="page-item"
-                              innerClass="pagination"
-                              linkClass="page-link"
-                              totalItemsCount={this.state.notifications_total}
-                              pageRangeDisplayed={this.state.countPage}
-                              onChange={this.handlePageChange}
-                            />
                           </div>
 
                         </div>

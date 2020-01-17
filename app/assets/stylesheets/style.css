@@ -13819,3 +13819,45 @@ be a descendant of the grid when it is being dragged.
     height: 81px;
     border-radius: 50%;
 }
+
+.icon-notification{
+    font-size: 91px;
+    margin-top: 34px;
+    color: #ffbe3b;
+    cursor: pointer;
+}
+
+/*
+.select-item-back{
+    box-shadow: 1px 1px 1px 1px orange !important;
+}
+*/
+
+.select-item-back{
+    box-shadow: 1px 1px 1px 1px orange !important;
+}
+
+.select-item{
+    animation-name: stretch;
+    animation-duration: 0.5s; 
+    animation-timing-function: ease-out; 
+    animation-delay: 0;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+    animation-fill-mode: none;
+    animation-play-state: running;
+}
+  
+@keyframes stretch {
+    0% {
+      transform: scale(.1);
+      /*background-color: #440000;*/
+      /*border-radius: 100%;*/
+    }
+    
+    100% {
+      transform: scale(.5);
+      /*background-color: red;*/
+      /*border-radius: 100%;*/
+    }
+}

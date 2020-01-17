@@ -82,6 +82,17 @@ class formCreate extends React.Component {
                   />
                 </div>
 
+                <div className="col-md-12 mt-4">
+                  <textarea
+                    name="description"
+                    value={this.props.formValues.description}
+                    onChange={this.props.onChangeForm}
+                    rows="4"
+                    className={`form form-control`}
+                    placeholder="Comprobante"
+                  />
+                </div>
+
 
                 {this.props.errorValues == false && (
                   <div className="col-md-12 mt-2">

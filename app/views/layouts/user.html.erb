@@ -35,8 +35,9 @@
             <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
               <div class="app-notification__content">
               <% get_register_edit.each do |notification|  %>
+                <% link = "/notifications" + "?from=" + notification.id.to_s %>
                 <li>
-                      <a class="app-notification__item" href="javascript:;">
+                      <a class="app-notification__item" href="<%= link %>">
                         <span class="app-notification__icon">
                           <span class="fa-stack fa-lg">
                             <i class="fa fa-circle fa-stack-2x text-primary"></i>

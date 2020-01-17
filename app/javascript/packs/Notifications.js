@@ -6,7 +6,7 @@ class Notifications extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <Index usuario={this.props.usuario} estados={this.props.estados} />
+                <Index usuario={this.props.usuario} estados={this.props.estados} from={this.props.from} />
             </React.Fragment>
         );
     }

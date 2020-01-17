@@ -215,6 +215,7 @@ class index extends React.Component {
                           porc_desplazamiento= {this.state.porc_desplazamiento}
 
                           loadData={this.loadData}
+                          clientes={this.props.clientes}
                           
                       />
 

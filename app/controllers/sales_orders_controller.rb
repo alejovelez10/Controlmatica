@@ -36,6 +36,98 @@ class SalesOrdersController < ApplicationController
      @cost_center = CostCenter.find(@sales_order.cost_center_id)
   end
 
+  def download_file
+    respond_to do |format|
+
+      format.xls do
+      
+        task = Spreadsheet::Workbook.new
+        sheet = task.create_worksheet
+        
+        rows_format = Spreadsheet::Format.new color: :black,
+        weight: :normal,
+        size: 13,
+        align: :left
+
+        SalesOrder.all.each.with_index(1) do |task, i|
+      
+          position = sheet.row(i)
+          
+          sheet.row(1).default_format = rows_format    
+          position[0] = task.cost_center.code
+          position[1] = task.created_date
+          position[2] = task.order_number
+          position[3] = task.order_value
+          position[4] = task.description
+          position[5] = task.customer_invoices.sum(:invoice_value)
+          
+          
+          
+          sheet.row(i).height = 25
+          sheet.column(i).width = 40
+          sheet.row(i).default_format = rows_format
+        
+        end
+        
+        
+        
+        head_format = Spreadsheet::Format.new color: :white,      
+        weight: :bold,
+        size: 12,      
+        pattern_bg_color: :xls_color_10,    
+        pattern: 2,      
+        vertical_align: :middle,      
+        align: :left
+        
+        
+        
+        position = sheet.row(0)
+        
+        position[0] = "Centro de costo"
+        position[1] = "Fecha de Generacion"
+        position[2] = "Numero"
+        position[3] = "Valor"
+        position[4] = "Descripcion"
+        position[5] = "Total de facturas"
+
+        
+        
+        
+        
+        
+        sheet.row(0).height = 20
+        sheet.column(0).width = 40
+        
+        
+        
+        sheet.column(1).width = 40
+        
+        sheet.column(2).width = 40
+        
+        sheet.column(3).width = 40
+        
+        sheet.column(4).width = 40
+        
+        sheet.column(5).width = 40
+        
+        
+        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+        
+        
+        
+        temp_file = StringIO.new
+        
+        task.write(temp_file)
+        
+        send_data(temp_file.string, :filename => "oirdenes_de_compra.xls", :disposition => 'inline')
+        
+        end  
+    end
+
+  end
+
+  
+
   # POST /sales_orders
   # POST /sales_orders.json
   def create
@@ -126,6 +218,6 @@ class SalesOrdersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def sales_order_params
-      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id)
+      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id, :description)
     end
 end
