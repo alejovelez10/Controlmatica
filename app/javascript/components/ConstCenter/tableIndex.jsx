@@ -603,25 +603,29 @@ class tableIndex extends React.Component {
             
               <table
                 className="table table-hover table-bordered table-width"
-                id="sampleTable"
+                id="sampleTable" style={{tableLayout: "fixed"}}
               >
                 <thead>
                   <tr className="tr-title">
-                    <th style={{width: "60px"}} className="text-center">Acciones</th>
-                    <th>Codigo</th>
+                    <th style={{width: "100px"}} className="text-center">Acciones</th>
+                    <th style={{width: "200px"}}>Codigo</th>
                     <th>Cliente</th>
-                    <th>Tipo</th>
-                    <th>Descripcion</th>
+                    <th style={{width: "150px"}}>Tipo</th>
+                    <th style={{width: "400px"}}>Descripcion</th>
+                    {this.props.estados.ending == true && (
+                      <th className="text-center" style={{ width: "100px"}}>¿Finalizo?</th>
+                    )}
+                    <th className="text-center" style={{ width: "6%"}}>Estado de ejecución</th>
+                    <th className="text-center" style={{ width: "300px"}}>Estado facturado</th>
                     <th>Número de cotización</th>
                     <th>$ Ingeniería Cotizado</th>
                     <th>$ Ingeniería Ejecutado</th>
                     <th>$ Viaticos Cotizado</th>
                     <th>$ Viaticos Real</th>
-                    {this.props.estados.ending == true && (
-                      <th className="text-center" style={{ width: "2%"}}>¿Finalizo?</th>
-                    )}
-                    <th className="text-center" style={{ width: "6%"}}>Estado de ejecución</th>
-                    <th className="text-center" style={{ width: "11%"}}>Estado facturado</th>
+                    <th>$ Total Legalizado</th>
+                    <th>$ Total Cotizado</th>
+                    
+                
                   </tr>
                 </thead>
 
@@ -674,11 +678,6 @@ class tableIndex extends React.Component {
                         <th>{accion.customer != undefined ? accion.customer.name : ""}</th>
                         <th>{accion.service_type}</th>
                         <th>{accion.description}</th>
-                        <th>{accion.quotation_number}</th>
-                        <th><NumberFormat value={accion.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th><NumberFormat value={accion.sum_executed} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th><NumberFormat value={accion.sum_viatic} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
 
                         {this.props.estados.ending == true && (
                           <th>
@@ -687,7 +686,15 @@ class tableIndex extends React.Component {
                         )}
 
                         <th className="text-center">{accion.execution_state}</th>
-                        <th className="text-center">{accion.invoiced_state}</th>                      
+                        <th className="text-center">{accion.invoiced_state}</th>      
+                        <th>{accion.quotation_number}</th>
+                        <th><NumberFormat value={accion.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.sum_executed} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.sum_viatic} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                
                       </tr>
                     ))
                   ) : (
