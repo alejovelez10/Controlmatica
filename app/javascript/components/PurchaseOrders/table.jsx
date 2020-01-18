@@ -592,7 +592,7 @@ class table extends React.Component {
                           ))}
                         </td>
                         <th>{accion.description}</th>
-                        <th>{accion.state}</th>
+                        <th>{accion.cost_center.invoiced_state}</th>
 
                         <td>
                                 <React.Fragment>
