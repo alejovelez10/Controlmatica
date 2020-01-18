@@ -86,6 +86,7 @@ class FormCreate extends React.Component {
       .catch(error => console.error('Error:', error))
       .then(data => {
         this.props.loadInfo(this.props.accion)
+        this.props.loadOrders()
         this.props.MessageSucces(data.message, data.type, data.message_error)
 
         this.setState({
