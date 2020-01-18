@@ -580,11 +580,11 @@ class table extends React.Component {
                   <tr className="tr-title">
                     <th style={{width: "150px"}}>Centro de costo</th>
                     <th style={{width: "150px"}}>Fecha de Orden</th>
-                    <th>Numero</th>
-                    <th>Valor</th>
+                    <th style={{width: "150px"}}>Numero</th>
+                    <th style={{width: "150px"}}>Valor</th>
                     <th style={{width: "400px"}}>Facturas</th>
                     <th style={{width: "300px"}}>Descripción</th>
-                    <th>Estado</th>
+                    <th style={{width: "250px"}}>Estado</th>
                     <th style={{width: "120px"}}>Archivo</th>
                     <th style={{width: "90px"}} className="text-center">Acciones</th>
                   </tr>
