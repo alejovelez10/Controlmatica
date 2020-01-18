@@ -26,12 +26,13 @@
       <ul class="app-nav">
         <li class="dropdown">
 
-          <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-            <span class="badge badge-light notification-badge"><%= get_register_edit.count %></span>
-              <i class="fas fa-bell" style="font-size: 17px;"></i>
-          </a>
+          <% if get_register_edit.any? && current_user.rol.name == "Administrador" %>
 
-          <% if get_register_edit.any? %>
+            <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
+              <span class="badge badge-light notification-badge"><%= get_register_edit.count %></span>
+                <i class="fas fa-bell" style="font-size: 17px;"></i>
+            </a>
+
             <ul class="app-notification dropdown-menu dropdown-menu-right">
               <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
@@ -56,6 +57,7 @@
             
               <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
             </ul>
+            
           <% end %>
 
         </li>
