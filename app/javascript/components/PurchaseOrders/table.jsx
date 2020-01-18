@@ -578,6 +578,7 @@ class table extends React.Component {
               >
                 <thead>
                   <tr className="tr-title">
+                  <th style={{width: "90px"}} className="text-center">Acciones</th>
                     <th style={{width: "150px"}}>Centro de costo</th>
                     <th style={{width: "150px"}}>Fecha de Orden</th>
                     <th style={{width: "150px"}}>Numero</th>
@@ -586,7 +587,7 @@ class table extends React.Component {
                     <th style={{width: "300px"}}>Descripción</th>
                     <th style={{width: "250px"}}>Estado</th>
                     <th style={{width: "120px"}}>Archivo</th>
-                    <th style={{width: "90px"}} className="text-center">Acciones</th>
+                    
                   </tr>
                 </thead>
 
@@ -594,42 +595,7 @@ class table extends React.Component {
                   {this.props.dataActions.length >= 1 ? (
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
-                        <td>{accion.cost_center.code}</td>
-                        <td><p>{accion.created_date}</p></td>
-                        <td><p>{accion.order_number}</p></td>
-                        <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                        <td>  
-                          <table style={{tableLayout: "fixed", width:"100%"}}>
-                          <tr>
-                                <td style={{padding:"0px", textAlign:"center"}}>Numero</td>
-                                <td style={{padding:"0px", textAlign:"center"}}>Fecha</td>
-                                <td style={{padding:"0px", textAlign:"center"}}>Valor</td>
-                              </tr>
-                          {accion.customer_invoices.map(customer => (
-                              <tr>
-                                <td style={{padding:"5px", textAlign:"center"}}>{customer.number_invoice}</td>
-                                <td style={{padding:"5px", textAlign:"center"}}>{this.date_short(customer.invoice_date)}</td>
-                                <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                              </tr>
-                          ))}
-                          </table>
-                        </td>
-                        <th>{accion.description}</th>
-                        <th>{accion.cost_center.invoiced_state}</th>
-
-                        <td>
-                                <React.Fragment>
-                                  {accion.order_file.url != null ? (
-                                          <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.order_file.url} data-original-title="Descargar Archivo" >
-                                            <i className="fas fa-download"></i>
-                                          </a>
-                                        ) : (
-                                          <i className="fas fa-times color-false"></i>
-                                  )}
-                                </React.Fragment>
-                        </td>
-  
-                        <td className="text-center" style={{ width: "10px"}}>   
+                              <td className="text-center" style={{ width: "10px"}}>   
                         <div
                             className="btn-group"
                             role="group"
@@ -670,6 +636,42 @@ class table extends React.Component {
                             </div>
                           </div>  
                         </td>
+                        <td>{accion.cost_center.code}</td>
+                        <td><p>{accion.created_date}</p></td>
+                        <td><p>{accion.order_number}</p></td>
+                        <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                        <td>  
+                          <table style={{tableLayout: "fixed", width:"100%"}}>
+                          <tr>
+                                <td style={{padding:"0px", textAlign:"center"}}>Numero</td>
+                                <td style={{padding:"0px", textAlign:"center"}}>Fecha</td>
+                                <td style={{padding:"0px", textAlign:"center"}}>Valor</td>
+                              </tr>
+                          {accion.customer_invoices.map(customer => (
+                              <tr>
+                                <td style={{padding:"5px", textAlign:"center"}}>{customer.number_invoice}</td>
+                                <td style={{padding:"5px", textAlign:"center"}}>{this.date_short(customer.invoice_date)}</td>
+                                <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                              </tr>
+                          ))}
+                          </table>
+                        </td>
+                        <th>{accion.description}</th>
+                        <th>{accion.cost_center.invoiced_state}</th>
+
+                        <td>
+                                <React.Fragment>
+                                  {accion.order_file.url != null ? (
+                                          <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.order_file.url} data-original-title="Descargar Archivo" >
+                                            <i className="fas fa-download"></i>
+                                          </a>
+                                        ) : (
+                                          <i className="fas fa-times color-false"></i>
+                                  )}
+                                </React.Fragment>
+                        </td>
+  
+                  
                       
                       </tr>
                     ))
