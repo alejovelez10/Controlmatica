@@ -2,8 +2,8 @@ class RegisterEditsController < ApplicationController
     
     def get_notifications
 
-        notifications_pending = RegisterEdit.where(state: "pending").to_json( :include => { :user => { :only =>[:names] }, :register_user => { :only =>[:names] } })
-        notifications_revised = RegisterEdit.where(state: "revised").to_json( :include => { :user => { :only =>[:names] }, :register_user => { :only =>[:names] } })
+        notifications_pending = RegisterEdit.where(state: "pending").to_json( :include => { :user => { :only =>[:names] }})
+        notifications_revised = RegisterEdit.where(state: "revised").to_json( :include => { :user => { :only =>[:names] }})
 
         notifications_pending = JSON.parse(notifications_pending)
         notifications_revised = JSON.parse(notifications_revised)

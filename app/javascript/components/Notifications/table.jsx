@@ -22,99 +22,792 @@ class table extends React.Component {
 
     /////////////////////////////////////////////
     if (accion.editValues.name == true && accion.editValues.email == false && accion.editValues.document_type == false && accion.editValues.number_document == false && accion.editValues.rol_id == false) {
-      return `Edicion del nombre el dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre el dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-5">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-5">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.email == true && accion.editValues.name == false  && accion.editValues.document_type == false && accion.editValues.number_document == false && accion.editValues.rol_id == false) {
-      return `Edicion del email el dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del email el dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-5">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-5">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.document_type == true && accion.editValues.name == false && accion.editValues.email == false && accion.editValues.number_document == false && accion.editValues.rol_id == false) {
-      return `Edicion del tipo de documento el dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del tipo de documento el dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.number_document == true && accion.editValues.document_type == false && accion.editValues.name == false && accion.editValues.email == false && accion.editValues.rol_id == false) {
-      return `Edicion del numero de documento el dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del numero de documento el dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.number_document == false && accion.editValues.document_type == false && accion.editValues.name == false && accion.editValues.email == false) {
-      return `Edicion del rol el dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol el dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
     
     } else if (accion.editValues.name == true && accion.editValues.email == true && accion.editValues.document_type == false && accion.editValues.number_document == false && accion.editValues.rol_id == false) {
-      return `Edicion del nombre y el email. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre y el email. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == true && accion.editValues.number_document == true && accion.editValues.email == false && accion.editValues.document_type == false && accion.editValues.rol_id == false) {
-      return `Edicion del nombre y el numero de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == true && accion.editValues.number_document == false && accion.editValues.email == false && accion.editValues.document_type == true && accion.editValues.rol_id == false) {
-      return `Edicion del nombre y el tipo de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre y el tipo de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == false && accion.editValues.number_document == true && accion.editValues.email == true && accion.editValues.document_type == true && accion.editValues.rol_id == false) {
-      return `Edicion del email, el tipo de documento y el numero de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del email, el tipo de documento y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == false && accion.editValues.number_document == true && accion.editValues.email == true && accion.editValues.document_type == true && accion.editValues.rol_id == true) {
-      return `Edicion del email, el tipo de documento, el numero de documento y el rol. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del email, el tipo de documento, el numero de documento y el rol. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.email == true && accion.editValues.number_document == true && accion.editValues.document_type == false && accion.editValues.name == false) {
-      return `Edicion del rol, el email y el numero de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el email y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.email == true && accion.editValues.document_type == true && accion.editValues.number_document == true && accion.editValues.name == true) {
-      return `Edicion del rol, el email, el tipo de documento, el numero de documento y el nombre. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el email, el tipo de documento, el numero de documento y el nombre. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == true && accion.editValues.number_document == true && accion.editValues.email == false && accion.editValues.document_type == true && accion.editValues.rol_id == true) {
-      return `Edicion del nombre, el numero de documento, el rol y el tipo de documento El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre, el numero de documento, el rol y el tipo de documento El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == false && accion.editValues.email == true && accion.editValues.document_type == true && accion.editValues.number_document == false && accion.editValues.rol_id == false) {
-      return `Edicion del email y el tipo de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del email y el tipo de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == true && accion.editValues.email == false && accion.editValues.document_type == true && accion.editValues.number_document == false && accion.editValues.rol_id == true) {
-      return `Edicion del rol, el tipo de documento y el nombre El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el tipo de documento y el nombre El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.number_document == true && accion.editValues.name == true && accion.editValues.document_type == false && accion.editValues.email == false) {
-      return `Edicion del rol, el numero de documento y el nombre. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el numero de documento y el nombre. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.number_document == false && accion.editValues.name == true && accion.editValues.document_type == true && accion.editValues.email == true) {
-      return `Edicion del rol, el nombre, el email, el tipo de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el nombre, el email, el tipo de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == true && accion.editValues.email == true && accion.editValues.document_type == true && accion.editValues.number_document == false && accion.editValues.rol_id == false) {
-      return `Edicion del nombre, el email y el tipo de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre, el email y el tipo de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == false && accion.editValues.email == false && accion.editValues.document_type == true && accion.editValues.number_document == true && accion.editValues.rol_id == false) {
-      return `Edicion del el tipo de documento y el numero de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del el tipo de documento y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == true && accion.editValues.email == true && accion.editValues.number_document == true && accion.editValues.document_type == false && accion.editValues.rol_id == false) {
-      return `Edicion del nombre, el email y el numero de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del nombre, el email y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == false && accion.editValues.email == true && accion.editValues.document_type == false && accion.editValues.number_document == false && accion.editValues.rol_id == true) {
-      return `Edicion del email y el rol. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del email y el rol. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.name == false && accion.editValues.email == true && accion.editValues.document_type == false && accion.editValues.number_document == true && accion.editValues.rol_id == false) {
-      return `Edicion del email y el numero de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del email y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.email == false && accion.editValues.document_type == false && accion.editValues.number_document == false && accion.editValues.name == true) {
-      return `Edicion del rol y el nombre. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol y el nombre. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.number_document == true && accion.editValues.email == false && accion.editValues.document_type == false && accion.editValues.name == false) {
-      return `Edicion del rol y el numero de documento. El dia ${this.date(accion.date_update)}`
-    /////////////////////////////////////////////
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol y el numero de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
 
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el numero de documento tenia <b className="color-select">{accion.newValues.number_document[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.number_document[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
 
     } else if (accion.editValues.rol_id == true && accion.editValues.number_document == false && accion.editValues.email == false && accion.editValues.document_type == true && accion.editValues.name == false) {
-      return `Edicion del rol y el tipo de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol y el tipo de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
 
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
+    
     } else if (accion.editValues.rol_id == true && accion.editValues.email == true && accion.editValues.document_type == true && accion.editValues.number_document == false && accion.editValues.name == false) {
-      return `Edicion del rol, el email y el tipo de documento. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el email y el tipo de documento. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
 
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el tipo de documento tenia <b className="color-select">{accion.newValues.document_type[0]}</b></li>
+                  </ul>
+                </div>
+
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.document_type[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
+    
     } else if (accion.editValues.rol_id == true && accion.editValues.email == true && accion.editValues.document_type == false && accion.editValues.number_document == false && accion.editValues.name == true) {
-      return `Edicion del rol, el email y el nombre. El dia ${this.date(accion.date_update)}`
+      return(
+        <React.Fragment>
+          <b>{`Edicion del rol, el email y el nombre. El dia ${this.date(accion.date_update)}`}</b>
+          <div className="col-md-10 mt-3">
+              <div className="row">
 
+                <div className="col-md-6">
+                  <p className="text-center">Valores viejos</p>
+                  <ul>
+                    <li>el rol tenia <b className="color-select">{accion.newValues.rol_id[0]}</b></li>
+                    <li>el email tenia <b className="color-select">{accion.newValues.email[0]}</b></li>
+                    <li>el nombre tenia <b className="color-select">{accion.newValues.name[0]}</b></li>
+                  </ul>
+                </div>
 
+                <div className="col-md-6">
+                  <p className="text-center">Valores nuevos</p>
+                  <ul>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.rol_id[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.email[1]}</b></li>
+                    <li>fue cambiado por <b className="color-select">{accion.newValues.name[1]}</b></li>
+                  </ul>
+                </div>
+                
+              </div>
+          </div>
+        </React.Fragment>
+      )
+    /////////////////////////////////////////////
 
-
-     
 
     } else {
       return "Edicion "
     } 
   }
 
-  
 
   MessageSucces = (name_success, type, error_message) => {
         Swal.fire({
@@ -164,11 +857,9 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-9">
-                              <b>{this.get_title(accion)}</b>
+                              {this.get_title(accion)}
 
-                              <div className="col-md-10 mt-3">
-                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages</p>
-                              </div>
+                              <p>Esta infomacion fue editada por: <b>{accion.user.names}</b></p>
                           </div>
 
                           <div className="col-md-2 text-center">
@@ -200,11 +891,7 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-9">
-                              <b>{this.get_title(accion)}</b>
-
-                              <div className="col-md-10 mt-3">
-                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages</p>
-                              </div>
+                              {this.get_title(accion)}
                           </div>
 
                           <div className="col-md-2 text-center">

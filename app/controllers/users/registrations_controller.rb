@@ -37,16 +37,19 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
     puts "klsñhlksadjfñlkasdjñlasdjkñladskjñadskljkadskñlfjdsñkldsajkñlafdjkñl"
     if user_params["password"].length == 0
-      params_new =  user_update_params
+      params_new =  user_update_params.merge!(actual_user: current_user.id)
     else
-      params_new = user_params
+      params_new = user_params.merge!(actual_user: current_user.id)
     end
+
+    #params_new.merge!(params_new: current_user.id)
 
     if @user.update(params_new)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
       }
+    
 
       #User.get_values(current_user.id)
 
@@ -147,11 +150,11 @@ class Users::RegistrationsController < Devise::RegistrationsController
     end
 
     def user_update_params
-      params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user)
+      params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user, :actual_user)
     end
 
     def user_params
-      params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user)
+      params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user, :actual_user)
     end
     
 end

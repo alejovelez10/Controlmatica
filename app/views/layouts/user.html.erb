@@ -31,30 +31,33 @@
               <i class="fas fa-bell" style="font-size: 17px;"></i>
           </a>
 
-          <ul class="app-notification dropdown-menu dropdown-menu-right">
-            <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
-              <div class="app-notification__content">
-              <% get_register_edit.each do |notification|  %>
-                <% link = "/notifications" + "?from=" + notification.id.to_s %>
-                <li>
-                      <a class="app-notification__item" href="<%= link %>">
-                        <span class="app-notification__icon">
-                          <span class="fa-stack fa-lg">
-                            <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                            <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
-                          </span>
-                        </span>
+          <% if get_register_edit.any? && current_user.rol.name == "Administrador" %>
+            <ul class="app-notification dropdown-menu dropdown-menu-right">
+              <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
+                <div class="app-notification__content">
+                  <% get_register_edit.each do |notification|  %>
+                    <% link = "/notifications" + "?from=" + notification.id.to_s %>
+                    <li>
+                          <a class="app-notification__item" href="<%= link %>">
+                            <span class="app-notification__icon">
+                              <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x text-primary"></i>
+                                <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
+                              </span>
+                            </span>
 
-                        <div>
-                          <p class="app-notification__message">Modificacion de usuario</p>
-                          <p class="app-notification__meta"><%= get_date(notification.date_update) %></p>
-                        </div>
-                      </a>  
-                </li>
-              <% end %>
-           
-            <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
-          </ul>
+                            <div>
+                              <p class="app-notification__message">Modificacion de usuario</p>
+                              <p class="app-notification__meta"><%= get_date(notification.date_update) %></p>
+                            </div>
+                          </a>  
+                    </li>
+                  <% end %>
+            
+              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
+            </ul>
+          <% end %>
+
         </li>
 
         <!-- User Menu-->

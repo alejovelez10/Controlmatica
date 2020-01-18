@@ -9,7 +9,6 @@
 #  date_update      :date
 #  editValues       :json
 #  newValues        :json
-#  oldValues        :json
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #

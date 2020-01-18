@@ -13861,3 +13861,8 @@ be a descendant of the grid when it is being dragged.
       /*border-radius: 100%;*/
     }
 }
+
+.color-select{
+    text-decoration: underline;
+    text-decoration-color: #ffbe3b;
+}

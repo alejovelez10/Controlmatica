@@ -47,8 +47,19 @@ class User < ApplicationRecord
 
   
   def create_register
+    nombres = []
+
+    if self.rol_id_changed?
+      find_rols = Rol.where(id: self.rol_id_change)
+      find_rols.each do |rol| 
+        nombres << rol.name
+      end
+    else
+      nombres = ""
+    end
+    
     unless self.menu_changed?
-      RegisterEdit.create(user_id: self.id, register_user_id: self.id, state: "pending", date_update: Time.now, oldValues: {name: self.names_was, email: self.email_was, document_type: self.document_type_was, number_document: self.number_document_was, rol_id: self.rol_id_was}, newValues: {name: self.names_change, email: self.email_change, document_type: self.document_type_change, number_document: self.number_document_change, rol_id: self.rol_id_change}, editValues: {name: self.names_changed?, email: self.email_changed?, document_type: self.document_type_changed?, number_document: self.number_document_changed?, rol_id: self.rol_id_changed?} )
+      RegisterEdit.create(user_id: self.actual_user, register_user_id: self.id, state: "pending", date_update: Time.now, newValues: {name: self.names_change, email: self.email_change, document_type: self.document_type_change, number_document: self.number_document_change, rol_id: nombres}, editValues: {name: self.names_changed?, email: self.email_changed?, document_type: self.document_type_changed?, number_document: self.number_document_changed?, rol_id: self.rol_id_changed?} )
     end
   end
 
