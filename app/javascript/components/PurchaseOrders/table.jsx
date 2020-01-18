@@ -555,6 +555,11 @@ class table extends React.Component {
                 errorValues={this.state.ErrorValuesInvoice}
                 dataIncomes={this.state.data_incomes}
                 delete={this.deleteInvoice}
+
+                loadInfo={this.loadTableIncome}
+
+                accion={this.state.action}
+                MessageSucces={this.MessageSucces}
             /> 
 
           
