@@ -58,7 +58,7 @@ class FormFilter extends Component {
                   <label>Numero</label>
                     <input
                       className="form form-control"
-                      type="number"
+                      type="text"
                       name="number_order"
                       placeholder="Numero de orden"
                       onChange={this.props.onChangeFilter}

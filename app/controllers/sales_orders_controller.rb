@@ -158,11 +158,11 @@ class SalesOrdersController < ApplicationController
       sales_orders_total = SalesOrder.all.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description]).count
 
     elsif params[:filter]
-      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => {  :cost_center => { :only =>[:code] }, :customer_invoices => { :only =>[:invoice_value, :invoice_date] } })
       sales_orders_total = SalesOrder.all.count
 
     else
-      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => { :cost_center => { :only =>[:code] } })
+      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => {  :cost_center => { :only =>[:code] }, :customer_invoices => { :only =>[:invoice_value, :invoice_date] } })
       sales_orders_total = SalesOrder.all.count
     end
     

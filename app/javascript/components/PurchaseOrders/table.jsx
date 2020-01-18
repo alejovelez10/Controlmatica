@@ -71,7 +71,12 @@ class table extends React.Component {
         });
     }
 
-
+  date = (fecha) => {
+      var d = new Date(fecha),
+      months = ['Enero','Febrero','Marzo','Abril','Mayo','junio','julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " +d.getFullYear()
+  }
+  
   handleSubmit = e => {
       e.preventDefault();
   };
@@ -565,6 +570,7 @@ class table extends React.Component {
                     <th style={{width: "20%"}}>Fecha de Generacion</th>
                     <th>Numero</th>
                     <th>Valor</th>
+                    <th>Facturas</th>
                     <th>Descripción</th>
                     <th>Estado</th>
                     <th>Archivo</th>
@@ -580,6 +586,11 @@ class table extends React.Component {
                         <td><p>{accion.created_date}</p></td>
                         <td><p>{accion.order_number}</p></td>
                         <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                        <td>  
+                          {accion.customer_invoices.map(customer => (
+                              <p>Se agrego una factura con un valor de <b>{customer.invoice_value}</b> el dia <b>{this.date(customer.invoice_date)}</b></p>
+                          ))}
+                        </td>
                         <th>{accion.description}</th>
                         <th>{accion.state}</th>
 
