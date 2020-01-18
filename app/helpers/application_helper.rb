@@ -21,7 +21,9 @@ module ApplicationHelper
 
 		elsif controller == "sales_orders" && action == "index"
 			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Ordenes de Compra " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
-		
+
+		elsif controller == "register_edits" && action == "notifications"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Registro de edicion de usuarios " + "</h1>" + "<p>" + "Gestion de registros" + "</p>"
 
         elsif controller == "cost_centers" && action == "show"
 			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "Analiza como va tu proyecto" + "</p>"

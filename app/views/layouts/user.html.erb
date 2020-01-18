@@ -31,7 +31,7 @@
               <i class="fas fa-bell" style="font-size: 17px;"></i>
           </a>
 
-          <% if get_register_edit.any? && current_user.rol.name == "Administrador" %>
+          <% if get_register_edit.any? %>
             <ul class="app-notification dropdown-menu dropdown-menu-right">
               <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
