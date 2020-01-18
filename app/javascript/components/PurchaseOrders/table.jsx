@@ -76,6 +76,11 @@ class table extends React.Component {
       months = ['Enero','Febrero','Marzo','Abril','Mayo','junio','julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
       return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " +d.getFullYear()
   }
+
+  date_short = (fecha) => {
+    var d = new Date(fecha)
+    return (d.getDate() + 1 > 9 ? "" : "0") + (d.getDate() +  1)  + "/" + (d.getMonth() +1  > 9 ? "" : "0") + (d.getMonth()  +  1) + " " + '/' + d.getFullYear()
+}
   
   handleSubmit = e => {
       e.preventDefault();
@@ -562,19 +567,19 @@ class table extends React.Component {
             
               <table
                 className="table table-hover table-bordered"
-                id="sampleTable"
+                id="sampleTable" style={{tableLayout: "fixed"}}
               >
                 <thead>
                   <tr className="tr-title">
-                    <th style={{width: "13%"}}>Centro de costo</th>
-                    <th style={{width: "20%"}}>Fecha de Generacion</th>
+                    <th style={{width: "150px"}}>Centro de costo</th>
+                    <th style={{width: "150px"}}>Fecha de Orden</th>
                     <th>Numero</th>
                     <th>Valor</th>
-                    <th>Facturas</th>
-                    <th>Descripción</th>
+                    <th style={{width: "400px"}}>Facturas</th>
+                    <th style={{width: "300px"}}>Descripción</th>
                     <th>Estado</th>
-                    <th>Archivo</th>
-                    <th style={{width: "60px"}} className="text-center">Acciones</th>
+                    <th style={{width: "120px"}}>Archivo</th>
+                    <th style={{width: "90px"}} className="text-center">Acciones</th>
                   </tr>
                 </thead>
 
@@ -587,9 +592,20 @@ class table extends React.Component {
                         <td><p>{accion.order_number}</p></td>
                         <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                         <td>  
+                          <table style={{tableLayout: "fixed", width:"100%"}}>
+                          <tr>
+                                <td style={{padding:"0px", textAlign:"center"}}>Numero</td>
+                                <td style={{padding:"0px", textAlign:"center"}}>Fecha</td>
+                                <td style={{padding:"0px", textAlign:"center"}}>Valor</td>
+                              </tr>
                           {accion.customer_invoices.map(customer => (
-                              <p>Se agrego una factura con un valor de <b>{customer.invoice_value}</b> el dia <b>{this.date(customer.invoice_date)}</b></p>
+                              <tr>
+                                <td style={{padding:"5px", textAlign:"center"}}>{customer.number_invoice}</td>
+                                <td style={{padding:"5px", textAlign:"center"}}>{this.date_short(customer.invoice_date)}</td>
+                                <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                              </tr>
                           ))}
+                          </table>
                         </td>
                         <th>{accion.description}</th>
                         <th>{accion.cost_center.invoiced_state}</th>
