@@ -89,7 +89,7 @@ class formCreate extends React.Component {
                     onChange={this.props.onChangeForm}
                     rows="4"
                     className={`form form-control`}
-                    placeholder="Comprobante"
+                    placeholder="Descripción..."
                   />
                 </div>
 

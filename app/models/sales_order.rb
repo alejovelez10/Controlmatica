@@ -31,12 +31,15 @@ class SalesOrder < ApplicationRecord
   end
 
 
-  def self.search(search1, search2, search3, search4)
+  def self.search(search1, search2, search3, search4, search5, search6)
     search1 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
     search2 != "" ? (scope :fhastap, -> { where(["created_at < ?", search2]) }) : (scope :fhastap, -> { where.not(id: nil) })
     search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
-    fdesdep.fhastap.number.centro
+    search5 != "" ? (scope :estado, -> { where(state: search5) }) : (scope :estado, -> { where.not(id: nil) })
+    search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
+
+    fdesdep.fhastap.number.centro.estado.descripcion
   end
   
 end

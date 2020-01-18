@@ -35,14 +35,6 @@ class table extends React.Component {
             description: "",
         },
 
-        formUpdate: {
-          created_date: "",
-          order_number: "",
-          order_value: "",
-          user_id: this.props.usuario.id,
-          cost_center_id: ""
-        },
-
 
         formInvoice: {
           sales_order_id: "",
@@ -143,18 +135,17 @@ class table extends React.Component {
     formData.append("cost_center_id", this.state.form.cost_center_id);
     formData.append("description", this.state.form.description);
 
-    if (this.validationForm() == true) {      
-          fetch("/sales_orders", {
-            method: "POST", // or 'PUT'
-            body: formData, // data can be `string` or {object}!
-            headers: {}
-          })
-
+    if (this.validationForm() == true) {
+      if (this.state.modeEdit == true) {
+        fetch("/sales_orders/" + this.state.action.id, {
+          method: "PATCH", 
+          body: formData, // data can be `string` or {object}!
+          headers: {}
+        })
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
             this.props.loadInfo()
-
             this.MessageSucces(data.message, data.type, data.message_error)
 
             this.setState({
@@ -166,10 +157,48 @@ class table extends React.Component {
                   user_id: this.props.usuario.id,
                   cost_center_id: "",
                   description: ""
-              }
+              },
+
+              selectedOptionCentro: {
+                cost_center_id: "",
+                label: "Centro de costo"
+              },
             });
+
           });
+      } else {
+        fetch("/sales_orders", {
+          method: "POST", // or 'PUT'
+          body: formData, // data can be `string` or {object}!
+          headers: {}
+        })
+
+        .then(res => res.json())
+        .catch(error => console.error("Error:", error))
+        .then(data => {
+          this.props.loadInfo()
+
+          this.MessageSucces(data.message, data.type, data.message_error)
+
+          this.setState({
+            modal: false,
+              form: {
+                created_date: "",
+                order_number: "",
+                order_value: "",
+                user_id: this.props.usuario.id,
+                cost_center_id: "",
+                description: ""
+            },
+
+            selectedOptionCentro: {
+              cost_center_id: "",
+              label: "Centro de costo"
+            },
+          });
+        });
       }
+    }
   };
 
 
@@ -253,60 +282,41 @@ class table extends React.Component {
     }
   }
 
-  handleChangeUpdate = e => {
-    this.setState({
-      formUpdate: {
-        ...this.state.formUpdate,
-        [e.target.name]: e.target.value
-      }
-    });
+  edit = modulo => {
+    console.log(modulo)
+    if(this.state.modeEdit === true){
+      this.setState({modeEdit: false})
+    }else{
+      this.setState({modeEdit: true})
+    }
+
+    this.toggle("edit")
+
+      this.setState({
+
+        selectedOptionCentro: {
+          cost_center_id: modulo.cost_center_id,
+          label: `${modulo.cost_center.code}`
+        },
+
+        action: modulo,
+        title: "Editar orden de compra",
+
+        form: {
+          created_date: modulo.created_date,
+          order_number: modulo.order_number,
+          order_value: modulo.order_value,
+          order_file: {},
+          user_id: modulo.user_id,
+          cost_center_id: modulo.cost_center_id,
+          description: modulo.description,
+        },
+        
+        }
+        
+      )
+      
   };
-
-  editTable = (accion) =>{
-    this.setState({
-      id: accion.id,
-      formUpdate: {
-        created_date: accion.created_date,
-        order_number: accion.order_number,
-        order_value: accion.order_value,
-        user_id: this.props.usuario.id,
-        cost_center_id: accion.cost_center_id
-      }
-    })
-  }
-
-  updateInfo = () => {
-    const formData = new FormData();
-    formData.append("created_date", this.state.formUpdate.created_date);
-    formData.append("order_number", this.state.formUpdate.order_number);
-    formData.append("order_value", this.state.formUpdate.order_value);
-    formData.append("order_file", this.state.order_file == undefined ? "" : this.state.order_file);
-    formData.append("user_id", this.props.usuario.id);
-    formData.append("cost_center_id", this.state.formUpdate.cost_center_id);
-
-    fetch("/sales_orders/" + this.state.id, {
-      method: 'PATCH', // or 'PUT'
-      body: formData, // data can be `string` or {object}!
-      headers: {}
-    }).then(res => res.json())
-      .catch(error => console.error('Error:', error))
-      .then(data => {
-        this.props.loadInfo()
-
-        this.setState({
-          id: "",
-          formUpdate: {
-            created_date: "",
-            order_number: "",
-            order_value: "",
-            order_file: {},
-            user_id: this.props.usuario.id,
-            cost_center_id: ""
-          }
-        });
-
-      });
-  }
 
 
   /* facturaaaaaaaaaaaaaaaaaaaaaaaaaaaaa datos*/
@@ -542,9 +552,7 @@ class table extends React.Component {
                 delete={this.deleteInvoice}
             /> 
 
-            
-
-{/**/}
+          
             <div className="content">
             
               <table
@@ -557,11 +565,9 @@ class table extends React.Component {
                     <th style={{width: "20%"}}>Fecha de Generacion</th>
                     <th>Numero</th>
                     <th>Valor</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
                     <th>Archivo</th>
-                     {this.state.id != "" &&
-                          <th></th>
-                      }
-                  
                     <th style={{width: "60px"}} className="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -571,70 +577,13 @@ class table extends React.Component {
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
                         <td>{accion.cost_center.code}</td>
-                        <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="date" 
-                                      className="form form-control" 
-                                      name="created_date"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.created_date}
-                                    />
-                                ) : (
-                                    <p>{accion.created_date}</p>
-                                  
-                          )}
-                          
-                        </td>
+                        <td><p>{accion.created_date}</p></td>
+                        <td><p>{accion.order_number}</p></td>
+                        <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                        <th>{accion.description}</th>
+                        <th>{accion.state}</th>
 
                         <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="number" 
-                                      className="form form-control" 
-                                      name="order_number"
-                                      onChange={this.handleChangeUpdate}
-                                      value={this.state.formUpdate.order_number}
-                                    />
-                                ) : (
-                                    <p>{accion.order_number}</p>
-                                  
-                          )}
-                        </td>
-                        
-                        <td>
-                          {this.state.id == accion.id ? (
-                                  <NumberFormat 
-                                  name="order_value"
-                                  thousandSeparator={true} 
-                                  prefix={'$'} 
-                                  className={`form form-control`}
-                                  value={this.state.formUpdate.order_value}
-                                  onChange={this.handleChangeUpdate}
-                                  placeholder="Valor total"
-                                /> 
-                                ) : (
-                                  <NumberFormat
-                                  value={accion.order_value}
-                                  displayType={"text"}
-                                  thousandSeparator={true}
-                                  prefix={"$"}
-                                />
-                                  
-                          )}
-
-                        </td>
-
-                        <td>
-                          {this.state.id == accion.id ? (
-                                    <input 
-                                      type="file" 
-                                      className="form form-control" 
-                                      name="order_file"
-                                      onChange={this.handleFileOrderFile}
-                                    />
-                                ) : (
-
                                 <React.Fragment>
                                   {accion.order_file.url != null ? (
                                           <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.order_file.url} data-original-title="Descargar Archivo" >
@@ -644,26 +593,7 @@ class table extends React.Component {
                                           <i className="fas fa-times color-false"></i>
                                   )}
                                 </React.Fragment>
-
-                                  
-                          )}
-                          
                         </td>
-
-                          {this.state.id != "" &&
-                              <td style={{width: "118px"}}>
-                                {this.state.id == accion.id && (
-                                      <React.Fragment>
-                                        <button className="btn btn-secondary" onClick={() => this.updateInfo()}>
-                                          <i className="fas fa-check"></i>
-                                        </button>
-                                        <button className="btn btn-danger ml-2" onClick={() => this.setState({ id: ""})}>
-                                          <i className="fas fa-times"></i>
-                                        </button>
-                                      </React.Fragment>
-                                )}
-                              </td>
-                          }
   
                         <td className="text-center" style={{ width: "10px"}}>   
                         <div
@@ -689,9 +619,9 @@ class table extends React.Component {
                                     Facturas
                                   </button>     
                                 )}
-
-                                {this.props.estados.edit == true && (
-                                  <button onClick={() => this.editTable(accion)} className="dropdown-item">
+                                
+                                {true && (
+                                  <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>
                                 )}

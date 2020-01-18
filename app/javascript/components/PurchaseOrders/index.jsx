@@ -15,6 +15,8 @@ class index extends React.Component {
               date_hasta: "",
               number_order: "",
               cost_center_id: "",
+              state: "",
+              description: "",
             },
 
             activePage: 1,
@@ -84,6 +86,8 @@ class index extends React.Component {
           date_hasta: "",
           number_order: "",
           cost_center_id: "",
+          state: "",
+          description: "",
         },
 
         selectedOptionCentro: {
@@ -105,7 +109,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}`)
+      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
