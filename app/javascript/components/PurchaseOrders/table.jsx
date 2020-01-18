@@ -377,7 +377,6 @@ class table extends React.Component {
         .then(data => {
 
           this.loadTableIncome(this.state.action)
-          this.props.loadInfo()
 
           this.MessageSucces(data.message, data.type, data.message_error)
 
@@ -442,7 +441,6 @@ class table extends React.Component {
       }).then(response => response.json())
       .then(response => {
         this.loadTableIncome(this.state.action)
-        this.props.loadInfo()
         
         Swal.fire(
           'Borrado!',
@@ -557,12 +555,6 @@ class table extends React.Component {
                 errorValues={this.state.ErrorValuesInvoice}
                 dataIncomes={this.state.data_incomes}
                 delete={this.deleteInvoice}
-
-                loadInfo={this.loadTableIncome}
-
-                accion={this.state.action}
-                MessageSucces={this.MessageSucces}
-                loadOrders={this.props.loadInfo}
             /> 
 
           
