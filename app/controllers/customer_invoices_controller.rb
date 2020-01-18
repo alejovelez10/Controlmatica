@@ -54,15 +54,24 @@ class CustomerInvoicesController < ApplicationController
   # PATCH/PUT /customer_invoices/1
   # PATCH/PUT /customer_invoices/1.json
   def update
-    respond_to do |format|
-      if @customer_invoice.update(customer_invoice_params)
-        format.html { redirect_to cost_center_path(@customer_invoice.cost_center_id), notice: 'Customer invoice was successfully updated.' }
-        format.json { render :show, status: :ok, location: @customer_invoice }
-        format.js
-      else
-        format.html { render :edit }
-        format.json { render json: @customer_invoice.errors, status: :unprocessable_entity }
+    if params["invoice_value"].present?
+      if customer_invoice_params["invoice_value"].class.to_s != "Integer"
+        valor1 = customer_invoice_params["invoice_value"].gsub('$','').gsub(',','')
+        params["invoice_value"] = valor1
       end
+    end
+
+    if @customer_invoice.update(customer_invoice_params) 
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success"
+      }
+    else 
+      render :json => {
+        message: "¡El Registro no fue actualizado!",
+        type: "error",
+        message_error: @customer_invoice.errors.full_messages
+      }
     end
   end
 

@@ -13866,3 +13866,12 @@ be a descendant of the grid when it is being dragged.
     text-decoration: underline;
     text-decoration-color: #ffbe3b;
 }
+
+.moda-large{
+    max-width: 1085px !important;
+}
+
+.add-table{
+    width: 160%;
+    max-width: 160%;
+}

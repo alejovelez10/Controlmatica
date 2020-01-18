@@ -16,10 +16,11 @@ class FormCreate extends React.Component {
       collapse: false, 
       status: 'abrir', 
       id: "",
+
       formUpdate: {
-        date_detail: "",
-        value: "",
-        voucher: "",
+        invoice_date: "",
+        invoice_value: "",
+        number_invoice: "",
       }
     };
   }
@@ -40,9 +41,9 @@ class FormCreate extends React.Component {
     this.setState({
       id: accion.id,
       formUpdate: {
-        date_detail: accion.date_detail,
-        value: accion.value,
-        voucher: accion.voucher,
+        invoice_date: accion.invoice_date,
+        invoice_value: accion.invoice_value,
+        number_invoice: accion.number_invoice,
       }
     })
   }
@@ -56,27 +57,50 @@ class FormCreate extends React.Component {
     });
   };
 
+  handleFileReceptionReport = e => {
+    this.setState({
+      reception_report_file: e.target.files[0]
+    });
+  };
+
+  handleFileDeliveryCertificate = e => {
+    this.setState({
+      delivery_certificate_file: e.target.files[0]
+    });
+  };
+
 
   updateInfo = () => {
-    fetch("/income_details/" + this.state.id, {
+    const formData = new FormData();
+    formData.append("invoice_date", this.state.formUpdate.invoice_date);
+    formData.append("invoice_value", this.state.formUpdate.invoice_value);
+    formData.append("number_invoice", this.state.formUpdate.number_invoice);
+    formData.append("delivery_certificate_file", this.state.delivery_certificate_file == undefined ? "" : this.state.delivery_certificate_file);
+    formData.append("reception_report_file", this.state.reception_report_file == undefined ? "" : this.state.reception_report_file);
+
+    fetch("/customer_invoices/" + this.state.id, {
       method: 'PATCH', // or 'PUT'
-      body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
-      headers: {
-        'Content-Type': 'application/json',
-      }
+      body: formData, // data can be `string` or {object}!
+      headers: {}
     }).then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(data => {
-        this.props.loadData(this.props.income)
+        this.props.loadInfo(this.props.accion)
+        this.props.loadOrders()
         this.props.MessageSucces(data.message, data.type, data.message_error)
 
         this.setState({
           id: "",
+
           formUpdate: {
-            date_detail: "",
-            value: "",
-            voucher: "",
-          }
+            invoice_date: "",
+            invoice_value: "",
+            number_invoice: "",
+          },
+
+          delivery_certificate_file: null,
+          reception_report_file: null
+
         });
 
       });
@@ -84,7 +108,7 @@ class FormCreate extends React.Component {
 
   
 
-  
+  //moda-large
 
   render() {
     return (
@@ -195,20 +219,20 @@ class FormCreate extends React.Component {
                 )}
 
                 <div className="col-md-12">
-                  <div className="content">
+                  <div className="content-table">
                     <table
-                    className="table table-hover table-bordered"
+                    className={`table table-hover table-bordered ${this.state.id != "" ? "add-table" : ""}`}
                     id="sampleTable"
                   >
                     <thead>
                       <tr>
                         <th style={{ width: "13%" }}>Fecha</th>
-                        <th style={{ width: "13%" }}>Valor</th>
+                        <th style={{ width: "22%" }}>Valor</th>
                         <th style={{ width: "21%" }}>Numero de factura</th>
-                        <th style={{ width: "12%" }} className="text-center">Certificado de entrega</th>
-                        <th style={{ width: "14%" }} className="text-center">Informe de recepción</th>
+                        <th style={{ width: "20%" }} className="text-center">Certificado de entrega</th>
+                        <th style={{ width: "20%" }} className="text-center">Informe de recepción</th>
                         {this.state.id != "" &&
-                          <th></th>
+                          <th>Actualizacion</th>
                         }
 
                         
@@ -253,12 +277,33 @@ class FormCreate extends React.Component {
 
                             </td>
 
-                            <td>
-                              <p>{accion.number_invoice}</p>
-                            </td>
+                              <td>
+                                {this.state.id == accion.id ? (
+                                    <input 
+                                      type="number" 
+                                      name="number_invoice"
+                                      placeholder="Numero de factura"
+                                      className="form form-control" 
+                                      onChange={this.handleChangeUpdate}
+                                      value={this.state.formUpdate.number_invoice}
+                                    />
+                                ) : (
+                                  <p>{accion.number_invoice}</p>
+                                  
+                                )}
+                              </td>
 
 
                             <td className="text-center">
+                                {this.state.id == accion.id ? (
+                                    <input 
+                                      type="file" 
+                                      name="delivery_certificate_file"
+                                      className="form form-control" 
+                                      onChange={this.handleFileDeliveryCertificate}
+                                    />
+                                ) : (
+                                  <React.Fragment>
                                     {accion.delivery_certificate_file.url != null ? (
                                         <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.delivery_certificate_file.url} data-original-title="Descargar Archivo" >
                                           <i className="fas fa-download"></i>
@@ -266,9 +311,20 @@ class FormCreate extends React.Component {
                                     ) : (
                                       <i className="fas fa-times color-false"></i>
                                     )}
+                                  </React.Fragment>
+                                )}
                             </td>
 
                             <td className="text-center">
+                              {this.state.id == accion.id ? (
+                                    <input 
+                                      type="file" 
+                                      name="reception_report_file"
+                                      className="form form-control" 
+                                      onChange={this.handleFileReceptionReport}
+                                    />
+                                ) : (
+                                  <React.Fragment>
                                     {accion.reception_report_file.url != null ? (
                                         <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.reception_report_file.url} data-original-title="Descargar Archivo" >
                                           <i className="fas fa-download"></i>
@@ -276,6 +332,8 @@ class FormCreate extends React.Component {
                                     ) : (
                                       <i className="fas fa-times color-false"></i>
                                     )}
+                                  </React.Fragment>
+                                )}
                             </td>
 
                             {this.state.id != "" &&
