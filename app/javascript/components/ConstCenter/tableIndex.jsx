@@ -512,6 +512,7 @@ class tableIndex extends React.Component {
 
 
   get_btn(accion){
+    console.log("añsldfjlkads")
     if (accion.execution_state == "FINALIZADO" && accion.invoiced_state == "FACTURADO") {
       return ""  
 
@@ -530,6 +531,17 @@ class tableIndex extends React.Component {
     }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "POR FACTURAR"){
       return ""
     }
+  }
+
+
+  get_sales_orders(sales_orders){
+    console.log(sales_orders)
+    var acumulado = 0;
+    sales_orders.forEach(element => {
+        acumulado = acumulado + element.order_value 
+    });
+  
+      return acumulado;
   }
 
   render() {
@@ -692,7 +704,7 @@ class tableIndex extends React.Component {
                         <th><NumberFormat value={accion.sum_executed} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.sum_viatic} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={ this.get_sales_orders(accion.sales_orders) } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                 
                       </tr>
