@@ -59,8 +59,7 @@ class SalesOrdersController < ApplicationController
           position[2] = task.order_number
           position[3] = task.order_value
           position[4] = task.description
-          position[5] = task.customer_invoices.sum(:invoice_value)
-          
+          position[5] = "asdasdasd" #task.customer_invoices.sum(:invoice_value)
           
           
           sheet.row(i).height = 25
@@ -88,11 +87,10 @@ class SalesOrdersController < ApplicationController
         position[2] = "Numero"
         position[3] = "Valor"
         position[4] = "Descripcion"
-        position[5] = "Total de facturas"
+        position[5] = "Facturas"
 
         
-        
-        
+      
         
         
         sheet.row(0).height = 20
@@ -108,7 +106,7 @@ class SalesOrdersController < ApplicationController
         
         sheet.column(4).width = 40
         
-        sheet.column(5).width = 40
+        sheet.column(5).width = 50
         
         
         sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
