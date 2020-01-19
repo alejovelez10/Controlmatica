@@ -34,6 +34,11 @@ class MaterialInvoicesController < ApplicationController
   end
 
   def update
+    if material_invoice_params["value"].class.to_s != "Integer" && material_invoice_params["value"].class.to_s != "Float" && material_invoice_params["value"].present?
+      valor1 = material_invoice_params["value"].gsub('$','').gsub(',','')
+      params["value"] = valor1
+    end
+
     if @material_invoice.update(material_invoice_params) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",

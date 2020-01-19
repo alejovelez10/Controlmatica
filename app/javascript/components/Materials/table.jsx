@@ -352,7 +352,7 @@ class table extends React.Component {
     }
   }
 
-  incomeDetail(accion){
+  incomeDetail = (accion) =>{
     fetch("/get_material_invoice/" + accion)
     .then(response => response.json())
     .then(data => {
@@ -516,7 +516,6 @@ class table extends React.Component {
 
           submit={this.HandleClickIncomes}
           delete={this.deleteIncomes}
-          loadInfo={this.incomeDetail}
           income={this.state.id}
           loadData={this.updateInfoIncome}
           MessageSucces={this.MessageSucces}
@@ -526,6 +525,10 @@ class table extends React.Component {
           formValues={this.state.formCreateIncome}
           errorValues={this.state.ErrorValuesIncome}
           estados={this.props.estados}
+
+          loadInfo={this.incomeDetail}
+          loadMaterial={this.props.loadInfo}
+          id={this.state.id}
         />
 
         <ShowInfo
