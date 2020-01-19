@@ -16,7 +16,7 @@
 class MaterialInvoice < ApplicationRecord
   belongs_to :material
   after_save :update_values
-  after_destroy :update_values
+  after_destroy :update_values_destroy
 
   def update_values
     material = Material.find(self.material_id)
@@ -24,5 +24,10 @@ class MaterialInvoice < ApplicationRecord
     invoice_total = material.material_invoices.sum(:value)
     material.update(provider_invoice_value: invoice_total)
   end
-  
+
+  def update_values_destroy
+    material = Material.find(self.material_id)
+    invoice_total = material.material_invoices.sum(:value)
+    material.update(provider_invoice_value: invoice_total)
+  end
 end
