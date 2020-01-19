@@ -583,7 +583,7 @@ class table extends React.Component {
                     <th style={{width: "150px"}}>Fecha de Orden</th>
                     <th style={{width: "150px"}}>Numero</th>
                     <th style={{width: "150px"}}>Valor</th>
-                    <th style={{width: "400px"}}>Facturas</th>
+                    <th style={{width: "450px"}}>Facturas</th>
                     <th style={{width: "300px"}}>Descripción</th>
                     <th style={{width: "250px"}}>Estado</th>
                     <th style={{width: "120px"}}>Archivo</th>
