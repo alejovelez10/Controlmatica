@@ -654,6 +654,9 @@ class table extends React.Component {
                                 <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                               </tr>
                           ))}
+                              <tr>
+                                <td colSpan="3" style={{padding:"5px", textAlign:"center"}}><b>Total: </b><NumberFormat value={accion.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                              </tr>
                           </table>
                         </td>
                         <th>{accion.description}</th>

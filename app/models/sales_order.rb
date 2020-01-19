@@ -13,6 +13,7 @@
 #  updated_at     :datetime         not null
 #  user_id        :integer
 #  description    :text
+#  sum_invoices   :float
 #
 
 class SalesOrder < ApplicationRecord
