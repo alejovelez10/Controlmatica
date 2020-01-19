@@ -584,8 +584,9 @@ class table extends React.Component {
                     <th style={{width: "150px"}}>Numero</th>
                     <th style={{width: "150px"}}>Valor</th>
                     <th style={{width: "450px"}}>Facturas</th>
+                    <th style={{width: "200px"}}>Total Facturas</th>
                     <th style={{width: "300px"}}>Descripción</th>
-                    <th style={{width: "250px"}}>Estado</th>
+                    <th style={{width: "250px"}}>Estado Centro de Costo</th>
                     <th style={{width: "120px"}}>Archivo</th>
                     
                   </tr>
@@ -654,11 +655,10 @@ class table extends React.Component {
                                 <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                               </tr>
                           ))}
-                              <tr>
-                                <td colSpan="3" style={{padding:"5px", textAlign:"center"}}><b>Total: </b><NumberFormat value={accion.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                              </tr>
+                              
                           </table>
                         </td>
+                        <td><NumberFormat value={accion.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                         <th>{accion.description}</th>
                         <th>{accion.cost_center.invoiced_state}</th>
 

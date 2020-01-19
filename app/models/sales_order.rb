@@ -20,17 +20,18 @@ class SalesOrder < ApplicationRecord
   belongs_to :cost_center, optional: true
   mount_uploader :order_file, OrderUploader
   after_save :change_state_cost_center
-  has_many :customer_invoices
+  has_many :customer_invoices, dependent: :destroy
 
   def change_state_cost_center
     cost_center = CostCenter.find(self.cost_center_id)
-
+    sum_invoices = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
     sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
-    if (cost_center.quotation_value <= sales_order + 1000)
+    if (cost_center.quotation_value <= sales_order + 1000 && sum_invoices == 0)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+    elsif (sales_order > 0 && sales_order < cost_center.quotation_value && sum_invoices == 0 && sum_invoices == 0)
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
     end
   end
-
 
   def self.search(search1, search2, search3, search4, search5, search6)
     search1 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
@@ -42,5 +43,4 @@ class SalesOrder < ApplicationRecord
 
     fdesdep.fhastap.number.centro.estado.descripcion
   end
-  
 end

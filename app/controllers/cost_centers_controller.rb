@@ -73,7 +73,7 @@ class CostCentersController < ApplicationController
 
 
 
-    @cost_centers =  @cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] } })
+    @cost_centers =  @cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :sales_orders => { :only =>[:order_value] } })
 
 
     @cost_centers = JSON.parse(@cost_centers)

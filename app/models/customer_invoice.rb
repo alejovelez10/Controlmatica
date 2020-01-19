@@ -44,5 +44,4 @@ class CustomerInvoice < ApplicationRecord
     sales_order = SalesOrder.find(self.sales_order_id)
     sales_order.update(sum_invoices: sales_order.customer_invoices.sum(:invoice_value))
   end
-  
 end
