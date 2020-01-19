@@ -40,7 +40,13 @@ class SalesOrdersController < ApplicationController
     respond_to do |format|
 
       format.xls do
-      
+        
+        if params[:ids]
+          sales_orders = SalesOrder.where(id: params[:ids])
+        else
+          sales_orders = SalesOrder.all
+        end
+
         task = Spreadsheet::Workbook.new
         sheet = task.create_worksheet
         
@@ -49,7 +55,7 @@ class SalesOrdersController < ApplicationController
         size: 13,
         align: :left
 
-        SalesOrder.all.each.with_index(1) do |task, i|
+        sales_orders.each.with_index(1) do |task, i|
       
           position = sheet.row(i)
           
