@@ -24,9 +24,9 @@ class CustomerInvoice < ApplicationRecord
   belongs_to :sales_order
 
   after_save :change_state_cost_center
+  after_destroy :update_value
 
   def change_state_cost_center
-    puts "organizadooñlsadfjñlkasdfjñlasdfjñlkadsfjñlkadsjfñlkadsjflakjsdflñkasdjñlkadsjñadsñlkjasdlfkñdsajlñkfj"
     cost_center = CostCenter.find(self.cost_center_id)
     sales_order = SalesOrder.find(self.sales_order_id)
 
@@ -38,9 +38,11 @@ class CustomerInvoice < ApplicationRecord
     elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO PARCIAL")
     end
-
-    
-    
-
   end
+
+  def update_value
+    sales_order = SalesOrder.find(self.sales_order_id)
+    sales_order.update(sum_invoices: sales_order.customer_invoices.sum(:invoice_value))
+  end
+  
 end
