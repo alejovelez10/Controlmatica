@@ -23,9 +23,10 @@ class CustomerInvoice < ApplicationRecord
   belongs_to :cost_center, optional: true
   belongs_to :sales_order
 
-  after_create :change_state_cost_center
+  after_save :change_state_cost_center
 
   def change_state_cost_center
+    puts "organizadooñlsadfjñlkasdfjñlasdfjñlkadsfjñlkadsjfñlkadsjflakjsdflñkasdjñlkadsjñadsñlkjasdlfkñdsajlñkfj"
     cost_center = CostCenter.find(self.cost_center_id)
     sales_order = SalesOrder.find(self.sales_order_id)
 
