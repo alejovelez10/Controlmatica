@@ -56,23 +56,71 @@ class SalesOrdersController < ApplicationController
         size: 13,
         align: :left
 
-        sales_orders.each.with_index(1) do |task, i|
-      
-          position = sheet.row(i)
+
+        state = false
+        i = 1
+        sales_orders.order(created_date: :desc).each.with_index(1) do |task, x|
           
+
+          
+
+
+          facturas_count = 0 
+          if task.customer_invoices.count > 0
+
+              task.customer_invoices.order(invoice_date: :desc).each do |invoice|
+              puts i
+              
+              position = sheet.row(i)
+              sheet.row(1).default_format = rows_format    
+              position[0] = invoice.sales_order.cost_center.code
+              position[1] = invoice.sales_order.cost_center.customer.name
+              position[2] = invoice.sales_order.order_number 
+              position[3] = invoice.sales_order.created_date
+              position[4] = facturas_count == 0 ? invoice.sales_order.order_value : 0
+              position[5] = invoice.sales_order.description
+              position[6] = invoice.number_invoice
+              position[7] = invoice.invoice_date
+              position[8] = invoice.invoice_value
+              position[9] = facturas_count == 0 ? invoice.sales_order.customer_invoices.sum(:invoice_value) : 0 
+              position[10] = invoice.sales_order.cost_center.invoiced_state
+              sheet.row(i).height = 25
+              sheet.column(i).width = 40
+              sheet.row(i).default_format = rows_format
+              i = (i + 1)  
+              
+
+              facturas_count = 1
+            
+            end
+
+
+           
+            
+
+          else
+
+          position = sheet.row(i)
+          puts "lñdsfjasdklñfjdsañasdflksdaflasdñlfasdñflksdjafklsadjfñasdjkfasdlfajkljñkl"
           sheet.row(1).default_format = rows_format    
           position[0] = task.cost_center.code
-          position[1] = task.created_date
-          position[2] = task.order_number
-          position[3] = task.order_value
-          position[4] = task.description
-          position[5] = "asdasdasd" #task.customer_invoices.sum(:invoice_value)
-          
+          position[1] = task.cost_center.customer.name
+          position[2] = task.order_number 
+          position[3] = task.created_date
+          position[4] = task.order_value
+          position[5] = task.description
+          position[6] = task.description
+          position[7] = task.description
+          position[8] = task.description
+          position[9] = task.customer_invoices.sum(:invoice_value)
+          position[10] = task.cost_center.invoiced_state
+          i = i + 1
+          end
           
           sheet.row(i).height = 25
           sheet.column(i).width = 40
           sheet.row(i).default_format = rows_format
-        
+          
         end
         
         
@@ -90,11 +138,16 @@ class SalesOrdersController < ApplicationController
         position = sheet.row(0)
         
         position[0] = "Centro de costo"
-        position[1] = "Fecha de Generacion"
-        position[2] = "Numero"
-        position[3] = "Valor"
-        position[4] = "Descripcion"
-        position[5] = "Facturas"
+        position[1] = "Cliente"
+        position[2] = "Numero de Orden"
+        position[3] = "Fecha"
+        position[4] = "Valor"
+        position[5] = "Descripcion"
+        position[6] = "Numero Factura"
+        position[7] = "Fecha Factura"
+        position[8] = "Valor Factura"
+        position[9] = "Total Facturas"
+        position[10] = "Estado"
 
         
       
@@ -107,13 +160,20 @@ class SalesOrdersController < ApplicationController
         
         sheet.column(1).width = 40
         
-        sheet.column(2).width = 40
+        sheet.column(2).width = 30
         
-        sheet.column(3).width = 40
+        sheet.column(3).width = 30
         
         sheet.column(4).width = 40
         
-        sheet.column(5).width = 50
+        sheet.column(5).width = 40
+
+        sheet.column(6).width = 40
+
+        sheet.column(7).width = 30
+        sheet.column(8).width = 30
+        sheet.column(9).width = 30
+        sheet.column(10).width = 40
         
         
         sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
