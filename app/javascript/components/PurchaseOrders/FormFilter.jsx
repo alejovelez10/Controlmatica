@@ -83,15 +83,19 @@ class FormFilter extends Component {
                   </div>
 
                   <div className="col-md-3 imput-filter mt-3">
-                  <label>Estado</label>
-                    <input
-                      className="form form-control"
-                      type="text"
-                      name="state"
-                      placeholder="Estado de orden"
-                      onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.state}
-                    />
+                  <label>Estado de centro de costo</label>
+                    <select 
+                        name="state" 
+                        className="form form-control"
+                        onChange={this.props.onChangeFilter}
+                        value={this.props.formValuesFilter.state}
+                    >   
+                        <option value="">Seleccione un estado</option>
+                        <option value="LEGALIZADO">LEGALIZADO</option>
+                        <option value="FACTURADO">FACTURADO</option>
+                        <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
+                        <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
+                    </select>
                   </div>
 
                   <div className="col-md-3 imput-filter mt-3">
