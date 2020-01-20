@@ -87,7 +87,7 @@ Rails.application.routes.draw do
   get "download_file/contractors", to: "contractors#download_file"
   get "download_file/materials", to: "materials#download_file"
   get "download_file/customer_reports", to: "customer_reports#download_file"
-  get "download_file/sales_orders", to: "sales_orders#download_file"
+  get "download_file/sales_orders(/:ids)", to: "sales_orders#download_file"
 
 
   get "update_load/:id", to: "material_invoices#update_load"
