@@ -95,6 +95,16 @@ class table extends React.Component {
       });
   };
 
+  range(array) {
+    let ids = []
+
+    array.map((item) => (
+      ids.push(item.id)
+    ))
+
+    return ids
+  }
+
   validationForm = () => {
     if (this.state.form.created_date != "" && 
         this.state.form.order_number != "" &&
@@ -112,7 +122,7 @@ class table extends React.Component {
     }
   }
 
-  componentDidMount() {
+  componentDidMount = () => {
     let array = []
 
     this.props.cost_centers.map((item) => (
@@ -501,7 +511,7 @@ class table extends React.Component {
 
                         <a
                           className=" mr-2"
-                          href={`/download_file/sales_orders.xls`}
+                          href={`/download_file/sales_orders/${this.range(this.props.dataActions)}.xls`}
                           target="_blank"
                         >
                           <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>

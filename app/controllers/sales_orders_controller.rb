@@ -42,7 +42,8 @@ class SalesOrdersController < ApplicationController
       format.xls do
         
         if params[:ids]
-          sales_orders = SalesOrder.where(id: params[:ids])
+          id =  params[:ids].split(",")
+          sales_orders = SalesOrder.where(id: id)
         else
           sales_orders = SalesOrder.all
         end
