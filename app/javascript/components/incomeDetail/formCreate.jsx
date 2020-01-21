@@ -111,7 +111,7 @@ class formCreate extends React.Component {
                             <div className="col-md-4">
                             <label>Numero de factura <small className="validate-label">*</small></label>
                               <input
-                                type="number"
+                                type="text"
                                 name="number"
                                 onChange={this.props.onChangeForm}
                                 value={this.props.formValues.number}
