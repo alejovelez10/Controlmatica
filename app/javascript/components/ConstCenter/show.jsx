@@ -830,8 +830,11 @@ class Show extends React.Component {
                                                 <option value="">Seleccione un tipo</option>
                                                 <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
                                                 <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
-                                                <option value="FACTURADO">FACTURADO</option>
                                                 <option value="LEGALIZADO">LEGALIZADO</option>
+                                                <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
+                                                <option value="FACTURADO">FACTURADO</option>
+                                                <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
+                                          
                                             </select> 
                                     ) : (
                                             <React.Fragment>

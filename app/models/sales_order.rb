@@ -21,6 +21,7 @@ class SalesOrder < ApplicationRecord
   mount_uploader :order_file, OrderUploader
   after_save :change_state_cost_center
   has_many :customer_invoices, dependent: :destroy
+  after_destroy :change_state_cost_center_destroy
 
   def change_state_cost_center
     cost_center = CostCenter.find(self.cost_center_id)
@@ -34,9 +35,8 @@ class SalesOrder < ApplicationRecord
   end
 
   def self.search(search1, search2, search3, search4, search5, search6)
-
     if search5.present?
-        search5 = CostCenter.find_by_invoiced_state(search5)
+      search5 = CostCenter.find_by_invoiced_state(search5)
     end
 
     search1 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
@@ -44,10 +44,26 @@ class SalesOrder < ApplicationRecord
     search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
 
-    search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.id : nil ) }) : (scope :estado, -> { where.not(id: nil) })
+    search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.id : nil) }) : (scope :estado, -> { where.not(id: nil) })
 
     search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
 
     fdesdep.fhastap.number.centro.estado.descripcion
+  end
+
+  def change_state_cost_center_destroy
+    cost_center = CostCenter.find(self.cost_center_id)
+    puts "afadsfadsfadsfasdfasdfassfasdf"
+    sum_invoices = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
+    sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
+    if (cost_center.quotation_value <= sales_order + 1000 && sum_invoices == 0)
+      puts "2222222222222222"
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+    elsif (sales_order > 0 && sales_order < cost_center.quotation_value && sum_invoices == 0 && sum_invoices == 0)
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
+      puts "afadsfadsfadsfasdfasdfassfasdf11111"
+    elsif (sales_order == 0 && sum_invoices == 0)
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
+    end
   end
 end
