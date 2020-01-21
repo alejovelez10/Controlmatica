@@ -36,7 +36,7 @@ class SalesOrder < ApplicationRecord
 
   def self.search(search1, search2, search3, search4, search5, search6)
     if search5.present?
-      search5 = CostCenter.find_by_invoiced_state(search5)
+      search5 = CostCenter.where(invoiced_state: search5)
     end
 
     search1 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
@@ -44,7 +44,7 @@ class SalesOrder < ApplicationRecord
     search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
 
-    search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.id : nil) }) : (scope :estado, -> { where.not(id: nil) })
+    search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.ids : nil) }) : (scope :estado, -> { where.not(id: nil) })
 
     search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
 
