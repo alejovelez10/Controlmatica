@@ -512,8 +512,14 @@ class tableIndex extends React.Component {
 
 
   get_btn(accion){
-    console.log("añsldfjlkads")
-    if (accion.execution_state == "FINALIZADO" && accion.invoiced_state == "FACTURADO") {
+    if (accion.execution_state == "EJECUCION") {
+      return <button className="btn btn-primary" onClick={() => this.updateState(accion)}>Finalizar</button> 
+    }else{
+      return "" 
+    }
+    
+    /*
+    }else if (accion.execution_state == "FINALIZADO" && accion.invoiced_state == "FACTURADO") {
       return ""  
 
     }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "PENDIENTE DE COTIZACION"){
@@ -531,6 +537,8 @@ class tableIndex extends React.Component {
     }else if(accion.execution_state == "FINALIZADO" && accion.invoiced_state == "POR FACTURAR"){
       return ""
     }
+
+    */
   }
 
 
