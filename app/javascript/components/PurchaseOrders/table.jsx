@@ -590,6 +590,7 @@ class table extends React.Component {
                   <tr className="tr-title">
                   <th style={{width: "90px"}} className="text-center">Acciones</th>
                     <th style={{width: "150px"}}>Centro de costo</th>
+                    <th style={{width: "150px"}}>Cliente</th>
                     <th style={{width: "150px"}}>Fecha de Orden</th>
                     <th style={{width: "150px"}}>Numero</th>
                     <th style={{width: "150px"}}>Valor</th>
@@ -648,6 +649,7 @@ class table extends React.Component {
                           </div>  
                         </td>
                         <td>{accion.cost_center.code}</td>
+                        <td>{accion.cost_center.customer.name}</td>
                         <td><p>{accion.created_date}</p></td>
                         <td><p>{accion.order_number}</p></td>
                         <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
