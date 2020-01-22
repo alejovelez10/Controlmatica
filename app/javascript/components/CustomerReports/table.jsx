@@ -431,7 +431,7 @@ class table extends React.Component {
 
         Swal.fire({
           title: 'Enviando...',
-          html: 'El correo se estan enviando, espera <b></b> minutos',
+          html: 'El correo se estan enviando, espera <b></b> unos segundos',
           timerProgressBar: true,
           onBeforeOpen: () => {
             Swal.showLoading()

@@ -284,6 +284,7 @@ class CustomerReportsController < ApplicationController
   def aprobar_informe
     @customer_report = CustomerReport.where(token: params[:token]).first
     @customer_report.update(report_state: "Aprobado", approve_date: Date.today)
+    CustormerReportMailer.approval_customer_email(@customer_report).deliver
     @customer_report.reports.each do |report|
       report.report_sate = true
       report.save
