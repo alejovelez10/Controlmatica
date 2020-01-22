@@ -251,13 +251,13 @@ class index extends React.Component {
                       <div className="col-md-12" style={{ marginTop: "50px" }}>
                         <div className="row">
 
-                          <div className="col-md-9 text-left pl-0">
+                          <div className="col-md-7 text-left pl-0">
                               <p>
                                   Mostrando {this.state.data.length} de {this.state.reports_total}
                               </p>
                           </div>
 
-                          <div className="col-md-3 p-0 text-right">
+                          <div className="col-md-5 p-0 text-right">
                             <Pagination
                               hideNavigation
                               activePage={this.state.activePage}
