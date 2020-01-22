@@ -79,7 +79,6 @@ class CostCenter < ApplicationRecord
     self.sum_contractors = 0
     self.sum_materials = 0
     self.sum_viatic = 0
-
     if self.start_date.present?
       año = self.start_date
     else
@@ -98,7 +97,7 @@ class CostCenter < ApplicationRecord
     self.code = prefix + "-" + customer_prefix + "-" + self.count.to_s + "-" + año.year.to_s
     self.hour_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     self.hour_cotizada = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
-    self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
+    self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" || self.quotation_number == "N/A" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
   end
 
   def calculate_costo
@@ -121,7 +120,7 @@ class CostCenter < ApplicationRecord
 
     puts self.invoiced_state == "PENDIENTE DE COTIZACION"
 
-    if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil?
+    if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil?  && (self.quotation_number != "N/A")
       puts("hoasfhasddaslkdjdkljskfa")
       self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
     end
