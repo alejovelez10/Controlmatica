@@ -431,8 +431,6 @@ class table extends React.Component {
     fetch(`/customer_user/${modulo.customer_id}`)
     .then(response => response.json())
     .then(data => {
-      console.log("aaaaaaaaaaaaaaaaaaaaaaaaaa")
-      console.log(data)
 
       data.map((item) => (
         arrayCentro.push({label: item.code, value: item.id})
