@@ -426,39 +426,57 @@ class table extends React.Component {
 
     this.toggle("edit")
 
+    let arrayCentro = []
+
+    fetch(`/customer_user/${modulo.customer_id}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log("aaaaaaaaaaaaaaaaaaaaaaaaaa")
+      console.log(data)
+
+      data.map((item) => (
+        arrayCentro.push({label: item.code, value: item.id})
+      ))
+
+      this.setState({
+        dataCostCenter: arrayCentro
+      })
+      
+    });
+
       this.setState({
         action: modulo,
         title: "Editar Reporte",
-        form: {
-          customer_id: modulo.customer_id,
-          contact_id: modulo.contact_id,
-          cost_center_id: modulo.cost_center_id,
-          report_date: modulo.report_date,
-          report_execute_id: modulo.report_execute_id,
-          working_time: modulo.working_time,
-          work_description: modulo.work_description,
-          viatic_value: modulo.viatic_value,
-          viatic_description: modulo.viatic_description,
-          report_code: modulo.report_code,
-          user_id: this.props.usuario.id,
-          displacement_hours: modulo.displacement_hours,
-          value_displacement_hours: modulo.value_displacement_hours,
-        },
+          form: {
+            customer_id: modulo.customer_id,
+            contact_id: modulo.contact_id,
+            cost_center_id: modulo.cost_center_id,
+            report_date: modulo.report_date,
+            report_execute_id: modulo.report_execute_id,
+            working_time: modulo.working_time,
+            work_description: modulo.work_description,
+            viatic_value: modulo.viatic_value,
+            viatic_description: modulo.viatic_description,
+            report_code: modulo.report_code,
+            user_id: this.props.usuario.id,
+            displacement_hours: modulo.displacement_hours,
+            value_displacement_hours: modulo.value_displacement_hours,
+          },
 
-        selectedOption: {
-          customer_id: modulo.customer_id,
-          label: `${modulo.customer.name}`
-        },
+          selectedOption: {
+            customer_id: modulo.customer_id,
+            label: `${modulo.customer.name}`
+          },
 
-        selectedOptionContact: {
-          contact_id: modulo.contact_id,
-          label: `${modulo.contact.name}`
-        },
+          selectedOptionContact: {
+            contact_id: modulo.contact_id,
+            label: `${modulo.contact.name}`
+          },
 
-        selectedOptionCentro: {
-          cost_center_id: modulo.cost_center_id,
-          label: `${modulo.cost_center.code}`
-        },
+          selectedOptionCentro: {
+            cost_center_id: modulo.cost_center_id,
+            label: `${modulo.cost_center.code}`
+          },
         
         }
         
