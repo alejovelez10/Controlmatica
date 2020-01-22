@@ -454,6 +454,11 @@ class table extends React.Component {
           contact_id: modulo.contact_id,
           label: `${modulo.contact.name}`
         },
+
+        selectedOptionCentro: {
+          cost_center_id: modulo.cost_center_id,
+          label: `${modulo.cost_center.code}`
+        },
         
         }
         
