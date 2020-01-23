@@ -708,8 +708,8 @@ class tableIndex extends React.Component {
                         <th className="text-center">{accion.execution_state}</th>
                         <th className="text-center">{accion.invoiced_state}</th>      
                         <th>{accion.quotation_number}</th>
-                        <th><NumberFormat value={accion.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
-                        <th><NumberFormat value={accion.sum_executed} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.engineering_value + (accion.value_displacement_hours * accion.displacement_hours)} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                        <th><NumberFormat value={accion.sum_materials_costo + accion.offset_value } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.sum_viatic} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={ this.get_sales_orders(accion.sales_orders) } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
