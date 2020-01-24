@@ -37,6 +37,8 @@ class index extends React.Component {
               customer_id: "",
               label: "Buscar cliente"
             },
+
+            filtering: false,
       
             dataCostCenter: [],
             dataUsers: [],
@@ -166,6 +168,7 @@ class index extends React.Component {
           this.setState({
             data: data.reports_paginate,
             reports_total: data.reports_total,
+            filtering: true
           });
         });
     };
@@ -188,7 +191,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}`) 
+      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({ 
