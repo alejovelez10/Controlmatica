@@ -834,6 +834,7 @@ class Show extends React.Component {
                                                 <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
                                                 <option value="FACTURADO">FACTURADO</option>
                                                 <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
+                                                <option value="POR FACTURAR">POR FACTURAR</option>
                                           
                                             </select> 
                                     ) : (
