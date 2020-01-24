@@ -12,6 +12,8 @@ class indexTable extends React.Component {
             data: [],
             isLoaded: false,
             show_filter: false,
+            filtering: false,
+
             formFilter: {
               descripcion: "",
               customer_id: "",
@@ -82,6 +84,8 @@ class indexTable extends React.Component {
     if (valor == true) {
       this.setState({ 
         show_filter: false,
+        filtering: false,
+        
         formFilter: {
           descripcion: "",
           customer_id: "",
@@ -98,7 +102,7 @@ class indexTable extends React.Component {
 
       this.loadData();
     }else{
-      this.setState({ show_filter: true });
+      this.setState({ show_filter: true, filtering: true });
     }
   }
   
@@ -136,7 +140,7 @@ class indexTable extends React.Component {
 
 
   HandleClickFilter = e => {
-    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}`)
+    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -165,10 +169,13 @@ class indexTable extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}`) 
+    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}&descripcion=${this.state.filtering == true ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.filtering == true ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.filtering == true ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`) 
       .then(response => response.json())
       .then(data => {
-        this.setState({ data: data.cost_centers_paginate });
+        this.setState({ 
+          data: data.cost_centers_paginate,
+          cost_centers_total: data.cost_centers_total,
+        });
       });
      
   };

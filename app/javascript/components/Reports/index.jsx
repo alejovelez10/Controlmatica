@@ -50,7 +50,6 @@ class index extends React.Component {
         fetch("/get_reports")
         .then(response => response.json())
         .then(data => {
-          console.log(data)
           this.setState({
             data: data.reports_paginate,
             reports_total: data.reports_total
@@ -118,10 +117,10 @@ class index extends React.Component {
 
     showFilter = valor => {
       if (valor == true) {
-        this.setState({ show_filter: false });
+        this.setState({ show_filter: false, filtering: false  });
         this.loadData();
       } else {
-        this.setState({ show_filter: true });
+        this.setState({ show_filter: true, filtering: true });
       }
       
       this.setState({
@@ -157,20 +156,20 @@ class index extends React.Component {
         formFilter: {
           ...this.state.formFilter,
           [e.target.name]: e.target.value
-        }
+        },
       });
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}`)
+      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&filtering=${this.state.filtering}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
             data: data.reports_paginate,
             reports_total: data.reports_total,
-            filtering: true
+            activePage: 1
           });
-        });
+      });
     };
 
     change = e => {
@@ -191,7 +190,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}`) 
+      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&work_description=${this.state.filtering == true ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.filtering == true ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.filtering == true ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.filtering == true ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.filtering == true ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined  ? this.state.formFilter.customer_id : ""}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({ 
@@ -201,6 +200,10 @@ class index extends React.Component {
         });
        
     };
+
+    /*
+    asdasdasd
+    */
 
 
     render() {

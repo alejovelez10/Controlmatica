@@ -10,6 +10,8 @@ class index extends React.Component {
         this.state = {
             data: [],
             show_filter: false,
+            filtering: false,
+
             formFilter: {
               date_desde: "",
               date_hasta: "",
@@ -74,10 +76,10 @@ class index extends React.Component {
 
     showFilter = valor => {
       if (valor == true) {
-        this.setState({ show_filter: false });
+        this.setState({ show_filter: false, filtering: false  });
         this.loadData();
       } else {
-        this.setState({ show_filter: true });
+        this.setState({ show_filter: true, filtering: true  });
       }
       
       this.setState({
@@ -109,7 +111,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}`)
+      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}&filtering=${this.state.filtering}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -138,7 +140,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}`) 
+      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&date_desde=${this.state.filtering == true ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.filtering == true ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.filtering == true ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.filtering == true ? this.state.formFilter.state : ""}&description=${this.state.filtering == true ? this.state.formFilter.description : ""}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({           
