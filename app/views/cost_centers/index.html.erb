@@ -1,5 +1,5 @@
 <%= javascript_pack_tag 'ConstCenter' %> 
-<%= react_component('ConstCenter', usuario: current_user, clientes: get_customer, estados: @estados, hours_real: @hours_real, hours_invoices: @hours_invoices) %>
+<%= react_component('ConstCenter', usuario: current_user, clientes: get_customer,cost_center: get_cost_center, estados: @estados, hours_real: @hours_real, hours_invoices: @hours_invoices) %>
 
 
 

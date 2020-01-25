@@ -43,6 +43,21 @@ class FormFilter extends Component {
                       value={this.props.formValuesFilter.descripcion}
                     />
                   </div>
+                  <div className="col-md-3">
+                      <input
+                        type="hidden"
+                        name="cost_center_id"
+                        value={this.props.formAutocompleteCentro.cost_center_id}
+                      />
+                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteCentro}
+                        options={this.props.centro}
+                        autoFocus={false}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
+                        value={this.props.formAutocompleteCentro}
+                      />
+                  </div>
 
                   <div className="col-md-3 imput-filter">
                     <label>Clientes</label>

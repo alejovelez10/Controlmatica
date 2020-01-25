@@ -79,7 +79,7 @@
         <% @customer_report.reports.each do |report|%>
         <tr>
           <td style="width: 12%; text-align: center;"><%=report.report_date%></td>
-          <td style="width: 12%; text-align: center;"><%=report.working_time + report.displacement_hours%></td>
+          <td style="width: 12%; text-align: center;"><%=report.working_time%></td>
           <td style="width: 12%; text-align: center;"><%=report.report_execute.names %> <%=report.report_execute.last_names%></td>
           <td style="width: 50%"><%=report.work_description%></td>
           <td style="width: 12%"><%=report.contact_name%></td>

@@ -31,6 +31,13 @@ class indexTable extends React.Component {
             },
 
             clients: [],
+
+            selectedOptionCentro: {
+              cost_center_id: "",
+              label: "Centro de costo"
+            },
+      
+            dataCostCenter: []
         }
     }
 
@@ -76,6 +83,17 @@ class indexTable extends React.Component {
           clients: arrayClients,
       })
 
+
+      let array_cost_center = []
+
+      this.props.cost_center.map((item) => (
+        array_cost_center.push({label: item.code, value: item.id})
+      ))
+  
+      this.setState({
+        dataCostCenter: array_cost_center
+      })
+
       this.loadData()
     }
 
@@ -96,6 +114,10 @@ class indexTable extends React.Component {
         selectedOption: {
           customer_id: "",
           label: "Buscar cliente"
+        },
+        selectedOptionCentro: {
+          cost_center_id: "",
+          label: "Centro de costo"
         },
     
       });
@@ -140,7 +162,7 @@ class indexTable extends React.Component {
 
 
   HandleClickFilter = e => {
-    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`)
+    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -180,6 +202,16 @@ class indexTable extends React.Component {
      
   };
 
+  handleChangeAutocompleteCentro = selectedOptionCentro => {
+    this.setState({
+      selectedOptionCentro,
+      formFilter: {
+        ...this.state.formFilter,
+        cost_center_id: selectedOptionCentro.value
+      }
+    });
+  };
+
 
     render() {
         return (
@@ -197,6 +229,13 @@ class indexTable extends React.Component {
                 formAutocompleteCustomer={this.state.selectedOption}
                 onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
                 clientes={this.state.clients}
+
+                   /* AUTOCOMPLETE CENTRO DE COSTO */
+
+                   centro={this.state.dataCostCenter}
+                   onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                   formAutocompleteCentro={this.state.selectedOptionCentro}
+
               />
             </div>
 
