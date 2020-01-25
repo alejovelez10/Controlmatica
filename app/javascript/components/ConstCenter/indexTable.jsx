@@ -17,7 +17,9 @@ class indexTable extends React.Component {
             formFilter: {
               descripcion: "",
               customer_id: "",
+              cost_center_id: "",
               execution_state: "",
+              service_type: "",
               invoiced_state: ""
             },
 
@@ -107,6 +109,8 @@ class indexTable extends React.Component {
         formFilter: {
           descripcion: "",
           customer_id: "",
+          cost_center_id: "",
+          service_type:"",
           execution_state: "",
           invoiced_state: ""
         },
@@ -134,7 +138,9 @@ class indexTable extends React.Component {
       formFilter: {
         descripcion: "",
         customer_id: "",
+        cost_center_id: "",
         execution_state: "",
+        service_type: "",
         invoiced_state: ""
       },
 
@@ -162,7 +168,7 @@ class indexTable extends React.Component {
 
 
   HandleClickFilter = e => {
-    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`)
+    fetch(`/get_cost_centers?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&service_type=${this.state.formFilter.service_type != undefined ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`)
       .then(response => response.json())
       .then(data => {
         this.setState({

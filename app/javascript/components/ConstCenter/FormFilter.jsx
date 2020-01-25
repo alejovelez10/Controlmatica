@@ -31,19 +31,7 @@ class FormFilter extends Component {
             <div className="tile-body">
               <form onSubmit={this.handleSubmit}>
                 <div className="row">
-
                 <div className="col-md-3">
-                   <label>Descripcion</label>
-                    <input
-                      className="form form-control"
-                      type="text"
-                      name="descripcion"
-                      placeholder="Descripcion"
-                      onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.descripcion}
-                    />
-                  </div>
-                  <div className="col-md-3">
                       <input
                         type="hidden"
                         name="cost_center_id"
@@ -74,7 +62,35 @@ class FormFilter extends Component {
                         value={this.props.formAutocompleteCustomer}
                       />
                     </div>
+                <div className="col-md-3">
+                   <label>Descripcion</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="descripcion"
+                      placeholder="Descripcion"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.descripcion}
+                    />
+                  </div>
 
+                  <div className="col-md-3 imput-filter">
+                  <label>Tipo</label>
+                    <select 
+                        name="service_type" 
+                        className="form form-control"
+                        onChange={ this.props.onChangeFilter }
+                        value={ this.props.formValuesFilter.service_type }
+                        >   
+                        <option value="">Seleccione un estado</option>
+                        <option value="PROYECTO">PROYECTO</option>
+                        <option value="SERVICIO">SERVICIO</option>
+                        <option value="VENTA">VENTA</option>
+                    </select>
+                  </div>
+                  </div>
+                  <br/>
+                  <div className="row">
                   <div className="col-md-3 imput-filter">
                   <label>Estado de ejecución</label>
                     <select 
