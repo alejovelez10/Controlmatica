@@ -39,8 +39,8 @@ class SalesOrder < ApplicationRecord
       search5 = CostCenter.where(invoiced_state: search5)
     end
 
-    search1 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search2 != "" ? (scope :fhastap, -> { where(["created_at < ?", search2]) }) : (scope :fhastap, -> { where.not(id: nil) })
+    search1 != "" ? (scope :fdesdep, -> { where(["created_date >= ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
+    search2 != "" ? (scope :fhastap, -> { where(["created_date <= ?", search2]) }) : (scope :fhastap, -> { where.not(id: nil) })
     search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
 

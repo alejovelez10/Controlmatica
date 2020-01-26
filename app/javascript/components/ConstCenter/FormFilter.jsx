@@ -31,6 +31,29 @@ class FormFilter extends Component {
             <div className="tile-body">
               <form onSubmit={this.handleSubmit}>
                 <div className="row">
+                <div className="col-md-3 imput-filter">
+                  <label>Fecha desde</label>
+                    <input
+                      className="form form-control"
+                      type="date"
+                      name="start_date"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.date_desde}
+                    />
+                  </div>
+
+                  <div className="col-md-3 imput-filter">
+                  <label>Fecha hasta</label>
+                    <input
+                      className="form form-control"
+                      type="date"
+                      name="end_date"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.date_hasta}
+                    />
+                  </div>
+
+
                 <div className="col-md-3">
                       <input
                         type="hidden"
@@ -123,6 +146,18 @@ class FormFilter extends Component {
                         <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
                         <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
                     </select>
+                  </div>
+
+                  <div className="col-md-3">
+                   <label># Cotización</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="quotation_number"
+                      placeholder="Descripcion"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.quotation_number}
+                    />
                   </div>
 
 
