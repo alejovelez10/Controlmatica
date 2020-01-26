@@ -74,7 +74,7 @@ class CostCenter < ApplicationRecord
       search6 != "" ? (scope :service_type_scope, -> { where(service_type: search6) }) : (scope :service_type_scope, -> { where.not(id: nil) })
       search7 != "" ? (scope :date_desde_type_scope, -> { where(["start_date >= ?", search7]) }) : (scope :date_desde_type_scope, -> { where.not(id: nil) })
       search8 != "" ? (scope :date_hasta_type_scope, -> { where(["start_date <= ?", search8]) }) : (scope :date_hasta_type_scope, -> { where.not(id: nil) })
-      search9 != "" ? (scope :quotation_number_scope, -> { where(quotation_number: search9) }) : (scope :quotation_number_scope, -> { where.not(id: nil) })
+      search9 != "" ? (scope :quotation_number_scope, -> { where("quotation_number like '%#{search9.downcase}%' or quotation_number like '%#{search9.upcase}%' or quotation_number like '%#{search9.capitalize}%' ") }) : (scope :quotation_number_scope, -> { where.not(id: nil) })
 
       descripcion.customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope.quotation_number_scope
     end

@@ -32,18 +32,18 @@ class FormFilter extends Component {
               <form onSubmit={this.handleSubmit}>
                 <div className="row">
                 <div className="col-md-3 imput-filter">
-                  <label>Fecha desde</label>
+                  <label>Fecha Inicio (desde)</label>
                     <input
                       className="form form-control"
                       type="date"
                       name="start_date"
                       onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.date_desde}
+                      value={this.props.formValuesFilter.start_date}
                     />
                   </div>
 
                   <div className="col-md-3 imput-filter">
-                  <label>Fecha hasta</label>
+                  <label>Fecha Inicio (desde)</label>
                     <input
                       className="form form-control"
                       type="date"
@@ -85,17 +85,12 @@ class FormFilter extends Component {
                         value={this.props.formAutocompleteCustomer}
                       />
                     </div>
-                <div className="col-md-3">
-                   <label>Descripcion</label>
-                    <input
-                      className="form form-control"
-                      type="text"
-                      name="descripcion"
-                      placeholder="Descripcion"
-                      onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.descripcion}
-                    />
-                  </div>
+                    </div>
+                 
+                    <div className="row mt-3">
+           
+
+          
 
                   <div className="col-md-3 imput-filter">
                   <label>Tipo</label>
@@ -111,9 +106,6 @@ class FormFilter extends Component {
                         <option value="VENTA">VENTA</option>
                     </select>
                   </div>
-                  </div>
-                  <br/>
-                  <div className="row">
                   <div className="col-md-3 imput-filter">
                   <label>Estado de ejecución</label>
                     <select 
@@ -147,7 +139,6 @@ class FormFilter extends Component {
                         <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
                     </select>
                   </div>
-
                   <div className="col-md-3">
                    <label># Cotización</label>
                     <input
@@ -157,6 +148,22 @@ class FormFilter extends Component {
                       placeholder="Descripcion"
                       onChange={this.props.onChangeFilter}
                       value={this.props.formValuesFilter.quotation_number}
+                    />
+                  </div>
+                  </div>
+                  
+                  <div className="row mt-3">
+             
+
+                  <div className="col-md-6">
+                   <label>Descripcion</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="descripcion"
+                      placeholder="Descripcion"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.descripcion}
                     />
                   </div>
 
