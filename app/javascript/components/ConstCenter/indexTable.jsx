@@ -140,7 +140,6 @@ class indexTable extends React.Component {
   }
   
   cancelFilter = () => {
-    console.log("cancelFilter")
     this.setState({
       formFilter: {
         descripcion: "",
@@ -207,7 +206,7 @@ class indexTable extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}&descripcion=${this.state.filtering == true ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.filtering == true ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.filtering == true ? this.state.formFilter.invoiced_state : ""}&filtering=${this.state.filtering}`) 
+    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}&descripcion=${this.state.filtering == true ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&execution_state=${this.state.filtering == true ? this.state.formFilter.execution_state : ""}&invoiced_state=${this.state.filtering == true ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.filtering == true && this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : ""}&date_hasta=${this.state.filtering == true && this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&quotation_number=${this.state.filtering == true ? this.state.formFilter.quotation_number : ""}&filtering=${this.state.filtering}`) 
       .then(response => response.json())
       .then(data => {
         this.setState({ 
@@ -286,13 +285,13 @@ class indexTable extends React.Component {
                       <div className="col-md-12" style={{ marginTop: "50px" }}>
                         <div className="row">
 
-                          <div className="col-md-9 text-left pl-0">
+                          <div className="col-md-5 text-left pl-0">
                               <p>
                                   Mostrando {this.state.data.length} de {this.state.cost_centers_total}
                               </p>
                           </div>
 
-                          <div className="col-md-3 p-0 text-right">
+                          <div className="col-md-6 p-0 text-right">
                             <Pagination
                               hideNavigation
                               activePage={this.state.activePage}

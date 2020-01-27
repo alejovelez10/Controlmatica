@@ -44,7 +44,7 @@ class CostCentersController < ApplicationController
     if validate
       
       if params[:filtering] == "true"
-        @cost_centers = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => params[:filter]).order(id: :desc)
+        @cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => params[:filter]).order(id: :desc)
         @cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
 
       elsif params[:filtering] == "false"

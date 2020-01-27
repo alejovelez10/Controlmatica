@@ -131,7 +131,6 @@ class tableIndex extends React.Component {
     fetch(`/get_client/${selectedOption.value}/centro`)
     .then(response => response.json())
     .then(data => {
-      console.log(data)
 
       data.map((item) => (
         array.push({label: item.name, value: item.id})
@@ -451,7 +450,6 @@ class tableIndex extends React.Component {
   }
 
   edit = modulo => {
-    console.log(modulo)
     if(this.state.modeEdit === true){
       this.setState({modeEdit: false})
     }else{
@@ -459,6 +457,22 @@ class tableIndex extends React.Component {
     }
 
     this.toggle("edit")
+
+    let array = []
+
+    fetch(`/get_client/${modulo.contact_id}/centro`)
+    .then(response => response.json())
+    .then(data => {
+
+      data.map((item) => (
+        array.push({label: item.name, value: item.id})
+      ))
+
+      this.setState({
+        dataContact: array
+      })
+
+    });
 
       this.setState({
 
@@ -543,7 +557,6 @@ class tableIndex extends React.Component {
 
 
   get_sales_orders(sales_orders){
-    console.log(sales_orders)
     var acumulado = 0;
     sales_orders.forEach(element => {
         acumulado = acumulado + element.order_value 
