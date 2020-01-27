@@ -111,6 +111,22 @@ class FormFilter extends Component {
                     />
                   </div>
 
+                  <div className="col-md-3 imput-filter mt-3">
+                    <label>Clientes</label>
+                      <input
+                        type="hidden"
+                        name="customer"
+                        value={this.props.formAutocompleteCustomer.customer}
+                      />
+                      <Select
+                        options={this.props.clientes}
+                        autoFocus={false}
+                        className={`link-form`}
+                        onChange={this.props.onChangeAutocompleteCustomer}
+                        value={this.props.formAutocompleteCustomer}
+                      />
+                  </div>
+
 
 
 

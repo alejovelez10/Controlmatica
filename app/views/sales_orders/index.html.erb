@@ -1,2 +1,2 @@
 <%= javascript_pack_tag 'SalesOrders' %> 
-<%= react_component('SalesOrders', usuario: current_user, estados: @estados, cost_centers: get_cost_center) %>
+<%= react_component('SalesOrders', usuario: current_user, estados: @estados, cost_centers: get_cost_center, clientes: get_customer) %>

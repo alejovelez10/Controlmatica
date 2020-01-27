@@ -7,7 +7,7 @@ class SalesOrders extends React.Component {
  
   render() {
     return (
-         <Index usuario={this.props.usuario} estados={this.props.estados} cost_centers={this.props.cost_centers}/>
+         <Index usuario={this.props.usuario} estados={this.props.estados} cost_centers={this.props.cost_centers} clientes={this.props.clientes}/>
     );
   }
 }

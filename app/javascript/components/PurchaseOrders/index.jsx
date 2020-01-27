@@ -19,6 +19,7 @@ class index extends React.Component {
               cost_center_id: "",
               state: "",
               description: "",
+              customer: "",
             },
 
             activePage: 1,
@@ -31,7 +32,13 @@ class index extends React.Component {
               label: "Centro de costo"
             },
 
+            selectedOptionCustomer: {
+              customer: "",
+              label: "Cliente"
+            },
+
             dataCostCenter: [],
+            clients: []
         }
     }
 
@@ -54,14 +61,22 @@ class index extends React.Component {
         this.loadData();
 
         let array = []
+        let arrayClientes = []
 
         this.props.cost_centers.map((item) => (
           array.push({label: item.code, value: item.id})
         ))
+
+        this.props.clientes.map((item) => (
+          arrayClientes.push({label: item.name, value: item.id})
+        ))
     
         this.setState({
           dataCostCenter: array,
+          clients: arrayClientes
         })
+
+
     }
 
     handleChangeAutocompleteCentro = selectedOptionCentro => {
@@ -70,6 +85,16 @@ class index extends React.Component {
         formFilter: {
           ...this.state.formFilter,
           cost_center_id: selectedOptionCentro.value
+        }
+      });
+    };
+
+    handleChangeAutocompleteCustomer = selectedOptionCustomer => {
+      this.setState({
+        selectedOptionCustomer,
+        formFilter: {
+          ...this.state.formFilter,
+          customer: selectedOptionCustomer.value
         }
       });
     };
@@ -111,7 +136,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}&filtering=${this.state.filtering}`)
+      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}&customer=${this.state.formFilter.customer != undefined ? this.state.formFilter.customer : ""}&filtering=${this.state.filtering}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -140,7 +165,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&date_desde=${this.state.filtering == true ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.filtering == true ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.filtering == true ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.filtering == true ? this.state.formFilter.state : ""}&description=${this.state.filtering == true ? this.state.formFilter.description : ""}`) 
+      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&date_desde=${this.state.filtering == true ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.filtering == true ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.filtering == true ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.filtering == true ? this.state.formFilter.state : ""}&description=${this.state.filtering == true ? this.state.formFilter.description : ""}&customer=${this.state.filtering == true && this.state.formFilter.customer != undefined ? this.state.formFilter.customer : ""}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({           
@@ -170,6 +195,12 @@ class index extends React.Component {
                   centro={this.state.dataCostCenter}
                   onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
                   formAutocompleteCentro={this.state.selectedOptionCentro}
+
+
+                  /* AUTOCOMPLETE CLIENTE */
+                  clientes={this.state.clients}
+                  onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
+                  formAutocompleteCustomer={this.state.selectedOptionCustomer}
 
                 />
               </div>

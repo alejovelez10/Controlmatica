@@ -34,21 +34,25 @@ class SalesOrder < ApplicationRecord
     end
   end
 
-  def self.search(search1, search2, search3, search4, search5, search6)
+  def self.search(search1, search2, search3, search4, search5, search6, search7)
+
     if search5.present?
       search5 = CostCenter.where(invoiced_state: search5)
+    end
+
+    if search7.present?
+      search7 =  CostCenter.where(customer_id: search7)
     end
 
     search1 != "" ? (scope :fdesdep, -> { where(["created_date >= ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
     search2 != "" ? (scope :fhastap, -> { where(["created_date <= ?", search2]) }) : (scope :fhastap, -> { where.not(id: nil) })
     search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
-
     search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.ids : nil) }) : (scope :estado, -> { where.not(id: nil) })
-
     search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
+    search7 != "" ? (scope :customer, -> { where(cost_center_id: search7.present? ? search7.ids : nil) }) : (scope :customer, -> { where.not(id: nil) })
 
-    fdesdep.fhastap.number.centro.estado.descripcion
+    fdesdep.fhastap.number.centro.estado.descripcion.customer
   end
 
   def change_state_cost_center_destroy
