@@ -76,7 +76,7 @@ class CostCenter < ApplicationRecord
       search8 != "" ? (scope :date_hasta_type_scope, -> { where(["start_date <= ?", search8]) }) : (scope :date_hasta_type_scope, -> { where.not(id: nil) })
       search9 != "" ? (scope :quotation_number_scope, -> { where("quotation_number like '%#{search9.downcase}%' or quotation_number like '%#{search9.upcase}%' or quotation_number like '%#{search9.capitalize}%' ") }) : (scope :quotation_number_scope, -> { where.not(id: nil) })
 
-      descripcion.customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope.quotation_number_scope
+      return descripcion.customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope.quotation_number_scope
     end
 
   def create_code

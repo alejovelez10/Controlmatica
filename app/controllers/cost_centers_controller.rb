@@ -44,42 +44,44 @@ class CostCentersController < ApplicationController
     if validate
       
       if params[:filtering] == "true"
-        @cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => params[:filter]).order(id: :desc)
-        @cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
+        puts "truetruetruetruetrue"
+        cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => params[:filter]).order(id: :desc)
+        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
 
       elsif params[:filtering] == "false"
-        @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        @cost_centers_total = CostCenter.all.count
+        puts "falsefalsefalsefalse"
+        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(id: :desc)
+        cost_centers_total = CostCenter.all.count
       else
-        
-        @cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        @cost_centers_total =  CostCenter.all.count
+        puts "normallllll           "
+        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(id: :desc)
+        cost_centers_total =  CostCenter.all.count
       end
 
     else
 
       if params[:filtering] == "true"
-        @cost_centers = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => params[:filter]).order(id: :desc)
-        @cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
+        cost_centers = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => params[:filter]).order(id: :desc)
+        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
 
       elsif params[:filtering] == "false"
-        @cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        @cost_centers_total = CostCenter.where(user_id: current_user.id).count
+        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(id: :desc)
+        cost_centers_total = CostCenter.where(user_id: current_user.id).count
       else
         
-        @cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        @cost_centers_total =  CostCenter.where(user_id: current_user.id).count
+        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(id: :desc)
+        cost_centers_total =  CostCenter.where(user_id: current_user.id).count
       end
 
     end
 
 
 
-    @cost_centers =  @cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :sales_orders => { :only =>[:order_value] } })
+    cost_centers = cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :sales_orders => { :only =>[:order_value] } })
 
 
-    @cost_centers = JSON.parse(@cost_centers)
-    render :json => {cost_centers_paginate: @cost_centers, cost_centers_total: @cost_centers_total }
+    cost_centers = JSON.parse(cost_centers)
+    render :json => {cost_centers_paginate: cost_centers, cost_centers_total: cost_centers_total }
   end
   
 
