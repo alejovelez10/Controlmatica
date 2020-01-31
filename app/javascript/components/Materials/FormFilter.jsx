@@ -127,6 +127,20 @@ class FormFilter extends Component {
                       value={this.props.formValuesFilter.date_hasta}
                     />
                   </div>
+
+                  <div className="col-md-3 imput-filter mt-3">
+                  <label># Orden</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="sales_number"
+                      placeholder="# Orden"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.sales_number}
+                    />
+                  </div>
+
+    
     
               
                 <div className="col-md-12 mt-4">
