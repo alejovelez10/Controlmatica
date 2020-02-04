@@ -41,7 +41,7 @@ class SalesOrdersController < ApplicationController
 
       format.xls do
         
-        if params[:ids]
+        if params[:ids] != "todos"
           id =  params[:ids].split(",")
           sales_orders = SalesOrder.where(id: id)
         else

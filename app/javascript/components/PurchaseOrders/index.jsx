@@ -218,6 +218,7 @@ class index extends React.Component {
                                 estados={this.props.estados}
                                 cost_centers={this.props.cost_centers}
                                 show={this.showFilter}
+                                filtering={this.state.filtering}
                             />
 
                         ) : (
