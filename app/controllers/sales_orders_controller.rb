@@ -78,9 +78,11 @@ class SalesOrdersController < ApplicationController
               position[2] = invoice.sales_order.order_number 
               position[3] = invoice.sales_order.created_date
               position[4] = facturas_count == 0 ? invoice.sales_order.order_value : 0
+              
               position[5] = invoice.sales_order.description
               position[6] = invoice.number_invoice
               position[7] = invoice.invoice_date
+              
               position[8] = invoice.invoice_value
               position[9] = facturas_count == 0 ? invoice.sales_order.customer_invoices.sum(:invoice_value) : 0 
               position[10] = invoice.sales_order.cost_center.invoiced_state
@@ -100,21 +102,20 @@ class SalesOrdersController < ApplicationController
 
           else
 
-          position = sheet.row(i)
-          puts "lñdsfjasdklñfjdsañasdflksdaflasdñlfasdñflksdjafklsadjfñasdjkfasdlfajkljñkl"
-          sheet.row(1).default_format = rows_format    
-          position[0] = task.cost_center.code
-          position[1] = task.cost_center.customer.name
-          position[2] = task.order_number 
-          position[3] = task.created_date
-          position[4] = task.order_value
-          position[5] = task.description
-          position[6] = task.description
-          position[7] = task.description
-          position[8] = task.description
-          position[9] = task.customer_invoices.sum(:invoice_value)
-          position[10] = task.cost_center.invoiced_state
-          i = i + 1
+            position = sheet.row(i)
+            sheet.row(1).default_format = rows_format    
+            position[0] = task.cost_center.code
+            position[1] = task.cost_center.customer.name
+            position[2] = task.order_number 
+            position[3] = task.created_date
+            position[4] = task.order_value
+            position[5] = task.description
+            position[6] = ""
+            position[7] = ""
+            position[8] = ""
+            position[9] = task.customer_invoices.sum(:invoice_value)
+            position[10] = task.cost_center.invoiced_state
+            i = i + 1
           end
           
           sheet.row(i).height = 25
