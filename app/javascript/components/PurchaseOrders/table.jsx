@@ -511,7 +511,7 @@ class table extends React.Component {
 
                         <a
                           className=" mr-2"
-                          href={`/download_file/sales_orders/${this.props.filtering == false ? "todos" : this.range(this.props.dataActions)}.xls`}
+                          href={`/download_file/sales_orders/${this.props.filtering == false ? "todos" : this.range(this.props.sales_orders_total_exel)}.xls`}
                           target="_blank"
                         >
                           <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>

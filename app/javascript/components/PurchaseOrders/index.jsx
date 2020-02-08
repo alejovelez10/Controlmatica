@@ -24,6 +24,7 @@ class index extends React.Component {
 
             activePage: 1,
             sales_orders_total: 0, 
+            sales_orders_total_exel: 0,
             countPage: 10,
             isLoaded: false,
 
@@ -47,9 +48,11 @@ class index extends React.Component {
         .then(response => response.json())
         .then(data => {
           console.log(data)
+          console.log(data.sales_orders_total)
           this.setState({
             data: data.sales_order,
-            sales_orders_total: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total.length,
+            sales_orders_total_exel: data.sales_orders_total,
             isLoaded: true,
           });
         });
@@ -141,7 +144,8 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.sales_order,
-            sales_orders_total: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total.length,
+            sales_orders_total_exel: data.sales_orders_total,
             activePage: 1
           });
         });
@@ -157,7 +161,8 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.sales_order,
-          sales_orders_total: data.sales_orders_total,
+          sales_orders_total: data.sales_orders_total.length,
+          sales_orders_total_exel: data.sales_orders_total,
           activePage: 1
         });
       });
@@ -170,7 +175,8 @@ class index extends React.Component {
         .then(data => {
           this.setState({           
             data: data.sales_order,
-            sales_orders_total: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total.length,
+            sales_orders_total_exel: data.sales_orders_total,
           });
         });
        
@@ -219,6 +225,7 @@ class index extends React.Component {
                                 cost_centers={this.props.cost_centers}
                                 show={this.showFilter}
                                 filtering={this.state.filtering}
+                                sales_orders_total_exel={this.state.sales_orders_total_exel}
                             />
 
                         ) : (
