@@ -225,7 +225,7 @@ class SalesOrdersController < ApplicationController
 
     elsif params[:filtering] == "false"
       sales_order = SalesOrder.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
-      sales_orders_total =  sales_order
+      sales_orders_total =  SalesOrder.all
     else
       
       sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
