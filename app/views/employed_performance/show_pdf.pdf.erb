@@ -51,7 +51,7 @@
 
  
     <table id="customers">
-      <thead>
+
     
         <tr>
           <th class="title-header text-center" style=" text-align: center;" colspan="1">FECHA</th>
@@ -63,9 +63,9 @@
           <th class="title-header text-center" style=" text-align: center;">DESCRIPCION CENTRO DE COSTO</th>
           
         </tr>
-      </thead>
 
-      <tbody >
+
+
         <% @reports.each do |report|%>
         <tr>
           <td style="width: 10%; text-align: center;"><%=report.report_date.strftime("%d-%m-%Y")%></td>
@@ -83,7 +83,7 @@
 
           
         </tr>
-      </tbody>
+ 
     </table>
       <br><br>
 
