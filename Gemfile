@@ -108,7 +108,6 @@ end
 group :production do
   gem "pg"
   gem "wkhtmltopdf-binary"
-  gem "wkhtmltopdf-binary-edge"
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
