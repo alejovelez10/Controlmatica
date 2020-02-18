@@ -17,7 +17,6 @@
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
 #
-
 class Material < ApplicationRecord
   belongs_to :cost_center
   belongs_to :provider
@@ -27,15 +26,16 @@ class Material < ApplicationRecord
   after_destroy :calculate_cost_destroy
   before_save :set_state
 
-  def self.search(search1, search2, search3, search4, search5, search6, search7)
+  def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :proveedor, -> { where(provider_id: search1) }) : (scope :proveedor, -> { where.not(id: nil) })
     search2 != " " && search2 != nil && search2 != "" ? (scope :date, -> { where("DATE(sales_date) = ?", search2) }) : (scope :date, -> { where.not(id: nil) })
     search3 != "" ? (scope :descripcion, -> { where("description like '%#{search3.downcase}%' or description like '%#{search3.upcase}%' or description like '%#{search3.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
     search5 != "" ? (scope :estado, -> { where("sales_state like '%#{search5.downcase}%' or sales_state like '%#{search5.upcase}%' or sales_state like '%#{search5.capitalize}%' ") }) : (scope :estado, -> { where.not(id: nil) })
-    search6 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search6]) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search7 != "" ? (scope :fhastap, -> { where(["created_at < ?", search7]) }) : (scope :fhastap, -> { where.not(id: nil) })
-    proveedor.date.descripcion.centro.estado.fdesdep.fhastap
+    search6 != "" ? (scope :fdesdep, -> { where(["sales_date > ?", search6]) }) : (scope :fdesdep, -> { where.not(id: nil) })
+    search7 != "" ? (scope :fhastap, -> { where(["sales_date < ?", search7]) }) : (scope :fhastap, -> { where.not(id: nil) })
+    search8 != "" ? (scope :order_number, -> { where(sales_number: search8) }) : (scope :order_number, -> { where.not(id: nil) })
+    proveedor.date.descripcion.centro.estado.fdesdep.fhastap.order_number
   end
 
   def calculate_cost
