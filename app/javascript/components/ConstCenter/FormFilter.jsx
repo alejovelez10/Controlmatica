@@ -145,7 +145,7 @@ class FormFilter extends Component {
                       className="form form-control"
                       type="text"
                       name="quotation_number"
-                      placeholder="Descripcion"
+                      placeholder="# Cotización"
                       onChange={this.props.onChangeFilter}
                       value={this.props.formValuesFilter.quotation_number}
                     />

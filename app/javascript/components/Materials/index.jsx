@@ -19,6 +19,7 @@ class index extends React.Component {
               estado: "",
               date_desde: "",
               date_hasta: "",
+              sales_number: "",
             },
 
             activePage: 1,
@@ -66,6 +67,7 @@ class index extends React.Component {
             estado: "",
             date_desde: "",
             date_hasta: "",
+            sales_number: "",
           },
 
           selectedOptionCentro: {
@@ -146,7 +148,7 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`)
+    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&sales_number=${this.state.formFilter.sales_number}`)
       .then(response => response.json())
       .then(data => {
         this.setState({

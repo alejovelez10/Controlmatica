@@ -33,8 +33,8 @@ class Material < ApplicationRecord
     search3 != "" ? (scope :descripcion, -> { where("description like '%#{search3.downcase}%' or description like '%#{search3.upcase}%' or description like '%#{search3.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
     search5 != "" ? (scope :estado, -> { where("sales_state like '%#{search5.downcase}%' or sales_state like '%#{search5.upcase}%' or sales_state like '%#{search5.capitalize}%' ") }) : (scope :estado, -> { where.not(id: nil) })
-    search6 != "" ? (scope :fdesdep, -> { where(["sales_date >= ?", search6]) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search7 != "" ? (scope :fhastap, -> { where(["sales_date <= ?", search7]) }) : (scope :fhastap, -> { where.not(id: nil) })
+    search6 != "" ? (scope :fdesdep, -> { where(["created_at > ?", search6]) }) : (scope :fdesdep, -> { where.not(id: nil) })
+    search7 != "" ? (scope :fhastap, -> { where(["created_at < ?", search7]) }) : (scope :fhastap, -> { where.not(id: nil) })
     proveedor.date.descripcion.centro.estado.fdesdep.fhastap
   end
 
