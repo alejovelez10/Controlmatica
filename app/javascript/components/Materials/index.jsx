@@ -11,6 +11,7 @@ class index extends React.Component {
         this.state = {
             data: [],
             show_filter: false,
+            filtering: false,
             formFilter: {
               provider_id: "",
               sales_date: "",
@@ -59,6 +60,7 @@ class index extends React.Component {
       if (valor == true) {
         this.setState({ 
           show_filter: false,
+          filtering: false,
           formFilter: {
             provider_id: "",
             sales_date: "",
@@ -79,7 +81,7 @@ class index extends React.Component {
   
         this.loadDataTable();
       }else{
-        this.setState({ show_filter: true });
+        this.setState({ show_filter: true, filtering: true });
       }
     }
     
@@ -127,7 +129,7 @@ class index extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_materials?page=${pageNumber}&filter=${this.state.countPage}`) 
+    fetch(`/get_materials?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&sales_number=${this.state.formFilter.sales_number}`) 
       .then(response => response.json())
       .then(data => {
         this.setState({ 
@@ -148,7 +150,7 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&sales_number=${this.state.formFilter.sales_number}`)
+    fetch(`/get_materials?provider_id=${this.state.formFilter.provider_id}&sales_date=${this.state.formFilter.sales_date}&description=${this.state.formFilter.description}&cost_center_id=${this.state.formFilter.cost_center_id}&estado=${this.state.formFilter.estado}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&sales_number=${this.state.formFilter.sales_number}&filtering=${this.state.filtering}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -196,6 +198,7 @@ class index extends React.Component {
                                 providers={this.props.providers}
                                 estados={this.props.estados}
                                 show={this.showFilter}
+                                filtering={this.state.filtering}
                             />
 
                         ) : (
@@ -209,7 +212,7 @@ class index extends React.Component {
                         <div className="col-md-12" style={{ marginTop: "50px" }}>
                           <div className="row">
 
-                            <div className="col-md-9 text-left pl-0">
+                            <div className="col-md-7 text-left pl-0">
                                 <p>
                                     Mostrando {this.state.data.length} de {this.state.materials_total}
                                 </p>

@@ -69,6 +69,16 @@ class table extends React.Component {
     });
   }
 
+  range(array) {
+    let ids = []
+
+    array.map((item) => (
+      ids.push(item.id)
+    ))
+
+    return ids
+  }
+
   componentDidMount(){
     let array = []
 
@@ -464,7 +474,7 @@ class table extends React.Component {
               {this.props.estados.download_file == true && (
                 <a
                   className=" mr-2"
-                  href={`/download_file/materials.xls`}
+                  href={`/download_file/materials/${this.props.filtering == false ? "todos" : this.range(this.props.dataActions)}.xls`}
                   target="_blank"
                 >
                   <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>

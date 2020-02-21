@@ -21,15 +21,16 @@ class MaterialsController < ApplicationController
 
 
   def get_materials
-    if params[:provider_id] || params[:sales_date] || params[:description] || params[:cost_center_id] || params[:estado] || params[:date_desde] || params[:date_hasta] || params[:sales_number]
+
+    if params[:filtering] == "true"
       materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
       materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).count
 
-    elsif params[:filter]
-      materials = Material.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+    elsif params[:filtering] == "false"
+      materials = Material.all.paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
       materials_total = Material.all.count
-
     else
+      
       materials = Material.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
       materials_total =  Material.all.count
     end
@@ -40,11 +41,18 @@ class MaterialsController < ApplicationController
   end
 
   def download_file
-    materials = Material.all
+
+    if params[:ids] != "todos"
+      id = params[:ids].split(",")
+      materials = Material.where(id: id)
+    else
+      materials = Material.all
+    end
+
     respond_to do |format|
 
       format.xls do
-      
+
         task = Spreadsheet::Workbook.new
         sheet = task.create_worksheet
         
