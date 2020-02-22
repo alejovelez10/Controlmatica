@@ -23,6 +23,7 @@ class index extends React.Component {
           activePage: 1,
           contractors_total: 0, 
           countPage: 10,
+          contractors: [],
 
           selectedOptionCentro: {
             cost_center_id: "",
@@ -38,10 +39,10 @@ class index extends React.Component {
       fetch("/get_contractors/")
       .then(response => response.json())
       .then(data => {
-        console.log(data)
         this.setState({
           data: data.contractors_paginate,
-          contractors_total: data.contractors_total,
+          contractors_total: data.contractors_total.length,
+          contractors: data.contractors_total
         });
 
         setTimeout(() => {
@@ -116,7 +117,8 @@ class index extends React.Component {
     .then(data => {
       this.setState({
         data: data.contractors_paginate,
-        contractors_total: data.contractors_total,
+        contractors_total: data.contractors_total.length,
+        contractors: data.contractors_total,
         activePage: 1
       });
     });
@@ -127,7 +129,11 @@ class index extends React.Component {
     fetch(`/get_contractors?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`) 
       .then(response => response.json())
       .then(data => {
-        this.setState({ data: data.contractors_paginate });
+        this.setState({ 
+          data: data.contractors_paginate,
+          contractors_total: data.contractors_total.length,
+          contractors: data.contractors_total,
+        });
       });
      
   };
@@ -147,7 +153,8 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.contractors_paginate,
-          contractors_total: data.contractors_total,
+          contractors_total: data.contractors_total.length,
+          contractors: data.contractors_total,
         });
       });
    
@@ -192,6 +199,7 @@ class index extends React.Component {
                                 users={this.props.users}
                                 show={this.showFilter}
                                 filtering={this.state.filtering}
+                                exel_values={this.state.contractors}
                             />
 
                         ) : (
