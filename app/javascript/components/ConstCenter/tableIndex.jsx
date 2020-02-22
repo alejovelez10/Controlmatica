@@ -62,6 +62,16 @@ class tableIndex extends React.Component {
 
   }
 
+  range(array) {
+    let ids = []
+
+    array.map((item) => (
+      ids.push(item.id)
+    ))
+
+    return ids
+  }
+
   validationForm = () => {
     if (this.state.form.customer_id != "" && 
         this.state.form.contact_id != "" && 
@@ -617,7 +627,7 @@ class tableIndex extends React.Component {
                           {this.props.estados.download_file == true && (
                             <a
                               className=" mr-2"
-                              href={`/download_file/cost_centers.xls`}
+                              href={`/download_file/cost_centers/${this.props.filtering == false ? "todos" : this.range(this.props.exel_values)}.xls`}
                               target="_blank"
                             >
                               <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>

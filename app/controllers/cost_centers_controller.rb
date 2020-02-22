@@ -44,33 +44,30 @@ class CostCentersController < ApplicationController
     if validate
       
       if params[:filtering] == "true"
-        puts "truetruetruetruetrue"
         cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
+        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
 
       elsif params[:filtering] == "false"
-        puts "falsefalsefalsefalse"
         cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        cost_centers_total = CostCenter.all.count
+        cost_centers_total = CostCenter.all
       else
-        puts "normallllll           "
         cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        cost_centers_total =  CostCenter.all.count
+        cost_centers_total =  CostCenter.all
       end
 
     else
 
       if params[:filtering] == "true"
         cost_centers = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
+        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
 
       elsif params[:filtering] == "false"
         cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        cost_centers_total = CostCenter.where(user_id: current_user.id).count
+        cost_centers_total = CostCenter.where(user_id: current_user.id)
       else
         
         cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-        cost_centers_total =  CostCenter.where(user_id: current_user.id).count
+        cost_centers_total =  CostCenter.where(user_id: current_user.id)
       end
 
     end
@@ -342,9 +339,22 @@ class CostCentersController < ApplicationController
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
     if validate
-      centro_show = CostCenter.all
+      if params[:ids] != "todos"
+        id =  params[:ids].split(",")
+        centro_show = CostCenter.where(id: id)
+      else
+        centro_show = CostCenter.all
+      end
+
     else
-      centro_show = CostCenter.where(user_id: current_user.id)
+
+      if params[:ids] != "todos"
+        id =  params[:ids].split(",")
+        centro_show = Contractor.where(id: id, user_id: current_user.id)
+      else
+        centro_show = CostCenter.where(user_id: current_user.id)
+      end
+
     end
 
     respond_to do |format|

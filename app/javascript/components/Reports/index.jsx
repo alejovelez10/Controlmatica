@@ -9,6 +9,7 @@ class index extends React.Component {
 
         this.state = {
             data: [],
+            exel_values: [],
             show_filter: false,
             formFilter: {
               work_description: "",
@@ -52,7 +53,8 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.reports_paginate,
-            reports_total: data.reports_total
+            reports_total: data.reports_total.length,
+            exel_values: data.reports_total,
           });
         });
 
@@ -166,7 +168,8 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.reports_paginate,
-            reports_total: data.reports_total,
+            reports_total: data.reports_total.length,
+            exel_values: data.reports_total,
             activePage: 1
           });
       });
@@ -182,7 +185,8 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.reports_paginate,
-          reports_total: data.reports_total,
+          reports_total: data.reports_total.length,
+          exel_values: data.reports_total,
           activePage: 1
         });
       });
@@ -195,7 +199,8 @@ class index extends React.Component {
         .then(data => {
           this.setState({ 
             data: data.reports_paginate,
-            reports_total: data.reports_total,
+            reports_total: data.reports_total.length,
+            exel_values: data.reports_total,
           });
         });
        
@@ -252,6 +257,7 @@ class index extends React.Component {
                         users={this.props.users}
                         estados={this.props.estados}
                         rol={this.props.rol}
+                        exel_values={this.state.exel_values}
                         filtering={this.state.filtering}
                       />
 

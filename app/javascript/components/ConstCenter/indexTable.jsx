@@ -10,6 +10,7 @@ class indexTable extends React.Component {
 
         this.state = {
             data: [],
+            exel_values: [],
             isLoaded: false,
             show_filter: false,
             filtering: false,
@@ -63,7 +64,8 @@ class indexTable extends React.Component {
 
           this.setState({
             data: data.cost_centers_paginate,
-            cost_centers_total: data.cost_centers_total
+            cost_centers_total: data.cost_centers_total.length,
+            exel_values: data.cost_centers_total,
           });
 
           setTimeout(() => {
@@ -181,7 +183,8 @@ class indexTable extends React.Component {
       .then(data => {
         this.setState({
           data: data.cost_centers_paginate,
-          cost_centers_total: data.cost_centers_total,
+          cost_centers_total: data.cost_centers_total.length,
+          exel_values: data.cost_centers_total,
           activePage: 1
         });
       });
@@ -197,7 +200,8 @@ class indexTable extends React.Component {
     .then(data => {
       this.setState({
         data: data.cost_centers_paginate,
-        cost_centers_total: data.cost_centers_total,
+        cost_centers_total: data.cost_centers_total.length,
+        exel_values: data.cost_centers_total,
         activePage: 1
       });
     });
@@ -208,10 +212,10 @@ class indexTable extends React.Component {
     fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&descripcion=${this.state.filtering == true ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.filtering == true ? this.state.formFilter.execution_state : ""}&service_type=${this.state.filtering == true ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.filtering == true ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.filtering == true && this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : ""}&date_hasta=${this.state.filtering == true && this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&quotation_number=${this.state.filtering == true ? this.state.formFilter.quotation_number : ""}`) 
       .then(response => response.json())
       .then(data => {
-        console.log(data)
         this.setState({ 
           data: data.cost_centers_paginate,
-          cost_centers_total: data.cost_centers_total,
+          cost_centers_total: data.cost_centers_total.length,
+          exel_values: data.cost_centers_total,
         });
       });
      
@@ -272,6 +276,8 @@ class indexTable extends React.Component {
                                 estados={this.props.estados}
                                 hours_real={this.props.hours_real}
                                 hours_invoices={this.props.hours_invoices}
+                                exel_values={this.state.exel_values}
+                                filtering={this.state.filtering}
                             />
 
                         ) : (

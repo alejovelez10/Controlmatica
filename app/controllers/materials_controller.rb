@@ -24,15 +24,15 @@ class MaterialsController < ApplicationController
 
     if params[:filtering] == "true"
       materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
-      materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).count
+      materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number])
 
     elsif params[:filtering] == "false"
       materials = Material.all.paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
-      materials_total = Material.all.count
+      materials_total = Material.all
     else
       
       materials = Material.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
-      materials_total =  Material.all.count
+      materials_total =  Material.all
     end
     
     materials = JSON.parse(materials)
