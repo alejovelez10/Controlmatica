@@ -81,9 +81,22 @@ class ReportsController < ApplicationController
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
     if validate
-      report_show = Report.all
+      if params[:ids] != "todos"
+        id =  params[:ids].split(",")
+        report_show = Report.where(id: id)
+      else
+        report_show = Report.all
+      end
+
     else
-      report_show = Report.where(user_id: current_user.id)
+
+      if params[:ids] != "todos"
+        id =  params[:ids].split(",")
+        report_show = Report.where(id: id, user_id: current_user.id)
+      else
+        report_show = Report.where(user_id: current_user.id)
+      end
+      
     end
 
     respond_to do |format|

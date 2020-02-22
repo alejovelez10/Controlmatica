@@ -252,6 +252,7 @@ class index extends React.Component {
                         users={this.props.users}
                         estados={this.props.estados}
                         rol={this.props.rol}
+                        filtering={this.state.filtering}
                       />
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>

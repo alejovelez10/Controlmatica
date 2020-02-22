@@ -11,6 +11,7 @@ class index extends React.Component {
         this.state = {
           data: [],
           show_filter: false,
+          filtering: false,
           formFilter: {
             user_execute_id: "",
             sales_date: "",
@@ -79,9 +80,9 @@ class index extends React.Component {
       
   showFilter = (valor) => {
     if (valor == true) {
-      this.setState({ show_filter: false });
+      this.setState({ show_filter: false, filtering: false });
     }else{
-      this.setState({ show_filter: true });
+      this.setState({ show_filter: true, filtering: true });
     }
 
     this.setState({
@@ -123,7 +124,7 @@ class index extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_contractors?page=${pageNumber}&filter=${this.state.countPage}`) 
+    fetch(`/get_contractors?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`) 
       .then(response => response.json())
       .then(data => {
         this.setState({ data: data.contractors_paginate });
@@ -141,7 +142,7 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_contractors?user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`)
+    fetch(`/get_contractors?user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&filtering=${this.state.filtering}`)
       .then(response => response.json())
       .then(data => {
         this.setState({
@@ -190,6 +191,7 @@ class index extends React.Component {
                                 cost_center={this.props.cost_center}
                                 users={this.props.users}
                                 show={this.showFilter}
+                                filtering={this.state.filtering}
                             />
 
                         ) : (

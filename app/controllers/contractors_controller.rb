@@ -20,18 +20,18 @@ class ContractorsController < ApplicationController
   end
 
   def get_contractors
-    if params[:user_execute_id] || params[:sales_date] || params[:cost_center_id] || params[:date_desde] || params[:date_hasta]
-      
-      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+    if params[:filtering] == "true"
+      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
       contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta]).count
 
-    elsif params[:filter]
-      contractor = Contractor.all.paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+    elsif params[:filtering] == "false"
+      contractor = Contractor.all.paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
       contractor_total = Contractor.all.count
     else
-
+    
       contractor = Contractor.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
       contractor_total =  Contractor.all.count
+      
     end
     
     contractor = JSON.parse(contractor)
@@ -40,7 +40,14 @@ class ContractorsController < ApplicationController
   end
 
   def download_file
-    contractor = Contractor.all
+
+    if params[:ids] != "todos"
+      id =  params[:ids].split(",")
+      contractor = Contractor.where(id: id)
+    else
+      contractor = Contractor.all
+    end
+
     respond_to do |format|
 
       format.xls do
