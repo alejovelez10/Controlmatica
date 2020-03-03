@@ -43,5 +43,20 @@ class CustomerInvoice < ApplicationRecord
   def update_value
     sales_order = SalesOrder.find(self.sales_order_id)
     sales_order.update(sum_invoices: sales_order.customer_invoices.sum(:invoice_value))
+    cost_center = CostCenter.find(sales_order.cost_center_id)
+    customer_invoice = CustomerInvoice.where(cost_center_id: sales_order.cost_center_id).sum(:invoice_value)
+    if (cost_center.quotation_value <= customer_invoice)
+      CostCenter.find(sales_order.cost_center_id).update(invoiced_state: "FACTURADO")
+    elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
+      CostCenter.find(sales_order.cost_center_id).update(invoiced_state: "FACTURADO PARCIAL")
+    elsif (customer_invoice < 0)
+      if (cost_center.quotation_value <= sales_order + 1000 && customer_invoice == 0)
+        CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+      elsif (sales_order > 0 && sales_order < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
+        CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
+      elsif (sales_order == 0 && customer_invoice == 0)
+        CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
+      end
+    end
   end
 end

@@ -652,21 +652,21 @@ class tableIndex extends React.Component {
                   <tr className="tr-title">
                     <th style={{width: "100px"}} className="text-center">Acciones</th>
                     <th style={{width: "200px"}}>Codigo</th>
-                    <th>Cliente</th>
-                    <th style={{width: "150px"}}>Tipo</th>
+                    <th style={{width: "200px"}}>Cliente</th>
+                    <th style={{width: "200px"}}>Tipo</th>
                     <th style={{width: "400px"}}>Descripcion</th>
                     {this.props.estados.ending == true && (
                       <th className="text-center" style={{ width: "100px"}}>¿Finalizo?</th>
                     )}
-                    <th className="text-center" style={{ width: "6%"}}>Estado de ejecución</th>
+                    <th className="text-center" style={{ width: "250px"}}>Estado de ejecución</th>
                     <th className="text-center" style={{ width: "300px"}}>Estado facturado</th>
-                    <th>Número de cotización</th>
-                    <th>$ Ingeniería Cotizado</th>
-                    <th>$ Ingeniería Ejecutado</th>
-                    <th>$ Viaticos Cotizado</th>
-                    <th>$ Viaticos Real</th>
-                    <th>$ Total Legalizado</th>
-                    <th>$ Total Cotizado</th>
+                    <th style={{ width: "250px"}}>Número de cotización</th>
+                    <th style={{ width: "250px"}}>$ Ingeniería Cotizado</th>
+                    <th style={{ width: "250px"}}>$ Ingeniería Ejecutado</th>
+                    <th style={{ width: "250px"}}>$ Viaticos Cotizado</th>
+                    <th style={{ width: "250px"}}>$ Viaticos Real</th>
+                    <th style={{ width: "250px"}}>$ Total Legalizado</th>
+                    <th style={{ width: "250px"}}>$ Total Cotizado</th>
                     
                 
                   </tr>
