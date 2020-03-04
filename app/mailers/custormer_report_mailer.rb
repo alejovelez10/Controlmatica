@@ -1,7 +1,7 @@
 class CustormerReportMailer < ApplicationMailer
   def approval_customer_email(customer_report)
     @customer_report = customer_report
-    mail(to: "aprobaciones@controlmatica.com.co", :from => @customer_report.contact.email, subject: "El reporte #{customer_report.report_code} fue aprobado")
+    mail(to: "alejovelez10@gmail.com", :from => @customer_report.contact.email, subject: "El reporte #{customer_report.report_code} fue aprobado")
   end
 
   def approval_email(customer_report)
