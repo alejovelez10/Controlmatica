@@ -485,7 +485,7 @@ class table extends React.Component {
     if (accion.report_state == "Aprobado") {
       return "Aprobado por el cliente"
     }else if (accion.report_state == "Enviado al Cliente"){
-      return "Enviado para Aprobaciòn"
+      return "Reenviar para Aprobaciòn"
     }else{
       return "Enviar para Aprobaciòn"
     }
@@ -603,7 +603,7 @@ class table extends React.Component {
                           onClick={() => this.sendReques(accion)}
                           className="btn btn-success"
                           style={{width: "220px"}}
-                          disabled={accion.report_state == "Aprobado" || accion.report_state == "Enviado al Cliente" ? true : false }
+                          disabled={accion.report_state == "Aprobado"  ? true : false }
                       >
                           {this.getState(accion)}
                       </button>
