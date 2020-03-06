@@ -26,6 +26,10 @@ class table extends React.Component {
 
       ErrorValues: true,
 
+      formUpdate: {
+        sales_state: ""
+      },
+
       form: {
         provider_id: "",
         sales_date: "",
@@ -173,6 +177,7 @@ class table extends React.Component {
             });
           });
       } else {
+
         fetch("/materials", {
           method: "POST", // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -207,6 +212,7 @@ class table extends React.Component {
               },
             });
           });
+
       }
     }
   };
@@ -448,6 +454,34 @@ class table extends React.Component {
     }
   }
 
+
+  onChangeUpdateSelect = (e) =>{
+      fetch("/update_state_materials/" + this.state.id + "/" + e.target.value, {
+        method: 'POST', // or 'PUT' 
+      })
+      .then(res => res.json())
+      .catch(error => console.error("Error:", error))
+      .then(data => {    
+        this.props.loadInfo();
+        this.MessageSucces(data.message, data.type, data.message_error);
+    
+        this.setState({
+          id: "",
+        })
+
+      });
+  }
+
+
+  HandleClickUpdate = (register, state) => {
+    this.setState({ 
+      id: (state == true ? register.id : "" ),
+      formUpdate: {
+        sales_state: (state == true ? register.sales_state : "" )
+      },
+    });
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -549,19 +583,19 @@ class table extends React.Component {
           titulo={"Informacion detallada"}
         />
 
-        <div className="content">
-          <table className="table table-hover table-bordered" id="sampleTable">
+        <div className="content-table">
+          <table className="table table-hover table-bordered table-width" id="sampleTable">
             <thead>
               <tr className="tr-title">
-                <th style={{width:"15%"}}>Centro de costo</th>
-                <th style={{width:"12%"}}>Proveedor</th>
-                <th style={{width:"12%"}}># Orden</th>
-                <th style={{width:"10%"}}>Valor</th>
+                <th style={{width:"6%"}}>Centro de costo</th>
+                <th style={{width:"8%"}}>Proveedor</th>
+                <th style={{width:"6%"}}># Orden</th>
+                <th style={{width:"5%"}}>Valor</th>
                 <th style={{width:"19%"}}>Descripción</th>
-                <th style={{width:"12%"}}>Fecha de Orden</th>
-                <th style={{width:"12%"}}>Fecha Entrega</th>
-                <th style={{width:"12%"}}>Valor Facturas</th>
-                <th style={{width:"10%"}}>Estado</th>
+                <th style={{width:"5%"}}>Fecha de Orden</th>
+                <th style={{width:"5%"}}>Fecha Entrega</th>
+                <th style={{width:"5%"}}>Valor Facturas</th>
+                <th style={{width:"11%"}}>Estado</th>
                 <th style={{ width: "5%" }} className="text-center">
                   Acciones
                 </th>
@@ -581,7 +615,31 @@ class table extends React.Component {
                     <td>{accion.delivery_date}</td>
                    
                     <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                    <td>{accion.sales_state}</td>
+
+                    <td>
+                          {this.state.id == accion.id ? (
+                            <React.Fragment>
+                              <select 
+                                name="estado" 
+                                className="form form-control"
+                                onChange={this.onChangeUpdateSelect}
+                                value={this.state.formUpdate.sales_state}
+                                style={{ display: "inherit", width: "90%"}}
+                              >
+                                <option value="">Seleccione un estado</option>
+                                <option value="PROCESADO">PROCESADO</option>
+                                <option value="INGRESADO TOTAL">INGRESADO TOTAL</option>
+                                <option value="INGRESADO CON MAYOR VALOR EN FACTURA">INGRESADO CON MAYOR VALOR EN FACTURA</option>
+                                <option value="INGRESADO PARCIAL">INGRESADO PARCIAL</option>
+
+                              </select> 
+
+                              <i onClick={() => this.HandleClickUpdate(accion, false)} className="fas fa-times-circle float-right"></i>
+                            </React.Fragment>
+                          ) : (
+                            <p>{accion.sales_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true)} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                          )} 
+                    </td>
                   
 
                     <td className="text-center" style={{ width: "10px" }}>

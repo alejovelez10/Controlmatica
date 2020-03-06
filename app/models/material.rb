@@ -24,7 +24,7 @@ class Material < ApplicationRecord
   has_many :material_invoices, dependent: :destroy
 
   after_destroy :calculate_cost_destroy
-  before_save :set_state
+  before_create :set_state
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :proveedor, -> { where(provider_id: search1) }) : (scope :proveedor, -> { where.not(id: nil) })

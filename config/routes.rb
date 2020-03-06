@@ -76,6 +76,8 @@ Rails.application.routes.draw do
 
   get "update_state/:id", to: "register_edits#update_state"
 
+  post "update_state_materials/:id/:state", to: "materials#update_state_materials"
+
 
   #DESCARGAS DE EXEL
 

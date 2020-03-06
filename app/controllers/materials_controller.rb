@@ -10,11 +10,13 @@ class MaterialsController < ApplicationController
     edit = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Descargar excel").exists?
+    update_state = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Forzar estados").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
+      update_state: (current_user.rol.name == "Administrador" ? true : update_state),
       download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
   end
@@ -38,6 +40,18 @@ class MaterialsController < ApplicationController
     materials = JSON.parse(materials)
 
     render :json => {materials_paginate: materials, materials_total: materials_total }
+  end
+
+  def update_state_materials 
+    material = Material.find(params[:id])
+    update_material = material.update(sales_state: params[:state])
+    
+    if update_material
+      render :json => {
+        message: "¡El Estado fue actualizado con exito!",
+        type: "success"
+      }
+    end
   end
 
   def download_file
