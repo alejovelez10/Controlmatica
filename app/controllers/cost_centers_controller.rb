@@ -82,6 +82,24 @@ class CostCentersController < ApplicationController
     cost_centers = JSON.parse(cost_centers)
     render :json => {cost_centers_paginate: cost_centers, cost_centers_total: cost_centers_total }
   end
+
+
+  def update_state_centro
+    centro = CostCenter.find(params[:id])
+
+    if params[:from] == "execution_state"
+      update_centro = centro.update(execution_state: params[:state])
+    else
+      update_centro = centro.update(invoiced_state: params[:state])
+    end
+
+    if update_centro
+      render :json => {
+        message: "¡El Registro fue Actualizado con exito!",
+        type: "success"
+      }
+    end
+  end
   
 
   # GET /cost_centers/1

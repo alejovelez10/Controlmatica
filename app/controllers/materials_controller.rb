@@ -175,6 +175,8 @@ class MaterialsController < ApplicationController
           message: "¡El Registro fue creado con exito!",
           type: "success"
         }
+
+        Material.set_state(@material.id)
       else
         render :json => {
           message: "¡El Registro no fue creado!",
@@ -199,6 +201,8 @@ class MaterialsController < ApplicationController
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
       }
+
+      Material.set_state(@material.id)
     else 
       render :json => {
         message: "¡El Registro no fue actualizado!",

@@ -24,7 +24,7 @@ class Material < ApplicationRecord
   has_many :material_invoices, dependent: :destroy
 
   after_destroy :calculate_cost_destroy
-  before_create :set_state
+  #before_create :set_state
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :proveedor, -> { where(provider_id: search1) }) : (scope :proveedor, -> { where.not(id: nil) })
@@ -50,6 +50,30 @@ class Material < ApplicationRecord
     cost_center.update(sum_materials_value: sum_materials_costo)
   end
 
+
+  def self.set_state(id)
+    material = Material.find(id)
+
+    invoice_total = material.material_invoices.sum(:value)
+    material.provider_invoice_value = invoice_total
+
+    if invoice_total > material.amount
+      puts "111111111111111343434434"
+      material.update(sales_state: "INGRESADO CON MAYOR VALOR EN FACTURA")
+    elsif (invoice_total < material.amount) && invoice_total > 0
+      puts "33333333334334"
+      material.update(sales_state: "INGRESADO PARCIAL")
+    elsif invoice_total == 0
+      puts "22222234343434"
+      material.update(sales_state: "PROCESADO")
+    elsif invoice_total == material.amount
+      puts "222222343434"
+      material.update(sales_state: "INGRESADO TOTAL")
+    end
+  end
+
+=begin
+
   def set_state
     invoice_total = self.material_invoices.sum(:value)
     self.provider_invoice_value = invoice_total
@@ -68,4 +92,9 @@ class Material < ApplicationRecord
       self.sales_state = "INGRESADO TOTAL"
     end
   end
+  
+=end
+
+  #
+  
 end

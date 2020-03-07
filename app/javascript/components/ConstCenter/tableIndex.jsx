@@ -16,6 +16,15 @@ class tableIndex extends React.Component {
         ErrorValues: true,
         modal: false,
         backdrop: "static",
+
+        formUpdate: {
+          execution_state: "",
+          invoiced_state: ""
+        },
+
+        id: "",
+        from_state: "",
+
         form: {
           customer_id: "",
           contact_id: "",
@@ -575,6 +584,41 @@ class tableIndex extends React.Component {
       return acumulado;
   }
 
+  HandleClickUpdate = (register, state_show, from_state) => {
+    this.setState({ 
+      id: (state_show == true ? register.id : "" ),
+      from_state: (state_show == true ? from_state : "" ),
+
+      formUpdate: {
+        execution_state: (state_show == true && from_state == "execution_state" ? register.execution_state : "" ),
+        invoiced_state: (state_show == true && from_state == "invoiced_state" ? register.invoiced_state : "" )
+      },
+    });
+  } 
+
+  onChangeUpdateSelect = (e) =>{
+    fetch("/update_cost_centers/" + this.state.id + "/" + this.state.from_state + "/" + e.target.value , {
+        method: 'POST', // or 'PUT' 
+    })
+    .then(res => res.json())
+    .catch(error => console.error("Error:", error))
+    .then(data => {    
+      this.props.loadInfo();
+      this.MessageSucces(data.message, data.type, data.message_error);
+    
+      this.setState({
+        id: "",
+        from_state: "",
+
+        formUpdate: {
+          execution_state: "",
+          invoiced_state: ""
+        },
+      })
+
+    });
+  }
+
   render() {
     return (
         <React.Fragment>
@@ -658,8 +702,8 @@ class tableIndex extends React.Component {
                     {this.props.estados.ending == true && (
                       <th className="text-center" style={{ width: "100px"}}>¿Finalizo?</th>
                     )}
-                    <th className="text-center" style={{ width: "250px"}}>Estado de ejecución</th>
-                    <th className="text-center" style={{ width: "300px"}}>Estado facturado</th>
+                    <th className="text-left" style={{ width: "250px"}}>Estado de ejecución</th>
+                    <th className="text-left" style={{ width: "300px"}}>Estado facturado</th>
                     <th style={{ width: "250px"}}>Número de cotización</th>
                     <th style={{ width: "250px"}}>$ Ingeniería Cotizado</th>
                     <th style={{ width: "250px"}}>$ Ingeniería Ejecutado</th>
@@ -728,8 +772,58 @@ class tableIndex extends React.Component {
                           </th>
                         )}
 
-                        <th className="text-center">{accion.execution_state}</th>
-                        <th className="text-center">{accion.invoiced_state}</th>      
+                        <th>
+                          {this.state.id == accion.id && this.state.from_state == "execution_state" ? (
+                            <React.Fragment>
+                                <select 
+                                  name="estado" 
+                                  className="form form-control"
+                                  onChange={this.onChangeUpdateSelect}
+                                  value={this.state.formUpdate.execution_state}
+                                  style={{ display: "inherit", width: "90%"}}
+                                >
+                                <option value="">Seleccione un estado</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="PROYECTO">PROYECTO</option>
+                                <option value="SERVICIO">SERVICIO</option>
+                                <option value="VENTA">VENTA</option>
+
+                              </select> 
+
+                              <i onClick={() => this.HandleClickUpdate(accion, false, "execution_state")} className="fas fa-times-circle float-right"></i>
+                            </React.Fragment>
+                          ) : (
+                            <p>{accion.execution_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true, "execution_state")} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                          )} 
+                        </th>
+
+                        <th>
+                          {this.state.id == accion.id && this.state.from_state == "invoiced_state" ? (
+                            <React.Fragment>
+                              <select 
+                                name="estado" 
+                                className="form form-control"
+                                onChange={this.onChangeUpdateSelect}
+                                value={this.state.formUpdate.invoiced_state}
+                                style={{ display: "inherit", width: "90%"}}
+                              >
+                                <option value="">Seleccione un estado</option>
+                                <option value="FACTURADO">FACTURADO</option>
+                                <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
+                                <option value="LEGALIZADO">LEGALIZADO</option>
+                                <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
+                                <option value="POR FACTURAR">POR FACTURAR</option>
+                                <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
+                                <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
+
+                              </select> 
+
+                              <i onClick={() => this.HandleClickUpdate(accion, false, "invoiced_state")} className="fas fa-times-circle float-right"></i>
+                            </React.Fragment>
+                          ) : (
+                            <p>{accion.invoiced_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true, "invoiced_state")} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                          )}
+                        </th>      
                         <th>{accion.quotation_number}</th>
                         <th><NumberFormat value={accion.engineering_value + (accion.value_displacement_hours * accion.displacement_hours)} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.sum_materials_costo + accion.offset_value } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>

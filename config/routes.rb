@@ -78,6 +78,8 @@ Rails.application.routes.draw do
 
   post "update_state_materials/:id/:state", to: "materials#update_state_materials"
 
+  post "update_cost_centers/:id/:from/:state", to: "cost_centers#update_state_centro"
+
 
   #DESCARGAS DE EXEL
 

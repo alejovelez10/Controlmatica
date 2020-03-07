@@ -456,20 +456,20 @@ class table extends React.Component {
 
 
   onChangeUpdateSelect = (e) =>{
-      fetch("/update_state_materials/" + this.state.id + "/" + e.target.value, {
+    fetch("/update_state_materials/" + this.state.id + "/" + e.target.value, {
         method: 'POST', // or 'PUT' 
-      })
-      .then(res => res.json())
-      .catch(error => console.error("Error:", error))
-      .then(data => {    
-        this.props.loadInfo();
-        this.MessageSucces(data.message, data.type, data.message_error);
+    })
+    .then(res => res.json())
+    .catch(error => console.error("Error:", error))
+    .then(data => {    
+      this.props.loadInfo();
+      this.MessageSucces(data.message, data.type, data.message_error);
     
-        this.setState({
-          id: "",
-        })
+      this.setState({
+        id: "",
+      })
 
-      });
+    });
   }
 
 
