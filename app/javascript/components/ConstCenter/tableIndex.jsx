@@ -785,9 +785,7 @@ class tableIndex extends React.Component {
                                 <option value="">Seleccione un estado</option>
                                 <option value="PENDIENTE">PENDIENTE</option>
                                 <option value="EJECUCION">EJECUCION</option>
-                                <option value="PROYECTO">PROYECTO</option>
-                                <option value="SERVICIO">SERVICIO</option>
-                                <option value="VENTA">VENTA</option>
+                                <option value="FINALIZADO">FINALIZADO</option>
 
                               </select> 
 
