@@ -19,10 +19,13 @@ class MaterialInvoicesController < ApplicationController
 
   	@material_invoice = MaterialInvoice.create(material_invoice_params)
       if @material_invoice.save
+        
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"
         }
+
+        Material.set_state(@material_invoice.material_id)
       else
         render :json => {
           message: "¡El Registro no fue creado!",
@@ -43,7 +46,9 @@ class MaterialInvoicesController < ApplicationController
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
+        
       }
+      Material.set_state(@material_invoice.material_id)
     else 
       render :json => {
         message: "¡El Registro no fue actualizado!",
@@ -54,7 +59,9 @@ class MaterialInvoicesController < ApplicationController
   end
 
   def destroy
-  	  if @material_invoice.destroy
+       material_invoice = @material_invoice.material_id
+      if @material_invoice.destroy
+        Material.set_state(material_invoice)
         render :json => @material_invoice
       else 
         render :json => @material_invoice.errors.full_messages

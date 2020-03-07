@@ -50,7 +50,6 @@ class Material < ApplicationRecord
     cost_center.update(sum_materials_value: sum_materials_costo)
   end
 
-
   def self.set_state(id)
     material = Material.find(id)
 
@@ -96,5 +95,5 @@ class Material < ApplicationRecord
 =end
 
   #
-  
+
 end
