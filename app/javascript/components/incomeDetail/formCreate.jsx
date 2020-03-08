@@ -197,7 +197,7 @@ class formCreate extends React.Component {
                             <td>
                               {this.state.id == accion.id ? (
                                   <input 
-                                    type="number" 
+                                    type="text" 
                                     className="form form-control" 
                                     name="number"
                                     onChange={this.handleChangeUpdate}

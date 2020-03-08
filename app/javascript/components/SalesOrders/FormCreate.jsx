@@ -280,7 +280,7 @@ class FormCreate extends React.Component {
                               <td>
                                 {this.state.id == accion.id ? (
                                     <input 
-                                      type="number" 
+                                      type="text" 
                                       name="number_invoice"
                                       placeholder="Numero de factura"
                                       className="form form-control" 
