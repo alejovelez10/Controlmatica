@@ -83,7 +83,6 @@ class Show extends React.Component {
     } 
 
     handleChangeForm = e => {
-        console.log("handleChangehandleChangehandleChangehandleChangehandleChange")
           this.setState({
             form: {
               ...this.state.form,
@@ -127,7 +126,6 @@ class Show extends React.Component {
         fetch("/get_roles")
         .then(response => response.json())
         .then(data => {
-            console.log(data)
           this.setState({
             show_btn_materiales: data.materials,
             show_btn_ordenes_compra: data.sales_orders,
@@ -151,7 +149,6 @@ class Show extends React.Component {
         fetch(`/get_client/${selectedOption.value}/centro`)
         .then(response => response.json())
         .then(data => {
-          console.log(data)
     
           data.map((item) => (
             array.push({label: item.name, value: item.id})
@@ -210,7 +207,6 @@ class Show extends React.Component {
     }
 
     edit = modulo => {
-        console.log(modulo)
         if(this.state.modeEdit === true){
           this.setState({modeEdit: false})
         }else{
@@ -813,7 +809,11 @@ class Show extends React.Component {
                                             </select> 
                                         ) : (
                                             <React.Fragment>
-                                                <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                                {this.props.estados.update_state == true ? (
+                                                    <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                                ) : (
+                                                    <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."}</p>
+                                                )}
                                             </React.Fragment>
                                         )}
                                 </div>
@@ -839,7 +839,11 @@ class Show extends React.Component {
                                             </select> 
                                     ) : (
                                             <React.Fragment>
-                                                <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                                {this.props.estados.update_state == true ? (
+                                                    <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                                ) : (
+                                                    <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                                )}
                                             </React.Fragment>
                                     )}
                                 </div>

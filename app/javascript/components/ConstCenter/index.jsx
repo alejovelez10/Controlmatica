@@ -216,6 +216,7 @@ class index extends React.Component {
 
                           loadData={this.loadData}
                           clientes={this.props.clientes}
+                          estados={this.props.estados}
                           
                       />
 

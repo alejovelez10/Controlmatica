@@ -97,6 +97,17 @@ class FormFilter extends Component {
                       onChange={this.props.onChangeFilter}
                       value={this.props.formValuesFilter.date_hasta}
                     />
+                  </div> 
+
+                  <div className="col-md-5 imput-filter mt-3">
+                  <label>Descripcion</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="descripcion"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.descripcion}
+                    />
                   </div>  
     
               
