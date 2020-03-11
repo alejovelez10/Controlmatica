@@ -18,6 +18,7 @@ class index extends React.Component {
             cost_center_id: "",
             date_desde: "",
             date_hasta: "",
+            descripcion: "",
           },
 
           activePage: 1,
@@ -93,6 +94,7 @@ class index extends React.Component {
         cost_center_id: "",
         date_desde: "",
         date_hasta: "",
+        descripcion: "",
       },
 
       selectedOptionCentro: {
@@ -126,7 +128,7 @@ class index extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_contractors?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`) 
+    fetch(`/get_contractors?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&descripcion=${this.state.formFilter.descripcion}`) 
       .then(response => response.json())
       .then(data => {
         this.setState({ 
@@ -148,7 +150,7 @@ class index extends React.Component {
   };
 
   HandleClickFilter = e => {
-    fetch(`/get_contractors?user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&filtering=${this.state.filtering}`)
+    fetch(`/get_contractors?user_execute_id=${this.state.formFilter.user_execute_id}&sales_date=${this.state.formFilter.sales_date}&cost_center_id=${this.state.formFilter.cost_center_id}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&descripcion=${this.state.formFilter.descripcion}&filtering=${this.state.filtering}`)
       .then(response => response.json())
       .then(data => {
         this.setState({

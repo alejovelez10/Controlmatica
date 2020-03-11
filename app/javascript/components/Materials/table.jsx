@@ -23,6 +23,7 @@ class table extends React.Component {
       action: {},
       title: "Nuevo convenio",
       id: "",
+      material_id: "",
 
       ErrorValues: true,
 
@@ -456,7 +457,7 @@ class table extends React.Component {
 
 
   onChangeUpdateSelect = (e) =>{
-    fetch("/update_state_materials/" + this.state.id + "/" + e.target.value, {
+    fetch("/update_state_materials/" + this.state.material_id + "/" + e.target.value, {
         method: 'POST', // or 'PUT' 
     })
     .then(res => res.json())
@@ -466,7 +467,7 @@ class table extends React.Component {
       this.MessageSucces(data.message, data.type, data.message_error);
     
       this.setState({
-        id: "",
+        material_id: "",
       })
 
     });
@@ -475,7 +476,7 @@ class table extends React.Component {
 
   HandleClickUpdate = (register, state) => {
     this.setState({ 
-      id: (state == true ? register.id : "" ),
+      material_id: (state == true ? register.id : "" ),
       formUpdate: {
         sales_state: (state == true ? register.sales_state : "" )
       },
@@ -617,7 +618,7 @@ class table extends React.Component {
                     <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
 
                     <td>
-                          {this.state.id == accion.id ? (
+                          {this.state.material_id == accion.id ? (
                             <React.Fragment>
                               <select 
                                 name="estado" 
