@@ -67,7 +67,7 @@ class ShowInfo extends React.Component {
                 </div>
 
                 {this.props.infoShow.material_invoices != undefined &&(
-                  <div className="col-md-12">
+                  <div className="col-md-12 mt-4">
                       <h4 className="color-title text-center">Facturas</h4>
                       <table
                         className="table table-hover table-bordered"
