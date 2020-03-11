@@ -588,6 +588,9 @@ class table extends React.Component {
           <table className="table table-hover table-bordered table-width" id="sampleTable">
             <thead>
               <tr className="tr-title">
+                <th style={{ width: "1%" }} className="text-center">
+                  Acciones
+                </th>
                 <th style={{width:"6%"}}>Centro de costo</th>
                 <th style={{width:"8%"}}>Proveedor</th>
                 <th style={{width:"6%"}}># Orden</th>
@@ -597,9 +600,6 @@ class table extends React.Component {
                 <th style={{width:"5%"}}>Fecha Entrega</th>
                 <th style={{width:"5%"}}>Valor Facturas</th>
                 <th style={{width:"11%"}}>Estado</th>
-                <th style={{ width: "5%" }} className="text-center">
-                  Acciones
-                </th>
               </tr>
             </thead>
 
@@ -607,43 +607,7 @@ class table extends React.Component {
               {this.props.dataActions.length >= 1 ? (
                 this.props.dataActions.map(accion => (
                   <tr key={accion.id}>
-                    <td>{accion.cost_center.code}</td>
-                    <td>{accion.provider.name}</td>
-                    <td>{accion.sales_number}</td>
-                    <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                    <td>{accion.description}</td>
-                    <td>{accion.sales_date}</td>
-                    <td>{accion.delivery_date}</td>
-                   
-                    <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-
                     <td>
-                          {this.state.material_id == accion.id ? (
-                            <React.Fragment>
-                              <select 
-                                name="estado" 
-                                className="form form-control"
-                                onChange={this.onChangeUpdateSelect}
-                                value={this.state.formUpdate.sales_state}
-                                style={{ display: "inherit", width: "90%"}}
-                              >
-                                <option value="">Seleccione un estado</option>
-                                <option value="PROCESADO">PROCESADO</option>
-                                <option value="INGRESADO TOTAL">INGRESADO TOTAL</option>
-                                <option value="INGRESADO CON MAYOR VALOR EN FACTURA">INGRESADO CON MAYOR VALOR EN FACTURA</option>
-                                <option value="INGRESADO PARCIAL">INGRESADO PARCIAL</option>
-
-                              </select> 
-
-                              <i onClick={() => this.HandleClickUpdate(accion, false)} className="fas fa-times-circle float-right"></i>
-                            </React.Fragment>
-                          ) : (
-                            <p>{accion.sales_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true)} className="fas fa-pencil-alt float-right"></i> : ""} </p>
-                          )} 
-                    </td>
-                  
-
-                    <td className="text-center" style={{ width: "10px" }}>
                       <div
                         className="btn-group"
                         role="group"
@@ -696,6 +660,40 @@ class table extends React.Component {
                           </div>
                         </div>
                       </div>
+                    </td>
+                    <td>{accion.cost_center.code}</td>
+                    <td>{accion.provider.name}</td>
+                    <td>{accion.sales_number}</td>
+                    <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                    <td>{accion.description}</td>
+                    <td>{accion.sales_date}</td>
+                    <td>{accion.delivery_date}</td>
+                   
+                    <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+
+                    <td>
+                          {this.state.material_id == accion.id ? (
+                            <React.Fragment>
+                              <select 
+                                name="estado" 
+                                className="form form-control"
+                                onChange={this.onChangeUpdateSelect}
+                                value={this.state.formUpdate.sales_state}
+                                style={{ display: "inherit", width: "90%"}}
+                              >
+                                <option value="">Seleccione un estado</option>
+                                <option value="PROCESADO">PROCESADO</option>
+                                <option value="INGRESADO TOTAL">INGRESADO TOTAL</option>
+                                <option value="INGRESADO CON MAYOR VALOR EN FACTURA">INGRESADO CON MAYOR VALOR EN FACTURA</option>
+                                <option value="INGRESADO PARCIAL">INGRESADO PARCIAL</option>
+
+                              </select> 
+
+                              <i onClick={() => this.HandleClickUpdate(accion, false)} className="fas fa-times-circle float-right"></i>
+                            </React.Fragment>
+                          ) : (
+                            <p>{accion.sales_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true)} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                          )} 
                     </td>
                   </tr>
                 ))

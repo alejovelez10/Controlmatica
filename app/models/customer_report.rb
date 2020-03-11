@@ -37,11 +37,13 @@ class CustomerReport < ApplicationRecord
 		self.report_code = self.cost_center.code + "-" + self.count.to_s
 	end
 
-	def self.search(search1, search2, search3)
+	def self.search(search1, search2, search3, search4, search5)
 		search1 != "" ? (scope :centro, -> { where(cost_center_id: search1) }) : (scope :centro, -> { where.not(id: nil) })
 		search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
 		search3 != "" ? (scope :estado, -> { where("report_state like '%#{search3.downcase}%' or report_state like '%#{search3.upcase}%' or report_state like '%#{search3.capitalize}%' ") }) : (scope :estado, -> { where.not(id: nil) })
-	    centro.customer.estado
+		search4 != "" ? (scope :fdesdep, -> { where(["report_date > ?", search4]) }) : (scope :fdesdep, -> { where.not(id: nil) })
+		search5 != "" ? (scope :fhastap, -> { where(["report_date < ?", search5]) }) : (scope :fhastap, -> { where.not(id: nil) })
+	    centro.customer.estado.fdesdep.fhastap
 	end
 	
 

@@ -119,6 +119,28 @@ class FormFilter extends Component {
                       />
                   </div>
 
+                  <div className="col-md-3 imput-filter mt-3">
+                  <label>Fecha desde</label>
+                    <input
+                      className="form form-control"
+                      type="date"
+                      name="date_desde"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.date_desde}
+                    />
+                  </div>
+
+                  <div className="col-md-3 imput-filter mt-3">
+                  <label>Fecha hasta</label>
+                    <input
+                      className="form form-control"
+                      type="date"
+                      name="date_hasta"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.date_hasta}
+                    />
+                  </div> 
+
 
 
 

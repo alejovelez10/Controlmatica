@@ -17,7 +17,9 @@ class index extends React.Component {
               date_ejecution: "",
               report_sate: "",
               cost_center_id: "",
-              customer_id: ""
+              customer_id: "",
+              date_desde: "",
+              date_hasta: "",
             },
 
             activePage: 1,
@@ -131,7 +133,9 @@ class index extends React.Component {
           report_execute_id: "",
           date_ejecution: "",
           report_sate: "",
-          cost_center_id: ""
+          cost_center_id: "",
+          date_desde: "",
+          date_hasta: "",
         },
 
         selectedOptionCentro: {
@@ -163,7 +167,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&filtering=${this.state.filtering}`)
+      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&filtering=${this.state.filtering}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -194,7 +198,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&work_description=${this.state.filtering == true ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.filtering == true ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.filtering == true ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.filtering == true ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.filtering == true ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined  ? this.state.formFilter.customer_id : ""}`) 
+      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&work_description=${this.state.filtering == true ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.filtering == true ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.filtering == true ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.filtering == true ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.filtering == true ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined  ? this.state.formFilter.customer_id : ""}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({ 

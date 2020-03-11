@@ -46,14 +46,16 @@ class Report < ApplicationRecord
 
 
 
-  def self.search(search1, search2, search3, search4, search5, search6)
+  def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :descripcion, -> { where("work_description like '%#{search1.downcase}%' or work_description like '%#{search1.upcase}%' or work_description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search2 != "" ? (scope :responsible, -> { where(report_execute_id: search2) }) : (scope :responsible, -> { where.not(id: nil) })
     search3 != " " && search3 != nil && search3 != "" ? (scope :date_ejecution, -> { where("DATE(report_date) = ?", search3) }) : (scope :date_ejecution, -> { where.not(id: nil) })
     search4 != "" ? (scope :state_report, -> { where(report_sate: search4) }) : (scope :state_report, -> { where.not(id: nil) })
     search5 != "" ? (scope :centro, -> { where(cost_center_id: search5) }) : (scope :centro, -> { where.not(id: nil) })
     search6 != "" ? (scope :customer, -> { where(customer_id: search6) }) : (scope :customer, -> { where.not(id: nil) })
-    descripcion.responsible.date_ejecution.state_report.centro.customer
+    search7 != "" ? (scope :fdesdep, -> { where(["report_date > ?", search7]) }) : (scope :fdesdep, -> { where.not(id: nil) })
+    search8 != "" ? (scope :fhastap, -> { where(["report_date < ?", search8]) }) : (scope :fhastap, -> { where.not(id: nil) })
+    descripcion.responsible.date_ejecution.state_report.centro.customer.fdesdep.fhastap
   end
 
   def create_code
