@@ -3,6 +3,7 @@ import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import NumberFormat from 'react-number-format';
 import FormCreate from '../Reports/FormCreate'
+import { UncontrolledTooltip } from "reactstrap";
 
 class table extends React.Component {
     constructor(props) {
@@ -642,7 +643,16 @@ class table extends React.Component {
                     </div>
                   </td>
                   <td>{accion.code_report}</td>
-                  <td>{accion.cost_center.code}</td>
+                  <td  id={`state${accion.id}`}>
+                    {accion.cost_center.code}
+                    <UncontrolledTooltip
+                      className="red-tooltip"
+                      placement="top"
+                      target={`state${accion.id}`}
+                    >
+                    {`${accion.cost_center.description}`}
+                  </UncontrolledTooltip>
+                  </td>
                   <td>{accion.report_date}</td>
                   <td>{accion.report_execute != undefined ? accion.report_execute.names : "" }</td>
                   <td>{accion.working_time}</td>
