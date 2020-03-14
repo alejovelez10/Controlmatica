@@ -57,7 +57,7 @@ class FormCreate extends React.Component {
                       )}
                   </div>
 
-                  <div className="col-md-8">
+                  <div className="col-md-12">
                       <input
                         type="hidden"
                         name="cost_center_id"
