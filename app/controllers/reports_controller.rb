@@ -44,11 +44,11 @@ class ReportsController < ApplicationController
         reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta])
 
       elsif params[:filtering] == "false"
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :description] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
         reports_total =  Report.all
       else
         
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :description] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
         reports_total =  Report.all
       end
 

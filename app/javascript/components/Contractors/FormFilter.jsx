@@ -50,7 +50,7 @@ class FormFilter extends Component {
                       </select>
                 </div>
 
-                <div className="col-md-3">
+                {/*<div className="col-md-3">
                    <label>Fecha creacion</label>
                     <input
                       className="form form-control"
@@ -59,7 +59,7 @@ class FormFilter extends Component {
                       onChange={this.props.onChangeFilter}
                       value={this.props.formValuesFilter.sales_date}
                     />
-                </div>
+                      </div>*/}
 
                 <div className="col-md-3">
                       <input
@@ -88,7 +88,7 @@ class FormFilter extends Component {
                     />
                   </div>
 
-                  <div className="col-md-3 imput-filter mt-3">
+                  <div className="col-md-3 imput-filter">
                   <label>Fecha hasta</label>
                     <input
                       className="form form-control"

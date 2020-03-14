@@ -23,6 +23,8 @@ class CostCentersController < ApplicationController
     ending = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Descargar excel").exists?
     update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
+    show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
+
 
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
@@ -35,6 +37,7 @@ class CostCentersController < ApplicationController
       ending: (current_user.rol.name == "Administrador" ? true : ending),
       download_file: (current_user.rol.name == "Administrador" ? true : download_file),
       update_state: (current_user.rol.name == "Administrador" ? true : update_state),
+      show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
     }
   end
 

@@ -36,19 +36,21 @@ class FormCreate extends React.Component {
             /> 
           </div>
 
-          <div className="col-md-4">
-            <label>Valor hora costo <small className="validate-label">*</small></label>
+          {this.props.estados.show_hours == true && (
+            <div className="col-md-4">
+              <label>Valor hora costo <small className="validate-label">*</small></label>
 
-            <NumberFormat 
-              name="hour_real"
-              thousandSeparator={true} 
-              prefix={'$'} 
-              className={`form form-control ${this.props.errorValues == false && this.props.formValues.hour_real == "" ? "error-class" : ""}`}
-              value={this.props.formValues.hour_real}
-              onChange={this.props.onChangeForm}
-              placeholder="Valor hora costo"
-            /> 
-          </div>
+              <NumberFormat 
+                name="hour_real"
+                thousandSeparator={true} 
+                prefix={'$'} 
+                className={`form form-control ${this.props.errorValues == false && this.props.formValues.hour_real == "" ? "error-class" : ""}`}
+                value={this.props.formValues.hour_real}
+                onChange={this.props.onChangeForm}
+                placeholder="Valor hora costo"
+              /> 
+            </div>
+          )}
 
           <div className="col-md-4">
             <label>Hora valor cotizada<small className="validate-label">*</small></label>
@@ -186,6 +188,7 @@ class FormCreate extends React.Component {
                     /> 
                   </div>
 
+                {this.props.estados.show_hours == true && (
                   <div className="col-md-4">
                   <label>Valor hora costo <small className="validate-label">*</small></label>
                     <NumberFormat 
@@ -198,6 +201,7 @@ class FormCreate extends React.Component {
                       placeholder="Valor hora costo"
                     /> 
                   </div>
+                )}
 
                   <div className="col-md-4">
                   <label>Hora valor cotizada<small className="validate-label">*</small></label>
@@ -230,18 +234,21 @@ class FormCreate extends React.Component {
                     /> 
                   </div>
 
-                  <div className="col-md-4">
-                  <label>Valor hora Costo<small className="validate-label">*</small></label>
-                    <NumberFormat 
-                      name="hours_contractor_real"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor_real == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.hours_contractor_real}
-                      onChange={this.props.onChangeForm}
-                      placeholder="Valor hora Costo"
-                    /> 
-                  </div>
+                  {this.props.estados.show_hours == true && (
+                    <div className="col-md-4">
+                    <label>Valor hora Costo<small className="validate-label">*</small></label>
+                      <NumberFormat 
+                        name="hours_contractor_real"
+                        thousandSeparator={true} 
+                        prefix={'$'} 
+                        className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours_contractor_real == "" ? "error-class" : ""}`}
+                        value={this.props.formValues.hours_contractor_real}
+                        onChange={this.props.onChangeForm}
+                        placeholder="Valor hora Costo"
+                      /> 
+                    </div>
+                  )}
+                
 
                   <div className="col-md-4">
                   <label>Valor hora cotizada<small className="validate-label">*</small></label>

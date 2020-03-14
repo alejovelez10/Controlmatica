@@ -162,7 +162,7 @@ class table extends React.Component {
     .then(data => {
 
       data.map((item) => (
-        arrayCentro.push({label: item.code, value: item.id})
+        arrayCentro.push({label: `${item.code} - (${item.description})`, value: item.id})
       ))
 
       this.setState({
@@ -586,6 +586,7 @@ class table extends React.Component {
               <th className="text-center">Acciones</th>
               <th style={{width: "6%"}}>Codigo</th>
               <th style={{width: "6%"}}>Centro de Costos</th>
+              <th style={{width: "6%"}}>Cliente</th>
               <th style={{width: "7%"}}>Fecha de Ejecucion</th>
               <th style={{width: "8%"}}>Responsable Ejecucion</th>
               <th style={{width: "6%"}}>Horas Laboradas</th>
@@ -652,6 +653,9 @@ class table extends React.Component {
                     >
                     {`${accion.cost_center.description}`}
                   </UncontrolledTooltip>
+                  </td>
+                  <td>
+                    {accion.cost_center.customer.name}
                   </td>
                   <td>{accion.report_date}</td>
                   <td>{accion.report_execute != undefined ? accion.report_execute.names : "" }</td>

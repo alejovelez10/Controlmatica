@@ -51,10 +51,10 @@ class ShowInfo extends React.Component {
                     <p className="mb-0">{this.props.infoShow.provider != undefined ? this.props.infoShow.provider.name : this.props.infoShow.provider_id }</p>
                 </div>
 
-                <div className="col-md-4 mb-4">
+                {/*<div className="col-md-4 mb-4">
                     <h6 className="colorTitle">Número de factura</h6>
                     <p className="mb-0">{this.props.infoShow.provider_invoice_number}</p>
-                </div>
+                </div>*/}
 
                 <div className="col-md-4 mb-4">
                     <h6 className="colorTitle">Valor de factura </h6>

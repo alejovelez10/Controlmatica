@@ -648,6 +648,10 @@ class tableIndex extends React.Component {
           contacto={this.state.dataContact}
           onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
           formAutocompleteContact={this.state.selectedOptionContact}
+
+          /* ESTADOS */
+
+          estados={this.props.estados}
           
 
           

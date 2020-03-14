@@ -18,7 +18,7 @@ class FormCreate extends React.Component {
             <ModalBody>
 
             <div className="row">
-              <div className="col-md-4">
+              <div className="col-md-6">
                       <input
                         type="hidden"
                         name="customer_id"
@@ -34,7 +34,7 @@ class FormCreate extends React.Component {
                       />
                 </div>
 
-                  <div className="col-md-4">
+                  <div className="col-md-6">
                     <input
                         type="hidden"
                         name="contact_id"
@@ -48,9 +48,16 @@ class FormCreate extends React.Component {
                         className={`link-form ${this.props.errorValues == false && this.props.formValues.contact_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocompleteContact}
                       />
+
+
+                      {this.props.create_state == false && (
+                          <a data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                              Crear contacto
+                          </a>
+                      )}
                   </div>
 
-                  <div className="col-md-4">
+                  <div className="col-md-8">
                       <input
                         type="hidden"
                         name="cost_center_id"
@@ -67,13 +74,6 @@ class FormCreate extends React.Component {
                   </div>
                   <div className="col-md-4 text-center"></div>
                   
-                  <div className="col-md-4 ">
-                    {this.props.create_state == false && (
-                        <a data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-                            Crear contacto
-                        </a>
-                    )}
-                  </div>
                   <div className="col-md-4 mt-4 text-center"></div>
 
 
