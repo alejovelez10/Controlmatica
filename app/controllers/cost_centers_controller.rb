@@ -254,6 +254,26 @@ class CostCentersController < ApplicationController
     
   end
 
+  def getValues
+    cost_center = CostCenter.find(params[:id])
+    sales_ordes = cost_center.sales_orders.to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+    reportes = cost_center.reports.to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+    contractors = cost_center.contractors.to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+
+    sales_ordes = JSON.parse(sales_ordes)
+    reportes = JSON.parse(reportes)
+    contractors = JSON.parse(contractors)
+
+    values = {
+      dataMateriales: cost_center.materials,
+      dataContractors: contractors,
+      dataSalesOrdes: sales_ordes,
+      dataReports: reportes,
+    }
+    render :json => values
+  end
+
+
   # GET /cost_centers/new
   def new
     @cost_center = CostCenter.new

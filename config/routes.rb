@@ -80,6 +80,9 @@ Rails.application.routes.draw do
 
   post "update_cost_centers/:id/:from/:state", to: "cost_centers#update_state_centro"
 
+  get "getValues/:id", to: "cost_centers#getValues"
+
+
 
   #DESCARGAS DE EXEL
 

@@ -3,7 +3,8 @@ import {Card, CardImg, CardText, CardBody,CardTitle, CardSubtitle, Button} from 
 import NumberFormat from 'react-number-format';
 import FormCreate from "./FormCreate";
 import SweetAlert from 'sweetalert2-react';
-import Swal from 'sweetalert2/dist/sweetalert2.js'
+import Swal from 'sweetalert2/dist/sweetalert2.js';
+import TabContentShow from '../ShowConstCenter/TabContentShow'
 
 class Show extends React.Component {
     constructor(props){
@@ -21,6 +22,11 @@ class Show extends React.Component {
                 invoiced_state: this.props.data_info.invoiced_state,
                 id: this.props.data_info.id,
             },
+
+            dataMateriales: [],
+            dataContractors: [],
+            dataSalesOrdes: [],
+            dataReports: [],
 
             title: "Nuevo centro de costo",
             ErrorValues: true,
@@ -141,6 +147,23 @@ class Show extends React.Component {
         this.setState({
             clients: array
         })
+
+        setTimeout(() => {
+            this.getValues()
+        },1000)
+    }
+
+    getValues(){
+        fetch(`/getValues/${this.props.data_info.id}`)
+        .then(response => response.json())
+        .then(data => {
+          this.setState({
+            dataMateriales: data.dataMateriales,
+            dataContractors: data.dataContractors,
+            dataSalesOrdes: data.dataSalesOrdes,
+            dataReports: data.dataReports,
+          });
+        });
     }
 
     handleChangeAutocomplete = selectedOption => {
@@ -926,6 +949,14 @@ class Show extends React.Component {
 
                     </CardBody>
                 </Card>
+
+                <Card className="mt-3">
+                    <CardBody>
+                        <TabContentShow dataMateriales={this.state.dataMateriales} dataContractors={this.state.dataContractors} dataSalesOrdes={this.state.dataSalesOrdes} dataReports={this.state.dataReports} />
+                    </CardBody>
+                </Card>
+
+
             </React.Fragment>
         );
     }
