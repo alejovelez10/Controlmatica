@@ -9,7 +9,6 @@ class ReportesDeServiciosTable extends Component {
                     <table className="table table-hover table-bordered table-width" id="sampleTable">
                     <thead>
                         <tr className="tr-title">
-                            <th className="text-center">Acciones</th>
                             <th style={{width: "6%"}}>Codigo</th>
                             <th style={{width: "6%"}}>Cliente</th>
                             <th style={{width: "7%"}}>Fecha de Ejecucion</th>
