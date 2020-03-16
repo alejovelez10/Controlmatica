@@ -1,4 +1,11 @@
 import React, { Component } from 'react';
+import NumberFormat from "react-number-format";
+
+
+date_short = (fecha) => {
+    var d = new Date(fecha)
+    return (d.getDate() + 1 > 9 ? "" : "0") + (d.getDate() +  1)  + "/" + (d.getMonth() +1  > 9 ? "" : "0") + (d.getMonth()  +  1) + " " + '/' + d.getFullYear()
+}
 
 class OrdenesDeCompraTable extends Component {
     render() {

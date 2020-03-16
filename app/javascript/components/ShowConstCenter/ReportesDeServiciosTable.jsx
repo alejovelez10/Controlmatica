@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import NumberFormat from "react-number-format";
 
 class ReportesDeServiciosTable extends Component {
     render() {
