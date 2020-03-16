@@ -259,13 +259,15 @@ class CostCentersController < ApplicationController
     sales_ordes = cost_center.sales_orders.to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
     reportes = cost_center.reports.to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
     contractors = cost_center.contractors.to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+    materiales = cost_center.materials.to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] } })
 
     sales_ordes = JSON.parse(sales_ordes)
     reportes = JSON.parse(reportes)
     contractors = JSON.parse(contractors)
+    materiales = JSON.parse(materiales)
 
     values = {
-      dataMateriales: cost_center.materials,
+      dataMateriales: materiales,
       dataContractors: contractors,
       dataSalesOrdes: sales_ordes,
       dataReports: reportes,
