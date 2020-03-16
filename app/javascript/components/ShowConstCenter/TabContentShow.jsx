@@ -18,7 +18,7 @@ const TabContentShow = (props) => {
 
   return (
     <div>
-      <Nav tabs>
+      <Nav tabs className="mb-3">
 
         <NavItem>
           <NavLink
