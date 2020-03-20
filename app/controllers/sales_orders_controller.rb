@@ -250,7 +250,7 @@ class SalesOrdersController < ApplicationController
       end
     end
 
-    if @sales_order.update(sales_order_params) 
+    if @sales_order.update(sales_order_params.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -286,6 +286,6 @@ class SalesOrdersController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def sales_order_params
-      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id, :description)
+      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id, :description, :update_user)
     end
 end

@@ -196,7 +196,7 @@ class MaterialsController < ApplicationController
       params["amount"] = valor1
   end
 
-    if @material.update(material_params) 
+    if @material.update(material_params.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -226,7 +226,7 @@ class MaterialsController < ApplicationController
   end
 
   def material_params
-    params.permit(:provider_id, :sales_date, :sales_number, :amount, :delivery_date, :sales_state, :description, :provider_invoice_number, :provider_invoice_value, :cost_center_id, :user_id)
+    params.permit(:provider_id, :sales_date, :sales_number, :amount, :delivery_date, :sales_state, :description, :provider_invoice_number, :provider_invoice_value, :cost_center_id, :user_id, :update_user)
   end
 
 

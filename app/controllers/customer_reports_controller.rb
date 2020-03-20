@@ -253,7 +253,7 @@ class CustomerReportsController < ApplicationController
   # PATCH/PUT /customer_reports/1
   # PATCH/PUT /customer_reports/1.json
   def update
-    if @customer_report.update(customer_report_params) 
+    if @customer_report.update(customer_report_params.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -330,6 +330,6 @@ class CustomerReportsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def customer_report_params
-    params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :email, :report_ids => [])
+    params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :email, :update_user, :report_ids => [])
   end
 end

@@ -28,6 +28,7 @@
 #  count                    :integer
 #  displacement_hours       :float
 #  value_displacement_hours :float
+#  update_user              :integer
 #
 
 class Report < ApplicationRecord
@@ -172,7 +173,7 @@ class Report < ApplicationRecord
     str = "#{customer}#{contact}#{centro}#{date}#{user}#{working_time}#{work_description}#{displacement_hours}#{viatic_value}#{viatic_description}"
 
     RegisterEdit.create(  
-      user_id: 12, 
+      user_id: self.update_user, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,

@@ -170,7 +170,7 @@ class ContractorsController < ApplicationController
       end
     end
 
-    if @contractor.update(contractor_params) 
+    if @contractor.update(contractor_params.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -198,6 +198,6 @@ class ContractorsController < ApplicationController
   end
 
   def contractor_params
-    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id)
+    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id, :update_user)
   end
 end

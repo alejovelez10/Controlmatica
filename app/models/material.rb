@@ -16,6 +16,7 @@
 #  user_id                 :integer
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
+#  update_user             :integer
 #
 class Material < ApplicationRecord
   belongs_to :cost_center
@@ -104,7 +105,7 @@ class Material < ApplicationRecord
     str = "#{provider}#{centro}#{sales_date}#{sales_number}#{amount}#{delivery_date}#{description}"
 
     RegisterEdit.create(  
-      user_id: 12, 
+      user_id: self.update_user, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,

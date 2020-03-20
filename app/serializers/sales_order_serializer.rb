@@ -14,6 +14,7 @@
 #  user_id        :integer
 #  description    :text
 #  sum_invoices   :float
+#  update_user    :integer
 #
 
 class SalesOrderSerializer < ActiveModel::Serializer

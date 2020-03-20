@@ -246,7 +246,7 @@ class ReportsController < ApplicationController
     end
 
     
-    if @report.update(report_params) 
+    if @report.update(report_params.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -286,7 +286,7 @@ class ReportsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def report_params
-      params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id, :count, :displacement_hours, :value_displacement_hours)
+      params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user)
     end
 end
 

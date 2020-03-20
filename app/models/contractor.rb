@@ -13,6 +13,7 @@
 #  description     :text
 #  hours           :float
 #  user_execute_id :integer
+#  update_user     :integer
 #
 
 class Contractor < ApplicationRecord
@@ -82,7 +83,7 @@ class Contractor < ApplicationRecord
     str = "#{centro}#{user}#{sales_date}#{hours}#{description}"
 
     RegisterEdit.create(  
-      user_id: 12, 
+      user_id: self.update_user, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,

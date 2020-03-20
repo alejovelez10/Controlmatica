@@ -14,6 +14,7 @@
 #  user_id        :integer
 #  description    :text
 #  sum_invoices   :float
+#  update_user    :integer
 #
 
 class SalesOrder < ApplicationRecord
@@ -92,7 +93,7 @@ class SalesOrder < ApplicationRecord
     str = "#{created_date}#{order_number}#{order_value}#{centro}#{description}"
 
     RegisterEdit.create(  
-      user_id: 12, 
+      user_id: self.update_user, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,

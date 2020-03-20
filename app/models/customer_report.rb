@@ -17,6 +17,7 @@
 #  count          :integer
 #  approve_date   :date
 #  email          :string
+#  update_user    :integer
 #
 
 class CustomerReport < ApplicationRecord
@@ -86,7 +87,7 @@ class CustomerReport < ApplicationRecord
 		str = "#{customer}#{centro}#{contact}#{description}#{report_date}"
 	
 		RegisterEdit.create(  
-		  user_id: 12, 
+		  user_id: self.update_user, 
 		  register_user_id: self.id, 
 		  state: "pending", 
 		  date_update: Time.now,
