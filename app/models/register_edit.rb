@@ -11,6 +11,8 @@
 #  newValues        :json
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
+#  module           :string
+#  description      :text
 #
 
 class RegisterEdit < ApplicationRecord

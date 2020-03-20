@@ -22,6 +22,7 @@ class SalesOrder < ApplicationRecord
   after_save :change_state_cost_center
   has_many :customer_invoices, dependent: :destroy
   after_destroy :change_state_cost_center_destroy
+  before_update :create_edit_register
 
   def change_state_cost_center
     cost_center = CostCenter.find(self.cost_center_id)
@@ -70,4 +71,36 @@ class SalesOrder < ApplicationRecord
       CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
     end
   end
+
+  def create_edit_register
+    if self.cost_center_id_changed?
+      names = []
+      cost_center = CostCenter.where(id: self.cost_center_id_change)
+      cost_center.each do |centro| 
+        names << centro.code
+      end
+      centro = "<p>El Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      centro = ""
+    end
+    
+    created_date = self.created_date_changed? == true ? ("<p>La Fecha de generación: <b class='color-true'>#{self.created_date_change[0]}</b> / <b class='color-false'>#{self.created_date_change[1]}</b></p>") : "" 
+    order_number = self.order_number_changed? == true ? ("<p>La Numero de orden: <b class='color-true'>#{self.order_number_change[0]}</b> / <b class='color-false'>#{self.order_number_change[1]}</b></p>") : "" 
+    order_value = self.order_value_changed? == true ? ("<p>La Valor: <b class='color-true'>#{self.order_value_change[0]}</b> / <b class='color-false'>#{self.order_value_change[1]}</b></p>") : "" 
+    description = self.description_changed? == true ? ("<p>La descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : "" 
+    
+    str = "#{created_date}#{order_number}#{order_value}#{centro}#{description}"
+
+    RegisterEdit.create(  
+      user_id: 12, 
+      register_user_id: self.id, 
+      state: "pending", 
+      date_update: Time.now,
+      module: "Ordenes de Compra",
+      description: str
+    )
+  end
+
+
+
 end

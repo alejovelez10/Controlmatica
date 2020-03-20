@@ -24,6 +24,7 @@ class Material < ApplicationRecord
   has_many :material_invoices, dependent: :destroy
 
   after_destroy :calculate_cost_destroy
+  before_update :create_edit_register
   #before_create :set_state
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
@@ -69,6 +70,47 @@ class Material < ApplicationRecord
       puts "222222343434"
       material.update(sales_state: "INGRESADO TOTAL")
     end
+  end
+
+  def create_edit_register
+    if self.provider_id_changed?
+      names = []
+      providers = Provider.where(id: self.provider_id_change)
+      providers.each do |provider| 
+        names << provider.names
+      end
+      provider = "<p>El Proveedor: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      provider = ""
+    end
+
+    if self.cost_center_id_changed?
+      names = []
+      cost_center = CostCenter.where(id: self.cost_center_id_change)
+      cost_center.each do |centro| 
+        names << centro.code
+      end
+      centro = "<p>El Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      centro = ""
+    end
+    
+    sales_date = self.sales_date_changed? == true ? ("<p>La Fecha de orden: <b class='color-true'>#{self.sales_date_change[0]}</b> / <b class='color-false'>#{self.sales_date_change[1]}</b></p>") : "" 
+    sales_number = self.sales_number_changed? == true ? ("<p>EL Numero de orden: <b class='color-true'>#{self.sales_number_change[0]}</b> / <b class='color-false'>#{self.sales_number_change[1]}</b></p>") : "" 
+    amount = self.amount_changed? == true ? ("<p>El Valor: <b class='color-true'>#{self.amount_change[0]}</b> / <b class='color-false'>#{self.amount_change[1]}</b></p>") : "" 
+    delivery_date = self.delivery_date_changed? == true ? ("<p>La Fecha estimada de entrega: <b class='color-true'>#{self.delivery_date_change[0]}</b> / <b class='color-false'>#{self.delivery_date_change[1]}</b></p>") : "" 
+    description = self.description_changed? == true ? ("<p>La Descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : "" 
+    
+    str = "#{provider}#{centro}#{sales_date}#{sales_number}#{amount}#{delivery_date}#{description}"
+
+    RegisterEdit.create(  
+      user_id: 12, 
+      register_user_id: self.id, 
+      state: "pending", 
+      date_update: Time.now,
+      module: "Materiales",
+      description: str
+    )
   end
 
 =begin

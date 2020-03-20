@@ -937,6 +937,8 @@ class Show extends React.Component {
                                 contacto={this.state.dataContact}
                                 onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
                                 formAutocompleteContact={this.state.selectedOptionContact}
+
+                                estados={this.props.estados}
                                 
                             />
 

@@ -110,9 +110,11 @@ class CostCentersController < ApplicationController
   def show
     cost_centers = ModuleControl.find_by_name("Centro de Costos")
     update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
+    show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
 
     @estados = {    
       update_state: (current_user.rol.name == "Administrador" ? true : update_state),
+      show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
     }
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
@@ -565,6 +567,7 @@ class CostCentersController < ApplicationController
         type: "success",
         register: @cost_center
       }
+
     else 
       render :json => {
         message: "¡El Registro no fue actualizado!",

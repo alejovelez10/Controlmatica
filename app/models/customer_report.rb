@@ -27,7 +27,7 @@ class CustomerReport < ApplicationRecord
 	belongs_to :contact, optional: true
 	before_create :generate_token
 	after_create :send_approval_email
-
+	before_update :create_edit_register
 
 
 	def generate_token
@@ -45,12 +45,55 @@ class CustomerReport < ApplicationRecord
 		search5 != "" ? (scope :fhastap, -> { where(["report_date < ?", search5]) }) : (scope :fhastap, -> { where.not(id: nil) })
 	    centro.customer.estado.fdesdep.fhastap
 	end
+
+	def create_edit_register
+		if self.customer_id_changed?
+			names = []
+			customers = Customer.where(id: self.customer_id_change)
+			customers.each do |cliente| 
+			  names << cliente.name
+			end
+			customer = "<p>El Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"#self.customer.name
+		else
+			customer = ""
+		end
 	
+		if self.cost_center_id_changed?
+		  names = []
+		  cost_center = CostCenter.where(id: self.cost_center_id_change)
+		  cost_center.each do |centro| 
+			names << centro.code
+		  end
+		  centro = "<p>El Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+		else
+		  centro = ""
+		end
 
-	def send_approval_email
-
+		if self.contact_id_changed?
+			namesClient = []
+			contact = Contact.where(id: self.contact_id_change)
+			contact.each do |contacto| 
+			  namesClient << contacto.name
+			end
+			contact = "<p>El que Aprueba el Reporte: <b class='color-true'>#{namesClient[1]}</b> / <b class='color-false'>#{namesClient[0]}</p>"
+		else
+			contact = ""
+		end
 		
-
+		report_date = self.report_date_changed? == true ? ("<p>La Fecha del reporte: <b class='color-true'>#{self.report_date_change[0]}</b> / <b class='color-false'>#{self.report_date_change[1]}</b></p>") : "" 
+		description = self.description_changed? == true ? ("<p>La Descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : "" 
 		
+		str = "#{customer}#{centro}#{contact}#{description}#{report_date}"
+	
+		RegisterEdit.create(  
+		  user_id: 12, 
+		  register_user_id: self.id, 
+		  state: "pending", 
+		  date_update: Time.now,
+		  module: "Reportes de clientes",
+		  description: str
+		)
 	end
+
+
 end

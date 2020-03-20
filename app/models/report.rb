@@ -40,9 +40,9 @@ class Report < ApplicationRecord
   before_create :create_code
   belongs_to :contact, optional: true
   before_create :coste_center_verify
-  after_create :save_report_in_cost_center
   after_destroy :calculate_cost_destroy
   after_save :calculatate_update
+  before_update :create_edit_register
 
 
 
@@ -100,22 +100,6 @@ class Report < ApplicationRecord
     else
       CostCenter.find(self.cost_center_id).update(execution_state: "EJECUCION")
     end
-
-    #if self.contact_id == nil
-      #Contact.create(customer_id: self.customer_id, name: self.contact_name, email: self.contact_email, phone: self.contact_phone, position: self.contact_position, user_id: self.user_id)
-    #else
-      #contact = Contact.find(self.contact_id)
-      #self.contact_name = contact.name
-      #self.contact_position = contact.position
-      #self.contact_email = contact.email
-      #self.contact_phone = contact.phone
-      #CostCenter.last.update(contact_id: contact.id)
-    #end
-  end
-
-  def save_report_in_cost_center
-
-    
   end
 
   def calculatate_update
@@ -129,6 +113,74 @@ class Report < ApplicationRecord
     end
   
   end
+
+  def create_edit_register
+
+    if self.customer_id_changed?
+      names = []
+      customers = Customer.where(id: self.customer_id_change)
+      customers.each do |customer| 
+        names << customer.name
+      end
+      customer = "<p>El Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      customer = ""
+    end
+
+    if self.contact_id_changed?
+      names = []
+      contacts = Contact.where(id: self.contact_id_change)
+      contacts.each do |contact| 
+        names << contact.name
+      end
+      contact = "<p>El Contacto: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      contact = ""
+    end
+
+    if self.cost_center_id_changed?
+      names = []
+      cost_center = CostCenter.where(id: self.cost_center_id_change)
+      cost_center.each do |centro| 
+        names << centro.code
+      end
+      centro = "<p>El Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      centro = ""
+    end
+
+    if self.report_execute_id_changed?
+      names = []
+      users = User.where(id: self.report_execute_id_change)
+      users.each do |user| 
+        names << user.names
+      end
+      user = "<p>El Responsable de Ejecucion: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+    else
+      user = ""
+    end
+
+
+    
+    date = self.report_date_changed? == true ? ("<p>La Fecha del reporte: <b class='color-true'>#{self.report_date_change[0]}</b> / <b class='color-false'>#{self.report_date_change[1]}</b></p>") : "" 
+    working_time = self.working_time_changed? == true ? ("<p>EL Tiempo de Trabajo: <b class='color-true'>#{self.working_time_change[0]}</b> / <b class='color-false'>#{self.working_time_change[1]}</b></p>") : "" 
+    work_description = self.work_description_changed? == true ? ("<p>La Descripcion del trabajo: <b class='color-true'>#{self.work_description_change[0]}</b> / <b class='color-false'>#{self.work_description_change[1]}</b></p>") : "" 
+    displacement_hours = self.displacement_hours_changed? == true ? ("<p>La Horas de desplazamiento: <b class='color-true'>#{self.displacement_hours_change[0]}</b> / <b class='color-false'>#{self.displacement_hours_change[1]}</b></p>") : "" 
+    viatic_value = self.viatic_value_changed? == true ? ("<p>La Valor de viaticos: <b class='color-true'>#{self.viatic_value_change[0]}</b> / <b class='color-false'>#{self.viatic_value_change[1]}</b></p>") : "" 
+    viatic_description = self.viatic_description_changed? == true ? ("<p>La Descripcion viaticos: <b class='color-true'>#{self.viatic_description_change[0]}</b> / <b class='color-false'>#{self.viatic_description_change[1]}</b></p>") : "" 
+    
+    str = "#{customer}#{contact}#{centro}#{date}#{user}#{working_time}#{work_description}#{displacement_hours}#{viatic_value}#{viatic_description}"
+
+    RegisterEdit.create(  
+      user_id: 12, 
+      register_user_id: self.id, 
+      state: "pending", 
+      date_update: Time.now,
+      module: "Reportes de servicios",
+      description: str
+    )
+  end
+
 
   def calculate_cost_destroy
     cost_center = CostCenter.find(self.cost_center_id_was)

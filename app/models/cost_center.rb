@@ -53,6 +53,7 @@ class CostCenter < ApplicationRecord
   has_many :materials, dependent: :destroy
   has_many :contractors, dependent: :destroy
 
+
   belongs_to :customer, optional: :true
   belongs_to :contact, optional: :true
   belongs_to :user, optional: :true
@@ -116,18 +117,68 @@ class CostCenter < ApplicationRecord
       self.offset_value = valor
     end
   end
+  
+  
 
   def change_state
-    puts("wewewe")
     self.engineering_value = self.hour_cotizada * self.eng_hours
-    puts !self.quotation_number.blank?
-    puts !self.quotation_number.nil?
-
-    puts self.invoiced_state == "PENDIENTE DE COTIZACION"
-
     if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil?  && (self.quotation_number != "N/A")
-      puts("hoasfhasddaslkdjdkljskfa")
       self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
     end
+
+    if self.customer_id_changed?
+      names = []
+      customers = Customer.where(id: self.customer_id_change)
+      customers.each do |cliente| 
+        names << cliente.name
+      end
+      customer = "<p>El Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"#self.customer.name
+    else
+      customer = ""
+    end
+
+
+
+    if self.contact_id_changed?
+      namesClient = []
+      contact = Contact.where(id: self.contact_id_change)
+      contact.each do |contacto| 
+        namesClient << contacto.name
+      end
+      contact = "<p>El Contacto: <b class='color-true'>#{namesClient[1]}</b> / <b class='color-false'>#{namesClient[0]}</p>"
+    else
+      contact = ""
+    end
+
+
+    descripcion = self.description_changed? == true ? ("<p>La descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : "" 
+    fecha_star = self.start_date_changed? == true ? ("<p>La Fecha de inicio: <b class='color-true'>#{self.start_date_change[0]}</b> / <b class='color-false'>#{self.start_date_change[1]}</b></p>") : "" 
+    fecha_end = self.end_date_changed? == true ? ("<p>La Fecha final: <b class='color-true'>#{self.end_date_change[0]}</b> / <b class='color-false'>#{self.end_date_change[1]}</b></p>") : ""  
+    quotation_number = self.quotation_number_changed? == true ? ("<p>El Número de cotización: <b class='color-true'>#{self.quotation_number_change[0]}</b> / <b class='color-false'>#{self.quotation_number_change[1]}</b></p>") : "" 
+    materials_value = self.materials_value_changed? == true ? ("<p>El Valor de los materiales: <b class='color-true'>#{self.materials_value_change[0]}</b> / <b class='color-false'>#{self.materials_value_change[1]}</b></p>") : "" 
+    eng_hours = self.eng_hours_changed? == true ? ("<p>La Horas ingeniería: <b class='color-true'>#{self.eng_hours_change[0]}</b> / <b class='color-false'>#{self.eng_hours_change[1]}</b></p>") : "" 
+    hour_real = self.hour_real_changed? == true ? ("<p>El Valor hora costo: <b class='color-true'>#{self.hour_real_change[0]}</b> / <b class='color-false'>#{self.hour_real_change[1]}</b></p>") : "" 
+    hour_cotizada = self.hour_cotizada_changed? == true ? ("<p>La Hora de valor cotizada: <b class='color-true'>#{self.hour_cotizada_value[0]}</b> / <b class='color-false'>#{self.hour_cotizada_value[1]}</b></p>") : "" 
+    hours_contractor = self.hours_contractor_changed? == true ? ("<p>Las Horas tablerista: <b class='color-true'>#{self.hours_contractor_change[0]}</b> / <b class='color-false'>#{self.hours_contractor_change[1]}</b></p>") : "" 
+    hours_contractor_real = self.hours_contractor_real_changed? == true ? ("<p>EL Valor hora Costo: <b class='color-true'>#{self.hours_contractor_real_change[0]}</b> / <b class='color-false'>#{self.hours_contractor_real_change[1]}</b></p>") : "" 
+    hours_contractor_invoices = self.hours_contractor_invoices_changed? == true ? ("<p>El Valor hora cotizada: <b class='color-true'>#{self.hours_contractor_invoices_change[0]}</b> / <b class='color-false'>#{self.hours_contractor_invoices_change[1]}</b></p>") : "" 
+    displacement_hours = self.displacement_hours_changed? == true ? ("<p>Las Horas de desplazamiento: <b class='color-true'>#{self.displacement_hours_change[0]}</b> / <b class='color-false'>#{self.displacement_hours_change[1]}</b></p>") : "" 
+    value_displacement_hours = self.value_displacement_hours_changed? == true ? ("<p>El Valor de hora de desplazamiento: <b class='color-true'>#{self.value_displacement_hours_change[0]}</b> / <b class='color-false'>#{self.value_displacement_hours_change[1]}</b></p>") : "" 
+    viatic_value = self.viatic_value_changed? == true ? ("<p>El Valor Viaticos: <b class='color-true'>#{self.viatic_value_change[0]}</b> / <b class='color-false'>#{self.viatic_value_change[1]}</b></p>") : "" 
+    quotation_value = self.quotation_value_changed? == true ? ("<p>El Total Cotizacion: <b class='color-true'>#{self.quotation_value_change[0]}</b> / <b class='color-false'>#{self.quotation_value_change[1]}</b></p>") : "" 
+    invoiced_state = self.invoiced_state_changed? == true ? ("<p>El Estado: <b class='color-true'>#{self.invoiced_state_change[0]}</b> / <b class='color-false'>#{self.invoiced_state_change[1]}</b></p>") : "" 
+
+
+    str = "#{customer}#{contact}#{descripcion}#{fecha_star}#{fecha_end}#{quotation_number}#{materials_value}#{eng_hours}#{hour_real}#{hour_cotizada}#{hours_contractor}#{hours_contractor_real}#{hours_contractor_invoices}#{displacement_hours}#{value_displacement_hours}#{viatic_value}#{quotation_value}#{invoiced_state}"
+
+    RegisterEdit.create(  
+      user_id: 12, 
+      register_user_id: self.id, 
+      state: "pending", 
+      date_update: Time.now,
+      module: "Centro de costo",
+      description: str
+    )
+
   end
 end
