@@ -36,7 +36,7 @@ class SalesOrder < ApplicationRecord
     end
   end
 
-  def self.search(search1, search2, search3, search4, search5, search6, search7)
+  def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
 
     if search5.present?
       search5 = CostCenter.where(invoiced_state: search5)
@@ -46,6 +46,11 @@ class SalesOrder < ApplicationRecord
       search7 =  CostCenter.where(customer_id: search7)
     end
 
+    if search8.present?
+      invoice = CustomerInvoice.find_by_number_invoice(search8)
+      search8 =  SalesOrder.joins(:customer_invoices).where("customer_invoices.id = '#{invoice.id}'")
+    end
+
     search1 != "" ? (scope :fdesdep, -> { where(["created_date >= ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
     search2 != "" ? (scope :fhastap, -> { where(["created_date <= ?", search2]) }) : (scope :fhastap, -> { where.not(id: nil) })
     search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
@@ -53,8 +58,9 @@ class SalesOrder < ApplicationRecord
     search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.ids : nil) }) : (scope :estado, -> { where.not(id: nil) })
     search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search7 != "" ? (scope :customer, -> { where(cost_center_id: search7.present? ? search7.ids : nil) }) : (scope :customer, -> { where.not(id: nil) })
+    search8 != "" ? (scope :number_invoice, -> { where(id: search8.present? ? search8.ids : nil) }) : (scope :number_invoice, -> { where.not(id: nil) })
 
-    fdesdep.fhastap.number.centro.estado.descripcion.customer
+    fdesdep.fhastap.number.centro.estado.descripcion.customer.number_invoice
   end
 
   def change_state_cost_center_destroy

@@ -220,8 +220,8 @@ class SalesOrdersController < ApplicationController
 
   def get_sales_order
     if params[:filtering] == "true"
-      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer]).paginate(page: params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
-      sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer])
+      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice]).paginate(page: params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice])
 
     elsif params[:filtering] == "false"
       sales_order = SalesOrder.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })

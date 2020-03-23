@@ -128,6 +128,18 @@ class FormFilter extends Component {
                       />
                   </div>
 
+                  <div className="col-md-3 mt-3">
+                  <label>Numero de factura</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="number_invoice"
+                      placeholder="Numero de factura"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.number_invoice}
+                    />
+                  </div>
+
 
 
 

@@ -20,6 +20,7 @@ class index extends React.Component {
               state: "",
               description: "",
               customer: "",
+              number_invoice: ""
             },
 
             activePage: 1,
@@ -118,6 +119,7 @@ class index extends React.Component {
           cost_center_id: "",
           state: "",
           description: "",
+          number_invoice: ""
         },
 
         selectedOptionCentro: {
@@ -139,7 +141,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}&customer=${this.state.formFilter.customer != undefined ? this.state.formFilter.customer : ""}&filtering=${this.state.filtering}`)
+      fetch(`/get_sales_order?date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.formFilter.number_order != undefined ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.formFilter.state}&description=${this.state.formFilter.description}&customer=${this.state.formFilter.customer != undefined ? this.state.formFilter.customer : ""}&number_invoice=${this.state.formFilter.number_invoice != undefined ? this.state.formFilter.number_invoice : ""}&filtering=${this.state.filtering}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -170,7 +172,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&date_desde=${this.state.filtering == true ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.filtering == true ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.filtering == true ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.filtering == true ? this.state.formFilter.state : ""}&description=${this.state.filtering == true ? this.state.formFilter.description : ""}&customer=${this.state.filtering == true && this.state.formFilter.customer != undefined ? this.state.formFilter.customer : ""}`) 
+      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&date_desde=${this.state.filtering == true ? this.state.formFilter.date_desde : "" }&date_hasta=${this.state.filtering == true ? this.state.formFilter.date_hasta : ""}&number_order=${this.state.filtering == true ? this.state.formFilter.number_order : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&state=${this.state.filtering == true ? this.state.formFilter.state : ""}&description=${this.state.filtering == true ? this.state.formFilter.description : ""}&customer=${this.state.filtering == true && this.state.formFilter.customer != undefined ? this.state.formFilter.customer : ""}&number_invoice=${this.state.formFilter.number_invoice != undefined ? this.state.formFilter.number_invoice : ""}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({           
@@ -239,7 +241,7 @@ class index extends React.Component {
                       <div className="col-md-12" style={{ marginTop: "50px" }}>
                         <div className="row">
 
-                          <div className="col-md-9 text-left pl-0">
+                          <div className="col-md-7 text-left pl-0">
                               <p>
                                   Mostrando {this.state.data.length} de {this.state.sales_orders_total}
                               </p>
