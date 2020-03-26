@@ -27,7 +27,7 @@ class CustomerReport < ApplicationRecord
 	belongs_to :customer, optional:true
 	belongs_to :contact, optional: true
 	before_create :generate_token
-	after_create :send_approval_email
+	#after_create :send_approval_email
 	before_update :create_edit_register
 
 
