@@ -1,5 +1,4 @@
 <div class="content-table">
-<div class="marca_de_agua"><%="APROBADO" if @customer_report.report_state == "Aprobado"%></div>
   <table id="table">
     <thead>
       <tr>
@@ -47,7 +46,9 @@
         <td class="title-td" >Telefono del contacto</td>
         <td class="info-td" ><%=@customer_report.cost_center.contact.phone if @customer_report.cost_center.contact %></td>
       </tr>
-        <tr>
+
+            
+      <tr>
  
         <td class="title-td" >Orden de Compra #</td>
         <td class="info-td" >  <%@customer_report.cost_center.sales_orders.each_with_index do |order, index|%>
@@ -57,6 +58,8 @@
 
     </thead>
   </table>
+
+  <p class="marca_de_agua"><%= "APROBADO" if @customer_report.report_state == "Aprobado" %></p>
 
   <br><br><br>
 
@@ -234,13 +237,14 @@
   {
     width: 100%;
   }
-  .marca_de_agua{
-    font-size: 144px;
+  .marca_de_agua
+  {
+    font-size: 70px;
     position: absolute;
-    top: 970px;
-    left: 250px;
+    right: 100px;
+    top: 230px;
     font-family: sans-serif;
     color: rgba(228, 228, 228, 0.5803921568627451);
-  }
+}
   
 </style>
