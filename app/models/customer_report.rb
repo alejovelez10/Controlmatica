@@ -47,6 +47,8 @@ class CustomerReport < ApplicationRecord
 	    centro.customer.estado.fdesdep.fhastap
 	end
 
+	#mostrar los que tenga como responsable esa persona en reportes de cliente
+
 	def create_edit_register
 		if self.customer_id_changed?
 			names = []

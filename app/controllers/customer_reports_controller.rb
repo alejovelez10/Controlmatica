@@ -323,6 +323,8 @@ class CustomerReportsController < ApplicationController
 
   private
 
+  #mostrar los que tenga como responsable esa persona en reportes de cliente
+
   # Use callbacks to share common setup or constraints between actions.
   def set_customer_report
     @customer_report = CustomerReport.find(params[:id])
