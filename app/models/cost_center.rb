@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
+#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
-#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -44,6 +44,24 @@
 #  value_displacement_hours  :float
 #  offset_value              :float
 #  update_user               :integer
+#  ing_horas_eje             :float            default(0.0)
+#  ing_horas_porcentaje      :float            default(0.0)
+#  ing_costo_cotizado        :float            default(0.0)
+#  ing_costo_real            :float            default(0.0)
+#  ing_costo_porcentaje      :float            default(0.0)
+#  cont_horas_eje            :float            default(0.0)
+#  cont_horas_porcentaje     :float            default(0.0)
+#  cont_costo_cotizado       :float            default(0.0)
+#  cont_costo_real           :float            default(0.0)
+#  cont_costo_porcentaje     :float            default(0.0)
+#  mat_costo_real            :float            default(0.0)
+#  mat_costo_porcentaje      :float            default(0.0)
+#  viat_costo_real           :float            default(0.0)
+#  viat_costo_porcentaje     :float            default(0.0)
+#  fact_real                 :float            default(0.0)
+#  fact_porcentaje           :float            default(0.0)
+#  desp_horas_eje            :float            default(0.0)
+#  desp_horas_porcentaje     :float            default(0.0)
 #
 
 class CostCenter < ApplicationRecord
@@ -159,7 +177,7 @@ class CostCenter < ApplicationRecord
     materials_value = self.materials_value_changed? == true ? ("<p>El Valor de los materiales: <b class='color-true'>#{self.materials_value_change[0]}</b> / <b class='color-false'>#{self.materials_value_change[1]}</b></p>") : "" 
     eng_hours = self.eng_hours_changed? == true ? ("<p>La Horas ingeniería: <b class='color-true'>#{self.eng_hours_change[0]}</b> / <b class='color-false'>#{self.eng_hours_change[1]}</b></p>") : "" 
     hour_real = self.hour_real_changed? == true ? ("<p>El Valor hora costo: <b class='color-true'>#{self.hour_real_change[0]}</b> / <b class='color-false'>#{self.hour_real_change[1]}</b></p>") : "" 
-    hour_cotizada = self.hour_cotizada_changed? == true ? ("<p>La Hora de valor cotizada: <b class='color-true'>#{self.hour_cotizada_value[0]}</b> / <b class='color-false'>#{self.hour_cotizada_value[1]}</b></p>") : "" 
+    hour_cotizada = self.hour_cotizada_changed? == true ? ("<p>La Hora de valor cotizada: <b class='color-true'>#{self.hour_cotizada_value_changed[0]}</b> / <b class='color-false'>#{self.hour_cotizada_value_changed[1]}</b></p>") : "" 
     hours_contractor = self.hours_contractor_changed? == true ? ("<p>Las Horas tablerista: <b class='color-true'>#{self.hours_contractor_change[0]}</b> / <b class='color-false'>#{self.hours_contractor_change[1]}</b></p>") : "" 
     hours_contractor_real = self.hours_contractor_real_changed? == true ? ("<p>EL Valor hora Costo: <b class='color-true'>#{self.hours_contractor_real_change[0]}</b> / <b class='color-false'>#{self.hours_contractor_real_change[1]}</b></p>") : "" 
     hours_contractor_invoices = self.hours_contractor_invoices_changed? == true ? ("<p>El Valor hora cotizada: <b class='color-true'>#{self.hours_contractor_invoices_change[0]}</b> / <b class='color-false'>#{self.hours_contractor_invoices_change[1]}</b></p>") : "" 
