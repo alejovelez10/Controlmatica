@@ -269,6 +269,7 @@ class FormCreate extends React.Component {
                       <hr/>
                     </div>
                   {/* HR */}
+                  
 
                   <div className="col-md-6">
                   <label>Horas de desplazamiento<small className="validate-label">*</small></label>
@@ -281,7 +282,7 @@ class FormCreate extends React.Component {
                       placeholder="Horas de desplazamiento"
                     /> 
                   </div>
-
+                  {this.props.estados.show_hours == true && (
                   <div className="col-md-6">
                   <label>Valor hora de desplazamiento<small className="validate-label">*</small></label>
                     <NumberFormat 
@@ -294,7 +295,7 @@ class FormCreate extends React.Component {
                       placeholder="Valor hora de desplazamiento"
                     /> 
                   </div>
-
+                   )}
 
                   {/* HR */}
                   <div className="col-md-12 mt-4 mb-4">

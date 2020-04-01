@@ -275,7 +275,9 @@ class indexTable extends React.Component {
                                 clientes={this.props.clientes}
                                 estados={this.props.estados}
                                 hours_real={this.props.hours_real}
-                                hours_invoices={this.props.hours_invoices}
+                                hours_invoices={this.props.hours_invoices} 
+                                hours_real_contractor={this.props.hours_real_contractor}
+                                value_displacement_hours={this.props.value_displacement_hours}
                                 exel_values={this.state.exel_values}
                                 filtering={this.state.filtering}
                             />

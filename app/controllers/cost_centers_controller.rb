@@ -29,6 +29,12 @@ class CostCentersController < ApplicationController
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
 
+    @hours_real_contractor = Parameterization.where(name: "HORA TABLERISTA COSTO").first.money_value
+    @value_displacement_hours = Parameterization.where(name: "HORA DESPLAZAMIENTO").first.money_value
+
+
+    
+
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
@@ -350,8 +356,10 @@ class CostCentersController < ApplicationController
     end
 
     if params["value_displacement_hours"]  != "nil" || params["value_displacement_hours"] != ""
-      valo10 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
-      params["value_displacement_hours"] = valo10
+      if cost_center_params["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" 
+        valo10 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
+        params["value_displacement_hours"] = valo10
+      end
     end
 
     @cost_center = CostCenter.create(cost_center_params)

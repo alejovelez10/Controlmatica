@@ -39,10 +39,11 @@ class tableIndex extends React.Component {
           eng_hours: "0.0",
           hour_real: this.props.hours_real,
           hour_cotizada: this.props.hours_invoices,
+          
 
 
           hours_contractor: "0.0",
-          hours_contractor_real: "0.0",
+          hours_contractor_real: this.props.hours_real_contractor,
           hours_contractor_invoices: "0.0",
 
           materials_value: "0.0",
@@ -50,7 +51,7 @@ class tableIndex extends React.Component {
           quotation_value: "0.0",
 
           displacement_hours: "0.0",
-          value_displacement_hours: "0.0"
+          value_displacement_hours: this.props.value_displacement_hours
         },
 
         selectedOption: {
@@ -203,7 +204,7 @@ class tableIndex extends React.Component {
           hour_cotizada: this.props.hours_invoices,
   
           hours_contractor: "",
-          hours_contractor_real: "",
+          hours_contractor_real:  this.props.hours_real_contractor,
           hours_contractor_invoices: "",
   
           materials_value: "",
@@ -212,7 +213,7 @@ class tableIndex extends React.Component {
           quotation_value: "",
 
           displacement_hours: "",
-          value_displacement_hours: "",
+          value_displacement_hours: this.props.value_displacement_hours,
         },
 
         ErrorValues: true,
@@ -233,14 +234,14 @@ class tableIndex extends React.Component {
           hour_cotizada: "0.0",
 
           hours_contractor: "0.0",
-          hours_contractor_real: "0.0",
+          hours_contractor_real: this.props.hours_real_contractor,
           hours_contractor_invoices: "0.0",
   
           materials_value: "",
           quotation_value: "",
 
           displacement_hours: "0.0",
-          value_displacement_hours: "0.0",
+          value_displacement_hours: this.props.value_displacement_hours,
 
           viatic_value: "0.0",
           service_type: e.target.value
@@ -260,11 +261,11 @@ class tableIndex extends React.Component {
           hour_cotizada: this.props.hours_invoices,
 
           hours_contractor: "0.0",
-          hours_contractor_real: "0.0",
+          hours_contractor_real: this.props.hours_real_contractor,
           hours_contractor_invoices: "0.0",
 
           displacement_hours: "",
-          value_displacement_hours: "",
+          value_displacement_hours: this.props.value_displacement_hours,
   
           materials_value: "0.0",
           service_type: e.target.value
@@ -281,11 +282,11 @@ class tableIndex extends React.Component {
           hour_cotizada: this.props.hours_invoices,
 
           hours_contractor: "",
-          hours_contractor_real: "",
+          hours_contractor_real: this.props.hours_real_contractor ,
           hours_contractor_invoices: "",
 
           displacement_hours: "",
-          value_displacement_hours: "",
+          value_displacement_hours: this.props.value_displacement_hours,
   
           materials_value: "",
 
