@@ -25,15 +25,36 @@ class SalesOrder < ApplicationRecord
   after_destroy :change_state_cost_center_destroy
   before_update :create_edit_register
 
+
   def change_state_cost_center
     cost_center = CostCenter.find(self.cost_center_id)
     sum_invoices = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
-    sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
-    if (cost_center.quotation_value <= sales_order + 1000 && sum_invoices == 0)
-      CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
-    elsif (sales_order > 0 && sales_order < cost_center.quotation_value && sum_invoices == 0 && sum_invoices == 0)
-      CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
+    sales_order_sum = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
+    customer_invoice = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
+    CustomerInvoice.where(cost_center_id: self.cost_center_id).each do |en|
+      puts en.invoice_value
     end
+    puts "asfadsfdasfdafasfadsfadsfdsafdfdasfdasfsdfadsfdsafdd"
+    puts customer_invoice
+    puts sales_order_sum
+    puts cost_center.quotation_value
+             if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
+            CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO")
+          elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
+            CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO PARCIAL")
+          elsif (customer_invoice <= 0)
+            if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
+              CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+            elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
+              CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
+            elsif (sales_order_sum == 0 && customer_invoice == 0)
+              CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
+            end
+         end
+   
+
+    
+
   end
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
@@ -106,6 +127,35 @@ class SalesOrder < ApplicationRecord
       module: "Ordenes de Compra",
       description: str
     )
+   
+    if self.cost_center_id_changed?
+
+        CustomerInvoice.where(cost_center_id: self.cost_center_id_change[0]).update(cost_center_id: self.cost_center_id)
+        puts "111111111asfadsfadsfasdfadsfsadfkaslfksafsadfjjsfkaskfh jkadsfhjaslfadsfksdkdslfahk "
+        cost_center = CostCenter.find(self.cost_center_id_change[0])
+        sales_order_sum = SalesOrder.where(cost_center_id: cost_center.id).sum(:order_value) - self.order_value
+        customer_invoice_self = CustomerInvoice.where(sales_order_id: self.id).sum(:invoice_value)
+        customer_invoice = CustomerInvoice.where(cost_center_id: cost_center.id).sum(:invoice_value) 
+        puts customer_invoice
+        puts sales_order_sum
+        puts cost_center.quotation_value
+
+         if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
+            CostCenter.find(cost_center.id).update(invoiced_state: "FACTURADO")
+        elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
+            CostCenter.find(cost_center.id).update(invoiced_state: "FACTURADO PARCIAL")
+        elsif (customer_invoice <= 0)
+            if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
+              CostCenter.find(cost_center.id).update(invoiced_state: "LEGALIZADO")
+            elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
+              CostCenter.find(cost_center.id).update(invoiced_state: "LEGALIZADO PARCIAL")
+            elsif (sales_order_sum == 0 && customer_invoice == 0)
+              CostCenter.find(cost_center.id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
+            end
+         end
+
+    end
+
   end
 
 
