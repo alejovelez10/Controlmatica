@@ -2,6 +2,7 @@ class MaterialsController < ApplicationController
   before_action :set_material, only: [:destroy, :update]
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
+  include ApplicationHelper
 
   def index
     materials = ModuleControl.find_by_name("Materiales")
@@ -171,6 +172,7 @@ class MaterialsController < ApplicationController
 
   	@material = Material.create(material_params)
       if @material.save
+        recalculate_cost_center(@material.cost_center_id)
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"
@@ -197,6 +199,7 @@ class MaterialsController < ApplicationController
   end
 
     if @material.update(material_params.merge!(update_user: current_user.id)) 
+      recalculate_cost_center(@material.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"

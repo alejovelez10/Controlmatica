@@ -2,6 +2,7 @@ class ReportsController < ApplicationController
   before_action :set_report, only: [:show, :edit, :update, :destroy]
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
+  include ApplicationHelper
 
   # GET /reports
   # GET /reports.json
@@ -221,6 +222,8 @@ class ReportsController < ApplicationController
     @report = Report.create(report_params)
 
       if @report.save
+        recalculate_cost_center(@report.cost_center_id)
+
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"
@@ -247,6 +250,7 @@ class ReportsController < ApplicationController
 
     
     if @report.update(report_params.merge!(update_user: current_user.id)) 
+      recalculate_cost_center(@report.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"

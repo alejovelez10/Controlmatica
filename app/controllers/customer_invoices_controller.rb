@@ -2,6 +2,7 @@ class CustomerInvoicesController < ApplicationController
   before_action :set_customer_invoice, only: [:show, :edit, :update, :destroy]
     before_action :authenticate_user!
     skip_before_action :verify_authenticity_token
+    include ApplicationHelper
   #before_action :set_cost_center, only: [:create, :new]
   #before_action :set_sales, only: [:create, :new]
 
@@ -37,6 +38,7 @@ class CustomerInvoicesController < ApplicationController
     @customer_invoice = CustomerInvoice.create(customer_invoice_params)
 
       if @customer_invoice.save
+        recalculate_cost_center(@customer_invoice.sales_order.cost_center_id)
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"
@@ -62,6 +64,7 @@ class CustomerInvoicesController < ApplicationController
     end
 
     if @customer_invoice.update(customer_invoice_params) 
+      recalculate_cost_center(@customer_invoice.sales_order.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"

@@ -2,6 +2,7 @@ class ContractorsController < ApplicationController
   before_action :set_contractor, only: [:destroy, :update]
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
+  include ApplicationHelper
 
   def index
     contractors = ModuleControl.find_by_name("Tableristas")
@@ -148,6 +149,7 @@ class ContractorsController < ApplicationController
 
   	@contractor = Contractor.create(contractor_params)
       if @contractor.save
+        recalculate_cost_center(@contractor.cost_center_id)
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"
@@ -171,6 +173,7 @@ class ContractorsController < ApplicationController
     end
 
     if @contractor.update(contractor_params.merge!(update_user: current_user.id)) 
+      recalculate_cost_center(@contractor.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"

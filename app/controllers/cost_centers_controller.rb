@@ -190,6 +190,7 @@ class CostCentersController < ApplicationController
 
     porc_eje_costo_contractor =  costo_en_dinero_contractor > 0 ? (((1 - (costo_real_en_dinero_contractor.to_f/costo_en_dinero_contractor))*100)).to_i : "N/A"
 
+    
     porc_via =  via_cotizado > 0 ? ((via_real.to_f/via_cotizado)*100).to_i : "N/A" 
 
     porc_fac =  @cost_center.quotation_value > 0 ? ((facturacion.to_f/@cost_center.quotation_value)*100).to_i : "N/A" 
