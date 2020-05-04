@@ -57,7 +57,7 @@ class SalesOrder < ApplicationRecord
 
   end
 
-  def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
+  def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
 
     if search5.present?
       search5 = CostCenter.where(invoiced_state: search5)
@@ -65,6 +65,10 @@ class SalesOrder < ApplicationRecord
 
     if search7.present?
       search7 =  CostCenter.where(customer_id: search7)
+    end
+
+    if search9.present?
+      search9 =  CostCenter.where(quotation_number: search9)
     end
 
     if search8.present?
@@ -80,8 +84,9 @@ class SalesOrder < ApplicationRecord
     search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search7 != "" ? (scope :customer, -> { where(cost_center_id: search7.present? ? search7.ids : nil) }) : (scope :customer, -> { where.not(id: nil) })
     search8 != "" ? (scope :number_invoice, -> { where(id: search8.present? ? search8.ids : nil) }) : (scope :number_invoice, -> { where.not(id: nil) })
+    search9 != "" ? (scope :quotation_number, -> { where(cost_center_id: search9.present? ? search9.ids : nil) }) : (scope :number_invoice, -> { where.not(id: nil) })
 
-    fdesdep.fhastap.number.centro.estado.descripcion.customer.number_invoice
+    fdesdep.fhastap.number.centro.estado.descripcion.customer.number_invoice.quotation_number
   end
 
   def change_state_cost_center_destroy

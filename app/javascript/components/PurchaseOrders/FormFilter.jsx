@@ -140,6 +140,20 @@ class FormFilter extends Component {
                     />
                   </div>
 
+                  <div className="col-md-3 mt-3">
+                  <label>Numero de cotización</label>
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="quotation_number"
+                      placeholder="Numero de cotización"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.quotation_number}
+                    />
+                  </div>
+
+        
+
 
 
 

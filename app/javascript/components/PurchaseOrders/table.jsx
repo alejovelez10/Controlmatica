@@ -593,6 +593,7 @@ class table extends React.Component {
                     <th style={{width: "150px"}}>Cliente</th>
                     <th style={{width: "150px"}}>Fecha de Orden</th>
                     <th style={{width: "150px"}}>Numero</th>
+                    <th style={{width: "179px"}}>Numero de cotización</th>
                     <th style={{width: "150px"}}>Valor</th>
                     <th style={{width: "450px"}}>Facturas</th>
                     <th style={{width: "200px"}}>Total Facturas</th>
@@ -652,6 +653,7 @@ class table extends React.Component {
                         <td>{accion.cost_center.customer.name}</td>
                         <td><p>{accion.created_date}</p></td>
                         <td><p>{accion.order_number}</p></td>
+                        <td><p>{accion.cost_center.quotation_number}</p></td>
                         <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                         <td>  
                           <table style={{tableLayout: "fixed", width:"100%"}}>
