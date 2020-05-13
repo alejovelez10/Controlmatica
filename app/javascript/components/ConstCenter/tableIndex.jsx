@@ -772,7 +772,7 @@ class tableIndex extends React.Component {
                             </div>
                           </div>  
                         </td>
-                        <th>{accion.code}</th>
+                        <th>{accion.code} {console.log(accion.ing_costo_cotizado)}</th>
                         <th>{accion.customer != undefined ? accion.customer.name : ""}</th>
                         <th>{accion.service_type}</th>
                         <th>{accion.description}</th>
@@ -848,63 +848,63 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Cotizado: <b>{accion.eng_hours}</b> </li>
                             <li>Ejecutado: <b>{accion.ing_horas_eje}</b> </li>
-                            <li>Avance: <b>{accion.porc_eje}%</b> </li>
+                            <li>Avance: <b>{accion.ing_horas_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
-                            <li>Ing Cotizada: <b><NumberFormat value={accion.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Ing costo: <b><NumberFormat value={accion.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Margen: <b>{accion.porc_eje_costo}%</b> </li>
+                            <li>Ing Cotizada: <b><NumberFormat value={accion.ing_costo_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Ing costo: <b><NumberFormat value={accion.ing_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Margen: <b>{accion.ing_costo_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
                             <li>Cotizado: <b>{accion.hours_contractor}</b> </li>
-                            <li>Ejecutado: <b>{accion.hours_eje_contractor}</b> </li>
-                            <li>Avance: <b>{accion.porc_eje_contractor}</b> </li>
+                            <li>Ejecutado: <b>{accion.cont_horas_eje}</b> </li>
+                            <li>Avance: <b>{accion.cont_horas_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
-                            <li>Tab Cotizada: <b><NumberFormat value={accion.costo_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Tab costo: <b><NumberFormat value={accion.costo_real_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Margen: <b>{accion.porc_eje_costo_contractor}%</b> </li>
+                            <li>Tab Cotizada: <b><NumberFormat value={accion.cont_costo_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Tab costo: <b><NumberFormat value={accion.cont_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Margen: <b>{accion.cont_costo_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
-                            <li>Cotizado: <b>{"00"}</b> </li>
-                            <li>Ejecutado: <b>{accion.ejecutado_desplazamiento_horas}</b> </li>
-                            <li>Ejecucion: <b>{accion.porc_desplazamiento}%</b> </li>
+                            <li>Cotizado: <b>{accion.displacement_hours}</b></li>
+                            <li>Ejecutado: <b>{accion.desp_horas_eje}</b> </li>
+                            <li>Ejecucion: <b>{accion.desp_horas_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
                             <li>Cotizados: <b><NumberFormat value={accion.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b>  </li>
-                            <li>Comprados: <b><NumberFormat value={accion.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Margen: <b>{accion.porc_mat}%</b> </li>
+                            <li>Comprados: <b><NumberFormat value={accion.mat_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Margen: <b>{accion.mat_costo_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
-                            <li>Cotizado: <b><NumberFormat value={accion.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Gastado: <b><NumberFormat value={accion.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Avance: <b>{accion.porc_via}%</b> </li>
+                            <li>Cotizado: <b><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Gastado: <b><NumberFormat value={accion.viat_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Avance: <b>{accion.viat_costo_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
                         <th>
                           <ul>
                             <li>Cotizado: <b><NumberFormat value={accion.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Facturado: <b><NumberFormat value={accion.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Avance: <b>{accion.porc_fac}%</b> </li>
+                            <li>Facturado: <b><NumberFormat value={accion.fact_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
+                            <li>Avance: <b>{accion.fact_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
