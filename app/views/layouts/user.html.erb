@@ -65,10 +65,8 @@
         <!-- User Menu-->
         <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Open Profile Menu"><i class="fa fa-user fa-lg"></i></a>
           <ul class="dropdown-menu settings-menu dropdown-menu-right">
-              <%= link_to edit_user_registration_path, class: "dropdown-item" do %>
-                  <i class="fa fa-user fa-lg"></i> Cuenta
-              <% end -%>
-            </li>
+            
+          
             <li>
               <%= link_to destroy_user_session_path, method: :delete, class: "dropdown-item" do %>
                   <i class="fas fa-sign-out-alt mr-2 fa-lg"></i> Salir</a>
