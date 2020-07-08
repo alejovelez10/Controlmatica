@@ -456,6 +456,9 @@ GEM
     retriable (3.1.2)
     reverse_markdown (1.1.0)
       nokogiri
+    roo (2.8.2)
+      nokogiri (~> 1)
+      rubyzip (>= 1.2.1, < 2.0.0)
     rubocop (0.71.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
@@ -600,6 +603,7 @@ DEPENDENCIES
   rails (~> 5.2.2)
   rails-assets-sweetalert2 (~> 5.1.1)!
   react-rails
+  roo
   sass-rails (~> 5.0)
   selenium-webdriver
   solargraph
