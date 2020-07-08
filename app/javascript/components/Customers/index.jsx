@@ -1,5 +1,7 @@
 import React from 'react';
 import Table from "../Customers/table";
+import SweetAlert from "sweetalert2-react";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 
 class index extends React.Component {
     constructor(props){
@@ -13,6 +15,9 @@ class index extends React.Component {
 
             stateSearch: false,
             stateSearchCancel: false,
+            submitBtnFile: false,
+
+            file: null,
         }
     }
 
@@ -63,6 +68,43 @@ class index extends React.Component {
       this.loadData();
     }
 
+    messageSuccess = (response) => {
+      Swal.fire({
+        position: "center",
+        type: "success",
+        title: `${response.success}`,
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    };
+
+    uploadExel = (e) => {
+      this.setState({
+          file: e.target.files[0],
+          submitBtnFile: (this.state.submitBtnFile == false ? true : false)
+      });
+    }
+
+    handleClickUpload = () => {
+      const formData = new FormData();
+      formData.append("file", this.state.file)
+      fetch(`/import_customers`, {
+          method: 'POST', // or 'PUT'
+          body: formData, // data can be `string` or {object}!
+          headers: {}
+      })
+      .then(res => res.json())
+      .catch(error => console.error("Error:", error))
+      .then(data => {
+          this.loadData();
+          this.messageSuccess(data)
+          this.setState({ submitBtnFile: false })
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+      });
+    }
+
 
     render() {
         return (
@@ -76,7 +118,7 @@ class index extends React.Component {
                         <div className="col-md-12">
                             <div className="row">
 
-                                <div className="col-md-8">
+                                <div className="col-md-6">
                                    <div className="col-md-5 pl-0">
 
                                    <div className="input-group">
@@ -101,19 +143,48 @@ class index extends React.Component {
                                    </div>
                                 </div>
 
-                                <div className="col-md-4 text-right">
-                                  {this.props.estados.download_file == true && (
-                                      <a
-                                        className=" mr-2"
-                                        href={`/download_file/customers.xls`}
-                                        target="_blank"
-                                      >
-                                        <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
-                                      </a>
-                                  )}
-                                  {this.props.estados.create == true && (
-                                    <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
-                                  )}
+                                <div className="col-md-5 ">
+                                    <div className="row text-right">
+                                          {this.props.estados.download_file == true && (
+                                              <a
+                                                className=" mr-2"
+                                                href={`/download_file/customers.xls`}
+                                                target="_blank"
+                                              >
+                                                <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                                              </a>
+                                        )}
+
+                                        <div className="dropdown mr-3">
+                                          <button className="btn btn-info dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Subida de Archivo
+                                          </button>
+                                          <div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                            <a className="dropdown-item" href="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/700/FORMATO_SUBIR_CLIENTES.xlsx">Descargar formato</a>
+                                            <label className="dropdown-item" htmlFor="fathers" >Cargar archivo</label>
+                                          </div>
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            id="fathers"
+                                            onChange={(e) => this.uploadExel(e)}
+                                            style={{ display: "none" }}
+                                        />
+
+                                        {this.state.submitBtnFile && (
+                                            <button
+                                                onClick={() => this.handleClickUpload()}
+                                                className="btn-shadow btn btn-primary mr-3"
+                                            >
+                                                Subir <i className="fas fa-file-upload"></i>
+                                            </button>
+                                        )}
+
+                                        {this.props.estados.create == true && (
+                                          <a href="/customers/new" className="btn btn-secondary" >Nuevo Cliente</a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

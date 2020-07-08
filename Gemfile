@@ -48,6 +48,8 @@ gem "will_paginate-bootstrap"
 #generar pdf
 gem "wicked_pdf"
 
+gem 'roo'
+
 #jquery
 gem "jquery-ui-rails"
 gem "jquery-validation-rails"

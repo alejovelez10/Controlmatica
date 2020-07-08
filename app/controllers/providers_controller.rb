@@ -30,6 +30,15 @@ class ProvidersController < ApplicationController
     end
     render :json => providers
   end
+
+  def import_providers
+    if Provider.import(params[:file], current_user.id)
+      render :json => {
+        success: "Los Archivos fueron importados con exito!",
+        type: "success",
+      }
+    end
+  end
   
 
   # GET /providers/1

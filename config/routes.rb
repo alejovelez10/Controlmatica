@@ -82,6 +82,12 @@ Rails.application.routes.draw do
 
   get "getValues/:id", to: "cost_centers#getValues"
 
+  #subir archvos 
+
+  post "import_customers", to: "customers#import_customers"
+  post "import_providers", to: "providers#import_providers"
+
+
 
 
   #DESCARGAS DE EXEL

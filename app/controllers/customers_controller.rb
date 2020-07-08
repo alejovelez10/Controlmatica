@@ -23,6 +23,16 @@ class CustomersController < ApplicationController
     @customers = Customer.all.paginate(:page => params[:page], :per_page => 10)
   end
 
+  def import_customers
+    if Customer.import(params[:file], current_user.id)
+      render :json => {
+        success: "Los Archivos fueron importados con exito!",
+        type: "success",
+      }
+    end
+  end
+  
+
   def download_file
     customers = Customer.all
     respond_to do |format|
