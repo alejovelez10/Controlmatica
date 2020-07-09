@@ -17,7 +17,7 @@
 
 class RegisterEdit < ApplicationRecord
     belongs_to :user
-    belongs_to :register_user, :class_name => "User"
+    belongs_to :register_user, :class_name => "User", optional: true
 
     before_create :update_json
 

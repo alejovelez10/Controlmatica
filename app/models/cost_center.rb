@@ -163,7 +163,7 @@ class CostCenter < ApplicationRecord
       customer = ""
     end
 
-
+    puts "change_statechange_statechange_statechange_statechange_statechange_statechange_statechange_statechange_state"
 
     if self.contact_id_changed?
       namesClient = []
@@ -198,7 +198,7 @@ class CostCenter < ApplicationRecord
     str = "#{customer}#{contact}#{descripcion}#{fecha_star}#{fecha_end}#{quotation_number}#{materials_value}#{eng_hours}#{hour_real}#{hour_cotizada}#{hours_contractor}#{hours_contractor_real}#{hours_contractor_invoices}#{displacement_hours}#{value_displacement_hours}#{viatic_value}#{quotation_value}#{invoiced_state}"
 
     RegisterEdit.create(  
-      user_id: self.update_user, 
+      user_id: User.current.id, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,
