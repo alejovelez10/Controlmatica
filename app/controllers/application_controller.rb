@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::Base
 before_action :configure_permitted_parameters, if: :devise_controller?
-
+before_action :set_current_user
   protected
 
   def configure_permitted_parameters
@@ -24,7 +24,12 @@ before_action :configure_permitted_parameters, if: :devise_controller?
 		 else
 		  'user'
 		end
+	end
+
+    def set_current_user
+      User.current = current_user
     end
+	
 
   def after_sign_in_path_for(resource)
 	reports = ModuleControl.find_by_name("Reportes de servicios")

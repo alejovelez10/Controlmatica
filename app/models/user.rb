@@ -45,6 +45,15 @@ class User < ApplicationRecord
   mount_uploader :avatar, AvatarUploader  
   belongs_to :rol, optional: true
 
+  def self.current
+    Thread.current[:user]
+  end
+
+  def self.current=(user)
+    Thread.current[:user] = user
+  end
+
+ 
 
   def create_edit_register    
     unless self.menu_changed? || self.encrypted_password_changed?
@@ -68,7 +77,7 @@ class User < ApplicationRecord
       str = "#{rol_user}#{names}#{email}#{document_type}#{number_document}"
   
       RegisterEdit.create(  
-        user_id: 12, 
+        user_id: User.current.id, 
         register_user_id: self.id, 
         state: "pending", 
         date_update: Time.now,

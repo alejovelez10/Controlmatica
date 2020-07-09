@@ -37,6 +37,7 @@ class Customer < ApplicationRecord
 		header[3] = "nit"
 		header[4] = "web"
 		header[5] = "email"
+		header[6] = "code"
 	
 		(2..spreadsheet.last_row).each do |i|
 		  row = Hash[[header, spreadsheet.row(i)].transpose]
