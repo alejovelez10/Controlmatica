@@ -24,6 +24,10 @@ Rails.application.routes.draw do
   resources :materials
   resources :contractors
   resources :material_invoices
+  resources :alerts, :except => [:show, :new, :edit]
+  get "get_alerts", to: "alerts#get_alerts"
+  get "informes/controlmatica", to: "reports#controlmatica", as: "controlmatica"
+  get "get_informes", to: "reports#get_informes"
 
   default_url_options :host => "controlmatica.herokuapp.com"
 

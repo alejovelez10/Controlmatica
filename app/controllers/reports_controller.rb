@@ -76,6 +76,24 @@ class ReportsController < ApplicationController
     render :json => {reports_paginate: reports, reports_total: reports_total}
   end
 
+  def controlmatica
+    
+  end
+
+  def get_informes
+    cost_center = CostCenter.all
+    materials = Material.all
+    contractors = Contractor.all
+
+    render :json => {
+      dataCostCenter: ActiveModelSerializers::SerializableResource.new(cost_center, each_serializer: CostCenterSerializer),
+      dataMaterials: ActiveModelSerializers::SerializableResource.new(materials, each_serializer: MaterialSerializer),
+      dataTableristas: ActiveModelSerializers::SerializableResource.new(contractors, each_serializer: ContractorSerializer),
+    }
+  end
+  
+
+
   def download_file
     report = ModuleControl.find_by_name("Reportes de servicios")
     estado = current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ver todos").exists?

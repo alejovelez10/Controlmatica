@@ -143,6 +143,21 @@
               </li>
             <% end %>
 
+            <% if authorization_modules || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to alerts_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Alertas</span>
+                <% end -%>
+              </li>
+            <% end %>
+
+            <% if authorization_modules || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to controlmatica_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Informes</span>
+                <% end -%>
+              </li>
+            <% end %>
 
             </ul>
           </li>

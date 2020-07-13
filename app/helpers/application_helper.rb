@@ -1,6 +1,6 @@
 module ApplicationHelper
 
-	def controller_name_helper(controller,action)
+	def controller_name_helper(controller, action)
         if controller == "providers" && action == "index"
             card = "<h1>" + " <i class='app-menu__icon fa fa-user'></i> Proveedores" + "</h1>" + "<p>" + "Gestiona tus proveedores" + "</p>"
  
@@ -41,9 +41,12 @@ module ApplicationHelper
             card = "<h1>" + " <i class='fas fa-university'></i> Reportes de servicios " + "</h1>" + "<p>" + "Gestiona los reportes de servicios" + "</p>"
 
         elsif controller == "employed_performance" && action == "show"
-            card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Informe de rendimiento" + "</h1>" + "<p>" + "" + "</p>"
-        
+			card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Informe de rendimiento" + "</h1>" + "<p>" + "" + "</p>"
 
+		elsif controller == "alerts" && action == "index"
+			card = "<h1>" + " <i class='fas fa-handshake'></i> Alertas " + "</h1>" + "<p>" + "Gestiona de requerimientos" + "</p>"
+        elsif controller == "reports" && action == "controlmatica"
+			card = "<h1>" + " <i class='fas fa-handshake'></i> Informes " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
 
         else
             "Proyectos"
