@@ -65,5 +65,5 @@
 #
 
 class CostCenterSerializer < ActiveModel::Serializer
-  attributes :id
+  attributes :id, :code, :description
 end

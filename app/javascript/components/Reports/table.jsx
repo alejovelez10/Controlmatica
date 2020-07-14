@@ -441,7 +441,9 @@ class table extends React.Component {
 
     fetch(`/customer_user/${modulo.customer_id}`)
     .then(response => response.json())
-    .then(data => {
+    .then(data => { 
+
+      console.log(data)
 
       data.map((item) => (
         arrayCentro.push({label: item.code, value: item.id})
@@ -655,7 +657,7 @@ class table extends React.Component {
                   </UncontrolledTooltip>
                   </td>
                   <td>
-                    {accion.cost_center.customer.name}
+                    {accion.cost_center.customer != undefined ? accion.cost_center.customer.name : ""}
                   </td>
                   <td>{accion.report_date}</td>
                   <td>{accion.report_execute != undefined ? accion.report_execute.names : "" }</td>
