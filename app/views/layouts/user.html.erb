@@ -25,21 +25,21 @@
       <!-- Navbar Right Menu-->
       <ul class="app-nav">
         <li class="dropdown">
-
-          <% if get_register_edit.any? && current_user.rol.name == "Administrador" %>
+            <!--
+          <%# if get_register_edit.any? && current_user.rol.name == "Administrador" %>
 
             <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-              <span class="badge badge-light notification-badge"><%= get_register_edit.count %></span>
+              <span class="badge badge-light notification-badge"><%# get_register_edit.count %></span>
                 <i class="fas fa-bell" style="font-size: 17px;"></i>
             </a>
 
             <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
+              <li class="app-notification__title">Tienes <%# get_register_edit.count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_register_edit.each do |notification|  %>
-                    <% link = "/notifications" + "?from=" + notification.id.to_s %>
+                  <%# get_register_edit.each do |notification|  %>
+                    <%# link = "/notifications" + "?from=" + notification.id.to_s %>
                     <li>
-                          <a class="app-notification__item" href="<%= link %>">
+                          <a class="app-notification__item" href="<%# link %>">
                             <span class="app-notification__icon">
                               <span class="fa-stack fa-lg">
                                 <i class="fa fa-circle fa-stack-2x text-primary"></i>
@@ -48,17 +48,18 @@
                             </span>
 
                             <div>
-                              <p class="app-notification__message">Modificacion de <%= notification.module %></p>
-                              <p class="app-notification__meta"><%= get_date(notification.date_update) %></p>
+                              <p class="app-notification__message">Modificacion de <%# notification.module %></p>
+                              <p class="app-notification__meta"><%# get_date(notification.date_update) %></p>
                             </div>
                           </a>  
                     </li>
-                  <% end %>
+                  <%# end %>
             
-              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
+              <li class="app-notification__footer"><%# link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
             </ul>
             
-          <% end %>
+          <%# end %>
+                        -->
 
         </li>
 
@@ -158,6 +159,14 @@
                 <% end -%>
               </li>
             <% end %>
+
+            <% if current_user.rol.name == "Administrador" %>
+                <li>
+                  <%= link_to notifications_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Notificaciones</span>
+                  <% end -%>
+                </li>
+              <% end %>
 
             </ul>
           </li>
