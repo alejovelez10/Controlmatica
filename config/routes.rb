@@ -109,7 +109,7 @@ Rails.application.routes.draw do
 
   get "update_load/:id", to: "material_invoices#update_load"
 
-  get "notifications", to: "register_edits#notifications"
+  get "notifications", to: "register_edits#notifications", as: "notifications"
 
   get "get_notifications", to: "register_edits#get_notifications"
 
