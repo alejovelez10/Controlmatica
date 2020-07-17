@@ -620,6 +620,35 @@ class tableIndex extends React.Component {
     });
   }
 
+
+  alertIng=(value, value2, value3)=>{
+    if (value <= value2)
+    {
+        return "green"
+    }else if (value > value2 && value <= value3){
+        
+        return "orange"
+    }
+    else{
+        
+        return "red"
+    }
+}
+
+alertIngCosto=(value, value2, value3)=>{
+    if (value >= value2)
+    {
+        return "green"
+    }else if (value < value2 && value >= value3){
+        
+        return "orange"
+    }
+    else{
+        
+        return "red"
+    }
+}
+
   render() {
     return (
         <React.Fragment>
@@ -848,7 +877,8 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Cotizado: <b>{accion.eng_hours}</b> </li>
                             <li>Ejecutado: <b>{accion.ing_horas_eje}</b> </li>
-                            <li>Avance: <b>{accion.ing_horas_porcentaje}%</b> </li>
+                            <li>Avance: <b style={{color: this.alertIng(accion.ing_horas_porcentaje,this.props.alerts[0].ing_ejecucion_min ,this.props.alerts[0].ing_costo_med)}}>{accion.ing_horas_porcentaje}%</b> </li>
+                          
                           </ul>
                         </th>
 
@@ -856,7 +886,7 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Ing Cotizada: <b><NumberFormat value={accion.ing_costo_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
                             <li>Ing costo: <b><NumberFormat value={accion.ing_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Margen: <b>{accion.ing_costo_porcentaje}%</b> </li>
+                            <li>Margen: <b style={{color: this.alertIngCosto(accion.ing_costo_porcentaje,this.props.alerts[0].ing_costo_min, this.props.alerts[0].ing_costo_med)}}>{accion.ing_costo_porcentaje}%</b> </li>
                           </ul>
                         </th>
 
@@ -864,7 +894,8 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Cotizado: <b>{accion.hours_contractor}</b> </li>
                             <li>Ejecutado: <b>{accion.cont_horas_eje}</b> </li>
-                            <li>Avance: <b>{accion.cont_horas_porcentaje}%</b> </li>
+                            <li>Avance: <b style={{color: this.alertIng(accion.cont_horas_porcentaje,this.props.alerts[0].tab_ejecucion_min, this.props.alerts[0].tab_ejecucion_med)}}>{accion.cont_horas_porcentaje}%</b> </li>
+
                           </ul>
                         </th>
 
@@ -872,7 +903,8 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Tab Cotizada: <b><NumberFormat value={accion.cont_costo_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
                             <li>Tab costo: <b><NumberFormat value={accion.cont_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Margen: <b>{accion.cont_costo_porcentaje}%</b> </li>
+                            <li>Margen: <b style={{color: this.alertIngCosto(accion.cont_costo_porcentaje,this.props.alerts[0].tab_costo_min, this.props.alerts[0].tab_costo_med)}}>{accion.cont_costo_porcentaje}%</b> </li>
+
                           </ul>
                         </th>
 
@@ -880,7 +912,8 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Cotizado: <b>{accion.displacement_hours}</b></li>
                             <li>Ejecutado: <b>{accion.desp_horas_eje}</b> </li>
-                            <li>Ejecucion: <b>{accion.desp_horas_porcentaje}%</b> </li>
+                            <li>Ejecucion: <b style={{color: this.alertIng(accion.desp_horas_porcentaje,this.props.alerts[0].desp_min, this.props.alerts[0].desp_med)}}>{accion.desp_horas_porcentaje}%</b> </li>
+
                           </ul>
                         </th>
 
@@ -888,7 +921,8 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Cotizados: <b><NumberFormat value={accion.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b>  </li>
                             <li>Comprados: <b><NumberFormat value={accion.mat_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Margen: <b>{accion.mat_costo_porcentaje}%</b> </li>
+                            <li>Margen: <b style={{color: this.alertIngCosto(accion.mat_costo_porcentaje,this.props.alerts[0].mat_min, this.props.alerts[0].mat_med)}}>{accion.mat_costo_porcentaje}%</b> </li>
+
                           </ul>
                         </th>
 
@@ -896,7 +930,9 @@ class tableIndex extends React.Component {
                           <ul>
                             <li>Cotizado: <b><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
                             <li>Gastado: <b><NumberFormat value={accion.viat_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"}/></b> </li>
-                            <li>Avance: <b>{accion.viat_costo_porcentaje}%</b> </li>
+                            <li>Avance: <b style={{color: this.alertIng(accion.viat_costo_porcentaje,this.props.alerts[0].via_min ,this.props.alerts[0].via_med)}}>{accion.viat_costo_porcentaje}%</b> </li>
+                         
+
                           </ul>
                         </th>
 

@@ -232,6 +232,9 @@ class indexTable extends React.Component {
   };
 
 
+
+
+
     render() {
         return (
             <React.Fragment>
@@ -280,6 +283,7 @@ class indexTable extends React.Component {
                                 value_displacement_hours={this.props.value_displacement_hours}
                                 exel_values={this.state.exel_values}
                                 filtering={this.state.filtering}
+                                alerts={this.props.alerts}
                             />
 
                         ) : (

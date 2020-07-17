@@ -240,7 +240,7 @@ class ReportsController < ApplicationController
     @report = Report.create(report_params)
 
       if @report.save
-        recalculate_cost_center(@report.cost_center_id)
+        recalculate_cost_center(@report.cost_center_id, "reportes")
 
         render :json => {
           message: "¡El Registro fue creado con exito!",

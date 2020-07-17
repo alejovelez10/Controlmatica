@@ -365,6 +365,36 @@ class Show extends React.Component {
         }
     }
 
+
+    alertIng=(value, value2, value3)=>{
+        if (value <= value2)
+        {
+            return "green"
+        }else if (value > value2 && value <= value3){
+            
+            return "orange"
+        }
+        else{
+            
+            return "red"
+        }
+    }
+
+    alertIngCosto=(value, value2, value3)=>{
+        if (value >= value2)
+        {
+            return "green"
+        }else if (value < value2 && value >= value3){
+            
+            return "orange"
+        }
+        else{
+            
+            return "red"
+        }
+    }
+
+
     getServices = () => {
         return(
             <React.Fragment>
@@ -387,7 +417,7 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">
                                 <strong>Avance</strong><br/> 
-                                <span>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
+                                <span style={{color: this.alertIng(this.props.porc_eje,this.props.alerts[0].ing_ejecucion_min ,this.props.alerts[0].ing_costo_med)}}>{this.props.porc_eje}%</span>
                             </div>
                         </div>
                             
@@ -415,7 +445,7 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Margen</strong><br/> 
-                                <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
+                                <span style={{color: this.alertIngCosto(this.props.porc_eje_costo,this.props.alerts[0].ing_costo_min, this.props.alerts[0].ing_costo_med)}}>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
                             </div>
                         </div>
                     </div>
@@ -442,6 +472,8 @@ class Show extends React.Component {
                             <div className="col-md-4 text-center">   
                                 <strong>Ejecucion</strong><br/> 
                                 <span>{this.props.porc_desplazamiento}%</span>
+                                <span style={{color: this.alertIng(this.props.porc_desplazamiento,this.props.alerts[0].desp_min, this.props.alerts[0].desp_med)}}>{this.props.porc_desplazamiento/*<%= porc_eje_costo  %>*/}%</span>
+
                             </div>
 
                         </div>
@@ -468,7 +500,8 @@ class Show extends React.Component {
                                 
                             <div className="col-md-4 text-center"> 
                                 <strong>Avance</strong><br/>
-                                <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
+                                <span style={{color: this.alertIng(this.props.porc_via,this.props.alerts[0].via_min ,this.props.alerts[0].via_med)}}>{this.props.porc_via/*<%= porc_eje %> */}%</span>
+
                             </div>
 
                         </div>
@@ -528,7 +561,8 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Margen</strong><br/> 
-                                <span>{this.props.porc_mat}%</span>
+                                <span style={{color: this.alertIngCosto(this.props.porc_mat,this.props.alerts[0].mat_min, this.props.alerts[0].mat_med)}}>{this.props.porc_mat/*<%= porc_eje_costo  %>*/}%</span>
+
                             </div>
 
                         </div>
@@ -590,7 +624,7 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">
                                 <strong>Avance</strong><br/> 
-                                <span>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
+                                <span style={{color: this.alertIng(this.props.porc_eje,this.props.alerts[0].ing_ejecucion_min ,this.props.alerts[0].ing_costo_med)}}>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
                             </div>
                         </div>
                             
@@ -618,7 +652,8 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Margen</strong><br/> 
-                                <span>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
+                                <span style={{color: this.alertIngCosto(this.props.porc_eje_costo,this.props.alerts[0].ing_costo_min, this.props.alerts[0].ing_costo_med)}}>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
+                            
                             </div>
                         </div>
                     </div>
@@ -644,7 +679,8 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Avance</strong><br/> 
-                                <span>{this.props.porc_eje_contractor}</span>
+                                  <span style={{color: this.alertIng(this.props.porc_eje_contractor,this.props.alerts[0].tab_ejecucion_min, this.props.alerts[0].tab_ejecucion_med)}}>{this.props.porc_eje_contractor/*<%= porc_eje_costo  %>*/}%</span>
+
                             </div>
 
                         </div>
@@ -671,7 +707,8 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Margen</strong><br/> 
-                                <span>{this.props.porc_eje_costo_contractor}%</span>
+                                <span style={{color: this.alertIngCosto(this.props.porc_eje_costo_contractor,this.props.alerts[0].tab_costo_min, this.props.alerts[0].tab_costo_med)}}>{this.props.porc_eje_costo_contractor/*<%= porc_eje_costo  %>*/}%</span>
+
                             </div>
 
                         </div>
@@ -696,8 +733,8 @@ class Show extends React.Component {
                             </div>
 
                             <div className="col-md-4 text-center">   
-                                <strong>Ejecucion</strong><br/> 
-                                <span>{this.props.porc_desplazamiento}%</span>
+                                <strong>Avance</strong><br/> 
+                                <span style={{color: this.alertIng(this.props.porc_desplazamiento,this.props.alerts[0].desp_min, this.props.alerts[0].desp_med)}}>{this.props.porc_desplazamiento/*<%= porc_eje_costo  %>*/}%</span>
                             </div>
 
                         </div>
@@ -724,7 +761,7 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Margen</strong><br/> 
-                                <span>{this.props.porc_mat}%</span>
+                                <span style={{color: this.alertIngCosto(this.props.porc_mat,this.props.alerts[0].mat_min, this.props.alerts[0].mat_med)}}>{this.props.porc_mat/*<%= porc_eje_costo  %>*/}%</span>
                             </div>
 
                         </div>
@@ -751,7 +788,7 @@ class Show extends React.Component {
                                 
                             <div className="col-md-4 text-center"> 
                                 <strong>Avance</strong><br/>
-                                <span>{this.props.porc_via/*<%= porc_via %>*/}%</span>
+                                <span style={{color: this.alertIng(this.props.porc_via,this.props.alerts[0].via_min ,this.props.alerts[0].via_med)}}>{this.props.porc_via/*<%= porc_eje %> */}%</span>
                             </div>
 
                         </div>

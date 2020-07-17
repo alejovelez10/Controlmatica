@@ -469,7 +469,7 @@ module ApplicationHelper
 	end
 
 
-	def recalculate_cost_center(cost)
+	def recalculate_cost_center(cost, module_is="nt")
 		@cost_center = CostCenter.find(cost)	
 		ing_horas_eje = @cost_center.reports.sum(:working_time)
 		ing_horas_porcentaje = @cost_center.eng_hours > 0 ? (((ing_horas_eje.to_f/@cost_center.eng_hours))*100).to_i : 0
@@ -525,6 +525,23 @@ module ApplicationHelper
 			
 			
 		)
+
+
+		alert = Alert.last
+
+		if module_is == "reportes"
+		if @cost_center.ing_costo_porcentaje < alert.ing_costo_med
+			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+			AlertMailer.send_alert(@cost_center.ing_costo_porcentaje, alert.ing_costo_med ,"El margen esperado esta por debajo").deliver
+		end
+		if @cost_center.viat_costo_porcentaje > alert.via_med
+			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+			AlertMailer.send_alert(@cost_center.viat_costo_porcentaje, alert.via_med ,"El porcentaje de avance de los viaticos esta por encima de del tope").deliver
+		end
+	else
+	end
+
+
 
           puts "hola"
 	end	
