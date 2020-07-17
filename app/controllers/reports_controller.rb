@@ -81,7 +81,12 @@ class ReportsController < ApplicationController
   end
 
   def get_informes
-    cost_center = CostCenter.all
+    if params[:descripcion] || params[:customer_id] || params[:execution_state] || params[:invoiced_state] || params[:cost_center_id] || params[:service_type] || params[:date_desde] || params[:date_hasta] || params[:quotation_number]
+      cost_center = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
+    else
+      cost_center = CostCenter.all
+    end
+
     materials = Material.all
     contractors = Contractor.all
 
