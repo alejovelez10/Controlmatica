@@ -211,11 +211,11 @@ class InformesIndex extends Component {
 
                   formAutocompleteCustomer={this.state.selectedOption}
                   onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
-                  clientes={this.state.clients}
+                  clientes={this.state.clientes}
 
                   /* AUTOCOMPLETE CENTRO DE COSTO */
 
-                  centro={this.state.dataCostCenter}
+                  centro={this.state.dataCostCenterSelect}
                   onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
                   formAutocompleteCentro={this.state.selectedOptionCentro}
 
