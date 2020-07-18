@@ -9,7 +9,7 @@ namespace :calculate_aiu do
       aiu_real = cost.quotation_value - gastos
       aiu_percent_real = cost.quotation_value > 0 ? ((gastos.to_f / cost.quotation_value.to_f) * 100).to_i : 0
 
-      cost.update(aiu: aiu, aiu_percent: aiu_percent, aiu_real: aiu_percent_real, total_expenses: gastos)
+      cost.update(aiu: aiu, aiu_percent: aiu_percent, aiu_real: aiu_real, aiu_percent_real: aiu_percent_real, total_expenses: gastos)
     end
   end
 end
