@@ -65,5 +65,5 @@
 #
 
 class CostCenterSerializer < ActiveModel::Serializer
-  attributes :id, :code, :description
+  attributes :id, :code, :description, :aiu_percent_real
 end

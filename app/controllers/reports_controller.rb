@@ -273,7 +273,7 @@ class ReportsController < ApplicationController
 
     
     if @report.update(report_params.merge!(update_user: current_user.id)) 
-      recalculate_cost_center(@report.cost_center_id)
+      recalculate_cost_center(@report.cost_center_id, "reportes")
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"

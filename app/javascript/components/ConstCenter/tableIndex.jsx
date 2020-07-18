@@ -949,7 +949,7 @@ alertIngCosto=(value, value2, value3)=>{
                         <th style={{textAlign:"center"}}><NumberFormat value={ accion.aiu} displayType={"text"} thousandSeparator={true} prefix={"$"}/>
                             <div style={{color: this.alertIngCosto(accion.aiu_percent,this.props.alerts[0].total_min ,this.props.alerts[0].total_med)}}>{ accion.aiu_percent}%</div>
                         </th>
-                        <th><NumberFormat value={ accion.aiu_real } displayType={"text"} thousandSeparator={true} prefix={"$"}/>
+                        <th style={{textAlign:"center"}}><NumberFormat value={ accion.aiu_real } displayType={"text"} thousandSeparator={true} prefix={"$"}/>
                             <div style={{color: this.alertIngCosto(accion.aiu_percent_real,this.props.alerts[0].total_min ,this.props.alerts[0].total_med)}}>{ accion.aiu_percent_real }%</div>
                         </th>
                         <th><NumberFormat value={ this.get_sales_orders(accion.sales_orders) } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>

@@ -471,7 +471,6 @@ class Show extends React.Component {
 
                             <div className="col-md-4 text-center">   
                                 <strong>Ejecucion</strong><br/> 
-                                <span>{this.props.porc_desplazamiento}%</span>
                                 <span style={{color: this.alertIng(this.props.porc_desplazamiento,this.props.alerts[0].desp_min, this.props.alerts[0].desp_med)}}>{this.props.porc_desplazamiento/*<%= porc_eje_costo  %>*/}%</span>
 
                             </div>

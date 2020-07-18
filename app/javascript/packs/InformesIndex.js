@@ -116,7 +116,10 @@ class InformesIndex extends Component {
           .then(response => response.json())
           .then(data => {
             this.setState({
-                dataCostCenter: data.data
+              dataCostCenter: data.dataCostCenter,
+              dataMaterials: data.dataMaterials,
+              dataTableristas: data.dataTableristas,
+              isLoaded: false
             });
         });
     };
