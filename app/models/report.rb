@@ -111,8 +111,7 @@ class Report < ApplicationRecord
     viatic_value = cost_center.reports.sum(:viatic_value)
     cost_center.update(sum_materials_costo: working_value, sum_viatic: viatic_value)
     puts "ñaslkfjsakfjadsñlfjasñljfkoñsadjflkasdjflkasfjlksajflkasjfklsajfklsajfklasdjfklasjfklasjfasñfjals"
-    
-
+      
   end
 
 

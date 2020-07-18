@@ -149,7 +149,7 @@ class ContractorsController < ApplicationController
 
   	@contractor = Contractor.create(contractor_params)
       if @contractor.save
-        recalculate_cost_center(@contractor.cost_center_id)
+        recalculate_cost_center(@contractor.cost_center_id, "contractor")
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"

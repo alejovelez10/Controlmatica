@@ -748,6 +748,9 @@ alertIngCosto=(value, value2, value3)=>{
                     <th style={{ width: "250px"}}>Materiales</th>
                     <th style={{ width: "250px"}}>Viaticos</th>
                     <th style={{ width: "250px"}}>Facturacion</th>
+                    <th style={{ width: "250px"}}>Aiu/Actual</th>
+                    <th style={{ width: "250px"}}>Aiu/Actual Cotizado </th>
+
 
                     <th style={{ width: "250px"}}>$ Total Legalizado</th>
                     <th style={{ width: "250px"}}>$ Total Cotizado</th>
@@ -943,7 +946,12 @@ alertIngCosto=(value, value2, value3)=>{
                             <li>Avance: <b>{accion.fact_porcentaje}%</b> </li>
                           </ul>
                         </th>
-
+                        <th style={{textAlign:"center"}}><NumberFormat value={ accion.aiu} displayType={"text"} thousandSeparator={true} prefix={"$"}/>
+                            <div style={{color: this.alertIngCosto(accion.aiu_percent,this.props.alerts[0].total_min ,this.props.alerts[0].total_med)}}>{ accion.aiu_percent}%</div>
+                        </th>
+                        <th><NumberFormat value={ accion.aiu_real } displayType={"text"} thousandSeparator={true} prefix={"$"}/>
+                            <div style={{color: this.alertIngCosto(accion.aiu_percent_real,this.props.alerts[0].total_min ,this.props.alerts[0].total_med)}}>{ accion.aiu_percent_real }%</div>
+                        </th>
                         <th><NumberFormat value={ this.get_sales_orders(accion.sales_orders) } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                 

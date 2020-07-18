@@ -172,7 +172,7 @@ class MaterialsController < ApplicationController
 
   	@material = Material.create(material_params)
       if @material.save
-        recalculate_cost_center(@material.cost_center_id)
+        recalculate_cost_center(@material.cost_center_id,"materiales")
         render :json => {
           message: "¡El Registro fue creado con exito!",
           type: "success"

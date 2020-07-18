@@ -4,6 +4,7 @@ namespace :update_cost_center do
     CostCenter.all.each do |cost_center|
       @cost_center = cost_center
       ing_horas_eje = @cost_center.reports.sum(:working_time)
+
       ing_horas_porcentaje = @cost_center.eng_hours > 0 ? (((ing_horas_eje.to_f / @cost_center.eng_hours)) * 100).to_i : 0
 
       #desplazamiento

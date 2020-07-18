@@ -501,6 +501,13 @@ module ApplicationHelper
 
 		fact_real = @cost_center.customer_invoices.sum(:invoice_value)
 		fact_porcentaje = @cost_center.quotation_value > 0 ? ((fact_real.to_f/@cost_center.quotation_value)*100).to_i : 0
+		
+		gastos = ing_costo_real + cont_costo_real + mat_costo_real + viat_costo_real 
+		aiu = fact_real - gastos
+		aiu_percent = fact_real > 0 ? ((aiu.to_f/fact_real.to_f)*100).to_i : 0
+
+		aiu_real = @cost_center.quotation_value - gastos
+		aiu_percent_real = @cost_center.quotation_value > 0 ? ((gastos.to_f/@cost_center.quotation_value.to_f)*100).to_i : 0
 
 
 		@cost_center.update(
@@ -521,9 +528,12 @@ module ApplicationHelper
 			viat_costo_real:viat_costo_real,
 			viat_costo_porcentaje:viat_costo_porcentaje,
 			fact_real: fact_real,
-			fact_porcentaje: fact_porcentaje
-			
-			
+			fact_porcentaje: fact_porcentaje,
+			aiu: aiu,
+			aiu_percent: aiu_percent,
+			aiu_real: aiu_real,
+			aiu_percent_real: aiu_percent_real,
+			total_expenses: gastos
 		)
 
 
@@ -532,13 +542,30 @@ module ApplicationHelper
 		if module_is == "reportes"
 		if @cost_center.ing_costo_porcentaje < alert.ing_costo_med
 			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
-			AlertMailer.send_alert(@cost_center.ing_costo_porcentaje, alert.ing_costo_med ,"El margen esperado esta por debajo").deliver
+			AlertMailer.send_alert(@cost_center.ing_costo_porcentaje, alert.ing_costo_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
 		end
 		if @cost_center.viat_costo_porcentaje > alert.via_med
 			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
 			AlertMailer.send_alert(@cost_center.viat_costo_porcentaje, alert.via_med ,"El porcentaje de avance de los viaticos esta por encima de del tope").deliver
 		end
-	else
+		if @cost_center.desp_horas_porcentaje > alert.desp_med
+			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+			AlertMailer.send_alert(@cost_center.desp_horas_porcentaje, alert.desp_med ,"El porcentaje de avance desplazamiento esta por encima de del tope").deliver
+		end
+
+		
+	elsif module_is == "contractor"
+		if @cost_center.cont_costo_porcentaje < alert.tab_costo_med
+			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+			AlertMailer.send_alert(@cost_center.cont_costo_porcentaje, alert.tab_costo_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
+		end
+
+	elsif module_is == "materiales"
+		if @cost_center.mat_costo_porcentaje < alert.mat_med
+			puts "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+			AlertMailer.send_alert(@cost_center.mat_costo_porcentaje, alert.mat_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
+		end
+		
 	end
 
 
