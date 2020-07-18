@@ -19,7 +19,7 @@ class Index extends Component {
     }
     dataLineAccumulated = (nextProps) => {
 
-        let target = 90
+        let target = this.props.alert[0].total_min
         let array = [['x', 'datos', { role: "annotation", type: "string" }, '%'], [0, 0, "", target]]
 
 

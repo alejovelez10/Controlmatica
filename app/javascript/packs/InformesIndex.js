@@ -235,6 +235,7 @@ class InformesIndex extends Component {
                   dataCostCenter={this.state.dataCostCenter}
                   dataMaterials={this.state.dataMaterials}
                   dataTableristas={this.state.dataTableristas}
+                  alert={this.props.alert}
               />
 
             </React.Fragment>
