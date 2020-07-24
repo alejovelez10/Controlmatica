@@ -39,7 +39,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos', { role: "annotation", type: "string" }, '%', { role: "annotation", type: "string" }]]
+        let array = [['x', 'datos',/*  { role: "annotation", type: "string" }, */ '%'/* , { role: "annotation", type: "string" } */]]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -54,7 +54,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], data_percent_num, data_percent_currency, gastos, gastos_currency])
+            array.push([months[index], data_percent_num, gastos])
 
 
 
@@ -71,7 +71,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos', { role: "annotation", type: "string" }, '%', { role: "annotation", type: "string" }, '%', { role: "annotation", type: "string" }]]
+        let array = [['x', 'datos'/* , { role: "annotation", type: "string" } */, '%', /* { role: "annotation", type: "string" }, */ '%', /* { role: "annotation", type: "string" } */]]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -89,7 +89,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], rep, rep_currency, tab, tab_currency, mat, mat_currency])
+            array.push([months[index], rep, tab, mat])
 
 
 

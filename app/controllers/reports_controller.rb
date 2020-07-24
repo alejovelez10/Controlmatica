@@ -131,8 +131,7 @@ class ReportsController < ApplicationController
     rep_total = reports.where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
     report_total = rep_total.sum(:viatic_value) + rep_total.sum(:working_value) + rep_total.sum(:value_displacement_hours)  
 
-    totals_all = [['x', 'datos'],['Ingenieria', cont_total],['Tablerista', mat_total],['Equipos', report_total]]
-
+    totals_all = [['x', 'datos'],['Ingenieria', report_total],['Tablerista', cont_total],['Equipos', mat_total]]
     
 
     render :json => {
