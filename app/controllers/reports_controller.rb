@@ -126,13 +126,22 @@ class ReportsController < ApplicationController
     end
 
 
+    cont_total = contractors.where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
+    mat_total = materials.where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
+    rep_total = reports.where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
+    report_total = rep_total.sum(:viatic_value) + rep_total.sum(:working_value) + rep_total.sum(:value_displacement_hours)  
 
+    totals_all = [['x', 'datos'],['Ingenieria', cont_total],['Tablerista', mat_total],['Equipos', report_total]]
+
+    
 
     render :json => {
       dataCostCenter: months_lleno,
       dataMaterials: months_lleno_mat,
       dataTableristas: months_lleno_cont,
       dataReports: months_lleno_rep,
+      gastosTotales: totals_all,
+
 
     }
   end

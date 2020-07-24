@@ -1,3 +1,63 @@
 // Place all the styles related to the Reports controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+.pie-header{
+    .datos
+    {
+      display: flex;
+      justify-content: center;
+      flex-direction: row;
+      max-width: 520px;
+      width: 100%;
+      margin: auto;
+  
+      > div {
+        text-align: center;
+        padding-left: 5px;
+        padding-right: 5px; 
+        width: 33%;
+        p{
+          margin: 0;
+   
+        }
+      }
+      p{
+        font-size: 16px;
+        padding: 0px 16px;
+        color: white;
+        width: 100%;
+      }
+      p:last-child{
+        padding-bottom: 5px;
+        border-radius: 0 0 4px 4px;
+      }
+      p:first-child{
+        padding-bottom: 5px;
+        border-radius: 4px 4px 0 0;
+      }
+      .Task, .column-x
+      {
+        display: none;
+      }
+      .Ingenieria
+      {
+        p{
+          background-color: #4ab77b;
+        }
+      
+      }
+      .Tablerista
+      {
+  
+        p{
+          background-color: #ffc800;
+        }
+      }
+      .Equipos
+      {
+        p{
+          background-color: #2196f3;
+        }
+      }
+    }
+  }

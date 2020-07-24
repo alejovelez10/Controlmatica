@@ -1,7 +1,7 @@
 import React from "react";
 import Chart from "react-google-charts";
 
-class LineChartIndicator extends React.Component {
+class LineChartGastos extends React.Component {
     constructor(props) {
         super(props);
         this.chartReference = React.createRef();
@@ -27,7 +27,7 @@ class LineChartIndicator extends React.Component {
                         chartType="ColumnChart"
                         loader={<div>Loading Chart</div>}
                         data={this.props.data} options={{
-                            title: "TENDENCIA DE CALIFICACIÓN",
+                            title: "",
                             hAxis: {
                                 title: 'FECHA',
                             }, vAxis: {
@@ -39,7 +39,7 @@ class LineChartIndicator extends React.Component {
                             vAxis: { minValue: 0, maxValue: 100 },
                             hAxis: { minValue: 0, maxValue: 31,
                             },
-                            colors: ["#65ab84", "#206ba7"],
+                            colors: ["#4ab77b", "#ffc800","#2196f3"],
                            
                           }}
                         rootProps={{ 'data-testid': '1' }}
@@ -57,4 +57,4 @@ class LineChartIndicator extends React.Component {
     }
 }
 
-export default LineChartIndicator;
+export default LineChartGastos;

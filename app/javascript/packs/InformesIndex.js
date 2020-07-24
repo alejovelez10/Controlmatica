@@ -39,7 +39,8 @@ class InformesIndex extends Component {
             dataReports: [],
 
             clientes: [],
-            dataCostCenterSelect: []
+            dataCostCenterSelect: [],
+            gastosTotales: []
             
         }
     }
@@ -85,6 +86,7 @@ class InformesIndex extends Component {
             dataMaterials: data.dataMaterials,
             dataTableristas: data.dataTableristas,
             dataReports: data.dataReports,
+            gastosTotales: data.gastosTotales,
             isLoaded: false
           });
         });
@@ -238,7 +240,9 @@ class InformesIndex extends Component {
                   dataMaterials={this.state.dataMaterials}
                   dataTableristas={this.state.dataTableristas}
                   dataReports={this.state.dataReports}
+                  dataTotales={this.state.gastosTotales}
                   alert={this.props.alert}
+                 
               />
 
             </React.Fragment>
