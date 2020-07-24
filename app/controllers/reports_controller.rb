@@ -91,11 +91,48 @@ class ReportsController < ApplicationController
     contractors = Contractor.all
     reports = Report.all
 
+
+
+    months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    months_lleno =[] 
+    months.each_with_index do |month,index|
+      total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index).sum(:quotation_value)
+      months_lleno << total.to_f
+    end
+
+    months_lleno_mat =[] 
+    months.each_with_index do |month,index|
+      total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:amount)
+      months_lleno_mat << total.to_f
+    end
+    puts "hola como estoyaaa"
+    puts months_lleno_mat
+    puts "hola como estoyaaa"
+
+    months_lleno_cont =[] 
+    months.each_with_index do |month,index|
+      total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:ammount)
+      months_lleno_cont << total.to_f
+    end
+
+
+
+    months_lleno_rep =[] 
+    reports.each_with_index do |month,index|
+      total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index)
+      total = total.sum(:viatic_value) + total.sum(:working_value) + total.sum(:value_displacement_hours)  
+      months_lleno_rep << total.to_f
+    end
+
+
+
+
     render :json => {
-      dataCostCenter: ActiveModelSerializers::SerializableResource.new(cost_center, each_serializer: CostCenterSerializer),
-      dataMaterials: ActiveModelSerializers::SerializableResource.new(materials, each_serializer: MaterialSerializer),
-      dataTableristas: ActiveModelSerializers::SerializableResource.new(contractors, each_serializer: ContractorSerializer),
-      dataReports: ActiveModelSerializers::SerializableResource.new(reports, each_serializer: ReportSerializer),
+      dataCostCenter: months_lleno,
+      dataMaterials: months_lleno_mat,
+      dataTableristas: months_lleno_cont,
+      dataReports: months_lleno_rep,
 
     }
   end

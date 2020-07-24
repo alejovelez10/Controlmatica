@@ -32,7 +32,7 @@ class Index extends Component {
        
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     
-        let months_lleno =[] 
+       /*  let months_lleno =[] 
         months.map((month,index)=>{
             let total = []
             total = nextProps.dataCostCenter.filter((data)=>{
@@ -53,82 +53,7 @@ class Index extends Component {
 
 
             months_lleno.push(valuer)
-        })
-
-        let months_lleno_mat =[] 
-        months.map((month,index)=>{
-            let total = []
-            total = nextProps.dataMaterials.filter((data)=>{
-                return new Date(data.sales_date).getMonth() == index
-            })
-
-            let valuer = 0;
-            if (total.length > 0)
-            {
-                total.map(value=>{
-                    valuer = valuer + value.amount
-                })
-            }
-
-            else{
-                valuer = 0;
-            }
-
-
-            months_lleno_mat.push(valuer)
-        })
-
-        let months_lleno_tab =[] 
-        months.map((month,index)=>{
-            let total = []
-            total = nextProps.dataTableristas.filter((data)=>{
-                return new Date(data.sales_date).getMonth() == index
-            })
-
-            let valuer = 0;
-            if (total.length > 0)
-            {
-                total.map(value=>{
-                    valuer = valuer + value.ammount
-                })
-            }
-
-            else{
-                valuer = 0;
-            }
-
-
-            months_lleno_tab.push(valuer)
-        })
-
-        let months_lleno_reports =[] 
-        months.map((month,index)=>{
-            let total = []
-            total = nextProps.dataReports.filter((data)=>{
-                return new Date(data.report_date).getMonth() == index
-            })
-
-            let valuer = 0;
-            if (total.length > 0)
-            {
-                total.map(value=>{
-                    valuer = valuer + value.viatic_value + value.working_value + value.value_displacement_hours
-                })
-            }
-
-            else{
-                valuer = 0;
-            }
-
-
-            months_lleno_reports.push(valuer)
-        })
-
-        console.log(months_lleno)
-        console.log(months_lleno_reports)
-        console.log(months_lleno_mat)
-        console.log(months_lleno_tab)
-
+        }) */
        
         let array = [['x', 'datos', { role: "annotation", type: "string" }, '%', { role: "annotation", type: "string" }]]
 
@@ -136,13 +61,13 @@ class Index extends Component {
         
 
 
-        months_lleno.map((data, index) => {
+        nextProps.dataCostCenter.map((data, index) => {
 
             let data_percent = data
             let data_percent_num = data
             let data_percent_currency = this.numberToCurrency(data)
             
-            let gastos = months_lleno_mat[index] + months_lleno_tab[index] + months_lleno_reports[index]
+            let gastos =  nextProps.dataMaterials[index] + nextProps.dataReports[index] + nextProps.dataTableristas[index]
             let gastos_currency = this.numberToCurrency(gastos)
      
             /* if (!data.state) {
