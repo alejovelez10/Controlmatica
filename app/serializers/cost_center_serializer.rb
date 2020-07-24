@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
+#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
-#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -62,8 +62,13 @@
 #  fact_porcentaje           :float            default(0.0)
 #  desp_horas_eje            :float            default(0.0)
 #  desp_horas_porcentaje     :float            default(0.0)
+#  aiu                       :float            default(0.0)
+#  aiu_percent               :float            default(0.0)
+#  aiu_real                  :float            default(0.0)
+#  aiu_percent_real          :float            default(0.0)
+#  total_expenses            :float            default(0.0)
 #
 
 class CostCenterSerializer < ActiveModel::Serializer
-  attributes :id, :code, :description, :aiu_percent_real
+  attributes :id, :code, :description, :aiu_percent_real, :start_date, :quotation_value
 end

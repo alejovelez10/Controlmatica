@@ -24,7 +24,7 @@ class LineChartIndicator extends React.Component {
                     <Chart
                         width={'100%'}
                         height={'400px'}
-                        chartType="LineChart"
+                        chartType="ColumnChart"
                         loader={<div>Loading Chart</div>}
                         data={this.props.data} options={{
                             title: "TENDENCIA DE CALIFICACIÓN",

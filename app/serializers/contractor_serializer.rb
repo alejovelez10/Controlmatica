@@ -17,5 +17,5 @@
 #
 
 class ContractorSerializer < ActiveModel::Serializer
-  attributes :id
+  attributes :id, :ammount, :sales_date
 end

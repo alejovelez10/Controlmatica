@@ -89,11 +89,14 @@ class ReportsController < ApplicationController
 
     materials = Material.all
     contractors = Contractor.all
+    reports = Report.all
 
     render :json => {
       dataCostCenter: ActiveModelSerializers::SerializableResource.new(cost_center, each_serializer: CostCenterSerializer),
       dataMaterials: ActiveModelSerializers::SerializableResource.new(materials, each_serializer: MaterialSerializer),
       dataTableristas: ActiveModelSerializers::SerializableResource.new(contractors, each_serializer: ContractorSerializer),
+      dataReports: ActiveModelSerializers::SerializableResource.new(reports, each_serializer: ReportSerializer),
+
     }
   end
   

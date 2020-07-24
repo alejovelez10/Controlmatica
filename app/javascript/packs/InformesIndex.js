@@ -36,6 +36,7 @@ class InformesIndex extends Component {
             dataCostCenter: [],
             dataMaterials: [],
             dataTableristas: [],
+            dataReports: [],
 
             clientes: [],
             dataCostCenterSelect: []
@@ -83,6 +84,7 @@ class InformesIndex extends Component {
             dataCostCenter: data.dataCostCenter,
             dataMaterials: data.dataMaterials,
             dataTableristas: data.dataTableristas,
+            dataReports: data.dataReports,
             isLoaded: false
           });
         });
@@ -235,6 +237,7 @@ class InformesIndex extends Component {
                   dataCostCenter={this.state.dataCostCenter}
                   dataMaterials={this.state.dataMaterials}
                   dataTableristas={this.state.dataTableristas}
+                  dataReports={this.state.dataReports}
                   alert={this.props.alert}
               />
 

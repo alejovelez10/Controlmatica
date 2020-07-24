@@ -62,6 +62,11 @@
 #  fact_porcentaje           :float            default(0.0)
 #  desp_horas_eje            :float            default(0.0)
 #  desp_horas_porcentaje     :float            default(0.0)
+#  aiu                       :float            default(0.0)
+#  aiu_percent               :float            default(0.0)
+#  aiu_real                  :float            default(0.0)
+#  aiu_percent_real          :float            default(0.0)
+#  total_expenses            :float            default(0.0)
 #
 
 class CostCenter < ApplicationRecord

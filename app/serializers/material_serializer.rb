@@ -20,5 +20,9 @@
 #
 
 class MaterialSerializer < ActiveModel::Serializer
-  attributes :id
+  attributes :id, :amount, :sales_date
+
+  def material_invoices
+    object.material_invoices # or whatever methood
+  end
 end
