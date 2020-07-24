@@ -165,7 +165,7 @@ class Index extends Component {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-12">
+                    <div className="col-md-6">
                         <div className="card">
                             <div className="card-body">
                                 <h3>MARGEN</h3>
@@ -174,8 +174,8 @@ class Index extends Component {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-12"><hr/></div>
-                    <div className="col-md-12">
+                  
+                    <div className="col-md-6">
                         <div className="card">
                             <div className="card-body">
                                 <h3>GASTOS</h3>
