@@ -40,7 +40,13 @@ class InformesIndex extends Component {
 
             clientes: [],
             dataCostCenterSelect: [],
-            gastosTotales: []
+            gastosTotales: [],
+            facturaGastos: [],
+            facturaVentas: [],
+            ventaGastos: []
+
+
+
             
         }
     }
@@ -87,6 +93,9 @@ class InformesIndex extends Component {
             dataTableristas: data.dataTableristas,
             dataReports: data.dataReports,
             gastosTotales: data.gastosTotales,
+            facturaGastos: data.facturaGastos,
+            facturaVentas: data.facturaVentas,
+            ventaGastos: data.ventaGastos,
             isLoaded: false
           });
         });
@@ -241,8 +250,11 @@ class InformesIndex extends Component {
                   dataTableristas={this.state.dataTableristas}
                   dataReports={this.state.dataReports}
                   dataTotales={this.state.gastosTotales}
+                  facturaGastos={this.state.facturaGastos}
+                  facturaVentas={this.state.facturaVentas}
+                  ventaGastos={this.state.ventaGastos}
                   alert={this.props.alert}
-                 
+
               />
 
             </React.Fragment>

@@ -90,6 +90,7 @@ class ReportsController < ApplicationController
     materials = Material.all
     contractors = Contractor.all
     reports = Report.all
+    facturas = CustomerInvoice.all
 
 
 
@@ -134,12 +135,28 @@ class ReportsController < ApplicationController
     totals_all = [['x', 'datos'],['Ingenieria', report_total],['Tablerista', cont_total],['Equipos', mat_total]]
     
 
+    facturas_total = facturas.where("EXTRACT(YEAR FROM invoice_date) = ?", Date.today.year).sum(:invoice_value)
+    gastos_totales = cont_total + mat_total + report_total
+    ventas_totales = cost_center.where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
+
+    factura_gastos = [['','x', 'datos'],["FACTURACION VS GASTOS", facturas_total, gastos_totales]]
+
+    factura_venta = [['','x', 'datos'],["FACTURACION VS VENTAS" , facturas_total, ventas_totales]]
+
+    venta_gastos = [['','x', 'datos'],["VENTAS VS GASTOS" , ventas_totales, gastos_totales]]
+
+
+
     render :json => {
       dataCostCenter: months_lleno,
       dataMaterials: months_lleno_mat,
       dataTableristas: months_lleno_cont,
       dataReports: months_lleno_rep,
       gastosTotales: totals_all,
+      facturaGastos: factura_gastos,
+      facturaVentas: factura_venta,
+      ventaGastos:  venta_gastos,
+
 
 
     }

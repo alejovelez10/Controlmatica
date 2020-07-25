@@ -11,7 +11,7 @@ class Index extends Component {
         this.state = {
             dataLine: [],
             dataPie: [],
-            dataLineGastos:[],
+            dataLineGastos: [],
         }
 
     }
@@ -39,7 +39,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos',/*  { role: "annotation", type: "string" }, */ '%'/* , { role: "annotation", type: "string" } */]]
+        let array = [['x', 'datos', '%']]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -71,7 +71,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos'/* , { role: "annotation", type: "string" } */, '%', /* { role: "annotation", type: "string" }, */ '%', /* { role: "annotation", type: "string" } */]]
+        let array = [['x', 'datos', '%', '%']]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -136,7 +136,41 @@ class Index extends Component {
         return finalCurrency;
     }
 
+    getfacturaGastos=(value)=>{
+       
+        let porcentaje = 0 
+        if (value[1] != undefined)
+        {
+        let gastos = value[1][2];
+        let facturacion = value[1][1];
+        let resta = facturacion - gastos
+        let porcentaje = 0  
+        if (facturacion > 0)
+        {
+            porcentaje = Math.round((resta/facturacion)*100,0)
+        }
+    }
+        return porcentaje
+    }
 
+    getfacturaVentas=(value)=>{
+       
+        let porcentaje = 0 
+        if (value[1] != undefined)
+        {
+            let facturacion = value[1][1];
+            let ventas = value[1][2];
+            let resta = ventas - facturacion
+             
+            if (ventas > 0)
+            {
+                porcentaje = Math.round((resta/ventas)*100,0)
+            }
+        }
+     
+        return porcentaje
+    }
+    
     render() {
         return (
             <React.Fragment>
@@ -174,22 +208,57 @@ class Index extends Component {
                             </div>
                         </div>
                     </div>
-                  
+
                     <div className="col-md-6">
                         <div className="card">
                             <div className="card-body">
                                 <h3>GASTOS</h3>
-                                <div style={{ display: "flex", justifyContent: "flex-end" }}> 
-                                <div style={{ borderRadius: "4px", padding: "10px", background: "#4ab77b", color: "white" , marginRight: "10px"}}>Ingenieria</div>
-                                <div style={{ borderRadius: "4px", padding: "10px", background: "#ffc800", color: "white" , marginRight: "10px"}}>Tableristas</div>
-                                <div style={{ borderRadius: "4px", padding: "10px", background: "#2196f3", color: "white", marginRight: "10px" }}>Materiales</div> 
+                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                    <div style={{ borderRadius: "4px", padding: "10px", background: "#4ab77b", color: "white", marginRight: "10px" }}>Ingenieria</div>
+                                    <div style={{ borderRadius: "4px", padding: "10px", background: "#ffc800", color: "white", marginRight: "10px" }}>Tableristas</div>
+                                    <div style={{ borderRadius: "4px", padding: "10px", background: "#2196f3", color: "white", marginRight: "10px" }}>Materiales</div>
 
                                 </div>
                                 <LineChartGastos data={this.state.dataLineGastos} />
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-12"><hr/></div>
+                    <div className="col-md-12"><hr /></div>
+                    <div className="col-md-6">
+                        <div className="card">
+                            <div className="card-body">
+                                <h3>FACTURACION VS GASTOS</h3>
+                                <p>Utilidad {this.getfacturaGastos(this.props.facturaGastos)}%</p>
+                                <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>FACTURACION</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
+
+                                <LineChartIndicator data={this.props.facturaGastos} />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-6">
+                        <div className="card">
+                            <div className="card-body">
+                                <h3>VENTAS VS GASTOS</h3>
+                                <p>Utilidad {this.getfacturaGastos(this.props.facturaVentas)}%</p>
+
+                                <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>VENTAS</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
+                                <LineChartIndicator data={this.props.ventaGastos} />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-12"><hr /></div>
+                    <div className="col-md-6">
+                        <div className="card">
+                            <div className="card-body">
+                                <h3>FACTURACION VS VENTAS</h3>
+                                <p>Se a facturado un  {this.getfacturaVentas(this.props.facturaVentas)}% de las ventas</p>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>FACTURACION</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" , marginRight: "10px"}}>VENTAS</div></div>
+
+                            <LineChartIndicator data={this.props.facturaVentas} />
+                        </div>
+                    </div>
+ 
                     <div className="col-md-6">
                         <div className="card">
                             <div className="card-body">
@@ -200,7 +269,7 @@ class Index extends Component {
                     </div>
 
                 </div>
-            </React.Fragment>
+            </React.Fragment >
         );
     }
 }
