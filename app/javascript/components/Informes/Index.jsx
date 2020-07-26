@@ -160,11 +160,10 @@ class Index extends Component {
         {
             let facturacion = value[1][1];
             let ventas = value[1][2];
-            let resta = ventas - facturacion
              
             if (ventas > 0)
             {
-                porcentaje = Math.round((resta/ventas)*100,0)
+                porcentaje = Math.round((facturacion/ventas)*100,0)
             }
         }
      
