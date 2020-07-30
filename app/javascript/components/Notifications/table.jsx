@@ -32,7 +32,7 @@ class table extends React.Component {
       
 
     handleClickUpdate = (id) => {
-      fetch(`/update_state/${id}`)
+      fetch(`/${this.props.url}/${id}`)
       .then(response => response.json())
       .then(data => {
           this.props.loadInfo()
@@ -46,18 +46,18 @@ class table extends React.Component {
       <React.Fragment>
         <ul className="nav nav-tabs mb-3" id="myTab" role="tablist">
           <li className="nav-item">
-            <a className="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Pendientes de revision <span className="badge badge-warning">{this.props.dataPending.length}</span></a>
+            <a className="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Pendientes de revision <span className="badge badge-warning">{this.props.data.filter(notification => notification.state == "pending").length}</span></a>
           </li>
 
           <li className="nav-item">
-            <a className="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Revisadas <span className="badge badge-warning">{this.props.dataRevised.length}</span></a>
+            <a className="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Revisadas <span className="badge badge-warning">{this.props.data.filter(notification => notification.state == "revised").length}</span></a>
           </li>
         </ul>
 
         <div className="tab-content" id="myTabContent">
           <div className="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-            {this.props.dataPending.length >= 1 ? (
-                this.props.dataPending.map(accion => (
+            {this.props.data.filter(notification => notification.state == this.props.pending).length >= 1 ? (
+                this.props.data.filter(notification => notification.state == this.props.pending).map(accion => (
                   <div className={`card ${this.props.from != null ? (accion.id == this.props.from ? "select-item-back" : "") : ""}`} key={accion.id} style={{ marginBottom: "17px"}}>
                     <div className="card-body">
                         <div className="row">
@@ -76,9 +76,6 @@ class table extends React.Component {
                             <hr className="mt-0"/>
 
                               {ReactHtmlParser(accion.description)}
-                              {/*accion.description.replace('','').map(customer => (
-                                  <p>{customer}</p>
-                              ))*/}
                           </div>
 
                           <div className="col-md-2 text-center">
@@ -99,8 +96,8 @@ class table extends React.Component {
           </div>
 
           <div className="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-            {this.props.dataRevised.length >= 1 ? (
-                this.props.dataRevised.map(accion => (
+            {this.props.data.filter(notification => notification.state == this.props.pending).length >= 1 ? (
+                this.props.data.filter(notification => notification.state == this.props.pending).map(accion => (
                   <div className="card" key={accion.id} style={{ marginBottom: "17px" }}>
                     <div className="card-body">
                         <div className="row">
@@ -119,9 +116,6 @@ class table extends React.Component {
                             <hr className="mt-0"/>
 
                               {ReactHtmlParser(accion.description)}
-                              {/*accion.description.replace('','').map(customer => (
-                                  <p>{customer}</p>
-                              ))*/}
                           </div>
 
                           <div className="col-md-2 text-center">

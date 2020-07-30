@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import WebpackerReact from 'webpacker-react';
 import Index from '../components/Informes/Index'
-import Filter from '../components/ConstCenter/FormFilter'
+import Filter from '../components/Informes/FormFilter'
 
 class InformesIndex extends Component {
     constructor(props) {
@@ -10,8 +10,8 @@ class InformesIndex extends Component {
         this.state = {
             formFilter: {
                 descripcion: "",
-                customer_id: "",
-                cost_center_id: "",
+                customer_id: [],
+                cost_center_id: [],
                 execution_state: "",
                 service_type: "",
                 invoiced_state: "",
@@ -104,27 +104,43 @@ class InformesIndex extends Component {
     //filter props
 
     handleChangeAutocompleteCustomer = selectedOption => {
+      let array = []
+
+        selectedOption.map((item) => (
+          array.push(item.value)
+        ))
+    
         this.setState({
-          selectedOption,
           formFilter: {
             ...this.state.formFilter,
-            customer_id: selectedOption.value
+            customer_id: array
           }
-        });
+        })
     };
 
     handleChangeAutocompleteCentro = selectedOptionCentro => {
+      let array = []
+
+        selectedOptionCentro.map((item) => (
+          array.push(item.value)
+        ))
+    
         this.setState({
-          selectedOptionCentro,
           formFilter: {
             ...this.state.formFilter,
-            cost_center_id: selectedOptionCentro.value
+            cost_center_id: array
           }
-        });
+        })
     };
+
+    updateStateLoad = (state) => {
+      this.setState({ isLoaded: state })
+    } 
+
     
 
     HandleClickFilter = e => {
+        this.setState({ isLoaded: true })
         fetch(`/get_informes?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&service_type=${this.state.formFilter.service_type != undefined ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : ""}&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&quotation_number=${this.state.formFilter.quotation_number != undefined ? this.state.formFilter.quotation_number : ""}`)
           .then(response => response.json())
           .then(data => {
@@ -145,8 +161,8 @@ class InformesIndex extends Component {
             
             formFilter: {
               descripcion: "",
-              customer_id: "",
-              cost_center_id: "",
+              customer_id: [],
+              cost_center_id: [],
               service_type:"",
               execution_state: "",
               invoiced_state: "",
@@ -185,8 +201,8 @@ class InformesIndex extends Component {
         this.setState({
           formFilter: {
             descripcion: "",
-            customer_id: "",
-            cost_center_id: "",
+            customer_id: [],
+            cost_center_id: [],
             execution_state: "",
             service_type: "",
             invoiced_state: "",

@@ -1,0 +1,51 @@
+$color-1: #fecd3a;
+$color-2: #fecd3a;
+$color-3: #fecd3a;
+$color-4: #fecd3a;
+$color-5: #fecd3a;
+
+$color: $color-1, $color-2, $color-3, $color-4, $color-5;
+
+@mixin anim($i){
+  $y: ($i + 5) * 10;
+ 
+  @keyframes right-#{$i} {
+    0% {
+      transform: translateY(#{-$y}px);
+    }
+    100% {
+      transform: translateY(#{$y}px);
+    }
+  }
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 71vh;
+  overflow: hidden;
+}
+
+.container{
+  ul {
+    display: flex;
+    li {
+      width: 20px;
+      height: 20px;
+      margin: 10px;
+      list-style-type: none;
+      transition: 0.5s all ease;
+    }
+  
+    @for $i from 1 through 5 {
+      li:nth-child(#{$i}) {
+        @include anim($i);
+        animation: right-#{$i} 1s infinite alternate;
+        background-color: nth($color, $i);
+        animation-delay: 100ms * $i;  
+      }
+    }
+  }
+}
+

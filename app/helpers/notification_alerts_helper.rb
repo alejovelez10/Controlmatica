@@ -1,0 +1,2 @@
+module NotificationAlertsHelper
+end

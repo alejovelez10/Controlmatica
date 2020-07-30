@@ -25,6 +25,9 @@ Rails.application.routes.draw do
   resources :contractors
   resources :material_invoices
   resources :alerts, :except => [:show, :new, :edit]
+
+  resources :notification_alerts, :only => [:index]
+
   get "get_alerts", to: "alerts#get_alerts"
   get "informes/controlmatica", to: "reports#controlmatica", as: "controlmatica"
   get "get_informes", to: "reports#get_informes"
@@ -110,8 +113,10 @@ Rails.application.routes.draw do
   get "update_load/:id", to: "material_invoices#update_load"
 
   get "notifications", to: "register_edits#notifications", as: "notifications"
-
   get "get_notifications", to: "register_edits#get_notifications"
+
+  get "update_state_notification_alert/:id", to: "notification_alerts#update_state"
+  get "get_notifications_alerts", to: "notification_alerts#get_notifications_alerts"
 
 
 

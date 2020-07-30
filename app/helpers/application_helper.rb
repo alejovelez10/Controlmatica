@@ -25,6 +25,9 @@ module ApplicationHelper
 		elsif controller == "register_edits" && action == "notifications"
 			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Registro de edicion " + "</h1>" + "<p>" + "Gestion de registros" + "</p>"
 
+		elsif controller == "notification_alerts" && action == "index"
+			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Notificación de alertas" + "</h1>" + "<p>" + "Gestion de notificación de alertas" + "</p>"
+
         elsif controller == "cost_centers" && action == "show"
 			card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "Analiza como va tu proyecto" + "</p>"
 		

@@ -8,8 +8,7 @@ class index extends React.Component {
         super(props)
 
         this.state = {
-            data_pending: [],
-            data_revised: [],
+            data: [],
             show_filter: false,
 
             formFilter: {
@@ -27,14 +26,13 @@ class index extends React.Component {
     }
 
     loadData = () => {
-        fetch("/get_notifications")
+        fetch(`/${this.props.urlLoadData}`)
         .then(response => response.json())
         .then(data => {
           console.log(data)
           this.setState({
-            data_pending: data.notifications_pending,
-            data_revised: data.notifications_revised,
-            notifications_total: data.notifications_pending.length,
+            data: data.data,
+            notifications_total: data.data.length,
             isLoaded: true,
           });
         });
@@ -79,8 +77,8 @@ class index extends React.Component {
         .then(response => response.json())
         .then(data => {
           this.setState({
-            data: data.notifications,
-            notifications_total: data.notifications.length,
+            data: data.data,
+            notifications_total: data.data.length,
             activePage: 1
           });
         });
@@ -108,8 +106,8 @@ class index extends React.Component {
         .then(response => response.json())
         .then(data => {
           this.setState({           
-            data: data.notifications,
-            notifications_total: data.notifications.length,
+            data: data.data,
+            notifications_total: data.data.length,
           });
         });
        
@@ -138,13 +136,15 @@ class index extends React.Component {
       
                         {this.state.isLoaded == true ? (
                             <Table 
-                                dataPending={this.state.data_pending} 
-                                dataRevised={this.state.data_revised} 
+                              data={this.state.data} 
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
-                                estados={this.props.estados}
+                                url={this.props.url}
                                 show={this.showFilter}
                                 from={this.props.from}
+
+                                pending={this.props.pending}
+                                review={this.props.review}
                             /> 
 
 
@@ -161,7 +161,7 @@ class index extends React.Component {
 
                           <div className="col-md-9 text-left pl-0">
                               <p>
-                                  Mostrando {this.state.data_pending.length} de {this.state.notifications_total}
+                                  Mostrando {this.state.data.length} de {this.state.notifications_total}
                               </p>
                           </div>
 

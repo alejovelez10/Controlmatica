@@ -36,6 +36,7 @@ class User < ApplicationRecord
   has_many :module_controls
   has_many :cost_centers
   has_many :register_edits
+  has_many :notification_alerts
   
   before_update :create_edit_register
 
