@@ -194,9 +194,11 @@ module ApplicationHelper
 	def get_register_edit
 		RegisterEdit.where(state: "pending")
 	end
-	
-	
 
+	def get_notification_alert
+		NotificationAlert.all
+	end
+	
 	def get_date(fecha)
    
 		if fecha != nil
@@ -544,24 +546,29 @@ module ApplicationHelper
 
 		if module_is == "reportes"
 		if @cost_center.ing_costo_porcentaje < alert.ing_costo_med
-			AlertMailer.send_alert(@cost_center.ing_costo_porcentaje, alert.ing_costo_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
+			NotificationAlert.create(user_id: current_user.id, module: "Reportes", date_update: Time.now, description: "El margen esperado esta por debajo de lo minimo esperado")
+			#AlertMailer.send_alert(@cost_center.ing_costo_porcentaje, alert.ing_costo_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
 		end
 		if @cost_center.viat_costo_porcentaje > alert.via_med
-			AlertMailer.send_alert(@cost_center.viat_costo_porcentaje, alert.via_med ,"El porcentaje de avance de los viaticos esta por encima de del tope").deliver
+			NotificationAlert.create(user_id: current_user.id, module: "Reportes", date_update: Time.now, description: "El porcentaje de avance de los viaticos esta por encima de del tope")
+			#AlertMailer.send_alert(@cost_center.viat_costo_porcentaje, alert.via_med ,"El porcentaje de avance de los viaticos esta por encima de del tope").deliver
 		end
 		if @cost_center.desp_horas_porcentaje > alert.desp_med
-			AlertMailer.send_alert(@cost_center.desp_horas_porcentaje, alert.desp_med ,"El porcentaje de avance desplazamiento esta por encima de del tope").deliver
+			NotificationAlert.create(user_id: current_user.id, module: "Reportes", date_update: Time.now, description: "El porcentaje de avance desplazamiento esta por encima de del tope")
+			#AlertMailer.send_alert(@cost_center.desp_horas_porcentaje, alert.desp_med ,"El porcentaje de avance desplazamiento esta por encima de del tope").deliver
 		end
 
 		
 	elsif module_is == "contractor"
 		if @cost_center.cont_costo_porcentaje < alert.tab_costo_med
-			AlertMailer.send_alert(@cost_center.cont_costo_porcentaje, alert.tab_costo_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
+			NotificationAlert.create(user_id: current_user.id, module: "Tableristas", date_update: Time.now, description: "El margen esperado esta por debajo de lo minimo esperado")
+			#AlertMailer.send_alert(@cost_center.cont_costo_porcentaje, alert.tab_costo_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
 		end
 
 	elsif module_is == "materiales"
 		if @cost_center.mat_costo_porcentaje < alert.mat_med
-			AlertMailer.send_alert(@cost_center.mat_costo_porcentaje, alert.mat_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
+			NotificationAlert.create(user_id: current_user.id, module: "Materiales", date_update: Time.now, description: "El margen esperado esta por debajo de lo minimo esperado")
+			#AlertMailer.send_alert(@cost_center.mat_costo_porcentaje, alert.mat_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
 		end
 		
 	end
