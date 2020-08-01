@@ -108,6 +108,7 @@ class CostCenter < ApplicationRecord
     def self.searchInfo(search1, search2, search3, search4, search5, search6,search7)
       search4 = search4 != "" ? search4.split(/,/) : ""
       search1 = search1 != "" ? search1.split(/,/) : ""
+      
       puts search4
       puts search1
 

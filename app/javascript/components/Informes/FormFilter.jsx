@@ -54,7 +54,7 @@ class FormFilter extends Component {
                   </div>
 
 
-                <div className="col-md-3">
+                <div className="col-md-6">
                       <input
                         type="hidden"
                         name="cost_center_id"
@@ -75,7 +75,7 @@ class FormFilter extends Component {
 
                   
 
-                  <div className="col-md-3 imput-filter">
+                  <div className="col-md-6 mt-2 imput-filter">
                     <label>Clientes</label>
                       <input
                         type="hidden"
@@ -151,18 +151,6 @@ class FormFilter extends Component {
                   
                   <div className="row mt-3">
              
-
-                  <div className="col-md-6">
-                   <label>Descripcion</label>
-                    <input
-                      className="form form-control"
-                      type="text"
-                      name="descripcion"
-                      placeholder="Descripcion"
-                      onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.descripcion}
-                    />
-                  </div>
 
 
               
