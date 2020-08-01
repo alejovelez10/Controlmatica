@@ -107,7 +107,10 @@ class CostCenter < ApplicationRecord
 
     def self.searchInfo(search1, search2, search3, search4, search5, search6,search7)
       search4 = search4 != "" ? search4.split(/,/) : ""
-      search1 = search4 != "" ? search1.split(/,/) : ""
+      search1 = search1 != "" ? search1.split(/,/) : ""
+      puts search4
+      puts search1
+
       puts "jajajajajajajajajajajajajajjaajajajajajajajj"
       search1 != "" ? (scope :customer, -> { where(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
       search2 != "" ? (scope :state_execution, -> { where(execution_state: search2) }) : (scope :state_execution, -> { where.not(id: nil) })

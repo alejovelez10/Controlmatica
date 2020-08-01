@@ -151,7 +151,7 @@ class ReportsController < ApplicationController
     rep_total = reports.where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
     report_total = rep_total.sum(:viatic_value) + rep_total.sum(:working_value) + rep_total.sum(:value_displacement_hours)  
 
-    totals_all = [['x', 'datos'],['Ingenieria', report_total],['Tablerista', cont_total],['Equipos', mat_total]]
+    totals_all = [['x', 'datos'],['Ingenieria', report_total.round(0)],['Tablerista', cont_total.round(0)],['Equipos', mat_total.round(0)]]
     
 
     facturas_total = facturas.where("EXTRACT(YEAR FROM invoice_date) = ?", Date.today.year).sum(:invoice_value)
@@ -172,14 +172,14 @@ class ReportsController < ApplicationController
     materials_entradas = cost_center_entradas.sum(:materials_value)
 
 
-    totals_all_entradas = [['x', 'datos'],['Ingenieria', ingenieria_entradas],['Tablerista', contratista_entradas],['Equipos', materials_entradas]]
+    totals_all_entradas = [['x', 'datos'],['Ingenieria', ingenieria_entradas.round(0)],['Tablerista', contratista_entradas.round(0)],['Equipos', materials_entradas.round(0)]]
 
 
-    ingenieria_comparativa = [['','x', 'datos'],["FACTURACION VS GASTOS", ingenieria_entradas, report_total]]
+    ingenieria_comparativa = [['','Cotizado', 'Gasto'],["", ingenieria_entradas.round(0), report_total.round(0)]]
 
-    contratista_comparativa = [['','x', 'datos'],["FACTURACION VS VENTAS" , contratista_entradas, cont_total]]
+    contratista_comparativa = [['','Cotizado', 'Gasto'],["" , contratista_entradas.round(0), cont_total.round(0)]]
 
-    materiales_comparativa = [['','x', 'datos'],["VENTAS VS GASTOS" , materials_entradas, mat_total]]
+    materiales_comparativa = [['','Cotizado', 'Gasto'],["" , materials_entradas.round(0), mat_total.round(0)]]
 
 
     render :json => {
