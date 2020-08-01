@@ -60,7 +60,7 @@ class FormFilter extends Component {
                         name="cost_center_id"
                         value={this.props.formAutocompleteCentro.cost_center_id}
                       />
-                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <label>Centro de costo (Excluidos) <small className="validate-label">*</small></label>
                       <Select
                         onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}

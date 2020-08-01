@@ -41,16 +41,16 @@ class ReportsController < ApplicationController
     if validate
       
       if params[:filtering] == "true"
-        reports = Report.all.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
-        reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta])
+        reports = Report.all.order(report_date: :desc).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).order(report_date: :desc)
 
       elsif params[:filtering] == "false"
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
-        reports_total =  Report.all
+        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total =  Report.all.order(report_date: :desc)
       else
         
-        reports = Report.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
-        reports_total =  Report.all
+        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports_total =  Report.all.order(report_date: :desc)
       end
 
     else
@@ -81,36 +81,55 @@ class ReportsController < ApplicationController
   end
 
   def get_informes
-    if params[:descripcion] || params[:customer_id] || params[:execution_state] || params[:invoiced_state] || params[:cost_center_id] || params[:service_type] || params[:date_desde] || params[:date_hasta] || params[:quotation_number]
-      cost_center = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
+
+    if  !params[:customer_id].blank? || !params[:execution_state].blank? || !params[:invoiced_state].blank? || !params[:cost_center_id].blank? || !params[:service_type].blank? || !params[:date_desde].blank? || !params[:date_hasta].blank? 
+      
+      puts params[:customer_id]
+      puts params[:execution_state]
+      puts params[:invoiced_state]
+      puts params[:cost_center_id]
+      puts params[:service_type]
+      puts params[:date_desde]
+      
+      cost_center = CostCenter.all.searchInfo(params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta])
+
+      puts "entre aqui"
+      puts cost_center.count
+      materials = Material.joins(:cost_center).where('cost_centers.id' => cost_center.ids)
+      contractors = Contractor.joins(:cost_center).where('cost_centers.id' => cost_center.ids)
+      reports = Report.joins(:cost_center).where('cost_centers.id' => cost_center.ids)
+      facturas = CustomerInvoice.joins(:cost_center).where('cost_centers.id' => cost_center.ids)
     else
       cost_center = CostCenter.all
+      materials = Material.all
+      contractors = Contractor.all
+      reports = Report.all
+      facturas = CustomerInvoice.all
     end
 
-    materials = Material.all
-    contractors = Contractor.all
-    reports = Report.all
-    facturas = CustomerInvoice.all
 
 
 
     months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
+    #COST CENTER POR MES
     months_lleno =[] 
     months.each_with_index do |month,index|
       total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index).sum(:quotation_value)
       months_lleno << total.to_f
     end
 
+  #MATERIALES POR MES
     months_lleno_mat =[] 
     months.each_with_index do |month,index|
-      total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:amount)
-      months_lleno_mat << total.to_f
+    total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:amount)
+    months_lleno_mat << total.to_f
     end
     puts "hola como estoyaaa"
     puts months_lleno_mat
     puts "hola como estoyaaa"
 
+   #TABLERISTAS POR MES
     months_lleno_cont =[] 
     months.each_with_index do |month,index|
       total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:ammount)
@@ -118,7 +137,7 @@ class ReportsController < ApplicationController
     end
 
 
-
+  #REPORTE POR MES
     months_lleno_rep =[] 
     reports.each_with_index do |month,index|
       total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index)
@@ -126,7 +145,7 @@ class ReportsController < ApplicationController
       months_lleno_rep << total.to_f
     end
 
-
+  #VALORES POR AÑO
     cont_total = contractors.where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
     mat_total = materials.where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
     rep_total = reports.where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
@@ -146,6 +165,22 @@ class ReportsController < ApplicationController
     venta_gastos = [['','x', 'datos'],["VENTAS VS GASTOS" , ventas_totales, gastos_totales]]
 
 
+    #ENTRADAS POR CENTRO DE COSTOS
+    cost_center_entradas = cost_center.where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year)
+    ingenieria_entradas = cost_center_entradas.sum(:engineering_value) + cost_center_entradas.sum(:viatic_value) + cost_center_entradas.sum(:offset_value)
+    contratista_entradas = cost_center_entradas.sum(:work_force_contractor)
+    materials_entradas = cost_center_entradas.sum(:materials_value)
+
+
+    totals_all_entradas = [['x', 'datos'],['Ingenieria', ingenieria_entradas],['Tablerista', contratista_entradas],['Equipos', materials_entradas]]
+
+
+    ingenieria_comparativa = [['','x', 'datos'],["FACTURACION VS GASTOS", ingenieria_entradas, report_total]]
+
+    contratista_comparativa = [['','x', 'datos'],["FACTURACION VS VENTAS" , contratista_entradas, cont_total]]
+
+    materiales_comparativa = [['','x', 'datos'],["VENTAS VS GASTOS" , materials_entradas, mat_total]]
+
 
     render :json => {
       dataCostCenter: months_lleno,
@@ -156,6 +191,11 @@ class ReportsController < ApplicationController
       facturaGastos: factura_gastos,
       facturaVentas: factura_venta,
       ventaGastos:  venta_gastos,
+      entradasTotales: totals_all_entradas,
+      ingenieriaComparativa: ingenieria_comparativa,
+      contratistaComparativa: contratista_comparativa,
+      materialesComparativa: materiales_comparativa
+
 
 
 
