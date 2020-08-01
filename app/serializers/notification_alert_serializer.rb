@@ -16,9 +16,6 @@
 #
 
 class NotificationAlertSerializer < ActiveModel::Serializer
-  attributes :id,
+  attributes :id
   belongs_to :cost_center, serializer: Health::CostCenterSerializer
-
-
-
 end
