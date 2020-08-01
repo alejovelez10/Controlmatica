@@ -109,20 +109,19 @@ class ReportsController < ApplicationController
 
 
 
-
     months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
     #COST CENTER POR MES
     months_lleno =[] 
     months.each_with_index do |month,index|
-      total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index).sum(:quotation_value)
+      total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index).where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
       months_lleno << total.to_f
     end
 
   #MATERIALES POR MES
     months_lleno_mat =[] 
     months.each_with_index do |month,index|
-    total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:amount)
+    total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
     months_lleno_mat << total.to_f
     end
     puts "hola como estoyaaa"
@@ -132,7 +131,7 @@ class ReportsController < ApplicationController
    #TABLERISTAS POR MES
     months_lleno_cont =[] 
     months.each_with_index do |month,index|
-      total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index).sum(:ammount)
+      total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
       months_lleno_cont << total.to_f
     end
 
@@ -140,7 +139,7 @@ class ReportsController < ApplicationController
   #REPORTE POR MES
     months_lleno_rep =[] 
     reports.each_with_index do |month,index|
-      total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index)
+      total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index).where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
       total = total.sum(:viatic_value) + total.sum(:working_value) + total.sum(:value_displacement_hours)  
       months_lleno_rep << total.to_f
     end
