@@ -84,7 +84,7 @@ class table extends React.Component {
                             </div>
                             <hr />
                             <div style={{ fontSize: "16px" }}>
-                              <p> Centro de costos: {accion.cost_center != undefined ? accion.cost_center.description : " "}</p>
+                              <p> Centro de costos: ({accion.cost_center != undefined ? accion.cost_center.code : " "}) {accion.cost_center != undefined ? accion.cost_center.description : " "}</p>
                             </div>
                           </div>
                         )}
