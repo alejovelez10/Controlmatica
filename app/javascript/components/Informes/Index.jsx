@@ -338,7 +338,7 @@ class Index extends Component {
                                     <Preloader/>
                                 ) : (
                                     <React.Fragment>
-                                        <h3>CONTRATISTA</h3>
+                                        <h3>TABLERISTA</h3>
                                         <p>Utilidad {this.getfacturaGastos(this.props.contratistaComparativa)}%</p>
 
                                         <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>COTIZADOS</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
