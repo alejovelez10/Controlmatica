@@ -54,7 +54,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], data_percent_num,this.numberToCurrency(Math.round(data_percent_num/10000000,1)), gastos,this.numberToCurrency(Math.round(gastos/10000000,1))])
+            array.push([months[index], data_percent_num,this.numberToCurrency(Math.round(data_percent_num/1000000,1)), gastos,this.numberToCurrency(Math.round(gastos/1000000,1))])
 
 
 
@@ -89,7 +89,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], rep,this.numberToCurrency(Math.round(rep/10000000,1)),tab,this.numberToCurrency(Math.round(tab/10000000,1)), mat,this.numberToCurrency(Math.round(mat/10000000,1))])
+            array.push([months[index], rep,this.numberToCurrency(Math.round(rep/1000000,1)),tab,this.numberToCurrency(Math.round(tab/1000000,1)), mat,this.numberToCurrency(Math.round(mat/1000000,1))])
 
 
 
