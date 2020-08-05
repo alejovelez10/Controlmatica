@@ -38,7 +38,7 @@
                   <% get_notification_alert.where(state:false).each do |notification|  %>
                     <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
                     <li>
-                          <a class="app-notification__item" href="<%# link %>">
+                          <a class="app-notification__item" href="/notification_alerts">
                             <span class="app-notification__icon">
                               <span class="fa-stack fa-lg">
                                 <i class="fa fa-circle fa-stack-2x text-primary"></i>

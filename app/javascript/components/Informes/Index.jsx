@@ -39,7 +39,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos', '%']]
+        let array = [['x', 'datos',{ role: "annotation", type: "string" }, '%',{ role: "annotation", type: "string" }]]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -54,7 +54,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], data_percent_num, gastos])
+            array.push([months[index], data_percent_num,this.numberToCurrency(Math.round(data_percent_num/10000000,1)), gastos,this.numberToCurrency(Math.round(gastos/10000000,1))])
 
 
 
@@ -71,7 +71,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos', '%', '%']]
+        let array = [['x', 'datos',{ role: "annotation", type: "string" }, '%',{ role: "annotation", type: "string" }, '%',{ role: "annotation", type: "string" }]]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -89,7 +89,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], rep, tab, mat])
+            array.push([months[index], rep,this.numberToCurrency(Math.round(rep/10000000,1)),tab,this.numberToCurrency(Math.round(tab/10000000,1)), mat,this.numberToCurrency(Math.round(mat/10000000,1))])
 
 
 
@@ -141,7 +141,7 @@ class Index extends Component {
         console.log(value)
 
 
-        let gastos = value[1][2];
+        let gastos = value[1][3];
         let facturacion = value[1][1];
         let resta = facturacion - gastos
         let porcentaje = 0  
@@ -160,7 +160,7 @@ class Index extends Component {
         if (value[1] != undefined)
         {
             let facturacion = value[1][1];
-            let ventas = value[1][2];
+            let ventas = value[1][3];
              
             if (ventas > 0)
             {
@@ -255,7 +255,7 @@ class Index extends Component {
                                 ) : (
                                     <React.Fragment>
                                         <h3>VENTAS VS GASTOS</h3>
-                                        <p>Utilidad {this.getfacturaGastos(this.props.facturaVentas)}%</p>
+                                        <p>Utilidad {this.getfacturaGastos(this.props.ventaGastos)}%</p>
 
                                         <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>VENTAS</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
                                         <LineChartIndicator data={this.props.ventaGastos} />

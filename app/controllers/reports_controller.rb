@@ -3,6 +3,7 @@ class ReportsController < ApplicationController
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
   include ApplicationHelper
+  include ActionView::Helpers::NumberHelper
 
   # GET /reports
   # GET /reports.json
@@ -157,11 +158,11 @@ class ReportsController < ApplicationController
     gastos_totales = cont_total + mat_total + report_total
     ventas_totales = cost_center.where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
 
-    factura_gastos = [['','x', 'datos'],["FACTURACION VS GASTOS", facturas_total, gastos_totales]]
+    factura_gastos = [['','x',{ role: "annotation", type: "string" }, 'datos',{ role: "annotation", type: "string" }],["FACTURACION VS GASTOS", facturas_total,number_to_currency(facturas_total,precision: 0), gastos_totales, number_to_currency(gastos_totales, precision: 0)]]
 
-    factura_venta = [['','x', 'datos'],["FACTURACION VS VENTAS" , facturas_total, ventas_totales]]
+    factura_venta = [['','x',{ role: "annotation", type: "string" }, 'datos',{ role: "annotation", type: "string" }],["FACTURACION VS VENTAS" , facturas_total,number_to_currency(facturas_total,precision: 0), ventas_totales,number_to_currency(ventas_totales,precision: 0)]]
 
-    venta_gastos = [['','x', 'datos'],["VENTAS VS GASTOS" , ventas_totales, gastos_totales]]
+    venta_gastos = [['','x',{ role: "annotation", type: "string" }, 'datos',{ role: "annotation", type: "string" }],["VENTAS VS GASTOS" , ventas_totales,number_to_currency(ventas_totales,precision: 0), gastos_totales,number_to_currency(gastos_totales,precision: 0)]]
 
 
     #ENTRADAS POR CENTRO DE COSTOS
@@ -171,14 +172,15 @@ class ReportsController < ApplicationController
     materials_entradas = cost_center_entradas.sum(:materials_value)
 
 
+
     totals_all_entradas = [['x', 'datos'],['Ingenieria', ingenieria_entradas.round(0)],['Tablerista', contratista_entradas.round(0)],['Equipos', materials_entradas.round(0)]]
 
 
-    ingenieria_comparativa = [['','Cotizado', 'Gasto'],["", ingenieria_entradas.round(0), report_total.round(0)]]
+    ingenieria_comparativa = [['','Cotizado',{ role: "annotation", type: "string" }, 'Gasto', { role: "annotation", type: "string" }],["", ingenieria_entradas.round(0), number_to_currency(ingenieria_entradas,precision: 0), report_total.round(0), number_to_currency(report_total,precision: 0)]]
 
-    contratista_comparativa = [['','Cotizado', 'Gasto'],["" , contratista_entradas.round(0), cont_total.round(0)]]
+    contratista_comparativa = [['','Cotizado',{ role: "annotation", type: "string" }, 'Gasto',{ role: "annotation", type: "string" }],["" , contratista_entradas.round(0), number_to_currency(contratista_entradas,precision: 0), cont_total.round(0),number_to_currency(cont_total,precision: 0)]]
 
-    materiales_comparativa = [['','Cotizado', 'Gasto'],["" , materials_entradas.round(0), mat_total.round(0)]]
+    materiales_comparativa = [['','Cotizado',{ role: "annotation", type: "string" }, 'Gasto',{ role: "annotation", type: "string" }],["" , materials_entradas.round(0), number_to_currency(materials_entradas,precision: 0), mat_total.round(0), number_to_currency(mat_total,precision: 0)]]
 
 
     render :json => {
