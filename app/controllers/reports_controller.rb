@@ -115,14 +115,17 @@ class ReportsController < ApplicationController
     #COST CENTER POR MES
     months_lleno =[] 
     months.each_with_index do |month,index|
-      total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index).where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
+      total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index + 1).where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
+      puts "jadlñfñdfkasdfl"
+      puts month
+      
       months_lleno << total.to_f
     end
 
   #MATERIALES POR MES
     months_lleno_mat =[] 
     months.each_with_index do |month,index|
-    total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
+    total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
     months_lleno_mat << total.to_f
     end
     puts "hola como estoyaaa"
@@ -132,16 +135,18 @@ class ReportsController < ApplicationController
    #TABLERISTAS POR MES
     months_lleno_cont =[] 
     months.each_with_index do |month,index|
-      total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
+      total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
       months_lleno_cont << total.to_f
     end
 
 
   #REPORTE POR MES
     months_lleno_rep =[] 
-    reports.each_with_index do |month,index|
-      total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index).where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
+    months.each_with_index do |month,index|
+      total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index + 1).where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
       total = total.sum(:viatic_value) + total.sum(:working_value) + total.sum(:value_displacement_hours)  
+      puts total
+      puts "ingflskñflñsdlassñlñlj"
       months_lleno_rep << total.to_f
     end
 
