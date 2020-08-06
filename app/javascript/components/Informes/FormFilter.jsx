@@ -76,7 +76,7 @@ class FormFilter extends Component {
                   
 
                   <div className="col-md-6 mt-2 imput-filter">
-                    <label>Clientes</label>
+                    <label>Clientes (Excluidos)</label>
                       <input
                         type="hidden"
                         name="customer_id"
