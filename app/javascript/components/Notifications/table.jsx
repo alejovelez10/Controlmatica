@@ -69,7 +69,7 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-7">
-                            <p> Usuiaro que ingresa: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
+                            <p> Usuiaro que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
                           </div>
                         </div>
 
@@ -80,7 +80,7 @@ class table extends React.Component {
                         {accion.real != undefined && (
                           <div>
                             <div style={{ fontSize: "20px" }}>
-                              Esperado: <span style={{ color: "green", marginRight: "40px" }}>{accion.expected}% </span>  Real: <span style={{ color: "red" }}>{accion.real}% </span>
+                              Margen minimo: <span style={{ color: "green", marginRight: "40px" }}>{accion.expected}% </span>  Real: <span style={{ color: "red" }}>{accion.real}% </span>
                             </div>
                             <hr />
                             <div style={{ fontSize: "16px" }}>
@@ -121,7 +121,7 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-7">
-                            <p>Usuiaro que ingresa: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
+                            <p>Usuiaro que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
                           </div>
                         </div>
 

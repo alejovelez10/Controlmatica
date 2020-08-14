@@ -104,14 +104,17 @@ class Material < ApplicationRecord
 
     str = "#{provider}#{centro}#{sales_date}#{sales_number}#{amount}#{delivery_date}#{description}"
 
-    RegisterEdit.create(
-      user_id: self.update_user,
-      register_user_id: self.id,
-      state: "pending",
-      date_update: Time.now,
-      module: "Materiales",
-      description: str,
-    )
+    if str.length > 5
+      str = "<p>Numero de orden: #{self.sales_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      RegisterEdit.create(
+        user_id: self.user_id,
+        register_user_id: self.user_id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Materiales",
+        description: str,
+      )
+    end
   end
 
 =begin
