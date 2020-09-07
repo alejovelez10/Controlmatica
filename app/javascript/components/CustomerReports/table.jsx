@@ -114,6 +114,8 @@ class table extends React.Component {
     fetch(`/get_report_value/${selectedOptionCentro.value}`)
     .then(response => response.json())
     .then(data => {
+      
+      console.log(data)
 
       data.map((item) => (
         arrayReport.push({label: item.code_report, value: item.id})

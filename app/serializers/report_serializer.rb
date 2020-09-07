@@ -32,5 +32,5 @@
 #
 
 class ReportSerializer < ActiveModel::Serializer
-  attributes :id, :total_value, :working_value, :viatic_value, :value_displacement_hours, :report_date
+  attributes :id, :total_value, :working_value, :viatic_value, :value_displacement_hours, :report_date, :code_report
 end
