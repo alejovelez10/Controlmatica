@@ -4,7 +4,7 @@ class NotificationAlertsController < ApplicationController
     end
 
     def get_notifications_alerts
-        notifications_alerts = NotificationAlert.all.to_json( :include => { :user => { :only =>[:names] }})
+        notifications_alerts = NotificationAlert.all.to_json( :include => { :user => { :only =>[:names] }, :cost_center => { :only =>[:description, :code] } })
         notifications_alerts = JSON.parse(notifications_alerts)
 
         render :json => {

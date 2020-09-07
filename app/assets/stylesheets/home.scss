@@ -116,7 +116,7 @@
     border: 1px solid;
 }
 
-.validate-label, .color-false{
+.validate-label{
   color: red !important;
 }
 
@@ -227,9 +227,9 @@ input[type="file"] label{
 }
 
 .color-false{
-  color: red;
+  color: green;
 }
 
 .color-true{
-  color: green;
+  color: red;
 }

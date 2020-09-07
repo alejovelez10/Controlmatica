@@ -124,15 +124,24 @@ class SalesOrder < ApplicationRecord
     
     str = "#{created_date}#{order_number}#{order_value}#{centro}#{description}"
 
+
+    if str.length > 5
+
+    str = "<p>Orden de compra: #{self.order_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
     RegisterEdit.create(  
-      user_id: self.update_user, 
-      register_user_id: self.id, 
+      user_id: self.user_id, 
+      register_user_id: self.user_id, 
       state: "pending", 
       date_update: Time.now,
       module: "Ordenes de Compra",
       description: str
     )
    
+  end
+
+
+
+
     if self.cost_center_id_changed?
 
         CustomerInvoice.where(cost_center_id: self.cost_center_id_change[0]).update(cost_center_id: self.cost_center_id)

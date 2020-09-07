@@ -39,7 +39,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos', '%']]
+        let array = [['x', 'datos',{ role: "annotation", type: "string" }, '%',{ role: "annotation", type: "string" }]]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -54,7 +54,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], data_percent_num, gastos])
+            array.push([months[index], data_percent_num,this.numberToCurrency(Math.round(data_percent_num/1000000,1)), gastos,this.numberToCurrency(Math.round(gastos/1000000,1))])
 
 
 
@@ -71,7 +71,7 @@ class Index extends Component {
         let target = this.props.alert[0].total_min
 
         let months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'jun', 'jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        let array = [['x', 'datos', '%', '%']]
+        let array = [['x', 'datos',{ role: "annotation", type: "string" }, '%',{ role: "annotation", type: "string" }, '%',{ role: "annotation", type: "string" }]]
 
         nextProps.dataCostCenter.map((data, index) => {
 
@@ -89,7 +89,7 @@ class Index extends Component {
                 data_percent_num = null
             } */
 
-            array.push([months[index], rep, tab, mat])
+            array.push([months[index], rep,this.numberToCurrency(Math.round(rep/1000000,1)),tab,this.numberToCurrency(Math.round(tab/1000000,1)), mat,this.numberToCurrency(Math.round(mat/1000000,1))])
 
 
 
@@ -138,29 +138,29 @@ class Index extends Component {
     }
 
     getfacturaGastos=(value)=>{
-       
-        let porcentaje = 0 
-        if (value[1] != undefined)
-        {
-        let gastos = value[1][2];
+        console.log(value)
+
+
+        let gastos = value[1][3];
         let facturacion = value[1][1];
         let resta = facturacion - gastos
         let porcentaje = 0  
         if (facturacion > 0)
         {
             porcentaje = Math.round((resta/facturacion)*100,0)
+            console.log(porcentaje)
         }
-    }
+    
         return porcentaje
     }
 
     getfacturaVentas=(value)=>{
-       
+       console.log(value)
         let porcentaje = 0 
         if (value[1] != undefined)
         {
             let facturacion = value[1][1];
-            let ventas = value[1][2];
+            let ventas = value[1][3];
              
             if (ventas > 0)
             {
@@ -230,7 +230,7 @@ class Index extends Component {
                         </div>
                     </div>
                     <div className="col-md-12"><hr /></div>
-                    <div className="col-md-6">
+                    <div className="col-md-4">
                         <div className="card">
                             <div className="card-body">
                                 {this.props.isLoaded ? (
@@ -247,7 +247,7 @@ class Index extends Component {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-4">
                         <div className="card">
                             <div className="card-body">
                                 {this.props.isLoaded ? (
@@ -255,7 +255,7 @@ class Index extends Component {
                                 ) : (
                                     <React.Fragment>
                                         <h3>VENTAS VS GASTOS</h3>
-                                        <p>Utilidad {this.getfacturaGastos(this.props.facturaVentas)}%</p>
+                                        <p>Utilidad {this.getfacturaGastos(this.props.ventaGastos)}%</p>
 
                                         <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>VENTAS</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
                                         <LineChartIndicator data={this.props.ventaGastos} />
@@ -264,9 +264,9 @@ class Index extends Component {
                             </div>
                         </div>
                     </div>
-                    <div className="col-md-12"><hr /></div>
+              
 
-                    <div className="col-md-6">
+                    <div className="col-md-4">
                         <div className="card">
                             <div className="card-body">
                                 {this.props.isLoaded ? (
@@ -282,7 +282,7 @@ class Index extends Component {
                             </div>
                         </div>
                     </div>
- 
+                    <div className="col-md-12"><hr /></div>
                     <div className="col-md-6">
                         <div className="card">
                             <div className="card-body">
@@ -292,6 +292,75 @@ class Index extends Component {
                                     <React.Fragment>
                                         <h3>DISTRIBUCION DE GASTOS</h3>
                                         <DonaIndicator data={this.state.dataPie} />
+                                    </React.Fragment>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="col-md-6">
+                        <div className="card">
+                            <div className="card-body">
+                                {this.props.isLoaded ? (
+                                    <Preloader/>
+                                ) : (
+                                    <React.Fragment>
+                                        <h3>DISTRIBUCION DE ENTRADAS</h3>
+                                        <DonaIndicator data={this.props.entradasTotales} />
+                                    </React.Fragment>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="col-md-12"><hr /></div>
+                    <div className="col-md-4">
+                        <div className="card">
+                            <div className="card-body">
+                                {this.props.isLoaded ? (
+                                    <Preloader/>
+                                ) : (
+                                    <React.Fragment>
+                                        <h3>INGENIERIA</h3>
+                                        <p>Utilidad {this.getfacturaGastos(this.props.ingenieriaComparativa)}%</p>
+                                        <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>COTIZADA</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
+
+                                        <LineChartIndicator data={this.props.ingenieriaComparativa} />
+                                    </React.Fragment>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-4">
+                        <div className="card">
+                            <div className="card-body">
+                                {this.props.isLoaded ? (
+                                    <Preloader/>
+                                ) : (
+                                    <React.Fragment>
+                                        <h3>TABLERISTA</h3>
+                                        <p>Utilidad {this.getfacturaGastos(this.props.contratistaComparativa)}%</p>
+
+                                        <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>COTIZADOS</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" }}>GASTOS</div></div>
+                                        <LineChartIndicator data={this.props.contratistaComparativa} />
+                                    </React.Fragment>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+              
+
+                    <div className="col-md-4">
+                        <div className="card">
+                            <div className="card-body">
+                                {this.props.isLoaded ? (
+                                    <Preloader/>
+                                ) : (
+                                    <React.Fragment>
+                                        <h3>EQUIPOS</h3>
+                                        <p>Utilidad {this.getfacturaGastos(this.props.materialesComparativa)}%</p>
+                                        <div style={{ display: "flex", justifyContent: "flex-end" }}> <div style={{ borderRadius: "4px", padding: "10px", background: "#65ab84", color: "white", marginRight: "10px" }}>COTIZADOS</div> <div style={{ borderRadius: "4px", padding: "10px", background: "#206ba7", color: "white" , marginRight: "10px"}}>VENTAS</div></div>
+                                        <LineChartIndicator data={this.props.materialesComparativa} />
                                     </React.Fragment>
                                 )}
                             </div>

@@ -176,6 +176,8 @@ class Report < ApplicationRecord
     
     str = "#{customer}#{contact}#{centro}#{date}#{user}#{working_time}#{work_description}#{displacement_hours}#{viatic_value}#{viatic_description}"
 
+    if str.length > 5
+      str = "<p>Reporte: #{self.code_report}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
     RegisterEdit.create(  
       user_id: self.update_user, 
       register_user_id: self.id, 
@@ -185,6 +187,7 @@ class Report < ApplicationRecord
       description: str
     )
   end
+end
 
 
   def calculate_cost_destroy

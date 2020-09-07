@@ -82,14 +82,17 @@ class Contractor < ApplicationRecord
     
     str = "#{centro}#{user}#{sales_date}#{hours}#{description}"
 
+    if str.length > 5
+      str = "<p>Centro de costos: #{self.cost_center.code}</p> " + str
     RegisterEdit.create(  
       user_id: self.update_user, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,
-      module: "Gestion de Tableristas",
+      module: "Tableristas",
       description: str
     )
+  end
   end
   
 end

@@ -54,13 +54,13 @@ class FormFilter extends Component {
                   </div>
 
 
-                <div className="col-md-3">
+                <div className="col-md-6">
                       <input
                         type="hidden"
                         name="cost_center_id"
                         value={this.props.formAutocompleteCentro.cost_center_id}
                       />
-                      <label>Centro de costo <small className="validate-label">*</small></label>
+                      <label>Centro de costo (Excluidos) <small className="validate-label">*</small></label>
                       <Select
                         onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}
@@ -75,8 +75,8 @@ class FormFilter extends Component {
 
                   
 
-                  <div className="col-md-3 imput-filter">
-                    <label>Clientes</label>
+                  <div className="col-md-6 mt-2 imput-filter">
+                    <label>Clientes (Excluidos)</label>
                       <input
                         type="hidden"
                         name="customer_id"
@@ -151,18 +151,6 @@ class FormFilter extends Component {
                   
                   <div className="row mt-3">
              
-
-                  <div className="col-md-6">
-                   <label>Descripcion</label>
-                    <input
-                      className="form form-control"
-                      type="text"
-                      name="descripcion"
-                      placeholder="Descripcion"
-                      onChange={this.props.onChangeFilter}
-                      value={this.props.formValuesFilter.descripcion}
-                    />
-                  </div>
 
 
               

@@ -105,6 +105,25 @@ class CostCenter < ApplicationRecord
       return descripcion.customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope.quotation_number_scope
     end
 
+    def self.searchInfo(search1, search2, search3, search4, search5, search6,search7)
+      search4 = search4 != "" ? search4.split(/,/) : ""
+      search1 = search1 != "" ? search1.split(/,/) : ""
+      
+      puts search4
+      puts search1
+
+      puts "jajajajajajajajajajajajajajjaajajajajajajajj"
+      search1 != "" ? (scope :customer, -> { where.not(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
+      search2 != "" ? (scope :state_execution, -> { where(execution_state: search2) }) : (scope :state_execution, -> { where.not(id: nil) })
+      search3 != "" ? (scope :state_invoice, -> { where(invoiced_state: search3) }) : (scope :state_invoice, -> { where.not(id: nil) })
+      search4 != "" ? (scope :cost_center, -> { where.not(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
+      search5 != "" ? (scope :service_type_scope, -> { where(service_type: search5) }) : (scope :service_type_scope, -> { where.not(id: nil) })
+      search6 != "" ? (scope :date_desde_type_scope, -> { where(["start_date >= ?", search6]) }) : (scope :date_desde_type_scope, -> { where.not(id: nil) })
+      search7 != "" ? (scope :date_hasta_type_scope, -> { where(["start_date <= ?", search7]) }) : (scope :date_hasta_type_scope, -> { where.not(id: nil) })
+
+      return customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope
+    end
+
   def create_code
     self.sum_executed = 0
     self.sum_contractors = 0
@@ -203,14 +222,22 @@ class CostCenter < ApplicationRecord
 
     str = "#{customer}#{contact}#{descripcion}#{fecha_star}#{fecha_end}#{quotation_number}#{materials_value}#{eng_hours}#{hour_real}#{hour_cotizada}#{hours_contractor}#{hours_contractor_real}#{hours_contractor_invoices}#{displacement_hours}#{value_displacement_hours}#{viatic_value}#{quotation_value}#{invoiced_state}"
 
+
+    
+    if str.length > 5
+
+      str = "<p>Centro de costos: #{self.code}</p> " + str
+  
     RegisterEdit.create(  
-      user_id: self.id, 
-      register_user_id: self.id, 
+      user_id: self.user_id, 
+      register_user_id: self.user_id, 
       state: "pending", 
       date_update: Time.now,
       module: "Centro de costo",
       description: str
     )
+
+  end
 
   end
 end

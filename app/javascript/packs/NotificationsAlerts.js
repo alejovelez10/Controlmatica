@@ -10,8 +10,8 @@ class NotificationsAlerts extends React.Component {
                     usuario={this.props.usuario} 
                     url={"update_state_notification_alert"}
                     urlLoadData={"get_notifications_alerts"}
-                    pending={true}
-                    review={false}
+                    pending={false}
+                    review={true}
                     from={this.props.from} 
                 />
             </React.Fragment>

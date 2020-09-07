@@ -16,6 +16,6 @@
 #
 
 class NotificationAlert < ApplicationRecord
-    belongs_to :user
-    belongs_to :cost_center, optional: true
+  belongs_to :user
+  belongs_to :cost_center, optional: true
 end

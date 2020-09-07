@@ -15,30 +15,30 @@ class table extends React.Component {
 
   date = (fecha) => {
     var d = new Date(fecha),
-    months = ['Enero','Febrero','Marzo','Abril','Mayo','junio','julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " +d.getFullYear()
+      months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
   }
 
   MessageSucces = (name_success, type, error_message) => {
-        Swal.fire({
-        position: "center",
-        type: type,
-        html: '<p>'  + error_message !=  undefined ? error_message : "asdasdasd"  +  '</p>',
-        title: name_success,
-        showConfirmButton: false,
-        timer: 1500 
-        });
-    }
-      
+    Swal.fire({
+      position: "center",
+      type: type,
+      html: '<p>' + error_message != undefined ? error_message : "asdasdasd" + '</p>',
+      title: name_success,
+      showConfirmButton: false,
+      timer: 1500
+    });
+  }
 
-    handleClickUpdate = (id) => {
-      fetch(`/${this.props.url}/${id}`)
+
+  handleClickUpdate = (id) => {
+    fetch(`/${this.props.url}/${id}`)
       .then(response => response.json())
       .then(data => {
-          this.props.loadInfo()
+        this.props.loadInfo()
       });
-    };
-  
+  };
+
 
 
   render() {
@@ -57,86 +57,98 @@ class table extends React.Component {
         <div className="tab-content" id="myTabContent">
           <div className="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
             {this.props.data.filter(notification => notification.state == this.props.pending).length >= 1 ? (
-                this.props.data.filter(notification => notification.state == this.props.pending).map(accion => (
-                  <div className={`card ${this.props.from != null ? (accion.id == this.props.from ? "select-item-back" : "") : ""}`} key={accion.id} style={{ marginBottom: "17px"}}>
-                    <div className="card-body">
+              this.props.data.filter(notification => notification.state == this.props.pending).map(accion => (
+                <div className={`card ${this.props.from != null ? (accion.id == this.props.from ? "select-item-back" : "") : ""}`} key={accion.id} style={{ marginBottom: "17px" }}>
+                  <div className="card-body">
+                    <div className="row">
+
+                      <div className="col-md-10">
                         <div className="row">
-
-                          <div className="col-md-10">
-                            <div className="row">
-                              <div className="col-md-4">
-                                <h4 style={{ color: "#ffbe3b" }}>{accion.module}</h4>
-                              </div>
-
-                              <div className="col-md-7">
-                                <p>Esta infomacion fue editada por: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
-                              </div>
-                            </div>
-
-                            <hr className="mt-0"/>
-
-                              {ReactHtmlParser(accion.description)}
+                          <div className="col-md-4">
+                            <h4 style={{ color: "#ffbe3b" }}>{accion.module}</h4>
                           </div>
 
-                          <div className="col-md-2 text-center">
-                            <i onClick={() => this.handleClickUpdate(accion.id)} className={`fas fa-exclamation-triangle icon-notification ${this.props.from != null ? (accion.id == this.props.from ? "select-item" : "") : ""}`}></i>
+                          <div className="col-md-7">
+                            <p> Usuiaro que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
                           </div>
-
                         </div>
+
+                        <hr className="mt-0" />
+
+                        {ReactHtmlParser(accion.description)} <br /><hr />
+                     
+                        {accion.real != undefined && (
+                          <div>
+                            <div style={{ fontSize: "20px" }}>
+                              Margen minimo: <span style={{ color: "green", marginRight: "40px" }}>{accion.expected}% </span>  Real: <span style={{ color: "red" }}>{accion.real}% </span>
+                            </div>
+                            <hr />
+                            <div style={{ fontSize: "16px" }}>
+                              <p> Centro de costos: ({accion.cost_center != undefined ? accion.cost_center.code : " "}) {accion.cost_center != undefined ? accion.cost_center.description : " "}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="col-md-2 text-center">
+                        <i onClick={() => this.handleClickUpdate(accion.id)} className={`fas fa-exclamation-triangle icon-notification ${this.props.from != null ? (accion.id == this.props.from ? "select-item" : "") : ""}`}></i>
+                      </div>
+
                     </div>
-                  </div>  
-                ))
-              ) : (
+                  </div>
+                </div>
+              ))
+            ) : (
                 <div className="card">
-                    <div className="card-body">
-                        <h5>No hay Notificaciones pendientes</h5>
-                    </div>
+                  <div className="card-body">
+                    <h5>No hay Notificaciones pendientes</h5>
+                  </div>
                 </div>
               )}
           </div>
 
           <div className="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-            {this.props.data.filter(notification => notification.state == this.props.pending).length >= 1 ? (
-                this.props.data.filter(notification => notification.state == this.props.pending).map(accion => (
-                  <div className="card" key={accion.id} style={{ marginBottom: "17px" }}>
-                    <div className="card-body">
+            {this.props.data.filter(notification => notification.state == this.props.review).length >= 1 ? (
+              this.props.data.filter(notification => notification.state == this.props.review).map(accion => (
+                <div className="card" key={accion.id} style={{ marginBottom: "17px" }}>
+                  <div className="card-body">
+                    <div className="row">
+
+                      <div className="col-md-10">
                         <div className="row">
-
-                          <div className="col-md-10">
-                            <div className="row">
-                              <div className="col-md-4">
-                                <h4 style={{ color: "#ffbe3b" }}>{accion.module}</h4>
-                              </div>
-
-                              <div className="col-md-7">
-                                <p>Esta infomacion fue editada por: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
-                              </div>
-                            </div>
-
-                            <hr className="mt-0"/>
-
-                              {ReactHtmlParser(accion.description)}
+                          <div className="col-md-4">
+                            <h4 style={{ color: "#ffbe3b" }}>{accion.module}</h4>
                           </div>
 
-                          <div className="col-md-2 text-center">
-                            <i className="fas fa-check icon-notification"></i>
+                          <div className="col-md-7">
+                            <p>Usuiaro que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
                           </div>
-
                         </div>
+
+                        <hr className="mt-0" />
+
+                        {ReactHtmlParser(accion.description)}
+                      </div>
+
+                      <div className="col-md-2 text-center">
+                        <i className="fas fa-check icon-notification"></i>
+                      </div>
+
                     </div>
-                  </div>  
-                ))
-              ) : (
+                  </div>
+                </div>
+              ))
+            ) : (
                 <div className="card">
-                    <div className="card-body">
-                        <h5>No hay Notificaciones pendientes</h5>
-                    </div>
+                  <div className="card-body">
+                    <h5>No hay Notificaciones pendientes</h5>
+                  </div>
                 </div>
               )}
           </div>
 
         </div>
-      </React.Fragment>
+      </React.Fragment >
     );
   }
 }

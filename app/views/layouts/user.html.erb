@@ -28,14 +28,14 @@
           <% if get_notification_alert.any? && current_user.rol.name == "Administrador" %>
 
             <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-              <span class="badge badge-light notification-badge"><%= get_notification_alert.count %></span>
+              <span class="badge badge-light notification-badge"><%= get_notification_alert.where(state:false).count %></span>
                 <i class="fas fa-bell" style="font-size: 17px;"></i>
             </a>
 
             <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <% get_notification_alert.count %> nuevas notificaciones.</li>
+              <li class="app-notification__title">Tienes <% get_notification_alert.where(state:false).count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_notification_alert.each do |notification|  %>
+                  <% get_notification_alert.where(state:false).each do |notification|  %>
                     <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
@@ -47,14 +47,14 @@
                             </span>
 
                             <div>
-                              <p class="app-notification__message">Modificacion de <%= notification.module %></p>
+                              <p class="app-notification__message">Alerta de sobrecosto en <%= notification.module %> <br> C.C (<%= notification.cost_center.code if notification.cost_center%>)   </p>
                               <p class="app-notification__meta"><%= get_date(notification.date_update) %></p>
                             </div>
                           </a>  
-                    </li>
+                    </li> 
                   <% end %>
             
-              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
+              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notification_alerts_path, style: "color: #ffff !important;" %></li>
             </ul>
             
           <% end %>
@@ -150,13 +150,6 @@
               </li>
             <% end %>
 
-            <% if authorization_modules || current_user.rol.name == "Administrador" %>
-              <li>
-                <%= link_to controlmatica_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Informes</span>
-                <% end -%>
-              </li>
-            <% end %>
 
             <% if current_user.rol.name == "Administrador" %>
                 <li>
@@ -228,6 +221,23 @@
             <% end -%>
           </li>
         <% end %>
+
+            <% if current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to controlmatica_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Informes</span>
+                <% end -%>
+              </li>
+            <% end %>
+
+
+            <% if current_user.rol.name == "Administrador" %>
+                <li>
+                  <%= link_to notification_alerts_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fas fa-chart-line"></i> <span class="app-menu__label">Notificaciones</span>
+                  <% end -%>
+                </li>
+              <% end %>
 
 
 

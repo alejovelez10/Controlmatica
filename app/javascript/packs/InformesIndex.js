@@ -43,7 +43,11 @@ class InformesIndex extends Component {
             gastosTotales: [],
             facturaGastos: [],
             facturaVentas: [],
-            ventaGastos: []
+            ventaGastos: [],
+            entradasTotales:[],
+            ingenieriaComparativa: [],
+            contratistaComparativa: [],
+            materialesComparativa: [],
 
 
 
@@ -96,6 +100,10 @@ class InformesIndex extends Component {
             facturaGastos: data.facturaGastos,
             facturaVentas: data.facturaVentas,
             ventaGastos: data.ventaGastos,
+            entradasTotales: data.entradasTotales,
+            ingenieriaComparativa: data.ingenieriaComparativa,
+            contratistaComparativa: data.contratistaComparativa,
+            materialesComparativa: data.materialesComparativa,
             isLoaded: false
           });
         });
@@ -141,13 +149,22 @@ class InformesIndex extends Component {
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true })
-        fetch(`/get_informes?descripcion=${this.state.formFilter.descripcion != undefined ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&service_type=${this.state.formFilter.service_type != undefined ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : ""}&date_hasta=${this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&quotation_number=${this.state.formFilter.quotation_number != undefined ? this.state.formFilter.quotation_number : ""}`)
+        fetch(`/get_informes?customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.formFilter.execution_state != undefined ? this.state.formFilter.execution_state : ""}&service_type=${this.state.formFilter.service_type != undefined ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.formFilter.invoiced_state != undefined ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.formFilter.start_date != undefined ? this.state.formFilter.start_date : ""}&date_hasta=${this.state.formFilter.end_date != undefined ? this.state.formFilter.end_date : ""}`)
           .then(response => response.json())
           .then(data => {
             this.setState({
               dataCostCenter: data.dataCostCenter,
               dataMaterials: data.dataMaterials,
               dataTableristas: data.dataTableristas,
+              dataReports: data.dataReports,
+              gastosTotales: data.gastosTotales,
+              facturaGastos: data.facturaGastos,
+              facturaVentas: data.facturaVentas,
+              ventaGastos: data.ventaGastos,
+              entradasTotales: data.entradasTotales,
+              ingenieriaComparativa: data.ingenieriaComparativa,
+              contratistaComparativa: data.contratistaComparativa,
+              materialesComparativa: data.materialesComparativa,
               isLoaded: false
             });
         });
@@ -269,6 +286,14 @@ class InformesIndex extends Component {
                   facturaGastos={this.state.facturaGastos}
                   facturaVentas={this.state.facturaVentas}
                   ventaGastos={this.state.ventaGastos}
+                  entradasTotales={this.state.entradasTotales}
+
+                  ingenieriaComparativa={this.state.ingenieriaComparativa}
+                  contratistaComparativa={this.state.contratistaComparativa}
+                  materialesComparativa={this.state.materialesComparativa}
+
+
+
                   alert={this.props.alert}
 
               />
