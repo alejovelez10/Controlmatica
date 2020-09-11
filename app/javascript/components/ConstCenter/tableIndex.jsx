@@ -788,7 +788,7 @@ alertIngCosto=(value, value2, value3)=>{
                                   </a>    
                                 )}
 
-                                {this.props.estados.edit == true && (
+                                {this.props.estados.edit == true && (accion.user_id == this.props.usuario.id || this.props.usuario.rol_id != 5 )  && (
                                   <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>

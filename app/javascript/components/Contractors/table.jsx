@@ -456,7 +456,7 @@ class table extends React.Component {
                                 <i className="fas fa-bars"></i>
                               </button>
                               <div className="dropdown-menu dropdown-menu-right"> 
-                                {this.props.estados.edit == true && (   
+                                {this.props.estados.edit == true && (accion.user_id == this.props.usuario.id || this.props.usuario.rol_id != 5 )  && (   
                                   <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>
