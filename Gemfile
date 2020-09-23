@@ -50,6 +50,9 @@ gem "wicked_pdf"
 
 gem 'roo'
 
+gem 'prawn-rails'
+gem 'prawn-table'
+
 #jquery
 gem "jquery-ui-rails"
 gem "jquery-validation-rails"
