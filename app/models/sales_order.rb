@@ -144,7 +144,7 @@ class SalesOrder < ApplicationRecord
 
     if self.cost_center_id_changed?
 
-        CustomerInvoice.where(cost_center_id: self.cost_center_id_change[0]).update(cost_center_id: self.cost_center_id)
+        CustomerInvoice.where(cost_center_id: self.cost_center_id_change[0]).where(sales_order_id: self.id).update(cost_center_id: self.cost_center_id)
         puts "111111111asfadsfadsfasdfadsfsadfkaslfksafsadfjjsfkaskfh jkadsfhjaslfadsfksdkdslfahk "
         cost_center = CostCenter.find(self.cost_center_id_change[0])
         sales_order_sum = SalesOrder.where(cost_center_id: cost_center.id).sum(:order_value) - self.order_value
