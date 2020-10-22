@@ -485,6 +485,16 @@ class table extends React.Component {
     }
   }
 
+  getState = (user) => {
+    if(this.props.estados.edit == true && this.props.usuario.id == user){
+      return true
+    }else if(this.props.estados.edit == false && this.props.estados.edit_all){
+      return true
+    }else if(this.props.estados.edit == false && this.props.estados.edit_all == false){
+      return false
+    }
+  }
+
 
   render() {
     return (
@@ -649,11 +659,11 @@ class table extends React.Component {
                             </div>
                           </div>  
                         </td>
-                        <td>{accion.cost_center.code}</td>
-                        <td>{accion.cost_center.customer.name}</td>
+                        <td>{accion.cost_center != undefined ? accion.cost_center.code : ""}</td>
+                        <td>{accion.cost_center != undefined ? accion.cost_center.customer.name : ""}</td>
                         <td><p>{accion.created_date}</p></td>
                         <td><p>{accion.order_number}</p></td>
-                        <td><p>{accion.cost_center.quotation_number}</p></td>
+                        <td><p>{accion.cost_center != undefined ? accion.cost_center.quotation_number : ""}</p></td>
                         <td><NumberFormat value={accion.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                         <td>  
                           <table style={{tableLayout: "fixed", width:"100%"}}>
@@ -674,7 +684,7 @@ class table extends React.Component {
                         </td>
                         <td><NumberFormat value={accion.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                         <th>{accion.description}</th>
-                        <th>{accion.cost_center.invoiced_state}</th>
+                        <th>{accion.cost_center != undefined ? accion.cost_center.invoiced_state : ""}</th>
 
                         <td>
                                 <React.Fragment>

@@ -1,2 +1,2 @@
 <%= javascript_pack_tag 'Notifications' %> 
-<%= react_component('Notifications', usuario: current_user, from: params[:from]) %>
+<%= react_component('Notifications', usuario: current_user, from: params[:from], estados: @estados) %>

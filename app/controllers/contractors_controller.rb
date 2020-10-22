@@ -11,10 +11,12 @@ class ContractorsController < ApplicationController
     edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
     delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Descargar excel").exists?
+    edit_all = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar todos").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
+      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }

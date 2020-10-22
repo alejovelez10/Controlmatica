@@ -192,12 +192,13 @@ module ApplicationHelper
 	end
 
 	def get_register_edit
-		RegisterEdit.where(state: "pending")
+		RegisterEdit.all
 	end
 
 	def get_notification_alert
 		NotificationAlert.all
 	end
+	
 	
 	def get_date(fecha)
    
@@ -302,12 +303,29 @@ module ApplicationHelper
         end
 	end
 
+	def authorization_alerts
+		modulo = ModuleControl.find_by_name("Notificación de alertas")
+		if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+	def authorization_notifications
+		modulo = ModuleControl.find_by_name("Registro de edicion")
+		if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+	
+	
+
 
 	def authorization_config
 		if authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador"
 			true
 		end
 	end
+	
 
 
 	def get_state_center(accion)

@@ -10,15 +10,18 @@ class Notifications extends React.Component {
                     usuario={this.props.usuario} 
                     url={"update_state"}
                     urlLoadData={"get_notifications"}
+                    urlUpdateAll={"register_edit_update_all"}
                     pending={"pending"}
                     review={"revised"}
                     from={this.props.from} 
+                    estados={this.props.estados}
                 />
             </React.Fragment>
         );
     }
 }
 
-export default Notifications;
 
+
+export default Notifications;
 WebpackerReact.setup({ Notifications });

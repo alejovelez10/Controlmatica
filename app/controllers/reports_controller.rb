@@ -14,10 +14,12 @@ class ReportsController < ApplicationController
     delete = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Eliminar").exists?
     responsible = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver Responsables").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Descargar excel").exists?
+    edit_all = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar todos").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
+      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       responsible: (current_user.rol.name == "Administrador" ? true : responsible),
       download_file: (current_user.rol.name == "Administrador" ? true : download_file)

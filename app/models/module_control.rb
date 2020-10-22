@@ -12,5 +12,5 @@
 
 class ModuleControl < ApplicationRecord
   has_many :accion_modules, dependent: :destroy
-  belongs_to :user
+  belongs_to :user, optional: true
 end

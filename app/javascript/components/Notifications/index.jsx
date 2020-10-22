@@ -140,11 +140,13 @@ class index extends React.Component {
                                 loadInfo={this.loadData}
                                 usuario={this.props.usuario}
                                 url={this.props.url}
+                                urlUpdateAll={this.props.urlUpdateAll}
                                 show={this.showFilter}
                                 from={this.props.from}
 
                                 pending={this.props.pending}
                                 review={this.props.review}
+                                estados={this.props.estados}
                             /> 
 
 

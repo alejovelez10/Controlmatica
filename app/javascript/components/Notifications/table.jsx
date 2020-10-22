@@ -39,6 +39,14 @@ class table extends React.Component {
       });
   };
 
+  handleClickUpdateAll = () => {
+    fetch(`/${this.props.urlUpdateAll}`)
+      .then(response => response.json())
+      .then(data => {
+        this.props.loadInfo()
+      });
+  };
+
 
 
   render() {
@@ -46,12 +54,19 @@ class table extends React.Component {
       <React.Fragment>
         <ul className="nav nav-tabs mb-3" id="myTab" role="tablist">
           <li className="nav-item">
-            <a className="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Pendientes de revision <span className="badge badge-warning">{this.props.data.filter(notification => notification.state == "pending").length}</span></a>
+            <a className="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Pendientes de revision <span className="badge badge-warning">{this.props.data.filter(notification => notification.state == this.props.pending).length}</span></a>
           </li>
 
           <li className="nav-item">
-            <a className="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Revisadas <span className="badge badge-warning">{this.props.data.filter(notification => notification.state == "revised").length}</span></a>
+            <a className="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Revisadas <span className="badge badge-warning">{this.props.data.filter(notification => notification.state == this.props.review).length}</span></a>
           </li>
+
+          {(this.props.data.filter(notification => notification.state == this.props.pending).length >= 1 && this.props.estados.review) && (
+            <li className="nav-item">
+              <a onClick={() => this.handleClickUpdateAll()} href="javascript:void(0);" className="nav-link">Actualizar todos</a>
+            </li>
+          )}
+
         </ul>
 
         <div className="tab-content" id="myTabContent">
@@ -69,7 +84,7 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-7">
-                            <p> Usuiaro que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
+                            <p> Usuario que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
                           </div>
                         </div>
 
@@ -90,9 +105,11 @@ class table extends React.Component {
                         )}
                       </div>
 
-                      <div className="col-md-2 text-center">
-                        <i onClick={() => this.handleClickUpdate(accion.id)} className={`fas fa-exclamation-triangle icon-notification ${this.props.from != null ? (accion.id == this.props.from ? "select-item" : "") : ""}`}></i>
-                      </div>
+                      {this.props.estados.review && (
+                        <div className="col-md-2 text-center">
+                          <i onClick={() => this.handleClickUpdate(accion.id)} className={`fas fa-exclamation-triangle icon-notification ${this.props.from != null ? (accion.id == this.props.from ? "select-item" : "") : ""}`}></i>
+                        </div>
+                      )}
 
                     </div>
                   </div>
@@ -121,13 +138,25 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-7">
-                            <p>Usuiaro que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
+                            <p>Usuario que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
                           </div>
                         </div>
 
                         <hr className="mt-0" />
 
-                        {ReactHtmlParser(accion.description)}
+                        {ReactHtmlParser(accion.description)}  <br /><hr />
+
+                        {accion.real != undefined && (
+                          <div>
+                            <div style={{ fontSize: "20px" }}>
+                              Margen minimo: <span style={{ color: "green", marginRight: "40px" }}>{accion.expected}% </span>  Real: <span style={{ color: "red" }}>{accion.real}% </span>
+                            </div>
+                            <hr />
+                            <div style={{ fontSize: "16px" }}>
+                              <p> Centro de costos: ({accion.cost_center != undefined ? accion.cost_center.code : " "}) {accion.cost_center != undefined ? accion.cost_center.description : " "}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="col-md-2 text-center">

@@ -25,7 +25,43 @@
       <!-- Navbar Right Menu-->
       <ul class="app-nav">
         <li class="dropdown">
-          <% if get_notification_alert.any? && current_user.rol.name == "Administrador" %>
+          <% if get_register_edit.where(state: "pending").any? && current_user.rol.name == "Administrador" %>
+
+            <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
+              <span class="badge badge-light notification-badge"><%= get_register_edit.where(state: "pending").count %></span>
+                <i class="fas fa-bell" style="font-size: 17px;"></i>
+            </a>
+
+            <ul class="app-notification dropdown-menu dropdown-menu-right">
+              <li class="app-notification__title">Tienes <% get_register_edit.where(state: "pending").count %> nuevas notificaciones.</li>
+                <div class="app-notification__content">
+                  <% get_register_edit.where(state: "pending").last(5).each do |notification|  %>
+                    <% link = "/notifications" + "?from=" + notification.id.to_s %>
+                    <li>
+                          <a class="app-notification__item" href="<%= link %>">
+                            <span class="app-notification__icon">
+                              <span class="fa-stack fa-lg">
+                                <i class="fa fa-circle fa-stack-2x text-primary"></i>
+                                <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
+                              </span>
+                            </span>
+
+                            <div>
+                              <p class="app-notification__message"><%= notification.module %> <br></p>
+                              <p class="app-notification__meta"><%= get_date(notification.date_update) %></p>
+                            </div>
+                          </a>  
+                    </li> 
+                  <% end %>
+            
+              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
+            </ul>
+
+          <% end %>
+        </li>
+
+        <li class="dropdown">
+          <% if get_notification_alert.where(state: false).any? && current_user.rol.name == "Administrador" %>
 
             <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
               <span class="badge badge-light notification-badge"><%= get_notification_alert.where(state:false).count %></span>
@@ -35,7 +71,7 @@
             <ul class="app-notification dropdown-menu dropdown-menu-right">
               <li class="app-notification__title">Tienes <% get_notification_alert.where(state:false).count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_notification_alert.where(state:false).each do |notification|  %>
+                  <% get_notification_alert.where(state: false).each do |notification|  %>
                     <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
@@ -150,15 +186,6 @@
               </li>
             <% end %>
 
-
-            <% if current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to notifications_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Notificaciones</span>
-                  <% end -%>
-                </li>
-              <% end %>
-
             </ul>
           </li>
       <% end %>
@@ -231,10 +258,18 @@
             <% end %>
 
 
-            <% if current_user.rol.name == "Administrador" %>
+            <% if authorization_alerts %>
                 <li>
                   <%= link_to notification_alerts_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-chart-line"></i> <span class="app-menu__label">Notificaciones</span>
+                  <i class="app-menu__icon fas fa-chart-line"></i> <span class="app-menu__label">Notificación de alertas</span>
+                  <% end -%>
+                </li>
+              <% end %>
+
+              <% if authorization_notifications %>
+                <li>
+                  <%= link_to notifications_path, class: "app-menu__item" do %>
+                  <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Registro de edición</span>
                   <% end -%>
                 </li>
               <% end %>

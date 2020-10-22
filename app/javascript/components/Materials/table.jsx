@@ -483,6 +483,16 @@ class table extends React.Component {
     });
   }
 
+  getState = (user) => {
+    if(this.props.estados.edit == true && this.props.usuario.id == user){
+      return true
+    }else if(this.props.estados.edit == false && this.props.estados.edit_all){
+      return true
+    }else if(this.props.estados.edit == false && this.props.estados.edit_all == false){
+      return false
+    }
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -640,7 +650,7 @@ class table extends React.Component {
                                   </button>
                             )}
 
-                            {this.props.estados.edit == true /* && (accion.user_id == this.props.usuario.id || this.props.usuario.rol_id != 5 ) */  && (
+                            {this.getState(accion.user_id) && (
                               <button
                                 onClick={() => this.edit(accion)}
                                 className="dropdown-item"
@@ -661,8 +671,8 @@ class table extends React.Component {
                         </div>
                       </div>
                     </td>
-                    <td>{accion.cost_center.code}</td>
-                    <td>{accion.provider.name}</td>
+                    <td>{accion.cost_center != undefined ? accion.cost_center.code : "" }</td>
+                    <td>{accion.provider != undefined ? accion.provider.name : "" }</td>
                     <td>{accion.sales_number}</td>
                     <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                     <td>{accion.description}</td>

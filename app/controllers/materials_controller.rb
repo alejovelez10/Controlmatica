@@ -12,10 +12,12 @@ class MaterialsController < ApplicationController
     delete = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Descargar excel").exists?
     update_state = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Forzar estados").exists?
+    edit_all = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar todos").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
+      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       update_state: (current_user.rol.name == "Administrador" ? true : update_state),
       download_file: (current_user.rol.name == "Administrador" ? true : download_file)

@@ -14,10 +14,12 @@ class CustomerReportsController < ApplicationController
     send_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Enviar para aprobaciòn").exists?
     edit_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar email").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Descargar excel").exists?
+    edit_all = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar todos").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
+      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       generate_pdf: (current_user.rol.name == "Administrador" ? true : generate_pdf),
       send_email: (current_user.rol.name == "Administrador" ? true : send_email),

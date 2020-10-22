@@ -495,6 +495,16 @@ class table extends React.Component {
       
   };
 
+  getState = (user) => {
+    if(this.props.estados.edit == true && this.props.usuario.id == user){
+      return true
+    }else if(this.props.estados.edit == false && this.props.estados.edit_all){
+      return true
+    }else if(this.props.estados.edit == false && this.props.estados.edit_all == false){
+      return false
+    }
+  }
+
 
 
   render() {
@@ -623,7 +633,7 @@ class table extends React.Component {
                         </button>
                         <div className="dropdown-menu dropdown-menu-right">
 
-                          {this.props.estados.edit == true && (accion.user_id == this.props.usuario.id || this.props.usuario.rol_id != 5 )  && (
+                          {this.getState(accion.user_id)  && (
                             <a
                               onClick={() => this.edit(accion)}
                               className="dropdown-item"

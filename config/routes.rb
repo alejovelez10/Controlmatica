@@ -29,6 +29,9 @@ Rails.application.routes.draw do
 
   resources :notification_alerts, :only => [:index]
 
+  get "register_edit_update_all", to: "register_edits#update_all"
+  get "notification_alerts_update_all", to: "notification_alerts#update_all"
+
   get "get_alerts", to: "alerts#get_alerts"
   get "informes/controlmatica", to: "reports#controlmatica", as: "controlmatica"
   get "get_informes", to: "reports#get_informes"

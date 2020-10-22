@@ -25,6 +25,7 @@ class CostCentersController < ApplicationController
     update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
     show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
     state_update = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
+    edit_all = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar todos").exists?
 
 
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
@@ -39,6 +40,7 @@ class CostCentersController < ApplicationController
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
       edit: (current_user.rol.name == "Administrador" ? true : edit),
+      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       manage_module: (current_user.rol.name == "Administrador" ? true : manage_module),
       ending: (current_user.rol.name == "Administrador" ? true : ending),

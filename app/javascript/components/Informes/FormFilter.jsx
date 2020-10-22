@@ -53,14 +53,13 @@ class FormFilter extends Component {
                     />
                   </div>
 
-
                 <div className="col-md-6">
                       <input
                         type="hidden"
                         name="cost_center_id"
                         value={this.props.formAutocompleteCentro.cost_center_id}
                       />
-                      <label>Centro de costo (Excluidos) <small className="validate-label">*</small></label>
+                      <label>Centro de costo (<input type="checkbox" onChange={this.props.handleChangeCheckCentro} /> {this.props.formValuesFilter.centro_incluido}) <small className="validate-label">*</small></label>
                       <Select
                         onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}
@@ -73,10 +72,9 @@ class FormFilter extends Component {
                       />
                   </div>
 
-                  
 
                   <div className="col-md-6 mt-2 imput-filter">
-                    <label>Clientes (Excluidos)</label>
+                    <label>Clientes (<input type="checkbox" onChange={this.props.handleChangeCheckClientes}/> {this.props.formValuesFilter.cliente_incluido})</label>
                       <input
                         type="hidden"
                         name="customer_id"
@@ -93,66 +91,111 @@ class FormFilter extends Component {
                         name="customer_id"
                       />
                     </div>
-                    </div>
+                  </div>
                  
-                    <div className="row mt-3">
-           
+                <div className="row mt-3">
 
-          
+                    <div className="col-md-4 imput-filter">
+                      <label>Tipo</label>
+                        <input
+                          type="hidden"
+                          name="execution_state"
+                          value={this.props.formAutocompleteType.execution_state}
+                        />
+                        <Select
+                          onChange={this.props.onChangeAutocompleteType}
+                          options={this.props.dataType}
+                          isMulti
+                          closeMenuOnSelect={false}
+                          autoFocus={false}
+                          className={`link-form`}
+                          classNamePrefix="select"
+                          name="execution_state"
+                        />
 
-                  <div className="col-md-3 imput-filter">
-                  <label>Tipo</label>
-                    <select 
-                        name="service_type" 
-                        className="form form-control"
-                        onChange={ this.props.onChangeFilter }
-                        value={ this.props.formValuesFilter.service_type }
+                        {/*<select 
+                            name="service_type" 
+                            className="form form-control"
+                            onChange={ this.props.onChangeFilter }
+                            value={ this.props.formValuesFilter.service_type }
+                            >   
+                            <option value="">Seleccione un estado</option>
+                            <option value="PROYECTO">PROYECTO</option>
+                            <option value="SERVICIO">SERVICIO</option>
+                            <option value="VENTA">VENTA</option>
+                        </select>*/}
+                    </div>
+
+                    <div className="col-md-4 imput-filter">
+                      <label>Estado de ejecución</label>
+                        <input
+                          type="hidden"
+                          name="service_type"
+                          value={this.props.formAutocompleteEjecucion.service_type}
+                        />
+                        <Select
+                          onChange={this.props.onChangeAutocompleteEjecucion}
+                          options={this.props.dataEjecucion}
+                          isMulti
+                          closeMenuOnSelect={false}
+                          autoFocus={false}
+                          className={`link-form`}
+                          classNamePrefix="select"
+                          name="service_type"
+                        />
+
+                        {/*<select 
+                            name="execution_state" 
+                            className="form form-control"
+                            onChange={this.props.onChangeFilter}
+                            value={this.props.formValuesFilter.execution_state}
                         >   
-                        <option value="">Seleccione un estado</option>
-                        <option value="PROYECTO">PROYECTO</option>
-                        <option value="SERVICIO">SERVICIO</option>
-                        <option value="VENTA">VENTA</option>
-                    </select>
-                  </div>
-                  <div className="col-md-3 imput-filter">
-                  <label>Estado de ejecución</label>
-                    <select 
-                        name="execution_state" 
-                        className="form form-control"
-                        onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.execution_state}
-                    >   
-                        <option value="">Seleccione un estado</option>
-                        <option value="FINALIZADO">FINALIZADO</option>
-                        <option value="PENDIENTE">PENDIENTE</option>
-                        <option value="EJECUCION">EJECUCION</option>
-                    </select>
-                  </div>
-
-                  <div className="col-md-3 imput-filter">
-                  <label>Estado facturado</label>
-                    <select 
-                        name="invoiced_state" 
-                        className="form form-control"
-                        onChange={this.props.onChangeFilter}
-                        value={this.props.formValuesFilter.invoiced_state}
-                    >   
-                        <option value="">Seleccione un estado</option>
-                        <option value="FACTURADO">FACTURADO</option>
-                        <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
-                        <option value="LEGALIZADO">LEGALIZADO</option>
-                        <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
-                        <option value="POR FACTURAR">POR FACTURAR</option>
-                        <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
-                        <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
-                    </select>
-                  </div>
-                  </div>
-                  
-                  <div className="row mt-3">
-             
+                            <option value="">Seleccione un estado</option>
+                            <option value="FINALIZADO">FINALIZADO</option>
+                            <option value="PENDIENTE">PENDIENTE</option>
+                            <option value="EJECUCION">EJECUCION</option>
+                        </select>*/}
+                    </div>
 
 
+                    <div className="col-md-4 imput-filter">
+                      <label>Estado facturado</label>
+
+                        <input
+                          type="hidden"
+                          name="invoiced_state"
+                          value={this.props.formAutocompleteFacturado.invoiced_state}
+                        />
+                        <Select
+                          onChange={this.props.onChangeAutocompleteFacturado}
+                          options={this.props.dataFacturado}
+                          isMulti
+                          closeMenuOnSelect={false}
+                          autoFocus={false}
+                          className={`link-form`}
+                          classNamePrefix="select"
+                          name="invoiced_state"
+                        />
+                      
+                      {/*<select 
+                          name="invoiced_state" 
+                          className="form form-control"
+                          onChange={this.props.onChangeFilter}
+                          value={this.props.formValuesFilter.invoiced_state}
+                      >   
+                          <option value="">Seleccione un estado</option>
+                          <option value="FACTURADO">FACTURADO</option>
+                          <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
+                          <option value="LEGALIZADO">LEGALIZADO</option>
+                          <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
+                          <option value="POR FACTURAR">POR FACTURAR</option>
+                          <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
+                          <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
+                      </select>*/}
+                    </div>
+
+                </div>
+                
               
                 <div className="col-md-12 mt-4">
                     <div className="row">
@@ -164,7 +207,6 @@ class FormFilter extends Component {
                     </div>
                 </div>
 
-                </div>
               </form>
             </div>
           </div>
