@@ -19,7 +19,7 @@ class RolsController < ApplicationController
   
 
   def get_rols
-    @rol = Rol.all
+    @rol = Rol.all.order(created_at: :asc)
     @rol =  @rol.to_json(:include => [:accion_modules => {:only =>[:id]}])
     @rol = JSON.parse(@rol)
     render :json => @rol

@@ -24,9 +24,9 @@ class ProvidersController < ApplicationController
 
   def get_providers
     if params[:name].present?
-      providers = Provider.search(params[:name])
+      providers = Provider.search(params[:name]).order(created_at: :asc)
     else
-      providers = Provider.all
+      providers = Provider.all.order(created_at: :asc)
     end
     render :json => providers
   end

@@ -17,14 +17,14 @@ class ParameterizationsController < ApplicationController
       delete: (current_user.rol.name == "Administrador" ? true : delete)
     }
 
-    @parameterizations = Parameterization.all.paginate(:page => params[:page], :per_page => 10)
+    @parameterizations = Parameterization.all.paginate(:page => params[:page], :per_page => 10).order(created_at: :asc)
   end
 
   def get_parameterizations
     if params[:name].present?
-      parameterizations = Parameterization.search(params[:name])
+      parameterizations = Parameterization.search(params[:name]).order(created_at: :asc)
     else
-      parameterizations = Parameterization.all
+      parameterizations = Parameterization.all.order(created_at: :asc)
     end
     render :json => parameterizations
   end

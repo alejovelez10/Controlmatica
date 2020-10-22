@@ -220,15 +220,15 @@ class SalesOrdersController < ApplicationController
 
   def get_sales_order
     if params[:filtering] == "true"
-      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
-      sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number])
+      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :asc).paginate(page: params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :asc)
 
     elsif params[:filtering] == "false"
-      sales_order = SalesOrder.all.paginate(:page => params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_order = SalesOrder.all.order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
       sales_orders_total =  SalesOrder.all
     else
       
-      sales_order = SalesOrder.all.paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_order = SalesOrder.all.order(created_at: :asc).paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
       sales_orders_total = SalesOrder.all
     end
 

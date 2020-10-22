@@ -76,14 +76,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def get_users
     if params[:name] || params[:email] || params[:rol_id] || params[:state] || params[:number_document]
-      @users = User.all.paginate(page: params[:page], :per_page => 30).search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document])
+      @users = User.all.paginate(page: params[:page], :per_page => 30).search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document]).order(created_at: :asc)
       @users_total = User.all.search(params[:name], params[:email], params[:rol_id], params[:state], params[:number_document]).count
 
     elsif params[:filter]
-      @users = User.all.paginate(page: params[:page], :per_page => params[:filter])
+      @users = User.all.paginate(page: params[:page], :per_page => params[:filter]).order(created_at: :asc)
       @users_total = User.all.count
     else
-      @users = User.all.paginate(page: params[:page], :per_page => 30).order(id: :desc)
+      @users = User.all.paginate(page: params[:page], :per_page => 30).order(id: :desc).order(created_at: :asc)
       @users_total = User.all.count
     end
 
