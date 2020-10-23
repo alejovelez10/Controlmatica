@@ -5,10 +5,21 @@ class SalesOrdersController < ApplicationController
   # GET /sales_orders
   # GET /sales_orders.json
   def index
+    ordenes = ModuleControl.find_by_name("Ordenes de Compra")
+
+    create = current_user.rol.accion_modules.where(module_control_id: ordenes.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: ordenes.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: ordenes.id).where(name: "Eliminar").exists?
+    download_file = current_user.rol.accion_modules.where(module_control_id: ordenes.id).where(name: "Descargar excel").exists?
+    edit_all = current_user.rol.accion_modules.where(module_control_id: ordenes.id).where(name: "Editar todos").exists?
+
+
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : true),
-      edit: (current_user.rol.name == "Administrador" ? true : true),
-      delete: (current_user.rol.name == "Administrador" ? true : true),
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file),
+      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
     }
   end
 

@@ -519,15 +519,17 @@ class table extends React.Component {
                           Filtros <i className="fas fa-search ml-2"></i>
                         </button>  
 
-                        <a
-                          className=" mr-2"
-                          href={`/download_file/sales_orders/${this.props.filtering == false ? "todos" : this.range(this.props.sales_orders_total_exel)}.xls`}
-                          target="_blank"
-                        >
-                          <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
-                        </a>
+                        {this.props.estados.download_file && ( 
+                          <a
+                            className=" mr-2"
+                            href={`/download_file/sales_orders/${this.props.filtering == false ? "todos" : this.range(this.props.sales_orders_total_exel)}.xls`}
+                            target="_blank"
+                          >
+                            <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                          </a>
+                        )}
 
-                        {this.props.estados.create == true && (     
+                        {this.props.estados.create && (     
                           <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Orden de compra</button>
                         )}
                     </div>
