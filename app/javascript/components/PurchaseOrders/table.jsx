@@ -490,6 +490,8 @@ class table extends React.Component {
       return true
     }else if(this.props.estados.edit == false && this.props.estados.edit_all){
       return true
+    }else if (this.props.estados.edit && this.props.estados.edit_all){
+      return true
     }else if(this.props.estados.edit == false && this.props.estados.edit_all == false){
       return false
     }
