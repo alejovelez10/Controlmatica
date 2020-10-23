@@ -179,7 +179,7 @@ class Report < ApplicationRecord
     if str.length > 5
       str = "<p>Reporte: #{self.code_report}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
     RegisterEdit.create(  
-      user_id: self.update_user, 
+      user_id:  User.current.id, 
       register_user_id: self.id, 
       state: "pending", 
       date_update: Time.now,

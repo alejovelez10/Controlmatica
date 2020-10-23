@@ -107,7 +107,7 @@ class Material < ApplicationRecord
     if str.length > 5
       str = "<p>Numero de orden: #{self.sales_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
       RegisterEdit.create(
-        user_id: self.user_id,
+        user_id:  User.current.id,
         register_user_id: self.user_id,
         state: "pending",
         date_update: Time.now,
