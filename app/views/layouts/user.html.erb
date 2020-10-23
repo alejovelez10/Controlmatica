@@ -61,17 +61,17 @@
         </li>
 
         <li class="dropdown">
-          <% if get_notification_alert.where(state: false).any? && current_user.rol.name == "Administrador" %>
+          <% if get_notification_alert.where(state: true).any? && current_user.rol.name == "Administrador" %>
 
             <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-              <span class="badge badge-light notification-badge"><%= get_notification_alert.where(state:false).count %></span>
+              <span class="badge badge-light notification-badge"><%= get_notification_alert.where(state: true).count %></span>
                 <i class="fas fa-bell" style="font-size: 17px;"></i>
             </a>
 
             <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <% get_notification_alert.where(state:false).count %> nuevas notificaciones.</li>
+              <li class="app-notification__title">Tienes <% get_notification_alert.where(state: true).count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_notification_alert.where(state: false).each do |notification|  %>
+                  <% get_notification_alert.where(state: true).each do |notification|  %>
                     <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
