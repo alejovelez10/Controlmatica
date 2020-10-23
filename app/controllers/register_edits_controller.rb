@@ -1,7 +1,7 @@
 class RegisterEditsController < ApplicationController
     
     def get_notifications
-        notifications_pending = RegisterEdit.all.order(date_update: :asc).to_json( :include => { :user => { :only =>[:names] }})
+        notifications_pending = RegisterEdit.all.order(created_at: :desc).to_json( :include => { :user => { :only =>[:names] }})
         notifications_pending = JSON.parse(notifications_pending)
 
         render :json => {

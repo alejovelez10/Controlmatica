@@ -20,7 +20,7 @@ class CustomersController < ApplicationController
       download_file: (current_user.rol.name == "Administrador" ? true : download_file)
     }
 
-    @customers = Customer.all.paginate(:page => params[:page], :per_page => 10).order(created_at: :asc)
+    @customers = Customer.all.paginate(:page => params[:page], :per_page => 10).order(created_at: :desc)
   end
 
   def import_customers

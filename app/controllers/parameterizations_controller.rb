@@ -22,9 +22,9 @@ class ParameterizationsController < ApplicationController
 
   def get_parameterizations
     if params[:name].present?
-      parameterizations = Parameterization.search(params[:name]).order(created_at: :asc)
+      parameterizations = Parameterization.search(params[:name]).order(created_at: :desc)
     else
-      parameterizations = Parameterization.all.order(created_at: :asc)
+      parameterizations = Parameterization.all.order(created_at: :desc)
     end
     render :json => parameterizations
   end

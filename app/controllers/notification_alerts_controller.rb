@@ -9,7 +9,7 @@ class NotificationAlertsController < ApplicationController
     end
 
     def get_notifications_alerts
-        notifications_alerts = NotificationAlert.all.order(date_update: :asc).to_json( :include => { :user => { :only =>[:names] }, :cost_center => { :only =>[:description, :code] } })
+        notifications_alerts = NotificationAlert.all.order(date_update: :desc).to_json( :include => { :user => { :only =>[:names] }, :cost_center => { :only =>[:description, :code] } })
         notifications_alerts = JSON.parse(notifications_alerts)
 
         render :json => {

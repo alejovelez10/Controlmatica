@@ -59,29 +59,29 @@ class CostCentersController < ApplicationController
     if validate
       
       if params[:filtering] == "true"
-        cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(created_at: :asc)
+        cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
 
       elsif params[:filtering] == "false"
-        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(created_at: :asc)
+        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         cost_centers_total = CostCenter.all
       else
-        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(created_at: :asc)
+        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         cost_centers_total =  CostCenter.all
       end
 
     else
 
       if params[:filtering] == "true"
-        cost_centers = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(created_at: :asc)
+        cost_centers = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
 
       elsif params[:filtering] == "false"
-        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :asc)
+        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         cost_centers_total = CostCenter.where(user_id: current_user.id)
       else
         
-        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :asc)
+        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         cost_centers_total =  CostCenter.where(user_id: current_user.id)
       end
 

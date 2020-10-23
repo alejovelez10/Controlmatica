@@ -31,7 +31,7 @@ class AlertsController < ApplicationController
   end
 
   def get_alerts
-    alerts = Alert.all.order(created_at: :asc)
+    alerts = Alert.all.order(created_at: :desc)
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(alerts, each_serializer: AlertSerializer),
     }
