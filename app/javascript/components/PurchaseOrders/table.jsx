@@ -487,17 +487,23 @@ class table extends React.Component {
 
   getState = (user) => {
     if(this.props.estados.edit == true && this.props.usuario.id == user){
+      console.log("this.props.estados.edit == true && this.props.usuario.id == user")
       return true
     }else if(this.props.estados.edit == false && this.props.estados.edit_all){
+      console.log("this.props.estados.edit == false && this.props.estados.edit_all")
       return true
 
     }else if(this.props.estados.edit_all == true && this.props.usuario.id == user){
+      console.log("this.props.estados.edit_all == true && this.props.usuario.id == user")
       return true
     }else if(this.props.estados.edit_all){
+      console.log("this.props.estados.edit_all")
       return true
     }else if (this.props.estados.edit && this.props.estados.edit_all){
+      console.log("this.props.estados.edit && this.props.estados.edit_all")
       return true
     }else if(this.props.estados.edit == false && this.props.estados.edit_all == false){
+      console.log("this.props.estados.edit == false && this.props.estados.edit_all == false")
       return false
     }
   }
@@ -652,7 +658,7 @@ class table extends React.Component {
                                   </button>     
                                 )}
                                 
-                                {true && (accion.user_id == this.props.usuario.id || this.props.usuario.rol_id != 5 )  && (
+                                {this.getState(accion.user_id)&& (
                                   <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>
