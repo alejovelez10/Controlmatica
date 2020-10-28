@@ -608,15 +608,15 @@ class table extends React.Component {
                 <th style={{ width: "1%" }} className="text-center">
                   Acciones
                 </th>
-                <th style={{width:"6%"}}>Centro de costo</th>
-                <th style={{width:"8%"}}>Proveedor</th>
-                <th style={{width:"6%"}}># Orden</th>
-                <th style={{width:"5%"}}>Valor</th>
-                <th style={{width:"19%"}}>Descripción</th>
-                <th style={{width:"5%"}}>Fecha de Orden</th>
-                <th style={{width:"5%"}}>Fecha Entrega</th>
-                <th style={{width:"5%"}}>Valor Facturas</th>
-                <th style={{width:"11%"}}>Estado</th>
+                <th style={{width:"184px"}}>Centro de costo</th>
+                <th style={{width:"184px"}}>Proveedor</th>
+                <th style={{width:"184px"}}># Orden</th>
+                <th style={{width:"184px"}}>Valor</th>
+                <th style={{width:"370px"}}>Descripción</th>
+                <th style={{width:"100px"}}>Fecha de Orden</th>
+                <th style={{width:"100px"}}>Fecha Entrega</th>
+                <th style={{width:"100px"}}>Valor Facturas</th>
+                <th style={{width:"184px"}}>Estado</th>
               </tr>
             </thead>
 

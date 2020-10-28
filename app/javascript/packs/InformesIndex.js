@@ -247,7 +247,7 @@ class InformesIndex extends Component {
       this.setState({
         formFilter: {
           ...this.state.formFilter,
-          centro_incluido: checked ? "Incluidos" : "Excluidos"
+          centro_incluido: e.target.value,
         }
       })
 
@@ -259,7 +259,7 @@ class InformesIndex extends Component {
       this.setState({
         formFilter: {
           ...this.state.formFilter,
-          cliente_incluido: checked ? "Incluidos" : "Excluidos"
+          cliente_incluido: e.target.value,
         }
       })
 

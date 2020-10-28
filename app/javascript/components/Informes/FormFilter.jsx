@@ -59,7 +59,7 @@ class FormFilter extends Component {
                         name="cost_center_id"
                         value={this.props.formAutocompleteCentro.cost_center_id}
                       />
-                      <label>Centro de costo (<input type="checkbox" onChange={this.props.handleChangeCheckCentro} /> {this.props.formValuesFilter.centro_incluido}) <small className="validate-label">*</small></label>
+                      <label>Centro de costo (<input type="radio" onChange={this.props.handleChangeCheckCentro} checked={this.props.formValuesFilter.centro_incluido == "Excluidos"} value="Excluidos" /> Excluidos <input type="radio" onChange={this.props.handleChangeCheckCentro} checked={this.props.formValuesFilter.centro_incluido == "Icluidos" ? true : false} value="Icluidos" /> Icluidos) <small className="validate-label">*</small></label>
                       <Select
                         onChange={this.props.onChangeAutocompleteCentro}
                         options={this.props.centro}
@@ -72,9 +72,11 @@ class FormFilter extends Component {
                       />
                   </div>
 
+                  {/*this.props.formValuesFilter.cliente_incluido*/}
+                  {/*this.props.formValuesFilter.centro_incluido*/}
 
                   <div className="col-md-6 mt-2 imput-filter">
-                    <label>Clientes (<input type="checkbox" onChange={this.props.handleChangeCheckClientes}/> {this.props.formValuesFilter.cliente_incluido})</label>
+                    <label>Clientes (<input type="radio" onChange={this.props.handleChangeCheckClientes} checked={this.props.formValuesFilter.cliente_incluido == "Excluidos"} value="Excluidos" /> Excluidos <input type="radio" onChange={this.props.handleChangeCheckClientes} checked={this.props.formValuesFilter.cliente_incluido == "Icluidos"} value="Icluidos"/> Icluidos)</label>
                       <input
                         type="hidden"
                         name="customer_id"
