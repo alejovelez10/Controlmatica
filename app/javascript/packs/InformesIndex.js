@@ -202,7 +202,7 @@ class InformesIndex extends Component {
         this.setState({
           formFilter: {
             ...this.state.formFilter,
-            execution_state: array
+            service_type: array
           }
         })
     };
@@ -217,7 +217,7 @@ class InformesIndex extends Component {
         this.setState({
           formFilter: {
             ...this.state.formFilter,
-            service_type: array
+            execution_state: array
           }
         })
     };
@@ -247,7 +247,7 @@ class InformesIndex extends Component {
       this.setState({
         formFilter: {
           ...this.state.formFilter,
-          centro_incluido: checked ? "Incluido" : "Excluidos"
+          centro_incluido: checked ? "Incluidos" : "Excluidos"
         }
       })
 
@@ -259,7 +259,7 @@ class InformesIndex extends Component {
       this.setState({
         formFilter: {
           ...this.state.formFilter,
-          cliente_incluido: checked ? "Incluido" : "Excluidos"
+          cliente_incluido: checked ? "Incluidos" : "Excluidos"
         }
       })
 

@@ -105,19 +105,40 @@ class CostCenter < ApplicationRecord
       return descripcion.customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope.quotation_number_scope
     end
 
-    def self.searchInfo(search1, search2, search3, search4, search5, search6,search7)
+    def self.searchInfo(search1, search2, search3, search4, search5, search6,search7,search8,search9)
+      puts "model"
+      puts search5
+      puts search1
       search4 = search4 != "" ? search4.split(/,/) : ""
       search1 = search1 != "" ? search1.split(/,/) : ""
+      search2 = search2 != "" ? search2.split(/,/) : ""
+      search3 = search3 != "" ? search3.split(/,/) : ""
+      search5 = search5 != "" ? search5.split(/,/) : ""
       
       puts search4
       puts search1
+      puts search2
+      puts search3
+      puts search5
 
-      puts "jajajajajajajajajajajajajajjaajajajajajajajj"
-      search1 != "" ? (scope :customer, -> { where.not(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
+
+      if search8 == "incluidos"
+        search1 != "" ? (scope :customer, -> { where(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
+      else
+        search1 != "" ? (scope :customer, -> { where.not(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
+      end
+
       search2 != "" ? (scope :state_execution, -> { where(execution_state: search2) }) : (scope :state_execution, -> { where.not(id: nil) })
       search3 != "" ? (scope :state_invoice, -> { where(invoiced_state: search3) }) : (scope :state_invoice, -> { where.not(id: nil) })
-      search4 != "" ? (scope :cost_center, -> { where.not(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
-      search5 != "" ? (scope :service_type_scope, -> { where(service_type: search5) }) : (scope :service_type_scope, -> { where.not(id: nil) })
+
+      if search9 == "incluidos"
+      search4 != "" ? (scope :cost_center, -> { where(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
+      else
+        search4 != "" ? (scope :cost_center, -> { where.not(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
+      end
+
+
+      search5 != "" ? (scope :service_type_scope, -> { where(service_type:search5 ) }) : (scope :service_type_scope, -> { where.not(id: nil) })
       search6 != "" ? (scope :date_desde_type_scope, -> { where(["start_date >= ?", search6]) }) : (scope :date_desde_type_scope, -> { where.not(id: nil) })
       search7 != "" ? (scope :date_hasta_type_scope, -> { where(["start_date <= ?", search7]) }) : (scope :date_hasta_type_scope, -> { where.not(id: nil) })
 

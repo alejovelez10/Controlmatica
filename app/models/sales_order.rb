@@ -119,7 +119,7 @@ class SalesOrder < ApplicationRecord
     
     created_date = self.created_date_changed? == true ? ("<p>La Fecha de generación: <b class='color-true'>#{self.created_date_change[0]}</b> / <b class='color-false'>#{self.created_date_change[1]}</b></p>") : "" 
     order_number = self.order_number_changed? == true ? ("<p>La Numero de orden: <b class='color-true'>#{self.order_number_change[0]}</b> / <b class='color-false'>#{self.order_number_change[1]}</b></p>") : "" 
-    order_value = self.order_value_changed? == true ? ("<p>La Valor: <b class='color-true'>#{self.order_value_change[0]}</b> / <b class='color-false'>#{self.order_value_change[1]}</b></p>") : "" 
+    order_value = self.order_value_changed? == true ? ("<p>Valor: <b class='color-true'>#{self.order_value_change[0]}</b> / <b class='color-false'>#{self.order_value_change[1]}</b></p>") : "" 
     description = self.description_changed? == true ? ("<p>La descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : "" 
     
     str = "#{created_date}#{order_number}#{order_value}#{centro}#{description}"

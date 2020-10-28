@@ -99,8 +99,8 @@ class FormFilter extends Component {
                       <label>Tipo</label>
                         <input
                           type="hidden"
-                          name="execution_state"
-                          value={this.props.formAutocompleteType.execution_state}
+                          name="service_type"
+                          value={this.props.formAutocompleteType.service_type}
                         />
                         <Select
                           onChange={this.props.onChangeAutocompleteType}
@@ -110,7 +110,7 @@ class FormFilter extends Component {
                           autoFocus={false}
                           className={`link-form`}
                           classNamePrefix="select"
-                          name="execution_state"
+                          name="service_type"
                         />
 
                         {/*<select 
@@ -130,8 +130,8 @@ class FormFilter extends Component {
                       <label>Estado de ejecución</label>
                         <input
                           type="hidden"
-                          name="service_type"
-                          value={this.props.formAutocompleteEjecucion.service_type}
+                          name="execution_state"
+                          value={this.props.formAutocompleteEjecucion.execution_state}
                         />
                         <Select
                           onChange={this.props.onChangeAutocompleteEjecucion}
@@ -141,7 +141,7 @@ class FormFilter extends Component {
                           autoFocus={false}
                           className={`link-form`}
                           classNamePrefix="select"
-                          name="service_type"
+                          name="execution_state"
                         />
 
                         {/*<select 

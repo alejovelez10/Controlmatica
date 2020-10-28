@@ -83,6 +83,9 @@ class ReportsController < ApplicationController
     
   end
 
+
+
+
   def get_informes
 
     if  !params[:customer_id].blank? || !params[:execution_state].blank? || !params[:invoiced_state].blank? || !params[:cost_center_id].blank? || !params[:service_type].blank? || !params[:date_desde].blank? || !params[:date_hasta].blank? 
@@ -93,8 +96,10 @@ class ReportsController < ApplicationController
       puts params[:cost_center_id]
       puts params[:service_type]
       puts params[:date_desde]
+      puts params[:centro_incluido]
+      puts params[:cliente_incluido]
       
-      cost_center = CostCenter.all.searchInfo(params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta])
+      cost_center = CostCenter.all.searchInfo(params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta],params[:cliente_incluido], params[:centro_incluido])
 
       puts "entre aqui"
       puts cost_center.count
