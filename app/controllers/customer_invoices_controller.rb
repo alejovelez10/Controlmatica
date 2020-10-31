@@ -81,7 +81,9 @@ class CustomerInvoicesController < ApplicationController
   # DELETE /customer_invoices/1
   # DELETE /customer_invoices/1.json
   def destroy
+    customer_invoice_last = @customer_invoice.sales_order.cost_center_id
     if @customer_invoice.destroy
+      recalculate_cost_center(customer_invoice_last)
       render :json => @customer_invoice
     else 
       render :json => @customer_invoice.errors.full_messages

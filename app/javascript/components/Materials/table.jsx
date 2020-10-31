@@ -602,7 +602,7 @@ class table extends React.Component {
         />
 
         <div className="content-table">
-          <table className="table table-hover table-bordered table-width" id="sampleTable">
+          <table className="table table-hover table-bordered" style={{width:"1850px",maxWidth:"1850px"}} id="sampleTable">
             <thead>
               <tr className="tr-title">
                 <th style={{ width: "1%" }} className="text-center">
@@ -613,9 +613,9 @@ class table extends React.Component {
                 <th style={{width:"184px"}}># Orden</th>
                 <th style={{width:"184px"}}>Valor</th>
                 <th style={{width:"370px"}}>Descripción</th>
-                <th style={{width:"100px"}}>Fecha de Orden</th>
-                <th style={{width:"100px"}}>Fecha Entrega</th>
-                <th style={{width:"100px"}}>Valor Facturas</th>
+                <th style={{width:"150px"}}>Fecha de Orden</th>
+                <th style={{width:"150px"}}>Fecha Entrega</th>
+                <th style={{width:"150px"}}>Valor Facturas</th>
                 <th style={{width:"184px"}}>Estado</th>
               </tr>
             </thead>

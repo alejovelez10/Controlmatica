@@ -79,7 +79,7 @@ class table extends React.Component {
 
   date_short = (fecha) => {
     var d = new Date(fecha)
-    return (d.getDate() + 1 > 9 ? "" : "0") + (d.getDate() +  1)  + "/" + (d.getMonth() +1  > 9 ? "" : "0") + (d.getMonth()  +  1) + " " + '/' + d.getFullYear()
+    return (d.getDate() > 9 ? "" : "0") + (d.getDate() )  + "/" + (d.getMonth()  > 9 ? "" : "0") + (d.getMonth()) + " " + '/' + d.getFullYear()
   }
   
   handleSubmit = e => {
@@ -690,7 +690,7 @@ class table extends React.Component {
                           {accion.customer_invoices.map(customer => (
                               <tr>
                                 <td style={{padding:"5px", textAlign:"center"}}>{customer.number_invoice}</td>
-                                <td style={{padding:"5px", textAlign:"center"}}>{this.date_short(customer.invoice_date)}</td>
+                                <td style={{padding:"5px", textAlign:"center"}}>{customer.invoice_date}</td>
                                 <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                               </tr>
                           ))}

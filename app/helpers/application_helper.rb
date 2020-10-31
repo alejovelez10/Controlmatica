@@ -527,10 +527,10 @@ module ApplicationHelper
 		
 		gastos = ing_costo_real + cont_costo_real + mat_costo_real + viat_costo_real 
 		aiu = fact_real - gastos
-		aiu_percent = fact_real > 0 ? ((aiu.to_f/fact_real.to_f)*100).to_i : 0
+		aiu_percent = fact_real > 0 ? (((aiu.to_f/fact_real.to_f))*100).to_i : 0
 
 		aiu_real = @cost_center.quotation_value - gastos
-		aiu_percent_real = @cost_center.quotation_value > 0 ? ((gastos.to_f/@cost_center.quotation_value.to_f)*100).to_i : 0
+		aiu_percent_real = @cost_center.quotation_value > 0 ? (((aiu_real.to_f/@cost_center.quotation_value.to_f))*100).to_i : 0
 
 
 		@cost_center.update(

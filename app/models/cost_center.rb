@@ -120,20 +120,29 @@ class CostCenter < ApplicationRecord
       puts search2
       puts search3
       puts search5
+      puts "---------"
+      puts search8
 
 
-      if search8 == "incluidos"
+      if search8 == "Incluidos"
+        puts "incluidosssssssssssssssss customer"
         search1 != "" ? (scope :customer, -> { where(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
       else
+        puts "exosssssssssssssssss customer"
+
         search1 != "" ? (scope :customer, -> { where.not(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
       end
 
       search2 != "" ? (scope :state_execution, -> { where(execution_state: search2) }) : (scope :state_execution, -> { where.not(id: nil) })
       search3 != "" ? (scope :state_invoice, -> { where(invoiced_state: search3) }) : (scope :state_invoice, -> { where.not(id: nil) })
 
-      if search9 == "incluidos"
+      if search9 == "Incluidos"
+        puts "incluidosssssssssssssssss cost"
+
       search4 != "" ? (scope :cost_center, -> { where(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
       else
+        puts "exosssssssssssssssss sotr"
+
         search4 != "" ? (scope :cost_center, -> { where.not(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
       end
 

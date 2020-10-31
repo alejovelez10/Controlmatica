@@ -599,21 +599,21 @@ class table extends React.Component {
 
         <div className="content-table">
 
-        <table className="table table-hover table-bordered table-width" id="sampleTable">
+        <table className="table table-hover table-bordered" style={{width:"2100px",maxWidth:"2100px"}} id="sampleTable">
           <thead>
             <tr className="tr-title">
-              <th className="text-center">Acciones</th>
-              <th style={{width: "184px"}}>Codigo</th>
-              <th style={{width: "184px"}}>Centro de Costos</th>
-              <th style={{width: "184px"}}>Cliente</th>
-              <th style={{width: "184px"}}>Fecha de Ejecucion</th>
-              <th style={{width: "184px"}}>Responsable Ejecucion</th>
-              <th style={{width: "184px"}}>Horas Laboradas</th>
-              <th styel={{width: "370px"}}>Descripcion del Trabajo</th>
-              <th style={{width: "184px"}}>Valor de los Viaticos</th>
-              <th style={{width: "184px"}}>Descripcion de Viaticos</th>
-              <th style={{width: "184px"}}>Valor del Reporte</th>
-              <th style={{width: "184px"}}>Estado</th>
+              <th style={{width: "60px"}} className="text-center">Acciones</th>
+              <th style={{width: "150px"}}>Codigo</th>
+              <th style={{width: "150px"}}>Centro de Costos</th>
+              <th style={{width: "150px"}}>Cliente</th>
+              <th style={{width: "150px"}}>Fecha de Ejecucion</th>
+              <th style={{width: "150px"}}>Responsable Ejecucion</th>
+              <th style={{width: "150px"}}>Horas Laboradas</th>
+              <th style={{width: "370px"}}>Descripcion del Trabajo</th>
+              <th style={{width: "300px"}}>Valor de los Viaticos</th>
+              <th style={{width: "150px"}}>Descripcion de Viaticos</th>
+              <th style={{width: "150px"}}>Valor del Reporte</th>
+              <th style={{width: "100px"}}>Estado</th>
             </tr>
           </thead>
 
@@ -621,7 +621,7 @@ class table extends React.Component {
             {this.props.dataActions.length >= 1 ? (
               this.props.dataActions.map(accion => (
                 <tr key={accion.id}>
-                  <td className="text-right" style={{ width: "10px" }}>
+                  <td className="text-center" style={{ width: "10px" }}>
                     <div
                       className="btn-group"
                       role="group"
