@@ -192,11 +192,11 @@ module ApplicationHelper
 	end
 
 	def get_register_edit
-		RegisterEdit.all.order(created_at: :asc)
+		RegisterEdit.all.order(date_update: :desc)
 	end
 
 	def get_notification_alert
-		NotificationAlert.all.order(created_at: :asc)
+		NotificationAlert.all.order(date_update: :desc)
 	end
 	
 	
