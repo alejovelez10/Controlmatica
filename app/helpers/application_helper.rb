@@ -196,7 +196,7 @@ module ApplicationHelper
 	end
 
 	def get_notification_alert
-		NotificationAlert.all.order(date_update: :desc)
+		NotificationAlert.where(state: false).order(date_update: :desc)
 	end
 	
 	
