@@ -192,7 +192,7 @@ module ApplicationHelper
 	end
 
 	def get_register_edit
-		RegisterEdit.where(state: "pending").order(date_update: :desc)
+		RegisterEdit.where(state: "pending").order(created_at: :desc)
 	end
 
 	def get_notification_alert
