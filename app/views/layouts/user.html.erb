@@ -33,9 +33,9 @@
             </a>
 
             <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <% get_register_edit.count %> nuevas notificaciones.</li>
+              <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_register_edit.last(5).each do |notification|  %>
+                  <% get_register_edit.first(5).each do |notification|  %>
                     <% link = "/notifications" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
