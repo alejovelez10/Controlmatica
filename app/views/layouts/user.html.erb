@@ -71,7 +71,7 @@
             <ul class="app-notification dropdown-menu dropdown-menu-right">
               <li class="app-notification__title">Tienes <% get_notification_alert.count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_notification_alert.last(5).each do |notification|  %>
+                  <% get_notification_alert.first(5).each do |notification|  %>
                     <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
