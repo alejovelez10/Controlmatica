@@ -25,17 +25,17 @@
       <!-- Navbar Right Menu-->
       <ul class="app-nav">
         <li class="dropdown">
-          <% if get_register_edit.where(state: "pending").any? && current_user.rol.name == "Administrador" %>
+          <% if get_register_edit.any? && current_user.rol.name == "Administrador" %>
 
             <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-              <span class="badge badge-light notification-badge"><%= get_register_edit.where(state: "pending").count %></span>
+              <span class="badge badge-light notification-badge"><%= get_register_edit.count %></span>
                 <i class="fas fa-edit" style="font-size: 17px;"></i>
             </a>
 
             <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <% get_register_edit.where(state: "pending").count %> nuevas notificaciones.</li>
+              <li class="app-notification__title">Tienes <% get_register_edit.count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_register_edit.order(date_update: :desc).where(state: "pending").last(5).each do |notification|  %>
+                  <% get_register_edit.last(5).each do |notification|  %>
                     <% link = "/notifications" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
@@ -71,7 +71,7 @@
             <ul class="app-notification dropdown-menu dropdown-menu-right">
               <li class="app-notification__title">Tienes <% get_notification_alert.where(state:false).count %> nuevas notificaciones.</li>
                 <div class="app-notification__content">
-                  <% get_notification_alert.order(date_update: :desc).where(state: false).last(5).each do |notification|  %>
+                  <% get_notification_alert.where(state: false).order(updat_date: :desc).last(5).each do |notification|  %>
                     <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
                     <li>
                           <a class="app-notification__item" href="<%= link %>">
