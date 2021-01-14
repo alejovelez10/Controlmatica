@@ -84,7 +84,7 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-7">
-                            <p> Usuario que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
+                            <p> Usuario que registra: <b>{accion.user.names}</b> el dia: <b>{accion.date_update}</b></p>
                           </div>
                         </div>
 
@@ -138,7 +138,7 @@ class table extends React.Component {
                           </div>
 
                           <div className="col-md-7">
-                            <p>Usuario que registra: <b>{accion.user.names}</b> el dia: <b>{this.date(accion.date_update)}</b></p>
+                            <p>Usuario que registra: <b>{accion.user.names}</b> el dia: <b>{accion.date_update}</b></p>
                           </div>
                         </div>
 
