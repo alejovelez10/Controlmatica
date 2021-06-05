@@ -7,7 +7,7 @@ class ReportExpensesController < ApplicationController
     end
 
     def indicators_expenses
-        @validate = (current_user.rol.name == "Administrador" ? true : estado)
+        @validate = (current_user.rol.name == "Administrador" ? true : false)
     end
     
 
