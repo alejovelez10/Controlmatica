@@ -1,0 +1,36 @@
+# == Schema Information
+#
+# Table name: register_edits
+#
+#  id               :bigint           not null, primary key
+#  user_id          :integer
+#  register_user_id :integer
+#  state            :string
+#  date_update      :date
+#  editValues       :json
+#  newValues        :json
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  module           :string
+#  description      :text
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 1
+  names: MyString
+  email: MyString
+  document_type: MyString
+  number_document: MyString
+  rol_id: MyString
+  editValues: 
+
+two:
+  user_id: 1
+  names: MyString
+  email: MyString
+  document_type: MyString
+  number_document: MyString
+  rol_id: MyString
+  editValues: 

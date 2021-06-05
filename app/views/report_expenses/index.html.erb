@@ -1,0 +1,4 @@
+<% estados = { create: true, edit: true, delete: true } %>
+<%= javascript_pack_tag 'ReportExpenseIndex' %> 
+<%= react_component('ReportExpenseIndex', estados: estados, users: get_users, cost_centers: get_cost_center) %>
+

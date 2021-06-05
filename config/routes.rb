@@ -26,7 +26,9 @@ Rails.application.routes.draw do
   resources :contractors
   resources :material_invoices
   resources :alerts, :except => [:show, :new, :edit]
-
+  resources :report_expenses, :except => [:show, :new, :edit]
+  get "indicators_expenses", to: "report_expenses#indicators_expenses"
+  get "get_report_expenses", to: "report_expenses#get_report_expenses"
   resources :notification_alerts, :only => [:index]
 
   get "register_edit_update_all", to: "register_edits#update_all"

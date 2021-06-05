@@ -1,0 +1,32 @@
+# == Schema Information
+#
+# Table name: material_invoices
+#
+#  id          :bigint           not null, primary key
+#  material_id :integer
+#  user_id     :integer
+#  number      :string
+#  value       :float
+#  observation :text
+#  file        :string
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  material_id: 1
+  user_id: 1
+  number: MyString
+  value: 1.5
+  observation: MyText
+  file: MyString
+
+two:
+  material_id: 1
+  user_id: 1
+  number: MyString
+  value: 1.5
+  observation: MyText
+  file: MyString

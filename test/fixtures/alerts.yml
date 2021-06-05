@@ -1,0 +1,90 @@
+# == Schema Information
+#
+# Table name: alerts
+#
+#  id                :bigint           not null, primary key
+#  name              :string
+#  ing_ejecucion_min :integer
+#  ing_ejecucion_med :integer
+#  ing_ejecucion_max :integer
+#  ing_costo_min     :integer
+#  ing_costo_med     :integer
+#  ing_costo_max     :integer
+#  tab_ejecucion_min :integer
+#  tab_ejecucion_med :integer
+#  tab_ejecucion_max :integer
+#  tab_costo_min     :integer
+#  tab_costo_med     :integer
+#  tab_costo_max     :integer
+#  desp_min          :integer
+#  desp_med          :integer
+#  desp_max          :integer
+#  mat_min           :integer
+#  mat_med           :integer
+#  mat_max           :integer
+#  via_min           :integer
+#  via_med           :integer
+#  via_max           :integer
+#  total_min         :integer
+#  total_med         :integer
+#  tatal_max         :integer
+#  user_id           :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  ing_ejecucion_min: 1
+  ing_ejecucion_med: 1
+  ing_ejecucion_max: 1
+  ing_costo_min: 1
+  ing_costo_med: 1
+  ing_costo_max: 1
+  tab_ejecucion_min: 1
+  tab_ejecucion_med: 1
+  tab_ejecucion_max: 1
+  tab_costo_min: 1
+  tab_costo_med: 1
+  tab_costo_max: 1
+  desp_min: 1
+  desp_med: 1
+  desp_max: 1
+  mat_min: 1
+  mat_med: 1
+  mat_max: 1
+  via_min: 1
+  via_med: 1
+  via_max: 1
+  total_min: 1
+  total_med: 1
+  tatal_max: 1
+
+two:
+  name: MyString
+  ing_ejecucion_min: 1
+  ing_ejecucion_med: 1
+  ing_ejecucion_max: 1
+  ing_costo_min: 1
+  ing_costo_med: 1
+  ing_costo_max: 1
+  tab_ejecucion_min: 1
+  tab_ejecucion_med: 1
+  tab_ejecucion_max: 1
+  tab_costo_min: 1
+  tab_costo_med: 1
+  tab_costo_max: 1
+  desp_min: 1
+  desp_med: 1
+  desp_max: 1
+  mat_min: 1
+  mat_med: 1
+  mat_max: 1
+  via_min: 1
+  via_med: 1
+  via_max: 1
+  total_min: 1
+  total_med: 1
+  tatal_max: 1

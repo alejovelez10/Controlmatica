@@ -1,0 +1,53 @@
+# == Schema Information
+#
+# Table name: report_expenses
+#
+#  id                  :bigint           not null, primary key
+#  user_id             :integer
+#  cost_center_id      :integer
+#  user_invoice_id     :integer
+#  invoice_name        :string
+#  invoice_date        :date
+#  type_identification :string
+#  description         :text
+#  invoice_number      :string
+#  invoice_type        :string
+#  payment_type        :string
+#  invoice_value       :float            default(0.0)
+#  invoice_tax         :float            default(0.0)
+#  invoice_total       :float            default(0.0)
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user_id: 1
+  cost_center_id: 1
+  user_invoice_id: 1
+  invoice_name: MyString
+  invoice_date: 2021-06-05
+  type_identification: MyString
+  description: MyText
+  invoice_number: MyString
+  invoice_type: MyString
+  payment_type: MyString
+  invoice_value: 1.5
+  invoice_tax: 1.5
+  invoice_total: 1.5
+
+two:
+  user_id: 1
+  cost_center_id: 1
+  user_invoice_id: 1
+  invoice_name: MyString
+  invoice_date: 2021-06-05
+  type_identification: MyString
+  description: MyText
+  invoice_number: MyString
+  invoice_type: MyString
+  payment_type: MyString
+  invoice_value: 1.5
+  invoice_tax: 1.5
+  invoice_total: 1.5

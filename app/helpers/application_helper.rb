@@ -51,6 +51,12 @@ module ApplicationHelper
         elsif controller == "reports" && action == "controlmatica"
 			card = "<h1>" + " <i class='fas fa-handshake'></i> Informes " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
 
+        elsif controller == "report_expenses" && action == "index"
+			card = "<h1>" + " <i class='fas fa-handshake'></i> Control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+
+		elsif controller == "report_expenses" && action == "indicators_expenses"
+			card = "<h1>" + " <i class='fas fa-handshake'></i> Informe de control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+			
         else
             "Proyectos"
         end
@@ -91,7 +97,11 @@ module ApplicationHelper
         elsif controller == "home" && action == "index"
             card = "<li class='breadcrumb-item'> <a href='/'>Index</a></li>"
 
-        
+
+        elsif controller == "report_expenses" && action == "index"
+            card = "<li class='breadcrumb-item'> <a href='/report_expenses'>Index</a></li>"
+
+    
         else
             ""
         end
