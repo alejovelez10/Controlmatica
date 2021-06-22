@@ -338,7 +338,7 @@ class Index extends Component {
                                             <th>Usuario</th>
                                             <th>Nombre factura</th>
                                             <th>Fecha de factura</th>
-                                            <th>Tipo de identificación</th>
+                                            <th>NIT / CEDULA</th>
                                             <th>Descripcion</th>
                                             <th>Numero de factura</th>
                                             <th>Tipo de factura</th>

@@ -70,7 +70,7 @@ class FormFilter extends Component {
 
 
                                     <div className="col-md-3 mb-3">
-                                        <label>Tipo de identificación </label>
+                                        <label>NIT / CEDULA</label>
                                         <select 
                                             name="type_identification"
                                             value={this.props.formValues.type_identification}

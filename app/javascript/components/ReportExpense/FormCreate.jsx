@@ -54,21 +54,7 @@ class FormCreate extends Component {
                                             value={this.props.selectedOptionUser}
                                         />
                                     </div>
-
-
                                     <div className="col-md-4 mb-3">
-                                        <label>Nombre factura </label>
-                                        <input
-                                            type="text"
-                                            name="invoice_name"
-                                            value={this.props.formValues.invoice_name}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
-
-
-                                    <div className="col-md-4 mb-3 mt-3">
                                         <label>Fecha de factura </label>
                                         <input
                                             type="date"
@@ -79,9 +65,8 @@ class FormCreate extends Component {
                                         />
                                     </div>
 
-
                                     <div className="col-md-4 mb-3 mt-3">
-                                        <label>Tipo de identificación </label>
+                                        <label>NIT / CEDULA</label>
                                         <select 
                                             name="type_identification"
                                             value={this.props.formValues.type_identification}
@@ -94,8 +79,21 @@ class FormCreate extends Component {
                                         </select>
                                     </div>
 
+
+                                    <div className="col-md-4  mb-3 mt-3">
+                                        <label>Nombre</label>
+                                        <input
+                                            type="text"
+                                            name="invoice_name"
+                                            value={this.props.formValues.invoice_name}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                        />
+                                    </div>
+
+
                                     <div className="col-md-4 mb-3 mt-3">
-                                        <label>Descripcion </label>
+                                        <label>Descripción </label>
                                         <input
                                             type="text"
                                             name="description"
@@ -105,10 +103,10 @@ class FormCreate extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-4 ">
+                                    <div className="col-md-4 mt-3">
                                         <label>Numero de factura </label>
                                         <input
-                                            type="number"
+                                            type="text"
                                             name="invoice_number"
                                             value={this.props.formValues.invoice_number}
                                             onChange={this.props.onChangeForm}
@@ -116,7 +114,7 @@ class FormCreate extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-4">
+                                    <div className="col-md-4 mt-3">
                                         <label>Tipo de factura </label>
                                         <select 
                                             name="invoice_type"
@@ -130,7 +128,7 @@ class FormCreate extends Component {
                                         </select>
                                     </div>
 
-                                    <div className="col-md-4">
+                                    <div className="col-md-4 mt-3">
                                         <label>Tipo de pago </label>
                                         <select 
                                             name="payment_type"
