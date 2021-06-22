@@ -34,9 +34,19 @@ class ExpenseRatiosController < ApplicationController
     end
     
     def create
-        report_expense = ExpenseRatio.create(expense_ratio_params)
-        if report_expense.save
-            redirect_to expense_ratio_pdf_path(report_expense.id, :format => 'pdf')
+        expense_ratio = ExpenseRatio.create(expense_ratio_params)
+        if expense_ratio.save
+            render :json => {
+                success: "El Registro fue creado con exito!",
+                register: ActiveModelSerializers::SerializableResource.new(expense_ratio, each_serializer: ExpenseRatioSerializer),
+                type: "success",
+            }
+        else
+            render :json => {
+                success: "El Registro No se creo!",
+                message: expense_ratio.errors.full_messages,
+                type: "error",
+            }
         end
     end
   
