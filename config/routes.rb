@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   resources :customers
   resources :providers
   resources :rols, :except => [:show]
+  resources :expense_ratios
 
   resources :module_controls
   resources :accion_modules
@@ -31,6 +32,8 @@ Rails.application.routes.draw do
   get "get_report_expenses", to: "report_expenses#get_report_expenses"
   resources :notification_alerts, :only => [:index]
 
+  get "get_expense_ratios", to: "expense_ratios#get_expense_ratios"
+  get "expense_ratio_pdf/:id", to: "expense_ratios#pdf", as: "expense_ratio_pdf"
   get "register_edit_update_all", to: "register_edits#update_all"
   get "notification_alerts_update_all", to: "notification_alerts#update_all"
 

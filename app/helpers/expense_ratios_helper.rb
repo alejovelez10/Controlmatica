@@ -1,0 +1,2 @@
+module ExpenseRatiosHelper
+end

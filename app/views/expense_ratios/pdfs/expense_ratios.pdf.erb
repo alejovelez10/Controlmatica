@@ -1,0 +1,335 @@
+<div class="content-table">
+
+  <table id="table">
+    <thead>
+      <tr>
+        <th class="title-imagen" width="5%"><img width="" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png"></th>
+        <th class="title" width="40%" style="font-size: 30px;">RELACION DE GASTOS MENSUAL DE EMPLEADOS</th>
+        <td class="code text-center" width="10%">
+          <table class="rev" >
+            <tr>
+              <td colspan="2">CODIGO</td>
+            </tr>
+            <tr>
+              <td colspan="2" style="border-bottom: 1px solid gray">AUT-04</td>
+            </tr>
+            <tr>
+              <td style="border-right: 1px solid gray">VERSION</td>
+              <td>FECHA</td>
+            </tr>
+            <tr>
+              <td style="border-right: 1px solid gray">2</td>
+              <td>__de___</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </thead>
+  </table>
+ <br><br>
+
+  <table id="table" class="table-info">
+    <thead>
+        <tr>
+          <th class="">FECHA</th>
+          <th class="">NOMBRE EMPLEADO</th>
+          <th class="">AREA</th>
+          <th class="">FECHA INICIAL</th>
+          <th class="">FECHA FINAL</th>
+        </tr>
+
+        <tr>
+          <td class=""> <%= @expense_ratio.creation_date %> </td>
+          <td class=""> <%= @expense_ratio.user_report.names %> </th>
+          <td class=""> <%= @expense_ratio.area %> </td>
+          <td class=""> <%= @expense_ratio.start_date %> </td>
+          <td class=""> <%= @expense_ratio.end_date %> </td>
+        </tr>
+    </thead>
+  </table>
+
+  <br><br><br>
+
+ 
+    <table id="customers">
+        <tr>
+          <th class="title-header text-center" style=" text-align: center; width: 15%;" colspan="1">FECHA FACTURA</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">NIT / CC</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">NOMBRE</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">DESCRIPCION</th>
+          <th class="title-header text-center" style=" text-align: center; width: 20%;">CENTRO DE COSTO</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;"># FACTURA</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">TIPO</th>
+          <th class="title-header text-center" style=" text-align: center; width: 20%;">MEDIO DE PAGO</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">VALOR</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">IVA</th>
+          <th class="title-header text-center" style=" text-align: center; width: 10%;">TOTAL</th>
+          
+        </tr>
+
+        <% @report_expenses.each do |report_expense| %>
+          <tr>
+            <td style="text-align: center;"><%= report_expense.invoice_date %></td>
+            <td style="text-align: center;"><%= report_expense.type_identification %></td>
+            <td style="text-align: center;"><%= report_expense.user_invoice.names %></td>
+            <td style="text-align: center;"><%= report_expense.description %></td>
+            <td style="text-align: center;"><%= report_expense.cost_center.code %></td>
+            <td style="text-align: center;"><%= report_expense.invoice_number %></td>
+            <td style="text-align: center;"><%= report_expense.invoice_type %></td>
+            <td style="text-align: center;"><%= report_expense.payment_type %></td>
+
+            <td style="text-align: center;"><%= number_to_currency(report_expense.invoice_value, precision: 0) %></td>
+            <td style="text-align: center;"><%= number_to_currency(report_expense.invoice_tax, precision: 0) %></td>
+            <td style="text-align: center;"><%= number_to_currency(report_expense.invoice_total, precision: 0) %></td>
+          </tr>
+        <% end %>
+    </table>
+    <br><br><br>
+
+    <div class="row">
+
+      <div class="col-md-6">
+        <b>Observaciones</b>
+        <p><%= @expense_ratio.observations %></p>
+      </div>
+
+      <div class="col-md-6" style="width: 10% !important;">
+        <table id="table-total">
+        
+          <tr class="float-right">
+            <td class="text-center" style=" text-align: left; font-size: 15; font-weight: bold; width: 250px !important" colspan="1">TOTAL</td>
+            <td class="text-center" style=" text-align: left; font-size: 15"><%= 12 * 12%></td>
+          </tr>
+
+          <tr class="float-right">
+            <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">TOTAL EFECTIVO</td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12%></td>
+          </tr>
+
+          <tr class="float-right">
+            <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">ANTICIPOS A FAVOR CIA</td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12%></td>
+          </tr>
+
+          <tr class="float-right">
+            <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">VALOR A PAGAR EMPLEADO</td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12%></td>
+          </tr>
+
+        </table>
+      </div>
+    </div>
+
+    <br><br><br>
+
+    <table id="table">
+      <thead>
+        <tr>
+          <th class="title-firms" width="40%">
+            <input type="text" class="form form-control border-imput">
+            <label style="font-size: 20px;">Firma empleado</label>
+          </th>
+
+          <th class="title-firms" width="40%">
+            <input type="text" class="form form-control border-imput" value="<%= @expense_ratio.user_direction.names %>" >
+            <label style="font-size: 20px;">Nombre del director</label>
+          </th>
+
+          <th class="title-firms" width="40%">
+            <input type="text" class="form form-control border-imput">
+            <label style="font-size: 20px;">Firma director</label>
+          </th>
+        </tr>
+      </thead>
+    </table>
+</div>
+
+<style type="text/css" media="screen">
+  .title-td{
+    padding-left: 30px !important;
+  }
+
+  .info-td{
+    border-bottom: 1px solid gray;
+    width: 33%;
+    padding-right: 20px;
+  }
+
+  .table-info td{
+    font-size: 20px !important;
+    padding: 5px;
+    text-align: center;
+  }
+
+  .move{
+    position: absolute;
+    top: 1640px;
+  }
+
+  #customers {
+    border-collapse: collapse;
+    width: 1300px;
+    margin-left: 0px;
+  }
+
+  #customers td, #customers th {
+    border: 1px solid black;
+    padding: 8px;
+  }
+
+  #table-total {
+    border-collapse: collapse;
+    width: 600px;
+    margin-left: 0px;
+  }
+
+  #table-total td, #table-total th {
+    border: 1px solid black;
+    padding: 8px;
+  }
+
+  #text-show{
+    border-right: none;
+    border-top: none;
+    border-left: none;
+    width: 1300px;
+    margin-right: 15px;
+  }
+
+  #customers tr:nth-child(even){}
+
+  #customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #2a3f54;
+    color: white;
+  }
+  #table2{
+    border-collapse: collapse;
+    width: 99%;
+    margin-left: 5px;
+  }
+
+  .contenido2{
+    width: 1300px;
+    margin-left: 60px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  .contenido3{
+    width: 1300px;
+    margin-left: 5px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  .contenido3 p{
+    display: inline-block;
+  }
+
+  .contenido2 p{
+    display: inline-block;
+  }
+
+  .contenido p{
+    margin-top: 3px;
+    margin-bottom: 3px;
+  }
+
+  #table{
+    width: 1300px;
+    border-collapse: collapse;
+  }
+
+  .contenido{
+    border: 1px solid black !important;
+    padding: 10px !important;
+    width: 1300px;
+  }
+
+  #title-date{
+    border: 1px solid black !important;
+    text-align: center;
+    width: 1300px !important;
+  }
+
+  .title-header{
+    text-align: center
+  }
+
+  .text{
+    display: block;
+  }
+
+  .title{
+    padding: 20px;
+    border: 1px solid black !important;
+    text-align: center;
+    width: 30% !important;
+  }
+  
+  .title-firms{
+    padding: 20px;
+    text-align: center;
+    width: 30% !important;
+  }
+
+  .title-imagen{
+    padding: 20px;
+    border: 1px solid black !important;
+    text-align: center;
+  }
+
+  .code{
+    border: 1px solid black !important;
+    text-align: center;
+  }
+
+  .only-border{
+    border-top: 1px solid black !important; 
+  }
+  .rev td{
+    text-align: center;
+    padding: 5px;
+  }
+
+  .rev{
+    width: 100%;
+  }
+
+  .border-imput{
+      border-right: initial !important;
+      border-top: initial !important;
+      border-left: initial !important;
+      border-bottom-color: black;
+      width: 100% !important;
+  }
+
+  .marca_de_agua{
+    font-size: 144px;
+    position: absolute;
+    top: 642px;
+    left: 250px;
+    font-family: sans-serif;
+    color: rgba(228, 228, 228, 0.5803921568627451);
+  }
+
+  .row{
+    display: -webkit-box;
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .col-md-6{
+    position: relative;
+    width: 50%;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+  
+</style>

@@ -56,6 +56,9 @@ module ApplicationHelper
 
 		elsif controller == "report_expenses" && action == "indicators_expenses"
 			card = "<h1>" + " <i class='fas fa-handshake'></i> Informe de control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+
+		elsif controller == "expense_ratios" && action == "index"
+			card = "<h1>" + " <i class='fas fa-handshake'></i> Relacion de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
 			
         else
             "Proyectos"

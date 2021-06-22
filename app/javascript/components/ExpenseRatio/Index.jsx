@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FormCreate from './FormCreate'
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
+import NumberFormat from 'react-number-format';
 
 class Index extends Component {
     constructor(props) {
@@ -15,51 +16,25 @@ class Index extends Component {
             id: "",
 
             formCreate: {
-                cost_center_id: "",
-                user_invoice_id: "",
-                invoice_name: "",
-                invoice_date: "",
-                type_identification: "",
-                description: "",
-                invoice_number: "",
-                invoice_type: "",
-                payment_type: "",
-                invoice_value: "",
-                invoice_tax: "",
-                invoice_total: "",
+                creation_date: "", 
+                user_report_id: "",
+                start_date: "", 
+                end_date: "", 
+                area: "", 
+                observations: "", 
+                user_direction_id: "",
             },
 
-            selectedOptionCostCenter: {
-                cost_center_id: "",
-                label: "Centro de costo"
+            selectedOptionUserDirection: {
+                user_direction_id: "",
+                label: "Nombre del director"
             },
 
-            selectedOptionUser: {
-                user_invoice_id: "",
-                label: "Usuario"
+            selectedOptionUserReport: {
+                user_report_id: "",
+                label: "Nombre del empleado"
             },
         }
-    }
-
-    HandleChangeMoney = (e) => {
-        const value = e.target.value.replace("$", '').replace(",", '').replace(",", '').replace(",", '').replace(",", '')
-
-        this.setState({
-            formCreate: {
-                ...this.state.formCreate,
-                [e.target.name]: value,
-            }
-        },() => {
-            const total = (Number(this.state.formCreate.invoice_value) + Number(this.state.formCreate.invoice_tax))
-
-            this.setState({
-                formCreate: {
-                    ...this.state.formCreate,
-                    invoice_total: total,
-                }
-            })
-        });
-
     }
 
     toogle = (from) => {
@@ -83,22 +58,22 @@ class Index extends Component {
         }
     }
 
-    handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
+    handleChangeAutocompleteUserDirection = selectedOptionUserDirection => {
         this.setState({
-            selectedOptionCostCenter,
+            selectedOptionUserDirection,
                 formCreate: {
                     ...this.state.formCreate,
-                    cost_center_id: selectedOptionCostCenter.value
+                    user_direction_id: selectedOptionUserDirection.value
                 }
         });
     };
 
-    handleChangeAutocompleteUser = selectedOptionUser => {
+    handleChangeAutocompleteUserReport = selectedOptionUserReport => {
         this.setState({
-            selectedOptionUser,
+            selectedOptionUserReport,
                 formCreate: {
                     ...this.state.formCreate,
-                    user_invoice_id: selectedOptionUser.value
+                    user_report_id: selectedOptionUserReport.value
                 }
         });
     };
@@ -114,7 +89,7 @@ class Index extends Component {
             confirmButtonText: "Si"
         }).then(result => {
             if (result.value) {
-                fetch(`/report_expenses/${id}`, {
+                fetch(`/expense_ratios/${id}`, {
                     method: "delete",
                     headers: {
                         "X-CSRF-Token": this.token,
@@ -147,28 +122,23 @@ class Index extends Component {
             ErrorValues: true,
 
             formCreate: {
-                cost_center_id: "",
-                user_invoice_id: "",
-                invoice_name: "",
-                invoice_date: "",
-                type_identification: "",
-                description: "",
-                invoice_number: "",
-                invoice_type: "",
-                payment_type: "",
-                invoice_value: "",
-                invoice_tax: "",
-                invoice_total: "",
+                creation_date: "", 
+                user_report_id: "",
+                start_date: "", 
+                end_date: "", 
+                area: "", 
+                observations: "", 
+                user_direction_id: "",
             },
 
-            selectedOptionCostCenter: {
-                cost_center_id: "",
-                label: "Centro de costo"
+            selectedOptionUserDirection: {
+                user_direction_id: "",
+                label: "Nombre del director"
             },
 
-            selectedOptionUser: {
-                user_invoice_id: "",
-                label: "Usuario"
+            selectedOptionUserReport: {
+                user_report_id: "",
+                label: "Nombre del empleado"
             },
         })
     }
@@ -176,7 +146,7 @@ class Index extends Component {
     HandleClick = () => {
         if(this.validationForm()){
             if (!this.state.modeEdit)
-                fetch(`/report_expenses`, {
+                fetch(`/expense_ratios`, {
                     method: 'POST', // or 'PUT'
                     body: JSON.stringify(this.state.formCreate), // data can be `string` or {object}!
                     headers: {
@@ -194,7 +164,7 @@ class Index extends Component {
                     this.clearValues();
                 });
             else {
-                fetch(`/report_expenses/${this.state.id}`, {
+                fetch(`/expense_ratios/${this.state.id}`, {
                     method: 'PATCH', // or 'PUT'
                     body: JSON.stringify(this.state.formCreate), // data can be `string` or {object}!
                     headers: {
@@ -224,36 +194,31 @@ class Index extends Component {
         })
     }
 
-    edit = (report_expense) => {
+    edit = (expense_ratio) => {
         this.setState({
             modeEdit: true,
             modal: true,
-            id: report_expense.id,
+            id: expense_ratio.id,
 
             formCreate: {
                 ...this.state.formCreate,
-                cost_center_id: report_expense.cost_center != null ? report_expense.cost_center.id : "",
-                user_invoice_id: report_expense.user_invoice != null ? report_expense.user_invoice.id : "",
-                invoice_name: report_expense.invoice_name,
-                invoice_date: report_expense.invoice_date,
-                type_identification: report_expense.type_identification,
-                description: report_expense.description,
-                invoice_number: report_expense.invoice_number,
-                invoice_type: report_expense.invoice_type,
-                payment_type: report_expense.payment_type,
-                invoice_value: report_expense.invoice_value,
-                invoice_tax: report_expense.invoice_tax,
-                invoice_total: report_expense.invoice_total,
+                creation_date: expense_ratio.creation_date, 
+                user_report_id: expense_ratio.user_report_id,
+                start_date: expense_ratio.start_date, 
+                end_date: expense_ratio.end_date, 
+                area: expense_ratio.area, 
+                observations: expense_ratio.observations, 
+                user_direction_id: expense_ratio.user_direction_id,
             },
 
-            selectedOptionCostCenter: {
-                cost_center_id: `${report_expense.cost_center != null ? report_expense.cost_center.id : ""}`,
-                label: `${report_expense.cost_center != null ? report_expense.cost_center.code : "Centro de costo"}`
+            selectedOptionUserDirection: {
+                cost_center_id: `${expense_ratio.user_direction != null ? expense_ratio.user_direction.id : ""}`,
+                label: `${expense_ratio.user_direction != null ? expense_ratio.user_direction.names : "Nombre del director"}`
             },
 
-            selectedOptionUser: {
-                user_invoice_id: `${report_expense.user_invoice != null ? report_expense.cost_center.id : ""}`,
-                label: `${report_expense.user_invoice != null ? report_expense.user_invoice.name : "Usuario"}`
+            selectedOptionUserReport: {
+                user_invoice_id: `${expense_ratio.user_report != null ? expense_ratio.user_report.id : ""}`,
+                label: `${expense_ratio.user_report != null ? expense_ratio.user_report.names : "Nombre del empleado"}`
             },
         })
     }
@@ -268,24 +233,22 @@ class Index extends Component {
                         backdrop={"static"}
                         modal={this.state.modal}
                         toggle={this.toogle}
-                        title={this.state.modeEdit ? "Actualizar control de gasto" : "Crear control de gasto"}
+                        title={this.state.modeEdit ? "Actualizar relación de gasto" : "Crear relación de gasto"}
                         nameBnt={this.state.modeEdit ? "Actualizar" : "Añadir"}
 
                         //form props
                         formValues={this.state.formCreate}
                         submitForm={this.HandleClick}
                         onChangeForm={this.HandleChange}
-                        onChangeFormMoney={this.HandleChangeMoney}
                         errorValues={this.state.ErrorValues}
 
                         //select values
 
-                        handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
-                        selectedOptionCostCenter={this.state.selectedOptionCostCenter}
-                        cost_centers={this.props.cost_centers}
+                        handleChangeAutocompleteUserDirection={this.handleChangeAutocompleteUserDirection}
+                        selectedOptionUserDirection={this.state.selectedOptionUserDirection}
 
-                        handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
-                        selectedOptionUser={this.state.selectedOptionUser}
+                        handleChangeAutocompleteUserReport={this.handleChangeAutocompleteUserReport}
+                        selectedOptionUserReport={this.state.selectedOptionUserReport}
                         users={this.props.users}
                     />
                 )}
@@ -298,25 +261,17 @@ class Index extends Component {
                                 <div className="col-md-7"></div>
                                 <div className="col-md-5 text-right mb-3">
 
-                                    {true && (
-                                        <a 
-                                            className="btn btn-secondary ml-3"
-                                            href={`/indicators_expenses`}
-                                            target="_blank"
+                                    {false && (
+                                        <button 
+                                            className="btn btn-primary ml-3"
+                                            onClick={() => this.props.filter(true)}
                                         >
-                                            Informes de gastos
-                                        </a>   
-                                    )} 
-
-                                    <button 
-                                        className="btn btn-primary ml-3"
-                                        onClick={() => this.props.filter(true)}
-                                    >
-                                        Filtros
-                                    </button>   
+                                            Filtros
+                                        </button> 
+                                    )}  
 
                                     
-                                    {this.props.estados.create && (
+                                    {false && (
                                         <button 
                                             className="btn btn-secondary ml-3"
                                             onClick={() => this.toogle("new")}
@@ -329,31 +284,26 @@ class Index extends Component {
                             </div>
 
                             <div className="tile-body">
-                                <div className="content-table">
-                                <table className="table table-hover table-bordered table-width" id="sampleTable" >
+                                <div className=""> {/* content-table */}
+                                <table className="table table-hover table-bordered" id="sampleTable" > {/*  table-width */}
                                     <thead>
                                         <tr>
-                                            <th className="text-center">Acciones</th>
-                                            <th>Centro de costo</th>
-                                            <th>Usuario</th>
-                                            <th>Nombre factura</th>
-                                            <th>Fecha de factura</th>
-                                            <th>NIT / CEDULA</th>
-                                            <th>Descripcion</th>
-                                            <th>Numero de factura</th>
-                                            <th>Tipo de factura</th>
-                                            <th>Tipo de pago</th>
-                                            <th>Valor del pago</th>
-                                            <th>Impuesto a la factura</th>
-                                            <th>Total</th>
+                                            <th className="text-left">Acciones</th>
+                                            <th>Nombre del director</th>
+                                            <th>Nombre del empleado</th>
+                                            <th>Area</th>
+                                            <th>Fecha de creación</th>
+                                            <th>Fecha inicial</th>
+                                            <th>Fecha final</th>
+                                            <th>Observaciones</th>
                                         </tr>
                                     </thead>
 
                                     <tbody>
                                         {this.props.data.length >= 1 ? (
-                                            this.props.data.map(accion => (
-                                                <tr key={accion.id}>
-                                                    {(this.props.estados.delete || this.props.estados.edit) && (
+                                            this.props.data.map(expense_ratio => (
+                                                <tr key={expense_ratio.id}>
+                                                    {(true || true) && (
                                                         <td className="text-right" style={{ width: "10px"}}>          
                                                             <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
                                                                 <div className="btn-group" role="group">
@@ -363,16 +313,22 @@ class Index extends Component {
                                                                     
                                                                     <div className="dropdown-menu dropdown-menu-right">
 
-                                                                        {this.props.estados.edit && (
-                                                                            <button onClick={() => this.edit(accion)} className="dropdown-item">
+                                                                        {true && (
+                                                                            <button onClick={() => this.edit(expense_ratio)} className="dropdown-item">
                                                                                 Editar
                                                                             </button>
                                                                         )}
 
-                                                                        {this.props.estados.delete && (
-                                                                            <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                                                                        {true && (
+                                                                            <button onClick={() => this.delete(expense_ratio.id)} className="dropdown-item">
                                                                                 Eliminar
                                                                             </button>
+                                                                        )}
+
+                                                                        {true && (
+                                                                            <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="dropdown-item">
+                                                                                Ver informe en pdf
+                                                                            </a>
                                                                         )}
 
                                                                     </div>
@@ -381,18 +337,13 @@ class Index extends Component {
                                                         </td>
                                                     )}
 
-                                                    <td>{accion.cost_center.code}</td>
-                                                    <td>{accion.user_invoice.name}</td>
-                                                    <td>{accion.invoice_name}</td>
-                                                    <td>{accion.invoice_date}</td>
-                                                    <td>{accion.type_identification}</td>
-                                                    <td>{accion.description}</td>
-                                                    <td>{accion.invoice_number}</td>
-                                                    <td>{accion.invoice_type}</td>
-                                                    <td>{accion.payment_type}</td>
-                                                    <td>{accion.invoice_value}</td>
-                                                    <td>{accion.invoice_tax}</td>
-                                                    <td>{accion.invoice_total}</td>
+                                                    <td>{expense_ratio.user_direction.names}</td>
+                                                    <td>{expense_ratio.user_report.names}</td>
+                                                    <td>{expense_ratio.area}</td>
+                                                    <td>{expense_ratio.creation_date}</td>
+                                                    <td>{expense_ratio.start_date}</td>
+                                                    <td>{expense_ratio.end_date}</td>
+                                                    <td>{expense_ratio.observations}</td>
                                                 </tr>
                                             ))
                                         ) : (
