@@ -106,7 +106,7 @@ class ExpenseRatioIndex extends Component {
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true, isFiltering: true })
-        fetch(`/get_expense_ratios?user_direction_id=${this.state.formFilter.user_direction_id}&user_report_id=${this.state.formFilter.user_report_id}&creation_date=${this.state.formFilter.creation_date}`, {
+        fetch(`/get_expense_ratios?user_direction_id=${this.state.formFilter.user_direction_id}&user_report_id=${this.state.formFilter.user_report_id}&observations=${this.state.formFilter.observations}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&creation_date=${this.state.formFilter.creation_date}&area=${this.state.formFilter.area}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,

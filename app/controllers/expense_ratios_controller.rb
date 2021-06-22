@@ -22,7 +22,12 @@ class ExpenseRatiosController < ApplicationController
     end
 
     def get_expense_ratios
-        expense_ratios = ExpenseRatio.all
+        if params[:user_direction_id] || params[:user_report_id] || params[:observations] || params[:start_date] || params[:end_date] || params[:creation_date] || params[:area] 
+            expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
+        else
+            expense_ratios = ExpenseRatio.all
+        end
+
         render json: {
           data: ActiveModelSerializers::SerializableResource.new(expense_ratios, each_serializer: ExpenseRatioSerializer),
         }   
