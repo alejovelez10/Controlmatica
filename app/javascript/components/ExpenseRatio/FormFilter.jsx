@@ -45,12 +45,56 @@ class FormFilter extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-3 mb-3">
+                                    <div className="col-md-3">
+                                        <label>Observaciones </label>
+                                        <input
+                                            type="text"
+                                            name="observations"
+                                            value={this.props.formValues.observations}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control mb-3 ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                        />
+                                    </div>
+
+                                    <div className="col-md-3">
+                                        <label>Fecha inicial </label>
+                                        <input
+                                            type="date"
+                                            name="start_date"
+                                            value={this.props.formValues.start_date}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                        />
+                                    </div>
+
+                                    <div className="col-md-3 mt-3">
+                                        <label>Fecha final </label>
+                                        <input
+                                            type="date"
+                                            name="end_date"
+                                            value={this.props.formValues.end_date}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                        />
+                                    </div>
+
+                                    <div className="col-md-3 mt-3">
                                         <label>Fecha de creación </label>
                                         <input
                                             type="date"
                                             name="creation_date"
                                             value={this.props.formValues.creation_date}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        />
+                                    </div>
+
+                                    <div className="col-md-3 mt-3">
+                                        <label>Area </label>
+                                        <input
+                                            type="text"
+                                            name="area"
+                                            value={this.props.formValues.area}
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control`}
                                         />

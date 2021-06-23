@@ -271,7 +271,7 @@ class Index extends Component {
                                     )}  
 
                                     
-                                    {false && (
+                                    {true && (
                                         <button 
                                             className="btn btn-secondary ml-3"
                                             onClick={() => this.toogle("new")}
@@ -289,6 +289,7 @@ class Index extends Component {
                                     <thead>
                                         <tr>
                                             <th className="text-left">Acciones</th>
+                                            <th className="text-left">Pdf</th>
                                             <th>Nombre del director</th>
                                             <th>Nombre del empleado</th>
                                             <th>Area</th>
@@ -325,18 +326,17 @@ class Index extends Component {
                                                                             </button>
                                                                         )}
 
-                                                                        {true && (
-                                                                            <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="dropdown-item">
-                                                                                Ver informe en pdf
-                                                                            </a>
-                                                                        )}
-
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                     )}
 
+                                                    <td>
+                                                        <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="btn">
+                                                            <i className="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    </td>
                                                     <td>{expense_ratio.user_direction.names}</td>
                                                     <td>{expense_ratio.user_report.names}</td>
                                                     <td>{expense_ratio.area}</td>
