@@ -333,7 +333,9 @@ class Index extends Component {
                                 <table className="table table-hover table-bordered table-width" id="sampleTable" >
                                     <thead>
                                         <tr>
-                                            <th className="text-center">Acciones</th>
+                                            {(this.props.estados.delete || this.props.estados.edit) && (
+                                                <th className="text-center">Acciones</th>
+                                            )}
                                             <th>Centro de costo</th>
                                             <th>Usuario</th>
                                             <th>Nombre factura</th>

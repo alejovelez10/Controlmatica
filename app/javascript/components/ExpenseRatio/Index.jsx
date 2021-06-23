@@ -271,7 +271,7 @@ class Index extends Component {
                                     )}  
 
                                     
-                                    {true && (
+                                    {this.props.estados.create && (
                                         <button 
                                             className="btn btn-secondary ml-3"
                                             onClick={() => this.toogle("new")}
@@ -288,8 +288,14 @@ class Index extends Component {
                                 <table className="table table-hover table-bordered" id="sampleTable" > {/*  table-width */}
                                     <thead>
                                         <tr>
-                                            <th className="text-left">Acciones</th>
-                                            <th className="text-left">Pdf</th>
+                                            {(this.props.estados.delete || this.props.estados.edit) && (
+                                                <th className="text-left">Acciones</th>
+                                            )}
+
+                                            {this.props.estados.pdf && (
+                                                <th className="text-left">Pdf</th>
+                                            )}
+
                                             <th>Nombre del director</th>
                                             <th>Nombre del empleado</th>
                                             <th>Area</th>
@@ -304,7 +310,7 @@ class Index extends Component {
                                         {this.props.data.length >= 1 ? (
                                             this.props.data.map(expense_ratio => (
                                                 <tr key={expense_ratio.id}>
-                                                    {(true || true) && (
+                                                    {(this.props.estados.delete || this.props.estados.edit) && (
                                                         <td className="text-right" style={{ width: "10px"}}>          
                                                             <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
                                                                 <div className="btn-group" role="group">
@@ -314,13 +320,13 @@ class Index extends Component {
                                                                     
                                                                     <div className="dropdown-menu dropdown-menu-right">
 
-                                                                        {true && (
+                                                                        {this.props.estados.edit && (
                                                                             <button onClick={() => this.edit(expense_ratio)} className="dropdown-item">
                                                                                 Editar
                                                                             </button>
                                                                         )}
 
-                                                                        {true && (
+                                                                        {this.props.estados.delete && (
                                                                             <button onClick={() => this.delete(expense_ratio.id)} className="dropdown-item">
                                                                                 Eliminar
                                                                             </button>
@@ -332,11 +338,14 @@ class Index extends Component {
                                                         </td>
                                                     )}
 
-                                                    <td>
-                                                        <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="btn">
-                                                            <i className="fas fa-file-pdf"></i>
-                                                        </a>
-                                                    </td>
+                                                    {this.props.estados.pdf && (
+                                                        <td>
+                                                            <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="btn">
+                                                                <i className="fas fa-file-pdf"></i>
+                                                            </a>
+                                                        </td>
+                                                    )}
+                                                    
                                                     <td>{expense_ratio.user_direction.names}</td>
                                                     <td>{expense_ratio.user_report.names}</td>
                                                     <td>{expense_ratio.area}</td>

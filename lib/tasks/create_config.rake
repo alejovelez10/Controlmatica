@@ -146,5 +146,27 @@ namespace :create_config do
         end
 
 
+        report_expense = ModuleControl.create(name: "Gastos", user_id: user.id)
+
+        if report_expense
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: report_expense.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: report_expense.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: report_expense.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: report_expense.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: report_expense.id, user_id: user.id)
+        end
+
+        expense_ratio = ModuleControl.create(name: "Relación de gastos", user_id: user.id)
+
+        if expense_ratio
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Ver pdf", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: expense_ratio.id, user_id: user.id)
+        end
+
+
     end
 end

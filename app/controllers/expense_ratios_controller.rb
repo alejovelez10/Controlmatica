@@ -3,7 +3,19 @@ class ExpenseRatiosController < ApplicationController
     before_action :expense_ratio_find, only: [:update, :destroy, :pdf]
 
     def index
-  
+        expense_ratio = ModuleControl.find_by_name("Relación de gastos")
+
+        create = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Crear").exists?
+        edit = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Editar").exists?
+        delete = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Eliminar").exists?
+        pdf = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Ver pdf").exists?
+    
+        @estados = {      
+          create: (current_user.rol.name == "Administrador" ? true : create),
+          edit: (current_user.rol.name == "Administrador" ? true : edit),
+          delete: (current_user.rol.name == "Administrador" ? true : delete),
+          pdf: (current_user.rol.name == "Administrador" ? true : pdf),
+        }
     end
 
     def pdf
@@ -21,11 +33,23 @@ class ExpenseRatiosController < ApplicationController
         end
     end
 
+
     def get_expense_ratios
+        expense_ratio = ModuleControl.find_by_name("Relación de gastos")
+        show_all = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Ver todos").exists?
+        
         if params[:user_direction_id] || params[:user_report_id] || params[:observations] || params[:start_date] || params[:end_date] || params[:creation_date] || params[:area] 
-            expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
+            if show_all || current_user.rol.name == "Administrador"
+                expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
+            else
+                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
+            end
         else
-            expense_ratios = ExpenseRatio.all
+            if show_all || current_user.rol.name == "Administrador"
+                expense_ratios = ExpenseRatio.all
+            else
+                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id)
+            end
         end
 
         render json: {

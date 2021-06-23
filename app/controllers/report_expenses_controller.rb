@@ -3,7 +3,17 @@ class ReportExpensesController < ApplicationController
     before_action :report_expense_find, only: [:update, :destroy]
 
     def index
-  
+        report_expense = ModuleControl.find_by_name("Gastos")
+
+        create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
+        edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
+        delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
+    
+        @estados = {      
+          create: (current_user.rol.name == "Administrador" ? true : create),
+          edit: (current_user.rol.name == "Administrador" ? true : edit),
+          delete: (current_user.rol.name == "Administrador" ? true : delete),
+        }
     end
 
     def indicators_expenses
@@ -12,10 +22,21 @@ class ReportExpensesController < ApplicationController
     
 
     def get_report_expenses
+        report_expense = ModuleControl.find_by_name("Gastos")
+        show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
+
         if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:type_identification] || params[:description] || params[:invoice_number] || params[:invoice_type] || params[:payment_type] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_total]
-            report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:type_identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+            if show_all || current_user.rol.name == "Administrador"
+                report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:type_identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+            else
+                report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:type_identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+            end
         else
-            report_expenses = ReportExpense.all
+            if show_all || current_user.rol.name == "Administrador"
+                report_expenses = ReportExpense.all
+            else
+                report_expenses = ReportExpense.where(user_invoice_id: current_user.id)
+            end
         end
 
         render json: {
