@@ -158,6 +158,11 @@
   width: 220% !important;
   max-width: 220% !important;
 }
+.table-width-150{
+  width: 150% !important;
+  max-width: 150% !important;
+  table-layout: fixed;
+}
 
 ::-webkit-scrollbar {
   width: 10px;

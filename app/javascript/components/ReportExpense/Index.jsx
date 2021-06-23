@@ -295,8 +295,8 @@ class Index extends Component {
                         <div className="tile">
 
                             <div className="row">
-                                <div className="col-md-7"></div>
-                                <div className="col-md-5 text-right mb-3">
+                                <div className="col-md-8"></div>
+                                <div className="col-md-4 text-right mb-3">
 
                                     {true && (
                                         <a 
@@ -338,7 +338,7 @@ class Index extends Component {
                                             <th>Usuario</th>
                                             <th>Nombre factura</th>
                                             <th>Fecha de factura</th>
-                                            <th>NIT / CEDULA</th>
+                                            <th>Tipo de identificación</th>
                                             <th>Descripcion</th>
                                             <th>Numero de factura</th>
                                             <th>Tipo de factura</th>
