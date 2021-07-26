@@ -147,7 +147,7 @@ class FormFilter extends Component {
                                     </div>
 
                                     <div className="col-md-3">
-                                        <label>Impuesto a la factura </label>
+                                        <label>IVA </label>
                                         <NumberFormat 
                                             name="invoice_tax"
                                             thousandSeparator={true} 

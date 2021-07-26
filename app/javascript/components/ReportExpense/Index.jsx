@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import FormCreate from './FormCreate'
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
+import NumberFormat from "react-number-format";
 
 class Index extends Component {
     constructor(props) {
@@ -268,7 +269,7 @@ class Index extends Component {
                         backdrop={"static"}
                         modal={this.state.modal}
                         toggle={this.toogle}
-                        title={this.state.modeEdit ? "Actualizar control de gasto" : "Crear control de gasto"}
+                        title={this.state.modeEdit ? "Actualizar Gasto" : "Crear Gasto"}
                         nameBnt={this.state.modeEdit ? "Actualizar" : "Añadir"}
 
                         //form props
@@ -330,21 +331,21 @@ class Index extends Component {
 
                             <div className="tile-body">
                                 <div className="content-table">
-                                <table className="table table-hover table-bordered table-width" id="sampleTable" >
-                                    <thead>
+                                <table className="table table-hover table-bordered table-width-150" id="sampleTable" >
+                                <thead>
                                         <tr>
-                                            <th className="text-center">Acciones</th>
+                                            <th className="text-center" style={{width:"60px"}}></th>
                                             <th>Centro de costo</th>
-                                            <th>Usuario</th>
-                                            <th>Nombre factura</th>
+                                            <th>Responsable</th>
+                                            <th>Nombre</th>
                                             <th>Fecha de factura</th>
-                                            <th>Tipo de identificación</th>
-                                            <th>Descripcion</th>
+                                            <th>NIT / CEDULA</th>
+                                            <th style={{width:"300px"}}>Descripcion</th>
                                             <th>Numero de factura</th>
                                             <th>Tipo de factura</th>
                                             <th>Tipo de pago</th>
                                             <th>Valor del pago</th>
-                                            <th>Impuesto a la factura</th>
+                                            <th>IVA</th>
                                             <th>Total</th>
                                         </tr>
                                     </thead>
@@ -390,9 +391,9 @@ class Index extends Component {
                                                     <td>{accion.invoice_number}</td>
                                                     <td>{accion.invoice_type}</td>
                                                     <td>{accion.payment_type}</td>
-                                                    <td>{accion.invoice_value}</td>
-                                                    <td>{accion.invoice_tax}</td>
-                                                    <td>{accion.invoice_total}</td>
+                                                    <td><NumberFormat value={accion.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                    <td><NumberFormat value={accion.invoice_tax} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                    <td><NumberFormat value={accion.invoice_total} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                 </tr>
                                             ))
                                         ) : (

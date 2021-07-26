@@ -29,7 +29,7 @@ class FormCreate extends Component {
                                             name="user_direction_id"
                                             value={this.props.selectedOptionUserDirection.user_direction_id}
                                         />                                                        
-                                        <label>Nombre del director </label>
+                                        <label>Nombre director </label>
                                         <Select
                                             onChange={this.props.handleChangeAutocompleteUserDirection}
                                             options={this.props.users}

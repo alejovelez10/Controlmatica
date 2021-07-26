@@ -80,7 +80,7 @@ class FormCreate extends Component {
                                     </div>
 
 
-                                    <div className="col-md-4  mb-3 mt-3">
+                                    <div className="col-md-8  mb-3 mt-3">
                                         <label>Nombre</label>
                                         <input
                                             type="text"
@@ -94,7 +94,8 @@ class FormCreate extends Component {
 
                                     <div className="col-md-12 mb-3 mt-3">
                                         <label>Descripción </label>
-                                        <input
+                                        <textarea
+                                            row="4"
                                             type="text"
                                             name="description"
                                             value={this.props.formValues.description}
@@ -159,7 +160,7 @@ class FormCreate extends Component {
                                     </div>
 
                                     <div className="col-md-4">
-                                        <label>Impuesto a la factura </label>
+                                        <label>IVA</label>
                                         <NumberFormat 
                                             name="invoice_tax"
                                             thousandSeparator={true} 

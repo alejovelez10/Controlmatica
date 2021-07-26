@@ -27,7 +27,7 @@ class Index extends Component {
 
             selectedOptionUserDirection: {
                 user_direction_id: "",
-                label: "Nombre del director"
+                label: "Nombre director"
             },
 
             selectedOptionUserReport: {
@@ -133,7 +133,7 @@ class Index extends Component {
 
             selectedOptionUserDirection: {
                 user_direction_id: "",
-                label: "Nombre del director"
+                label: "Nombre director"
             },
 
             selectedOptionUserReport: {
@@ -288,15 +288,15 @@ class Index extends Component {
                                 <table className="table table-hover table-bordered" id="sampleTable" > {/*  table-width */}
                                     <thead>
                                         <tr>
-                                            <th className="text-left">Acciones</th>
-                                            <th className="text-left">Pdf</th>
-                                            <th>Nombre del director</th>
-                                            <th>Nombre del empleado</th>
+                                            <th className="text-left" style={{width:"60px"}}></th>
+                                            <th className="text-left" style={{width:"60px"}}>Pdf</th>
+                                            <th>Nombre director</th>
+                                            <th>Nombre empleado</th>
                                             <th>Area</th>
                                             <th>Fecha de creación</th>
                                             <th>Fecha inicial</th>
                                             <th>Fecha final</th>
-                                            <th>Observaciones</th>
+                                            <th style={{width:"250px"}}>Observaciones</th>
                                         </tr>
                                     </thead>
 
@@ -334,7 +334,7 @@ class Index extends Component {
 
                                                     <td>
                                                         <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="btn">
-                                                            <i className="fas fa-file-pdf"></i>
+                                                            <i className="fas fa-file-pdf" style={{fontSize:"20px"}}></i>
                                                         </a>
                                                     </td>
                                                     <td>{expense_ratio.user_direction.names}</td>

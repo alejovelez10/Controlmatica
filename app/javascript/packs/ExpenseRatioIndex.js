@@ -136,7 +136,7 @@ class ExpenseRatioIndex extends Component {
 
             selectedOptionUserDirection: {
                 user_direction_id: "",
-                label: "Nombre del director"
+                label: "Nombre director"
             },
 
             selectedOptionUserReport: {

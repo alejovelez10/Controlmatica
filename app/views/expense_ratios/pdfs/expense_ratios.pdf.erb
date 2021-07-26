@@ -51,19 +51,19 @@
   <br><br><br>
 
  
-    <table id="customers">
+    <table id="customers" style="table-layout:fixed">
         <tr>
-          <th class="title-header text-center" style=" text-align: center; width: 15%;" colspan="1">FECHA FACTURA</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">NIT / CC</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">NOMBRE</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">DESCRIPCION</th>
-          <th class="title-header text-center" style=" text-align: center; width: 20%;">CENTRO DE COSTO</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;"># FACTURA</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">TIPO</th>
-          <th class="title-header text-center" style=" text-align: center; width: 20%;">MEDIO DE PAGO</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">VALOR</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">IVA</th>
-          <th class="title-header text-center" style=" text-align: center; width: 10%;">TOTAL</th>
+          <th class="title-header text-center" style=" text-align: center;" colspan="1">FECHA FACTURA</th>
+          <th class="title-header text-center" style=" text-align: center;">NIT / CC</th>
+          <th class="title-header text-center" style=" text-align: center;">NOMBRE</th>
+          <th class="title-header text-center" style=" text-align: center;">DESCRIPCION</th>
+          <th class="title-header text-center" style=" text-align: center;">CENTRO DE COSTO</th>
+          <th class="title-header text-center" style=" text-align: center;"># FACTURA</th>
+          <th class="title-header text-center" style=" text-align: center;">TIPO</th>
+          <th class="title-header text-center" style=" text-align: center;">MEDIO DE PAGO</th>
+          <th class="title-header text-center" style=" text-align: center;" style="width: 200px">VALOR</th>
+          <th class="title-header text-center" style=" text-align: center;" style="width: 200px">IVA</th>
+          <th class="title-header text-center" style=" text-align: center;" style="width: 200px">TOTAL</th>
           
         </tr>
 
@@ -86,41 +86,42 @@
     </table>
     <br><br><br>
 
-    <div class="row">
 
-      <div class="col-md-6">
-        <b>Observaciones</b>
-        <p><%= @expense_ratio.observations %></p>
-      </div>
 
-      <div class="col-md-6" style="width: 10% !important;">
+    
+
+      <div class="col-md-12" style="width: 100% !important;position:relative">
         <table id="table-total">
         
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15; font-weight: bold; width: 250px !important" colspan="1">TOTAL</td>
-            <td class="text-center" style=" text-align: left; font-size: 15"><%= 12 * 12%></td>
+            <td class="text-center" style=" text-align: left; font-size: 15"><%= 12 * 12 %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">TOTAL EFECTIVO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12%></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12 %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">ANTICIPOS A FAVOR CIA</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12%></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12 %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">VALOR A PAGAR EMPLEADO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12%></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12 %></td>
           </tr>
 
         </table>
       </div>
-    </div>
+       <br><br><br>
+     <div class="table" style="margin-top:80px">
+        <b>Observaciones</b>
+        <p><%= @expense_ratio.observations %></p>
+      </div>
 
-    <br><br><br>
+
 
     <table id="table">
       <thead>
@@ -132,7 +133,7 @@
 
           <th class="title-firms" width="40%">
             <input type="text" class="form form-control border-imput" value="<%= @expense_ratio.user_direction.names %>" >
-            <label style="font-size: 20px;">Nombre del director</label>
+            <label style="font-size: 20px;">Nombre director</label>
           </th>
 
           <th class="title-firms" width="40%">
@@ -168,7 +169,7 @@
 
   #customers {
     border-collapse: collapse;
-    width: 1300px;
+    width: 100%;
     margin-left: 0px;
   }
 
@@ -178,8 +179,10 @@
   }
 
   #table-total {
+    position:absolute;
+    right:0px;
     border-collapse: collapse;
-    width: 600px;
+    width:400px;
     margin-left: 0px;
   }
 
@@ -239,7 +242,7 @@
   }
 
   #table{
-    width: 1300px;
+    width: 100%%;
     border-collapse: collapse;
   }
 
