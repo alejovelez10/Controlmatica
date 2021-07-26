@@ -213,7 +213,7 @@ class ExpenseRatioIndex extends Component {
                     updateItem={this.updateItem}
                     updateData={this.updateData}
                     filter={this.filter}
-
+                    estados={this.props.estados}
                     users={this.state.users}
                 />
             </React.Fragment>

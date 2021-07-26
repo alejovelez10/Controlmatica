@@ -190,29 +190,50 @@
           </li>
       <% end %>
 
-  
 
-        <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to cost_centers_path, class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Centros de costos</span>
-            <% end -%>
-          </li>
-        <% end %>
+      <% if authorization_report_expenses || authorization_expense_ratios %>
+        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Control de gastos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
+          <ul class="treeview-menu">
 
+<<<<<<< HEAD
         <% if false %>
           <li>
             <%= link_to report_expenses_path, class: "app-menu__item" do %>
               <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Control de gastos</span>
             <% end -%>
+=======
+              <% if authorization_report_expenses %>
+                <li>
+                  <%= link_to report_expenses_path, class: "app-menu__item" do %>
+                    <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Gastos</span>
+                  <% end -%>
+                </li>
+              <% end %>
+
+
+              <% if authorization_expense_ratios %>
+                <li>
+                  <%= link_to expense_ratios_path, class: "app-menu__item" do %>
+                    <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Relacion de gastos</span>
+                  <% end -%>
+                </li>
+              <% end %>
+
+            </ul>
+>>>>>>> 011f98faec82b59863e2f7874ef27686c7b5492c
           </li>
-        <% end %>
+      <% end %>
 
+  
 
+<<<<<<< HEAD
         <% if false %>
+=======
+        <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
+>>>>>>> 011f98faec82b59863e2f7874ef27686c7b5492c
           <li>
-            <%= link_to expense_ratios_path, class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Relacion de gastos</span>
+            <%= link_to cost_centers_path, class: "app-menu__item" do %>
+              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Centros de costos</span>
             <% end -%>
           </li>
         <% end %>

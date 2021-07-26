@@ -330,13 +330,24 @@ module ApplicationHelper
         end
 	end
 	
-	
-
-
 	def authorization_config
 		if authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador"
 			true
 		end
+	end
+
+	def authorization_report_expenses
+		modulo = ModuleControl.find_by_name("Gastos")
+		if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+	def authorization_expense_ratios
+		modulo = ModuleControl.find_by_name("Relación de gastos")
+		if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
 	end
 	
 
