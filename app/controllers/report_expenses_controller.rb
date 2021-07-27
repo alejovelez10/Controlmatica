@@ -45,7 +45,7 @@ class ReportExpensesController < ApplicationController
     end
     
     def create
-        report_expense = ReportExpense.create(report_expense_params)
+        report_expense = ReportExpense.create(report_expense_params_create)
         if report_expense.save
             render :json => {
                 success: "El Registro fue creado con exito!",
@@ -62,7 +62,7 @@ class ReportExpensesController < ApplicationController
     end
   
     def update
-        update_status = @report_expense.update(report_expense_params)
+        update_status = @report_expense.update(report_expense_params_update)
         if update_status
             render :json => {
                 success: "El Registro fue actualizado con exito!",
@@ -93,8 +93,12 @@ class ReportExpensesController < ApplicationController
             @report_expense = ReportExpense.find(params[:id])
         end
     
-        def report_expense_params
+        def report_expense_params_create
             defaults = { user_id: current_user.id}
             params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :type_identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total).reverse_merge(defaults)
+        end
+
+        def report_expense_params_update
+            params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :type_identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total)
         end
 end
