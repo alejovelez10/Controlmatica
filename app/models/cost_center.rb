@@ -85,7 +85,7 @@ class CostCenter < ApplicationRecord
 
   before_create :create_code
   before_update :change_state
-  before_save :change_state_cost_center
+  before_update :change_state_cost_center
 
   before_save :calculate_costo
 
