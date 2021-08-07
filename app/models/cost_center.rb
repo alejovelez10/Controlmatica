@@ -185,6 +185,7 @@ class CostCenter < ApplicationRecord
     self.displacement_hours = 0 
     self.value_displacement_hours = Parameterization.where(name: "HORA DESPLAZAMIENTO").first.money_value
     end
+
     self.invoiced_state = self.quotation_number.blank? || self.quotation_number.nil? || self.quotation_number == "" || self.quotation_number == "N/A" ? "PENDIENTE DE COTIZACION" : "PENDIENTE DE ORDEN DE COMPRA"
   end
 
@@ -290,7 +291,7 @@ class CostCenter < ApplicationRecord
             self.invoiced_state = "FACTURADO"
           elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
             self.invoiced_state = "FACTURADO PARCIAL"
-          elsif (customer_invoice <= 0)
+          elsif (customer_invoice <= 0 && !self.quotation_number.blank? && !self.quotation_number.nil?)
             if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
               self.invoiced_state = "LEGALIZADO"
             elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)

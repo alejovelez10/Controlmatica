@@ -73,7 +73,7 @@
             <td style="text-align: center;"><%= report_expense.type_identification %></td>
             <td style="text-align: center;"><%= report_expense.user_invoice.names %></td>
             <td style="text-align: center;"><%= report_expense.description %></td>
-            <td style="text-align: center;"><%= report_expense.cost_center.code %></td>
+            <td style="text-align: center;"><%= report_expense.cost_center ? report_expense.cost_center.code : ""%></td>
             <td style="text-align: center;"><%= report_expense.invoice_number %></td>
             <td style="text-align: center;"><%= report_expense.invoice_type %></td>
             <td style="text-align: center;"><%= report_expense.payment_type %></td>

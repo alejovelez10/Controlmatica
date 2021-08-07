@@ -899,9 +899,9 @@ class Show extends React.Component {
                                     ) : (
                                             <React.Fragment>
                                                 {this.props.estados.update_state == true ? (
-                                                    <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                                    <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
                                                 ) : (
-                                                    <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "CARGANDO.."}</p>
+                                                    <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
                                                 )}
                                             </React.Fragment>
                                     )}
@@ -909,27 +909,27 @@ class Show extends React.Component {
 
                                 <div className="col-md-3 text-center">
                                     <strong>Contacto</strong><br/>
-                                    <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : "CARGANDO.."}</p>
+                                    <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : "SIN INFORMACIÓN"}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Fecha de Inicio</strong><br/>
-                                    <p>{this.props.data_info.start_date != undefined ? this.props.data_info.start_date : "CARGANDO.."}</p>
+                                    <p>{this.props.data_info.start_date != undefined ? this.props.data_info.start_date : "SIN INFORMACIÓN"}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Fecha Final</strong><br/>
-                                    <p>{this.props.data_info.end_date != undefined ? this.props.data_info.end_date : "CARGANDO.."}</p>
+                                    <p>{this.props.data_info.end_date != undefined ? this.props.data_info.end_date : "SIN INFORMACIÓN"}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Numero de Cotizacion</strong><br/>
-                                    <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "CARGANDO.."}</p>
+                                    <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "SIN INFORMACIÓN"}</p>
                                 </div>
 
                                 <div className="col-md-3 text-center">
                                     <strong>Descripción</strong><br/>
-                                    <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "CARGANDO.."}</p>
+                                    <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "SIN INFORMACIÓN"}</p>
                                 </div>
                                 <div className="col-md-3 text-center">
                                     <strong>MARGEN GLOBAL</strong><br/><br/>

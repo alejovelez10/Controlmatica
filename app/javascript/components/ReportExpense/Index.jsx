@@ -333,9 +333,9 @@ class Index extends Component {
                                 <div className="content-table">
                                 <table className="table table-hover table-bordered table-width-150" id="sampleTable" >
                                 <thead>
-                                        <tr>
+                                        <tr >
                                             {(this.props.estados.delete || this.props.estados.edit) && (
-                                                <th className="text-center">Acciones</th>
+                                                <th style={{width:"80px"}} className="text-center">Acciones</th>
                                             )}
                                             <th>Centro de costo</th>
                                             <th>Responsable</th>
@@ -384,7 +384,7 @@ class Index extends Component {
                                                         </td>
                                                     )}
 
-                                                    <td>{accion.cost_center.code}</td>
+                                                    <td>{accion.cost_center ?  accion.cost_center.code : "" }</td>
                                                     <td>{accion.user_invoice.name}</td>
                                                     <td>{accion.invoice_name}</td>
                                                     <td>{accion.invoice_date}</td>
