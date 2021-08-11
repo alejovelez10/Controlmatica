@@ -20,14 +20,15 @@ class Index extends Component {
                 user_invoice_id: "",
                 invoice_name: "",
                 invoice_date: "",
-                type_identification: "",
                 description: "",
                 invoice_number: "",
+                identification: "",
                 invoice_type: "",
-                payment_type: "",
                 invoice_value: "",
                 invoice_tax: "",
                 invoice_total: "",
+                type_identification_id: "",
+                payment_type_id: "",
             },
 
             selectedOptionCostCenter: {
@@ -38,6 +39,16 @@ class Index extends Component {
             selectedOptionUser: {
                 user_invoice_id: "",
                 label: "Usuario"
+            },
+
+            selectedOptionTypeIndentification: {
+                type_identification_id: "",
+                label: ""
+            },
+
+            selectedOptionPaymentType: {
+                payment_type_id: "",
+                label: ""
             },
         }
     }
@@ -152,14 +163,15 @@ class Index extends Component {
                 user_invoice_id: "",
                 invoice_name: "",
                 invoice_date: "",
-                type_identification: "",
+                identification: "",
                 description: "",
                 invoice_number: "",
                 invoice_type: "",
-                payment_type: "",
                 invoice_value: "",
                 invoice_tax: "",
                 invoice_total: "",
+                type_identification_id: "",
+                payment_type_id: "",
             },
 
             selectedOptionCostCenter: {
@@ -170,6 +182,16 @@ class Index extends Component {
             selectedOptionUser: {
                 user_invoice_id: "",
                 label: "Usuario"
+            },
+
+            selectedOptionTypeIndentification: {
+                type_identification_id: "",
+                label: ""
+            },
+
+            selectedOptionPaymentType: {
+                payment_type_id: "",
+                label: ""
             },
         })
     }
@@ -225,6 +247,61 @@ class Index extends Component {
         })
     }
 
+    handleChangeAutocompleteReportExpenceOptionType = selectedOptionTypeIndentification => {
+        this.setState({
+            selectedOptionTypeIndentification,
+                formCreate: {
+                    ...this.state.formCreate,
+                    type_identification_id: selectedOptionTypeIndentification.value
+                }
+        });
+    }
+
+    handleChangeAutocompleteReportExpenceOptionPaymentType = selectedOptionPaymentType => {
+        this.setState({
+            selectedOptionPaymentType,
+                formCreate: {
+                    ...this.state.formCreate,
+                    payment_type_id: selectedOptionPaymentType.value
+                }
+        });
+    }
+
+    setValuesReportExpenseOption = (report_expense_option) => {
+        if(report_expense_option.category == "Tipo"){
+            let data = { label: report_expense_option.name, value: report_expense_option.id }
+            this.props.updateDataReportExpenseOptionType(data)
+
+            this.setState({
+                formCreate: {
+                    ...this.state.formCreate,
+                    type_identification_id: report_expense_option.id
+                },
+
+                selectedOptionTypeIndentification: {
+                    type_identification_id: report_expense_option.id,
+                    label: report_expense_option.name
+                },
+            })
+
+        }else{
+            let data = { label: report_expense_option.name, value: report_expense_option.id }
+            this.props.updateDataReportExpenseOptionPayment(data)
+
+            this.setState({
+                formCreate: {
+                    ...this.state.formCreate,
+                    payment_type_id: report_expense_option.id
+                },
+
+                selectedOptionPaymentType: {
+                    payment_type_id: report_expense_option.id,
+                    label: report_expense_option.name,
+                },
+            })
+        }
+    }
+
     edit = (report_expense) => {
         this.setState({
             modeEdit: true,
@@ -237,7 +314,7 @@ class Index extends Component {
                 user_invoice_id: report_expense.user_invoice != null ? report_expense.user_invoice.id : "",
                 invoice_name: report_expense.invoice_name,
                 invoice_date: report_expense.invoice_date,
-                type_identification: report_expense.type_identification,
+                identification: report_expense.identification,
                 description: report_expense.description,
                 invoice_number: report_expense.invoice_number,
                 invoice_type: report_expense.invoice_type,
@@ -245,6 +322,18 @@ class Index extends Component {
                 invoice_value: report_expense.invoice_value,
                 invoice_tax: report_expense.invoice_tax,
                 invoice_total: report_expense.invoice_total,
+                type_identification_id: report_expense.type_identification_id,
+                payment_type_id: report_expense.payment_type_id,
+            },
+
+            selectedOptionTypeIndentification: {
+                type_identification_id: `${report_expense.type_identification != null ? report_expense.type_identification.id : ""}`,
+                label: `${report_expense.type_identification != null ? report_expense.type_identification.name : ""}`,
+            },
+
+            selectedOptionPaymentType: {
+                payment_type_id: `${report_expense.payment_type != null ? report_expense.payment_type.id : ""}`,
+                label: `${report_expense.payment_type != null ? report_expense.payment_type.name : ""}`
             },
 
             selectedOptionCostCenter: {
@@ -278,6 +367,7 @@ class Index extends Component {
                         onChangeForm={this.HandleChange}
                         onChangeFormMoney={this.HandleChangeMoney}
                         errorValues={this.state.ErrorValues}
+                        setValuesReportExpenseOption={this.setValuesReportExpenseOption}
 
                         //select values
 
@@ -288,6 +378,17 @@ class Index extends Component {
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                         selectedOptionUser={this.state.selectedOptionUser}
                         users={this.props.users}
+
+                        selectedOptionTypeIndentification={this.state.selectedOptionTypeIndentification}
+                        handleChangeAutocompleteReportExpenceOptionType={this.handleChangeAutocompleteReportExpenceOptionType}
+                        report_expense_options_type={this.props.report_expense_options_type}
+                        
+                        selectedOptionPaymentType={this.state.selectedOptionPaymentType}
+                        handleChangeAutocompleteReportExpenceOptionPaymentType={this.handleChangeAutocompleteReportExpenceOptionPaymentType}
+                        report_expense_options_payment={this.props.report_expense_options_payment}
+
+                        updateDataReportExpenseOptionType={this.props.updateDataReportExpenseOptionType}
+                        updateDataReportExpenseOptionPayment={this.props.updateDataReportExpenseOptionPayment}
                     />
                 )}
 
@@ -388,11 +489,11 @@ class Index extends Component {
                                                     <td>{accion.user_invoice.name}</td>
                                                     <td>{accion.invoice_name}</td>
                                                     <td>{accion.invoice_date}</td>
-                                                    <td>{accion.type_identification}</td>
+                                                    <td>{accion.identification}</td>
                                                     <td>{accion.description}</td>
                                                     <td>{accion.invoice_number}</td>
-                                                    <td>{accion.invoice_type}</td>
-                                                    <td>{accion.payment_type}</td>
+                                                    <td>{accion.type_identification != undefined ? accion.type_identification.name : ""}</td>
+                                                    <td>{accion.payment_type != undefined ? accion.payment_type.name : ""}</td>
                                                     <td><NumberFormat value={accion.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                     <td><NumberFormat value={accion.invoice_tax} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                     <td><NumberFormat value={accion.invoice_total} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>

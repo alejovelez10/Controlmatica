@@ -25,11 +25,11 @@ class ReportExpensesController < ApplicationController
         report_expense = ModuleControl.find_by_name("Gastos")
         show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
 
-        if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:type_identification] || params[:description] || params[:invoice_number] || params[:invoice_type] || params[:payment_type] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_total]
+        if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:invoice_type] || params[:payment_type] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_total]
             if show_all || current_user.rol.name == "Administrador"
-                report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:type_identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+                report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
             else
-                report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:type_identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+                report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
             end
         else
             if show_all || current_user.rol.name == "Administrador"
@@ -95,10 +95,10 @@ class ReportExpensesController < ApplicationController
     
         def report_expense_params_create
             defaults = { user_id: current_user.id}
-            params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :type_identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total).reverse_merge(defaults)
+            params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description, :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax, :invoice_total, :type_identification_id, :payment_type_id).reverse_merge(defaults)
         end
 
         def report_expense_params_update
-            params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :type_identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total)
+            params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description, :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax, :invoice_total, :type_identification_id, :payment_type_id)
         end
 end

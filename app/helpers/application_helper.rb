@@ -59,6 +59,9 @@ module ApplicationHelper
 
 		elsif controller == "expense_ratios" && action == "index"
 			card = "<h1>" + " <i class='fas fa-handshake'></i> Relacion de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+
+		elsif controller == "report_expense_options" && action == "index"
+			card = "<h1>" + " <i class='fas fa-handshake'></i>  Tipos de Gastos " + "</h1>" + "<p>" + "Gestiona de tipos" + "</p>"
 			
         else
             "Proyectos"
@@ -345,6 +348,13 @@ module ApplicationHelper
 
 	def authorization_expense_ratios
 		modulo = ModuleControl.find_by_name("Relación de gastos")
+		if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+	def authorization_report_expense_options
+		modulo = ModuleControl.find_by_name("Tipos de Gastos")
 		if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
 			true
         end

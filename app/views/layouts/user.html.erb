@@ -191,7 +191,7 @@
       <% end %>
 
      <%#  authorization_report_expenses || authorization_expense_ratios  %>
-      <% if false  %>
+      <% if true  %>
         <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Control de gastos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
           <ul class="treeview-menu">
 
@@ -199,6 +199,14 @@
                 <li>
                   <%= link_to report_expenses_path, class: "app-menu__item" do %>
                     <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Gastos</span>
+                  <% end -%>
+                </li>
+              <% end %>
+
+              <% if authorization_report_expense_options %>
+                <li>
+                  <%= link_to report_expense_options_path, class: "app-menu__item" do %>
+                    <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Tipos de Gastos</span>
                   <% end -%>
                 </li>
               <% end %>

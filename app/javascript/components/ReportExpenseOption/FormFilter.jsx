@@ -1,30 +1,19 @@
 import React, { Component } from 'react';
-import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import Select from "react-select";
-import FormCreateExpenseOptionFromReporExpense from "../ReportExpenseOption/FormCreateExpenseOptionFromReporExpense"
 
-class FormCreate extends Component {
-
-    constructor(props){
-        super(props)
-    }
-
-    handleSubmit = e => {
-        e.preventDefault();
-    };
-
+class FormFilter extends Component {
     render() {
         return (
             <React.Fragment>
-                <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered modal-lg" backdrop={this.props.backdrop}>
-                    <ModalHeader className="title-modal" toggle={this.props.toggle}><i className="app-menu__icon fa fa-user mr-2"></i> {this.props.title}</ModalHeader>
+                <div className="row">
+                    <div className="col-md-12">
+                        <div className="tile">
 
-                        <form onSubmit={this.handleSubmit}>
-                            <ModalBody>
+                            <div className="tile-body">
                                 <div className="row">
 
-                                    <div className="col-md-4 mb-3">
+                                    <div className="col-md-3 mb-3">
                                         <input
                                             type="hidden"
                                             name="cost_center_id"
@@ -40,7 +29,7 @@ class FormCreate extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-4 mb-3">
+                                    <div className="col-md-3 mb-3">
                                         <input
                                             type="hidden"
                                             name="user_invoice_id"
@@ -55,34 +44,9 @@ class FormCreate extends Component {
                                             value={this.props.selectedOptionUser}
                                         />
                                     </div>
-                                    <div className="col-md-4 mb-3">
-                                        <label>Fecha de factura </label>
-                                        <input
-                                            type="date"
-                                            name="invoice_date"
-                                            value={this.props.formValues.invoice_date}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
 
-                                    <div className="col-md-4 mb-3 mt-3">
-                                        <label>NIT / CEDULA</label>
-                                        <select 
-                                            name="identification"
-                                            value={this.props.formValues.identification}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
-                                        >
-                                            <option value="">Selecciona un tipo</option>
-                                            <option value="NIT">NIT</option>
-                                            <option value="CC">CC</option>
-                                        </select>
-                                    </div>
-
-
-                                    <div className="col-md-8  mb-3 mt-3">
-                                        <label>Nombre</label>
+                                    <div className="col-md-3 mb-3">
+                                        <label>Nombre factura </label>
                                         <input
                                             type="text"
                                             name="invoice_name"
@@ -93,28 +57,47 @@ class FormCreate extends Component {
                                     </div>
 
 
-                                    <div className="col-md-12 mb-3 mt-3">
-                                        <label>Descripción </label>
-                                        <textarea
-                                            row="4"
-                                            type="text"
-                                            name="description"
-                                            value={this.props.formValues.description}
+                                    <div className="col-md-3 mb-3">
+                                        <label>Fecha de factura </label>
+                                        <input
+                                            type="date"
+                                            name="invoice_date"
+                                            value={this.props.formValues.invoice_date}
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
-                                    <div className="col-md-12">
-                                        <FormCreateExpenseOptionFromReporExpense 
-                                            setValuesReportExpenseOption={this.props.setValuesReportExpenseOption}
+
+                                    <div className="col-md-3 mb-3">
+                                        <label>NIT / CEDULA</label>
+                                        <select 
+                                            name="type_identification"
+                                            value={this.props.formValues.type_identification}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        >
+                                            <option value="">Selecciona un tipo</option>
+                                            <option value="NIT">NIT</option>
+                                            <option value="CC">CC</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="col-md-3 mb-3">
+                                        <label>Descripcion </label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={this.props.formValues.name}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
-                                    <div className="col-md-4 mt-3">
+                                    <div className="col-md-3 ">
                                         <label>Numero de factura </label>
                                         <input
-                                            type="text"
+                                            type="number"
                                             name="invoice_number"
                                             value={this.props.formValues.invoice_number}
                                             onChange={this.props.onChangeForm}
@@ -122,44 +105,36 @@ class FormCreate extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-4 mt-3">
+
+                                    <div className="col-md-3">
                                         <label>Tipo de factura </label>
-                                        <input
-                                            type="hidden"
-                                            name="type_identification_id"
-                                            value={this.props.selectedOptionTypeIndentification.type_identification_id}
-                                        />                                                        
-                                        <Select
-                                            onChange={this.props.handleChangeAutocompleteReportExpenceOptionType}
-                                            options={this.props.report_expense_options_type}
-                                            autoFocus={false}
-                                            className={`link-form`}
-                                            value={this.props.selectedOptionTypeIndentification}
-                                        />
+                                        <select 
+                                            name="invoice_type"
+                                            value={this.props.formValues.invoice_type}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        >
+                                            <option value="">Selecciona un tipo</option>
+                                            <option value="V1">V1</option>
+                                            <option value="V2">V2</option>
+                                        </select>
                                     </div>
 
-
-                                    <div className="col-md-4 mt-3">
+                                    <div className="col-md-3">
                                         <label>Tipo de pago </label>
-                                        <input
-                                            type="hidden"
-                                            name="payment_type_id"
-                                            value={this.props.selectedOptionPaymentType.payment_type_id}
-                                        />                                                        
-                                        <Select
-                                            onChange={this.props.handleChangeAutocompleteReportExpenceOptionPaymentType}
-                                            options={this.props.report_expense_options_payment}
-                                            autoFocus={false}
-                                            className={`link-form`}
-                                            value={this.props.selectedOptionPaymentType}
-                                        />
+                                        <select 
+                                            name="payment_type"
+                                            value={this.props.formValues.payment_type}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        >
+                                            <option value="">Selecciona un tipo</option>
+                                            <option value="V1">V1</option>
+                                            <option value="V2">V2</option>
+                                        </select>
                                     </div>
 
-                                    <div className="col-md-12">
-                                        <hr />
-                                    </div>
-
-                                    <div className="col-md-4">
+                                    <div className="col-md-3">
                                         <label>Valor del pago </label>
                                         <NumberFormat 
                                             name="invoice_value"
@@ -171,8 +146,8 @@ class FormCreate extends Component {
                                         /> 
                                     </div>
 
-                                    <div className="col-md-4">
-                                        <label>IVA</label>
+                                    <div className="col-md-3">
+                                        <label>IVA </label>
                                         <NumberFormat 
                                             name="invoice_tax"
                                             thousandSeparator={true} 
@@ -183,43 +158,42 @@ class FormCreate extends Component {
                                         /> 
                                     </div>
 
-                                    <div className="col-md-4">
+                                    <div className="col-md-3">
                                         <label>Total </label>
                                         <NumberFormat 
+                                            name="invoice_total"
                                             thousandSeparator={true} 
                                             prefix={'$'} 
                                             className={`form form-control`}
                                             value={this.props.formValues.invoice_total}
-                                            disabled
+                                            onChange={this.props.onChangeFormMoney}
                                         /> 
                                     </div>
 
-
-                                    {!this.props.errorValues && (
-                                        <div className="col-md-12 mt-4">
-                                            <div className="alert alert-danger" role="alert">
-                                                <b>Debes de completar todos los campos requerios</b>
-                                            </div>
-                                        </div>
-                                    )}
-
                                 </div>
-                            </ModalBody>
+                            </div>
 
-                            <ModalFooter>
-                                <label className="btn btn-light mt-2" onClick={() => this.props.toggle()}>Cerrar</label>
-                                <button className="btn btn-secondary"
-                                    onClick={this.props.submitForm}
-                                    style={{ color: "#ffff" }}
+                            <div className="tile-footer">
+                                <button
+                                    className="btn btn-secondary mr-3"
+                                    onClick={() => this.props.HandleClickFilter()}
                                 >
-                                    {this.props.nameBnt}
+                                    Aplicar
                                 </button>
-                            </ModalFooter>
-                        </form>
-                </Modal>
+
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={() => this.props.filter(false)}
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </React.Fragment>
         );
     }
 }
 
-export default FormCreate;
+export default FormFilter;

@@ -1,0 +1,23 @@
+# == Schema Information
+#
+# Table name: report_expense_options
+#
+#  id         :bigint           not null, primary key
+#  name       :string
+#  category   :string
+#  user_id    :integer
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  category: MyString
+  user_id: 1
+
+two:
+  name: MyString
+  category: MyString
+  user_id: 1

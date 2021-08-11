@@ -22,6 +22,8 @@ Rails.application.routes.draw do
 
   resources :module_controls
   resources :accion_modules
+  get "get_report_expense_options", to: "report_expense_options#get_report_expense_options"
+  resources :report_expense_options, :except => [:show, :edit, :new]
 
   resources :materials
   resources :contractors

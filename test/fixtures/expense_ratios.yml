@@ -1,0 +1,35 @@
+# == Schema Information
+#
+# Table name: expense_ratios
+#
+#  id                :bigint           not null, primary key
+#  creation_date     :date
+#  user_report_id    :integer
+#  start_date        :date
+#  end_date          :date
+#  area              :string
+#  observations      :text
+#  user_direction_id :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#
+
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  cration_date: 2021-06-22
+  user_report_id: 1
+  start_date: 2021-06-22
+  end_date: 2021-06-22
+  area: MyString
+  observations: MyText
+  user_direction_id: 1
+
+two:
+  cration_date: 2021-06-22
+  user_report_id: 1
+  start_date: 2021-06-22
+  end_date: 2021-06-22
+  area: MyString
+  observations: MyText
+  user_direction_id: 1

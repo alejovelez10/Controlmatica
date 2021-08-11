@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import Table from '../components/ReportExpense/Index'
-import FormFilter from '../components/ReportExpense/FormFilter';
+import Table from '../components/ReportExpenseOption/Index'
+import FormFilter from '../components/ReportExpenseOption/FormFilter';
 import WebpackerReact from 'webpacker-react';
 
-class ReportExpenseIndex extends Component {
+class ReportExpenseOptionIndex extends Component {
     constructor(props) {
         super(props);
         this.token = document.querySelector("[name='csrf-token']").content;
@@ -17,7 +17,7 @@ class ReportExpenseIndex extends Component {
                 user_invoice_id: "",
                 invoice_name: "",
                 invoice_date: "",
-                identification: "",
+                type_identification: "",
                 description: "",
                 invoice_number: "",
                 invoice_type: "",
@@ -39,14 +39,11 @@ class ReportExpenseIndex extends Component {
 
             users: [],
             cost_centers: [],
-            report_expense_options_type: [],
-            report_expense_options_payment: [],
         }
     }
 
     componentDidMount(){
         this.loadData();
-        this.configSelect();
     }
 
     updateStateLoad = (state) => {
@@ -60,23 +57,9 @@ class ReportExpenseIndex extends Component {
         })
     }
 
-    updateDataReportExpenseOptionType = (data) => {
-        this.setState({
-            report_expense_options_type: [...this.state.report_expense_options_type, data],
-        })
-    }
-
-    updateDataReportExpenseOptionPayment = (data) => {
-        this.setState({
-            report_expense_options_payment: [...this.state.report_expense_options_payment, data],
-        })
-    }
-
     configSelect = () => {
         let arrayCostCenters = [];
         let arrayUsers = [];
-        let arrayReportExpenseOptionType = [];
-        let arrayReportExpenseOptionPayment = [];
 
         this.props.cost_centers.map((item) => (
             arrayCostCenters.push({label: `${item.code}`, value: item.id})
@@ -86,19 +69,9 @@ class ReportExpenseIndex extends Component {
             arrayUsers.push({label: `${item.names}`, value: item.id})
         ))
 
-        this.props.report_expense_options.filter(item => item.category == "Tipo").map((item) => (
-            arrayReportExpenseOptionType.push({label: `${item.name}`, value: item.id})
-        ))
-
-        this.props.report_expense_options.filter(item => item.category == "Medio de pago").map((item) => (
-            arrayReportExpenseOptionPayment.push({label: `${item.name}`, value: item.id})
-        ))
-
         this.setState({
             cost_centers: arrayCostCenters,
             users: arrayUsers,
-            report_expense_options_type: arrayReportExpenseOptionType,
-            report_expense_options_payment: arrayReportExpenseOptionPayment,
         })
     }
 
@@ -108,24 +81,8 @@ class ReportExpenseIndex extends Component {
             data: this.state.data.map(item => {
             if (format.id === item.id) {
               return { ...item, 
-                cost_center_id: format.cost_center_id,
-                user_invoice_id: format.user_invoice_id,
-                invoice_name: format.invoice_name,
-                invoice_date: format.invoice_date,
-                identification: format.identification,
-                description: format.description,
-                invoice_number: format.invoice_number,
-                invoice_type: format.invoice_type,
-                payment_type: format.payment_type,
-                invoice_value: format.invoice_value,
-                invoice_tax: format.invoice_tax,
-                invoice_total: format.invoice_total,
-                cost_center: format.cost_center,
-                user_invoice: format.user_invoice,
-                payment_type: format.payment_type,
-                type_identification: format.type_identification,
-                payment_type_id: format.payment_type_id,
-                type_identification_id: format.type_identification_id,
+                name: format.name,
+                category: format.category,
               }
             }
             return item;
@@ -134,7 +91,7 @@ class ReportExpenseIndex extends Component {
     }
 
     loadData = () => {
-        fetch(`/get_report_expenses`, {
+        fetch(`/get_report_expense_options`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -153,7 +110,7 @@ class ReportExpenseIndex extends Component {
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true, isFiltering: true })
-        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&type_identification=${this.state.formFilter.type_identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&invoice_type=${this.state.formFilter.invoice_type}&payment_type=${this.state.formFilter.payment_type}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}`, {
+        fetch(`/get_report_expense_options?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&type_identification=${this.state.formFilter.type_identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&invoice_type=${this.state.formFilter.invoice_type}&payment_type=${this.state.formFilter.payment_type}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -176,7 +133,7 @@ class ReportExpenseIndex extends Component {
                 user_invoice_id: "",
                 invoice_name: "",
                 invoice_date: "",
-                identification: "",
+                type_identification: "",
                 description: "",
                 invoice_number: "",
                 invoice_type: "",
@@ -267,14 +224,9 @@ class ReportExpenseIndex extends Component {
                     updateData={this.updateData}
                     filter={this.filter}
                     estados={this.props.estados}
-                    report_expense_options_type={this.state.report_expense_options_type}
-                    report_expense_options_payment={this.state.report_expense_options_payment}
 
                     cost_centers={this.state.cost_centers}
                     users={this.state.users}
-
-                    updateDataReportExpenseOptionType={this.updateDataReportExpenseOptionType}
-                    updateDataReportExpenseOptionPayment={this.updateDataReportExpenseOptionPayment}
                 />
             </React.Fragment>
         );
@@ -282,5 +234,5 @@ class ReportExpenseIndex extends Component {
 }
 
 
-export default ReportExpenseIndex;
-WebpackerReact.setup({ ReportExpenseIndex });
+export default ReportExpenseOptionIndex;
+WebpackerReact.setup({ ReportExpenseOptionIndex });
