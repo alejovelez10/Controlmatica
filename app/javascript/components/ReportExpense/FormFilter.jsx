@@ -107,7 +107,7 @@ class FormFilter extends Component {
 
 
                                     <div className="col-md-3">
-                                        <label>Tipo de factura </label>
+                                        <label>Tipo </label>
                                         <select 
                                             name="invoice_type"
                                             value={this.props.formValues.invoice_type}
@@ -121,7 +121,7 @@ class FormFilter extends Component {
                                     </div>
 
                                     <div className="col-md-3">
-                                        <label>Tipo de pago </label>
+                                        <label>Medio de pago </label>
                                         <select 
                                             name="payment_type"
                                             value={this.props.formValues.payment_type}

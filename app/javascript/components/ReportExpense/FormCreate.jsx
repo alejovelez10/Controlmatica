@@ -123,7 +123,7 @@ class FormCreate extends Component {
                                     </div>
 
                                     <div className="col-md-4 mt-3">
-                                        <label>Tipo de factura </label>
+                                        <label>Tipo</label>
                                         <input
                                             type="hidden"
                                             name="type_identification_id"
@@ -140,7 +140,7 @@ class FormCreate extends Component {
 
 
                                     <div className="col-md-4 mt-3">
-                                        <label>Tipo de pago </label>
+                                        <label>Medio de pago </label>
                                         <input
                                             type="hidden"
                                             name="payment_type_id"

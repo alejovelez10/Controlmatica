@@ -445,8 +445,8 @@ class Index extends Component {
                                             <th>NIT / CEDULA</th>
                                             <th style={{width:"300px"}}>Descripcion</th>
                                             <th>Numero de factura</th>
-                                            <th>Tipo de factura</th>
-                                            <th>Tipo de pago</th>
+                                            <th>Tipo</th>
+                                            <th>Medio de pago</th>
                                             <th>Valor del pago</th>
                                             <th>IVA</th>
                                             <th>Total</th>
