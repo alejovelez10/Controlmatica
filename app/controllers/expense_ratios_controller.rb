@@ -39,13 +39,13 @@ class ExpenseRatiosController < ApplicationController
         show_all = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Ver todos").exists?
         
         if params[:user_direction_id] || params[:user_report_id] || params[:observations] || params[:start_date] || params[:end_date] || params[:creation_date] || params[:area] 
-            if show_all || current_user.rol.name == "Administrador"
+            if show_all
                 expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
             else
                 expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
             end
         else
-            if show_all || current_user.rol.name == "Administrador"
+            if show_all
                 expense_ratios = ExpenseRatio.all
             else
                 expense_ratios = ExpenseRatio.where(user_report_id: current_user.id)
