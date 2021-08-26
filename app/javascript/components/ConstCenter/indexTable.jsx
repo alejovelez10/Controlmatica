@@ -209,7 +209,7 @@ class indexTable extends React.Component {
   
   handlePageChange = pageNumber => {
     this.setState({ activePage: pageNumber });
-    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&descripcion=${this.state.filtering == true ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.filtering == true ? this.state.formFilter.execution_state : ""}&service_type=${this.state.filtering == true ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.filtering == true ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.filtering == true && this.state.formFilter.date_desde != undefined ? this.state.formFilter.date_desde : ""}&date_hasta=${this.state.filtering == true && this.state.formFilter.date_hasta != undefined ? this.state.formFilter.date_hasta : ""}&quotation_number=${this.state.filtering == true ? this.state.formFilter.quotation_number : ""}`) 
+    fetch(`/get_cost_centers?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&descripcion=${this.state.filtering == true ? this.state.formFilter.descripcion : "" }&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&cost_center_id=${this.state.filtering == true && this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&execution_state=${this.state.filtering == true ? this.state.formFilter.execution_state : ""}&service_type=${this.state.filtering == true ? this.state.formFilter.service_type : ""}&invoiced_state=${this.state.filtering == true ? this.state.formFilter.invoiced_state : ""}&date_desde=${this.state.filtering == true && this.state.formFilter.start_date != undefined ? this.state.formFilter.start_date : ""}&date_hasta=${this.state.filtering == true && this.state.formFilter.end_date != undefined ? this.state.formFilter.end_date : ""}&quotation_number=${this.state.filtering == true ? this.state.formFilter.quotation_number : ""}`) 
       .then(response => response.json())
       .then(data => {
         this.setState({ 
@@ -284,6 +284,7 @@ class indexTable extends React.Component {
                                 exel_values={this.state.exel_values}
                                 filtering={this.state.filtering}
                                 alerts={this.props.alerts}
+                                formFilter={this.state.formFilter}
                             />
 
                         ) : (

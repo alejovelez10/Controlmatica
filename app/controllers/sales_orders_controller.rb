@@ -52,9 +52,8 @@ class SalesOrdersController < ApplicationController
 
       format.xls do
         
-        if params[:ids] != "todos"
-          id =  params[:ids].split(",")
-          sales_orders = SalesOrder.where(id: id)
+        if params[:ids] == "filtro"
+          sales_orders = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number])
         else
           sales_orders = SalesOrder.all
         end

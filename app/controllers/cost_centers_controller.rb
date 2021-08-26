@@ -390,18 +390,16 @@ class CostCentersController < ApplicationController
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
     if validate
-      if params[:ids] != "todos"
-        id =  params[:ids].split(",")
-        centro_show = CostCenter.where(id: id)
+      if params[:ids] == "filtro"
+        centro_show = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
       else
         centro_show = CostCenter.all
       end
 
     else
 
-      if params[:ids] != "todos"
-        id =  params[:ids].split(",")
-        centro_show = Contractor.where(id: id, user_id: current_user.id)
+      if params[:ids] == "filtro"
+        centro_show = Contractor.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
       else
         centro_show = CostCenter.where(user_id: current_user.id)
       end

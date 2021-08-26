@@ -535,7 +535,7 @@ class table extends React.Component {
                         {this.props.estados.download_file && ( 
                           <a
                             className=" mr-2"
-                            href={`/download_file/sales_orders/${this.props.filtering == false ? "todos" : this.range(this.props.sales_orders_total_exel)}.xls`}
+                            href={`/download_file/sales_orders/${!this.props.filtering ? "todos.xls" : `filtro.xls?date_desde=${this.props.formFilter.date_desde}&date_hasta=${this.props.formFilter.date_hasta}&number_order=${this.props.formFilter.number_order}&cost_center_id=${this.props.formFilter.cost_center_id}&state=${this.props.formFilter.state}&description=${this.props.formFilter.description}&customer=${this.props.formFilter.customer != undefined ? this.props.formFilter.customer : ""}&number_invoice=${this.props.formFilter.number_invoice}&quotation_number=${this.props.formFilter.quotation_number != "" ? this.props.formFilter.quotation_number : ""}`}`}
                             target="_blank"
                           >
                             <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>

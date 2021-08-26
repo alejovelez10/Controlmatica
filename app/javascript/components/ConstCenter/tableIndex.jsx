@@ -723,7 +723,7 @@ getState = (user) => {
                           {this.props.estados.download_file == true && (
                             <a
                               className=" mr-2"
-                              href={`/download_file/cost_centers/${this.props.filtering == false ? "todos" : this.range(this.props.exel_values)}.xls`}
+                              href={`/download_file/cost_centers/${!this.props.filtering ? "todos.xls" : `filtro.xls?descripcion=${this.props.formFilter.descripcion}&customer_id=${this.props.formFilter.customer_id != undefined ? this.props.formFilter.customer_id : ""}&cost_center_id=${this.props.formFilter.cost_center_id != undefined ? this.props.formFilter.cost_center_id : ""}&execution_state=${this.props.formFilter.execution_state}&service_type=${this.props.formFilter.service_type}&invoiced_state=${this.props.formFilter.invoiced_state}&date_desde=${this.props.formFilter.start_date}&date_hasta=${this.props.formFilter.end_date}&quotation_number=${this.props.formFilter.quotation_number}` }`}
                               target="_blank"
                             >
                               <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>

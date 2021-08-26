@@ -230,6 +230,7 @@ class index extends React.Component {
                                 show={this.showFilter}
                                 filtering={this.state.filtering}
                                 sales_orders_total_exel={this.state.sales_orders_total_exel}
+                                formFilter={this.state.formFilter}
                             />
 
                         ) : (
