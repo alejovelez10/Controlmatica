@@ -29,6 +29,7 @@
 #  displacement_hours       :float
 #  value_displacement_hours :float
 #  update_user              :integer
+#  last_user_edited_id      :integer
 #
 
 class Report < ApplicationRecord
@@ -38,8 +39,10 @@ class Report < ApplicationRecord
   before_save :create_total
   belongs_to :report, optional: true
   belongs_to :report_execute, :class_name => "User"
+  belongs_to :last_user_edited, :class_name => "User", optional: :true
   before_create :create_code
   belongs_to :contact, optional: true
+  belongs_to :user, optional: :true
   before_create :coste_center_verify
   after_destroy :calculate_cost_destroy
   after_save :calculatate_update
@@ -120,7 +123,7 @@ class Report < ApplicationRecord
   end
 
   def create_edit_register
-
+    self.last_user_edited_id = User.current.id
     if self.customer_id_changed?
       names = []
       customers = Customer.where(id: self.customer_id_change)

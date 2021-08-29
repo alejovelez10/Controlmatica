@@ -29,6 +29,7 @@
 #  displacement_hours       :float
 #  value_displacement_hours :float
 #  update_user              :integer
+#  last_user_edited_id      :integer
 #
 
 class ReportSerializer < ActiveModel::Serializer

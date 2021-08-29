@@ -199,6 +199,17 @@ module ApplicationHelper
 		User.all
 	end
 
+	def get_users_json
+		users = User.all.order(created_at: :asc)
+		users.collect do |user|
+			{
+				:id => user.id,
+				:name => user.names,
+			}
+		end
+	end
+
+
 	def get_center_tableristas
 		CostCenter.where(service_type: "PROYECTO")
 	end

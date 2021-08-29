@@ -508,6 +508,12 @@ class table extends React.Component {
     }
   }
 
+  getDate = (date) => {
+    var d = new Date(date),
+    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+  }
+
 
   render() {
     return (
@@ -625,6 +631,8 @@ class table extends React.Component {
                     <th style={{width: "300px"}}>Descripción</th>
                     <th style={{width: "250px"}}>Estado Centro de Costo</th>
                     <th style={{width: "120px"}}>Archivo</th>
+                    <th style={{width: "168px"}}>Fecha de creacion</th>
+                    <th style={{width: "269px"}}>Fecha de la ultima actualizacion</th>
                     
                   </tr>
                 </thead>
@@ -712,6 +720,16 @@ class table extends React.Component {
                                   )}
                                 </React.Fragment>
                         </td>
+
+                        <th>
+                                                        {this.getDate(accion.created_at)} <br />
+                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                    </th>
+
+                                                    <th>
+                                                        {this.getDate(accion.updated_at)} <br />
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                    </th>
   
                   
                       

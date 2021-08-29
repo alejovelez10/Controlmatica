@@ -28,15 +28,15 @@ class MaterialsController < ApplicationController
   def get_materials
 
     if params[:filtering] == "true"
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] } })
+      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc)
 
     elsif params[:filtering] == "false"
-      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] } })
+      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       materials_total = Material.all
     else
       
-      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] } })
+      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       materials_total =  Material.all
     end
     
@@ -169,10 +169,10 @@ class MaterialsController < ApplicationController
   
 
   def create
-    valor1 = material_params["amount"].gsub('$','').gsub(',','')
+    valor1 = material_params_create["amount"].gsub('$','').gsub(',','')
     params["amount"] = valor1
 
-  	@material = Material.create(material_params)
+  	@material = Material.create(material_params_create)
       if @material.save
         recalculate_cost_center(@material.cost_center_id,"materiales")
         render :json => {
@@ -194,13 +194,13 @@ class MaterialsController < ApplicationController
   def update
 
 
-  if material_params["amount"].class.to_s != "Integer"  &&  material_params["amount"].class.to_s != "Float" 
+  if material_params_update["amount"].class.to_s != "Integer"  &&  material_params_update["amount"].class.to_s != "Float" 
       puts "asñljadñlfjadslfkñjasñjlkfdjskldsñlfal"
-      valor1 = material_params["amount"].gsub('$','').gsub(',','')
+      valor1 = material_params_update["amount"].gsub('$','').gsub(',','')
       params["amount"] = valor1
   end
 
-    if @material.update(material_params.merge!(update_user: current_user.id)) 
+    if @material.update(material_params_update.merge!(update_user: current_user.id)) 
       recalculate_cost_center(@material.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
@@ -230,7 +230,12 @@ class MaterialsController < ApplicationController
   	@material = Material.find(params[:id])
   end
 
-  def material_params
+  def material_params_create
+    defaults = { user_id: current_user.id}
+    params.permit(:provider_id, :sales_date, :sales_number, :amount, :delivery_date, :sales_state, :description, :provider_invoice_number, :provider_invoice_value, :cost_center_id, :user_id, :update_user).reverse_merge(defaults)
+  end
+
+  def material_params_update
     params.permit(:provider_id, :sales_date, :sales_number, :amount, :delivery_date, :sales_state, :description, :provider_invoice_number, :provider_invoice_value, :cost_center_id, :user_id, :update_user)
   end
 

@@ -72,8 +72,8 @@ class FormFilter extends Component {
                                     <div className="col-md-3 mb-3">
                                         <label>NIT / CEDULA</label>
                                         <select 
-                                            name="type_identification"
-                                            value={this.props.formValues.type_identification}
+                                            name="identification"
+                                            value={this.props.formValues.identification}
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control`}
                                         >
@@ -87,8 +87,8 @@ class FormFilter extends Component {
                                         <label>Descripcion </label>
                                         <input
                                             type="text"
-                                            name="name"
-                                            value={this.props.formValues.name}
+                                            name="description"
+                                            value={this.props.formValues.description}
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
                                         />
@@ -109,28 +109,30 @@ class FormFilter extends Component {
                                     <div className="col-md-3">
                                         <label>Tipo </label>
                                         <select 
-                                            name="invoice_type"
-                                            value={this.props.formValues.invoice_type}
+                                            name="type_identification_id"
+                                            value={this.props.formValues.type_identification_id}
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control`}
                                         >
                                             <option value="">Selecciona un tipo</option>
-                                            <option value="V1">V1</option>
-                                            <option value="V2">V2</option>
+                                            {this.props.report_expense_options.filter(item => item.category == "Tipo").map((item) => (
+                                                <option value={item.id} key={item.id}>{item.name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
                                     <div className="col-md-3">
                                         <label>Medio de pago </label>
                                         <select 
-                                            name="payment_type"
-                                            value={this.props.formValues.payment_type}
+                                            name="payment_type_id"
+                                            value={this.props.formValues.payment_type_id}
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control`}
                                         >
                                             <option value="">Selecciona un tipo</option>
-                                            <option value="V1">V1</option>
-                                            <option value="V2">V2</option>
+                                            {this.props.report_expense_options.filter(item => item.category == "Medio de pago").map((item) => (
+                                                <option value={item.id} key={item.id}>{item.name}</option>
+                                            ))}
                                         </select>
                                     </div>
 

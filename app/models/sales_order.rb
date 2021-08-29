@@ -2,19 +2,20 @@
 #
 # Table name: sales_orders
 #
-#  id             :bigint           not null, primary key
-#  created_date   :date
-#  order_number   :string
-#  order_value    :float
-#  state          :string
-#  order_file     :string
-#  cost_center_id :integer
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  user_id        :integer
-#  description    :text
-#  sum_invoices   :float
-#  update_user    :integer
+#  id                  :bigint           not null, primary key
+#  created_date        :date
+#  order_number        :string
+#  order_value         :float
+#  state               :string
+#  order_file          :string
+#  cost_center_id      :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  user_id             :integer
+#  description         :text
+#  sum_invoices        :float
+#  update_user         :integer
+#  last_user_edited_id :integer
 #
 
 class SalesOrder < ApplicationRecord
@@ -23,8 +24,14 @@ class SalesOrder < ApplicationRecord
   after_save :change_state_cost_center
   has_many :customer_invoices, dependent: :destroy
   after_destroy :change_state_cost_center_destroy
-  before_update :create_edit_register
+  belongs_to :user, optional: :true
+  belongs_to :last_user_edited, :class_name => "User", optional: :true
+  before_update :edit_values
 
+  def edit_values
+    puts "last_user_edited_idlast_user_edited_idlast_user_edited_idlast_user_edited_id"
+    self.last_user_edited_id = User.current.id
+  end
 
   def change_state_cost_center
     cost_center = CostCenter.find(self.cost_center_id)
@@ -106,6 +113,7 @@ class SalesOrder < ApplicationRecord
   end
 
   def create_edit_register
+    self.last_user_edited_id = User.current.id
     if self.cost_center_id_changed?
       names = []
       cost_center = CostCenter.where(id: self.cost_center_id_change)

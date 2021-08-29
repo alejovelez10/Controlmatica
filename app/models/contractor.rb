@@ -2,23 +2,26 @@
 #
 # Table name: contractors
 #
-#  id              :bigint           not null, primary key
-#  sales_number    :string
-#  sales_date      :date
-#  ammount         :float
-#  cost_center_id  :integer
-#  user_id         :integer
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  description     :text
-#  hours           :float
-#  user_execute_id :integer
-#  update_user     :integer
+#  id                  :bigint           not null, primary key
+#  sales_number        :string
+#  sales_date          :date
+#  ammount             :float
+#  cost_center_id      :integer
+#  user_id             :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  description         :text
+#  hours               :float
+#  user_execute_id     :integer
+#  update_user         :integer
+#  last_user_edited_id :integer
 #
 
 class Contractor < ApplicationRecord
   belongs_to :cost_center
   belongs_to :user_execute, :class_name => "User"
+  belongs_to :last_user_edited, :class_name => "User", optional: :true
+  belongs_to :user, optional: :true
 
   before_save :calculate_cost_total
   after_save :calculate_cost
@@ -54,6 +57,7 @@ class Contractor < ApplicationRecord
   end
 
   def create_edit_register
+    self.last_user_edited_id = User.current.id
     if self.cost_center_id_changed?
       names = []
       cost_center = CostCenter.where(id: self.cost_center_id_change)

@@ -223,6 +223,12 @@ class Index extends Component {
         })
     }
 
+    getDate = (date) => {
+        var d = new Date(date),
+        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -284,86 +290,97 @@ class Index extends Component {
                             </div>
 
                             <div className="tile-body">
-                                <div className=""> {/* content-table */}
-                                <table className="table table-hover table-bordered" id="sampleTable" > {/*  table-width */}
-                                    <thead>
-                                        <tr>
-                                            {(this.props.estados.delete || this.props.estados.edit) && (
-                                                <th className="text-left">Acciones</th>
-                                            )}
+                                <div className="content-table"> {/* content-table */}
+                                    <table className="table table-hover table-bordered" style={{ width: "256%", maxWidth: "258%" }} id="sampleTable" > {/*  table-width */}
+                                        <thead>
+                                            <tr>
+                                                {(this.props.estados.delete || this.props.estados.edit) && (
+                                                    <th className="text-left">Acciones</th>
+                                                )}
 
-                                            {this.props.estados.pdf && (
-                                                <th className="text-left">Pdf</th>
-                                            )}
+                                                {this.props.estados.pdf && (
+                                                    <th className="text-left">Pdf</th>
+                                                )}
 
-                                            <th>Nombre del director</th>
-                                            <th>Nombre del empleado</th>
-                                            <th>Area</th>
-                                            <th>Fecha de creación</th>
-                                            <th>Fecha inicial</th>
-                                            <th>Fecha final</th>
-                                            <th style={{width:"250px"}}>Observaciones</th>
-                                        </tr>
-                                    </thead>
+                                                <th>Nombre del director</th>
+                                                <th>Nombre del empleado</th>
+                                                <th>Area</th>
+                                                <th>Fecha de creación</th>
+                                                <th>Fecha inicial</th>
+                                                <th>Fecha final</th>
+                                                <th style={{width:"250px"}}>Observaciones</th>
+                                                <th style={{width: "15%"}}>Fecha de creacion</th>
+                                                <th style={{width: "15%"}}>Fecha de la ultima actualizacion</th>
+                                            </tr>
+                                        </thead>
 
-                                    <tbody>
-                                        {this.props.data.length >= 1 ? (
-                                            this.props.data.map(expense_ratio => (
-                                                <tr key={expense_ratio.id}>
-                                                    {(this.props.estados.delete || this.props.estados.edit) && (
-                                                        <td className="text-right" style={{ width: "10px"}}>          
-                                                            <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                                <div className="btn-group" role="group">
-                                                                    <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                        <i className="fas fa-bars"></i>
-                                                                    </button>
-                                                                    
-                                                                    <div className="dropdown-menu dropdown-menu-right">
+                                        <tbody>
+                                            {this.props.data.length >= 1 ? (
+                                                this.props.data.map(expense_ratio => (
+                                                    <tr key={expense_ratio.id}>
+                                                        {(this.props.estados.delete || this.props.estados.edit) && (
+                                                            <td className="text-right" style={{ width: "10px"}}>          
+                                                                <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                                    <div className="btn-group" role="group">
+                                                                        <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                            <i className="fas fa-bars"></i>
+                                                                        </button>
+                                                                        
+                                                                        <div className="dropdown-menu dropdown-menu-right">
 
-                                                                        {this.props.estados.edit && (
-                                                                            <button onClick={() => this.edit(expense_ratio)} className="dropdown-item">
-                                                                                Editar
-                                                                            </button>
-                                                                        )}
+                                                                            {this.props.estados.edit && (
+                                                                                <button onClick={() => this.edit(expense_ratio)} className="dropdown-item">
+                                                                                    Editar
+                                                                                </button>
+                                                                            )}
 
-                                                                        {this.props.estados.delete && (
-                                                                            <button onClick={() => this.delete(expense_ratio.id)} className="dropdown-item">
-                                                                                Eliminar
-                                                                            </button>
-                                                                        )}
+                                                                            {this.props.estados.delete && (
+                                                                                <button onClick={() => this.delete(expense_ratio.id)} className="dropdown-item">
+                                                                                    Eliminar
+                                                                                </button>
+                                                                            )}
 
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                    )}
+                                                            </td>
+                                                        )}
 
-                                                    {this.props.estados.pdf && (
-                                                        <td>
-                                                            <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="btn">
-                                                                <i className="fas fa-file-pdf"></i>
-                                                            </a>
-                                                        </td>
-                                                    )}
-                                                    
-                                                    <td>{expense_ratio.user_direction.names}</td>
-                                                    <td>{expense_ratio.user_report.names}</td>
-                                                    <td>{expense_ratio.area}</td>
-                                                    <td>{expense_ratio.creation_date}</td>
-                                                    <td>{expense_ratio.start_date}</td>
-                                                    <td>{expense_ratio.end_date}</td>
-                                                    <td>{expense_ratio.observations}</td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <td colSpan="13" className="text-center">
-                                                <div className="text-center mt-4 mb-4">
-                                                    <h4>No hay registros</h4>
-                                                </div>
-                                            </td>
-                                        )}
-                                    </tbody>
-                                </table>
+                                                        {this.props.estados.pdf && (
+                                                            <td>
+                                                                <a href={`/expense_ratio_pdf/${expense_ratio.id}.pdf`} target="_blank" className="btn">
+                                                                    <i className="fas fa-file-pdf"></i>
+                                                                </a>
+                                                            </td>
+                                                        )}
+                                                        
+                                                        <td>{expense_ratio.user_direction.names}</td>
+                                                        <td>{expense_ratio.user_report.names}</td>
+                                                        <td>{expense_ratio.area}</td>
+                                                        <td>{expense_ratio.creation_date}</td>
+                                                        <td>{expense_ratio.start_date}</td>
+                                                        <td>{expense_ratio.end_date}</td>
+                                                        <td>{expense_ratio.observations}</td>
+                                                        <th>
+                                                            {this.getDate(expense_ratio.created_at)} <br />
+                                                            {expense_ratio.user != undefined ? <React.Fragment> <b>Creado por: </b> {expense_ratio.user != undefined ? expense_ratio.user.names : ""} </React.Fragment> : null}
+                                                        </th>
+
+                                                        <th>
+                                                            {this.getDate(expense_ratio.updated_at)} <br />
+                                                            {expense_ratio.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {expense_ratio.last_user_edited != undefined ? expense_ratio.last_user_edited.names : ""} </React.Fragment> : null }
+                                                        </th>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <td colSpan="13" className="text-center">
+                                                    <div className="text-center mt-4 mb-4">
+                                                        <h4>No hay registros</h4>
+                                                    </div>
+                                                </td>
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>

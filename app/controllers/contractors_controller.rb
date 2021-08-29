@@ -24,15 +24,15 @@ class ContractorsController < ApplicationController
 
   def get_contractors
     if params[:filtering] == "true"
-      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] }, :user => { :only =>[:names, :id] } })
       contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc)
 
     elsif params[:filtering] == "false"
-      contractor = Contractor.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+      contractor = Contractor.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       contractor_total = Contractor.all
     else
     
-      contractor = Contractor.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] } })
+      contractor = Contractor.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       contractor_total =  Contractor.all
       
     end
@@ -146,10 +146,10 @@ class ContractorsController < ApplicationController
   end
 
   def create
-    valor1 = contractor_params["ammount"].gsub('$','').gsub(',','')
+    valor1 = contractor_params_create["ammount"].gsub('$','').gsub(',','')
     params["ammount"] = valor1
 
-  	@contractor = Contractor.create(contractor_params)
+  	@contractor = Contractor.create(contractor_params_create)
       if @contractor.save
         recalculate_cost_center(@contractor.cost_center_id, "contractor")
         render :json => {
@@ -168,13 +168,13 @@ class ContractorsController < ApplicationController
 
   def update
     if params["ammount"].present?
-      if contractor_params["ammount"].class.to_s != "Integer"
-        valor1 = contractor_params["ammount"].gsub('$','').gsub(',','')
+      if contractor_params_update["ammount"].class.to_s != "Integer"
+        valor1 = contractor_params_update["ammount"].gsub('$','').gsub(',','')
         params["ammount"] = valor1
       end
     end
 
-    if @contractor.update(contractor_params.merge!(update_user: current_user.id)) 
+    if @contractor.update(contractor_params_update.merge!(update_user: current_user.id)) 
       recalculate_cost_center(@contractor.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
@@ -202,7 +202,12 @@ class ContractorsController < ApplicationController
   	@contractor = Contractor.find(params[:id])
   end
 
-  def contractor_params
+  def contractor_params_create
+    defaults = { user_id: current_user.id}
+    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id, :update_user).reverse_merge(defaults)
+  end
+
+  def contractor_params_update
     params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id, :update_user)
   end
 end

@@ -31,6 +31,7 @@ class tableIndex extends React.Component {
           service_type: "",
           user_id: this.props.usuario.id,
           description: "",
+          user_owner_id: "",
           start_date: "",
           end_date: "",
           quotation_number: "0.0",
@@ -64,7 +65,13 @@ class tableIndex extends React.Component {
           label: "Seleccionar Contacto"
         },
 
+        selectedOptionUserOwner: {
+          user_owner_id: "",
+          label: ""
+        },
+
         dataContact: [],
+        users: [],
         clients: []
     }
 
@@ -180,6 +187,16 @@ class tableIndex extends React.Component {
     });
   };
 
+  handleChangeAutocompleteUserOwner = (selectedOptionUserOwner) => {
+    this.setState({
+      selectedOptionUserOwner,
+        form: {
+          ...this.state.form,
+          user_owner_id: selectedOptionUserOwner.value
+        }
+    });
+  }
+
 
   handleSubmit = e => {
     e.preventDefault();
@@ -195,6 +212,7 @@ class tableIndex extends React.Component {
           description: "",
           start_date: "",
           end_date: "",
+          user_owner_id: "",
           quotation_number: "",
           execution_state: "PENDIENTE",
   
@@ -239,6 +257,7 @@ class tableIndex extends React.Component {
   
           materials_value: "",
           quotation_value: "",
+          user_owner_id: "",
 
           displacement_hours: "0.0",
           value_displacement_hours: this.props.value_displacement_hours,
@@ -256,6 +275,7 @@ class tableIndex extends React.Component {
           eng_hours: "",
           viatic_value: "",
           quotation_value: "",
+          user_owner_id: "",
 
           hour_real: this.props.hours_real,
           hour_cotizada: this.props.hours_invoices,
@@ -289,6 +309,7 @@ class tableIndex extends React.Component {
           value_displacement_hours: this.props.value_displacement_hours,
   
           materials_value: "",
+          user_owner_id: "",
 
           viatic_value: "",
           quotation_value: "",
@@ -368,6 +389,11 @@ class tableIndex extends React.Component {
                 customer_id: "",
                 label: "Buscar cliente"
               },
+
+              selectedOptionUserOwner: {
+                user_owner_id: "",
+                label: ""
+              },
         
               selectedOptionContact: {
                 contact_id: "",
@@ -399,6 +425,11 @@ class tableIndex extends React.Component {
               selectedOption: {
                 customer_id: "",
                 label: "Buscar cliente"
+              },
+
+              selectedOptionUserOwner: {
+                user_owner_id: "",
+                label: ""
               },
         
               selectedOptionContact: {
@@ -504,6 +535,11 @@ class tableIndex extends React.Component {
         selectedOptionContact: {
           value: modulo.contact.customer_id,
           label: modulo.contact.name
+        },
+
+        selectedOptionUserOwner: {
+          user_owner_id: "",
+          label: ""
         },
 
         action: modulo,
@@ -649,6 +685,12 @@ alertIngCosto=(value, value2, value3)=>{
     }
 }
 
+getDate = (date) => {
+  var d = new Date(date),
+  months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+}
+
 
 getState = (user) => {
   if(this.props.estados.edit == true && this.props.usuario.id == user){
@@ -696,6 +738,12 @@ getState = (user) => {
           contacto={this.state.dataContact}
           onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
           formAutocompleteContact={this.state.selectedOptionContact}
+
+          /* AUTOCOMPLETE USERS */
+
+          formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
+          onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
+          users={this.props.users}
 
           /* ESTADOS */
 
@@ -772,6 +820,8 @@ getState = (user) => {
 
                     <th style={{ width: "250px"}}>$ Total Legalizado</th>
                     <th style={{ width: "250px"}}>$ Total Cotizado</th>
+                    <th style={{width: "250px"}}>Fecha de creacion</th>
+                    <th style={{width: "267px"}}>Fecha de la ultima actualizacion</th>
                     
                 
                   </tr>
@@ -974,6 +1024,15 @@ getState = (user) => {
                         </th>
                         <th><NumberFormat value={ this.get_sales_orders(accion.sales_orders) } displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                         <th><NumberFormat value={accion.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
+                                                    <th>
+                                                        {this.getDate(accion.created_at)} <br />
+                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                    </th>
+
+                                                    <th>
+                                                        {this.getDate(accion.updated_at)} <br />
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                    </th>
                 
                       </tr>
                     ))

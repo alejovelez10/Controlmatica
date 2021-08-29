@@ -207,11 +207,11 @@ class SalesOrdersController < ApplicationController
   # POST /sales_orders
   # POST /sales_orders.json
   def create
-    valor1 = sales_order_params["order_value"].gsub('$','').gsub(',','')
+    valor1 = sales_order_params_create["order_value"].gsub('$','').gsub(',','')
 
     params["order_value"] = valor1
 
-    @sales_order = SalesOrder.create(sales_order_params)
+    @sales_order = SalesOrder.create(sales_order_params_create)
 
     if @sales_order.save
       render :json => {
@@ -230,15 +230,15 @@ class SalesOrdersController < ApplicationController
 
   def get_sales_order
     if params[:filtering] == "true"
-      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_order = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :desc)
 
     elsif params[:filtering] == "false"
-      sales_order = SalesOrder.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_order = SalesOrder.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       sales_orders_total =  SalesOrder.all
     else
       
-      sales_order = SalesOrder.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
+      sales_order = SalesOrder.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).order(id: :desc).to_json( :include => {  :cost_center=> { :include=> :customer , :only =>[:code, :invoiced_state, :quotation_number]}, :last_user_edited => { :only =>[:names, :id] } , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       sales_orders_total = SalesOrder.all
     end
 
@@ -254,13 +254,13 @@ class SalesOrdersController < ApplicationController
   def update
 
     if params["order_value"].present?
-      if sales_order_params["order_value"].class.to_s != "Integer"
-        valor1 = sales_order_params["order_value"].gsub('$','').gsub(',','')
+      if sales_order_params_update["order_value"].class.to_s != "Integer"
+        valor1 = sales_order_params_update["order_value"].gsub('$','').gsub(',','')
         params["order_value"] = valor1
       end
     end
 
-    if @sales_order.update(sales_order_params.merge!(update_user: current_user.id)) 
+    if @sales_order.update(sales_order_params_update.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -295,7 +295,12 @@ class SalesOrdersController < ApplicationController
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
-    def sales_order_params
+    def sales_order_params_create
+      defaults = { user_id: current_user.id}
+      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id, :description, :update_user).reverse_merge(defaults)
+    end
+  
+    def sales_order_params_update
       params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id, :description, :update_user)
     end
 end

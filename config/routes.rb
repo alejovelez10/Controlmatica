@@ -30,6 +30,9 @@ Rails.application.routes.draw do
   resources :material_invoices
   resources :alerts, :except => [:show, :new, :edit]
   resources :report_expenses, :except => [:show, :new, :edit]
+  patch "update_filter_values", to: "report_expenses#update_filter_values"
+  get "download_file/report_expenses/:type", to: "report_expenses#download_file"
+  post "upload_file/report_expenses", to: "report_expenses#upload_file"
   get "indicators_expenses", to: "report_expenses#indicators_expenses"
   get "get_report_expenses", to: "report_expenses#get_report_expenses"
   resources :notification_alerts, :only => [:index]

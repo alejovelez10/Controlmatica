@@ -2,22 +2,23 @@
 #
 # Table name: customer_reports
 #
-#  id             :bigint           not null, primary key
-#  report_date    :date
-#  description    :text
-#  token          :string
-#  report_state   :string
-#  report_code    :string
-#  customer_id    :integer
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  user_id        :integer
-#  cost_center_id :integer
-#  contact_id     :integer
-#  count          :integer
-#  approve_date   :date
-#  email          :string
-#  update_user    :integer
+#  id                  :bigint           not null, primary key
+#  report_date         :date
+#  description         :text
+#  token               :string
+#  report_state        :string
+#  report_code         :string
+#  customer_id         :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  user_id             :integer
+#  cost_center_id      :integer
+#  contact_id          :integer
+#  count               :integer
+#  approve_date        :date
+#  email               :string
+#  update_user         :integer
+#  last_user_edited_id :integer
 #
 
 class CustomerReport < ApplicationRecord
@@ -26,6 +27,8 @@ class CustomerReport < ApplicationRecord
   belongs_to :cost_center, optional: true
   belongs_to :customer, optional: true
   belongs_to :contact, optional: true
+  belongs_to :last_user_edited, :class_name => "User", optional: :true
+  
   before_create :generate_token
   #after_create :send_approval_email
   before_update :create_edit_register
@@ -49,6 +52,7 @@ class CustomerReport < ApplicationRecord
   #mostrar los que tenga como responsable esa persona en reportes de cliente
 
   def create_edit_register
+    self.last_user_edited_id = User.current.id
     if self.customer_id_changed?
       names = []
       customers = Customer.where(id: self.customer_id_change)

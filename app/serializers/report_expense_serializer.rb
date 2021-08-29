@@ -21,14 +21,18 @@
 #  type_identification_id :integer
 #  payment_type_id        :integer
 #  identification         :string
+#  last_user_edited_id    :integer
+#  is_acepted             :boolean          default(FALSE)
 #
 
 class ReportExpenseSerializer < ActiveModel::Serializer
-  attributes :id, :invoice_name, :invoice_date, :identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total, :cost_center_id, :user_invoice_id, :user_invoice, :type_identification_id, :payment_type_id
+  attributes :id, :invoice_name, :invoice_date, :identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total, :cost_center_id, :user_invoice_id, :user_invoice, :type_identification_id, :payment_type_id, :updated_at, :is_acepted, :created_at
   belongs_to :cost_center, serializer: CostCenterSerializer
 
   belongs_to :type_identification, serializer: ReportExpenseOptionSerializer
   belongs_to :payment_type, serializer: ReportExpenseOptionSerializer
+  belongs_to :last_user_edited, serializer: UserSerializer
+  belongs_to :user, serializer: UserSerializer
   
   def user_invoice
     {

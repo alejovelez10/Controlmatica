@@ -15,6 +15,7 @@ class ReportsController < ApplicationController
     responsible = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver Responsables").exists?
     download_file = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Descargar excel").exists?
     edit_all = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar todos").exists?
+    viatics = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ingresar viaticos").exists?
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -22,7 +23,8 @@ class ReportsController < ApplicationController
       edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       responsible: (current_user.rol.name == "Administrador" ? true : responsible),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
+      download_file: (current_user.rol.name == "Administrador" ? true : download_file),
+      viatics: (current_user.rol.name == "Administrador" ? true : viatics)
     }
   end
 
@@ -48,26 +50,26 @@ class ReportsController < ApplicationController
         reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).order(report_date: :desc)
 
       elsif params[:filtering] == "false"
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         reports_total =  Report.all.order(report_date: :desc)
       else
         
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         reports_total =  Report.all.order(report_date: :desc)
       end
 
     else
       
       if params[:filtering] == "true"
-        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :user => { :only =>[:names, :id] } })
         reports_total = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta])
 
       elsif params[:filtering] == "false"
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         reports_total =  Report.where(report_execute_id: current_user.id)
       else
         
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         reports_total =  Report.where(report_execute_id: current_user.id)
       end
 
@@ -357,10 +359,10 @@ class ReportsController < ApplicationController
   # POST /reports.json
 
   def create
-    valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
+    valor1 = report_params_create["viatic_value"].gsub('$','').gsub(',','')
     params["viatic_value"] = valor1
     
-    @report = Report.create(report_params)
+    @report = Report.create(report_params_create)
 
       if @report.save
         recalculate_cost_center(@report.cost_center_id, "reportes")
@@ -384,13 +386,13 @@ class ReportsController < ApplicationController
   # PATCH/PUT /reports/1.json
 
   def update
-    if report_params["viatic_value"].class.to_s != "Integer" 
-      valor1 = report_params["viatic_value"].gsub('$','').gsub(',','')
+    if report_params_update["viatic_value"].class.to_s != "Integer" 
+      valor1 = report_params_update["viatic_value"].gsub('$','').gsub(',','')
       params["viatic_value"] = valor1
     end
 
     
-    if @report.update(report_params.merge!(update_user: current_user.id)) 
+    if @report.update(report_params_update.merge!(update_user: current_user.id)) 
       recalculate_cost_center(@report.cost_center_id, "reportes")
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
@@ -430,9 +432,15 @@ class ReportsController < ApplicationController
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
-    def report_params
+    def report_params_create
+      defaults = { user_id: current_user.id}
+      params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user).reverse_merge(defaults)
+    end
+  
+    def report_params_update
       params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id ,:customer_name, :contact_name, :contact_email, :contact_phone, :contact_position,:customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user)
     end
+  
 end
 
 #  displacement_hours       :float

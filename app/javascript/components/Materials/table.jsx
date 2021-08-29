@@ -500,6 +500,12 @@ class table extends React.Component {
     }
   }
 
+  getDate = (date) => {
+    var d = new Date(date),
+    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -608,7 +614,7 @@ class table extends React.Component {
                 <th style={{ width: "1%" }} className="text-center">
                   Acciones
                 </th>
-                <th style={{width:"184px"}}>Centro de costo</th>
+                <th style={{width:"253px"}}>Centro de costo</th>
                 <th style={{width:"184px"}}>Proveedor</th>
                 <th style={{width:"184px"}}># Orden</th>
                 <th style={{width:"184px"}}>Valor</th>
@@ -617,6 +623,8 @@ class table extends React.Component {
                 <th style={{width:"150px"}}>Fecha Entrega</th>
                 <th style={{width:"150px"}}>Valor Facturas</th>
                 <th style={{width:"184px"}}>Estado</th>
+                <th style={{width: "17%"}}>Fecha de creacion</th>
+                <th style={{width: "14%"}}>Fecha de la ultima actualizacion</th>
               </tr>
             </thead>
 
@@ -712,6 +720,16 @@ class table extends React.Component {
                             <p>{accion.sales_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true)} className="fas fa-pencil-alt float-right"></i> : ""} </p>
                           )} 
                     </td>
+
+                    <th>
+                                                        {this.getDate(accion.created_at)} <br />
+                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                    </th>
+
+                                                    <th>
+                                                        {this.getDate(accion.updated_at)} <br />
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                    </th>
                   </tr>
                 ))
               ) : (

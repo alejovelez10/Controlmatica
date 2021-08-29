@@ -17,7 +17,7 @@ class FormCreate extends Component {
         return (
             <React.Fragment>
                 <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered" backdrop={this.props.backdrop}>
-                    <ModalHeader toggle={this.props.toggle}><i className="app-menu__icon fa fa-user mr-2"></i> {this.props.title}</ModalHeader>
+                    <ModalHeader className="title-modal" toggle={this.props.toggle}><i className="app-menu__icon fa fa-user mr-2"></i> {this.props.title}</ModalHeader>
 
                         <form onSubmit={this.handleSubmit}>
                             <ModalBody>

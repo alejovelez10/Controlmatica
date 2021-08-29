@@ -1,6 +1,7 @@
 class ReportExpensesController < ApplicationController
     before_action :authenticate_user!
     before_action :report_expense_find, only: [:update, :destroy]
+    skip_before_action :verify_authenticity_token, only: [:upload_file]
 
     def index
         report_expense = ModuleControl.find_by_name("Gastos")
@@ -8,28 +9,30 @@ class ReportExpensesController < ApplicationController
         create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
         edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
         delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
+        closed = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cerrar gasto").exists?
     
         @estados = {      
           create: (current_user.rol.name == "Administrador" ? true : create),
           edit: (current_user.rol.name == "Administrador" ? true : edit),
           delete: (current_user.rol.name == "Administrador" ? true : delete),
+          closed: (current_user.rol.name == "Administrador" ? true : closed)
         }
     end
 
     def indicators_expenses
         @validate = (current_user.rol.name == "Administrador" ? true : false)
     end
-    
+
 
     def get_report_expenses
         report_expense = ModuleControl.find_by_name("Gastos")
         show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
 
-        if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:invoice_type] || params[:payment_type] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_total]
+        if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] ||  params[:identification] || params[:description] || params[:invoice_number] || params[:type_identification_id] || params[:payment_type_id] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_tax] || params[:invoice_total]
             if show_all
-                report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+                report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
             else
-                report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:invoice_type], params[:payment_type], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+                report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
             end
         else
             if show_all
@@ -60,6 +63,31 @@ class ReportExpensesController < ApplicationController
             }
         end
     end
+
+    def update_filter_values
+        report_expense = ModuleControl.find_by_name("Gastos")
+        show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
+
+        if show_all
+            report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+        else
+            report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+        end
+        
+        update_status = report_expenses.update(is_acepted: true)
+
+        if update_status
+            render :json => {
+                success: "Los registros fue actualizados con exito!",
+                type: "success",
+            }
+        else
+            render :json => {
+                success: "El Registro No se creo!",
+                type: "error",
+            }
+        end
+    end
   
     def update
         update_status = @report_expense.update(report_expense_params_update)
@@ -86,6 +114,157 @@ class ReportExpensesController < ApplicationController
             }
         end
     end
+
+    def upload_file
+        status_upload =  ReportExpense.import(params[:file], current_user.id)
+
+        if status_upload
+            render :json => {
+                success: "Los Archivos fueron importados con exito!",
+                type: "success",
+            }
+        else
+            render :json => {
+                success: "Los Archivos no fueron importados!",
+                type: "error",
+            }
+        end
+    end
+
+    def download_file
+        centro = ModuleControl.find_by_name("Gastos")
+        estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
+        validate = (current_user.rol.name == "Administrador" ? true : estado)
+
+        if validate
+            if params[:type] == "filtro"
+                centro_show = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+            else
+                centro_show = ReportExpense.all
+            end
+
+        else
+
+            if params[:type] == "filtro"
+                centro_show = ReportExpense.where(user_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total])
+            else
+                centro_show = ReportExpense.where(user_id: current_user.id)
+            end
+
+        end
+
+        respond_to do |format|
+
+        format.xls do
+        
+            task = Spreadsheet::Workbook.new
+            sheet = task.create_worksheet
+            
+            rows_format = Spreadsheet::Format.new color: :black,
+            weight: :normal,
+            size: 13,
+            align: :left
+
+            centro_show.each.with_index(1) do |task, i|
+        
+            position = sheet.row(i)
+            
+            sheet.row(1).default_format = rows_format    
+            position[0] = task.cost_center.present? ? task.cost_center.code : "" 
+            position[1] = task.user_invoice.names
+            position[2] = task.invoice_name
+            position[3] = task.invoice_date
+            position[4] = task.identification
+
+            position[5] = task.description
+            position[6] = task.invoice_number
+            position[7] = task.type_identification.present? ? task.type_identification.name : ""
+            position[8] = task.payment_type.present? ? task.payment_type.name : ""
+            position[9] = task.invoice_value
+            position[10] = task.invoice_tax
+            position[11] = task.invoice_total
+            
+            
+            
+            sheet.row(i).height = 25
+            sheet.column(i).width = 40
+            sheet.row(i).default_format = rows_format
+            
+            end
+            
+            
+            
+            head_format = Spreadsheet::Format.new color: :white,      
+            weight: :bold,
+            size: 12,      
+            pattern_bg_color: :xls_color_10,    
+            pattern: 2,      
+            vertical_align: :middle,      
+            align: :left
+            
+            
+            
+            position = sheet.row(0)
+            
+            position[0] = "Centro de costo"
+            position[1] = "Responsable"
+            position[2] = "Nombre"
+            position[3] = "Fecha de factura"
+            position[4] = "NIT / CEDULA"
+            position[5] = "Descripcion"
+            position[6] = "Numero de factura"
+            position[7] = "Tipo"
+            position[8] = "Medio de pago"
+            position[9] = "Valor del pago"
+            position[10] = "IVA"
+            position[11] = "Total"
+
+            
+            
+            
+            
+            
+            sheet.row(0).height = 20
+            sheet.column(0).width = 40
+            
+            
+            
+            sheet.column(1).width = 40
+            
+            sheet.column(2).width = 40
+            
+            sheet.column(3).width = 40
+            
+            sheet.column(4).width = 40
+            
+            sheet.column(5).width = 40
+            
+            sheet.column(6).width = 40
+            
+            sheet.column(7).width = 40
+            
+            sheet.column(8).width = 40
+            
+            sheet.column(9).width = 40
+            
+            sheet.column(10).width = 40
+            sheet.column(11).width = 45
+            
+            sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+            
+            
+            
+            temp_file = StringIO.new
+            
+            task.write(temp_file)
+            
+            send_data(temp_file.string, :filename => "Control_de_gastos.xls", :disposition => 'inline')
+            
+            end  
+        end
+
+    end
+
   
     private
   

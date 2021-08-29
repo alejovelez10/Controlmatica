@@ -17,6 +17,7 @@
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
 #  update_user             :integer
+#  last_user_edited_id     :integer
 #
 
 class MaterialSerializer < ActiveModel::Serializer
