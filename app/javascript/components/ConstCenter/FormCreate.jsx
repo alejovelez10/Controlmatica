@@ -454,6 +454,23 @@ class FormCreate extends React.Component {
                     /> 
                   </div>
 
+                  <div className="col-md-4 mt-3">
+                    <input
+                        type="hidden"
+                        name="user_owner_id"
+                        value={this.props.formAutocompleteUserOwner.user_owner_id}
+                      />
+                      <label>Propietario <small className="validate-label">*</small></label>
+                      <Select
+                        onChange={this.props.onChangeAutocompleteUserOwner}
+                        options={this.props.users}
+                        autoFocus={false}
+                        className={`link-form`}
+                        value={this.props.formAutocompleteUserOwner}
+                      />
+                  </div>
+
+
 
                   {/* HR */}
                     <div className="col-md-12 mt-4 mb-4">

@@ -35,12 +35,12 @@ class CustomerReportsController < ApplicationController
     
     if validate
       if params[:cost_center_id] || params[:customer_id] || params[:state]
-        customer_reports = CustomerReport.order(created_at: :desc).all.paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.order(created_at: :desc).all.paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] } })
       else
-        customer_reports = CustomerReport.order(created_at: :desc).all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.order(created_at: :desc).all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] } })
       end
     else 
-      customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+      customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] } })
     end
   
     customer_reports = JSON.parse(customer_reports)
@@ -55,30 +55,30 @@ class CustomerReportsController < ApplicationController
     if validate
 
       if params[:cost_center_id] || params[:customer_id] || params[:state]
-        customer_reports = CustomerReport.all.order(created_at: :desc).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.all.order(created_at: :desc).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         customer_reports_total = CustomerReport.all.order(created_at: :desc).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).count
 
       elsif params[:filter]
-        customer_reports = CustomerReport.all.order(created_at: :desc).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.all.order(created_at: :desc).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         customer_reports_total = CustomerReport.order(created_at: :desc).all.count
 
       else
-        customer_reports = CustomerReport.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         customer_reports_total =  CustomerReport.all.count
       end
 
     else
 
       if params[:cost_center_id] || params[:customer_id] || params[:state]
-        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         customer_reports_total = CustomerReport.where(user_id: current_user.id).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).count
 
       elsif params[:filter]
-        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         customer_reports_total = CustomerReport.where(user_id: current_user.id).count
 
       else
-        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] } })
+        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
         customer_reports_total =  CustomerReport.where(user_id: current_user.id).count
       end
 
@@ -230,7 +230,7 @@ class CustomerReportsController < ApplicationController
   # POST /customer_reports
   # POST /customer_reports.json
   def create
-    @customer_report = CustomerReport.create(customer_report_params)
+    @customer_report = CustomerReport.create(customer_report_params_create)
 
     if @customer_report.save
       render :json => {
@@ -255,7 +255,7 @@ class CustomerReportsController < ApplicationController
   # PATCH/PUT /customer_reports/1
   # PATCH/PUT /customer_reports/1.json
   def update
-    if @customer_report.update(customer_report_params.merge!(update_user: current_user.id)) 
+    if @customer_report.update(customer_report_params_update.merge!(update_user: current_user.id)) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         type: "success"
@@ -333,7 +333,13 @@ class CustomerReportsController < ApplicationController
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.
-  def customer_report_params
+
+  def customer_report_params_create
+    defaults = { user_id: current_user.id}
+    params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :email, :update_user, :report_ids => []).reverse_merge(defaults)
+  end
+
+  def customer_report_params_update
     params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :email, :update_user, :report_ids => [])
   end
 end

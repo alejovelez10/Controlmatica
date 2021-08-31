@@ -512,56 +512,64 @@ class table extends React.Component {
     }
   }
 
+  getDate = (date) => {
+    var d = new Date(date),
+    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+  }
 
 
   render() {
     return (
       <React.Fragment>
 
-        <FormCreate
-          toggle={this.toggle}
-          backdrop={this.state.backdrop}
-          modal={this.state.modal}
+        {this.state.modal && (
+          <FormCreate
+              toggle={this.toggle}
+              backdrop={this.state.backdrop}
+              modal={this.state.modal}
 
-          onChangeForm={this.handleChange}
-          formValues={this.state.form}
-          submit={this.HandleClick}
-          FormSubmit={this.handleSubmit}
-          titulo={this.state.title}
-          nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
-          errorValues={this.state.ErrorValues}
-          users={this.props.users}
+              onChangeForm={this.handleChange}
+              formValues={this.state.form}
+              submit={this.HandleClick}
+              FormSubmit={this.handleSubmit}
+              titulo={this.state.title}
+              nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
+              errorValues={this.state.ErrorValues}
+              users={this.props.users}
 
-          /* CONTACT FORM */
-          
-          formContactValues={this.state.formContact}
-          FormSubmitContact={this.HandleClickContact}
-          create_state={this.state.state_create}
-          errorValuesContact={this.state.ErrorValuesContact}
-          onChangeFormContact={this.handleChangeContact}
+              /* CONTACT FORM */
+              
+              formContactValues={this.state.formContact}
+              FormSubmitContact={this.HandleClickContact}
+              create_state={this.state.state_create}
+              errorValuesContact={this.state.ErrorValuesContact}
+              onChangeFormContact={this.handleChangeContact}
 
-          /* AUTOCOMPLETE CLIENTE */
+              /* AUTOCOMPLETE CLIENTE */
 
-          clientes={this.state.clients}
-          onChangeAutocomplete={this.handleChangeAutocomplete}
-          formAutocomplete={this.state.selectedOption}
+              clientes={this.state.clients}
+              onChangeAutocomplete={this.handleChangeAutocomplete}
+              formAutocomplete={this.state.selectedOption}
 
-           /* AUTOCOMPLETE CONTACTO */
+              /* AUTOCOMPLETE CONTACTO */
 
-          contacto={this.state.dataContact}
-          onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
-          formAutocompleteContact={this.state.selectedOptionContact}
+              contacto={this.state.dataContact}
+              onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+              formAutocompleteContact={this.state.selectedOptionContact}
 
-          /* AUTOCOMPLETE CENTRO DE COSTO */
+              /* AUTOCOMPLETE CENTRO DE COSTO */
 
-          centro={this.state.dataCostCenter}
-          onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
-          formAutocompleteCentro={this.state.selectedOptionCentro}
+              centro={this.state.dataCostCenter}
+              onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+              formAutocompleteCentro={this.state.selectedOptionCentro}
 
-          rol={this.props.rol}
-          estados={this.props.estados}
+              rol={this.props.rol}
+              estados={this.props.estados}
 
-        />
+            />          
+        )}
+
 
 
         <div className="row mb-4">
@@ -599,21 +607,23 @@ class table extends React.Component {
 
         <div className="content-table">
 
-        <table className="table table-hover table-bordered" style={{width:"2100px",maxWidth:"2100px"}} id="sampleTable">
+        <table className="table table-hover table-bordered" style={{ width: "256%", maxWidth: "258%" }} id="sampleTable">
           <thead>
             <tr className="tr-title">
               <th style={{width: "60px"}} className="text-center">Acciones</th>
-              <th style={{width: "150px"}}>Codigo</th>
-              <th style={{width: "150px"}}>Centro de Costos</th>
-              <th style={{width: "150px"}}>Cliente</th>
-              <th style={{width: "150px"}}>Fecha de Ejecucion</th>
-              <th style={{width: "150px"}}>Responsable Ejecucion</th>
-              <th style={{width: "150px"}}>Horas Laboradas</th>
-              <th style={{width: "370px"}}>Descripcion del Trabajo</th>
-              <th style={{width: "300px"}}>Valor de los Viaticos</th>
-              <th style={{width: "150px"}}>Descripcion de Viaticos</th>
-              <th style={{width: "150px"}}>Valor del Reporte</th>
-              <th style={{width: "100px"}}>Estado</th>
+              <th style={{width: "8%"}}>Codigo</th>
+              <th style={{width: "8%"}}>Centro de Costos</th>
+              <th style={{width: "8%"}}>Cliente</th>
+              <th style={{width: "8%"}}>Fecha de Ejecucion</th>
+              <th style={{width: "9%"}}>Responsable Ejecucion</th>
+              <th style={{width: "8%"}}>Horas Laboradas</th>
+              <th style={{width: "11%"}}>Descripcion del Trabajo</th>
+              <th style={{width: "10%"}}>Valor de los Viaticos</th>
+              <th style={{width: "9%"}}>Descripcion de Viaticos</th>
+              <th style={{width: "8%"}}>Valor del Reporte</th>
+              <th style={{width: "6%"}}>Estado</th>
+              <th style={{width: "17%"}}>Fecha de creacion</th>
+              <th style={{width: "14%"}}>Fecha de la ultima actualizacion</th>
             </tr>
           </thead>
 
@@ -684,6 +694,15 @@ class table extends React.Component {
                   <td>{accion.viatic_description}</td>
                   <td><NumberFormat value={accion.total_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                   <td>{accion.report_sate ? "Aprobado" : "Sin Aprobar"}</td>
+                  <th>
+                      {this.getDate(accion.created_at)} <br />
+                      {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                  </th>
+
+                  <th>
+                      {this.getDate(accion.updated_at)} <br />
+                      {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                  </th>
                 </tr>
               ))
             ) : (

@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
-#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
+#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -67,6 +67,8 @@
 #  aiu_real                  :float            default(0.0)
 #  aiu_percent_real          :float            default(0.0)
 #  total_expenses            :float            default(0.0)
+#  last_user_edited_id       :integer
+#  user_owner_id             :integer
 #
 
 class CostCenterSerializer < ActiveModel::Serializer

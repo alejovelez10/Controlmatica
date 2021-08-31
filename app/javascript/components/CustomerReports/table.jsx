@@ -493,6 +493,13 @@ class table extends React.Component {
     }
   }
 
+  getDate = (date) => {
+    var d = new Date(date),
+    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+  }
+
+
   getStateEdit = (user) => {
     if(this.props.estados.edit == true && this.props.usuario.id == user){
       return true
@@ -591,21 +598,23 @@ class table extends React.Component {
             </div>
         </div>
 
-        <div className="content">
+        <div className="content-table">
 
-        <table className="table table-hover table-bordered" id="sampleTable">
+        <table className="table table-hover table-bordered" style={{ width: "258%", maxWidth: "258%" }}  id="sampleTable">
           <thead>
             <tr className="tr-title">
-              <th>Creado</th>
-              <th>Codigo</th>
-              <th>Descripcion</th>
+              <th className="text-center" style={{ width: "2%" }}>Acciones</th>
+              <th style={{width: "8%"}}>Creado</th>
+              <th style={{width: "8%"}}>Codigo</th>
+              <th style={{width: "8%"}}>Descripcion</th>
               {this.props.estados.send_email == true && (  
-                <th style={{width: "220px"}}>Enviar para aprobaciòn</th>
+                <th style={{width: "10%"}}>Enviar para aprobaciòn</th>
               )}
-              <th>Estado</th>
-              <th>Fecha Aprobacion</th>
-              <th>Cliente</th>
-              <th className="text-center">Acciones</th>
+              <th style={{width: "8%"}}>Estado</th>
+              <th style={{width: "8%"}}>Fecha Aprobacion</th>
+              <th style={{width: "8%"}}>Cliente</th>
+              <th style={{width: "10%"}}>Fecha de creacion</th>
+              <th style={{width: "9%"}}>Fecha de la ultima actualizacion</th>
             </tr>
           </thead>
 
@@ -613,29 +622,7 @@ class table extends React.Component {
             {this.props.dataActions.length >= 1 ? (
               this.props.dataActions.map(accion => (
                 <tr key={accion.id}>
-                    <td>{accion.report_date}</td>
-                    <td>{accion.report_code}</td>
-                    <td>{accion.description}</td>
-
-                  {this.props.estados.send_email == true && (  
-                    <td> 
-                      <button
-                          onClick={() => this.sendReques(accion)}
-                          className="btn btn-success"
-                          style={{width: "220px"}}
-                          disabled={accion.report_state == "Aprobado"  ? true : false }
-                      >
-                          {this.getState(accion)}
-                      </button>
-                    </td>
-                  )}
-
-                  <td>{accion.report_state}</td>
-                  <td>{accion.approve_date}</td>
-                  <td>{accion.customer.name}</td>
-
-
-                  <td className="text-right" style={{ width: "10px" }}>
+                                    <td className="text-right" style={{ width: "10px" }}>
                     <div
                       className="btn-group"
                       role="group"
@@ -686,6 +673,36 @@ class table extends React.Component {
                       </div>
                     </div>
                   </td>
+                    <td>{accion.report_date}</td>
+                    <td>{accion.report_code}</td>
+                    <td>{accion.description}</td>
+
+                  {this.props.estados.send_email && (  
+                    <td> 
+                      <button
+                          onClick={() => this.sendReques(accion)}
+                          className="btn btn-success"
+                          style={{width: "220px"}}
+                          disabled={accion.report_state == "Aprobado"  ? true : false }
+                      >
+                          {this.getState(accion)}
+                      </button>
+                    </td>
+                  )}
+
+                  <td>{accion.report_state}</td>
+                  <td>{accion.approve_date}</td>
+                  <td>{accion.customer.name}</td>
+                  <th>
+                                                        {this.getDate(accion.created_at)} <br />
+                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                    </th>
+
+                                                    <th>
+                                                        {this.getDate(accion.updated_at)} <br />
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                    </th>
+
                 </tr>
               ))
             ) : (

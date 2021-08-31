@@ -17,12 +17,15 @@
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
 #  update_user             :integer
+#  last_user_edited_id     :integer
 #
 class Material < ApplicationRecord
   belongs_to :cost_center
   belongs_to :provider
   after_save :calculate_cost
+  belongs_to :last_user_edited, :class_name => "User", optional: :true
   has_many :material_invoices, dependent: :destroy
+  belongs_to :user, optional: :true
 
   after_destroy :calculate_cost_destroy
   before_update :create_edit_register
@@ -74,11 +77,12 @@ class Material < ApplicationRecord
   end
 
   def create_edit_register
+    self.last_user_edited_id = User.current.id
     if self.provider_id_changed?
       names = []
       providers = Provider.where(id: self.provider_id_change)
       providers.each do |provider|
-        names << provider.names
+        names << provider.name
       end
       provider = "<p>El Proveedor: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else

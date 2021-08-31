@@ -37,6 +37,15 @@ class User < ApplicationRecord
   has_many :cost_centers
   has_many :register_edits
   has_many :notification_alerts
+
+  has_many :contractors, dependent: :destroy
+  has_many :cost_centers, dependent: :destroy
+  has_many :customer_reports, dependent: :destroy
+  has_many :expense_ratios, dependent: :destroy
+  has_many :materials, dependent: :destroy
+  has_many :report_expenses, dependent: :destroy
+  has_many :reports, dependent: :destroy
+  has_many :sales_orders, dependent: :destroy
   
   before_update :create_edit_register
 

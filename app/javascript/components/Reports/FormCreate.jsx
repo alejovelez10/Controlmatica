@@ -242,34 +242,38 @@ class FormCreate extends React.Component {
                     /> 
                         </div>*/}
                   
-                  <div className="col-md-12 mt-4">
-                    <hr/>
-                  </div>
+                  {this.props.estados.viatics && (
+                    <React.Fragment>
+                      <div className="col-md-12 mt-4">
+                        <hr/>
+                      </div>
 
-                  <div className="col-md-4 mt-4">
-                  <label>Valor de viaticos <small className="validate-label">*</small></label>
-                    <NumberFormat 
-                      name="viatic_value"
-                      thousandSeparator={true} 
-                      prefix={'$'} 
-                      className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
-                      value={this.props.formValues.viatic_value}
-                      onChange={this.props.onChangeForm}
-                      placeholder="Valor de viaticos"
-                    /> 
-                  </div>
+                      <div className="col-md-4 mt-4">
+                      <label>Valor de viaticos <small className="validate-label">*</small></label>
+                        <NumberFormat 
+                          name="viatic_value"
+                          thousandSeparator={true} 
+                          prefix={'$'} 
+                          className={`form form-control ${this.props.errorValues == false && this.props.formValues.viatic_value == "" ? "error-class" : ""}`}
+                          value={this.props.formValues.viatic_value}
+                          onChange={this.props.onChangeForm}
+                          placeholder="Valor de viaticos"
+                        /> 
+                      </div>
 
-                  <div className="col-md-8 mt-4">
-                  <label>Descripcion viaticos</label>
-                    <textarea 
-                      name="viatic_description"
-                      className={`form form-control`}
-                      value={this.props.formValues.viatic_description}
-                      onChange={this.props.onChangeForm}
-                      rows="5"
-                      placeholder="Descripcion viaticos"
-                    /> 
-                  </div>
+                      <div className="col-md-8 mt-4">
+                      <label>Descripcion viaticos</label>
+                        <textarea 
+                          name="viatic_description"
+                          className={`form form-control`}
+                          value={this.props.formValues.viatic_description}
+                          onChange={this.props.onChangeForm}
+                          rows="5"
+                          placeholder="Descripcion viaticos"
+                        /> 
+                      </div>
+                    </React.Fragment>
+                  )}
             </div>
 
               {this.props.errorValues == false && (

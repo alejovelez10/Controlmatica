@@ -42,7 +42,8 @@ class indexTable extends React.Component {
               cost_center_id: "",
               label: "Centro de costo"
             },
-      
+            
+            users: [],
             dataCostCenter: []
         }
     }
@@ -80,28 +81,28 @@ class indexTable extends React.Component {
       }
     
     componentDidMount() {
-      let arrayClients = []
+      this.loadData()
+      let arrayClients = [];
+      let arryUsers = [];
+      let array_cost_center = []
 
       this.props.clientes.map((item) => (
         arrayClients.push({label: item.name, value: item.id})
       ))
-  
-      this.setState({
-          clients: arrayClients,
-      })
 
-
-      let array_cost_center = []
+      this.props.users.map((item) => (
+        arryUsers.push({label: item.name, value: item.id})
+      ))
 
       this.props.cost_center.map((item) => (
         array_cost_center.push({label: item.code, value: item.id})
       ))
   
       this.setState({
-        dataCostCenter: array_cost_center
+        dataCostCenter: array_cost_center,
+        clients: arrayClients,
+        users: arryUsers,
       })
-
-      this.loadData()
     }
 
       
@@ -284,6 +285,7 @@ class indexTable extends React.Component {
                                 exel_values={this.state.exel_values}
                                 filtering={this.state.filtering}
                                 alerts={this.props.alerts}
+                                users={this.state.users}
                                 formFilter={this.state.formFilter}
                             />
 

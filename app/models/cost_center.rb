@@ -14,10 +14,10 @@
 #  execution_state           :string
 #  invoiced_state            :string
 #  service_type              :string
-#  code                      :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  count                     :integer
+#  code                      :string
 #  create_type               :boolean
 #  eng_hours                 :float
 #  hour_cotizada             :float
@@ -67,6 +67,8 @@
 #  aiu_real                  :float            default(0.0)
 #  aiu_percent_real          :float            default(0.0)
 #  total_expenses            :float            default(0.0)
+#  last_user_edited_id       :integer
+#  user_owner_id             :integer
 #
 
 class CostCenter < ApplicationRecord
@@ -82,6 +84,7 @@ class CostCenter < ApplicationRecord
   belongs_to :customer, optional: :true
   belongs_to :contact, optional: :true
   belongs_to :user, optional: :true
+  belongs_to :last_user_edited, :class_name => "User", optional: :true
 
   before_create :create_code
   before_update :change_state
@@ -204,6 +207,7 @@ class CostCenter < ApplicationRecord
   
 
   def change_state
+    self.last_user_edited_id = User.current.id
     self.engineering_value = self.hour_cotizada * self.eng_hours
     if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil?  && (self.quotation_number != "N/A")
       self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"

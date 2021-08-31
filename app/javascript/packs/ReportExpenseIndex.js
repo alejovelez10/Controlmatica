@@ -11,6 +11,7 @@ class ReportExpenseIndex extends Component {
             data: [],
             isLoaded: true,
             showFilter: false,
+            isFiltering: false,
 
             formFilter: {
                 cost_center_id: "",
@@ -21,11 +22,14 @@ class ReportExpenseIndex extends Component {
                 description: "",
                 invoice_number: "",
                 invoice_type: "",
-                payment_type: "",
                 invoice_value: "",
                 invoice_tax: "",
                 invoice_total: "",
+                type_identification_id: "",
+                payment_type_id: "",
             },
+
+            
 
             selectedOptionCostCenter: {
                 cost_center_id: "",
@@ -153,7 +157,7 @@ class ReportExpenseIndex extends Component {
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true, isFiltering: true })
-        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&type_identification=${this.state.formFilter.type_identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&invoice_type=${this.state.formFilter.invoice_type}&payment_type=${this.state.formFilter.payment_type}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}`, {
+        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -171,6 +175,7 @@ class ReportExpenseIndex extends Component {
 
     clearValues = () => {
         this.setState({
+            isFiltering: false,
             formFilter: {
                 cost_center_id: "",
                 user_invoice_id: "",
@@ -180,10 +185,11 @@ class ReportExpenseIndex extends Component {
                 description: "",
                 invoice_number: "",
                 invoice_type: "",
-                payment_type: "",
                 invoice_value: "",
                 invoice_tax: "",
                 invoice_total: "",
+                type_identification_id: "",
+                payment_type_id: "",
             },
 
             selectedOptionCostCenter: {
@@ -251,6 +257,7 @@ class ReportExpenseIndex extends Component {
                         handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
                         selectedOptionCostCenter={this.state.selectedOptionCostCenter}
                         cost_centers={this.state.cost_centers}
+                        report_expense_options={this.props.report_expense_options}
                         
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                         selectedOptionUser={this.state.selectedOptionUser}
@@ -275,6 +282,8 @@ class ReportExpenseIndex extends Component {
 
                     updateDataReportExpenseOptionType={this.updateDataReportExpenseOptionType}
                     updateDataReportExpenseOptionPayment={this.updateDataReportExpenseOptionPayment}
+                    isFiltering={this.state.isFiltering}
+                    formFilter={this.state.formFilter}
                 />
             </React.Fragment>
         );

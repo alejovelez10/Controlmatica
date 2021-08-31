@@ -105,22 +105,9 @@ class FormCreate extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-12">
-                                        <FormCreateExpenseOptionFromReporExpense 
-                                            setValuesReportExpenseOption={this.props.setValuesReportExpenseOption}
-                                        />
-                                    </div>
+                                   
 
-                                    <div className="col-md-4 mt-3">
-                                        <label>Numero de factura </label>
-                                        <input
-                                            type="text"
-                                            name="invoice_number"
-                                            value={this.props.formValues.invoice_number}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
-                                        />
-                                    </div>
+                                  
 
                                     <div className="col-md-4 mt-3">
                                         <label>Tipo</label>
@@ -154,7 +141,23 @@ class FormCreate extends Component {
                                             value={this.props.selectedOptionPaymentType}
                                         />
                                     </div>
-
+                                    <div className="col-md-4 mt-3">
+                                        <label>Numero de factura </label>
+                                        <input
+                                            type="text"
+                                            name="invoice_number"
+                                            value={this.props.formValues.invoice_number}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        />
+                                    </div>
+                                    
+{/*                                     <div className="col-md-12 mt-2">
+                                        
+                                        <FormCreateExpenseOptionFromReporExpense 
+                                            setValuesReportExpenseOption={this.props.setValuesReportExpenseOption}
+                                        />
+                                    </div> */}
                                     <div className="col-md-12">
                                         <hr />
                                     </div>

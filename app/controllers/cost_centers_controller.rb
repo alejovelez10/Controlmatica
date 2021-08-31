@@ -89,7 +89,7 @@ class CostCentersController < ApplicationController
 
 
 
-    cost_centers = cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :sales_orders => { :only =>[:order_value] } })
+    cost_centers = cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] }, :sales_orders => { :only =>[:order_value] } })
 
 
     cost_centers = JSON.parse(cost_centers)
@@ -308,66 +308,66 @@ class CostCentersController < ApplicationController
 
 
     if params["viatic_value"] != "nil" || params["viatic_value"] != ""
-      valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
+      valor1 = cost_center_params_create["viatic_value"].gsub('$','').gsub(',','')
       params["viatic_value"] = valor1
     end
 
     if params["quotation_value"] != "nil" || params["quotation_value"] != ""
-      valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
+      valor2 = cost_center_params_create["quotation_value"].gsub('$','').gsub(',','')
       params["quotation_value"] = valor2
     end
 
     if params["hour_real"] != "nil" || params["hour_real"] != ""
-      if cost_center_params["hour_real"].class.to_s != "Integer" && cost_center_params["hour_real"].class.to_s != "Float" 
-        valor3 = cost_center_params["hour_real"].gsub('$','').gsub(',','')
+      if cost_center_params_create["hour_real"].class.to_s != "Integer" && cost_center_params_create["hour_real"].class.to_s != "Float" 
+        valor3 = cost_center_params_create["hour_real"].gsub('$','').gsub(',','')
         params["hour_real"] = valor3
       end
     end
 
     if params["hour_cotizada"] != "nil" || params["hour_cotizada"] != ""
-      if cost_center_params["hour_cotizada"].class.to_s != "Integer" && cost_center_params["hour_cotizada"].class.to_s != "Float"
-        valor4 = cost_center_params["hour_cotizada"].gsub('$','').gsub(',','')
+      if cost_center_params_create["hour_cotizada"].class.to_s != "Integer" && cost_center_params_create["hour_cotizada"].class.to_s != "Float"
+        valor4 = cost_center_params_create["hour_cotizada"].gsub('$','').gsub(',','')
         params["hour_cotizada"] = valor4
       end
     end
 
     if params["hours_contractor_real"] != "nil" || params["hours_contractor_real"] != ""
-      if cost_center_params["hours_contractor_real"].class.to_s != "Integer" && cost_center_params["hours_contractor_real"].class.to_s != "Float" 
-      valor5 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
+      if cost_center_params_create["hours_contractor_real"].class.to_s != "Integer" && cost_center_params_create["hours_contractor_real"].class.to_s != "Float" 
+      valor5 = cost_center_params_create["hours_contractor_real"].gsub('$','').gsub(',','')
       params["hours_contractor_real"] = valor5
       end
     end
 
     if params["hours_contractor_invoices"] != "nil" || params["hours_contractor_invoices"] != ""
-      if cost_center_params["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params["hours_contractor_invoices"].class.to_s != "Float" 
-      valor6 = cost_center_params["hours_contractor_invoices"].gsub('$','').gsub(',','')
+      if cost_center_params_create["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params_create["hours_contractor_invoices"].class.to_s != "Float" 
+      valor6 = cost_center_params_create["hours_contractor_invoices"].gsub('$','').gsub(',','')
       params["hours_contractor_invoices"] = valor6
       end
     end
 
     if params["materials_value"] != "nil" || params["materials_value"] != ""
-      valor7 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
+      valor7 = cost_center_params_create["materials_value"].gsub('$','').gsub(',','')
       params["materials_value"] = valor7
     end
 
     if params["quotation_value"]  != "nil" || params["quotation_value"] != ""
-      valor8 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
+      valor8 = cost_center_params_create["quotation_value"].gsub('$','').gsub(',','')
       params["quotation_value"] = valor8
     end
 
     if params["displacement_hours"]  != "nil" || params["displacement_hours"] != ""
-      valor9 = cost_center_params["displacement_hours"].gsub('$','').gsub(',','')
+      valor9 = cost_center_params_create["displacement_hours"].gsub('$','').gsub(',','')
       params["displacement_hours"] = valor9
     end
 
     if params["value_displacement_hours"]  != "nil" || params["value_displacement_hours"] != ""
-      if cost_center_params["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" 
-        valo10 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
+      if cost_center_params_create["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" 
+        valo10 = cost_center_params_create["value_displacement_hours"].gsub('$','').gsub(',','')
         params["value_displacement_hours"] = valo10
       end
     end
 
-    @cost_center = CostCenter.create(cost_center_params)
+    @cost_center = CostCenter.create(cost_center_params_create)
 
       if @cost_center.save
         render :json => {
@@ -525,54 +525,54 @@ class CostCentersController < ApplicationController
 
     if params[:viatic_value] || params[:quotation_value] || params[:hour_real] || params[:hours_contractor_real] || params[:hours_contractor_invoices] || params[:materials_value] || params[:displacement_hours] || params[:value_displacement_hours]
 
-      if cost_center_params["viatic_value"].class.to_s != "Integer" && cost_center_params["viatic_value"].class.to_s != "Float" && cost_center_params["viatic_value"].present?
-        valor1 = cost_center_params["viatic_value"].gsub('$','').gsub(',','')
+      if cost_center_params_update["viatic_value"].class.to_s != "Integer" && cost_center_params_update["viatic_value"].class.to_s != "Float" && cost_center_params_update["viatic_value"].present?
+        valor1 = cost_center_params_update["viatic_value"].gsub('$','').gsub(',','')
         params["viatic_value"] = valor1
       end
 
-      if cost_center_params["quotation_value"].class.to_s != "Integer" && cost_center_params["quotation_value"].class.to_s != "Float" && cost_center_params["quotation_value"].present?
-        valor2 = cost_center_params["quotation_value"].gsub('$','').gsub(',','')
+      if cost_center_params_update["quotation_value"].class.to_s != "Integer" && cost_center_params_update["quotation_value"].class.to_s != "Float" && cost_center_params_update["quotation_value"].present?
+        valor2 = cost_center_params_update["quotation_value"].gsub('$','').gsub(',','')
         params["quotation_value"] = valor2
       end
       
-      if cost_center_params["hour_real"].class.to_s != "Integer" && cost_center_params["hour_real"].class.to_s != "Float" && cost_center_params["hour_real"].present?
-        valor3 = cost_center_params["hour_real"].gsub('$','').gsub(',','')
+      if cost_center_params_update["hour_real"].class.to_s != "Integer" && cost_center_params_update["hour_real"].class.to_s != "Float" && cost_center_params_update["hour_real"].present?
+        valor3 = cost_center_params_update["hour_real"].gsub('$','').gsub(',','')
         params["hour_real"] = valor3
       end
 
-      if cost_center_params["hour_cotizada"].class.to_s != "Integer" && cost_center_params["hour_cotizada"].class.to_s != "Float" && cost_center_params["hour_cotizada"].present?
-        valor7 = cost_center_params["hour_cotizada"].gsub('$','').gsub(',','')
+      if cost_center_params_update["hour_cotizada"].class.to_s != "Integer" && cost_center_params_update["hour_cotizada"].class.to_s != "Float" && cost_center_params_update["hour_cotizada"].present?
+        valor7 = cost_center_params_update["hour_cotizada"].gsub('$','').gsub(',','')
         params["hour_cotizada"] = valor7
       end
       
-      if cost_center_params["hours_contractor_real"].class.to_s != "Integer" && cost_center_params["hours_contractor_real"].class.to_s != "Float" && cost_center_params["hours_contractor_real"].present?
-        valor4 = cost_center_params["hours_contractor_real"].gsub('$','').gsub(',','')
+      if cost_center_params_update["hours_contractor_real"].class.to_s != "Integer" && cost_center_params_update["hours_contractor_real"].class.to_s != "Float" && cost_center_params_update["hours_contractor_real"].present?
+        valor4 = cost_center_params_update["hours_contractor_real"].gsub('$','').gsub(',','')
         params["hours_contractor_real"] = valor4
       end
 
-      if cost_center_params["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params["hours_contractor_invoices"].class.to_s != "Float" && cost_center_params["hours_contractor_invoices"].present?
-        valor5 = cost_center_params["hours_contractor_invoices"].gsub('$','').gsub(',','')
+      if cost_center_params_update["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params_update["hours_contractor_invoices"].class.to_s != "Float" && cost_center_params_update["hours_contractor_invoices"].present?
+        valor5 = cost_center_params_update["hours_contractor_invoices"].gsub('$','').gsub(',','')
         params["hours_contractor_invoices"] = valor5
       end
 
-      if cost_center_params["materials_value"].class.to_s != "Integer" && cost_center_params["materials_value"].class.to_s != "Float" && cost_center_params["materials_value"].present?
-        valor6 = cost_center_params["materials_value"].gsub('$','').gsub(',','')
+      if cost_center_params_update["materials_value"].class.to_s != "Integer" && cost_center_params_update["materials_value"].class.to_s != "Float" && cost_center_params_update["materials_value"].present?
+        valor6 = cost_center_params_update["materials_value"].gsub('$','').gsub(',','')
         params["materials_value"] = valor6
       end
 
-      if cost_center_params["displacement_hours"].class.to_s != "Integer" && cost_center_params["displacement_hours"].class.to_s != "Float" && cost_center_params["displacement_hours"].present?
-        valor7 = cost_center_params["displacement_hours"].gsub('$','').gsub(',','')
+      if cost_center_params_update["displacement_hours"].class.to_s != "Integer" && cost_center_params_update["displacement_hours"].class.to_s != "Float" && cost_center_params_update["displacement_hours"].present?
+        valor7 = cost_center_params_update["displacement_hours"].gsub('$','').gsub(',','')
         params["displacement_hours"] = valor7
       end
 
-      if cost_center_params["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float" && cost_center_params["value_displacement_hours"].present?
-        valor8 = cost_center_params["value_displacement_hours"].gsub('$','').gsub(',','')
+      if cost_center_params_update["value_displacement_hours"].class.to_s != "Integer" && cost_center_params_update["value_displacement_hours"].class.to_s != "Float" && cost_center_params_update["value_displacement_hours"].present?
+        valor8 = cost_center_params_update["value_displacement_hours"].gsub('$','').gsub(',','')
         params["value_displacement_hours"] = valor8
       end
 
     end
 
-    if @cost_center.update(cost_center_params.merge!(update_user: current_user.id)) 
+    if @cost_center.update(cost_center_params_update.merge!(update_user: current_user.id)) 
       recalculate_cost_center(@cost_center.id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
@@ -621,7 +621,13 @@ class CostCentersController < ApplicationController
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
-    def cost_center_params
-      params.permit(:customer_id, :contact_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value, :user_id, :work_force_contractor, :hours_contractor_invoices, :hours_contractor_real, :materials_value, :hours_contractor, :displacement_hours, :value_displacement_hours, :offset_value, :update_user)
+
+    def cost_center_params_create
+      defaults = { user_id: current_user.id}
+      params.permit(:customer_id, :contact_id, :user_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value, :user_id, :work_force_contractor, :hours_contractor_invoices, :hours_contractor_real, :materials_value, :hours_contractor, :displacement_hours, :value_displacement_hours, :offset_value, :update_user, :user_owner_id).reverse_merge(defaults)
+    end
+  
+    def cost_center_params_update
+      params.permit(:customer_id, :contact_id, :user_id, :description, :start_date, :end_date, :quotation_number, :engineering_value, :viatic_value, :execution_state, :invoiced_state, :service_type, :code, :count, :eng_hours,:hour_cotizada, :hour_real, :quotation_value, :user_id, :work_force_contractor, :hours_contractor_invoices, :hours_contractor_real, :materials_value, :hours_contractor, :displacement_hours, :value_displacement_hours, :offset_value, :update_user, :user_owner_id)
     end
 end

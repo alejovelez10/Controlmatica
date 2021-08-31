@@ -90,11 +90,11 @@ class FormCreateExpenseOptionFromReporExpense extends Component {
     render() {
         return (
             <React.Fragment>
-                <hr />
+
                     {this.state.showForm ? (
                         <div className="card">
                             <div className="card-header">
-                                Crear tipo de gasto
+                                Crear Tipo oMedio de pago
                             </div>
 
                             <div className="card-body">
@@ -147,10 +147,10 @@ class FormCreateExpenseOptionFromReporExpense extends Component {
                             style={{ cursor: "pointer", color: "#0090ff", textDecoration: "underline" }}
                             onClick={() => this.setState({ showForm: true })}
                         >
-                            Crear tipo
+                            Crear Tipo o Medio de pago
                         </p>
                     )}
-                <hr />
+            
             </React.Fragment>
         );
     }
