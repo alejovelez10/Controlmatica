@@ -622,8 +622,8 @@ class table extends React.Component {
               <th style={{width: "9%"}}>Descripcion de Viaticos</th>
               <th style={{width: "8%"}}>Valor del Reporte</th>
               <th style={{width: "6%"}}>Estado</th>
-              <th style={{width: "17%"}}>Fecha de creacion</th>
-              <th style={{width: "14%"}}>Fecha de la ultima actualizacion</th>
+              <th style={{width: "17%"}}>Creación</th>
+              <th style={{width: "14%"}}>Ultima actualización</th>
             </tr>
           </thead>
 
@@ -696,7 +696,7 @@ class table extends React.Component {
                   <td>{accion.report_sate ? "Aprobado" : "Sin Aprobar"}</td>
                   <th>
                       {this.getDate(accion.created_at)} <br />
-                      {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                      {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
                   </th>
 
                   <th>

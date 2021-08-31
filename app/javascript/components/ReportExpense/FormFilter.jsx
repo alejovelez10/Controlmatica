@@ -35,7 +35,7 @@ class FormFilter extends Component {
                                             name="user_invoice_id"
                                             value={this.props.selectedOptionUser.user_invoice_id}
                                         />                                                        
-                                        <label>Usuario </label>
+                                        <label>Nombre </label>
                                         <Select
                                             onChange={this.props.handleChangeAutocompleteUser}
                                             options={this.props.users}
@@ -44,7 +44,7 @@ class FormFilter extends Component {
                                             value={this.props.selectedOptionUser}
                                         />
                                     </div>
-
+{/* 
                                     <div className="col-md-3 mb-3">
                                         <label>Nombre factura </label>
                                         <input
@@ -54,7 +54,7 @@ class FormFilter extends Component {
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
                                         />
-                                    </div>
+                                    </div> */}
 
 
                                     <div className="col-md-3 mb-3">
@@ -84,7 +84,7 @@ class FormFilter extends Component {
                                     </div>
 
                                     <div className="col-md-3 mb-3">
-                                        <label>Descripcion </label>
+                                        <label>Descripción </label>
                                         <input
                                             type="text"
                                             name="description"
@@ -95,7 +95,7 @@ class FormFilter extends Component {
                                     </div>
 
                                     <div className="col-md-3 ">
-                                        <label>Numero de factura </label>
+                                        <label># Factura </label>
                                         <input
                                             type="number"
                                             name="invoice_number"
@@ -135,7 +135,7 @@ class FormFilter extends Component {
                                             ))}
                                         </select>
                                     </div>
-
+{/* 
                                     <div className="col-md-3">
                                         <label>Valor del pago </label>
                                         <NumberFormat 
@@ -170,7 +170,7 @@ class FormFilter extends Component {
                                             value={this.props.formValues.invoice_total}
                                             onChange={this.props.onChangeFormMoney}
                                         /> 
-                                    </div>
+                                    </div> */}
 
                                 </div>
                             </div>

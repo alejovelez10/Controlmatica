@@ -40,7 +40,7 @@ class Index extends Component {
 
             selectedOptionUser: {
                 user_invoice_id: "",
-                label: "Usuario"
+                label: "Nombre"
             },
 
             selectedOptionTypeIndentification: {
@@ -516,20 +516,20 @@ class Index extends Component {
                                         <tr >
                                             <th style={{width:"80px"}} className="text-center">Acciones</th>
                                             <th>Centro de costo</th>
-                                            <th>Responsable</th>
-                                            <th>Nombre</th>
+                                            {/* <th>Responsable</th> */}
+                                            <th style={{width:"250px"}}>Nombre</th>
                                             <th>Fecha de factura</th>
                                             <th>NIT / CEDULA</th>
                                             <th style={{width:"300px"}}>Descripcion</th>
-                                            <th>Numero de factura</th>
+                                            <th>#Factura</th>
                                             <th>Tipo</th>
                                             <th>Medio de pago</th>
-                                            <th>Valor del pago</th>
+                                            <th>Valor</th>
                                             <th>IVA</th>
                                             <th>Total</th>
                                             <th>Estado</th>
-                                            <th style={{width: "200px"}}>Creacion</th>
-                                            <th style={{width: "200px"}}>Ultima actualizacion</th>
+                                            <th style={{width: "200px"}}>Creación</th>
+                                            <th style={{width: "200px"}}>Ultima actualización</th>
                                         </tr>
                                     </thead>
 
@@ -538,7 +538,7 @@ class Index extends Component {
                                             this.props.data.map(accion => (
                                                 <tr key={accion.id}>
                                                     
-                                                    <td className="text-right" style={{ width: "10px"}}>          
+                                                    <td className="text-center" style={{ width: "10px"}}>          
                                                         {!accion.is_acepted && (
                                                             <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
                                                                 <div className="btn-group" role="group">
@@ -569,7 +569,7 @@ class Index extends Component {
 
                                                     <td>{accion.cost_center ?  accion.cost_center.code : "" }</td>
                                                     <td>{accion.user_invoice.name}</td>
-                                                    <td>{accion.invoice_name}</td>
+                                                    {/* <td>{accion.invoice_name}</td> */}
                                                     <td>{accion.invoice_date}</td>
                                                     <td>{accion.identification}</td>
                                                     <td>{accion.description}</td>

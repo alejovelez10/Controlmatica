@@ -438,19 +438,20 @@ class table extends React.Component {
             
               <table
                 className="table table-hover table-bordered"
-                style={{  tableLayout: "fixed", width: "149%", maxWidth: "220%" }}
+                style={{  tableLayout: "fixed", width: "1400px", maxWidth: "1400px" , minWidth: "100%"}}
                 id="sampleTable"
               >
                 <thead>
                   <tr className="tr-title">
-                    <th style={{ width: "7%" }} >Fecha</th>
-                    <th style={{ width: "8%" }} >Centro de costo</th>
-                    <th style={{ width: "6%" }} >Horas</th>
-                    <th style={{ width: "11%" }} >Trabajo realizado por</th>
-                    <th style={{ width: "11%" }} >Descripcion</th>
-                    <th style={{width: "6px"}}>Fecha de creacion</th>
-                    <th style={{width: "7px"}}>Fecha de la ultima actualizacion</th>
-                    <th style={{ width: "2px" }} className="text-left">Acciones</th>
+                  <th style={{ width: "100px" }} className="text-left">Acciones</th>
+                    <th style={{ width: "150px" }} >Fecha</th>
+                    <th style={{ width: "200px" }} >Centro de costo</th>
+                    <th style={{ width: "100px" }} >Horas</th>
+                    <th style={{ width: "200px" }} >Trabajo realizado por</th>
+                    <th style={{ width: "400px" }} >Descripcion</th>
+                    <th style={{width: "200px"}}>Creación</th>
+                    <th style={{width: "200px"}}>Ultima actualización</th>
+                    
                   </tr>
                 </thead>
 
@@ -458,22 +459,7 @@ class table extends React.Component {
                   {this.props.dataActions.length >= 1 ? (
                     this.props.dataActions.map(accion => (
                       <tr key={accion.id}>
-                        <td>{accion.sales_date}</td>
-                        <td>{accion.cost_center != undefined ? accion.cost_center.code : ""}</td>                        
-                        <td>{accion.hours}</td>
-                        <td>{accion.user_execute != undefined ? accion.user_execute.names : ""}</td>
-                        <td>{accion.description}</td>
-                        <th>
-                                                        {this.getDate(accion.created_at)} <br />
-                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
-                                                    </th>
-
-                                                    <th>
-                                                        {this.getDate(accion.updated_at)} <br />
-                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
-                                                    </th>
-  
-                        <th>   
+                         <th>   
                         <div
                             className="btn-group"
                             role="group"
@@ -507,6 +493,22 @@ class table extends React.Component {
                             </div>
                           </div>  
                         </th>
+                        <td>{accion.sales_date}</td>
+                        <td>{accion.cost_center != undefined ? accion.cost_center.code : ""}</td>                        
+                        <td>{accion.hours}</td>
+                        <td>{accion.user_execute != undefined ? accion.user_execute.names : ""}</td>
+                        <td>{accion.description}</td>
+                        <th>
+                                                        {this.getDate(accion.created_at)} <br />
+                                                        {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                    </th>
+
+                                                    <th>
+                                                        {this.getDate(accion.updated_at)} <br />
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b></b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                    </th>
+  
+                       
                       
                       </tr>
                     ))

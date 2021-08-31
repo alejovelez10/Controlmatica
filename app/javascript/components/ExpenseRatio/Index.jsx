@@ -309,8 +309,8 @@ class Index extends Component {
                                                 <th>Fecha inicial</th>
                                                 <th>Fecha final</th>
                                                 <th style={{width:"250px"}}>Observaciones</th>
-                                                <th style={{width: "15%"}}>Fecha de creacion</th>
-                                                <th style={{width: "15%"}}>Fecha de la ultima actualizacion</th>
+                                                <th style={{width: "15%"}}>Creación</th>
+                                                <th style={{width: "15%"}}>Ultima actualización</th>
                                             </tr>
                                         </thead>
 
@@ -363,12 +363,12 @@ class Index extends Component {
                                                         <td>{expense_ratio.observations}</td>
                                                         <th>
                                                             {this.getDate(expense_ratio.created_at)} <br />
-                                                            {expense_ratio.user != undefined ? <React.Fragment> <b>Creado por: </b> {expense_ratio.user != undefined ? expense_ratio.user.names : ""} </React.Fragment> : null}
+                                                            {expense_ratio.user != undefined ? <React.Fragment> <b></b> {expense_ratio.user != undefined ? expense_ratio.user.names : ""} </React.Fragment> : null}
                                                         </th>
 
                                                         <th>
                                                             {this.getDate(expense_ratio.updated_at)} <br />
-                                                            {expense_ratio.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {expense_ratio.last_user_edited != undefined ? expense_ratio.last_user_edited.names : ""} </React.Fragment> : null }
+                                                            {expense_ratio.last_user_edited != undefined ? <React.Fragment> <b> </b> {expense_ratio.last_user_edited != undefined ? expense_ratio.last_user_edited.names : ""} </React.Fragment> : null }
                                                         </th>
                                                     </tr>
                                                 ))

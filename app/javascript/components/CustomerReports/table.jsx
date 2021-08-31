@@ -600,21 +600,21 @@ class table extends React.Component {
 
         <div className="content-table">
 
-        <table className="table table-hover table-bordered" style={{ width: "258%", maxWidth: "258%" }}  id="sampleTable">
+        <table className="table table-hover table-bordered" style={{ width: "1800px", maxWidth: "1800px", minWidth: "100%" }}  id="sampleTable">
           <thead>
             <tr className="tr-title">
-              <th className="text-center" style={{ width: "2%" }}>Acciones</th>
-              <th style={{width: "8%"}}>Creado</th>
-              <th style={{width: "8%"}}>Codigo</th>
-              <th style={{width: "8%"}}>Descripcion</th>
+              <th className="text-center" style={{ width: "90px" }}>Acciones</th>
+              <th style={{width: "200px"}}>Creado</th>
+              <th style={{width: "200px"}}>Codigo</th>
+              <th style={{width: "400px"}}>Descripcion</th>
               {this.props.estados.send_email == true && (  
-                <th style={{width: "10%"}}>Enviar para aprobaciòn</th>
+                <th style={{width: "200px"}}>Enviar para aprobaciòn</th>
               )}
-              <th style={{width: "8%"}}>Estado</th>
-              <th style={{width: "8%"}}>Fecha Aprobacion</th>
-              <th style={{width: "8%"}}>Cliente</th>
-              <th style={{width: "10%"}}>Fecha de creacion</th>
-              <th style={{width: "9%"}}>Fecha de la ultima actualizacion</th>
+              <th style={{width: "200px"}}>Estado</th>
+              <th style={{width: "200px"}}>Fecha Aprobacion</th>
+              <th style={{width: "200px"}}>Cliente</th>
+              <th style={{width: "200px"}}>Creación</th>
+              <th style={{width: "200px"}}>Ultima actualización</th>
             </tr>
           </thead>
 
@@ -695,12 +695,12 @@ class table extends React.Component {
                   <td>{accion.customer.name}</td>
                   <th>
                                                         {this.getDate(accion.created_at)} <br />
-                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                        {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
                                                     </th>
 
                                                     <th>
                                                         {this.getDate(accion.updated_at)} <br />
-                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b></b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
                                                     </th>
 
                 </tr>

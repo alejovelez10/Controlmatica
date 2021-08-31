@@ -820,8 +820,8 @@ getState = (user) => {
 
                     <th style={{ width: "250px"}}>$ Total Legalizado</th>
                     <th style={{ width: "250px"}}>$ Total Cotizado</th>
-                    <th style={{width: "250px"}}>Fecha de creacion</th>
-                    <th style={{width: "267px"}}>Fecha de la ultima actualizacion</th>
+                    <th style={{width: "250px"}}>Creación</th>
+                    <th style={{width: "267px"}}>Ultima actualización</th>
                     
                 
                   </tr>
@@ -1026,12 +1026,12 @@ getState = (user) => {
                         <th><NumberFormat value={accion.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></th>
                                                     <th>
                                                         {this.getDate(accion.created_at)} <br />
-                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                        {accion.user != undefined ? <React.Fragment> <b> </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
                                                     </th>
 
                                                     <th>
                                                         {this.getDate(accion.updated_at)} <br />
-                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b> </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
                                                     </th>
                 
                       </tr>

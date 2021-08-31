@@ -608,7 +608,7 @@ class table extends React.Component {
         />
 
         <div className="content-table">
-          <table className="table table-hover table-bordered" style={{width:"1850px",maxWidth:"1850px"}} id="sampleTable">
+          <table className="table table-hover table-bordered" style={{width:"2350px",maxWidth:"2350px"}} id="sampleTable">
             <thead>
               <tr className="tr-title">
                 <th style={{ width: "1%" }} className="text-center">
@@ -623,8 +623,8 @@ class table extends React.Component {
                 <th style={{width:"150px"}}>Fecha Entrega</th>
                 <th style={{width:"150px"}}>Valor Facturas</th>
                 <th style={{width:"184px"}}>Estado</th>
-                <th style={{width: "17%"}}>Fecha de creacion</th>
-                <th style={{width: "14%"}}>Fecha de la ultima actualizacion</th>
+                <th style={{width: "250px"}}>Creación</th>
+                <th style={{width: "250px"}}>Ultima actualización</th>
               </tr>
             </thead>
 
@@ -723,12 +723,12 @@ class table extends React.Component {
 
                     <th>
                                                         {this.getDate(accion.created_at)} <br />
-                                                        {accion.user != undefined ? <React.Fragment> <b>Creado por: </b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                        {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
                                                     </th>
 
                                                     <th>
                                                         {this.getDate(accion.updated_at)} <br />
-                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b>Actualizada por: </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
+                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b></b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
                                                     </th>
                   </tr>
                 ))
