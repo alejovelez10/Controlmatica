@@ -14,7 +14,7 @@ class Index extends Component {
             modal: false,
             modalImport: false,
             modeEdit: false,
-            ErrorValues:  true,
+            ErrorValues: true,
             id: "",
 
             formCreate: {
@@ -63,7 +63,7 @@ class Index extends Component {
                 ...this.state.formCreate,
                 [e.target.name]: value,
             }
-        },() => {
+        }, () => {
             const total = (Number(this.state.formCreate.invoice_value) + Number(this.state.formCreate.invoice_tax))
 
             this.setState({
@@ -94,12 +94,12 @@ class Index extends Component {
     }
 
     validationForm = () => {
-        if (this.state.formCreate.name != "" &&  
-            this.state.formCreate.year != "" 
+        if (this.state.formCreate.name != "" &&
+            this.state.formCreate.year != ""
         ) {
             this.setState({ ErrorValues: true })
             return true
-        }else{
+        } else {
             this.setState({ ErrorValues: false })
             return false
         }
@@ -108,20 +108,20 @@ class Index extends Component {
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
         this.setState({
             selectedOptionCostCenter,
-                formCreate: {
-                    ...this.state.formCreate,
-                    cost_center_id: selectedOptionCostCenter.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                cost_center_id: selectedOptionCostCenter.value
+            }
         });
     };
 
     handleChangeAutocompleteUser = selectedOptionUser => {
         this.setState({
             selectedOptionUser,
-                formCreate: {
-                    ...this.state.formCreate,
-                    user_invoice_id: selectedOptionUser.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                user_invoice_id: selectedOptionUser.value
+            }
         });
     };
 
@@ -144,11 +144,11 @@ class Index extends Component {
                     }
                 })
 
-                .then(response => response.json())
-                .then(response => {
-                    this.props.loadData()
-                    this.messageSuccess(response)
-                });
+                    .then(response => response.json())
+                    .then(response => {
+                        this.props.loadData()
+                        this.messageSuccess(response)
+                    });
             }
         });
     };
@@ -216,15 +216,16 @@ class Index extends Component {
             }
         })
 
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
-            this.props.loadData();
-        });
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+                this.props.HandleClickFilter();
+                this.messageSuccess(data)
+            });
     }
 
     HandleClick = () => {
-        if(this.validationForm()){
+        if (this.validationForm()) {
             if (!this.state.modeEdit)
                 fetch(`/report_expenses`, {
                     method: 'POST', // or 'PUT'
@@ -235,14 +236,15 @@ class Index extends Component {
                     }
                 })
 
-                .then(res => res.json())
-                .catch(error => console.error("Error:", error))
-                .then(data => {
-                    this.setState({ modal: false })
-                    this.messageSuccess(data);
-                    this.props.updateData(data.register);
-                    this.clearValues();
-                });
+                    .then(res => res.json())
+                    .catch(error => console.error("Error:", error))
+                    .then(data => {
+                        this.setState({ modal: false })
+                        this.messageSuccess(data);
+                        this.props.loadData()
+                        //this.props.updateData(data.register);
+                        this.clearValues();
+                    });
             else {
                 fetch(`/report_expenses/${this.state.id}`, {
                     method: 'PATCH', // or 'PUT'
@@ -253,14 +255,15 @@ class Index extends Component {
                     }
                 })
 
-                .then(res => res.json())
-                .catch(error => console.error("Error:", error))
-                .then(data => {
-                    this.setState({ modal: false })
-                    this.messageSuccess(data);
-                    this.props.updateItem(data.register);
-                    this.clearValues();
-                });
+                    .then(res => res.json())
+                    .catch(error => console.error("Error:", error))
+                    .then(data => {
+                        this.setState({ modal: false })
+                        this.messageSuccess(data);
+                        /* this.props.updateItem(data.register); */
+                        this.props.loadData()
+                        this.clearValues();
+                    });
             }
         }
     }
@@ -277,25 +280,25 @@ class Index extends Component {
     handleChangeAutocompleteReportExpenceOptionType = selectedOptionTypeIndentification => {
         this.setState({
             selectedOptionTypeIndentification,
-                formCreate: {
-                    ...this.state.formCreate,
-                    type_identification_id: selectedOptionTypeIndentification.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                type_identification_id: selectedOptionTypeIndentification.value
+            }
         });
     }
 
     handleChangeAutocompleteReportExpenceOptionPaymentType = selectedOptionPaymentType => {
         this.setState({
             selectedOptionPaymentType,
-                formCreate: {
-                    ...this.state.formCreate,
-                    payment_type_id: selectedOptionPaymentType.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                payment_type_id: selectedOptionPaymentType.value
+            }
         });
     }
 
     setValuesReportExpenseOption = (report_expense_option) => {
-        if(report_expense_option.category == "Tipo"){
+        if (report_expense_option.category == "Tipo") {
             let data = { label: report_expense_option.name, value: report_expense_option.id }
             this.props.updateDataReportExpenseOptionType(data)
 
@@ -311,7 +314,7 @@ class Index extends Component {
                 },
             })
 
-        }else{
+        } else {
             let data = { label: report_expense_option.name, value: report_expense_option.id }
             this.props.updateDataReportExpenseOptionPayment(data)
 
@@ -377,10 +380,10 @@ class Index extends Component {
 
     getDate = (date) => {
         var d = new Date(date),
-        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
     }
-    
+
 
     render() {
         return (
@@ -416,7 +419,7 @@ class Index extends Component {
                         selectedOptionTypeIndentification={this.state.selectedOptionTypeIndentification}
                         handleChangeAutocompleteReportExpenceOptionType={this.handleChangeAutocompleteReportExpenceOptionType}
                         report_expense_options_type={this.props.report_expense_options_type}
-                        
+
                         selectedOptionPaymentType={this.state.selectedOptionPaymentType}
                         handleChangeAutocompleteReportExpenceOptionPaymentType={this.handleChangeAutocompleteReportExpenceOptionPaymentType}
                         report_expense_options_payment={this.props.report_expense_options_payment}
@@ -447,62 +450,64 @@ class Index extends Component {
                                     <div style={{ display: "inline-flex" }}>
 
                                         {false && (
-                                            <a 
+                                            <a
                                                 className="btn btn-secondary ml-3"
                                                 href={`/indicators_expenses`}
                                                 target="_blank"
                                             >
                                                 Informes de gastos
-                                            </a>   
-                                        )} 
+                                            </a>
+                                        )}
 
-                                        <button 
+                                        <button
                                             className="btn btn-primary ml-3"
                                             onClick={() => this.props.filter(true)}
                                         >
                                             Filtros
-                                        </button>   
+                                        </button>
 
 
-                                        {true && (
+                                        {(this.props.estados.export || this.props.estados.create) && (
                                             <div class="dropdown ml-3">
+
                                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     Acciones
                                                 </button>
                                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                                    
-                                                    {false && (
+
+                                                    {this.props.estados.create && (
                                                         <a class="dropdown-item" onClick={() => this.toogleFile("new")}>Importar</a>
                                                     )}
-
-                                                    <a
-                                                        className="dropdown-item"
-                                                        href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}` }`}
-                                                        target="_blank"
-                                                    >
-                                                        <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/> Exportar
-                                                    </a>
+                                                    {this.props.estados.export && (
+                                                        <a
+                                                            className="dropdown-item"
+                                                            href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}`}`}
+                                                            target="_blank"
+                                                        >
+                                                            <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "35px" }} /> Exportar
+                                                        </a>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
 
-                                        {this.props.isFiltering && (
-                                            <button 
+                                        {(this.props.isFiltering && this.props.estados.closed) && (
+                                            <button
                                                 className="btn btn-secondary ml-3"
                                                 onClick={() => this.updateFilterValues()}
                                             >
-                                                Actualizar registros
-                                            </button>   
+                                                Aceptar gastos
+                                            </button>
                                         )}
 
-                                        
+
                                         {this.props.estados.create && (
-                                            <button 
+                                            <button
                                                 className="btn btn-secondary ml-3"
                                                 onClick={() => this.toogle("new")}
                                             >
                                                 Nuevo
-                                            </button>   
+                                            </button>
                                         )}
 
                                     </div>
@@ -511,96 +516,96 @@ class Index extends Component {
 
                             <div className="tile-body">
                                 <div className="content-table">
-                                <table className="table table-hover table-bordered" id="sampleTable"  style={{ width: "2500px", maxWidth: "2500px" , tableLayout:"fixed"}} >
-                                <thead>
-                                        <tr >
-                                            <th style={{width:"80px"}} className="text-center">Acciones</th>
-                                            <th>Centro de costo</th>
-                                            {/* <th>Responsable</th> */}
-                                            <th style={{width:"250px"}}>Nombre</th>
-                                            <th>Fecha de factura</th>
-                                            <th>NIT / CEDULA</th>
-                                            <th style={{width:"300px"}}>Descripcion</th>
-                                            <th>#Factura</th>
-                                            <th>Tipo</th>
-                                            <th>Medio de pago</th>
-                                            <th>Valor</th>
-                                            <th>IVA</th>
-                                            <th>Total</th>
-                                            <th>Estado</th>
-                                            <th style={{width: "200px"}}>Creación</th>
-                                            <th style={{width: "200px"}}>Ultima actualización</th>
-                                        </tr>
-                                    </thead>
+                                    <table className="table table-hover table-bordered" id="sampleTable" style={{ width: "2500px", maxWidth: "2500px", tableLayout: "fixed" }} >
+                                        <thead>
+                                            <tr >
+                                                <th style={{ width: "80px" }} className="text-center">Acciones</th>
+                                                <th>Centro de costo</th>
+                                                {/* <th>Responsable</th> */}
+                                                <th style={{ width: "250px" }}>Nombre</th>
+                                                <th>Fecha de factura</th>
+                                                <th>NIT / CEDULA</th>
+                                                <th style={{ width: "300px" }}>Descripcion</th>
+                                                <th>#Factura</th>
+                                                <th>Tipo</th>
+                                                <th>Medio de pago</th>
+                                                <th>Valor</th>
+                                                <th>IVA</th>
+                                                <th>Total</th>
+                                                <th>Estado</th>
+                                                <th style={{ width: "200px" }}>Creación</th>
+                                                <th style={{ width: "200px" }}>Ultima actualización</th>
+                                            </tr>
+                                        </thead>
 
-                                    <tbody>
-                                        {this.props.data.length >= 1 ? (
-                                            this.props.data.map(accion => (
-                                                <tr key={accion.id}>
-                                                    
-                                                    <td className="text-center" style={{ width: "10px"}}>          
-                                                        {!accion.is_acepted && (
-                                                            <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                                <div className="btn-group" role="group">
-                                                                    <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                        <i className="fas fa-bars"></i>
-                                                                    </button>
-                                                                    
-                                                                    <div className="dropdown-menu dropdown-menu-right">
+                                        <tbody>
+                                            {this.props.data.length >= 1 ? (
+                                                this.props.data.map(accion => (
+                                                    <tr key={accion.id}>
 
-                                                                        {!accion.is_acepted && (
-                                                                            <button onClick={() => this.edit(accion)} className="dropdown-item">
-                                                                                Editar
+                                                        <td className="text-center" style={{ width: "10px" }}>
+                                                            {!accion.is_acepted && (
+                                                                <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                                    <div className="btn-group" role="group">
+                                                                        <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                            <i className="fas fa-bars"></i>
+                                                                        </button>
+
+                                                                        <div className="dropdown-menu dropdown-menu-right">
+
+                                                                            {(!accion.is_acepted && this.props.estados.edit) && (
+                                                                                <button onClick={() => this.edit(accion)} className="dropdown-item">
+                                                                                    Editar
                                                                             </button>
-                                                                        )}
+                                                                            )}
 
-                                                                        {(!accion.is_acepted && this.props.estados.closed) && (
-                                                                            <button onClick={() => this.delete(accion.id)} className="dropdown-item">
-                                                                                Eliminar
+                                                                            {(!accion.is_acepted && this.props.estados.closed) && (
+                                                                                <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                                                                                    Eliminar
                                                                             </button>
-                                                                        )}
+                                                                            )}
 
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </td>
+
+
+                                                        <td>{accion.cost_center ? accion.cost_center.code : ""}</td>
+                                                        <td>{accion.user_invoice.name}</td>
+                                                        {/* <td>{accion.invoice_name}</td> */}
+                                                        <td>{accion.invoice_date}</td>
+                                                        <td>{accion.identification}</td>
+                                                        <td>{accion.description}</td>
+                                                        <td>{accion.invoice_number}</td>
+                                                        <td>{accion.type_identification != undefined ? accion.type_identification.name : ""}</td>
+                                                        <td>{accion.payment_type != undefined ? accion.payment_type.name : ""}</td>
+
+                                                        <td><NumberFormat value={accion.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                        <td><NumberFormat value={accion.invoice_tax} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                        <td><NumberFormat value={accion.invoice_total} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                        <td>{accion.is_acepted ? "Aceptado" : "Creado"}</td>
+                                                        <th>
+                                                            {this.getDate(accion.created_at)} <br />
+                                                            {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                                                        </th>
+
+                                                        <th>
+                                                            {this.getDate(accion.updated_at)} <br />
+                                                            {accion.last_user_edited != undefined ? <React.Fragment> <b> </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null}
+                                                        </th>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                    <td colSpan="13" className="text-center">
+                                                        <div className="text-center mt-4 mb-4">
+                                                            <h4>No hay registros</h4>
+                                                        </div>
                                                     </td>
-                                                    
-
-                                                    <td>{accion.cost_center ?  accion.cost_center.code : "" }</td>
-                                                    <td>{accion.user_invoice.name}</td>
-                                                    {/* <td>{accion.invoice_name}</td> */}
-                                                    <td>{accion.invoice_date}</td>
-                                                    <td>{accion.identification}</td>
-                                                    <td>{accion.description}</td>
-                                                    <td>{accion.invoice_number}</td>
-                                                    <td>{accion.type_identification != undefined ? accion.type_identification.name : ""}</td>
-                                                    <td>{accion.payment_type != undefined ? accion.payment_type.name : ""}</td>
-                                                    
-                                                    <td><NumberFormat value={accion.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                    <td><NumberFormat value={accion.invoice_tax} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                    <td><NumberFormat value={accion.invoice_total} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>                      
-                                                    <td>{accion.is_acepted  ? "Aceptado" : "Creado"}</td>
-                                                    <th>
-                                                        {this.getDate(accion.created_at)} <br />
-                                                        {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
-                                                    </th>
-
-                                                    <th>
-                                                        {this.getDate(accion.updated_at)} <br />
-                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b> </b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
-                                                    </th>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <td colSpan="13" className="text-center">
-                                                <div className="text-center mt-4 mb-4">
-                                                    <h4>No hay registros</h4>
-                                                </div>
-                                            </td>
-                                        )}
-                                    </tbody>
-                                </table>
+                                                )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>

@@ -267,7 +267,7 @@ class Index extends Component {
                                 <div className="col-md-7"></div>
                                 <div className="col-md-5 text-right mb-3">
 
-                                    {false && (
+                                    {true && (
                                         <button 
                                             className="btn btn-primary ml-3"
                                             onClick={() => this.props.filter(true)}

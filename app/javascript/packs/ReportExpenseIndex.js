@@ -276,7 +276,7 @@ class ReportExpenseIndex extends Component {
                     estados={this.props.estados}
                     report_expense_options_type={this.state.report_expense_options_type}
                     report_expense_options_payment={this.state.report_expense_options_payment}
-
+                    HandleClickFilter={this.HandleClickFilter}
                     cost_centers={this.state.cost_centers}
                     users={this.state.users}
 
