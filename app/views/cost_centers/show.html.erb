@@ -1,2 +1,2 @@
 <%= javascript_pack_tag 'ConstCenterShow' %> 
-<%= react_component('ConstCenterShow', alerts: get_alerts ,cost_center: @cost_center, usuario: current_user, estados: @estados, clientes: get_customer) %>
+<%= react_component('ConstCenterShow', alerts: get_alerts ,cost_center: @cost_center, usuario: current_user, estados: @estados, clientes: get_customer, users: get_users_json) %>

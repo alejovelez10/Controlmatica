@@ -13,6 +13,10 @@ class ReportExpenseIndex extends Component {
             showFilter: false,
             isFiltering: false,
 
+            activePage: 1,
+            total: 0, 
+            countPage: 10,
+
             formFilter: {
                 cost_center_id: "",
                 user_invoice_id: "",
@@ -27,6 +31,8 @@ class ReportExpenseIndex extends Component {
                 invoice_total: "",
                 type_identification_id: "",
                 payment_type_id: "",
+                start_date: "",
+                end_date: "",
             },
 
             
@@ -147,30 +153,50 @@ class ReportExpenseIndex extends Component {
         })
         .then(response => response.json())
         .then(data => {
-          this.setState({
-            data: data.data,
-            isLoaded: false
-          });
+            this.setState({
+                data: data.data,
+                total: data.total,
+                isLoaded: false
+            });
         });
     }
 
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true, isFiltering: true })
-        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}`, {
+        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
                 "Content-Type": "application/json"
             }
         })
-          .then(response => response.json())
-          .then(data => {
+        .then(response => response.json())
+        .then(data => {
             this.setState({
-              data: data.data,
-              isLoaded: false,
+                data: data.data,
+                total: data.total,
+                isLoaded: false,
             });
         });
+    };
+
+    handlePageChange = pageNumber => {
+        this.setState({ activePage: pageNumber }); 
+        fetch(`/get_report_expenses?page=${pageNumber}&filter=${this.state.countPage}&cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setState({ 
+                data: data.data,
+                total: data.total,
+            });
+        });     
     };
 
     clearValues = () => {
@@ -190,6 +216,8 @@ class ReportExpenseIndex extends Component {
                 invoice_total: "",
                 type_identification_id: "",
                 payment_type_id: "",
+                start_date: "",
+                end_date: "",
             },
 
             selectedOptionCostCenter: {
@@ -284,6 +312,11 @@ class ReportExpenseIndex extends Component {
                     updateDataReportExpenseOptionPayment={this.updateDataReportExpenseOptionPayment}
                     isFiltering={this.state.isFiltering}
                     formFilter={this.state.formFilter}
+
+                    activePage={this.state.activePage}
+                    total={this.state.total}
+                    countPage={this.state.countPage}
+                    handlePageChange={this.handlePageChange}
                 />
             </React.Fragment>
         );

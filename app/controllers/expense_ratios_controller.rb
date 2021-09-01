@@ -32,7 +32,27 @@ class ExpenseRatiosController < ApplicationController
             end
         end
     end
-
+    
+    def get_documents_create
+        if params[:filtering] == "true"
+          documents = DocumentManagement::Document.where(tenant_id: current_user.tenant_id, state: "creando").search(params[:name], params[:document_type_id], params[:proceso_id], params[:user_create_id], params[:user_review_id], params[:user_approve_id], params[:due_date], params[:version]).paginate(page: params[:page], :per_page => 10)
+          documents_total = DocumentManagement::Document.where(tenant_id: current_user.tenant_id, state: "creando").search(params[:name], params[:document_type_id], params[:proceso_id], params[:user_create_id], params[:user_review_id], params[:user_approve_id], params[:due_date], params[:version]).count
+  
+        elsif params[:filtering] == "false"
+          documents = DocumentManagement::Document.where(tenant_id: current_user.tenant_id, state: "creando").paginate(:page => params[:page], :per_page => 10)
+          documents_total =  DocumentManagement::Document.where(tenant_id: current_user.tenant_id, state: "creando").count
+  
+        else
+          documents = DocumentManagement::Document.where(tenant_id: current_user.tenant_id, state: "creando").paginate(:page => params[:page], :per_page => 10)
+          documents_total = DocumentManagement::Document.where(tenant_id: current_user.tenant_id, state: "creando").count
+  
+        end
+  
+        render json: {
+          data: ActiveModelSerializers::SerializableResource.new(documents, each_serializer: DocumentManagement::DocumentSerializer),
+          documents_total: documents_total,
+        }
+      end
 
     def get_expense_ratios
         expense_ratio = ModuleControl.find_by_name("Relación de gastos")
@@ -40,20 +60,25 @@ class ExpenseRatiosController < ApplicationController
         
         if params[:user_direction_id] || params[:user_report_id] || params[:observations] || params[:start_date] || params[:end_date] || params[:creation_date] || params[:area] 
             if show_all
-                expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
+                expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).paginate(page: params[:page], :per_page => 10)
+                total = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).count
             else
-                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area])
+                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).paginate(page: params[:page], :per_page => 10)
+                total = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).count
             end
         else
             if show_all
-                expense_ratios = ExpenseRatio.all
+                expense_ratios = ExpenseRatio.all.paginate(page: params[:page], :per_page => 10)
+                total = ExpenseRatio.all.count
             else
-                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id)
+                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).paginate(page: params[:page], :per_page => 10)
+                total = ExpenseRatio.where(user_report_id: current_user.id).count
             end
         end
 
         render json: {
           data: ActiveModelSerializers::SerializableResource.new(expense_ratios, each_serializer: ExpenseRatioSerializer),
+          total: total
         }   
     end
     

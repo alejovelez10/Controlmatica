@@ -38,7 +38,7 @@ class ReportExpense < ApplicationRecord
       self.last_user_edited_id = User.current.id
     end 
 
-    def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9, search10, search11, search12)
+    def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9, search10, search11, search12, search13, search14)
         search1 != "" ? (scope :centro, -> { where(cost_center_id: search1) }) : (scope :centro, -> { where.not(id: nil) })
         search2 != "" ? (scope :user, -> { where(user_invoice_id: search2) }) : (scope :user, -> { where.not(id: nil) })
         search3 != "" ? (scope :name_gasto, -> { where("invoice_name like '%#{search3.downcase}%' or invoice_name like '%#{search3.upcase}%' or invoice_name like '%#{search3.capitalize}%' ") }) : (scope :name_gasto, -> { where.not(id: nil) })
@@ -52,7 +52,10 @@ class ReportExpense < ApplicationRecord
         search11 != "" ? (scope :inpuesto_factura, -> { where(invoice_tax: search11) }) : (scope :inpuesto_factura, -> { where.not(id: nil) })
         search12 != "" ? (scope :total_factura, -> { where(invoice_total: search12) }) : (scope :total_factura, -> { where.not(id: nil) })
 
-        centro.user.name_gasto.date.indetificacion.descripcion.numero_factura.tipo_identificacion.tipo_pago.valor_factura.inpuesto_factura.total_factura
+        search13 != "" ? (scope :fdesdep, -> { where(["invoice_date > ?", search13]) }) : (scope :fdesdep, -> { where.not(id: nil) })
+        search14 != "" ? (scope :fhastap, -> { where(["invoice_date < ?", search14]) }) : (scope :fhastap, -> { where.not(id: nil) })
+
+        centro.user.name_gasto.date.indetificacion.descripcion.numero_factura.tipo_identificacion.tipo_pago.valor_factura.inpuesto_factura.total_factura.fdesdep.fhastap
     end
 
     def self.import(file, user)

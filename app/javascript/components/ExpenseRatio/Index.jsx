@@ -3,6 +3,7 @@ import FormCreate from './FormCreate'
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import NumberFormat from 'react-number-format';
+import Pagination from "react-js-pagination";
 
 class Index extends Component {
     constructor(props) {
@@ -382,6 +383,33 @@ class Index extends Component {
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <div className="col-md-12" style={{ marginTop: "50px" }}>
+                                    <div className="row">
+
+                                        <div className="col-md-7 text-left pl-0">
+                                            <p>
+                                                Mostrando {this.props.data.length} de {this.props.total}
+                                            </p>
+                                        </div>
+
+                                        <div className="col-md-5 p-0 text-right">
+                                            <Pagination
+                                                hideNavigation
+                                                activePage={this.props.activePage}
+                                                itemsCountPerPage={this.props.countPage}
+                                                itemClass="page-item"
+                                                innerClass="pagination"
+                                                linkClass="page-link"
+                                                totalItemsCount={this.props.total}
+                                                pageRangeDisplayed={this.props.countPage}
+                                                onChange={this.props.handlePageChange}
+                                            />
+                                        </div>
+
+                                    </div>
+                                </div>   
+
                             </div>
                         </div>
                     </div>

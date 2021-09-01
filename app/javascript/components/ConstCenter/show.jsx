@@ -59,12 +59,20 @@ class Show extends React.Component {
       
                 displacement_hours: this.props.data_info.displacement_hours,
                 value_displacement_hours: this.props.data_info.value_displacement_hours,
+
+                user_owner_id: this.props.data_info.user_owner_id != null ? this.props.data_info.user_owner_id : "",
             },
 
             selectedOption: {
                 customer_id: "",
                 label: "Seleccionar cliente"
             },
+
+            selectedOptionUserOwner: {
+                user_owner_id: this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.id : "",
+                label: `${this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : ""}`
+            },
+
       
             selectedOptionContact: {
                 contact_id: "",
@@ -72,7 +80,8 @@ class Show extends React.Component {
             },
       
             dataContact: [],
-            clients: []
+            clients: [],
+            users: [],
       
         }
     }
@@ -129,6 +138,12 @@ class Show extends React.Component {
       };
 
     componentDidMount(){
+        let arryUsers = [];
+
+        this.props.users.map((item) => (
+            arryUsers.push({label: item.name, value: item.id})
+        ))
+
         fetch("/get_roles")
         .then(response => response.json())
         .then(data => {
@@ -145,12 +160,16 @@ class Show extends React.Component {
         ))
     
         this.setState({
+            users: arryUsers,
             clients: array
         })
 
         setTimeout(() => {
             this.getValues()
         },1000)
+
+
+
     }
 
     getValues(){
@@ -248,6 +267,11 @@ class Show extends React.Component {
             selectedOptionContact: {
               value: modulo.contact.customer_id,
               label: modulo.contact.name
+            },
+
+            selectedOptionUserOwner: {
+                user_owner_id: modulo.contact.user_owner_id,
+                label: modulo.user_owner.names,
             },
     
             action: modulo,
@@ -392,6 +416,16 @@ class Show extends React.Component {
             
             return "red"
         }
+    }
+
+    handleChangeAutocompleteUserOwner = (selectedOptionUserOwner) => {
+        this.setState({
+          selectedOptionUserOwner,
+            form: {
+              ...this.state.form,
+              user_owner_id: selectedOptionUserOwner.value
+            }
+        });
     }
 
 
@@ -978,6 +1012,12 @@ class Show extends React.Component {
                                 contacto={this.state.dataContact}
                                 onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
                                 formAutocompleteContact={this.state.selectedOptionContact}
+
+                                /* AUTOCOMPLETE USERS */
+
+                                formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
+                                onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
+                                users={this.state.users}
 
                                 estados={this.props.estados}
                                 

@@ -12,6 +12,10 @@ class ExpenseRatioIndex extends Component {
             isLoaded: true,
             showFilter: false,
 
+            activePage: 1,
+            total: 0, 
+            countPage: 10,
+
             formFilter: {
                 creation_date: "", 
                 user_report_id: "",
@@ -96,10 +100,11 @@ class ExpenseRatioIndex extends Component {
         })
         .then(response => response.json())
         .then(data => {
-          this.setState({
-            data: data.data,
-            isLoaded: false
-          });
+            this.setState({
+                data: data.data,
+                total: data.total,
+                isLoaded: false
+            });
         });
     }
 
@@ -113,11 +118,12 @@ class ExpenseRatioIndex extends Component {
                 "Content-Type": "application/json"
             }
         })
-          .then(response => response.json())
-          .then(data => {
+
+        .then(response => response.json())
+        .then(data => {
             this.setState({
-              data: data.data,
-              isLoaded: false,
+                data: data.data,
+                isLoaded: false,
             });
         });
     };
@@ -184,6 +190,24 @@ class ExpenseRatioIndex extends Component {
         });
     };
 
+    handlePageChange = pageNumber => {
+        this.setState({ activePage: pageNumber }); 
+        fetch(`/get_expense_ratios?page=${pageNumber}&filter=${this.state.countPage}&user_direction_id=${this.state.formFilter.user_direction_id}&user_report_id=${this.state.formFilter.user_report_id}&observations=${this.state.formFilter.observations}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&creation_date=${this.state.formFilter.creation_date}&area=${this.state.formFilter.area}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setState({ 
+                data: data.data,
+                total: data.total,
+            });
+        });     
+    };
+
     render() {
         return (
             <React.Fragment>
@@ -215,6 +239,11 @@ class ExpenseRatioIndex extends Component {
                     filter={this.filter}
                     estados={this.props.estados}
                     users={this.state.users}
+
+                    activePage={this.state.activePage}
+                    total={this.state.total}
+                    countPage={this.state.countPage}
+                    handlePageChange={this.handlePageChange}
                 />
             </React.Fragment>
         );

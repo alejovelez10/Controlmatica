@@ -135,6 +135,28 @@ class FormFilter extends Component {
                                             ))}
                                         </select>
                                     </div>
+
+                                    <div className="col-md-3">
+                                        <label>Fecha inicial </label>
+                                        <input
+                                            type="date"
+                                            name="start_date"
+                                            value={this.props.formValues.start_date}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        />
+                                    </div>
+
+                                    <div className="col-md-3">
+                                        <label>Fecha final </label>
+                                        <input
+                                            type="date"
+                                            name="end_date"
+                                            value={this.props.formValues.end_date}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        />
+                                    </div>
 {/* 
                                     <div className="col-md-3">
                                         <label>Valor del pago </label>

@@ -85,6 +85,7 @@ class CostCenter < ApplicationRecord
   belongs_to :contact, optional: :true
   belongs_to :user, optional: :true
   belongs_to :last_user_edited, :class_name => "User", optional: :true
+  belongs_to :user_owner, :class_name => "User", optional: :true
 
   before_create :create_code
   before_update :change_state
