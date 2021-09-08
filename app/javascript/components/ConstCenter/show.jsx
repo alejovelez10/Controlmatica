@@ -971,6 +971,11 @@ class Show extends React.Component {
                                     <p>Margen Cotizado: <NumberFormat style={{fontSize:"20px"}}  value={ this.props.data_info.aiu_real } displayType={"text"} thousandSeparator={true} prefix={"$"}/> / <span style={{color: this.alertIngCosto(this.props.data_info.aiu_percent_real ,this.props.alerts[0].total_min ,this.props.alerts[0].total_med),fontSize:"20px"}}>{this.props.data_info.aiu_percent_real}%</span></p>
                                 </div>
 
+                                <div className="col-md-3 text-center">
+                                    <strong>Propietario</strong><br/><br/>
+                                    <p>{this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "SIN INFORMACIÓN"}</p>
+                                </div>
+
                             </div>
                         </div>
 
