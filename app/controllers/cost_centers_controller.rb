@@ -150,7 +150,7 @@ class CostCentersController < ApplicationController
     via_cotizado = @cost_center.viatic_value
 
     
-    via_real = @cost_center.reports.sum(:viatic_value)
+    via_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_total)
 
 
     #INGENIERIA EJECUCION

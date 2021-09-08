@@ -79,6 +79,7 @@ class CostCenter < ApplicationRecord
   has_many :materials, dependent: :destroy
   has_many :contractors, dependent: :destroy
   has_many :notification_alerts, dependent: :destroy
+  has_many :report_expenses
 
 
   belongs_to :customer, optional: :true
