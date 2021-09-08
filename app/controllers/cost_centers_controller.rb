@@ -207,7 +207,7 @@ class CostCentersController < ApplicationController
 
     porc_ejec =  total_cot > 0 ? ( (total_margen.to_f/total_cot)*100).round(1) : "N/A" 
 
-    cost_center = @cost_center.to_json( :include => { :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :user_owner => { :only =>[:names, :id] } })
+    cost_center = @cost_center.to_json( :include => { :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :user_owner => { :only =>[:names, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
 
     sum_materials = @cost_center.materials.sum(:amount)  #Material.where(cost_center_id: @cost_center.id).sum(:amount)
 

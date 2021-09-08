@@ -24,7 +24,7 @@ class ReportsController < ApplicationController
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       responsible: (current_user.rol.name == "Administrador" ? true : responsible),
       download_file: (current_user.rol.name == "Administrador" ? true : download_file),
-      viatics: (current_user.rol.name == "Administrador" ? true : viatics)
+      viatics: false
     }
   end
 

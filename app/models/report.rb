@@ -81,7 +81,7 @@ class Report < ApplicationRecord
       cost_center = CostCenter.find(self.cost_center_id)
       self.working_value = self.working_time * cost_center.hour_real
       self.value_displacement_hours = self.displacement_hours * cost_center.hour_real
-      self.total_value = self.viatic_value + (self.working_time * cost_center.hour_real)
+      self.total_value = (self.viatic_value.present? ? self.viatic_value : 0) + (self.working_time * cost_center.hour_real)
       
     else
       self.working_value = 0

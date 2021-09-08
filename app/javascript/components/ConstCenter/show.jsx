@@ -418,6 +418,12 @@ class Show extends React.Component {
         }
     }
 
+    getDate = (date) => {
+        var d = new Date(date),
+        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+    }
+
     handleChangeAutocompleteUserOwner = (selectedOptionUserOwner) => {
         this.setState({
           selectedOptionUserOwner,
@@ -974,6 +980,18 @@ class Show extends React.Component {
                                 <div className="col-md-3 text-center">
                                     <strong>Propietario</strong><br/><br/>
                                     <p>{this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "SIN INFORMACIÓN"}</p>
+                                </div>
+
+                                <div className="col-md-3 text-center">
+                                    <strong>Creación</strong><br/><br/>
+                                    {this.getDate(this.props.data_info.created_at)} <br />
+                                    {this.props.data_info.user != undefined ? <React.Fragment> <b> </b> {this.props.data_info.user != undefined ? this.props.data_info.user.names : ""} </React.Fragment> : null}
+                                </div>
+
+                                <div className="col-md-3 text-center">
+                                    <strong>Ultima actualización</strong><br/><br/>
+                                    {this.getDate(this.props.data_info.updated_at)} <br />
+                                    {this.props.data_info.last_user_edited != undefined ? <React.Fragment> <b> </b> {this.props.data_info.last_user_edited != undefined ? this.props.data_info.last_user_edited.names : ""} </React.Fragment> : null }
                                 </div>
 
                             </div>
