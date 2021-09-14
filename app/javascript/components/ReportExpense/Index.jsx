@@ -477,7 +477,7 @@ class Index extends Component {
                                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
                                                     {this.props.estados.create && (
-                                                        <a class="dropdown-item" onClick={() => this.toogleFile("new")}>Importar</a>
+                                                        <a class="dropdown-item" onClick={() => this.toogleFile("new")}><img src="https://cdn.iconscout.com/icon/premium/png-256-thumb/import-2033519-1712953.png" alt="" style={{ height: "35px" }} /> Importar</a>
                                                     )}
                                                     {this.props.estados.export && (
                                                         <a
@@ -485,7 +485,7 @@ class Index extends Component {
                                                             href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}`}`}
                                                             target="_blank"
                                                         >
-                                                            <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "35px" }} /> Exportar
+                                                            <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "25px" }} /> Exportar
                                                         </a>
                                                     )}
                                                 </div>

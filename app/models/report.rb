@@ -96,7 +96,7 @@ class Report < ApplicationRecord
 
     puts self.customer_id
     if self.cost_center_id == nil || self.cost_center_id == 0  
-      costcenter = CostCenter.create(contact_id:  self.contact_id, customer_id: self.customer_id, service_type: "SERVICIO", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, hour_real: 0.0, hour_cotizada:0.0, quotation_value: 0, execution_state: "EJECUCION",work_force_contractor: 0.0, hours_contractor:0.0,hours_contractor_invoices:0.0,hours_contractor_real:0.0,materials_value:0.0,sum_materials:0.0,sum_contractors:0.0,sum_executed:0.0, sum_viatic:self.viatic_value, sum_materials_costo:0.0,sum_materials_cot:0.0, contractor_total_costo:0.0, sum_contractor_costo:0.0,sum_contractor_cot:0.0,sum_materials_value:0.0,ingenieria_total_costo:0.0, description: "SIN INFORMACIÓN")
+      costcenter = CostCenter.create(user_id: self.user_id, contact_id:  self.contact_id, customer_id: self.customer_id, service_type: "SERVICIO", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, hour_real: 0.0, hour_cotizada:0.0, quotation_value: 0, execution_state: "EJECUCION",work_force_contractor: 0.0, hours_contractor:0.0,hours_contractor_invoices:0.0,hours_contractor_real:0.0,materials_value:0.0,sum_materials:0.0,sum_contractors:0.0,sum_executed:0.0, sum_viatic:self.viatic_value, sum_materials_costo:0.0,sum_materials_cot:0.0, contractor_total_costo:0.0, sum_contractor_costo:0.0,sum_contractor_cot:0.0,sum_materials_value:0.0,ingenieria_total_costo:0.0, description: "SIN INFORMACIÓN")
       self.cost_center_id = costcenter.id
       
       count = Report.where(customer_id: self.customer_id).maximum(:count)

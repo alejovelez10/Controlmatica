@@ -27,6 +27,7 @@ class ExpenseRatiosController < ApplicationController
                 render :pdf => "formatos1",
                     :template => "expense_ratios/pdfs/expense_ratios.pdf.erb",
                     :layout => "pdf.html.erb",
+                    :orientation => "landscape",
                     
                     :show_as_html => params[:debug].present?
             end
