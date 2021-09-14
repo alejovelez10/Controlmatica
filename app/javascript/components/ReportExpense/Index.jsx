@@ -540,6 +540,7 @@ class Index extends Component {
                                         </thead>
 
                                         <tbody>
+                                            
                                             {this.props.data.length >= 1 ? (
                                                 this.props.data.map(accion => (
                                                     <tr key={accion.id}>
