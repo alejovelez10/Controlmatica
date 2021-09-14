@@ -147,7 +147,7 @@ class FormFilter extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-3">
+                                    <div className="col-md-3 mt-2">
                                         <label>Fecha hasta </label>
                                         <input
                                             type="date"
