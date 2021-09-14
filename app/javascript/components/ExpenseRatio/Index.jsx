@@ -292,7 +292,7 @@ class Index extends Component {
 
                             <div className="tile-body">
                                 <div className="content-table"> {/* content-table */}
-                                    <table className="table table-hover table-bordered" style={{ width: "256%", maxWidth: "258%" }} id="sampleTable" > {/*  table-width */}
+                                    <table className="table table-hover table-bordered" style={{ width: "1800px", maxWidth: "1800px", minWidth: "100%" }} id="sampleTable" > {/*  table-width */}
                                         <thead>
                                             <tr>
                                                 {(this.props.estados.delete || this.props.estados.edit) && (
@@ -302,16 +302,15 @@ class Index extends Component {
                                                 {this.props.estados.pdf && (
                                                     <th className="text-left">Pdf</th>
                                                 )}
-
-                                                <th>Nombre del director</th>
-                                                <th>Nombre del empleado</th>
-                                                <th>Area</th>
-                                                <th>Fecha de creación</th>
-                                                <th>Fecha inicial</th>
-                                                <th>Fecha final</th>
+                                                <th style={{width:"200px"}}>Nombre del director</th>
+                                                <th style={{width:"200px"}}>Nombre del empleado</th>
+                                                <th style={{width:"200px"}}>Area</th>
+                                                <th style={{width:"200px"}}>Fecha de creación</th>
+                                                <th style={{width:"200px"}}>Fecha inicial</th>
+                                                <th style={{width:"200px"}}>Fecha final</th>
                                                 <th style={{width:"250px"}}>Observaciones</th>
-                                                <th style={{width: "15%"}}>Creación</th>
-                                                <th style={{width: "15%"}}>Ultima actualización</th>
+                                                <th style={{width:"200px"}}>Creación</th>
+                                                <th style={{width:"200px"}}>Ultima actualización</th>
                                             </tr>
                                         </thead>
 

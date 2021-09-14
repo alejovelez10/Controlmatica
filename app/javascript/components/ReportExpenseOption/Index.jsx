@@ -226,7 +226,7 @@ class Index extends Component {
                                         <tr >
                                             <th>Nombre</th>
                                             <th>Tipo</th>
-                                            <th>Acciones</th>
+                                            <th style={{width:"90px"}}>Acciones</th>
                                         </tr>
                                     </thead>
 

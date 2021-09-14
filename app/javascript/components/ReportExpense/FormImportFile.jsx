@@ -98,7 +98,7 @@ class FormImportFile extends Component {
                             <ModalBody>
                                 <div className="row">
                                     <div className={`col-md-12`}>
-                                        {/*<Dropzone onDrop={(files) => this.handleFileCreate(files)}>
+                                        <Dropzone onDrop={(files) => this.handleFileCreate(files)}>
                                             {({getRootProps, getInputProps}) => (
                                                 <div
                                                     {...getRootProps({
@@ -109,7 +109,7 @@ class FormImportFile extends Component {
                                                     <p>{`${(this.state.nameFile != "" ? this.state.nameFile : "Arrastre y suelte el archivo aquí, o haga clic para seleccionar el archivo")}`}</p>
                                                 </div>
                                             )}
-                                        </Dropzone>*/}
+                                        </Dropzone>
 
                                         
                                     </div>

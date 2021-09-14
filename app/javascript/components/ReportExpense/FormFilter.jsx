@@ -57,7 +57,7 @@ class FormFilter extends Component {
                                     </div> */}
 
 
-                                    <div className="col-md-3 mb-3">
+                                    {/* <div className="col-md-3 mb-3">
                                         <label>Fecha de factura </label>
                                         <input
                                             type="date"
@@ -66,7 +66,7 @@ class FormFilter extends Component {
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
                                         />
-                                    </div>
+                                    </div> */}
 
 
                                     <div className="col-md-3 mb-3">
@@ -137,7 +137,7 @@ class FormFilter extends Component {
                                     </div>
 
                                     <div className="col-md-3">
-                                        <label>Fecha inicial </label>
+                                        <label>Fecha desde </label>
                                         <input
                                             type="date"
                                             name="start_date"
@@ -148,7 +148,7 @@ class FormFilter extends Component {
                                     </div>
 
                                     <div className="col-md-3">
-                                        <label>Fecha final </label>
+                                        <label>Fecha hasta </label>
                                         <input
                                             type="date"
                                             name="end_date"

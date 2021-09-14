@@ -68,21 +68,37 @@ class table extends React.Component {
   }
 
   validationForm = () => {
-    if (this.state.form.customer_id != "" &&
-      this.state.form.contact_id != "" &&
-      this.state.form.report_date != "" &&
-      this.state.form.working_time != "" &&
-      this.state.form.work_description != "" &&
-      this.state.form.viatic_value != ""
-    ) {
-      console.log("los campos estan llenos")
-      this.setState({ ErrorValues: true })
-      return true
-    } else {
-      console.log("los campos no se han llenado")
-      this.setState({ ErrorValues: false })
-      return false
-
+    if(this.props.estados.viatics){
+        if (this.state.form.customer_id != "" &&
+          this.state.form.contact_id != "" &&
+          this.state.form.report_date != "" &&
+          this.state.form.working_time != "" &&
+          this.state.form.work_description != "" &&
+          this.state.form.viatic_value != ""
+      ) {
+        console.log("los campos estan llenos")
+        this.setState({ ErrorValues: true })
+        return true
+      } else {
+        console.log("los campos no se han llenado")
+        this.setState({ ErrorValues: false })
+        return false
+      }
+    }else{
+      if (this.state.form.customer_id != "" &&
+          this.state.form.contact_id != "" &&
+          this.state.form.report_date != "" &&
+          this.state.form.working_time != "" &&
+          this.state.form.work_description != ""
+      ) {
+        console.log("los campos estan llenos")
+        this.setState({ ErrorValues: true })
+        return true
+      } else {
+        console.log("los campos no se han llenado")
+        this.setState({ ErrorValues: false })
+        return false
+      }
     }
   }
 

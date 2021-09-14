@@ -81,24 +81,39 @@ class ReportExpense < ApplicationRecord
 		  report_expense = find_by(id: row["id"]) || new
 		  report_expense.attributes = row.to_hash
 
-      user_invoice = User.find_by_name(row["user_invoice_id"].upcase)
-      cost_center = CostCenter.find_by_name(row["cost_center_id"].upcase)
-      type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"].upcase)
-      payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"].upcase)
+      user_invoice = User.find_by_names(row["user_invoice_id"])
+      puts row["user_invoice_id"].upcase
+      puts user_invoice
+      puts "hola"
+      
+      if row["invoice_date"].split("-").length == 4
+        date = row["invoice_date"].split("-")
+        puts date[3]
+        puts date[2]
+        puts date[1]
+        report_expense.invoice_date = Date.new(date[3].to_i, date[2].to_i, date[1].to_i)
+      end
+      begin
+      cost_center = CostCenter.find_by_code(row["cost_center_id"])
+      type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"])
+      payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"])
 
       value_user_invoice = (user_invoice.present? ? user_invoice.id : "")
       value_cost_center = (cost_center.present? ? cost_center.id : "")
       value_type_identification = (type_identification.present? ? type_identification.id : "")
       value_payment_type = (payment_type.present? ? payment_type.id : "")
 
-		  report_expense.user_id = user
+		  report_expense.user_id = user_invoice.id
 
-      report_expense.user_invoice_id = value_user_invoice
+      report_expense.user_invoice_id = user_invoice.id
       report_expense.cost_center_id = value_cost_center
       report_expense.type_identification_id = value_type_identification
       report_expense.payment_type_id = value_payment_type
 
-		  report_expense.save!
+      report_expense.save!
+    rescue
+      puts "error salio"
+    end
 		end
 	end
 	
