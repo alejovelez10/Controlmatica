@@ -95,22 +95,22 @@
         
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15; font-weight: bold; width: 250px !important" colspan="1">TOTAL</td>
-            <td class="text-center" style=" text-align: left; font-size: 15"><%= 12 * 12 %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15"><%= @report_expenses.sum(:invoice_total) %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">TOTAL EFECTIVO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12 %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= @report_expenses.sum(:invoice_total) %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">ANTICIPOS A FAVOR CIA</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12 %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">VALOR A PAGAR EMPLEADO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= 12 * 12 %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= @report_expenses.sum(:invoice_total) %>></td>
           </tr>
 
         </table>

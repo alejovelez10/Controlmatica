@@ -545,7 +545,7 @@ class Index extends Component {
                                                     <tr key={accion.id}>
 
                                                         <td className="text-center" style={{ width: "10px" }}>
-                                                            {!accion.is_acepted && (
+                                                            {(!accion.is_acepted || this.props.estados.closed) && (
                                                                 <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
                                                                     <div className="btn-group" role="group">
                                                                         <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -560,7 +560,7 @@ class Index extends Component {
                                                                             </button>
                                                                             )}
 
-                                                                            {(!accion.is_acepted && this.props.estados.closed) && (
+                                                                            {(!accion.is_acepted && this.props.estados.delete) && (
                                                                                 <button onClick={() => this.delete(accion.id)} className="dropdown-item">
                                                                                     Eliminar
                                                                             </button>
