@@ -208,7 +208,7 @@ class Index extends Component {
     }
 
     updateFilterValues = () => {
-        fetch(`/update_filter_values?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}&start_date=${this.props.formFilter.start_date}&end_date=${this.props.formFilter.end_date}`, {
+        fetch(`/update_filter_values?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}`, {
             method: 'PATCH', // or 'PUT'
             body: JSON.stringify(this.state.formCreate), // data can be `string` or {object}!
             headers: {
@@ -482,7 +482,7 @@ class Index extends Component {
                                                     {this.props.estados.export && (
                                                         <a
                                                             className="dropdown-item"
-                                                            href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}&start_date=${this.props.formFilter.start_date}&end_date=${this.props.formFilter.end_date}`}`}
+                                                            href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}`}`}
                                                             target="_blank"
                                                         >
                                                             <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "25px" }} /> Exportar
@@ -545,7 +545,7 @@ class Index extends Component {
                                                     <tr key={accion.id}>
 
                                                         <td className="text-center" style={{ width: "10px" }}>
-                                                            {(!accion.is_acepted ) && (
+                                                            {(!accion.is_acepted || this.props.estados.closed) && (
                                                                 <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
                                                                     <div className="btn-group" role="group">
                                                                         <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -554,13 +554,13 @@ class Index extends Component {
 
                                                                         <div className="dropdown-menu dropdown-menu-right">
 
-                                                                            {(!accion.is_acepted && this.props.estados.edit) && (
+                                                                            {(this.props.estados.edit) && (
                                                                                 <button onClick={() => this.edit(accion)} className="dropdown-item">
                                                                                     Editar
                                                                             </button>
                                                                             )}
 
-                                                                            {(!accion.is_acepted && this.props.estados.delete) && (
+                                                                            {(this.props.estados.delete) && (
                                                                                 <button onClick={() => this.delete(accion.id)} className="dropdown-item">
                                                                                     Eliminar
                                                                             </button>
