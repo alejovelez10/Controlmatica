@@ -98,12 +98,12 @@ class Show extends React.Component {
     } 
 
     handleChangeForm = e => {
-          this.setState({
+        this.setState({
             form: {
               ...this.state.form,
               [e.target.name]: e.target.value
             }
-          });
+        });
     };
 
     HandleClick = e => {
@@ -248,69 +248,60 @@ class Show extends React.Component {
         }));
     }
 
-    edit = modulo => {
-        if(this.state.modeEdit === true){
-          this.setState({modeEdit: false})
-        }else{
-          this.setState({modeEdit: true})
-        }
-    
-        this.toggle("edit")
-    
-          this.setState({
-    
-            selectedOption: {
-              value: modulo.customer_id,
-              label: modulo.customer.name
-            },
-    
-            selectedOptionContact: {
-              value: modulo.contact.customer_id,
-              label: modulo.contact.name
-            },
+    edit = () => {
+        this.setState({
+            modal: true,
+            modeEdit: true,  
 
+                        
+            selectedOption: {
+                value: this.props.data_info.customer_id,
+                label: this.props.data_info.customer.name
+            },
+      
+            selectedOptionContact: {
+                value: this.props.data_info.contact.customer_id,
+                label: this.props.data_info.contact.name
+            },
+  
             selectedOptionUserOwner: {
-                user_owner_id: modulo.contact.user_owner_id,
-                label: modulo.user_owner.names,
+                user_owner_id: this.props.data_info.contact.user_owner_id != null ? this.props.data_info.contact.user_owner_id : "",
+                label: this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "",
             },
-    
-            action: modulo,
+      
+            action: this.props.data_info,
             title: "Editar Centro de costo",
-    
+      
             form: {
-              customer_id: modulo.customer_id,
-              contact_id: modulo.contact_id,
-              service_type: modulo.service_type,
-              user_id: modulo.user_id,
-              description: modulo.description,
-              start_date: modulo.start_date,
-              end_date: modulo.end_date,
-              quotation_number: modulo.quotation_number,
-              viatic_value: modulo.viatic_value,
-              execution_state: "PENDIENTE",
-    
-              eng_hours: modulo.eng_hours != "" ? modulo.eng_hours : "0.0" ,
-              hour_real: modulo.hour_real != "" ? modulo.hour_real : "0.0",
-              hour_cotizada: modulo.hour_cotizada != "" ? modulo.hour_cotizada : "0.0",
-    
-    
-              hours_contractor: modulo.hours_contractor != "" ? modulo.hours_contractor : "0.0",
-              hours_contractor_real: modulo.hours_contractor_real != "" ? modulo.hours_contractor_real : "0.0",
-              hours_contractor_invoices: modulo.hours_contractor_invoices != "" ? modulo.hours_contractor_invoices : "0.0",
-    
-              displacement_hours: modulo.displacement_hours != "" ? modulo.displacement_hours : "0.0",
-              value_displacement_hours: modulo.value_displacement_hours != "" ? modulo.value_displacement_hours : "0.0",
-    
-              materials_value: modulo.materials_value != "" ? modulo.materials_value : "0.0",
-              viatic_value: modulo.viatic_value != "" ? modulo.viatic_value : "0.0",
-              quotation_value: modulo.quotation_value != "" ? modulo.quotation_value : "0.0",
+                customer_id: this.props.data_info.customer_id,
+                contact_id: this.props.data_info.contact_id,
+                service_type: this.props.data_info.service_type,
+                user_id: this.props.data_info.user_id,
+                description: this.props.data_info.description,
+                start_date: this.props.data_info.start_date,
+                end_date: this.props.data_info.end_date,
+                quotation_number: this.props.data_info.quotation_number,
+                viatic_value: this.props.data_info.viatic_value,
+                execution_state: "PENDIENTE",
+      
+                eng_hours: this.props.data_info.eng_hours != "" ? this.props.data_info.eng_hours : "0.0" ,
+                hour_real: this.props.data_info.hour_real != "" ? this.props.data_info.hour_real : "0.0",
+                hour_cotizada: this.props.data_info.hour_cotizada != "" ? this.props.data_info.hour_cotizada : "0.0",
+      
+      
+                hours_contractor: this.props.data_info.hours_contractor != "" ? this.props.data_info.hours_contractor : "0.0",
+                hours_contractor_real: this.props.data_info.hours_contractor_real != "" ? this.props.data_info.hours_contractor_real : "0.0",
+                hours_contractor_invoices: this.props.data_info.hours_contractor_invoices != "" ? this.props.data_info.hours_contractor_invoices : "0.0",
+      
+                displacement_hours: this.props.data_info.displacement_hours != "" ? this.props.data_info.displacement_hours : "0.0",
+                value_displacement_hours: this.props.data_info.value_displacement_hours != "" ? this.props.data_info.value_displacement_hours : "0.0",
+      
+                materials_value: this.props.data_info.materials_value != "" ? this.props.data_info.materials_value : "0.0",
+                viatic_value: this.props.data_info.viatic_value != "" ? this.props.data_info.viatic_value : "0.0",
+                quotation_value: this.props.data_info.quotation_value != "" ? this.props.data_info.quotation_value : "0.0",
             },
-            
-            }
-            
-          )
-          
-      };
+        })  
+    };
     
     handleSubmit = e => {
        e.preventDefault();
@@ -1018,45 +1009,47 @@ class Show extends React.Component {
                                 </React.Fragment>
                             )}
 
-                            <FormCreate
-                                toggle={this.toggle}
-                                backdrop={this.state.backdrop}
-                                modal={this.state.modal}
-                                onChangeForm={this.handleChangeForm}
-                                formValues={this.state.form}
-                                submit={this.HandleClick}
-                                FormSubmit={this.handleSubmit}
+                            {this.state.modal && (
+                                <FormCreate
+                                    toggle={this.toggle}
+                                    backdrop={this.state.backdrop}
+                                    modal={this.state.modal}
+                                    onChangeForm={this.handleChangeForm}
+                                    formValues={this.state.form}
+                                    submit={this.HandleClick}
+                                    FormSubmit={this.handleSubmit}
 
-                                titulo={this.state.title}
-                                nameSubmit={true ? "Actualizar" : "Crear"}
-                                errorValues={this.state.ErrorValues}
-                                modeEdit={true}
-                                
+                                    titulo={"Actualizar centro de costo"}
+                                    nameSubmit={true ? "Actualizar" : "Crear"}
+                                    errorValues={this.state.ErrorValues}
+                                    modeEdit={true}
+                                    
 
-                                /* AUTOCOMPLETE CLIENTE */
+                                    /* AUTOCOMPLETE CLIENTE */
 
-                                clientes={this.state.clients}
-                                onChangeAutocomplete={this.handleChangeAutocomplete}
-                                formAutocomplete={this.state.selectedOption}
+                                    clientes={this.state.clients}
+                                    onChangeAutocomplete={this.handleChangeAutocomplete}
+                                    formAutocomplete={this.state.selectedOption}
 
-                                /* AUTOCOMPLETE CONTACTO */
+                                    /* AUTOCOMPLETE CONTACTO */
 
-                                contacto={this.state.dataContact}
-                                onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
-                                formAutocompleteContact={this.state.selectedOptionContact}
+                                    contacto={this.state.dataContact}
+                                    onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+                                    formAutocompleteContact={this.state.selectedOptionContact}
 
-                                /* AUTOCOMPLETE USERS */
+                                    /* AUTOCOMPLETE USERS */
 
-                                formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
-                                onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
-                                users={this.state.users}
+                                    formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
+                                    onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
+                                    users={this.state.users}
 
-                                estados={this.props.estados}
-                                
-                            />
+                                    estados={this.props.estados}
+                                    
+                                />  
+                            )}
 
                             <div className="col-md-12 text-center mt-5">
-                                <button onClick={() => this.edit(this.props.data_info)} className="btn btn-secondary">
+                                <button onClick={() => this.edit()} className="btn btn-secondary">
                                     Editar información
                                 </button>
                             </div>
