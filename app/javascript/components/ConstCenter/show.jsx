@@ -253,7 +253,6 @@ class Show extends React.Component {
             modal: true,
             modeEdit: true,  
 
-                        
             selectedOption: {
                 value: this.props.data_info.customer_id,
                 label: this.props.data_info.customer.name

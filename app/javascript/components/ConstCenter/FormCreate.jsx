@@ -465,7 +465,7 @@ class FormCreate extends React.Component {
                         onChange={this.props.onChangeAutocompleteUserOwner}
                         options={this.props.users}
                         autoFocus={false}
-                        className={`link-form`}
+                        className={`link-form ${this.props.errorValues == false && this.props.formValues.user_owner_id == "" ? "error-class" : ""}`}
                         value={this.props.formAutocompleteUserOwner}
                       />
                   </div>
