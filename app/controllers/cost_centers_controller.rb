@@ -270,6 +270,8 @@ puts "hola jaja"
   end
 
   def getValues
+    puts params[:id]
+    puts "hola probando"
     cost_center = CostCenter.find(params[:id])
     sales_ordes = cost_center.sales_orders.to_json( :include => {  :cost_center=> { :include => :customer , :only =>[:code, :invoiced_state]} , :customer_invoices => { :only =>[:invoice_value, :invoice_date, :number_invoice] } })
     reportes = cost_center.reports.to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
