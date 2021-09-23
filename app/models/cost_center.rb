@@ -293,6 +293,7 @@ class CostCenter < ApplicationRecord
     puts customer_invoice
     puts sales_order_sum
     puts cost_center.quotation_value
+    cost_center.quotation_value = cost_center.quotation_value.nil? ? 0 : cost_center.quotation_value 
              if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
             self.invoiced_state = "FACTURADO"
           elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
