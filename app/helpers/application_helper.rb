@@ -200,7 +200,7 @@ module ApplicationHelper
 	end
 
 	def get_users_json
-		users = User.all.order(created_at: :asc)
+		users = User.joins(:rol).where('rols.name = ? OR rols.name = ?', "Administrador", "Comercial")
 		users.collect do |user|
 			{
 				:id => user.id,

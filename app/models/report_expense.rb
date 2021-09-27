@@ -88,9 +88,10 @@ class ReportExpense < ApplicationRecord
       puts date[0]
       puts date[1]
       puts row["invoice_date"].to_s
-      report_expense.invoice_date = Time.new((date[2].to_i + 2000), date[0], date[1])
-      report_expense.invoice_total = row["invoice_tax"].to_f + row["invoice_value"].to_f
+
       begin
+        report_expense.invoice_date = Time.new((date[2].to_i + 2000), date[0], date[1])
+        report_expense.invoice_total = row["invoice_tax"].to_f + row["invoice_value"].to_f
         cost_center = CostCenter.find_by_code(row["cost_center_id"])
         type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"])
         payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"])

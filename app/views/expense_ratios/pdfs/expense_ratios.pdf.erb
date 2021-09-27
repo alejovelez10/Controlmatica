@@ -70,14 +70,13 @@
         <% @report_expenses.each do |report_expense| %>
           <tr>
             <td style="text-align: center;"><%= report_expense.invoice_date %></td>
-            <td style="text-align: center;"><%= report_expense.type_identification %></td>
+            <td style="text-align: center;"><%= report_expense.identification %></td>
             <td style="text-align: center;"><%= report_expense.user_invoice.names %></td>
             <td style="text-align: center;"><%= report_expense.description %></td>
             <td style="text-align: center;"><%= report_expense.cost_center ? report_expense.cost_center.code : ""%></td>
             <td style="text-align: center;"><%= report_expense.invoice_number %></td>
-            <td style="text-align: center;"><%= report_expense.invoice_type %></td>
-            <td style="text-align: center;"><%= report_expense.payment_type %></td>
-
+            <td style="text-align: center;"><%= report_expense.type_identification ? report_expense.type_identification.name : "" %></td>
+            <td style="text-align: center;"><%= report_expense.payment_type ? report_expense.payment_type.name : "" %></td>
             <td style="text-align: center;"><%= number_to_currency(report_expense.invoice_value, precision: 0) %></td>
             <td style="text-align: center;"><%= number_to_currency(report_expense.invoice_tax, precision: 0) %></td>
             <td style="text-align: center;"><%= number_to_currency(report_expense.invoice_total, precision: 0) %></td>
@@ -95,12 +94,12 @@
         
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15; font-weight: bold; width: 250px !important" colspan="1">TOTAL</td>
-            <td class="text-center" style=" text-align: left; font-size: 15"><%= @report_expenses.sum(:invoice_total) %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0)  %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">TOTAL EFECTIVO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= @report_expenses.sum(:invoice_total) %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0)  %></td>
           </tr>
 
           <tr class="float-right">
@@ -110,7 +109,7 @@
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">VALOR A PAGAR EMPLEADO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= @report_expenses.sum(:invoice_total) %>></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0)  %></td>
           </tr>
 
         </table>

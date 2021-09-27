@@ -96,8 +96,7 @@ class tableIndex extends React.Component {
         this.state.form.start_date != "" && 
         this.state.form.end_date != "" &&
         this.state.form.quotation_number != "" &&
-
-
+        this.state.form.user_owner_id != "" &&
         this.state.form.eng_hours != "" && 
         this.state.form.hour_real != "" &&
         this.state.form.hour_cotizada != "" &&

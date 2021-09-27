@@ -175,17 +175,16 @@ class ReportExpensesController < ApplicationController
           sheet.row(1).default_format = rows_format
           position[0] = task.cost_center.present? ? task.cost_center.code : ""
           position[1] = task.user_invoice.names
-          position[2] = task.invoice_name
-          position[3] = task.invoice_date
-          position[4] = task.identification
+          position[2] = task.invoice_date
+          position[3] = task.identification
 
-          position[5] = task.description
-          position[6] = task.invoice_number
-          position[7] = task.type_identification.present? ? task.type_identification.name : ""
-          position[8] = task.payment_type.present? ? task.payment_type.name : ""
-          position[9] = task.invoice_value
-          position[10] = task.invoice_tax
-          position[11] = task.invoice_total
+          position[4] = task.description
+          position[5] = task.invoice_number
+          position[6] = task.type_identification.present? ? task.type_identification.name : ""
+          position[7] = task.payment_type.present? ? task.payment_type.name : ""
+          position[8] = task.invoice_value
+          position[9] = task.invoice_tax
+          position[10] = task.invoice_total
 
           sheet.row(i).height = 25
           sheet.column(i).width = 40
@@ -204,40 +203,28 @@ class ReportExpensesController < ApplicationController
 
         position[0] = "Centro de costo"
         position[1] = "Responsable"
-        position[2] = "Nombre"
-        position[3] = "Fecha de factura"
-        position[4] = "NIT / CEDULA"
-        position[5] = "Descripcion"
-        position[6] = "Numero de factura"
-        position[7] = "Tipo"
-        position[8] = "Medio de pago"
-        position[9] = "Valor del pago"
-        position[10] = "IVA"
-        position[11] = "Total"
+        position[2] = "Fecha de factura"
+        position[3] = "NIT / CEDULA"
+        position[4] = "Descripcion"
+        position[5] = "Numero de factura"
+        position[6] = "Tipo"
+        position[7] = "Medio de pago"
+        position[8] = "Valor del pago"
+        position[9] = "IVA"
+        position[10] = "Total"
 
         sheet.row(0).height = 20
         sheet.column(0).width = 40
-
         sheet.column(1).width = 40
-
         sheet.column(2).width = 40
-
         sheet.column(3).width = 40
-
         sheet.column(4).width = 40
-
         sheet.column(5).width = 40
-
         sheet.column(6).width = 40
-
         sheet.column(7).width = 40
-
         sheet.column(8).width = 40
-
         sheet.column(9).width = 40
-
-        sheet.column(10).width = 40
-        sheet.column(11).width = 45
+        sheet.column(10).width = 45
 
         sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
 
