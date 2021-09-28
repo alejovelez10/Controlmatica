@@ -477,7 +477,7 @@ class table extends React.Component {
                                 <i className="fas fa-bars"></i>
                               </button>
                               <div className="dropdown-menu dropdown-menu-right"> 
-                                {this.getState(accion.user_id) &&(   
+                                {(this.getState(accion.user_id) && accion.cost_center.execution_state != "FINALIZADO") &&(   
                                   <button onClick={() => this.edit(accion)} className="dropdown-item">
                                     Editar
                                   </button>

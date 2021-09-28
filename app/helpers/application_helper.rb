@@ -209,9 +209,13 @@ module ApplicationHelper
 		end
 	end
 
+	def get_center_expenses
+		CostCenter.where.not(execution_state: "FINALIZADO")
+	end
+
 
 	def get_center_tableristas
-		CostCenter.where(service_type: "PROYECTO")
+		CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO")
 	end
 
 	def get_center_materials

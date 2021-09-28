@@ -563,7 +563,7 @@ class Index extends Component {
 
                                                                         <div className="dropdown-menu dropdown-menu-right">
 
-                                                                            {(this.props.estados.edit) && (
+                                                                            {(this.props.estados.edit && accion.cost_center.execution_state != "FINALIZADO") && (
                                                                                 <button onClick={() => this.edit(accion)} className="dropdown-item">
                                                                                     Editar
                                                                             </button>
