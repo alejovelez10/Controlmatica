@@ -81,9 +81,10 @@ class FormImportFile extends Component {
         .then(res => res.json())
         .catch(error => console.error("Error:", error))
         .then(data => {
-            this.updateData(data.register)
+            
             this.props.loadDataTable();
-            this.clearValuesFiles()
+            this.props.closeModal();
+            this.clearValuesFiles();
         });
     }
 

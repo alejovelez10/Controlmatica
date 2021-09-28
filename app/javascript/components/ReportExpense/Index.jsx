@@ -386,6 +386,12 @@ class Index extends Component {
     }
 
 
+    closeModal = () => {
+        this.setState({
+            modalImport: false
+        })
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -438,6 +444,8 @@ class Index extends Component {
                         toggle={this.toogleFile}
                         title={"Importar archivo"}
                         nameBnt={"Subir archivo"}
+                        closeModal={this.closeModal}
+                        loadDataTable={this.props.loadData}
                     />
                 )}
 
