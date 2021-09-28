@@ -26,16 +26,13 @@ class CostCentersController < ApplicationController
     show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
     state_update = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
     edit_all = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar todos").exists?
-
+    sales_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar compras").exists?
 
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
 
     @hours_real_contractor = Parameterization.where(name: "HORA TABLERISTA COSTO").first.money_value
     @value_displacement_hours = Parameterization.where(name: "HORA DESPLAZAMIENTO").first.money_value
-
-
-    
 
     @estados = {      
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -48,6 +45,8 @@ class CostCentersController < ApplicationController
       update_state: (current_user.rol.name == "Administrador" ? true : update_state),
       show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
       state_update: (current_user.rol.name == "Administrador" ? true : state_update),
+      sales_state: (current_user.rol.name == "Administrador" ? true : sales_state),
+
     }
   end
 
@@ -94,6 +93,18 @@ class CostCentersController < ApplicationController
 
     cost_centers = JSON.parse(cost_centers)
     render :json => {cost_centers_paginate: cost_centers, cost_centers_total: cost_centers_total }
+  end
+
+  def update_sales_state_cost_center
+    centro = CostCenter.find(params[:id])
+    update_centro = centro.update(sales_state: params[:state])
+
+    if update_centro
+      render :json => {
+        message: "¡El Registro fue Actualizado con exito!",
+        type: "success"
+      }
+    end  
   end
 
 

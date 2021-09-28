@@ -46,7 +46,7 @@ class Material < ApplicationRecord
   def calculate_cost
     cost_center = CostCenter.find(self.cost_center_id)
     sum_materials_costo = cost_center.materials.sum(:amount)
-    cost_center.update(sum_materials_value: sum_materials_costo)
+    cost_center.update(sum_materials_value: sum_materials_costo, sales_state: "COMPRANDO")
   end
 
   def calculate_cost_destroy

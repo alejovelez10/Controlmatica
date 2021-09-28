@@ -8,6 +8,7 @@ import FormCreate from "../ConstCenter/FormCreate";
 class tableIndex extends React.Component {
   constructor(props){
     super(props)
+    this.token = document.querySelector("[name='csrf-token']").content;
 
     this.state = {
         action: {},
@@ -21,6 +22,12 @@ class tableIndex extends React.Component {
           execution_state: "",
           invoiced_state: ""
         },
+
+        formUpdateSalesState: {
+          sales_state: "",
+        },
+
+        cost_center_id: "",
 
         id: "",
         from_state: "",
@@ -708,6 +715,50 @@ getState = (user) => {
   }
 }
 
+
+  update_sales_state = (e, cost_center) => {
+    fetch(`/update_sales_state_cost_center/${cost_center}/${e}`, {
+        method: 'PATCH', // or 'PUT'
+        headers: {
+            "X-CSRF-Token": this.token,
+            "Content-Type": "application/json"
+        }
+    })
+
+    .then(res => res.json())
+    .catch(error => console.error("Error:", error))
+    .then(data => {
+      this.props.loadInfo();
+        this.setState({
+          formUpdateSalesState: {
+            sales_state: "",
+          },
+    
+          cost_center_id: "",
+        })
+    });
+  }
+
+  editSalesState = (mode, cost_center) => {
+      if(mode == "cerrar"){
+        this.setState({
+          formUpdateSalesState: {
+            sales_state: "",
+          },
+    
+          cost_center_id: "",
+        })
+      }else{
+        this.setState({
+          formUpdateSalesState: {
+            sales_state: cost_center.sales_state,
+          },
+    
+          cost_center_id: cost_center.id,
+        })
+      }
+  }
+
   render() {
     return (
         <React.Fragment>
@@ -798,9 +849,17 @@ getState = (user) => {
                     <th style={{width: "200px"}}>Cliente</th>
                     <th style={{width: "200px"}}>Tipo</th>
                     <th style={{width: "400px"}}>Descripcion</th>
-                    {this.props.estados.ending == true && (
+
+                    {this.props.estados.sales_state && (
+                      <th className="text-center" style={{ width: "170px"}}>¿Finalizo compras?</th>
+                    )}
+
+                    <th className="text-center" style={{ width: "208px"}}>Estado de compras</th>
+
+                    {this.props.estados.ending && (
                       <th className="text-center" style={{ width: "100px"}}>¿Finalizo?</th>
                     )}
+
                     <th className="text-left" style={{ width: "250px"}}>Estado de ejecución</th>
                     <th className="text-left" style={{ width: "300px"}}>Estado facturado</th>
                     <th style={{ width: "250px"}}>Número de cotización</th>
@@ -878,7 +937,39 @@ getState = (user) => {
                         <th>{accion.service_type}</th>
                         <th>{accion.description}</th>
 
-                        {this.props.estados.ending == true && (
+                        {this.props.estados.sales_state && (
+                          <th>
+                              {accion.sales_state != "CERRADO" && (
+                                <button className="btn btn-primary" onClick={() => this.update_sales_state("CERRADO", accion.id)}>Cerrar compra</button>
+                              )}
+                          </th>
+                        )}
+
+                        <th>
+                          {this.state.cost_center_id == accion.id? (
+                            <React.Fragment>
+                                <select 
+                                  name="estado" 
+                                  className="form form-control"
+                                  onChange={(e) => this.update_sales_state(e.target.value, accion.id)}
+                                  value={this.state.formUpdateSalesState.sales_state}
+                                  style={{ display: "inherit", width: "90%"}}
+                                >
+                                <option value="">Seleccione un estado</option>
+                                <option value="SIN COMPRAS">SIN COMPRAS</option>
+                                <option value="COMPRANDO">COMPRANDO</option>
+                                <option value="CERRADO">CERRADO</option>
+
+                              </select> 
+
+                              <i onClick={() => this.editSalesState("cerrar", {})} className="fas fa-times-circle float-right"></i>
+                            </React.Fragment>
+                          ) : (
+                            <p>{accion.sales_state} {this.props.estados.sales_state ? <i onClick={() => this.editSalesState("edit", accion)} className="fas fa-pencil-alt float-right"></i> : null} </p>
+                          )} 
+                        </th>
+
+                        {this.props.estados.ending && (
                           <th>
                             {this.get_btn(accion)}
                           </th>
@@ -890,7 +981,7 @@ getState = (user) => {
                                 <select 
                                   name="estado" 
                                   className="form form-control"
-                                  onChange={this.onChangeUpdateSelect}
+                                  onChange={this.handleChangeSelect}
                                   value={this.state.formUpdate.execution_state}
                                   style={{ display: "inherit", width: "90%"}}
                                 >

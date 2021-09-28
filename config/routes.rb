@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get "aprobar_informe/:token", to: "customer_reports#aprobar_informe", as: "aprobar_informe"
   get "aproacion_cliente/:report/:token", to: "customer_reports#aproacion_cliente", as: "aproacion_cliente"
   get "cost_centers/change_state_ended/:id", to: "cost_centers#change_state_ended", as: "change_state_ended"
+  patch "update_sales_state_cost_center/:id/:state", to: "cost_centers#update_sales_state_cost_center"
 
   get "customer_user/:id", to: "customers#customer_user", as: "customer_user"
 

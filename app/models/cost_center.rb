@@ -69,6 +69,7 @@
 #  total_expenses            :float            default(0.0)
 #  last_user_edited_id       :integer
 #  user_owner_id             :integer
+#  sales_state               :string           default("SIN COMPRAS")
 #
 
 class CostCenter < ApplicationRecord
