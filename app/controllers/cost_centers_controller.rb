@@ -97,12 +97,35 @@ class CostCentersController < ApplicationController
 
   def update_sales_state_cost_center
     centro = CostCenter.find(params[:id])
-    update_centro = centro.update(sales_state: params[:state])
+
+    if params[:state] == "CERRADO"
+      if centro.materials.any? 
+        count_states = centro.materials.where(sales_state: "INGRESADO TOTAL").count
+        total = centro.materials.count
+
+        if count_states == total
+          message = "¡El Registro fue actualizado con exito!"
+          type = "success"
+          update_centro = centro.update(sales_state: params[:state])
+
+        else
+          message = "No se puede cerrar por que hay materiales sin ingresado total"
+          type = "error"
+          update_centro = true
+        end
+      end
+
+    else
+      message = "¡El Registro fue actualizado con exito!"
+      type = "success"
+      update_centro = centro.update(sales_state: params[:state])
+    end
+
 
     if update_centro
       render :json => {
-        message: "¡El Registro fue Actualizado con exito!",
-        type: "success"
+        success: message,
+        type: type
       }
     end  
   end

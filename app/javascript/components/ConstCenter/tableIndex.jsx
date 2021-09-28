@@ -716,6 +716,16 @@ getState = (user) => {
 }
 
 
+messageSuccess = (response) => {
+  Swal.fire({
+      position: "center",
+      type: `${response.type}`,
+      title: `${response.success}`,
+      showConfirmButton: false,
+      timer: 1500,
+  });
+};
+
   update_sales_state = (e, cost_center) => {
     fetch(`/update_sales_state_cost_center/${cost_center}/${e}`, {
         method: 'PATCH', // or 'PUT'
@@ -728,6 +738,7 @@ getState = (user) => {
     .then(res => res.json())
     .catch(error => console.error("Error:", error))
     .then(data => {
+      this.messageSuccess(data)
       this.props.loadInfo();
         this.setState({
           formUpdateSalesState: {

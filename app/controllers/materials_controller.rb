@@ -28,15 +28,15 @@ class MaterialsController < ApplicationController
   def get_materials
 
     if params[:filtering] == "true"
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :sales_state] }, :provider => { :only =>[:name] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc)
 
     elsif params[:filtering] == "false"
-      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :sales_state] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       materials_total = Material.all
     else
       
-      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :sales_state] }, :provider => { :only =>[:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
       materials_total =  Material.all
     end
     

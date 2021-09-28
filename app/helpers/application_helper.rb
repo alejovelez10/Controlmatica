@@ -213,13 +213,12 @@ module ApplicationHelper
 		CostCenter.where.not(execution_state: "FINALIZADO")
 	end
 
+	def get_center_materials
+		CostCenter.where.not(sales_state: "CERRADO")
+	end
 
 	def get_center_tableristas
 		CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO")
-	end
-
-	def get_center_materials
-		CostCenter.where("service_type like 'VENTA' or service_type like 'PROYECTO'") 
 	end
 
 	def get_register_edit

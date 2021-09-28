@@ -665,7 +665,7 @@ class table extends React.Component {
                                   </button>
                             )}
 
-                            {this.getState(accion.user_id) && (
+                            {(this.getState(accion.user_id) && accion.cost_center.sales_state != "CERRADO") && (
                               <button
                                 onClick={() => this.edit(accion)}
                                 className="dropdown-item"
