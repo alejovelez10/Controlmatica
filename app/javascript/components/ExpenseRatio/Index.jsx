@@ -48,8 +48,13 @@ class Index extends Component {
     }
 
     validationForm = () => {
-        if (this.state.formCreate.name != "" &&  
-            this.state.formCreate.year != "" 
+        if (this.state.formCreate.creation_date != "" &&  
+            this.state.formCreate.user_report_id != "" &&  
+            this.state.formCreate.start_date != "" &&  
+            this.state.formCreate.end_date != "" &&  
+            this.state.formCreate.area != "" &&  
+            this.state.formCreate.observations != "" &&  
+            this.state.formCreate.user_direction_id != ""
         ) {
             this.setState({ ErrorValues: true })
             return true

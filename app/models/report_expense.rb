@@ -35,7 +35,7 @@ class ReportExpense < ApplicationRecord
   before_update :edit_values
 
   def edit_values
-    #self.last_user_edited_id = User.current.id
+    self.last_user_edited_id = User.current.id
   end
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9, search10, search11, search12, search13, search14)
