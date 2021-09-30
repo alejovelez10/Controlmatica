@@ -214,7 +214,7 @@ module ApplicationHelper
 	end
 
 	def get_center_materials
-		CostCenter.where.not(sales_state: "CERRADO")
+		CostCenter.where.not(sales_state: "CERRADO").where.not(service_type: "SERVICIO")
 	end
 
 	def get_center_tableristas
