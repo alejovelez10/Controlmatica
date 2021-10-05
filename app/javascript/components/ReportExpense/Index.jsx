@@ -490,7 +490,7 @@ class Index extends Component {
                                                     {this.props.estados.export && (
                                                         <a
                                                             className="dropdown-item"
-                                                            href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}`}`}
+                                                            href={`/download_file/report_expenses/${!this.props.isFiltering ? "todos.xls" : `filtro.xls?cost_center_id=${this.props.formFilter.cost_center_id}&user_invoice_id=${this.props.formFilter.user_invoice_id}&invoice_name=${this.props.formFilter.invoice_name}&invoice_date=${this.props.formFilter.invoice_date}&identification=${this.props.formFilter.identification}&description=${this.props.formFilter.description}&invoice_number=${this.props.formFilter.invoice_number}&type_identification_id=${this.props.formFilter.type_identification_id}&payment_type_id=${this.props.formFilter.payment_type_id}&invoice_value=${this.props.formFilter.invoice_value}&invoice_tax=${this.props.formFilter.invoice_tax}&invoice_total=${this.props.formFilter.invoice_total}&start_date=${this.props.formFilter.start_date}&end_date=${this.props.formFilter.end_date}`}`}
                                                             target="_blank"
                                                         >
                                                             <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "25px" }} /> Exportar
@@ -525,12 +525,12 @@ class Index extends Component {
 
                             <div className="tile-body">
                                 <div className="content-table">
-                                    <table className="table table-hover table-bordered" id="sampleTable" style={{ width: "2500px", maxWidth: "2500px", tableLayout: "fixed" }} >
+                                    <table className="table table-hover table-bordered" id="sampleTable" style={{ width: "2700px", maxWidth: "2500px", tableLayout: "fixed" }} >
                                         <thead>
                                             <tr >
                                                 <th style={{ width: "80px" }} className="text-center">Acciones</th>
-                                                <th>Centro de costo</th>
-                                                {/* <th>Responsable</th> */}
+                                                <th style={{ width: "150px" }}>Centro de costo</th>
+                                                <th style={{ width: "250px" }}>Responsable</th>
                                                 <th style={{ width: "250px" }}>Nombre</th>
                                                 <th>Fecha de factura</th>
                                                 <th>NIT / CEDULA</th>
@@ -584,7 +584,7 @@ class Index extends Component {
 
                                                         <td>{accion.cost_center ? accion.cost_center.code : ""}</td>
                                                         <td>{accion.user_invoice.name}</td>
-                                                        {/* <td>{accion.invoice_name}</td> */}
+                                                        <td>{accion.invoice_name}</td>
                                                         <td>{accion.invoice_date}</td>
                                                         <td>{accion.identification}</td>
                                                         <td>{accion.description}</td>

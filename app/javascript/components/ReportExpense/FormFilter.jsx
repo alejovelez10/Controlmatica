@@ -44,9 +44,9 @@ class FormFilter extends Component {
                                             value={this.props.selectedOptionUser}
                                         />
                                     </div>
-{/* 
+
                                     <div className="col-md-3 mb-3">
-                                        <label>Nombre factura </label>
+                                        <label>Nombre</label>
                                         <input
                                             type="text"
                                             name="invoice_name"
@@ -54,7 +54,7 @@ class FormFilter extends Component {
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
                                         />
-                                    </div> */}
+                                    </div> 
 
 
                                     {/* <div className="col-md-3 mb-3">
@@ -71,16 +71,13 @@ class FormFilter extends Component {
 
                                     <div className="col-md-3 mb-3">
                                         <label>NIT / CEDULA</label>
-                                        <select 
+                                        <input
+                                            type="text"
                                             name="identification"
                                             value={this.props.formValues.identification}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
-                                        >
-                                            <option value="">Selecciona un tipo</option>
-                                            <option value="NIT">NIT</option>
-                                            <option value="CC">CC</option>
-                                        </select>
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                        />
                                     </div>
 
                                     <div className="col-md-3 mb-3">

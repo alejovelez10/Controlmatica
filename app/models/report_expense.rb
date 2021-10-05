@@ -64,8 +64,8 @@ class ReportExpense < ApplicationRecord
 
     header[0] = "cost_center_id"
     header[1] = "user_invoice_id"
-    header[2] = "invoice_name"
-    header[3] = "invoice_date"
+    header[2] = "invoice_date"
+    header[3] = "invoice_name"
     header[4] = "identification"
     header[5] = "description"
     header[6] = "invoice_number"
@@ -73,7 +73,6 @@ class ReportExpense < ApplicationRecord
     header[8] = "payment_type_id"
     header[9] = "invoice_value"
     header[10] = "invoice_tax"
-    header[11] = "invoice_total"
 
     (2..spreadsheet.last_row).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
