@@ -126,11 +126,11 @@ class ReportExpensesController < ApplicationController
 
   def upload_file
     status_upload = ReportExpense.import(params[:file], current_user.id)
-
     if status_upload
       render :json => {
-               success: "Los Archivos fueron importados con exito!",
+               success: "#{status_upload[0].length} subieron con exito, #{status_upload[1].length} no se puedieron crear por favor revisar",
                type: "success",
+               data: status_upload
              }
     else
       render :json => {

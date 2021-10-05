@@ -59,6 +59,8 @@ class ReportExpense < ApplicationRecord
   end
 
   def self.import(file, user)
+    success_records = []
+    fail_records = []
     spreadsheet = Roo::Spreadsheet.open(file.path)
     header = spreadsheet.row(1)
 
@@ -108,10 +110,13 @@ class ReportExpense < ApplicationRecord
         report_expense.payment_type_id = value_payment_type
 
         report_expense.save!
+        success_records << 1
       rescue
         puts "error salio"
+        fail_records << i
       end
     end
+    return [success_records, fail_records]
   end
 
   def self.open_spreadsheet(file)

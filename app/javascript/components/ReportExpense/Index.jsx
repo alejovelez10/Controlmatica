@@ -53,6 +53,9 @@ class Index extends Component {
                 payment_type_id: "",
                 label: ""
             },
+            showMsgLoadState: false,
+            showMsgLoadData: [],
+
         }
     }
 
@@ -392,6 +395,14 @@ class Index extends Component {
         })
     }
 
+    showMsgLoad = (data) => {
+        console.log("papa", data)
+        this.setState({
+            showMsgLoadData: data,
+            showMsgLoadState: true
+        })
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -446,6 +457,7 @@ class Index extends Component {
                         nameBnt={"Subir archivo"}
                         closeModal={this.closeModal}
                         loadDataTable={this.props.loadData}
+                        showMsgLoad={this.showMsgLoad}
                     />
                 )}
 
@@ -454,7 +466,22 @@ class Index extends Component {
                         <div className="tile">
 
                             <div className="row">
-                                <div className="col-md-6"></div>
+                                <div className="col-md-6">
+                                    {this.state.showMsgLoadState && (
+                                        <div className="col-md-12">
+                                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                                <strong>- {this.state.showMsgLoadData.data[0].length} Registros fureon cargados exitosamente.</strong><br />
+                                                <strong>- {this.state.showMsgLoadData.data[1].length} Registros no se pudieron cargar Filas({this.state.showMsgLoadData.data[1].map(value => (
+                                                    <span>    { value }, </span>
+                                                ))}).</strong>
+                                                <button type="button" class="close" onClick={() => this.setState({showMsgLoadState:false})}>
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="col-md-6 text-right mb-3">
                                     <div style={{ display: "inline-flex" }}>
 
@@ -548,7 +575,7 @@ class Index extends Component {
                                         </thead>
 
                                         <tbody>
-                                            
+
                                             {this.props.data.length >= 1 ? (
                                                 this.props.data.map(accion => (
                                                     <tr key={accion.id}>
@@ -642,8 +669,8 @@ class Index extends Component {
                                         </div>
 
                                     </div>
-                                </div> 
-                                
+                                </div>
+
                             </div>
                         </div>
                     </div>
