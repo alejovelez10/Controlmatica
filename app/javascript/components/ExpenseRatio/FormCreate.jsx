@@ -34,7 +34,7 @@ class FormCreate extends Component {
                                             onChange={this.props.handleChangeAutocompleteUserDirection}
                                             options={this.props.users}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.user_direction_id == "" ? "error-class" : ""}`}
                                             value={this.props.selectedOptionUserDirection}
                                         />
                                     </div>
@@ -50,7 +50,7 @@ class FormCreate extends Component {
                                             onChange={this.props.handleChangeAutocompleteUserReport}
                                             options={this.props.users}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.user_report_id == "" ? "error-class" : ""}`}
                                             value={this.props.selectedOptionUserReport}
                                         />
                                     </div>
@@ -63,7 +63,7 @@ class FormCreate extends Component {
                                             rows="6"
                                             value={this.props.formValues.observations}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control mb-3 ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                            className={`form form-control mb-3 ${!this.props.errorValues && this.props.formValues.observations == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
@@ -74,7 +74,7 @@ class FormCreate extends Component {
                                             name="start_date"
                                             value={this.props.formValues.start_date}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.start_date == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
@@ -85,7 +85,7 @@ class FormCreate extends Component {
                                             name="end_date"
                                             value={this.props.formValues.end_date}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.end_date == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
@@ -96,7 +96,7 @@ class FormCreate extends Component {
                                             name="creation_date"
                                             value={this.props.formValues.creation_date}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.creation_date == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
@@ -107,7 +107,7 @@ class FormCreate extends Component {
                                             name="area"
                                             value={this.props.formValues.area}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.area == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 

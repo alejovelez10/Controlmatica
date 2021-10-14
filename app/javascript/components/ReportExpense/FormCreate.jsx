@@ -35,7 +35,7 @@ class FormCreate extends Component {
                                             onChange={this.props.handleChangeAutocompleteCostCenter}
                                             options={this.props.cost_centers}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
                                             value={this.props.selectedOptionCostCenter}
                                         />
                                     </div>
@@ -51,7 +51,7 @@ class FormCreate extends Component {
                                             onChange={this.props.handleChangeAutocompleteUser}
                                             options={this.props.users}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.user_invoice_id == "" ? "error-class" : ""}`}
                                             value={this.props.selectedOptionUser}
                                         />
                                     </div>
@@ -62,7 +62,7 @@ class FormCreate extends Component {
                                             name="invoice_date"
                                             value={this.props.formValues.invoice_date}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_date == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
@@ -98,7 +98,7 @@ class FormCreate extends Component {
                                             name="description"
                                             value={this.props.formValues.description}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.description == "" ? "error-class" : ""}`}
                                         />
                                     </div>
 
@@ -117,7 +117,7 @@ class FormCreate extends Component {
                                             onChange={this.props.handleChangeAutocompleteReportExpenceOptionType}
                                             options={this.props.report_expense_options_type}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.type_identification_id == "" ? "error-class" : ""}`}
                                             value={this.props.selectedOptionTypeIndentification}
                                         />
                                     </div>
@@ -134,7 +134,7 @@ class FormCreate extends Component {
                                             onChange={this.props.handleChangeAutocompleteReportExpenceOptionPaymentType}
                                             options={this.props.report_expense_options_payment}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.payment_type_id == "" ? "error-class" : ""}`}
                                             value={this.props.selectedOptionPaymentType}
                                         />
                                     </div>
@@ -145,7 +145,7 @@ class FormCreate extends Component {
                                             name="invoice_number"
                                             value={this.props.formValues.invoice_number}
                                             onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_number == "" ? "error-class" : ""}`}
                                         />
                                     </div>
                                     
@@ -165,7 +165,7 @@ class FormCreate extends Component {
                                             name="invoice_value"
                                             thousandSeparator={true} 
                                             prefix={'$'} 
-                                            className={`form form-control`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_value == "" ? "error-class" : ""}`}
                                             value={this.props.formValues.invoice_value}
                                             onChange={this.props.onChangeFormMoney}
                                         /> 
@@ -177,7 +177,7 @@ class FormCreate extends Component {
                                             name="invoice_tax"
                                             thousandSeparator={true} 
                                             prefix={'$'} 
-                                            className={`form form-control`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_tax == "" ? "error-class" : ""}`}
                                             value={this.props.formValues.invoice_tax}
                                             onChange={this.props.onChangeFormMoney}
                                         /> 
@@ -188,7 +188,7 @@ class FormCreate extends Component {
                                         <NumberFormat 
                                             thousandSeparator={true} 
                                             prefix={'$'} 
-                                            className={`form form-control`}
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_total == "" ? "error-class" : ""}`}
                                             value={this.props.formValues.invoice_total}
                                             disabled
                                         /> 

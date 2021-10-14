@@ -98,8 +98,16 @@ class Index extends Component {
     }
 
     validationForm = () => {
-        if (this.state.formCreate.name != "" &&
-            this.state.formCreate.year != ""
+        if (this.state.formCreate.cost_center_id != "" &&
+            this.state.formCreate.description != "" &&
+            this.state.formCreate.identification != "" &&
+            this.state.formCreate.invoice_date != "" &&
+            this.state.formCreate.invoice_number != "" &&
+            this.state.formCreate.invoice_tax != "" &&
+            this.state.formCreate.invoice_total != "" &&
+            this.state.formCreate.payment_type_id != "" &&
+            this.state.formCreate.type_identification_id != "" &&
+            this.state.formCreate.user_invoice_id != ""
         ) {
             this.setState({ ErrorValues: true })
             return true
