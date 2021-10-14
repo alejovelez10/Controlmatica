@@ -1005,7 +1005,7 @@ class tableIndex extends React.Component {
                               <select
                                 name="estado"
                                 className="form form-control"
-                                onChange={this.handleChangeSelect}
+                                onChange={this.onChangeUpdateSelect}
                                 value={this.state.formUpdate.execution_state}
                                 style={{ display: "inherit", width: "90%" }}
                               >
