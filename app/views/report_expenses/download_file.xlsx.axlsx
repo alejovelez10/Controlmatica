@@ -7,6 +7,6 @@ wb.add_worksheet(name: "Items") do |sheet|
   @items.each do |task|
     sheet.add_row [task.cost_center.present? ? task.cost_center.code : "", task.user_invoice.names , task.invoice_date , task.invoice_name , task.identification , task.description, task.invoice_number , task.type_identification.present? ? task.type_identification.name : "" , task.payment_type.present? ? task.payment_type.name : "", task.invoice_value ,task.invoice_tax]
   end
-  sheet.column_widths 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+  sheet.column_widths 20, 30, 20, 20, 20, 40, 40, 40, 40, 20, 20
 end
 
