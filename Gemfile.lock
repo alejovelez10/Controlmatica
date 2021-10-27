@@ -1,4 +1,15 @@
 GIT
+  remote: https://github.com/randym/axlsx.git
+  revision: c8ac844572b25fda358cc01d2104720c4c42f450
+  ref: c8ac844
+  specs:
+    axlsx (2.1.0.pre)
+      htmlentities (~> 4.3.4)
+      mimemagic (~> 0.3)
+      nokogiri (>= 1.6.6)
+      rubyzip (>= 1.2.1)
+
+GIT
   remote: https://github.com/ryanb/nested_form.git
   revision: 1b0689dfb4d230ceabd278eba159fcb02f23c68a
   specs:
@@ -68,6 +79,9 @@ GEM
     ast (2.4.0)
     autoprefixer-rails (9.7.1)
       execjs
+    axlsx_rails (0.6.1)
+      actionpack (>= 3.1)
+      caxlsx (>= 3.0)
     babel-source (5.8.35)
     babel-transpiler (0.7.0)
       babel-source (>= 4.0, < 6)
@@ -97,6 +111,11 @@ GEM
       mime-types (>= 1.16)
     case_transform (0.2)
       activesupport
+    caxlsx (3.0.0)
+      htmlentities (~> 4.3, >= 4.3.4)
+      mimemagic (~> 0.3)
+      nokogiri (~> 1.8, >= 1.8.2)
+      rubyzip (~> 1.2, >= 1.2.1)
     childprocess (1.0.1)
       rake (< 13.0)
     chosen-rails (1.8.7)
@@ -587,6 +606,8 @@ DEPENDENCIES
   aasm
   active_model_serializers (~> 0.10.0)
   annotate
+  axlsx!
+  axlsx_rails
   bootsnap (>= 1.1.0)
   bootstrap (~> 4.3.1)
   byebug
@@ -617,6 +638,7 @@ DEPENDENCIES
   rails-assets-sweetalert2 (~> 5.1.1)!
   react-rails
   roo
+  rubyzip (>= 1.2.1)
   sass-rails (~> 5.0)
   selenium-webdriver
   solargraph
