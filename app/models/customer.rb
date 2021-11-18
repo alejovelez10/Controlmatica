@@ -24,7 +24,7 @@ class Customer < ApplicationRecord
 	validate :validate_code
 
   def validate_code
-    if Customer.where(code: self.code).count > 0
+    if Customer.where.not(id: self.id).where(code: self.code).count > 0
       errors.add(:el_prefijo, "ya existe")
     end
   end
