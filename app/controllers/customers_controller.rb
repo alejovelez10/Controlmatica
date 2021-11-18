@@ -185,6 +185,10 @@ class CustomersController < ApplicationController
   # GET /customers/new
   def new
     @customer = Customer.new
+    @customers = []
+    Customer.all.each do |c|
+      @customers << c.code
+    end
   end
 
   # GET /customers/1/edit

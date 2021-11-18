@@ -15,7 +15,7 @@
 
         <% if customer.errors.any? %>
           <div id="error_explanation">
-            <h2><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h2>
+            <h2><%= pluralize(customer.errors.count, "error") %> al guardar</h2>
 
             <ul>
             <% customer.errors.full_messages.each do |message| %>
@@ -59,7 +59,7 @@
 
             <div class="col-md-4">
               <label>Prefijo <span style="font-size: 12px;">(Se usa para organizar los codigos Eje: RTC-REP-01)</span></label>
-              <%= form.text_field :code, class: "form-control", :placeholder => "Prefijo", :required => true%>
+              <%= form.text_field :code, class: "form-control", :placeholder => "Prefijo", :required => true, maxlength: 4%>
             </div>
 
         </div>

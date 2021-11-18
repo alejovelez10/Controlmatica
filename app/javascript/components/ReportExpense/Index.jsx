@@ -478,9 +478,9 @@ class Index extends Component {
                                     {this.state.showMsgLoadState && (
                                         <div className="col-md-12">
                                             <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                                <strong>- {this.state.showMsgLoadData.data[0].length} Registros fureon cargados exitosamente.</strong><br />
-                                                <strong>- {this.state.showMsgLoadData.data[1].length} Registros no se pudieron cargar Filas({this.state.showMsgLoadData.data[1].map(value => (
-                                                    <span>    { value }, </span>
+                                                <strong>- {this.state.showMsgLoadData.data[0].length} Registros fueron cargados exitosamente.</strong><br />
+                                                <strong>- {this.state.showMsgLoadData.data[1].length} Registros no se pudieron cargar Filas({this.state.showMsgLoadData.data[1].map((value,index) => (
+                                                    <span>{ index == 0 ?  "" : ","} {value} </span>
                                                 ))}).</strong>
                                                 <button type="button" class="close" onClick={() => this.setState({showMsgLoadState:false})}>
                                                     <span aria-hidden="true">&times;</span>

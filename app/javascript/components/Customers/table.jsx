@@ -63,6 +63,7 @@ class table extends React.Component {
           <thead>
             <tr className="tr-title">
               <th>Nombre</th>
+              <th>Prefijo</th>
               <th>Telefono</th>
               <th>Dirección</th>
               <th>Nit</th>
@@ -77,6 +78,7 @@ class table extends React.Component {
               this.props.dataActions.map(accion => (
                 <tr key={accion.id}>
                   <td>{accion.name}</td>
+                  <td>{accion.code}</td>
                   <td>{accion.phone}</td>
                   <td>{accion.address}</td>
                   <td>{accion.nit}</td>
