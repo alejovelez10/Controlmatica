@@ -62,6 +62,7 @@ class ReportExpense < ApplicationRecord
     success_records = []
     fail_records = []
     spreadsheet = Roo::Spreadsheet.open(file.path)
+    puts spreadsheet.row(2)
     header = spreadsheet.row(1)
 
     header[0] = "cost_center_id"
@@ -83,15 +84,11 @@ class ReportExpense < ApplicationRecord
       report_expense.attributes = row.to_hash
 
       user_invoice = User.find_by_names(row["user_invoice_id"])
-      date = row["invoice_date"].to_s.split("/")
-      puts date
-      puts date[2].to_i + 2000
-      puts date[0]
-      puts date[1]
-      puts row["invoice_date"].to_s
+   
+
 
       begin
-        report_expense.invoice_date = Time.new((date[2].to_i + 2000), date[0], date[1])
+        report_expense.invoice_date = row["invoice_date"]
         report_expense.invoice_total = row["invoice_tax"].to_f + row["invoice_value"].to_f
         cost_center = CostCenter.find_by_code(row["cost_center_id"])
         type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"])
