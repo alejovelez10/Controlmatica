@@ -118,7 +118,7 @@ class FormImportFile extends Component {
                                     <div className="col-md-12 mt-3">
                                         <a
                                             className="dropdown-item"
-                                            href={`https://gestionmejora.s3.amazonaws.com/uploads/survey_answer/answer_file/30336/plantillas_gastos.xlsx`}
+                                            href={`https://gestionmejora.s3.amazonaws.com/uploads/survey_answer/answer_file/87103/Plantilla_controlmatica.xlsx`}
                                             target="_blank"
                                         >
                                             <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/> Descargar plantilla
