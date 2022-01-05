@@ -10,7 +10,7 @@ class FormCreate extends Component {
         super(props)
         this.state = {
             showMessage: false,
-            message : ""
+            message: ""
         }
     }
 
@@ -20,8 +20,8 @@ class FormCreate extends Component {
 
     copyQuestion = (value, name) => {
 
-        this.setState({ 
-            showMessage: true ,
+        this.setState({
+            showMessage: true,
             message: name
         })
         setTimeout(() => {
@@ -41,7 +41,7 @@ class FormCreate extends Component {
                             <div className="row">
                                 <div className="col-md-12">
                                     {this.state.showMessage && (
-                                        <div className="alert alert-warning">{this.state.message} copiado</div>   
+                                        <div className="alert alert-warning">{this.state.message} copiado</div>
                                     )}
                                 </div>
                                 <div className="col-md-4 mb-3">
@@ -58,7 +58,8 @@ class FormCreate extends Component {
                                         className={`link-form ${!this.props.errorValues && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
                                         value={this.props.selectedOptionCostCenter}
                                     />
-                                    <p style={{ cursor: "pointer" , color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionCostCenter.label, "Centro de costo")} >Copiar</p>
+                                    <div className="mt-1">{this.props.selectedOptionCostCenter.label}</div>
+                                    <div className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionCostCenter.label, "Centro de costo")} >Copiar</div>
                                 </div>
 
                                 <div className="col-md-4 mb-3">
@@ -75,7 +76,8 @@ class FormCreate extends Component {
                                         className={`link-form ${!this.props.errorValues && this.props.formValues.user_invoice_id == "" ? "error-class" : ""}`}
                                         value={this.props.selectedOptionUser}
                                     />
-                                     <p style={{ cursor: "pointer" , color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionUser.label, "Usuario")} >Copiar</p>
+                                    <div className="mt-1">{this.props.selectedOptionUser.label}</div>
+                                    <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionUser.label, "Usuario")} >Copiar</p>
                                 </div>
                                 <div className="col-md-4 mb-3">
                                     <label>Fecha de factura </label>
@@ -142,7 +144,8 @@ class FormCreate extends Component {
                                         className={`link-form ${!this.props.errorValues && this.props.formValues.type_identification_id == "" ? "error-class" : ""}`}
                                         value={this.props.selectedOptionTypeIndentification}
                                     />
-                                     <p style={{ cursor: "pointer" , color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")} >Copiar</p>
+                                    <div className="mt-1">{this.props.selectedOptionTypeIndentification.label}</div>
+                                    <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")} >Copiar</p>
                                 </div>
 
 
@@ -160,7 +163,8 @@ class FormCreate extends Component {
                                         className={`link-form ${!this.props.errorValues && this.props.formValues.payment_type_id == "" ? "error-class" : ""}`}
                                         value={this.props.selectedOptionPaymentType}
                                     />
-                                   <p style={{ cursor: "pointer" , color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionPaymentType.label, "Medio de Pago")} >Copiar</p>
+                                    <div className="mt-1">{this.props.selectedOptionPaymentType.label}</div>
+                                    <p className="mt-1"  style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionPaymentType.label, "Medio de Pago")} >Copiar</p>
 
                                 </div>
                                 <div className="col-md-4 mt-3">
