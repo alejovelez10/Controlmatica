@@ -59,8 +59,8 @@ class FormCreate extends Component {
                                         value={this.props.selectedOptionCostCenter}
                                     />
                                     <div className="mt-1">{this.props.selectedOptionCostCenter.label}</div>
-                                    <div className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionCostCenter.label, "Centro de costo")} >Copiar</div>
-                                </div>
+{/*                                     <div className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionCostCenter.label, "Centro de costo")} >Copiar</div>
+ */}                                </div>
 
                                 <div className="col-md-4 mb-3">
                                     <input
@@ -77,8 +77,8 @@ class FormCreate extends Component {
                                         value={this.props.selectedOptionUser}
                                     />
                                     <div className="mt-1">{this.props.selectedOptionUser.label}</div>
-                                    <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionUser.label, "Usuario")} >Copiar</p>
-                                </div>
+{/*                                     <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionUser.label, "Usuario")} >Copiar</p>
+ */}                                </div>
                                 <div className="col-md-4 mb-3">
                                     <label>Fecha de factura </label>
                                     <input
@@ -145,8 +145,8 @@ class FormCreate extends Component {
                                         value={this.props.selectedOptionTypeIndentification}
                                     />
                                     <div className="mt-1">{this.props.selectedOptionTypeIndentification.label}</div>
-                                    <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")} >Copiar</p>
-                                </div>
+{/*                                     <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")} >Copiar</p>
+ */}                                </div>
 
 
                                 <div className="col-md-4 mt-3">
@@ -164,8 +164,8 @@ class FormCreate extends Component {
                                         value={this.props.selectedOptionPaymentType}
                                     />
                                     <div className="mt-1">{this.props.selectedOptionPaymentType.label}</div>
-                                    <p className="mt-1"  style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionPaymentType.label, "Medio de Pago")} >Copiar</p>
-
+{/*                                     <p className="mt-1"  style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionPaymentType.label, "Medio de Pago")} >Copiar</p>
+ */}
                                 </div>
                                 <div className="col-md-4 mt-3">
                                     <label>Numero de factura </label>
