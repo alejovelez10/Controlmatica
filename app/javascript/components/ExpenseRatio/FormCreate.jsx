@@ -3,10 +3,12 @@ import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import Select from "react-select";
 
+
 class FormCreate extends Component {
 
     constructor(props){
         super(props)
+        
     }
 
     handleSubmit = e => {
@@ -109,6 +111,17 @@ class FormCreate extends Component {
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control ${!this.props.errorValues && this.props.formValues.area == "" ? "error-class" : ""}`}
                                         />
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label>Anticipos a favor CIA </label>
+                                           <NumberFormat 
+                                            name="anticipo"
+                                            thousandSeparator={true} 
+                                            prefix={'$'} 
+                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.anticipo == "" ? "error-class" : ""}`}
+                                            value={this.props.formValues.anticipo}
+                                            onChange={this.props.handlePageChangeMoney}
+                                        /> 
                                     </div>
 
 

@@ -24,6 +24,7 @@ class Index extends Component {
                 area: "", 
                 observations: "", 
                 user_direction_id: "",
+                anticipo: "",
             },
 
             selectedOptionUserDirection: {
@@ -54,7 +55,8 @@ class Index extends Component {
             this.state.formCreate.end_date != "" &&  
             this.state.formCreate.area != "" &&  
             this.state.formCreate.observations != "" &&  
-            this.state.formCreate.user_direction_id != ""
+            this.state.formCreate.user_direction_id != "" &&
+            this.state.formCreate.anticipo != ""
         ) {
             this.setState({ ErrorValues: true })
             return true
@@ -135,6 +137,7 @@ class Index extends Component {
                 area: "", 
                 observations: "", 
                 user_direction_id: "",
+                anticipo: ""
             },
 
             selectedOptionUserDirection: {
@@ -166,7 +169,7 @@ class Index extends Component {
                 .then(data => {
                     this.setState({ modal: false })
                     this.messageSuccess(data);
-                    this.props.updateData(data.register);
+                    this.props.loadData();
                     this.clearValues();
                 });
             else {
@@ -184,7 +187,7 @@ class Index extends Component {
                 .then(data => {
                     this.setState({ modal: false })
                     this.messageSuccess(data);
-                    this.props.updateItem(data.register);
+                    this.props.loadData();
                     this.clearValues();
                 });
             }
@@ -196,6 +199,18 @@ class Index extends Component {
             formCreate: {
                 ...this.state.formCreate,
                 [e.target.name]: e.target.value
+            }
+        })
+    }
+
+    handlePageChangeMoney = (e) => {
+    console.log("hola como esta")
+        const value = e.target.value.replace("$", '').replace(",", '').replace(",", '').replace(",", '').replace(",", '')
+
+        this.setState({
+            formCreate: {
+                ...this.state.formCreate,
+                [e.target.name]: value
             }
         })
     }
@@ -215,6 +230,7 @@ class Index extends Component {
                 area: expense_ratio.area, 
                 observations: expense_ratio.observations, 
                 user_direction_id: expense_ratio.user_direction_id,
+                anticipo: expense_ratio.anticipo
             },
 
             selectedOptionUserDirection: {
@@ -252,6 +268,7 @@ class Index extends Component {
                         formValues={this.state.formCreate}
                         submitForm={this.HandleClick}
                         onChangeForm={this.HandleChange}
+                        handlePageChangeMoney={this.handlePageChangeMoney}
                         errorValues={this.state.ErrorValues}
 
                         //select values

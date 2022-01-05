@@ -3,7 +3,7 @@
   <table id="table">
     <thead>
       <tr>
-        <th class="title-imagen" width="5%"><img width="" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png"></th>
+        <th class="title-imagen" width="5%"><img width="" src="http://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png"></th>
         <th class="title" width="40%" style="font-size: 30px;">RELACION DE GASTOS MENSUAL DE EMPLEADOS</th>
         <td class="code text-center" width="10%">
           <table class="rev" >
@@ -73,7 +73,7 @@
             <td style="text-align: center;"><%= report_expense.identification %></td>
             <td style="text-align: center;"><%= report_expense.invoice_name %></td>
             <td style="text-align: center;"><%= report_expense.description %></td>
-            <td style="text-align: center;"><%= report_expense.cost_center ? report_expense.cost_center.code : ""%></td>
+            <td style="text-align: center;"><%= report_expense.cost_center ? report_expense.cost_center.code : "" %></td>
             <td style="text-align: center;"><%= report_expense.invoice_number %></td>
             <td style="text-align: center;"><%= report_expense.type_identification ? report_expense.type_identification.name : "" %></td>
             <td style="text-align: center;"><%= report_expense.payment_type ? report_expense.payment_type.name : "" %></td>
@@ -91,36 +91,37 @@
 
       <div class="col-md-12" style="width: 100% !important;position:relative">
         <table id="table-total">
-        
+          <% efectivo = @report_expenses.where(payment_type_id: 2).sum(:invoice_total)
+             total = efectivo - @expense_ratio.anticipo %>
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15; font-weight: bold; width: 250px !important" colspan="1">TOTAL</td>
-            <td class="text-center" style=" text-align: left; font-size: 15"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0)  %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0) %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">TOTAL EFECTIVO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0)  %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(efectivo, precision: 0) %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">ANTICIPOS A FAVOR CIA</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(@expense_ratio.anticipo, precision: 0) %></td>
           </tr>
 
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15px; font-weight: bold; width: 250px !important" colspan="1">VALOR A PAGAR EMPLEADO</td>
-            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0)  %></td>
+            <td class="text-center" style=" text-align: left; font-size: 15px"><%= number_to_currency(total, precision: 0) %></td>
           </tr>
 
         </table>
       </div>
        <br><br><br>
-     <div class="table" style="margin-top:80px">
+     <div class="table" style="margin-top:80px;margin-bottom:200px;">
         <b>Observaciones</b>
         <p><%= @expense_ratio.observations %></p>
       </div>
 
-
+    
 
     <table id="table">
       <thead>

@@ -17,7 +17,7 @@
 #
 
 class ExpenseRatioSerializer < ActiveModel::Serializer
-  attributes :id, :creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id, :updated_at, :created_at
+  attributes :id, :creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id, :updated_at, :created_at, :anticipo
   belongs_to :user_report, serializer: UserSerializer
   belongs_to :user_direction, serializer: UserSerializer
   belongs_to :last_user_edited, serializer: UserSerializer

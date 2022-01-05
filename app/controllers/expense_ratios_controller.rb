@@ -133,6 +133,6 @@ class ExpenseRatiosController < ApplicationController
         end
     
         def expense_ratio_params
-            params.permit(:creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id)
+            params.permit(:creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id, :anticipo)
         end
 end
