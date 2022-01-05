@@ -92,7 +92,7 @@
       <div class="col-md-12" style="width: 100% !important;position:relative">
         <table id="table-total">
           <% efectivo = @report_expenses.where(payment_type_id: 2).sum(:invoice_total)
-             total = efectivo - @expense_ratio.anticipo %>
+             total = efectivo - (@expense_ratio.anticipo.nil? ? 0 : @expense_ratio.anticipo) %>
           <tr class="float-right">
             <td class="text-center" style=" text-align: left; font-size: 15; font-weight: bold; width: 250px !important" colspan="1">TOTAL</td>
             <td class="text-center" style=" text-align: left; font-size: 15"><%= number_to_currency(@report_expenses.sum(:invoice_total), precision: 0) %></td>
