@@ -208,6 +208,6 @@ class ContractorsController < ApplicationController
   end
 
   def contractor_params_update
-    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id, :update_user)
+    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :description, :hours, :user_execute_id, :update_user)
   end
 end

@@ -301,6 +301,6 @@ class SalesOrdersController < ApplicationController
     end
   
     def sales_order_params_update
-      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :user_id, :description, :update_user)
+      params.permit(:created_date, :order_number, :order_value, :state, :order_file, :cost_center_id, :description, :update_user)
     end
 end

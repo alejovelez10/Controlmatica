@@ -340,6 +340,6 @@ class CustomerReportsController < ApplicationController
   end
 
   def customer_report_params_update
-    params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :user_id, :cost_center_id, :email, :update_user, :report_ids => [])
+    params.permit(:report_date, :description, :token, :report_state, :report_code, :count, :customer_id, :contact_id, :cost_center_id, :email, :update_user, :report_ids => [])
   end
 end

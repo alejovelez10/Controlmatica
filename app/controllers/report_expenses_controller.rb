@@ -273,6 +273,6 @@ class ReportExpensesController < ApplicationController
   end
 
   def report_expense_params_update
-    params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description, :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax, :invoice_total, :type_identification_id, :payment_type_id)
+    params.permit(:cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description, :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax, :invoice_total, :type_identification_id, :payment_type_id)
   end
 end
