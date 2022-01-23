@@ -206,7 +206,7 @@ class FormCreate extends Component {
                                         name="invoice_tax"
                                         thousandSeparator={true}
                                         prefix={'$'}
-                                        className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_tax == "" ? "error-class" : ""}`}
+                                        className={`form form-control ${!this.props.errorValues && ((!this.props.formValues.invoice_tax || this.props.formValues.invoice_tax  != "") && this.props.formValues.invoice_tax != 0) ? "error-class" : ""}`}
                                         value={this.props.formValues.invoice_tax}
                                         onChange={this.props.onChangeFormMoney}
                                     />

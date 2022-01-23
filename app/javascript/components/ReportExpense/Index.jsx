@@ -103,7 +103,7 @@ class Index extends Component {
             this.state.formCreate.identification != "" &&
             this.state.formCreate.invoice_date != "" &&
             this.state.formCreate.invoice_number != "" &&
-            this.state.formCreate.invoice_tax != "" &&
+            (this.state.formCreate.invoice_tax || this.state.formCreate.invoice_tax == 0) &&
             this.state.formCreate.invoice_total != "" &&
             this.state.formCreate.payment_type_id != "" &&
             this.state.formCreate.type_identification_id != "" &&

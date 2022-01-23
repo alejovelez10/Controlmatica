@@ -28,6 +28,12 @@ class ExpenseRatiosController < ApplicationController
                     :template => "expense_ratios/pdfs/expense_ratios.pdf.erb",
                     :layout => "pdf.html.erb",
                     :orientation => "landscape",
+                          :footer => {
+                  :spacing => 5,
+                  :html => {
+                    :template => "expense_ratios/pdfs/footer.pdf.erb",
+                  },
+                },
                     
                     :show_as_html => params[:debug].present?
             end
