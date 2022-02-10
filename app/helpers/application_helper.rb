@@ -575,7 +575,7 @@ module ApplicationHelper
 		mat_costo_real = @cost_center.materials.sum(:amount)
 		mat_costo_porcentaje  = (@cost_center.materials_value != nil ? @cost_center.materials_value : 0 )> 0 ? ((1- (mat_costo_real.to_f/@cost_center.materials_value))*100).round(1) : 0 
 		
-		viat_costo_real = @cost_center.reports.sum(:viatic_value) +  @cost_center.report_expenses.sum(:invoice_total)
+		viat_costo_real = @cost_center.reports.sum(:viatic_value) +  @cost_center.report_expenses.sum(:invoice_value)
 		viat_costo_porcentaje = @cost_center.viatic_value > 0 ? ((viat_costo_real.to_f/@cost_center.viatic_value)*100).round(1) : 0
 
 		fact_real = @cost_center.customer_invoices.sum(:invoice_value)

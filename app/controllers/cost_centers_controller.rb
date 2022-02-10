@@ -189,9 +189,9 @@ class CostCentersController < ApplicationController
     
 
 
-     via_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_total)
-     puts @cost_center.report_expenses.sum(:invoice_total)
-puts "hola jaja"
+     via_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_value)
+     puts @cost_center.report_expenses.sum(:invoice_value)
+     puts "hola jaja"
 
     #INGENIERIA EJECUCION
     #Horas ejecutadas agregadas desde los reportes
