@@ -167,6 +167,10 @@ module ApplicationHelper
 	end
 
 
+	def get_current_user
+		current_user
+	end
+
 	def number_to_currency_br(number)
   		number_to_currency(number, :unit => "", :delimiter => ".")
 	end

@@ -20,7 +20,7 @@ class Index extends Component {
 
             formCreate: {
                 cost_center_id: "",
-                user_invoice_id: "",
+                user_invoice_id: this.props.current_user.actual_user,
                 invoice_name: "",
                 invoice_date: "",
                 description: "",
@@ -40,8 +40,8 @@ class Index extends Component {
             },
 
             selectedOptionUser: {
-                user_invoice_id: "",
-                label: "Nombre"
+                user_invoice_id: this.props.current_user.actual_user,
+                label: this.props.current_user.names
             },
 
             selectedOptionTypeIndentification: {
@@ -182,7 +182,7 @@ class Index extends Component {
 
             formCreate: {
                 cost_center_id: "",
-                user_invoice_id: "",
+                user_invoice_id: this.props.current_user.id,
                 invoice_name: "",
                 invoice_date: "",
                 identification: "",
@@ -202,8 +202,8 @@ class Index extends Component {
             },
 
             selectedOptionUser: {
-                user_invoice_id: "",
-                label: "Usuario"
+                user_invoice_id: this.props.current_user.id,
+                label: this.props.current_user.names
             },
 
             selectedOptionTypeIndentification: {
@@ -431,7 +431,8 @@ class Index extends Component {
                         onChangeFormMoney={this.HandleChangeMoney}
                         errorValues={this.state.ErrorValues}
                         setValuesReportExpenseOption={this.setValuesReportExpenseOption}
-
+                        estados={this.props.estados}
+                        current_user={this.props.current_user}
                         //select values
 
                         handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}

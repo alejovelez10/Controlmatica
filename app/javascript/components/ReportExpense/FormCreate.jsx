@@ -75,6 +75,8 @@ class FormCreate extends Component {
                                         autoFocus={false}
                                         className={`link-form ${!this.props.errorValues && this.props.formValues.user_invoice_id == "" ? "error-class" : ""}`}
                                         value={this.props.selectedOptionUser}
+                
+                                        isDisabled={!this.props.estados.show_user}
                                     />
                                     <div className="mt-1">{this.props.selectedOptionUser.label}</div>
 {/*                                     <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionUser.label, "Usuario")} >Copiar</p>

@@ -12,6 +12,7 @@ class ReportExpensesController < ApplicationController
     delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
     closed = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Aceptar gasto").exists?
     export = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
+    show_user = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
 
     @estados = {
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -19,6 +20,7 @@ class ReportExpensesController < ApplicationController
       delete: (current_user.rol.name == "Administrador" ? true : delete),
       closed: (current_user.rol.name == "Administrador" ? true : closed),
       export: (current_user.rol.name == "Administrador" ? true : export),
+      show_user: (current_user.rol.name == "Administrador" ? true : show_user),
     }
   end
 
