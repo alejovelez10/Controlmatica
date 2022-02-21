@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   get "aproacion_cliente/:report/:token", to: "customer_reports#aproacion_cliente", as: "aproacion_cliente"
   get "cost_centers/change_state_ended/:id", to: "cost_centers#change_state_ended", as: "change_state_ended"
   patch "update_sales_state_cost_center/:id/:state", to: "cost_centers#update_sales_state_cost_center"
+  patch "update_state_report_expense/:id/:state", to: "report_expenses#update_state_report_expense"
 
   get "customer_user/:id", to: "customers#customer_user", as: "customer_user"
 

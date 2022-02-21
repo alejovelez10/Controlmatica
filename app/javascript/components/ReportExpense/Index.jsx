@@ -17,6 +17,7 @@ class Index extends Component {
             modeEdit: false,
             ErrorValues: true,
             id: "",
+            report_expense_id: "",
 
             formCreate: {
                 cost_center_id: "",
@@ -411,6 +412,24 @@ class Index extends Component {
         })
     }
 
+    updateSelect = (e, report_expense) => {
+        fetch(`/update_state_report_expense/${report_expense.id}/${e.target.value}`, {
+            method: 'PATCH', // or 'PUT'
+            body: JSON.stringify(this.state.formCreate), // data can be `string` or {object}!
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+
+        .then(res => res.json())
+        .catch(error => console.error("Error:", error))
+        .then(data => {
+            this.setState({ report_expense_id: "" })
+            this.props.updateItem(data.register)
+        });
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -577,13 +596,14 @@ class Index extends Component {
                                                 <th>Valor</th>
                                                 <th>IVA</th>
                                                 <th>Total</th>
-                                                <th>Estado</th>
+                                                <th style={{ width: "5%" }}>Estado</th>
                                                 <th style={{ width: "200px" }}>Creación</th>
                                                 <th style={{ width: "200px" }}>Ultima actualización</th>
                                             </tr>
                                         </thead>
 
                                         <tbody>
+
 
                                             {this.props.data.length >= 1 ? (
                                                 this.props.data.map(accion => (
@@ -631,7 +651,34 @@ class Index extends Component {
                                                         <td><NumberFormat value={accion.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                         <td><NumberFormat value={accion.invoice_tax} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                         <td><NumberFormat value={accion.invoice_total} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                        <td>{accion.is_acepted ? "Aceptado" : "Creado"}</td>
+                                                        <td>
+                                                            {this.state.report_expense_id == accion.id ? (
+                                                                <React.Fragment>
+                                                                    <select 
+                                                                        value={accion.is_acepted}
+                                                                        onChange={(e) => this.updateSelect(e, accion)}
+                                                                        className={`form form-control`}
+                                                                    >
+                                                                        <option value="true">Aceptado</option>
+                                                                        <option value="false">Creado</option>
+                                                                    </select>
+
+                                                                    <hr />
+
+                                                                    <i 
+                                                                        className="fas fa-times-circle"
+                                                                        onClick={() => this.setState({ report_expense_id: "" })}
+                                                                    >
+                                                                            
+                                                                    </i>
+                                                                </React.Fragment>
+                                                            ) : (
+                                                                <React.Fragment>
+                                                                    <span onClick={() => this.setState({ report_expense_id: accion.id })}>{accion.is_acepted ? "Aceptado" : "Creado"}</span>
+                                                                </React.Fragment>
+                                                            )}
+                                                        </td>
+
                                                         <th>
                                                             {this.getDate(accion.created_at)} <br />
                                                             {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}

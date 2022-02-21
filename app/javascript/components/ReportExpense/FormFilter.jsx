@@ -144,7 +144,7 @@ class FormFilter extends Component {
                                         />
                                     </div>
 
-                                    <div className="col-md-3 mt-2">
+                                    <div className="col-md-3">
                                         <label>Fecha hasta </label>
                                         <input
                                             type="date"
@@ -153,6 +153,20 @@ class FormFilter extends Component {
                                             onChange={this.props.onChangeForm}
                                             className={`form form-control`}
                                         />
+                                    </div>
+
+                                    <div className="col-md-3">
+                                        <label>Estado </label>
+                                        <select 
+                                            name="is_acepted"
+                                            value={this.props.formValues.is_acepted}
+                                            onChange={this.props.onChangeForm}
+                                            className={`form form-control`}
+                                        >
+                                            <option value="">Selecciona</option>
+                                            <option value="true">Aceptado</option>
+                                            <option value="false">Creado</option>
+                                        </select>
                                     </div>
 {/* 
                                     <div className="col-md-3">

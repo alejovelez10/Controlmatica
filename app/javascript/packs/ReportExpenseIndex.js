@@ -33,10 +33,10 @@ class ReportExpenseIndex extends Component {
                 payment_type_id: "",
                 start_date: "",
                 end_date: "",
+                is_acepted: "",
             },
 
-            
-
+        
             selectedOptionCostCenter: {
                 cost_center_id: "",
                 label: "Centro de costo"
@@ -135,6 +135,7 @@ class ReportExpenseIndex extends Component {
                 payment_type: format.payment_type,
                 type_identification: format.type_identification,
                 payment_type_id: format.payment_type_id,
+                is_acepted: format.is_acepted,
                 type_identification_id: format.type_identification_id,
               }
             }
@@ -164,7 +165,7 @@ class ReportExpenseIndex extends Component {
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true, isFiltering: true })
-        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}`, {
+        fetch(`/get_report_expenses?cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&is_acepted=${this.state.formFilter.is_acepted}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -183,7 +184,7 @@ class ReportExpenseIndex extends Component {
 
     handlePageChange = pageNumber => {
         this.setState({ activePage: pageNumber }); 
-        fetch(`/get_report_expenses?page=${pageNumber}&filter=${this.state.countPage}&cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}`, {
+        fetch(`/get_report_expenses?page=${pageNumber}&filter=${this.state.countPage}&cost_center_id=${this.state.formFilter.cost_center_id}&user_invoice_id=${this.state.formFilter.user_invoice_id}&invoice_name=${this.state.formFilter.invoice_name}&invoice_date=${this.state.formFilter.invoice_date}&identification=${this.state.formFilter.identification}&description=${this.state.formFilter.description}&invoice_number=${this.state.formFilter.invoice_number}&type_identification_id=${this.state.formFilter.type_identification_id}&payment_type_id=${this.state.formFilter.payment_type_id}&invoice_value=${this.state.formFilter.invoice_value}&invoice_tax=${this.state.formFilter.invoice_tax}&invoice_total=${this.state.formFilter.invoice_total}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&is_acepted=${this.state.formFilter.is_acepted}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -218,6 +219,7 @@ class ReportExpenseIndex extends Component {
                 payment_type_id: "",
                 start_date: "",
                 end_date: "",
+                is_acepted: "",
             },
 
             selectedOptionCostCenter: {
