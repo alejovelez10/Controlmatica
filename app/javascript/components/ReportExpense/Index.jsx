@@ -674,7 +674,7 @@ class Index extends Component {
                                                                 </React.Fragment>
                                                             ) : (
                                                                 <React.Fragment>
-                                                                    <span onClick={() => this.setState({ report_expense_id: accion.id })}>{accion.is_acepted ? "Aceptado" : "Creado"}</span>
+                                                                    <span>{accion.is_acepted ? "Aceptado" : "Creado"} <i onClick={() => this.setState({ report_expense_id: accion.id })} className="fas fa-pencil-alt float-right"></i></span>
                                                                 </React.Fragment>
                                                             )}
                                                         </td>
