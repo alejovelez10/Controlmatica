@@ -11,7 +11,7 @@ class ExpensesTable extends Component {
                         id="sampleTable"
                     >
                         <thead>
-                            <tr >
+                            <tr className="tr-title">
 
                                
                                 <th style={{ width: "250px" }}>Responsable</th>
@@ -56,7 +56,7 @@ class ExpensesTable extends Component {
                             ) : (
                                 <td colSpan="8" className="text-center">
                                     <div className="text-center mt-1 mb-1">
-                                        <h4>No hay tableristas</h4>
+                                        <h4>No hay gastos</h4>
                                     </div>
                                 </td>
                             )}
