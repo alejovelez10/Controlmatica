@@ -6,6 +6,7 @@ import MaterialesTable from '../ShowConstCenter/MaterialesTable'
 import OrdenesDeCompraTable from '../ShowConstCenter/OrdenesDeCompraTable'
 import ReportesDeServiciosTable from '../ShowConstCenter/ReportesDeServiciosTable'
 import TableristasTable from '../ShowConstCenter/TableristasTable'
+import ExpensesTable from '../ShowConstCenter/ExpensesTable'
 
 
 const TabContentShow = (props) => {
@@ -60,6 +61,16 @@ const TabContentShow = (props) => {
           </NavLink>
         </NavItem>
 
+        <NavItem>
+          <NavLink
+            className={classnames({ active: activeTab === '5' })}
+            style={{ cursor: "pointer" }}
+            onClick={() => { toggle('5'); }}
+          >
+            Gastos
+          </NavLink>
+        </NavItem>
+
       </Nav>
 
       <TabContent activeTab={activeTab}>
@@ -78,6 +89,10 @@ const TabContentShow = (props) => {
 
         <TabPane tabId="4">
           <TableristasTable dataContractors={props.dataContractors} />
+        </TabPane>
+
+        <TabPane tabId="5">
+          <ExpensesTable dataContractors={props.dataExpenses} />
         </TabPane>
 
       </TabContent>
