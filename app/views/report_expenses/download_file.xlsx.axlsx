@@ -2,10 +2,10 @@ wb = xlsx_package.workbook
 
 wb.add_worksheet(name: "Items") do |sheet|
   # Create the header row
-  sheet.add_row ["Centro de costo", "Responsable" , "Fecha de factura"  , "Nombre" , "NIT / CEDULA" , "Descripcion" , "Numero de factura" , "Tipo" , "Medio de pago", "Valor del pago" , "IVA" ]
+  sheet.add_row ["Centro de costo", "Responsable" , "Fecha de factura"  , "Nombre" , "NIT / CEDULA" , "Descripcion" , "Numero de factura" , "Tipo" , "Medio de pago", "Estado", "Valor del pago" , "IVA" ]
   # Create entries for each item
   @items.each do |task|
-    sheet.add_row [task.cost_center.present? ? task.cost_center.code : "", task.user_invoice.names , task.invoice_date , task.invoice_name , task.identification , task.description, task.invoice_number , task.type_identification.present? ? task.type_identification.name : "" , task.payment_type.present? ? task.payment_type.name : "", task.invoice_value ,task.invoice_tax]
+    sheet.add_row [task.cost_center.present? ? task.cost_center.code : "", task.user_invoice.names , task.invoice_date , task.invoice_name , task.identification , task.description, task.invoice_number , task.type_identification.present? ? task.type_identification.name : "" , task.payment_type.present? ? task.payment_type.name : "", task.is_acepted ? "Aceptado" : "Creado", task.invoice_value ,task.invoice_tax]
   end
   sheet.column_widths 20, 30, 20, 20, 20, 40, 40, 40, 40, 20, 20
 end
