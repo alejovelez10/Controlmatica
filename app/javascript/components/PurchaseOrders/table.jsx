@@ -156,7 +156,7 @@ class table extends React.Component {
     formData.append("description", this.state.form.description);
 
     if (this.validationForm() == true) {
-      if (this.state.modeEdit == true) {
+      if (this.state.modeEdit) {
         fetch("/sales_orders/" + this.state.action.id, {
           method: "PATCH", 
           body: formData, // data can be `string` or {object}!
@@ -165,7 +165,7 @@ class table extends React.Component {
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
-            this.props.loadInfo()
+            this.props.updateItem(data.register)
             this.MessageSucces(data.message, data.type, data.message_error)
 
             this.setState({
@@ -196,7 +196,7 @@ class table extends React.Component {
         .then(res => res.json())
         .catch(error => console.error("Error:", error))
         .then(data => {
-          this.props.loadInfo()
+          this.props.updateData(data.register)
 
           this.MessageSucces(data.message, data.type, data.message_error)
 
@@ -266,7 +266,7 @@ class table extends React.Component {
   }
 
 
-  delete = (id) => {
+  delete = (sales_order) => {
     Swal.fire({
       title: 'Estas seguro?',
       text: "El registro sera eliminado para siempre!",
@@ -277,7 +277,7 @@ class table extends React.Component {
       confirmButtonText: 'Si'
     }).then((result) => {
       if (result.value) {
-        fetch("/sales_orders/" + id, {
+        fetch("/sales_orders/" + sales_order.id, {
           method: 'delete'
       }).then(response => response.json())
       .then(response => {
@@ -291,7 +291,6 @@ class table extends React.Component {
       });
       }
     })
-
   }
 
   show(estado){
@@ -556,59 +555,59 @@ class table extends React.Component {
                 </div>
             </div>
 
-            <FormCreate
+            {this.state.modal && (
+              <FormCreate
+                  toggle={this.toggle}
+                  backdrop={this.state.backdrop}
+                  modal={this.state.modal}
 
-                toggle={this.toggle}
-                backdrop={this.state.backdrop}
-                modal={this.state.modal}
+                  onChangeForm={this.handleChange}
+                  formValues={this.state.form}
+                  submit={this.HandleClick}
+                  FormSubmit={this.handleSubmit}
 
-                onChangeForm={this.handleChange}
-                formValues={this.state.form}
-                submit={this.HandleClick}
-                FormSubmit={this.handleSubmit}
+                  titulo={this.state.title}
+                  nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
+                  errorValues={this.state.ErrorValues}
+                  modeEdit={this.state.modeEdit}
 
-                titulo={this.state.title}
-                nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
-                errorValues={this.state.ErrorValues}
-                modeEdit={this.state.modeEdit}
+                  onChangehandleFileOrderFile={this.handleFileOrderFile}
 
-                onChangehandleFileOrderFile={this.handleFileOrderFile}
+                  /* AUTOCOMPLETE CENTRO DE COSTO */
+                  centro={this.state.dataCostCenter}
+                  onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                  formAutocompleteCentro={this.state.selectedOptionCentro}
+              />
+            )}
 
-                /* AUTOCOMPLETE CENTRO DE COSTO */
-                centro={this.state.dataCostCenter}
-                onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
-                formAutocompleteCentro={this.state.selectedOptionCentro}
-            />
+            {this.state.modalIncome && (
+              <Facturas
+                  toggle={this.showIncomeDetail}
+                  backdrop={this.state.backdrop}
+                  modal={this.state.modalIncome}
 
+                  onChangeForm={this.handleChangeInvoice}
+                  formValues={this.state.formInvoice}
 
+                  submit={this.HandleClickInvoice}
 
-            <Facturas
+                  FormSubmit={this.handleSubmit}
 
-                toggle={this.showIncomeDetail}
-                backdrop={this.state.backdrop}
-                modal={this.state.modalIncome}
+                  onChangeFormReceptionReport={this.handleFileReceptionReport}
+                  onChangeDeliveryCertificate={this.handleFileDeliveryCertificate}
 
-                onChangeForm={this.handleChangeInvoice}
-                formValues={this.state.formInvoice}
+                  titulo={this.state.title}
+                  errorValues={this.state.ErrorValuesInvoice}
+                  dataIncomes={this.state.data_incomes}
+                  delete={this.deleteInvoice}
 
-                submit={this.HandleClickInvoice}
+                  loadInfo={this.loadTableIncome}
 
-                FormSubmit={this.handleSubmit}
-
-                onChangeFormReceptionReport={this.handleFileReceptionReport}
-                onChangeDeliveryCertificate={this.handleFileDeliveryCertificate}
-
-                titulo={this.state.title}
-                errorValues={this.state.ErrorValuesInvoice}
-                dataIncomes={this.state.data_incomes}
-                delete={this.deleteInvoice}
-
-                loadInfo={this.loadTableIncome}
-
-                accion={this.state.action}
-                MessageSucces={this.MessageSucces}
-                loadOrders={this.props.loadInfo}
-            /> 
+                  accion={this.state.action}
+                  MessageSucces={this.MessageSucces}
+                  loadOrders={this.props.loadInfo}
+              /> 
+            )}
 
           
             <div className="content-table">
@@ -672,8 +671,8 @@ class table extends React.Component {
                                   </button>
                                 )}
 
-                                {this.props.estados.delete == true && (
-                                  <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                                {this.props.estados.delete && (
+                                  <button onClick={() => this.delete(accion)} className="dropdown-item">
                                     Eliminar
                                   </button>
                                 )}

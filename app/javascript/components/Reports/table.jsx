@@ -352,7 +352,7 @@ class table extends React.Component {
 
   HandleClick = e => {
     if (this.validationForm() == true) {
-      if (this.state.modeEdit == true) {
+      if (this.state.modeEdit) {
         fetch("/reports/" + this.state.action.id, {
           method: "PATCH", // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -363,7 +363,7 @@ class table extends React.Component {
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
-            this.props.loadInfo();
+            this.props.updateItem(data.register)
             this.updateValues()
             this.MessageSucces(data.message, data.type, data.message_error);
           });
@@ -379,7 +379,7 @@ class table extends React.Component {
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
-            this.props.loadInfo();
+            this.props.updateData(data.register)
             this.updateValues()
             this.MessageSucces(data.message, data.type, data.message_error);
 
@@ -388,34 +388,46 @@ class table extends React.Component {
     }
   };
 
-
-  delete = id => {
+  delete = (report) => {
     Swal.fire({
-      title: "Estas seguro?",
-      text: "El registro sera eliminado para siempre!",
-      type: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#009688",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Si"
-    }).then(result => {
-      if (result.value) {
-        fetch("/reports/" + id, {
-          method: "delete"
-        })
-          .then(response => response.json())
-          .then(response => {
-            this.props.loadInfo();
+        title: 'Escribe el codigo del reporte para poder eliminarlo',
+        input: 'text',
+        footer: `<p>El codigo del reporte es (${report.code_report}) </p>`,
 
-            Swal.fire(
-              "Borrado!",
-              "¡El registro fue eliminado con exito!",
-              "success"
-            );
-          });
-      }
-    });
-  };
+        inputAttributes: {
+            autocapitalize: 'off'
+        },
+
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#16aaff',
+        cancelButtonText: "Cancelar",
+        showLoaderOnConfirm: true,
+        preConfirm: (login) => {
+            if (login == report.code_report.trim()) {
+                  fetch(`/reports/${report.id}`, {
+                    method: "delete", // or 'PUT'
+                    headers: {
+                      "Content-Type": "application/json"
+                    }
+                  })
+                  .then(res => res.json())
+                  .catch(error => console.error("Error:", error))
+                  .then(data => {
+                    this.props.loadInfo();
+                  });
+            } else {
+              Swal.showValidationMessage("El codigo no concuerda")
+            }
+        },
+
+        allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+        if (result.value) {
+
+        }
+    })
+  }
 
   HandleClickContact = () => {
     let array = []
@@ -681,9 +693,9 @@ class table extends React.Component {
                             </a>
                             )}
 
-                            {this.props.estados.delete == true && (
+                            {this.props.estados.delete && (
                               <button
-                                onClick={() => this.delete(accion.id)}
+                                onClick={() => this.delete(accion)}
                                 className="dropdown-item"
                               >
                                 Eliminar

@@ -61,6 +61,11 @@ html {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
+.swal2-confirm{
+    background-color: #2a3f53 !important;
+    border-color: #2a3f53 !important;
+}
+
 @-ms-viewport {
     width: device-width;
 }

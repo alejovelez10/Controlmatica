@@ -4,6 +4,7 @@ class ReportsController < ApplicationController
   skip_before_action :verify_authenticity_token
   include ApplicationHelper
   include ActionView::Helpers::NumberHelper
+  include ReportsHelper
 
   # GET /reports
   # GET /reports.json
@@ -46,39 +47,37 @@ class ReportsController < ApplicationController
     if validate
       
       if params[:filtering] == "true"
-        reports = Report.all.order(report_date: :desc).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description, :execution_state]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] } })
+        reports = Report.all.order(report_date: :desc).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10)
         reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).order(report_date: :desc)
 
       elsif params[:filtering] == "false"
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description, :execution_state]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
         reports_total =  Report.all.order(report_date: :desc)
       else
         
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description, :execution_state]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
         reports_total =  Report.all.order(report_date: :desc)
       end
 
     else
       
       if params[:filtering] == "true"
-        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description, :execution_state]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :user => { :only =>[:names, :id] } })
+        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta]).paginate(page: params[:page], :per_page => 10)
         reports_total = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate],params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta])
 
       elsif params[:filtering] == "false"
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description, :execution_state]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
         reports_total =  Report.where(report_execute_id: current_user.id)
       else
         
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center=> { :include => :customer , :only =>[:code, :description, :execution_state]}, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :report_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
+        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
         reports_total =  Report.where(report_execute_id: current_user.id)
       end
 
     end
     
 
-
-    reports = JSON.parse(reports)
-    render :json => {reports_paginate: reports, reports_total: reports_total}
+    render :json => {reports_paginate: get_reports_items(reports), reports_total: reports_total}
   end
 
   def controlmatica
@@ -369,6 +368,7 @@ class ReportsController < ApplicationController
 
         render :json => {
           message: "¡El Registro fue creado con exito!",
+          register: get_report_item(@report),
           type: "success"
         }
       else
@@ -396,6 +396,7 @@ class ReportsController < ApplicationController
       recalculate_cost_center(@report.cost_center_id, "reportes");
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
+        register: get_report_item(@report),
         type: "success"
       }
     else 
