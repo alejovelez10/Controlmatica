@@ -87,7 +87,7 @@ class FormFilter extends Component {
                     </select>
                   </div>
                   
-                  <div className="col-md-3 mt-4">
+                  <div className="col-md-3 mt-3">
                       <input
                         type="hidden"
                         name="cost_center_id"
@@ -103,7 +103,7 @@ class FormFilter extends Component {
                       />
                   </div>
 
-                  <div className="col-md-3 mt-4">
+                  <div className="col-md-3 mt-3">
                     <label>Clientes</label>
                       <input
                         type="hidden"

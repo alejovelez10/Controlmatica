@@ -20,6 +20,7 @@ class index extends React.Component {
               customer_id: "",
               date_desde: "",
               date_hasta: "",
+              code_report: "",
             },
 
             activePage: 1,
@@ -62,6 +63,59 @@ class index extends React.Component {
 
 
       }
+
+    //add items
+    updateData = (data) => {
+      this.setState({
+        data: [...this.state.data, data],
+      })
+    }
+
+    //add update
+    updateItem = report => {
+        this.setState({
+            data: this.state.data.map(item => {
+            if (report.id === item.id) {
+              return { ...item, 
+                code_report: report.code_report,
+                contact: report.contact,
+                contact_email: report.contact_email,
+                contact_id: report.contact_id,
+                contact_name: report.contact_name,
+                contact_phone: report.contact_phone,
+                contact_position: report.contact_position,
+                cost_center: report.cost_center,
+                cost_center_id: report.cost_center_id,
+                count: report.count,
+                created_at: report.created_at,
+                customer: report.customer,
+                customer_id: report.customer_id,
+                customer_name: report.customer_name,
+                displacement_hours: report.displacement_hours,
+                last_user_edited: report.last_user_edited,
+                last_user_edited_id: report.last_user_edited_id,
+                report_code: report.report_code,
+                report_date: report.report_date,
+                report_execute: report.report_execute,
+                report_execute_id: report.report_execute_id,
+                report_sate: report.report_sate,
+                total_value: report.total_value,
+                update_user: report.update_user,
+                updated_at: report.updated_at,
+                user: report.user,
+                user_id: report.user_id,
+                value_displacement_hours: report.value_displacement_hours,
+                viatic_description: report.viatic_description,
+                viatic_value: report.viatic_value,
+                work_description: report.work_description,
+                working_time: report.working_time,
+                working_value: report.working_value,
+              }
+            }
+            return item;
+          })
+        });
+    }
     
     componentDidMount() {
         this.loadData();
@@ -136,6 +190,7 @@ class index extends React.Component {
           cost_center_id: "",
           date_desde: "",
           date_hasta: "",
+          code_report: "",
         },
 
         selectedOptionCentro: {
@@ -198,7 +253,7 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&work_description=${this.state.filtering == true ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.filtering == true ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.filtering == true ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.filtering == true ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.filtering == true ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined  ? this.state.formFilter.customer_id : ""}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}`) 
+      fetch(`/get_reports?page=${pageNumber}&filter=${this.state.countPage}&filtering=${this.state.filtering}&work_description=${this.state.filtering == true ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.filtering == true ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.filtering == true ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.filtering == true ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.filtering == true ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.filtering == true && this.state.formFilter.customer_id != undefined  ? this.state.formFilter.customer_id : ""}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&code_report=${this.state.formFilter.code_report}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({ 
@@ -218,8 +273,7 @@ class index extends React.Component {
     render() {
         return (
             <React.Fragment>
-              <div style={{ display: this.state.show_filter == true ? "block" : "none" }}>
-          
+              {this.state.show_filter && (
                 <Filter
                   onChangeFilter={this.handleChangeFilter}
                   formValuesFilter={this.state.formFilter}
@@ -244,8 +298,10 @@ class index extends React.Component {
                   onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
                   clientes={this.state.clients}
 
+                  data={this.state.data} 
+
                 />
-              </div>
+              )}
 
               <div className="row">
                 <div className="col-md-12">
@@ -263,6 +319,9 @@ class index extends React.Component {
                         rol={this.props.rol}
                         exel_values={this.state.exel_values}
                         filtering={this.state.filtering}
+
+                        updateData={this.updateData}
+                        updateItem={this.updateItem}
                       />
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>

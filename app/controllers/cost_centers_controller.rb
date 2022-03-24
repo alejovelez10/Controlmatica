@@ -4,6 +4,7 @@ class CostCentersController < ApplicationController
   before_action :authenticate_user!
   skip_before_action :verify_authenticity_token
   include ApplicationHelper
+  include CostCentersHelper
 
   # GET /cost_centers
   # GET /cost_centers.json
@@ -27,6 +28,7 @@ class CostCentersController < ApplicationController
     state_update = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
     edit_all = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar todos").exists?
     sales_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar compras").exists?
+    edit_code = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar codigo").exists?
 
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
@@ -46,7 +48,7 @@ class CostCentersController < ApplicationController
       show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
       state_update: (current_user.rol.name == "Administrador" ? true : state_update),
       sales_state: (current_user.rol.name == "Administrador" ? true : sales_state),
-
+      edit_code: (current_user.rol.name == "Administrador" ? true : edit_code),
     }
   end
 
@@ -79,10 +81,10 @@ class CostCentersController < ApplicationController
       end
     end
 
-    cost_centers = cost_centers.to_json(:include => { :customer => { :only => [:name] }, :contact => { :only => [:name, :id] }, :last_user_edited => { :only => [:names, :id] }, :user => { :only => [:names, :id] }, :sales_orders => { :only => [:order_value] } })
+    #cost_centers = cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] }, :sales_orders => { :only =>[:order_value] } })
 
-    cost_centers = JSON.parse(cost_centers)
-    render :json => { cost_centers_paginate: cost_centers, cost_centers_total: cost_centers_total }
+    #cost_centers = JSON.parse(cost_centers)
+    render :json => { cost_centers_paginate: get_cost_centers_items(cost_centers), cost_centers_total: cost_centers_total }
   end
 
   def update_sales_state_cost_center
@@ -122,17 +124,18 @@ class CostCentersController < ApplicationController
   end
 
   def update_state_centro
-    centro = CostCenter.find(params[:id])
+    cost_center = CostCenter.find(params[:id])
 
     if params[:from] == "execution_state"
-      update_centro = centro.update(execution_state: params[:state])
+      update_centro = cost_center.update(execution_state: params[:state])
     else
-      update_centro = centro.update(invoiced_state: params[:state])
+      update_centro = cost_center.update(invoiced_state: params[:state])
     end
 
     if update_centro
       render :json => {
         message: "¡El Registro fue Actualizado con exito!",
+        register: get_cost_centers_item(cost_center),
         type: "success",
       }
     end
@@ -361,18 +364,19 @@ class CostCentersController < ApplicationController
       end
     end
 
-    @cost_center = CostCenter.create(cost_center_params_create)
+    cost_center = CostCenter.create(cost_center_params_create)
 
-    if @cost_center.save
+    if cost_center.save
       render :json => {
                message: "¡El Registro fue creado con exito!",
+               register: get_cost_centers_item(cost_center),
                type: "success",
              }
     else
       render :json => {
                message: "¡El Registro no fue creado!",
                type: "error",
-               message_error: @cost_center.errors.full_messages,
+               message_error: cost_center.errors.full_messages,
              }
     end
   end
@@ -541,8 +545,8 @@ class CostCentersController < ApplicationController
       recalculate_cost_center(@cost_center.id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
+        register: get_cost_centers_item(@cost_center),
         type: "success",
-        register: @cost_center,
       }
     else
       render :json => {
@@ -568,9 +572,15 @@ class CostCentersController < ApplicationController
     state = @cost_center.invoiced_state == "LEGALIZADO" ? "POR FACTURAR" : @cost_center.invoiced_state
     @fac = @cost_center.invoiced_state == "LEGALIZADO" ? true : false
 
-    @cost_center.update(execution_state: "FINALIZADO", invoiced_state: state)
+    update_status = @cost_center.update(execution_state: "FINALIZADO", invoiced_state: state)
 
-    render :json => true
+    if update_status
+      render :json => {
+        message: "¡El Registro fue actualizado con exito!",
+        type: "success",
+        register: get_cost_centers_item(@cost_center),
+      }
+    end
   end
 
   private
