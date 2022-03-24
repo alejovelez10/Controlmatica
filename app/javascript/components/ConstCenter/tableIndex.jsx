@@ -20,7 +20,8 @@ class tableIndex extends React.Component {
 
       formUpdate: {
         execution_state: "",
-        invoiced_state: ""
+        invoiced_state: "",
+        code: "",
       },
 
       formUpdateSalesState: {
@@ -375,7 +376,7 @@ class tableIndex extends React.Component {
 
   HandleClick = e => {
     if (this.validationForm() == true) {
-      if (this.state.modeEdit == true) {
+      if (this.state.modeEdit) {
         fetch("/cost_centers/" + this.state.action.id, {
           method: "PATCH", // or 'PUT'
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -386,7 +387,7 @@ class tableIndex extends React.Component {
           .then(res => res.json())
           .catch(error => console.error("Error:", error))
           .then(data => {
-            this.props.loadInfo();
+            this.props.updateItem(data.register)
             this.MessageSucces(data.message, data.type, data.message_error);
 
             this.setState({
@@ -422,7 +423,7 @@ class tableIndex extends React.Component {
           .catch(error => console.error("Error:", error))
           .then(data => {
 
-            this.props.loadInfo();
+            this.props.updateData(data.register)
             this.removeValues(true)
             this.MessageSucces(data.message, data.type, data.message_error);
 
@@ -465,7 +466,7 @@ class tableIndex extends React.Component {
           method: 'GET'
         }).then(response => response.json())
           .then(response => {
-            this.props.loadInfo()
+            this.props.updateItem(response.register)
 
             Swal.fire(
               'Actualizado!',
@@ -478,32 +479,45 @@ class tableIndex extends React.Component {
 
   }
 
-  delete = (id) => {
+  delete = (cost_center) => {
     Swal.fire({
-      title: 'Estas seguro?',
-      text: "El registro sera eliminado para siempre!",
-      type: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#009688',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Si'
+        title: 'Escribe el codigo del centro de costo para poder eliminarlo',
+        input: 'text',
+        footer: `<p>El codigo del centro de costo es (${cost_center.code}) </p>`,
+
+        inputAttributes: {
+            autocapitalize: 'off'
+        },
+
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#16aaff',
+        cancelButtonText: "Cancelar",
+        showLoaderOnConfirm: true,
+        preConfirm: (login) => {
+            if (login == cost_center.code.trim()) {
+                  fetch(`/cost_centers/${cost_center.id}`, {
+                    method: "delete", // or 'PUT'
+                    headers: {
+                      "Content-Type": "application/json"
+                    }
+                  })
+                  .then(res => res.json())
+                  .catch(error => console.error("Error:", error))
+                  .then(data => {
+                      this.props.loadInfo()
+                  });
+            } else {
+              Swal.showValidationMessage("El codigo no concuerda")
+            }
+        },
+
+        allowOutsideClick: () => !Swal.isLoading()
     }).then((result) => {
-      if (result.value) {
-        fetch("/cost_centers/" + id, {
-          method: 'delete'
-        }).then(response => response.json())
-          .then(response => {
-            this.props.loadInfo()
+        if (result.value) {
 
-            Swal.fire(
-              'Borrado!',
-              '¡El registro fue eliminado con exito!',
-              'success'
-            )
-          });
-      }
+        }
     })
-
   }
 
   edit = modulo => {
@@ -544,8 +558,8 @@ class tableIndex extends React.Component {
       },
 
       selectedOptionUserOwner: {
-        user_owner_id: "",
-        label: ""
+        user_owner_id: modulo.user_owner.id,
+        label: modulo.user_owner.name,
       },
 
       action: modulo,
@@ -562,6 +576,7 @@ class tableIndex extends React.Component {
         quotation_number: modulo.quotation_number,
         viatic_value: modulo.viatic_value,
         execution_state: "PENDIENTE",
+        user_owner_id: modulo.user_owner.id,
 
         eng_hours: modulo.eng_hours != "" ? modulo.eng_hours : "0.0",
         hour_real: modulo.hour_real != "" ? modulo.hour_real : "0.0",
@@ -629,14 +644,39 @@ class tableIndex extends React.Component {
 
   HandleClickUpdate = (register, state_show, from_state) => {
     this.setState({
-      id: (state_show == true ? register.id : ""),
-      from_state: (state_show == true ? from_state : ""),
+      id: (state_show ? register.id : ""),
+      from_state: (state_show ? from_state : ""),
 
       formUpdate: {
-        execution_state: (state_show == true && from_state == "execution_state" ? register.execution_state : ""),
-        invoiced_state: (state_show == true && from_state == "invoiced_state" ? register.invoiced_state : "")
+        execution_state: (state_show && from_state == "execution_state" ? register.execution_state : ""),
+        invoiced_state: (state_show && from_state == "invoiced_state" ? register.invoiced_state : ""),
+        code: (state_show && from_state == "code" ? register.code : ""),
       },
     });
+  }
+
+  onChangeUpdate = (e) => {
+    this.setState({
+      formUpdate: {
+        ...this.state.formUpdate,
+        [e.target.name]: e.target.value
+      }
+    });
+  }
+
+  handleClickUpdate = (cost_center_id) => {
+    fetch(`/cost_centers/${cost_center_id}`, {
+      method: "PATCH", // or 'PUT'
+      body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+      .then(res => res.json())
+      .catch(error => console.error("Error:", error))
+      .then(data => {
+        this.props.updateItem(data.register)
+      });
   }
 
   onChangeUpdateSelect = (e) => {
@@ -646,7 +686,7 @@ class tableIndex extends React.Component {
       .then(res => res.json())
       .catch(error => console.error("Error:", error))
       .then(data => {
-        this.props.loadInfo();
+        this.props.updateItem(data.register)
         this.MessageSucces(data.message, data.type, data.message_error);
 
         this.setState({
@@ -655,7 +695,8 @@ class tableIndex extends React.Component {
 
           formUpdate: {
             execution_state: "",
-            invoiced_state: ""
+            invoiced_state: "",
+            code: "",
           },
         })
 
@@ -697,12 +738,12 @@ class tableIndex extends React.Component {
 
 
   getState = (user) => {
-    if (this.props.estados.edit == true && this.props.usuario.id == user) {
+    if (this.props.estados.edit && this.props.usuario.id == user) {
       return true
     } else if (this.props.estados.edit == false && this.props.estados.edit_all) {
       return true
 
-    } else if (this.props.estados.edit_all == true && this.props.usuario.id == user) {
+    } else if (this.props.estados.edit_all && this.props.usuario.id == user) {
       return true
     } else if (this.props.estados.edit_all) {
       return true
@@ -772,45 +813,44 @@ class tableIndex extends React.Component {
     return (
       <React.Fragment>
 
-        <FormCreate
-          toggle={this.toggle}
-          backdrop={this.state.backdrop}
-          modal={this.state.modal}
-          onChangeForm={this.handleChange}
-          formValues={this.state.form}
-          submit={this.HandleClick}
-          FormSubmit={this.handleSubmit}
-          titulo={this.state.title}
-          nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
-          errorValues={this.state.ErrorValues}
-          modeEdit={this.state.modeEdit}
+        {this.state.modal && (
+          <FormCreate
+            toggle={this.toggle}
+            backdrop={this.state.backdrop}
+            modal={this.state.modal}
+            onChangeForm={this.handleChange}
+            formValues={this.state.form}
+            submit={this.HandleClick}
+            FormSubmit={this.handleSubmit}
+            titulo={this.state.title}
+            nameSubmit={this.state.modeEdit ? "Actualizar" : "Crear"}
+            errorValues={this.state.ErrorValues}
+            modeEdit={this.state.modeEdit}
 
 
-          /* AUTOCOMPLETE CLIENTE */
+            /* AUTOCOMPLETE CLIENTE */
 
-          clientes={this.state.clients}
-          onChangeAutocomplete={this.handleChangeAutocomplete}
-          formAutocomplete={this.state.selectedOption}
+            clientes={this.state.clients}
+            onChangeAutocomplete={this.handleChangeAutocomplete}
+            formAutocomplete={this.state.selectedOption}
 
-          /* AUTOCOMPLETE CONTACTO */
+            /* AUTOCOMPLETE CONTACTO */
 
-          contacto={this.state.dataContact}
-          onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
-          formAutocompleteContact={this.state.selectedOptionContact}
+            contacto={this.state.dataContact}
+            onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+            formAutocompleteContact={this.state.selectedOptionContact}
 
-          /* AUTOCOMPLETE USERS */
+            /* AUTOCOMPLETE USERS */
 
-          formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
-          onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
-          users={this.props.users}
+            formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
+            onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
+            users={this.props.users}
 
-          /* ESTADOS */
+            /* ESTADOS */
 
-          estados={this.props.estados}
-
-
-
-        />
+            estados={this.props.estados}
+          />
+        )}
 
         <div className="col-md-12 p-0 mb-4">
           <div className="row">
@@ -837,7 +877,7 @@ class tableIndex extends React.Component {
                 </a>
               )}
 
-              {this.props.estados.create == true && (
+              {this.props.estados.create && (
                 <button onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo centro de costo</button>
               )}
             </div>
@@ -917,10 +957,10 @@ class tableIndex extends React.Component {
                           </button>
                           <div className="dropdown-menu dropdown-menu-right">
 
-                            {this.props.estados.manage_module == true && (
+                            {this.props.estados.manage_module && (
                               <a href={`/cost_centers/${accion.id}`} target="_blank" className="dropdown-item">
                                 Gestionar
-                                  </a>
+                              </a>
                             )}
 
                             {/* {this.props.estados.edit == true && (accion.user_id == this.props.usuario.id || this.props.usuario.rol_id != 5 )  && ( */}
@@ -928,20 +968,37 @@ class tableIndex extends React.Component {
                             {this.getState(accion.user_id) && (
                               <button onClick={() => this.edit(accion)} className="dropdown-item">
                                 Editar
-                                  </button>
+                              </button>
                             )}
 
-                            {this.props.estados.delete == true && (
-                              <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                            {this.props.estados.delete && (
+                              <button onClick={() => this.delete(accion)} className="dropdown-item">
                                 Eliminar
-                                  </button>
+                              </button>
                             )}
 
                           </div>
                         </div>
                       </div>
                     </td>
-                    <th>{accion.code} {console.log(accion.ing_costo_cotizado)}</th>
+                    <th>
+                      {this.state.id == accion.id && this.state.from_state == "code" ? (
+                        <React.Fragment>
+                          <input
+                            name="code"
+                            className="form form-control"
+                            onChange={this.onChangeUpdate}
+                            value={this.state.formUpdate.code}
+                            onBlur={() => this.handleClickUpdate(accion.id)}
+                            style={{ display: "inherit", width: "90%" }}
+                          />
+
+                          <i onClick={() => this.HandleClickUpdate(accion, false, "code")} className="fas fa-times-circle float-right"></i>
+                        </React.Fragment>
+                      ) : (
+                        <p>{accion.code} {this.props.estados.edit_code ? <i onClick={() => this.HandleClickUpdate(accion, true, "code")} className="fas fa-pencil-alt float-right"></i> : null} </p>
+                      )}
+                    </th>
                     <th>{accion.customer != undefined ? accion.customer.name : ""}</th>
                     <th>{accion.service_type}</th>
                     <th>{accion.description}</th>
@@ -981,8 +1038,8 @@ class tableIndex extends React.Component {
                               <i onClick={() => this.editSalesState("cerrar", {})} className="fas fa-times-circle float-right"></i>
                             </React.Fragment>
                           ) : (
-                              <p>{accion.sales_state} {this.props.estados.sales_state ? <i onClick={() => this.editSalesState("edit", accion)} className="fas fa-pencil-alt float-right"></i> : null} </p>
-                            )}
+                            <p>{accion.sales_state} {this.props.estados.sales_state ? <i onClick={() => this.editSalesState("edit", accion)} className="fas fa-pencil-alt float-right"></i> : null} </p>
+                          )}
                         </React.Fragment>
                       )}
                     </th>
@@ -1019,8 +1076,8 @@ class tableIndex extends React.Component {
                               <i onClick={() => this.HandleClickUpdate(accion, false, "execution_state")} className="fas fa-times-circle float-right"></i>
                             </React.Fragment>
                           ) : (
-                              <p>{accion.execution_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true, "execution_state")} className="fas fa-pencil-alt float-right"></i> : ""} </p>
-                            )}
+                            <p>{accion.execution_state} {this.props.estados.update_state ? <i onClick={() => this.HandleClickUpdate(accion, true, "execution_state")} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                          )}
                         </React.Fragment>
                       )}
                     </th>
@@ -1049,8 +1106,8 @@ class tableIndex extends React.Component {
                           <i onClick={() => this.HandleClickUpdate(accion, false, "invoiced_state")} className="fas fa-times-circle float-right"></i>
                         </React.Fragment>
                       ) : (
-                          <p>{accion.invoiced_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true, "invoiced_state")} className="fas fa-pencil-alt float-right"></i> : ""} </p>
-                        )}
+                        <p>{accion.invoiced_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true, "invoiced_state")} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                      )}
                     </th>
 
                     <th>{accion.quotation_number}</th>
@@ -1153,17 +1210,17 @@ class tableIndex extends React.Component {
                   </tr>
                 ))
               ) : (
-                  <tr>
-                    <td colSpan="13" className="text-center">
-                      <div className="text-center mt-1 mb-1">
-                        <h4>No hay registros</h4>
-                        {this.props.estados.create == true && (
-                          <button onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo centro de costo</button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
+                <tr>
+                  <td colSpan="13" className="text-center">
+                    <div className="text-center mt-1 mb-1">
+                      <h4>No hay registros</h4>
+                      {this.props.estados.create == true && (
+                        <button onClick={() => this.toggle("new")} className="btn btn-secondary">Nuevo centro de costo</button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
 
             </tbody>
 

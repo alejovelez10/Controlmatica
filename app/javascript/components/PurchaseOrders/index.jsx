@@ -187,6 +187,45 @@ class index extends React.Component {
     };
 
 
+    //add items
+    updateData = (data) => {
+      this.setState({
+        data: [...this.state.data, data],
+      })
+    }
+
+    //add update
+    updateItem = sales_order => {
+        this.setState({
+            data: this.state.data.map(item => {
+            if (sales_order.id === item.id) {
+              return { ...item, 
+                cost_center: sales_order.cost_center,
+                created_date: sales_order.created_date,
+                cost_center_id: sales_order.cost_center_id,
+                created_at: sales_order.created_at,
+                customer_invoices: sales_order.customer_invoices,
+                description: sales_order.description,
+                last_user_edited: sales_order.last_user_edited,
+
+                last_user_edited_id: sales_order.last_user_edited_id,
+                order_file: sales_order.order_file,
+                order_number: sales_order.order_number,
+                order_value: sales_order.order_value,
+                state: sales_order.state,
+                sum_invoices: sales_order.sum_invoices,
+                update_user: sales_order.update_user,
+                updated_at: sales_order.updated_at,
+                user: sales_order.user,
+                user_id: sales_order.user_id,
+              }
+            }
+            return item;
+          })
+        });
+    }
+
+
     render() {
         return (
             <React.Fragment>
@@ -211,7 +250,6 @@ class index extends React.Component {
                   clientes={this.state.clients}
                   onChangeAutocompleteCustomer={this.handleChangeAutocompleteCustomer}
                   formAutocompleteCustomer={this.state.selectedOptionCustomer}
-
                 />
               </div>
 
@@ -220,7 +258,7 @@ class index extends React.Component {
                   <div className="card card-table">
                     <div className="card-body">
       
-                        {this.state.isLoaded == true ? (
+                        {this.state.isLoaded ? (
                             <Table 
                                 dataActions={this.state.data} 
                                 loadInfo={this.loadData}
@@ -231,6 +269,9 @@ class index extends React.Component {
                                 filtering={this.state.filtering}
                                 sales_orders_total_exel={this.state.sales_orders_total_exel}
                                 formFilter={this.state.formFilter}
+
+                                updateData={this.updateData}
+                                updateItem={this.updateItem}
                             />
 
                         ) : (
@@ -238,8 +279,7 @@ class index extends React.Component {
                                 <div className="col-md-12 text-center">
                                     <p>Cargando....</p>
                                 </div>
-                            )
-                        }
+                        )}
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>
                         <div className="row">

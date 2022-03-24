@@ -37,6 +37,7 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: parameterizations.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: parameterizations.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: parameterizations.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: parameterizations.id, user_id: user.id)
         end
         
         users = ModuleControl.create(name: "Usuarios", user_id: user.id)
@@ -78,7 +79,13 @@ namespace :create_config do
             AccionModule.create(name: "Crear", module_control_id: cost_center.id, user_id: user.id)
             AccionModule.create(name: "Eliminar", module_control_id: cost_center.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: cost_center.id, user_id: user.id)
             AccionModule.create(name: "Descargar excel", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Ver horas costo", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Forzar estados", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Editar todos", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Finalizar compras", module_control_id: cost_center.id, user_id: user.id)
+            AccionModule.create(name: "Editar codigo", module_control_id: cost_center.id, user_id: user.id)
         end
 
         report = ModuleControl.create(name: "Reportes de servicios", user_id: user.id)
@@ -167,6 +174,65 @@ namespace :create_config do
             AccionModule.create(name: "Ver todos", module_control_id: expense_ratio.id, user_id: user.id)
         end
 
+        expense_ratio = ModuleControl.create(name: "Relación de gastos", user_id: user.id)
+
+        if expense_ratio
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Ver pdf", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: expense_ratio.id, user_id: user.id)
+        end
+
+        type_expense = ModuleControl.create(name: "Tipos de Gastos", user_id: user.id)
+
+        if type_expense
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: type_expense.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: type_expense.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: type_expense.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: type_expense.id, user_id: user.id)
+        end
+
+        notification_alert = ModuleControl.create(name: "Notificación de alertas", user_id: user.id)
+
+        if notification_alert
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: notification_alert.id, user_id: user.id)
+            AccionModule.create(name: "Revisar", module_control_id: notification_alert.id, user_id: user.id)
+        end
+        
+        edit_register = ModuleControl.create(name: "Registro de edicion", user_id: user.id)
+
+        if edit_register
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: edit_register.id, user_id: user.id)
+            AccionModule.create(name: "Revisar", module_control_id: edit_register.id, user_id: user.id)
+        end
+        
+        Parameterization.create(name: "HORA HOMBRE COSTO", money_value: 50000)
+        Parameterization.create(name: "HORA HOMBRE COTIZADA", money_value: 80000)
+        Parameterization.create(name: "HORA TABLERISTA COSTO", money_value: 50000)
+        Parameterization.create(name: "HORA DESPLAZAMIENTO", money_value: 50000)
+
+        Alert.create(
+            desp_med: 100, 
+            desp_min: 85, 
+            ing_costo_med: 25, 
+            ing_costo_min: 40, 
+            ing_ejecucion_med: 100, 
+            ing_ejecucion_min: 85,
+            mat_med: 15,
+            mat_min: 20,
+            name: "ALERTAS",
+            tab_costo_med: 15,
+            tab_costo_min: 35,
+            tab_ejecucion_med: 100,
+            tab_ejecucion_min: 85,
+            total_med: 15,
+            total_min: 20,
+            via_med: 100,
+            user_id: user.id,
+            via_min: 85
+        )
 
     end
 end
