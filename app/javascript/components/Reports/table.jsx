@@ -16,6 +16,7 @@ class table extends React.Component {
       ErrorValues: true,
       ErrorValuesContact: true,
       modal: false,
+      isLoading: false,
       backdrop: "static",
 
       state_create: false,
@@ -323,6 +324,7 @@ class table extends React.Component {
   updateValues() {
     this.setState({
       modal: false,
+      isLoading: false,
 
       formContact: {
         contact_name: "",
@@ -352,6 +354,7 @@ class table extends React.Component {
 
   HandleClick = e => {
     if (this.validationForm() == true) {
+      this.setState({ isLoading: true })
       if (this.state.modeEdit) {
         fetch("/reports/" + this.state.action.id, {
           method: "PATCH", // or 'PUT'
@@ -542,8 +545,33 @@ class table extends React.Component {
 
   getDate = (date) => {
     var d = new Date(date),
-      months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
+
+    var time = hoursAndMinutes; // your input
+    
+    time = time.split(':'); // convert to array
+
+    // fetch
+    var hours = Number(time[0]);
+    var minutes = Number(time[1]);
+    var seconds = Number(time[2]);
+
+    // calculate
+    var timeValue;
+
+    if (hours > 0 && hours <= 12) {
+      timeValue= "" + hours;
+    } else if (hours > 12) {
+      timeValue= "" + (hours - 12);
+    } else if (hours == 0) {
+      timeValue= "12";
+    }
+    
+    timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
+    //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
+
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear() + " / " + timeValue
   }
 
 
@@ -594,6 +622,7 @@ class table extends React.Component {
 
             rol={this.props.rol}
             estados={this.props.estados}
+            isLoading={this.state.isLoading}
 
           />
         )}

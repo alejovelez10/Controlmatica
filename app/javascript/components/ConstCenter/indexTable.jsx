@@ -84,7 +84,7 @@ class indexTable extends React.Component {
     //add items
     updateData = (data) => {
       this.setState({
-        data: [...this.state.data, data],
+        data: [...this.state.data, data].reverse(),
       })
     }
 

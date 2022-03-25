@@ -14,6 +14,7 @@ class table extends React.Component {
         modal: false,
         backdrop: "static",
         modeEdit: false,
+        isLoading: false,
         action: {},
         title: "",
         id: "",
@@ -146,7 +147,8 @@ class table extends React.Component {
 
   HandleClick = e => {
     if (this.validationForm() == true) {
-      if(this.state.modeEdit == true){
+      this.setState({ isLoading: true })
+      if(this.state.modeEdit){
         
         fetch("/contractors/" + this.state.action.id, {
           method: 'PATCH', // or 'PUT'
@@ -162,6 +164,7 @@ class table extends React.Component {
 
             this.setState({
               modal: false,
+              isLoading: false,
               form: {
                 sales_number: "",
                 sales_date: "",
@@ -203,7 +206,9 @@ class table extends React.Component {
 
             this.setState({
               modal: false,
-                form: {
+              isLoading: false,
+
+              form: {
                   sales_number: "",
                   sales_date: "",
                   ammount: "",
@@ -277,7 +282,8 @@ class table extends React.Component {
     }else if(from == "new"){
 
       this.setState({
-        modeEdit: false ,
+        modeEdit: false,
+        isLoading: false,
         title: "Agregar tablerista",
         form: {
           sales_number: "",
@@ -359,7 +365,32 @@ class table extends React.Component {
   getDate = (date) => {
     var d = new Date(date),
     months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+    const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
+
+    var time = hoursAndMinutes; // your input
+    
+    time = time.split(':'); // convert to array
+
+    // fetch
+    var hours = Number(time[0]);
+    var minutes = Number(time[1]);
+    var seconds = Number(time[2]);
+
+    // calculate
+    var timeValue;
+
+    if (hours > 0 && hours <= 12) {
+      timeValue= "" + hours;
+    } else if (hours > 12) {
+      timeValue= "" + (hours - 12);
+    } else if (hours == 0) {
+      timeValue= "12";
+    }
+    
+    timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
+    //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
+
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear() + " / " + timeValue
   }
 
 
@@ -404,35 +435,38 @@ class table extends React.Component {
 
                 </div>
             </div>
+            
+            {this.state.modal && (
+                <FormCreate
+                  toggle={this.toggle}
+                  backdrop={this.state.backdrop}
+                  modal={this.state.modal}
 
-            <FormCreate
-                toggle={this.toggle}
-                backdrop={this.state.backdrop}
-                modal={this.state.modal}
+                  onChangeForm={this.handleChange}
+                  formValues={this.state.form}
+                  submit={this.HandleClick}
+                  FormSubmit={this.handleSubmit}
 
-                onChangeForm={this.handleChange}
-                formValues={this.state.form}
-                submit={this.HandleClick}
-                FormSubmit={this.handleSubmit}
+                  titulo={this.state.title}
+                  nameSubmit={this.state.modeEdit ? "Actualizar" : "Crear"}
+                  errorValues={this.state.ErrorValues}
+                  modeEdit={this.state.modeEdit}
 
-                titulo={this.state.title}
-                nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
-                errorValues={this.state.ErrorValues}
-                modeEdit={this.state.modeEdit}
+                  /* AUTOCOMPLETE CENTRO DE COSTO */
 
-                /* AUTOCOMPLETE CENTRO DE COSTO */
+                  centro={this.state.dataCostCenter}
+                  onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+                  formAutocompleteCentro={this.state.selectedOptionCentro}
 
-                centro={this.state.dataCostCenter}
-                onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
-                formAutocompleteCentro={this.state.selectedOptionCentro}
+                  /* AUTOCOMPLETE USERS */
 
-                /* AUTOCOMPLETE USERS */
+                  users={this.state.dataUsers}
+                  onChangeAutocompleteUsers={this.handleChangeAutocompleteUsers}
+                  formAutocompleteUsers={this.state.selectedOptionUsers}
 
-                users={this.state.dataUsers}
-                onChangeAutocompleteUsers={this.handleChangeAutocompleteUsers}
-                formAutocompleteUsers={this.state.selectedOptionUsers}
-
-            />
+                  isLoading={this.state.isLoading}
+              />
+            )}
 
             <div className="content-table">
             

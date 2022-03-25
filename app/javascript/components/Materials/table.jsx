@@ -15,6 +15,7 @@ class table extends React.Component {
       backdrop: "static",
       modeEdit: false,
       modalShow: false,
+      isLoading: false,
 
       modalIncomeDetail: false,
       ErrorValuesIncome: true,
@@ -143,7 +144,8 @@ class table extends React.Component {
 
   HandleClick = e => {
     if (this.validationForm() == true) {
-      if (this.state.modeEdit == true) {
+      this.setState({ isLoading: true })
+      if (this.state.modeEdit) {
         fetch("/materials/" + this.state.action.id, {
           method: "PATCH", 
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -159,6 +161,7 @@ class table extends React.Component {
 
             this.setState({
               modal: false,
+              isLoading: false,
               form: {
                 provider_id: "",
                 sales_date: "",
@@ -195,6 +198,7 @@ class table extends React.Component {
 
             this.setState({
               modal: false,
+              isLoading: false,
               form: {
                 provider_id: "",
                 sales_date: "",
@@ -503,7 +507,32 @@ class table extends React.Component {
   getDate = (date) => {
     var d = new Date(date),
     months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear()
+    const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
+
+    var time = hoursAndMinutes; // your input
+    
+    time = time.split(':'); // convert to array
+
+    // fetch
+    var hours = Number(time[0]);
+    var minutes = Number(time[1]);
+    var seconds = Number(time[2]);
+
+    // calculate
+    var timeValue;
+
+    if (hours > 0 && hours <= 12) {
+      timeValue= "" + hours;
+    } else if (hours > 12) {
+      timeValue= "" + (hours - 12);
+    } else if (hours == 0) {
+      timeValue= "12";
+    }
+    
+    timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
+    //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
+
+    return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear() + " / " + timeValue
   }
 
   render() {
@@ -551,28 +580,31 @@ class table extends React.Component {
             </div>
           </div>
         </div>
+        
+        {this.state.modal && (
+          <FormCreate
+            toggle={this.toggle}
+            backdrop={this.state.backdrop}
+            modal={this.state.modal}
+            onChangeForm={this.handleChange}
+            formValues={this.state.form}
+            submit={this.HandleClick}
+            FormSubmit={this.handleSubmit}
+            titulo={this.state.title}
+            nameSubmit={this.state.modeEdit ? "Actualizar" : "Crear"}
+            errorValues={this.state.ErrorValues}
+            modeEdit={this.state.modeEdit}
+            providers={this.props.providers}
 
-        <FormCreate
-          toggle={this.toggle}
-          backdrop={this.state.backdrop}
-          modal={this.state.modal}
-          onChangeForm={this.handleChange}
-          formValues={this.state.form}
-          submit={this.HandleClick}
-          FormSubmit={this.handleSubmit}
-          titulo={this.state.title}
-          nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
-          errorValues={this.state.ErrorValues}
-          modeEdit={this.state.modeEdit}
-          providers={this.props.providers}
+            /* AUTOCOMPLETE CENTRO DE COSTO */
 
-          /* AUTOCOMPLETE CENTRO DE COSTO */
+            centro={this.state.dataCostCenter}
+            onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+            formAutocompleteCentro={this.state.selectedOptionCentro}
 
-          centro={this.state.dataCostCenter}
-          onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
-          formAutocompleteCentro={this.state.selectedOptionCentro}
-          
-        />
+            isLoading={this.state.isLoading}
+          />
+        )}
 
         <FormIncomeDetail
           toggle={this.showIncomeDetail}

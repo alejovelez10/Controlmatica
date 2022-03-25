@@ -5,7 +5,8 @@ class FormFilter extends Component {
   constructor(props){
     super(props)
     this.state = {
-      show_btn: false
+      show_btn: false,
+      reports: [],
     }
   }
 
@@ -20,6 +21,18 @@ class FormFilter extends Component {
     this.props.closeFilter(true)
     this.setState({
       show_btn: false
+    })
+  }
+
+  componentDidMount = () => {
+    let array = []
+
+    this.props.data.map((item) => (
+      array.push({label: item.code_report, value: item.code_report})
+    ))
+
+    this.setState({
+      reports: array,
     })
   }
 
@@ -140,6 +153,22 @@ class FormFilter extends Component {
                       value={this.props.formValuesFilter.date_hasta}
                     />
                   </div> 
+
+                  <div className="col-md-3 mt-3">
+                    <label>Busqueda por codigo</label>
+                      <input
+                        type="hidden"
+                        name="code_report"
+                        value={this.props.selectedOptionCodeReport.code_report}
+                      />
+                      <Select
+                        options={this.state.reports}
+                        autoFocus={false}
+                        className={`link-form`}
+                        onChange={this.props.handleChangeAutocompleteCodeReport}
+                        value={this.props.selectedOptionCodeReport}
+                      />
+                  </div>
 
 
 

@@ -136,7 +136,7 @@ class FormCreate extends React.Component {
 
           <ModalFooter>
                 <button className="btn btn-light" onClick={this.props.toggle}>Cerrar</button>
-                <button className="btn btn-secondary" onClick={this.props.submit}>{this.props.nameSubmit}</button>
+                <button className="btn btn-secondary" onClick={this.props.submit} disabled={this.props.isLoading}>{this.props.isLoading ? "Creando.." : this.props.nameSubmit}</button>
           </ModalFooter>
 
           </form>
