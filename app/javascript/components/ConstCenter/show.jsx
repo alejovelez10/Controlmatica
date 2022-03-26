@@ -29,6 +29,7 @@ class Show extends React.Component {
             dataContractors: [],
             dataSalesOrdes: [],
             dataReports: [],
+            dataExpenses: [],
 
             title: "Nuevo centro de costo",
             ErrorValues: true,
@@ -183,6 +184,7 @@ class Show extends React.Component {
                     dataContractors: data.dataContractors,
                     dataSalesOrdes: data.dataSalesOrdes,
                     dataReports: data.dataReports,
+                    dataExpenses: data.dataExpenses
                 });
             });
     }
@@ -1129,7 +1131,7 @@ class Show extends React.Component {
 
                 <Card className="mt-3">
                     <CardBody>
-                        <TabContentShow dataMateriales={this.state.dataMateriales} dataContractors={this.state.dataContractors} dataSalesOrdes={this.state.dataSalesOrdes} dataReports={this.state.dataReports} />
+                        <TabContentShow dataMateriales={this.state.dataMateriales} dataContractors={this.state.dataContractors} dataSalesOrdes={this.state.dataSalesOrdes} dataReports={this.state.dataReports}  dataExpenses={this.state.dataExpenses}/>
                     </CardBody>
                 </Card>
 

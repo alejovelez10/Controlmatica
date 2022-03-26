@@ -31,7 +31,6 @@ class ReportExpensesController < ApplicationController
   def get_report_expenses
     report_expense = ModuleControl.find_by_name("Gastos")
     show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
-
     if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:type_identification_id] || params[:payment_type_id] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_tax] || params[:invoice_total] || params[:start_date] || params[:end_date] || params[:is_acepted]
       if show_all
         report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(invoice_date: :desc)
@@ -92,9 +91,9 @@ class ReportExpensesController < ApplicationController
     show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
 
     if show_all
-      report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
+      report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
     else
-      report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
+      report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
     end
 
     update_status = report_expenses.update(is_acepted: true)
@@ -145,7 +144,7 @@ class ReportExpensesController < ApplicationController
       render :json => {
                success: "#{status_upload[0].length} subieron con exito, #{status_upload[1].length} no se puedieron crear por favor revisar",
                type: "success",
-               data: status_upload
+               data: status_upload,
              }
     else
       render :json => {
@@ -156,124 +155,120 @@ class ReportExpensesController < ApplicationController
   end
 
   def download_file
-
     centro = ModuleControl.find_by_name("Gastos")
     estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
     validate = (current_user.rol.name == "Administrador" ? true : estado)
-  if validate
-    if params[:type] == "filtro"
-      @items = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
-
+    if validate
+      if params[:type] == "filtro"
+        @items = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
+      else
+        @items = ReportExpense.all.order(invoice_date: :desc)
+      end
     else
-      @items = ReportExpense.all.order(invoice_date: :desc)
+      if params[:type] == "filtro"
+        @items = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
+      else
+        @items = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
+      end
     end
-  else
-    if params[:type] == "filtro"
-      @items = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
-    else
-      @items = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
-    end
-  end
 
+    render xlsx: "Reporte de gastos", template: "report_expenses/download_file.xlsx.axlsx"
 
-      render xlsx: "Reporte de gastos", template: "report_expenses/download_file.xlsx.axlsx"
+    #  centro = ModuleControl.find_by_name("Gastos")
+    #  estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
+    #  validate = (current_user.rol.name == "Administrador" ? true : estado)
 
+    #  if validate
+    #    if params[:type] == "filtro"
+    #      centro_show = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
+    #      puts centro_show.count
+    #    else
+    #      centro_show = ReportExpense.all.order(invoice_date: :desc)
+    #    end
+    #  else
+    #    if params[:type] == "filtro"
+    #      centro_show = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
+    #    else
+    #      centro_show = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
+    #    end
+    #  end
 
- #  centro = ModuleControl.find_by_name("Gastos")
- #  estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
- #  validate = (current_user.rol.name == "Administrador" ? true : estado)
+    #  respond_to do |format|
+    #    format.xlsx do
+    #      task = Spreadsheet::Workbook.new
+    #      sheet = task.create_worksheet
 
- #  if validate
- #    if params[:type] == "filtro"
- #      centro_show = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
- #      puts centro_show.count
- #    else
- #      centro_show = ReportExpense.all.order(invoice_date: :desc)
- #    end
- #  else
- #    if params[:type] == "filtro"
- #      centro_show = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date]).order(invoice_date: :desc)
- #    else
- #      centro_show = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
- #    end
- #  end
+    #      rows_format = Spreadsheet::Format.new color: :black,
+    #                                            weight: :normal,
+    #                                            size: 13,
+    #                                            align: :left
 
- #  respond_to do |format|
- #    format.xlsx do
- #      task = Spreadsheet::Workbook.new
- #      sheet = task.create_worksheet
+    #      centro_show.each.with_index(1) do |task, i|
+    #        position = sheet.row(i)
 
- #      rows_format = Spreadsheet::Format.new color: :black,
- #                                            weight: :normal,
- #                                            size: 13,
- #                                            align: :left
+    #        sheet.row(1).default_format = rows_format
+    #        position[0] = task.cost_center.present? ? task.cost_center.code : ""
+    #        position[1] = task.user_invoice.names
+    #        position[2] = task.invoice_date.month.to_s + "/" + task.invoice_date.day.to_s + "/" + task.invoice_date.year.to_s
+    #        position[3] = task.invoice_name
+    #        position[4] = task.identification
 
- #      centro_show.each.with_index(1) do |task, i|
- #        position = sheet.row(i)
+    #        position[5] = task.description
+    #        position[6] = task.invoice_number
+    #        position[7] = task.type_identification.present? ? task.type_identification.name : ""
+    #        position[8] = task.payment_type.present? ? task.payment_type.name : ""
+    #        position[9] = task.invoice_value
+    #        position[10] = task.invoice_tax
 
- #        sheet.row(1).default_format = rows_format
- #        position[0] = task.cost_center.present? ? task.cost_center.code : ""
- #        position[1] = task.user_invoice.names
- #        position[2] = task.invoice_date.month.to_s + "/" + task.invoice_date.day.to_s + "/" + task.invoice_date.year.to_s 
- #        position[3] = task.invoice_name
- #        position[4] = task.identification
+    #        sheet.row(i).height = 25
+    #        sheet.column(i).width = 40
+    #        sheet.row(i).default_format = rows_format
+    #      end
 
- #        position[5] = task.description
- #        position[6] = task.invoice_number
- #        position[7] = task.type_identification.present? ? task.type_identification.name : ""
- #        position[8] = task.payment_type.present? ? task.payment_type.name : ""
- #        position[9] = task.invoice_value
- #        position[10] = task.invoice_tax
+    #      head_format = Spreadsheet::Format.new color: :white,
+    #                                            weight: :bold,
+    #                                            size: 12,
+    #                                            pattern_bg_color: :xls_color_10,
+    #                                            pattern: 2,
+    #                                            vertical_align: :middle,
+    #                                            align: :left
 
- #        sheet.row(i).height = 25
- #        sheet.column(i).width = 40
- #        sheet.row(i).default_format = rows_format
- #      end
+    #      position = sheet.row(0)
 
- #      head_format = Spreadsheet::Format.new color: :white,
- #                                            weight: :bold,
- #                                            size: 12,
- #                                            pattern_bg_color: :xls_color_10,
- #                                            pattern: 2,
- #                                            vertical_align: :middle,
- #                                            align: :left
+    #      position[0] = "Centro de costo"
+    #      position[1] = "Responsable"
+    #      position[2] = "Fecha de factura"
+    #      position[3] = "Nombre"
+    #      position[4] = "NIT / CEDULA"
+    #      position[5] = "Descripcion"
+    #      position[6] = "Numero de factura"
+    #      position[7] = "Tipo"
+    #      position[8] = "Medio de pago"
+    #      position[9] = "Valor del pago"
+    #      position[10] = "IVA"
 
- #      position = sheet.row(0)
+    #      sheet.row(0).height = 20
+    #      sheet.column(0).width = 40
+    #      sheet.column(1).width = 40
+    #      sheet.column(2).width = 40
+    #      sheet.column(3).width = 40
+    #      sheet.column(4).width = 40
+    #      sheet.column(5).width = 40
+    #      sheet.column(6).width = 40
+    #      sheet.column(7).width = 40
+    #      sheet.column(8).width = 40
+    #      sheet.column(9).width = 40
+    #      sheet.column(10).width = 45
 
- #      position[0] = "Centro de costo"
- #      position[1] = "Responsable"
- #      position[2] = "Fecha de factura"
- #      position[3] = "Nombre"
- #      position[4] = "NIT / CEDULA"
- #      position[5] = "Descripcion"
- #      position[6] = "Numero de factura"
- #      position[7] = "Tipo"
- #      position[8] = "Medio de pago"
- #      position[9] = "Valor del pago"
- #      position[10] = "IVA"
+    #      sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
 
- #      sheet.row(0).height = 20
- #      sheet.column(0).width = 40
- #      sheet.column(1).width = 40
- #      sheet.column(2).width = 40
- #      sheet.column(3).width = 40
- #      sheet.column(4).width = 40
- #      sheet.column(5).width = 40
- #      sheet.column(6).width = 40
- #      sheet.column(7).width = 40
- #      sheet.column(8).width = 40
- #      sheet.column(9).width = 40
- #      sheet.column(10).width = 45
+    #      temp_file = StringIO.new
 
- #      sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
+    #      task.write(temp_file)
 
- #      temp_file = StringIO.new
-
- #      task.write(temp_file)
-
- #      send_data(temp_file.string, :filename => "Control_de_gastos.xlsx", :disposition => "inline")
- #    end
- #  end
+    #      send_data(temp_file.string, :filename => "Control_de_gastos.xlsx", :disposition => "inline")
+    #    end
+    #  end
   end
 
   private
