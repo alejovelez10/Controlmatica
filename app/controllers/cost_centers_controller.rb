@@ -131,6 +131,7 @@ class CostCentersController < ApplicationController
     if update_centro
       render :json => {
         success: message,
+        register: get_cost_centers_item(centro),
         type: type
       }
     end  
