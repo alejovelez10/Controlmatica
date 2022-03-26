@@ -53,7 +53,7 @@ class ReportExpenseOptionIndex extends Component {
     //add items
     updateData = (data) => {
         this.setState({
-            data: [...this.state.data, data],
+            data: [...this.state.data, data].reverse(),
         })
     }
 

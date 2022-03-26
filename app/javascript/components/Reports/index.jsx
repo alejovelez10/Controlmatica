@@ -42,6 +42,11 @@ class index extends React.Component {
               label: "Buscar cliente"
             },
 
+            selectedOptionCodeReport: {
+              code_report: "",
+              label: "Buscar por codigo"
+            },
+
             filtering: false,
       
             dataCostCenter: [],
@@ -67,7 +72,7 @@ class index extends React.Component {
     //add items
     updateData = (data) => {
       this.setState({
-        data: [...this.state.data, data],
+        data: [...this.state.data, data].reverse(),
       })
     }
 
@@ -153,6 +158,16 @@ class index extends React.Component {
       });
     };
 
+    handleChangeAutocompleteCodeReport = selectedOptionCodeReport => {
+      this.setState({
+        selectedOptionCodeReport,
+        formFilter: {
+          ...this.state.formFilter,
+          code_report: selectedOptionCodeReport.value
+        }
+      });
+    };
+
     handleChangeAutocompleteUser = selectedOptionUser => {
       this.setState({
         selectedOptionUser,
@@ -208,6 +223,11 @@ class index extends React.Component {
           label: "Buscar cliente"
         },
 
+        selectedOptionCodeReport: {
+          code_report: "",
+          label: "Buscar por codigo"
+        }
+
       })
       
     };
@@ -222,7 +242,7 @@ class index extends React.Component {
     };
 
     HandleClickFilter = e => {
-      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&filtering=${this.state.filtering}`)
+      fetch(`/get_reports?work_description=${this.state.formFilter.work_description != undefined ? this.state.formFilter.work_description : "" }&report_execute_id=${this.state.formFilter.report_execute_id != undefined ? this.state.formFilter.report_execute_id : ""}&date_ejecution=${this.state.formFilter.date_ejecution != undefined ? this.state.formFilter.date_ejecution : ""}&report_sate=${this.state.formFilter.report_sate != undefined ? this.state.formFilter.report_sate : ""}&cost_center_id=${this.state.formFilter.cost_center_id != undefined ? this.state.formFilter.cost_center_id : ""}&customer_id=${this.state.formFilter.customer_id != undefined ? this.state.formFilter.customer_id : ""}&date_desde=${this.state.formFilter.date_desde}&date_hasta=${this.state.formFilter.date_hasta}&code_report=${this.state.formFilter.code_report}&filtering=${this.state.filtering}`)
         .then(response => response.json())
         .then(data => {
           this.setState({
@@ -299,6 +319,8 @@ class index extends React.Component {
                   clientes={this.state.clients}
 
                   data={this.state.data} 
+                  handleChangeAutocompleteCodeReport={this.handleChangeAutocompleteCodeReport}
+                  selectedOptionCodeReport={this.state.selectedOptionCodeReport}
 
                 />
               )}
