@@ -652,9 +652,9 @@ class tableIndex extends React.Component {
       from_state: (state_show ? from_state : ""),
 
       formUpdate: {
-        execution_state: (state_show && from_state == "execution_state" ? register.execution_state : ""),
-        invoiced_state: (state_show && from_state == "invoiced_state" ? register.invoiced_state : ""),
-        code: (state_show && from_state == "code" ? register.code : ""),
+        execution_state: register.execution_state,
+        invoiced_state: register.invoiced_state,
+        code: register.code,
       },
     });
   }
@@ -807,7 +807,7 @@ class tableIndex extends React.Component {
       .catch(error => console.error("Error:", error))
       .then(data => {
         this.messageSuccess(data)
-        this.props.loadInfo();
+        this.props.updateItem(data.register)
         this.setState({
           formUpdateSalesState: {
             sales_state: "",
