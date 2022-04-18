@@ -1,9 +1,8 @@
 # == Schema Information
 #
-# Table name: expense_ratios
+# Table name: commission_relations
 #
 #  id                  :bigint           not null, primary key
-#  anticipo            :float
 #  area                :string
 #  creation_date       :date
 #  end_date            :date
@@ -17,22 +16,24 @@
 #  user_report_id      :integer
 #
 
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  cration_date: 2021-06-22
+  creation_date: 2022-04-11
   user_report_id: 1
-  start_date: 2021-06-22
-  end_date: 2021-06-22
-  area: MyString
+  start_date: 2022-04-11
+  end_date: 2022-04-11
+  area: 2022-04-11
   observations: MyText
   user_direction_id: 1
+  last_user_edited_id: 1
+  user_id: 1
 
 two:
-  cration_date: 2021-06-22
+  creation_date: 2022-04-11
   user_report_id: 1
-  start_date: 2021-06-22
-  end_date: 2021-06-22
-  area: MyString
+  start_date: 2022-04-11
+  end_date: 2022-04-11
+  area: 2022-04-11
   observations: MyText
   user_direction_id: 1
+  last_user_edited_id: 1
+  user_id: 1

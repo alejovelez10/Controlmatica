@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get 'commissions/index'
+  get 'commission_relations/index'
   get "get_show_center/:id", to: "cost_centers#get_show_center"
   get "employed_performance/show", to: "employed_performance#show", as: "employed_performance_show"
   get "employed_performance/info_pdf", to: "employed_performance#info_pdf", as: "info_pdf"
@@ -22,6 +24,21 @@ Rails.application.routes.draw do
   resources :rols, :except => [:show]
   resources :expense_ratios
 
+  resources :commission_relations, :except => [:show, :edit, :new]
+  resources :commissions, :except => [:show, :edit, :new]
+
+  ## commissions routes 
+  get "download_file/commissions/:type", to: "commissions#download_file"
+  get "get_commission_relations", to: "commission_relations#get_commission_relations"
+  get "get_commissions", to: "commissions#get_commissions"
+  patch "update_state_commission/:id/:state", to: "commissions#update_state_commission"
+  patch "update_filter_values_commissions", to: "commissions#update_filter_values_commissions"
+  get "download_file/commissions/:type", to: "commissions#download_file"
+
+  #commission_relations
+  get "get_commission_relations", to: "commission_relations#get_commission_relations"
+  get "commission_relations_pdf/:id", to: "commission_relations#pdf"
+
   resources :module_controls
   resources :accion_modules
   get "get_report_expense_options", to: "report_expense_options#get_report_expense_options"
@@ -34,6 +51,7 @@ Rails.application.routes.draw do
   resources :report_expenses, :except => [:show, :new, :edit]
   patch "update_filter_values", to: "report_expenses#update_filter_values"
   get "download_file/report_expenses/:type", to: "report_expenses#download_file"
+
   post "upload_file/report_expenses", to: "report_expenses#upload_file"
   get "indicators_expenses", to: "report_expenses#indicators_expenses"
   get "get_report_expenses", to: "report_expenses#get_report_expenses"

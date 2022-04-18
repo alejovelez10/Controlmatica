@@ -1,9 +1,8 @@
 # == Schema Information
 #
-# Table name: expense_ratios
+# Table name: commission_relations
 #
 #  id                  :bigint           not null, primary key
-#  anticipo            :float
 #  area                :string
 #  creation_date       :date
 #  end_date            :date
@@ -16,12 +15,10 @@
 #  user_id             :integer
 #  user_report_id      :integer
 #
-
-class ExpenseRatioSerializer < ActiveModel::Serializer
-  attributes :id, :creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id, :updated_at, :created_at, :anticipo
+class CommissionRelationSerializer < ActiveModel::Serializer
+  attributes :id, :start_date, :observations, :end_date, :creation_date, :area, :created_at, :updated_at
   belongs_to :user_report, serializer: UserSerializer
   belongs_to :user_direction, serializer: UserSerializer
   belongs_to :last_user_edited, serializer: UserSerializer
   belongs_to :user, serializer: UserSerializer
-
 end

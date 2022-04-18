@@ -141,6 +141,35 @@ namespace :create_config do
             AccionModule.create(name: "Descargar excel", module_control_id: materials.id, user_id: user.id)
         end
 
+        
+        commission_relation = ModuleControl.create(name: "Relación de comisiones", user_id: user.id)
+
+        if commission_relation
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: commission_relation.id, user_id: user.id)
+
+            AccionModule.create(name: "Ver todos", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Ver pdf", module_control_id: commission_relation.id, user_id: user.id)
+        end
+
+
+        commission = ModuleControl.create(name: "Comisiones", user_id: user.id)
+
+        if commission
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: commission.id, user_id: user.id)
+            
+            AccionModule.create(name: "Ver todos", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Aceptar comisión", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Exportar a excel", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Cambiar responsable", module_control_id: commission.id, user_id: user.id)
+        end
+
+
         sales_orders = ModuleControl.create(name: "Ordenes de Compra", user_id: user.id)
 
         if sales_orders
