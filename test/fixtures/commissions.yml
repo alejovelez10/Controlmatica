@@ -1,0 +1,42 @@
+# == Schema Information
+#
+# Table name: commissions
+#
+#  id                  :bigint           not null, primary key
+#  end_date            :date
+#  hours_worked        :float
+#  is_acepted          :boolean          default(FALSE)
+#  observation         :text
+#  start_date          :date
+#  total_value         :float
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  customer_invoice_id :integer
+#  last_user_edited_id :integer
+#  user_id             :integer
+#  user_invoice_id     :integer
+#
+
+one:
+  user_id: 1
+  user_invoice_id: 1
+  start_date: 2022-04-11
+  end_date: 2022-04-11
+  customer_invoice_id: 1
+  observation: MyText
+  hours_worked: 1.5
+  total_value: 1.5
+  is_acepted: false
+  last_user_edited_id: 1
+
+two:
+  user_id: 1
+  user_invoice_id: 1
+  start_date: 2022-04-11
+  end_date: 2022-04-11
+  customer_invoice_id: 1
+  observation: MyText
+  hours_worked: 1.5
+  total_value: 1.5
+  is_acepted: false
+  last_user_edited_id: 1

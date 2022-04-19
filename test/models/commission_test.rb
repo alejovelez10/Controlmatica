@@ -1,25 +1,24 @@
 # == Schema Information
 #
-# Table name: expense_ratios
+# Table name: commissions
 #
 #  id                  :bigint           not null, primary key
-#  anticipo            :float
-#  area                :string
-#  creation_date       :date
 #  end_date            :date
-#  observations        :text
+#  hours_worked        :float
+#  is_acepted          :boolean          default(FALSE)
+#  observation         :text
 #  start_date          :date
+#  total_value         :float
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
+#  customer_invoice_id :integer
 #  last_user_edited_id :integer
-#  user_direction_id   :integer
 #  user_id             :integer
-#  user_report_id      :integer
+#  user_invoice_id     :integer
 #
-
 require 'test_helper'
 
-class ExpenseRatioTest < ActiveSupport::TestCase
+class CommissionTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end

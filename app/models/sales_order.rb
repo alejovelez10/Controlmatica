@@ -20,7 +20,7 @@
 
 class SalesOrder < ApplicationRecord
   belongs_to :cost_center, optional: true
-  mount_uploader :order_file, OrderUploader
+  #mount_uploader :order_file, OrderUploader
   after_save :change_state_cost_center
   has_many :customer_invoices, dependent: :destroy
   after_destroy :change_state_cost_center_destroy

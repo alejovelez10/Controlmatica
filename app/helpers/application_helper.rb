@@ -62,6 +62,12 @@ module ApplicationHelper
 
 		elsif controller == "report_expense_options" && action == "index"
 			card = "<h1>" + " <i class='fas fa-handshake'></i>  Tipos de Gastos " + "</h1>" + "<p>" + "Gestiona de tipos" + "</p>"
+
+		elsif controller == "commissions" && action == "index"
+			card = "<h1>" + " <i class='fas fa-handshake'></i>  Comisiónes " + "</h1>" + "<p>" + "Gestion de comisiónes" + "</p>"
+
+		elsif controller == "commission_relations" && action == "index"
+			card = "<h1>" + " <i class='fas fa-handshake'></i>  Relacion de comisiónes " + "</h1>" + "<p>" + "Gestion de relacion de comisiónes" + "</p>"
 			
         else
             "Proyectos"
@@ -258,6 +264,20 @@ module ApplicationHelper
 
 	def authorization_customers
         customers = ModuleControl.find_by_name("Clientes")
+		if current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+	def authorization_commissions
+        customers = ModuleControl.find_by_name("Comisiones")
+		if current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
+			true
+        end
+	end
+
+	def authorization_commission_relations
+        customers = ModuleControl.find_by_name("Relación de comisiones")
 		if current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
 			true
         end

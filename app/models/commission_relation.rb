@@ -1,9 +1,8 @@
 # == Schema Information
 #
-# Table name: expense_ratios
+# Table name: commission_relations
 #
 #  id                  :bigint           not null, primary key
-#  anticipo            :float
 #  area                :string
 #  creation_date       :date
 #  end_date            :date
@@ -16,12 +15,11 @@
 #  user_id             :integer
 #  user_report_id      :integer
 #
-
-class ExpenseRatio < ApplicationRecord
-    belongs_to :user_report, class_name: "User"
+class CommissionRelation < ApplicationRecord
+    belongs_to :last_user_edited, class_name: "User", optional: :true
     belongs_to :user_direction, class_name: "User"
-    belongs_to :last_user_edited, :class_name => "User", optional: :true
-    belongs_to :user, optional: :true
+    belongs_to :user
+    belongs_to :user_report, class_name: "User", optional: true
     before_update :edit_values
 
     def edit_values
@@ -38,5 +36,4 @@ class ExpenseRatio < ApplicationRecord
         search7 != "" ? (scope :are, -> { where("area like '%#{search7.downcase}%' or area like '%#{search7.upcase}%' or area like '%#{search7.capitalize}%' ") }) : (scope :are, -> { where.not(id: nil) })
         user_direction.user_report.descripcion.f_comienzo.f_final.f_creation.are
     end
-    
 end

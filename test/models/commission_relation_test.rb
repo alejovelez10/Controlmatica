@@ -1,9 +1,8 @@
 # == Schema Information
 #
-# Table name: expense_ratios
+# Table name: commission_relations
 #
 #  id                  :bigint           not null, primary key
-#  anticipo            :float
 #  area                :string
 #  creation_date       :date
 #  end_date            :date
@@ -16,10 +15,9 @@
 #  user_id             :integer
 #  user_report_id      :integer
 #
-
 require 'test_helper'
 
-class ExpenseRatioTest < ActiveSupport::TestCase
+class CommissionRelationTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end
