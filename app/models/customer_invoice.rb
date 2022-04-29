@@ -3,28 +3,32 @@
 # Table name: customer_invoices
 #
 #  id                         :bigint           not null, primary key
-#  cost_center_id             :integer
-#  sales_order_id             :integer
-#  invoice_value              :float
-#  invoice_date               :date
 #  delivery_certificate_file  :string
 #  delivery_certificate_state :string
+#  engineering_value          :float            default(0.0)
+#  invoice_date               :date
+#  invoice_state              :string
+#  invoice_value              :float
+#  number_invoice             :string
+#  others_value               :float            default(0.0)
 #  reception_report_file      :string
 #  reception_report_state     :string
-#  invoice_state              :string
 #  created_at                 :datetime         not null
 #  updated_at                 :datetime         not null
-#  number_invoice             :string
+#  cost_center_id             :integer
+#  sales_order_id             :integer
 #
 
 class CustomerInvoice < ApplicationRecord
-  #mount_uploader :delivery_certificate_file, CertificateUploader
-  #mount_uploader :reception_report_file, InformationUploader
+  mount_uploader :delivery_certificate_file, CertificateUploader
+  mount_uploader :reception_report_file, InformationUploader
   belongs_to :cost_center, optional: true
   belongs_to :sales_order
 
   after_save :change_state_cost_center
   after_destroy :update_value
+  after_create :calculate_sum
+  after_update :calculate_sum
 
   def change_state_cost_center
     cost_center = CostCenter.find(self.cost_center_id)
@@ -38,6 +42,10 @@ class CustomerInvoice < ApplicationRecord
     elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO PARCIAL")
     end
+  end
+
+  def calculate_sum
+    self.others_value = (self.invoice_value - self.engineering_value)
   end
 
   def update_value
