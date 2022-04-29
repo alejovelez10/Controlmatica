@@ -107,6 +107,6 @@ class CustomerInvoicesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_invoice_params
-      params.permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state, :number_invoice)
+      params.permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state, :number_invoice, :engineering_value)
     end
 end

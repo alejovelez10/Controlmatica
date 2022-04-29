@@ -21,6 +21,7 @@ class FormCreate extends React.Component {
         invoice_date: "",
         invoice_value: "",
         number_invoice: "",
+        engineering_value: "",
       }
     };
   }
@@ -44,6 +45,7 @@ class FormCreate extends React.Component {
         invoice_date: accion.invoice_date,
         invoice_value: accion.invoice_value,
         number_invoice: accion.number_invoice,
+        engineering_value: accion.engineering_value,
       }
     })
   }
@@ -75,6 +77,7 @@ class FormCreate extends React.Component {
     formData.append("invoice_date", this.state.formUpdate.invoice_date);
     formData.append("invoice_value", this.state.formUpdate.invoice_value);
     formData.append("number_invoice", this.state.formUpdate.number_invoice);
+    formData.append("engineering_value", this.state.formUpdate.engineering_value);
     formData.append("delivery_certificate_file", this.state.delivery_certificate_file == undefined ? "" : this.state.delivery_certificate_file);
     formData.append("reception_report_file", this.state.reception_report_file == undefined ? "" : this.state.reception_report_file);
 
@@ -96,6 +99,7 @@ class FormCreate extends React.Component {
             invoice_date: "",
             invoice_value: "",
             number_invoice: "",
+            engineering_value: "",
           },
 
           delivery_certificate_file: null,
@@ -131,7 +135,7 @@ class FormCreate extends React.Component {
                         <form onSubmit={this.props.FormSubmit}>
                           <div className="row">
 
-                            <div className="col-md-4">
+                            <div className="col-md-6">
                             <label>Fecha de Factura<small className="validate-label">*</small></label>
                               <input
                                 type="date"
@@ -144,7 +148,7 @@ class FormCreate extends React.Component {
                             </div>
                             
 
-                            <div className="col-md-4">
+                            <div className="col-md-6">
                             <label>Valor <small className="validate-label">*</small></label>
                               <NumberFormat 
                                 name="invoice_value"
@@ -157,17 +161,32 @@ class FormCreate extends React.Component {
                               /> 
                             </div>
 
-                            <div className="col-md-4">
+
+                            <div className="col-md-6 mt-3">
+                            <label>Valor de ingenieria <small className="validate-label">*</small></label>
+                              <input 
+                                name="engineering_value"
+                                type="number"
+                                onChange={this.props.onChangeForm}
+                                value={this.props.formValues.engineering_value}
+                                className={`form form-control ${this.props.errorValues == false && this.props.formValues.engineering_value == "" ? "error-class" : ""}`}
+                                placeholder="Numero de factura"
+                              /> 
+                            </div>
+
+                            <div className="col-md-6 mt-3">
                             <label>Numero de factura <small className="validate-label">*</small></label>
                               <input 
                                 name="number_invoice"
-                                type="text"
+                                type="number"
                                 onChange={this.props.onChangeForm}
                                 value={this.props.formValues.number_invoice}
                                 className={`form form-control ${this.props.errorValues == false && this.props.formValues.number_invoice == "" ? "error-class" : ""}`}
                                 placeholder="Numero de factura"
                               /> 
                             </div>
+
+
 
                             
 
@@ -195,9 +214,7 @@ class FormCreate extends React.Component {
                             </div>
 
                             <div className="col-md-12 text-right mt-4">
-                                <Button onClick={this.toggle} id="toggler">
-                                  Cerrar
-                                </Button>
+                                <Button onClick={this.toggle} className="btn btn-light" id="toggler">Cerrar</Button>
                                 <button onClick={this.props.submit} className="btn btn-secondary ml-3">Guardar</button>
                             </div>
 
@@ -218,17 +235,18 @@ class FormCreate extends React.Component {
                   </div>
                 )}
 
-                <div className="col-md-12">
+                <div className="col-md-12 mb-3">
                   <div className="content-table">
                     <table
-                    className={`table table-hover table-bordered ${this.state.id != "" ? "add-table" : ""}`}
+                    className={`table table-hover table-bordered add-table`}
                     id="sampleTable"
                   >
                     <thead>
                       <tr>
-                        <th style={{ width: "13%" }}>Fecha</th>
-                        <th style={{ width: "22%" }}>Valor</th>
-                        <th style={{ width: "21%" }}>Numero de factura</th>
+                        <th style={{ width: "16%" }}>Fecha</th>
+                        <th style={{ width: "14%" }}>Valor</th>
+                        <th style={{ width: "17%" }}>Valor de ingeniería</th>
+                        <th style={{ width: "17%" }}>Numero de factura</th>
                         <th style={{ width: "20%" }} className="text-center">Certificado de entrega</th>
                         <th style={{ width: "20%" }} className="text-center">Informe de recepción</th>
                         {this.state.id != "" &&
@@ -272,6 +290,22 @@ class FormCreate extends React.Component {
                                 /> 
                               ) : (
                                   <p><NumberFormat value={accion.invoice_value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></p>
+                                
+                              )}
+
+                            </td>
+
+                            <td>
+                            {this.state.id == accion.id ? (
+                                <input 
+                                  name="engineering_value"
+                                  onChange={this.handleChangeUpdate}
+                                  value={this.state.formUpdate.engineering_value}
+                                  className="form form-control" 
+                                  placeholder="Valor "
+                                /> 
+                              ) : (
+                                  <p><NumberFormat value={accion.engineering_value} displayType={'text'} thousandSeparator={true} prefix={'$'} /></p>
                                 
                               )}
 
@@ -410,7 +444,7 @@ class FormCreate extends React.Component {
          
 
           <ModalFooter>
-                <button className="btn btn-secondary" onClick={() => this.props.toggle("close")}>Cerrar</button>
+                <button className="btn btn-light" onClick={() => this.props.toggle("close")}>Cerrar</button>
           </ModalFooter>
 
         </Modal>

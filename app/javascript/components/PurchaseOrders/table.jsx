@@ -44,7 +44,8 @@ class table extends React.Component {
           number_invoice: "",
           delivery_certificate_file: {},
           reception_report_file: {},
-          cost_center_id: ""
+          cost_center_id: "",
+          engineering_value: "",
         },
 
         dataCostCenter: [],
@@ -382,6 +383,7 @@ class table extends React.Component {
     formData.append("sales_order_id", this.state.formInvoice.sales_order_id);
     formData.append("number_invoice", this.state.formInvoice.number_invoice);
     formData.append("cost_center_id", this.state.formInvoice.cost_center_id);
+    formData.append("engineering_value", this.state.formInvoice.engineering_value);
     formData.append("delivery_certificate_file", this.state.delivery_certificate_file == undefined ? "" : this.state.delivery_certificate_file);
     formData.append("reception_report_file", this.state.reception_report_file == undefined ? "" : this.state.reception_report_file);
 
@@ -405,7 +407,8 @@ class table extends React.Component {
               invoice_date: "",
               number_invoice: "",
               invoice_value: "",
-              cost_center_id: ""
+              cost_center_id: "",
+              engineering_value: "",
             },
 
             delivery_certificate_file: null,
@@ -658,6 +661,7 @@ class table extends React.Component {
                     <th style={{width: "150px"}}>Valor</th>
                     <th style={{width: "450px"}}>Facturas</th>
                     <th style={{width: "200px"}}>Total Facturas</th>
+                    <th style={{width: "200px"}}>Total Valor ingenieria</th>
                     <th style={{width: "300px"}}>Descripción</th>
                     <th style={{width: "250px"}}>Estado Centro de Costo</th>
                     <th style={{width: "120px"}}>Archivo</th>
@@ -736,6 +740,7 @@ class table extends React.Component {
                           </table>
                         </td>
                         <td><NumberFormat value={accion.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                        <td><NumberFormat value={accion.total_engineering_values} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
                         <th>{accion.description}</th>
                         <th>{accion.cost_center != undefined ? accion.cost_center.invoiced_state : ""}</th>
 
