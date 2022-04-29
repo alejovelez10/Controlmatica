@@ -7,6 +7,34 @@ class HomeController < ApplicationController
   	
   end
 
+  def dashboard_ing
+
+
+  end
+
+
+  def get_dashboard_ing
+    user = current_user
+    
+    time = [["Year", "Sales", "Expenses", "Profit"]]
+    [1,2,3,4].each do |val|
+      array_ = []
+      array_ << Date.today - val.days
+      array_ <<  Report.where(report_execute_id: user.id).where(report_date: Date.today - val.days).sum(:working_time)
+      array_ <<  Report.where(report_execute_id: user.id).where(report_date: Date.today - val.days).sum(:working_time)
+      array_ <<  Report.where(report_execute_id: user.id).where(report_date: Date.today - val.days).sum(:working_time)
+      time << array_
+
+
+    end
+
+  
+    render :json => {      
+      data: time
+    }
+
+  end
+
 
   def users_new
   	

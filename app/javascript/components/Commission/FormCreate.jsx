@@ -23,7 +23,7 @@ class FormCreate extends Component {
                                         name="user_invoice_id"
                                         value={this.props.selectedOptionUser.user_invoice_id}
                                     />
-                                    <label>Usuario facturado </label>
+                                    <label>Responsable </label>
                                     <Select
                                         onChange={this.props.handleChangeAutocompleteUser}
                                         options={this.props.users}
@@ -34,7 +34,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-4 mb-3">
-                                    <label>Fecha de comienzo </label>
+                                    <label>Fecha de Inicial </label>
                                     <input
                                         type="date"
                                         name="start_date"

@@ -393,7 +393,7 @@ class Index extends Component {
                                                 className="btn btn-secondary ml-3"
                                                 onClick={() => this.updateFilterValues()}
                                             >
-                                                Aceptar gastos
+                                                Aceptar Comisiones
                                             </button>
                                         )}
 
@@ -417,8 +417,8 @@ class Index extends Component {
                                         <thead>
                                             <tr >
                                                 <th style={{ width: "20px" }} className="text-center">Acciones</th>
-                                                <th style={{ width: "70px" }}>Usuario facturado</th>
-                                                <th style={{ width: "100px" }}>Fecha de comienzo</th>
+                                                <th style={{ width: "70px" }}>Responsable</th>
+                                                <th style={{ width: "100px" }}>Fecha de inicial</th>
                                                 <th style={{ width: "100px" }}>Fecha de finalización</th>
                                                 <th style={{ width: "7%" }}>Factura</th>
                                                 <th style={{ width: "7%" }}>Horas trabajadas</th>

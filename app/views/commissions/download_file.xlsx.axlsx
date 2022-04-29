@@ -2,7 +2,7 @@ wb = xlsx_package.workbook
 
 wb.add_worksheet(name: "Items") do |sheet|
   # Create the header row
-  sheet.add_row ["Usuario facturado", "Fecha de comienzo", "Fecha de finalización", "Factura" , "Horas trabajadas" , "Total" , "Estado", "Observaciónes"]
+  sheet.add_row ["Responsable", "Fecha de inicial", "Fecha de finalización", "Factura" , "Horas trabajadas" , "Total" , "Estado", "Observaciónes"]
   # Create entries for each item
   @items.each do |commission|
     sheet.add_row [commission.user_invoice.names, commission.start_date, commission.end_date, commission.customer_invoice.number_invoice, commission.hours_worked, commission.total_value, commission.is_acepted ? "Aceptado" : "Creado", commission.observation]

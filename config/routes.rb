@@ -156,8 +156,10 @@ Rails.application.routes.draw do
 
   
 
-  root "home#dashboard"
+ root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"
+  get "home/dashboard_ing", to: "home#dashboard_ing", as: "dashboard_ing"
+  get "home/get_dashboard_ing", to: "home#get_dashboard_ing", as: "get_dashboard_ing"
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
   get "enviar_aprobacion/:report", to: "customer_reports#enviar_aprobacion", as: "enviar_aprobacion"
 

@@ -473,7 +473,7 @@ class Table extends React.Component {
               this.props.dataUsers.map(user => (
                 <tr key={user.id}>
                   <td className="text-center">
-                    <img className="img-user" src={user.avatar.url != undefined ? user.avatar.url : "https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg"} alt=""/>
+                    <img className="img-user" src="https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg" alt=""/>
                   </td>
 
                   <td>{user.names}</td>

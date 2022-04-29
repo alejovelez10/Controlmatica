@@ -18,7 +18,7 @@ class FormFilter extends Component {
                                             name="user_invoice_id"
                                             value={this.props.selectedOptionUser.user_invoice_id}
                                         />
-                                        <label>Usuario facturado </label>
+                                        <label>Responsable </label>
                                         <Select
                                             onChange={this.props.handleChangeAutocompleteUser}
                                             options={this.props.users}
