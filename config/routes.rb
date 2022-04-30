@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
-  get 'commissions/index'
-  get 'commission_relations/index'
+  get "commissions/index"
+  get "commission_relations/index"
   get "get_show_center/:id", to: "cost_centers#get_show_center"
   get "employed_performance/show", to: "employed_performance#show", as: "employed_performance_show"
   get "employed_performance/info_pdf", to: "employed_performance#info_pdf", as: "info_pdf"
@@ -27,7 +27,7 @@ Rails.application.routes.draw do
   resources :commission_relations, :except => [:show, :edit, :new]
   resources :commissions, :except => [:show, :edit, :new]
 
-  ## commissions routes 
+  ## commissions routes
   get "download_file/commissions/:type", to: "commissions#download_file"
   get "get_commission_relations", to: "commission_relations#get_commission_relations"
   get "get_commissions", to: "commissions#get_commissions"
@@ -123,13 +123,10 @@ Rails.application.routes.draw do
 
   get "getValues/:id", to: "cost_centers#getValues"
 
-  #subir archvos 
+  #subir archvos
 
   post "import_customers", to: "customers#import_customers"
   post "import_providers", to: "providers#import_providers"
-
-
-
 
   #DESCARGAS DE EXEL
 
@@ -143,7 +140,6 @@ Rails.application.routes.draw do
   get "download_file/customer_reports", to: "customer_reports#download_file"
   get "download_file/sales_orders/:ids", to: "sales_orders#download_file"
 
-
   get "update_load/:id", to: "material_invoices#update_load"
 
   get "notifications", to: "register_edits#notifications", as: "notifications"
@@ -152,14 +148,14 @@ Rails.application.routes.draw do
   get "update_state_notification_alert/:id", to: "notification_alerts#update_state"
   get "get_notifications_alerts", to: "notification_alerts#get_notifications_alerts"
 
-
-
-  
-
- root "home#dashboard"
+  root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"
   get "home/dashboard_ing", to: "home#dashboard_ing", as: "dashboard_ing"
-  get "home/get_dashboard_ing", to: "home#get_dashboard_ing", as: "get_dashboard_ing"
+  get "home/get_dashboard_ing/:id", to: "home#get_dashboard_ing", as: "get_dashboard_ing"
+  get "home/get_dashboard_two_ing/:id", to: "home#get_dashboard_two_ing", as: "get_dashboard_two_ing"
+  get "home/get_dashboard_three_ing/:ye/:mo", to: "home#get_dashboard_three_ing", as: "get_dashboard_three_ing"
+  get "home/get_dashboard_four_ing/:id", to: "home#get_dashboard_four_ing", as: "get_dashboard_four_ing"
+
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
   get "enviar_aprobacion/:report", to: "customer_reports#enviar_aprobacion", as: "enviar_aprobacion"
 

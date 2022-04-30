@@ -3,9 +3,11 @@
   "private": true,
   "dependencies": {
     "@rails/webpacker": "3.5",
+    "apexcharts": "^3.35.0",
     "babel-preset-react": "^6.24.1",
     "prop-types": "^15.6.2",
     "react": "^16.14.0",
+    "react-apexcharts": "^1.4.0",
     "react-dom": "^16.14.0",
     "react-dropzone": "^11.3.4",
     "react-google-charts": "^3.0.15",

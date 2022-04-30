@@ -255,3 +255,18 @@ input[type="file"] label{
 .color-true{
   color: red;
 }
+
+.no-chart
+{
+  font-family: Helvetica, Arial, sans-serif;
+    opacity: 1;
+    font-weight: bold;
+}
+
+.no-chart-container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #999999;
+}

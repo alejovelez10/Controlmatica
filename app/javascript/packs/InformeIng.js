@@ -1,55 +1,40 @@
 import React, { Component } from 'react';
 import WebpackerReact from 'webpacker-react';
-import { BarDayIng } from '../generalcomponents/BarDayIng';
+import HourPerMonth from '../components/DashboardIng/HourPerMonth';
+import ReporterHours from '../components/DashboardIng/ReporterHours';
+import HourProjectMonth from '../components/DashboardIng/HourProjectMonth';
+import HourDay from '../components/DashboardIng/HourDay';
+
+
 
 class InformeIng extends Component {
     constructor(props) {
         super(props);
-        this.token = document.querySelector("[name='csrf-token']").content;
-        this.state = {
-            data: []
-        }
+
     }
-
-
-
-    componentDidMount() {
-        this.loadData();
-    }
-
-    loadData = () => {
-        fetch(`/home/get_dashboard_ing`, {
-            method: 'GET', // or 'PUT'
-            headers: {
-                "X-CSRF-Token": this.token,
-                "Content-Type": "application/json"
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    data: data.data
-                });
-            });
-    }
-
-
 
     render() {
         return (
             <div className='row'>
-                <div className='col-md-12'>
-                    <BarDayIng data={this.state.data} />
+                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                    <HourPerMonth />
                 </div>
-                <div className='col-md-12'>
-                    <hr />
+                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                    <ReporterHours />
                 </div>
-                <div className='col-md-6'>
-                    <BarDayIng data={this.state.data} />
+               <div className='col-md-12'> <hr/></div>
+            
+                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
+                    <HourProjectMonth />
                 </div>
-                <div className='col-md-6'>
-                    <BarDayIng data={this.state.data} />
+                <div className='col-md-12'> <hr/></div>
+                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                    <ReporterHours />
                 </div>
+                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                    <HourDay />
+                </div>
+
             </div>
         )
 

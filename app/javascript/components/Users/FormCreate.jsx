@@ -167,7 +167,6 @@ class FormCreate extends React.Component {
                           onChange={this.props.onChangeForm}
                           onBlur={this.props.onBlurPasswordConfirmation}
                           className="form form-control"
-                          placeholder="Nombre"
                           placeholder="Confirmar contraseña"
                         />
 

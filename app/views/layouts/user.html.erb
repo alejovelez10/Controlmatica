@@ -335,11 +335,15 @@
                   <% end -%>
                 </li>
               <% end %>
-                           <li>
-                  <%= link_to dashboard_ing_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Mi tablero</span>
-                  <% end -%>
-                </li>
+                
+                
+                  <% if authorization_tablero %>
+                  <li>
+                    <%= link_to dashboard_ing_path, class: "app-menu__item" do %>
+                    <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Mi tablero</span>
+                    <% end -%>
+                  </li>
+                 <% end -%>
 
 
 
