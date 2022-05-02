@@ -20,7 +20,7 @@
 
 class SalesOrder < ApplicationRecord
   belongs_to :cost_center, optional: true
-  #mount_uploader :order_file, OrderUploader
+  mount_uploader :order_file, OrderUploader
   after_save :change_state_cost_center
   has_many :customer_invoices, dependent: :destroy
   after_destroy :change_state_cost_center_destroy
@@ -45,42 +45,37 @@ class SalesOrder < ApplicationRecord
     puts customer_invoice
     puts sales_order_sum
     puts cost_center.quotation_value
-             if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
-            CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO")
-          elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
-            CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO PARCIAL")
-          elsif (customer_invoice <= 0)
-            if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
-              CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
-            elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
-              CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
-            elsif (sales_order_sum == 0 && customer_invoice == 0)
-              CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
-            end
-         end
-   
-
-    
-
+    if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO")
+    elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
+      CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO PARCIAL")
+    elsif (customer_invoice <= 0)
+      if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
+        CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
+      elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
+        CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
+      elsif (sales_order_sum == 0 && customer_invoice == 0)
+        CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
+      end
+    end
   end
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
-
     if search5.present?
       search5 = CostCenter.where(invoiced_state: search5)
     end
 
     if search7.present?
-      search7 =  CostCenter.where(customer_id: search7)
+      search7 = CostCenter.where(customer_id: search7)
     end
 
     if search9.present?
-      search9 =  CostCenter.where(quotation_number: search9)
+      search9 = CostCenter.where(quotation_number: search9)
     end
 
     if search8.present?
       invoice = CustomerInvoice.find_by_number_invoice(search8)
-      search8 =  SalesOrder.joins(:customer_invoices).where("customer_invoices.id = '#{invoice.id}'")
+      search8 = SalesOrder.joins(:customer_invoices).where("customer_invoices.id = '#{invoice.id}'")
     end
 
     search1 != "" ? (scope :fdesdep, -> { where(["created_date >= ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
@@ -117,69 +112,57 @@ class SalesOrder < ApplicationRecord
     if self.cost_center_id_changed?
       names = []
       cost_center = CostCenter.where(id: self.cost_center_id_change)
-      cost_center.each do |centro| 
+      cost_center.each do |centro|
         names << centro.code
       end
       centro = "<p>El Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else
       centro = ""
     end
-    
-    created_date = self.created_date_changed? == true ? ("<p>La Fecha de generación: <b class='color-true'>#{self.created_date_change[0]}</b> / <b class='color-false'>#{self.created_date_change[1]}</b></p>") : "" 
-    order_number = self.order_number_changed? == true ? ("<p>La Numero de orden: <b class='color-true'>#{self.order_number_change[0]}</b> / <b class='color-false'>#{self.order_number_change[1]}</b></p>") : "" 
-    order_value = self.order_value_changed? == true ? ("<p>Valor: <b class='color-true'>#{self.order_value_change[0]}</b> / <b class='color-false'>#{self.order_value_change[1]}</b></p>") : "" 
-    description = self.description_changed? == true ? ("<p>La descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : "" 
-    
+
+    created_date = self.created_date_changed? == true ? ("<p>La Fecha de generación: <b class='color-true'>#{self.created_date_change[0]}</b> / <b class='color-false'>#{self.created_date_change[1]}</b></p>") : ""
+    order_number = self.order_number_changed? == true ? ("<p>La Numero de orden: <b class='color-true'>#{self.order_number_change[0]}</b> / <b class='color-false'>#{self.order_number_change[1]}</b></p>") : ""
+    order_value = self.order_value_changed? == true ? ("<p>Valor: <b class='color-true'>#{self.order_value_change[0]}</b> / <b class='color-false'>#{self.order_value_change[1]}</b></p>") : ""
+    description = self.description_changed? == true ? ("<p>La descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : ""
+
     str = "#{created_date}#{order_number}#{order_value}#{centro}#{description}"
 
-
     if str.length > 5
-
-    str = "<p>Orden de compra: #{self.order_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
-    RegisterEdit.create(  
-      user_id: User.current.id, 
-      register_user_id: self.user_id, 
-      state: "pending", 
-      date_update: Time.now,
-      module: "Ordenes de Compra",
-      description: str
-    )
-   
-  end
-
-
-
-
-    if self.cost_center_id_changed?
-
-        CustomerInvoice.where(cost_center_id: self.cost_center_id_change[0]).where(sales_order_id: self.id).update(cost_center_id: self.cost_center_id)
-        puts "111111111asfadsfadsfasdfadsfsadfkaslfksafsadfjjsfkaskfh jkadsfhjaslfadsfksdkdslfahk "
-        cost_center = CostCenter.find(self.cost_center_id_change[0])
-        sales_order_sum = SalesOrder.where(cost_center_id: cost_center.id).sum(:order_value) - self.order_value
-        customer_invoice_self = CustomerInvoice.where(sales_order_id: self.id).sum(:invoice_value)
-        customer_invoice = CustomerInvoice.where(cost_center_id: cost_center.id).sum(:invoice_value) 
-        puts customer_invoice
-        puts sales_order_sum
-        puts cost_center.quotation_value
-
-         if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
-            CostCenter.find(cost_center.id).update(invoiced_state: "FACTURADO")
-        elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
-            CostCenter.find(cost_center.id).update(invoiced_state: "FACTURADO PARCIAL")
-        elsif (customer_invoice <= 0)
-            if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
-              CostCenter.find(cost_center.id).update(invoiced_state: "LEGALIZADO")
-            elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
-              CostCenter.find(cost_center.id).update(invoiced_state: "LEGALIZADO PARCIAL")
-            elsif (sales_order_sum == 0 && customer_invoice == 0)
-              CostCenter.find(cost_center.id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
-            end
-         end
-
+      str = "<p>Orden de compra: #{self.order_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      RegisterEdit.create(
+        user_id: User.current.id,
+        register_user_id: self.user_id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Ordenes de Compra",
+        description: str,
+      )
     end
 
+    if self.cost_center_id_changed?
+      CustomerInvoice.where(cost_center_id: self.cost_center_id_change[0]).where(sales_order_id: self.id).update(cost_center_id: self.cost_center_id)
+      puts "111111111asfadsfadsfasdfadsfsadfkaslfksafsadfjjsfkaskfh jkadsfhjaslfadsfksdkdslfahk "
+      cost_center = CostCenter.find(self.cost_center_id_change[0])
+      sales_order_sum = SalesOrder.where(cost_center_id: cost_center.id).sum(:order_value) - self.order_value
+      customer_invoice_self = CustomerInvoice.where(sales_order_id: self.id).sum(:invoice_value)
+      customer_invoice = CustomerInvoice.where(cost_center_id: cost_center.id).sum(:invoice_value)
+      puts customer_invoice
+      puts sales_order_sum
+      puts cost_center.quotation_value
+
+      if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
+        CostCenter.find(cost_center.id).update(invoiced_state: "FACTURADO")
+      elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
+        CostCenter.find(cost_center.id).update(invoiced_state: "FACTURADO PARCIAL")
+      elsif (customer_invoice <= 0)
+        if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
+          CostCenter.find(cost_center.id).update(invoiced_state: "LEGALIZADO")
+        elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
+          CostCenter.find(cost_center.id).update(invoiced_state: "LEGALIZADO PARCIAL")
+        elsif (sales_order_sum == 0 && customer_invoice == 0)
+          CostCenter.find(cost_center.id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
+        end
+      end
+    end
   end
-
-
-
 end

@@ -63,7 +63,7 @@ class OrdenesDeCompraTable extends Component {
 
                             <td>
                                     <React.Fragment>
-                                        {accion.order_file.url != null ? (
+                                        {accion.order_file && accion.order_file.url != null ? (
                                                 <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={accion.order_file.url} data-original-title="Descargar Archivo" >
                                                 <i className="fas fa-download"></i>
                                                 </a>
