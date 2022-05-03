@@ -66,8 +66,7 @@ class Index extends Component {
             this.state.formCreate.start_date != "" &&
             this.state.formCreate.end_date != "" &&
             this.state.formCreate.customer_invoice_id != "" &&
-            this.state.formCreate.hours_worked != "" &&
-            this.state.formCreate.total_value != ""
+            this.state.formCreate.hours_worked != ""
         ) {
             this.setState({ ErrorValues: true })
             return true
@@ -88,6 +87,7 @@ class Index extends Component {
     };
 
     handleChangeAutocompleteUser = selectedOptionUser => {
+        console.log(selectedOptionUser)
         this.setState({
             selectedOptionUser,
             formCreate: {
@@ -253,7 +253,7 @@ class Index extends Component {
         });
     };
 
-    handleChangeAutocompleteUser = selectedOptionUser => {
+/*     handleChangeAutocompleteUser = selectedOptionUser => {
         this.setState({
             selectedOptionUser,
                 formCreate: {
@@ -261,7 +261,7 @@ class Index extends Component {
                     customer_report_id: selectedOptionUser.value
                 }
         });
-    };
+    }; */
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
         this.setState({
@@ -491,8 +491,8 @@ class Index extends Component {
                                                 <th style={{ width: "70px" }}>Centro de costo</th>
                                                 <th style={{ width: "70px" }}>Reporte de cliente</th>
 
-                                                <th style={{ width: "100px" }}>Fecha de inicial</th>
-                                                <th style={{ width: "100px" }}>Fecha de finalización</th>
+                                                <th style={{ width: "100px" }}>Fecha desde</th>
+                                                <th style={{ width: "100px" }}>Fecha hasta</th>
                                                 <th style={{ width: "7%" }}>Factura</th>
                                                 <th style={{ width: "7%" }}>Horas trabajadas</th>
                                                 <th style={{ width: "7%" }}>Total</th>

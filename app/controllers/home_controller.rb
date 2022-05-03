@@ -55,7 +55,7 @@ class HomeController < ApplicationController
 
   def get_dashboard_two_ing
     real_year = params[:id].to_s
-
+    alert = Alert.first
     year = Date.today.year
     month = Date.today.month
     day = Date.today.day
@@ -82,9 +82,9 @@ class HomeController < ApplicationController
     get_months.each do |val|
       months = data.where("extract(month from report_date) = ?", val).sum(:working_time)
       month_convert << get_month(val)
-      if month <= 10
+      if months <= alert.alert_min
         colors << "#d26666"
-      elsif month > 10 && month < 20
+      elsif months > alert.alert_min && months < alert.alert_med
         colors << "#d4b21e"
       else
         colors << "#24bc6b"
@@ -136,7 +136,7 @@ class HomeController < ApplicationController
 
   def get_dashboard_four_ing
     count = params[:id].to_i
-
+    alert = Alert.first
     year = Date.today.year
     month = Date.today.month
     day = Date.today.day
@@ -153,9 +153,9 @@ class HomeController < ApplicationController
     (1..count).each do |val|
       months = data.where(report_date: Date.today - count + val.day).sum(:working_time)
       categories << Date.today - count + val.day
-      if month <= 10
+      if months <= alert.alert_hour_min
         colors << "#d26666"
-      elsif month > 10 && month < 20
+      elsif months > alert.alert_hour_min && months < alert.alert_hour_med
         colors << "#d4b21e"
       else
         colors << "#24bc6b"

@@ -27,6 +27,8 @@ class Commission < ApplicationRecord
   belongs_to :customer_report
   belongs_to :cost_center
 
+  after_create :save_total
+
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :user, -> { where(user_invoice_id: search1) }) : (scope :user, -> { where.not(id: nil) })
 
@@ -40,5 +42,11 @@ class Commission < ApplicationRecord
     search8 != "" ? (scope :estado, -> { where(is_acepted: search8) }) : (scope :estado, -> { where.not(id: nil) })
 
     user.fdesdep.fhastap.customer_invoice_find.descripcion.hours.total.estado
+  end
+
+  def save_total
+    cost_center = CostCenter.find(self.cost_center_id)
+    value_engineer_hour = cost_center.engineering_value * self.hours_worked * 0.05
+    self.total_value = value_engineer_hour
   end
 end
