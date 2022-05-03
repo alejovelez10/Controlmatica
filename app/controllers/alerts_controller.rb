@@ -64,7 +64,7 @@ class AlertsController < ApplicationController
 
   def alert_params
     defaults = {user_id: current_user.id}
-    params.permit(:name, :ing_ejecucion_min, :ing_ejecucion_med, :ing_ejecucion_max, :ing_costo_min, :ing_costo_med, :ing_costo_max, :tab_ejecucion_min, :tab_ejecucion_med, :tab_ejecucion_max, :tab_costo_min, :tab_costo_med, :tab_costo_max, :desp_min, :desp_med, :desp_max, :mat_min, :mat_med, :mat_max, :via_min, :via_med, :via_max, :total_min, :total_med, :tatal_max, :user_id).reverse_merge(defaults)
+    params.permit(:name, :ing_ejecucion_min, :ing_ejecucion_med, :ing_ejecucion_max, :ing_costo_min, :ing_costo_med, :ing_costo_max, :tab_ejecucion_min, :tab_ejecucion_med, :tab_ejecucion_max, :tab_costo_min, :tab_costo_med, :tab_costo_max, :desp_min, :desp_med, :desp_max, :mat_min, :mat_med, :mat_max, :via_min, :via_med, :via_max, :total_min, :total_med, :tatal_max, :user_id, :alert_hour_min, :alert_hour_med, :alert_hour_max, :color_hour_min, :color_hour_med, :color_hour_max, :commision_porcentaje, :alert_min, :color_min, :alert_med, :color_mid, :alert_max, :color_max ).reverse_merge(defaults)
   end
 
 end

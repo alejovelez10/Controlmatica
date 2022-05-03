@@ -39,6 +39,24 @@ class Table extends Component {
                 total_min: "",
                 total_med: "",
                 tatal_max: "",
+                
+                //configuration hours for month
+                alert_min: 100,
+                color_min: "#d26666",
+                alert_med: 150,
+                color_mid: "#d4b21e",
+                alert_max: 151,
+                color_max: "#24bc6b",
+
+                //configuration 
+
+                alert_hour_min:  100,
+                alert_hour_med:  100,
+                alert_hour_max:  100,
+                color_hour_min:  "#d26666",
+                color_hour_med:  "#d4b21e",
+                color_hour_max:  "#24bc6b",
+                commision_porcentaje: "",
             },
 
         }
@@ -84,6 +102,24 @@ class Table extends Component {
                 total_min: "",
                 total_med: "",
                 tatal_max: "",
+
+                //configuration hours for month
+                alert_min: 100,
+                color_min: "#d26666",
+                alert_med: 150,
+                color_mid: "#d4b21e",
+                alert_max: 151,
+                color_max: "#24bc6b",
+
+                //configuration 
+
+                alert_hour_min:  100,
+                alert_hour_med:  100,
+                alert_hour_max:  100,
+                color_hour_min:  "#d26666",
+                color_hour_med:  "#d4b21e",
+                color_hour_max:  "#24bc6b",
+                commision_porcentaje: "",
             }
         })
     }
@@ -119,6 +155,24 @@ class Table extends Component {
                 total_min: alert.total_min,
                 total_med: alert.total_med,
                 tatal_max: alert.tatal_max,
+
+                //configuration hours for month
+                alert_min: alert.alert_min,
+                color_min: alert.color_min,
+                alert_med: alert.alert_med,
+                color_mid: alert.color_mid,
+                alert_max: alert.alert_max,
+                color_max: alert.color_max,
+
+                //configuration 
+
+                alert_hour_min: alert.alert_hour_min,
+                alert_hour_med: alert.alert_hour_med,
+                alert_hour_max: alert.alert_hour_max,
+                color_hour_min: alert.color_hour_min,
+                color_hour_med: alert.color_hour_med,
+                color_hour_max: alert.color_hour_max,
+                commision_porcentaje: alert.commision_porcentaje,
             }
         })
     }
@@ -223,20 +277,23 @@ class Table extends Component {
     render() {
         return (
             <React.Fragment>
-                <FormCreate
-                    //modal props
-                    backdrop={"static"}
-                    modal={this.state.modal}
-                    toggle={this.toogle}
-                    title={this.state.modeEdit == true ? "Actualizar alerta" : "Agregar nueva alerta"}
-                    nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
 
-                    //form props
-                    formValues={this.state.form}
-                    errorValues={this.state.ErrorValues}
-                    onChangeForm={this.HandleChange}
-                    submitForm={this.HandleClick}
-                />
+                {this.state.modal && (
+                    <FormCreate
+                        //modal props
+                        backdrop={"static"}
+                        modal={this.state.modal}
+                        toggle={this.toogle}
+                        title={this.state.modeEdit ? "Actualizar alerta" : "Agregar nueva alerta"}
+                        nameSubmit={this.state.modeEdit ? "Actualizar" : "Crear"}
+
+                        //form props
+                        formValues={this.state.form}
+                        errorValues={this.state.ErrorValues}
+                        onChangeForm={this.HandleChange}
+                        submitForm={this.HandleClick}
+                    />
+                )}
 
                 {!this.props.isLoaded ? (
                     <div className="content main-card mb-3 card">
@@ -260,7 +317,7 @@ class Table extends Component {
                                 <thead>
                                     <tr className="tr-title">
                                         <th>Nombre</th>
-                                        {(true || true) && (
+                                        {(true) && (
                                             <th className="text-center"></th>
                                         )}
                                     </tr>
