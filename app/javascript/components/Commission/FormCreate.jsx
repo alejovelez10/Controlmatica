@@ -93,6 +93,38 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
+                                <div className="col-md-4 mb-3">
+                                    <input
+                                        type="hidden"
+                                        name="user_invoice_id"
+                                        value={this.props.selectedOptionCostCenter.cost_center_id}
+                                    />
+                                    <label>Centro de costos </label>
+                                    <Select
+                                        onChange={this.props.handleChangeAutocompleteCostCenter}
+                                        options={this.props.cost_centers}
+                                        autoFocus={false}
+                                        className={`link-form`}
+                                        value={this.props.selectedOptionCostCenter}
+                                    />
+                                </div>
+
+                                <div className="col-md-4 mb-3">
+                                    <input
+                                        type="hidden"
+                                        name="customer_report_id"
+                                        value={this.props.selectedOptionCustomerReport.customer_report_id}
+                                    />
+                                    <label>Reporte de cliente </label>
+                                    <Select
+                                        onChange={this.props.handleChangeAutocompleteCustomerReport}
+                                        options={this.props.customer_reports}
+                                        autoFocus={false}
+                                        className={`link-form`}
+                                        value={this.props.selectedOptionCustomerReport}
+                                    />
+                                </div>
+
 
                                 <div className="col-md-12 mt-2">
                                     <textarea

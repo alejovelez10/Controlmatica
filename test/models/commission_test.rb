@@ -11,7 +11,9 @@
 #  total_value         :float
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
+#  cost_center_id      :integer
 #  customer_invoice_id :integer
+#  customer_report_id  :integer
 #  last_user_edited_id :integer
 #  user_id             :integer
 #  user_invoice_id     :integer

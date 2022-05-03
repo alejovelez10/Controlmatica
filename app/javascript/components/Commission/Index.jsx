@@ -25,6 +25,9 @@ class Index extends Component {
                 observation: "",
                 hours_worked: "",
                 total_value: "",
+
+                cost_center_id: "",
+                customer_report_id: "",
             },
 
             selectedOptionUser: {
@@ -35,6 +38,16 @@ class Index extends Component {
             selectedOptionCustomerInvoice: {
                 customer_invoice_id: "",
                 label: "Facturas"
+            },
+
+            selectedOptionCostCenter: {
+                cost_center_id: "",
+                label: "Centro de costo"
+            },
+
+            selectedOptionCustomerReport: {
+                customer_report_id: "",
+                label: "Reporte de cliente"
             },
         }
     }
@@ -135,6 +148,9 @@ class Index extends Component {
                 observation: "",
                 hours_worked: "",
                 total_value: "",
+
+                cost_center_id: "",
+                customer_report_id: "",
             },
 
             selectedOptionUser: {
@@ -145,6 +161,16 @@ class Index extends Component {
             selectedOptionCustomerInvoice: {
                 customer_invoice_id: "",
                 label: "Facturas"
+            },
+
+            selectedOptionCostCenter: {
+                cost_center_id: "",
+                label: "Centro de costo"
+            },
+
+            selectedOptionCustomerReport: {
+                customer_report_id: "",
+                label: "Reporte de cliente"
             },
         })
     }
@@ -232,7 +258,27 @@ class Index extends Component {
             selectedOptionUser,
                 formCreate: {
                     ...this.state.formCreate,
-                    user_invoice_id: selectedOptionUser.value
+                    customer_report_id: selectedOptionUser.value
+                }
+        });
+    };
+
+    handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
+        this.setState({
+            selectedOptionCostCenter,
+                formCreate: {
+                    ...this.state.formCreate,
+                    cost_center_id: selectedOptionCostCenter.value
+                }
+        });
+    };
+
+    handleChangeAutocompleteCustomerReport = selectedOptionCustomerReport => {
+        this.setState({
+            selectedOptionCustomerReport,
+                formCreate: {
+                    ...this.state.formCreate,
+                    customer_report_id: selectedOptionCustomerReport.value
                 }
         });
     };
@@ -253,16 +299,29 @@ class Index extends Component {
                 hours_worked: report_expense.hours_worked,
                 total_value: report_expense.total_value,
                 is_acepted: report_expense.is_acepted,
+
+                cost_center_id: (report_expense.cost_center ? report_expense.cost_center.id : ""),
+                customer_report_id: (report_expense.customer_report ? report_expense.customer_report.id : ""),
             },
 
             selectedOptionCustomerInvoice: {
                 customer_invoice_id: `${report_expense.customer_invoice != null ? report_expense.customer_invoice.id : ""}`,
-                label: `${report_expense.customer_invoice != null ? report_expense.customer_invoice.number_invoice : "Centro de costo"}`
+                label: `${report_expense.customer_invoice != null ? report_expense.customer_invoice.number_invoice : "Factura del cliente"}`
             },
 
             selectedOptionUser: {
                 user_invoice_id: `${report_expense.user_invoice != null ? report_expense.user_invoice.id : ""}`,
                 label: `${report_expense.user_invoice != null ? report_expense.user_invoice.names : "Usuario"}`
+            },
+
+            selectedOptionCostCenter: {
+                cost_center_id: `${report_expense.cost_center != null ? report_expense.cost_center.id : ""}`,
+                label: `${report_expense.cost_center != null ? report_expense.cost_center.code : "Centro de costo"}`
+            },
+
+            selectedOptionCustomerReport: {
+                customer_report_id: `${report_expense.customer_report != null ? report_expense.customer_report.id : ""}`,
+                label: `${report_expense.customer_report != null ? report_expense.customer_report.description : "Reporte de cliente"}`
             },
         })
     }
@@ -343,6 +402,16 @@ class Index extends Component {
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                         selectedOptionUser={this.state.selectedOptionUser}
                         users={this.props.users}
+
+                        //cost center
+                        handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
+                        selectedOptionCostCenter={this.state.selectedOptionCostCenter}
+                        cost_centers={this.props.cost_centers}
+
+                        //customer report 
+                        handleChangeAutocompleteCustomerReport={this.handleChangeAutocompleteCustomerReport}
+                        selectedOptionCustomerReport={this.state.selectedOptionCustomerReport}
+                        customer_reports={this.props.customer_reports}
                     />
                 )}
 
@@ -418,6 +487,10 @@ class Index extends Component {
                                             <tr >
                                                 <th style={{ width: "20px" }} className="text-center">Acciones</th>
                                                 <th style={{ width: "70px" }}>Responsable</th>
+
+                                                <th style={{ width: "70px" }}>Centro de costo</th>
+                                                <th style={{ width: "70px" }}>Reporte de cliente</th>
+
                                                 <th style={{ width: "100px" }}>Fecha de inicial</th>
                                                 <th style={{ width: "100px" }}>Fecha de finalización</th>
                                                 <th style={{ width: "7%" }}>Factura</th>
@@ -465,6 +538,10 @@ class Index extends Component {
 
 
                                                         <td>{accion.user_invoice.names}</td>
+                                                        
+                                                        <td>{accion.cost_center ? accion.cost_center.code : ""}</td>
+                                                        <td>{accion.customer_report ? accion.customer_report.description : ""}</td>
+
                                                         <td>{accion.start_date}</td>
                                                         <td>{accion.end_date}</td>
                                                         <td>{accion.customer_invoice.number_invoice}</td>
