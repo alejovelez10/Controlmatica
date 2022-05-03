@@ -11,7 +11,9 @@
 #  total_value         :float
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
+#  cost_center_id      :integer
 #  customer_invoice_id :integer
+#  customer_report_id  :integer
 #  last_user_edited_id :integer
 #  user_id             :integer
 #  user_invoice_id     :integer
@@ -21,6 +23,9 @@ class Commission < ApplicationRecord
   belongs_to :last_user_edited, class_name: "User", optional: true
   belongs_to :user
   belongs_to :customer_invoice
+
+  belongs_to :customer_report
+  belongs_to :cost_center
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :user, -> { where(user_invoice_id: search1) }) : (scope :user, -> { where.not(id: nil) })

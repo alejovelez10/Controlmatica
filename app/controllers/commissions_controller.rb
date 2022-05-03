@@ -167,11 +167,11 @@ class CommissionsController < ApplicationController
   
       def commission_create
           defaults = { user_id: current_user.id}
-          params.permit(:user_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted).reverse_merge(defaults)
+          params.permit(:user_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
       end
 
       def commission_update
           defaults = { last_user_edited_id: current_user.id }
-          params.permit(:last_user_edited_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted).reverse_merge(defaults)
+          params.permit(:last_user_edited_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
       end
 end

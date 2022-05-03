@@ -96,6 +96,8 @@ class CommissionIndex extends Component {
                 user: format.user,
                 user_invoice: format.user_invoice,
                 user_invoice_id: format.user_invoice_id,
+                customer_report: format.customer_report,
+                cost_center: format.cost_center,
               }
             }
             return item;
@@ -271,6 +273,9 @@ class CommissionIndex extends Component {
                     total={this.state.total}
                     countPage={this.state.countPage}
                     handlePageChange={this.handlePageChange}
+
+                    cost_centers={this.props.cost_centers}
+                    customer_reports={this.props.customer_reports}
                 />
             </React.Fragment>
         );

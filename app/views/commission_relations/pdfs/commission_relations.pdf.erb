@@ -54,6 +54,11 @@
     <table id="customers" style="table-layout:fixed">
         <tr>
           <th class="title-header text-center" style=" text-align: center;" colspan="1">RESPONSABLE</th>
+
+          <th class="title-header text-center" style=" text-align: center;" colspan="1">CENTRO DE COSTO</th>
+          <th class="title-header text-center" style=" text-align: center;" colspan="1">REPORTE DE CLIENTE</th>
+          
+
           <th class="title-header text-center" style=" text-align: center;">FECHA DE INICIAL</th>
           <th class="title-header text-center" style=" text-align: center;">FECHA DE FINALIZACION</th>
           <th class="title-header text-center" style=" text-align: center;">FACTURA</th>
@@ -66,6 +71,10 @@
         <% @commissions.each do |commission| %>
           <tr>
             <td style="text-align: center;"><%= commission.user_invoice.names %></td>
+
+            <td style="text-align: center;"><%= commission.cost_center.present? ? commission.cost_center.code : "" %></td>
+            <td style="text-align: center;"><%= commission.customer_report.present? ? commission.customer_report.description : "" %></td>
+
             <td style="text-align: center;"><%= commission.start_date %></td>
             <td style="text-align: center;"><%= commission.end_date %></td>
             <td style="text-align: center;"><%= commission.customer_invoice.number_invoice %></td>
