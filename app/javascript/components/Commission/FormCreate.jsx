@@ -54,53 +54,60 @@ class FormCreate extends Component {
                                         className={`form form-control ${!this.props.errorValues && this.props.formValues.end_date == "" ? "error-class" : ""}`}
                                     />
                                 </div>
-                                <div className="col-md-4 mb-3">
-                                    <input
-                                        type="hidden"
-                                        name="cost_center_id"
-                                        value={this.props.selectedOptionCostCenter.cost_center_id}
-                                    />
-                                    <label>Centro de costos </label>
-                                    <Select
-                                        onChange={this.props.handleChangeAutocompleteCostCenter}
-                                        options={this.props.cost_centers}
-                                        autoFocus={false}
-                                        className={`link-form`}
-                                        value={this.props.selectedOptionCostCenter}
-                                    />
-                                </div>
 
-                                <div className="col-md-4 mb-3">
-                                    <input
-                                        type="hidden"
-                                        name="customer_report_id"
-                                        value={this.props.selectedOptionCustomerReport.customer_report_id}
-                                    />
-                                    <label>Reporte de cliente </label>
-                                    <Select
-                                        onChange={this.props.handleChangeAutocompleteCustomerReport}
-                                        options={this.props.customer_reports}
-                                        autoFocus={false}
-                                        className={`link-form`}
-                                        value={this.props.selectedOptionCustomerReport}
-                                    />
-                                </div>
+                                {(this.props.formValues.start_date && this.props.formValues.end_date) && (
+                                    <div className="col-md-4 mb-3">
+                                        <input
+                                            type="hidden"
+                                            name="cost_center_id"
+                                            value={this.props.selectedOptionCostCenter.cost_center_id}
+                                        />
+                                        <label>Centro de costos </label>
+                                        <Select
+                                            onChange={this.props.handleChangeAutocompleteCostCenter}
+                                            options={this.props.cost_centers}
+                                            autoFocus={false}
+                                            className={`link-form`}
+                                            value={this.props.selectedOptionCostCenter}
+                                        />
+                                    </div>
+                                )}
 
-                                <div className="col-md-4 mb-3">
-                                    <input
-                                        type="hidden"
-                                        name="customer_invoice_id"
-                                        value={this.props.selectedOptionCustomerInvoice.customer_invoice_id}
-                                    />
-                                    <label>Facturas </label>
-                                    <Select
-                                        onChange={this.props.handleChangeAutocompleteCustomerInvoice}
-                                        options={this.props.customer_invoices}
-                                        autoFocus={false}
-                                        className={`link-form ${!this.props.errorValues && this.props.formValues.customer_invoice_id == "" ? "error-class" : ""}`}
-                                        value={this.props.selectedOptionCustomerInvoice}
-                                    />
-                                </div>
+                                {this.props.customer_reports.length >= 1 && (
+                                    <div className="col-md-4 mb-3">
+                                        <input
+                                            type="hidden"
+                                            name="customer_report_id"
+                                            value={this.props.selectedOptionCustomerReport.customer_report_id}
+                                        />
+                                        <label>Reporte de cliente </label>
+                                        <Select
+                                            onChange={this.props.handleChangeAutocompleteCustomerReport}
+                                            options={this.props.customer_reports}
+                                            autoFocus={false}
+                                            className={`link-form`}
+                                            value={this.props.selectedOptionCustomerReport}
+                                        />
+                                    </div>
+                                )}
+
+                                {this.props.customer_invoices.length >= 1 && (
+                                    <div className="col-md-4 mb-3">
+                                        <input
+                                            type="hidden"
+                                            name="customer_invoice_id"
+                                            value={this.props.selectedOptionCustomerInvoice.customer_invoice_id}
+                                        />
+                                        <label>Facturas </label>
+                                        <Select
+                                            onChange={this.props.handleChangeAutocompleteCustomerInvoice}
+                                            options={this.props.customer_invoices}
+                                            autoFocus={false}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.customer_invoice_id == "" ? "error-class" : ""}`}
+                                            value={this.props.selectedOptionCustomerInvoice}
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="col-md-4">
                                     <label>Horas trabajadas </label>
@@ -112,20 +119,6 @@ class FormCreate extends Component {
                                         className={`form form-control ${!this.props.errorValues && this.props.formValues.hours_worked == "" ? "error-class" : ""}`}
                                     />
                                 </div>
-
-{/*                                 <div className="col-md-4">
-                                    <label>Total </label>
-                                    <input
-                                        type="number"
-                                        name="total_value"
-                                        value={this.props.formValues.total_value}
-                                        onChange={this.props.onChangeForm}
-                                        className={`form form-control ${!this.props.errorValues && this.props.formValues.total_value == "" ? "error-class" : ""}`}
-                                    />
-                                </div> */}
-
-
-
 
                                 <div className="col-md-12 mt-2">
                                     <textarea
