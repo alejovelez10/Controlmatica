@@ -49,6 +49,9 @@ class Index extends Component {
                 customer_report_id: "",
                 label: "Reporte de cliente"
             },
+
+            customer_reports: [],
+            customer_invoices: [],
         }
     }
 
@@ -74,6 +77,44 @@ class Index extends Component {
             this.setState({ ErrorValues: false })
             return false
         }
+    }
+
+    getInfoCostCenter = (cost_center_id) => {
+        const form = {
+            start_date: this.state.formCreate.start_date,
+            end_date: this.state.formCreate.end_date,
+            cost_center_id: cost_center_id
+        }
+
+        fetch(`/get_info_cost_center/${cost_center_id}`, {
+            method: 'POST', // or 'PUT'
+            body: JSON.stringify(form), // data can be `string` or {object}!
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+
+        .then(res => res.json())
+        .catch(error => console.error("Error:", error))
+        .then(data => {
+
+            let arrayCustomerReports = [];
+            let arrayCustomerInvoices = [];
+    
+            data.customer_reports.map((item) => (
+                arrayCustomerReports.push({label: `${item.description}`, value: item.id})
+            ))
+
+            data.customer_invoices.map((item) => (
+                arrayCustomerInvoices.push({label: `${item.number_invoice}`, value: item.id})
+            ))
+    
+            this.setState({
+                customer_reports: arrayCustomerReports,
+                customer_invoices: arrayCustomerInvoices,
+            })
+        });
     }
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
@@ -264,6 +305,7 @@ class Index extends Component {
     }; */
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
+        this.getInfoCostCenter(selectedOptionCostCenter.value);
         this.setState({
             selectedOptionCostCenter,
                 formCreate: {
@@ -284,6 +326,10 @@ class Index extends Component {
     };
 
     edit = (report_expense) => {
+        if (report_expense.cost_center){
+            this.getInfoCostCenter(report_expense.cost_center.id)
+        }
+
         this.setState({
             modeEdit: true,
             modal: true,
@@ -397,7 +443,7 @@ class Index extends Component {
 
                         handleChangeAutocompleteCustomerInvoice={this.handleChangeAutocompleteCustomerInvoice}
                         selectedOptionCustomerInvoice={this.state.selectedOptionCustomerInvoice}
-                        customer_invoices={this.props.customer_invoices}
+                        customer_invoices={this.state.customer_invoices}
                         
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                         selectedOptionUser={this.state.selectedOptionUser}
@@ -411,7 +457,7 @@ class Index extends Component {
                         //customer report 
                         handleChangeAutocompleteCustomerReport={this.handleChangeAutocompleteCustomerReport}
                         selectedOptionCustomerReport={this.state.selectedOptionCustomerReport}
-                        customer_reports={this.props.customer_reports}
+                        customer_reports={this.state.customer_reports}
                     />
                 )}
 

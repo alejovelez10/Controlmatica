@@ -382,6 +382,15 @@ class CostCentersController < ApplicationController
     end
   end
 
+  def get_info_cost_center
+    cost_center = CostCenter.find(params[:cost_center_id])
+
+    render :json => {
+      customer_invoices: cost_center.customer_invoices.where("invoice_date >= ?", params[:start_date]).where("invoice_date <= ?", params[:end_date]),
+      customer_reports: cost_center.customer_reports,
+    }
+  end
+
   def download_file
     centro = ModuleControl.find_by_name("Centro de Costos")
     estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?

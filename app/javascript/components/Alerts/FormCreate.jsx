@@ -250,7 +250,13 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <button className="btn btn-secondary btn-block color_min" >Color</button>
+                                    <input 
+                                        type="color"
+                                        name="color_min"
+                                        value={this.props.formValues.color_min}
+                                        onChange={this.props.onChangeForm}
+                                        className={`form form-control`}
+                                    />
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4">
@@ -265,7 +271,13 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <button className="btn btn-secondary btn-block color_mid">Color</button>
+                                    <input 
+                                        type="color"
+                                        name="color_mid"
+                                        value={this.props.formValues.color_mid}
+                                        onChange={this.props.onChangeForm}
+                                        className={`form form-control`}
+                                    />
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4">
@@ -273,7 +285,13 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <button className="btn btn-secondary btn-block color_max">Color</button>
+                                    <input 
+                                        type="color"
+                                        name="color_max"
+                                        value={this.props.formValues.color_max}
+                                        onChange={this.props.onChangeForm}
+                                        className={`form form-control`}
+                                    />
                                 </div>
 
 
@@ -282,7 +300,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4">
-                                    <label>alert_hour_min</label>
+                                    <label>Menor o igual(Valor)</label>
                                     <input
                                         type="number"
                                         name="alert_hour_min"
@@ -293,11 +311,17 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <button className="btn btn-secondary btn-block color_hour_min" >Color color_hour_min</button>
+                                    <input 
+                                        type="color"
+                                        name="color_hour_min"
+                                        value={this.props.formValues.color_hour_min}
+                                        onChange={this.props.onChangeForm}
+                                        className={`form form-control`}
+                                    />
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4">
-                                    <label>alert_hour_med</label>
+                                    <label>Mayor que valor anterior y menor que</label>
                                     <input
                                         type="number"
                                         name="alert_hour_med"
@@ -308,22 +332,27 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <button className="btn btn-secondary btn-block color_hour_med">Color color_hour_med</button>
-                                </div>
-
-                                <div className="col-md-6 mt-4 mb-4">
-                                    <label>alert_hour_max</label>
-                                    <input
-                                        type="number"
-                                        name="alert_hour_max"
-                                        value={this.props.formValues.alert_hour_max}
+                                    <input 
+                                        type="color"
+                                        name="color_hour_med"
+                                        value={this.props.formValues.color_hour_med}
                                         onChange={this.props.onChangeForm}
                                         className={`form form-control`}
                                     />
                                 </div>
 
+                                <div className="col-md-6 mt-4 mb-4">
+                                    <label>Mayor o igual al valor anterior</label>
+                                </div>
+
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <button className="btn btn-secondary btn-block color_mid">Color color_hour_max</button>
+                                    <input 
+                                        type="color"
+                                        name="color_hour_max"
+                                        value={this.props.formValues.color_hour_max}
+                                        onChange={this.props.onChangeForm}
+                                        className={`form form-control`}
+                                    />
                                 </div>
 
 

@@ -38,6 +38,7 @@ Rails.application.routes.draw do
   #commission_relations
   get "get_commission_relations", to: "commission_relations#get_commission_relations"
   get "commission_relations_pdf/:id", to: "commission_relations#pdf"
+  post "get_info_cost_center/:cost_center_id", to: "cost_centers#get_info_cost_center"
 
   resources :module_controls
   resources :accion_modules
