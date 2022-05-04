@@ -54,7 +54,7 @@ class HourProjectMonth extends Component {
     }
 
     filter = () =>{
-        this.loadData(this.state.form.year, this.state.form.month );
+        this.loadData(this.state.form.year, this.state.form.month ,this.props.user);
     }
 
     render() {
