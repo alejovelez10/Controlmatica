@@ -66,7 +66,7 @@ class DonutDaysReport extends React.Component {
     return (
       <div id="chart">
       {this.state.series.length > 0 ? (
-       <ApexCharts options={this.state.options} series={this.state.series} type="donut" height={250} />
+       <ApexCharts options={this.state.options} series={this.state.series} type="donut"  />
       ) : (
         <div>
           <p className="no-chart">Horas por mes por proyecto</p>

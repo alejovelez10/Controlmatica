@@ -114,7 +114,7 @@ class BarReporterHours extends React.Component {
 
       <div id="chart">
         {this.state.options.xaxis.categories.length > 0 ? (
-          <ApexCharts options={this.state.options} series={this.state.series} type="bar" height={250} />
+          <ApexCharts options={this.state.options} series={this.state.series} type="bar"  />
         ) : (
           <div>
             <p className="no-chart">Horas por mes por proyecto</p>
