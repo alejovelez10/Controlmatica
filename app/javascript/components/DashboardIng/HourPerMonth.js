@@ -15,13 +15,19 @@ class HourPerMonth extends Component {
 
 
 
-    componentDidMount() {
-        this.loadData(new Date().getFullYear());
+    componentWillReceiveProps(nextProps) {
+        this.loadData(new Date().getFullYear(),nextProps.user);
     }
 
-    loadData = (type) => {
+    componentDidMount() {
+        this.loadData(new Date().getFullYear(), this.props.user);
+    }
 
-        fetch(`/home/get_dashboard_ing/${type}`, {
+
+
+    loadData = (type, user) => {
+
+        fetch(`/home/get_dashboard_ing/${type}/${user}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -43,7 +49,7 @@ class HourPerMonth extends Component {
                 [e.target.name]: e.target.value
             }
         });
-        this.loadData(e.target.value);
+        this.loadData(e.target.value,this.props.user);
     }
 
 
@@ -71,7 +77,7 @@ class HourPerMonth extends Component {
                         <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
                 <hr />
-                <BarDayIng data={this.state.data} title={"Horas por proyecto por mes"} />
+                <BarDayIng data={this.state.data} title={"Horas por proyecto por mes"} type="none" />
             </div>
         )
 

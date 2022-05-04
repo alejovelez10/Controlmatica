@@ -15,13 +15,19 @@ class ReporterHours extends Component {
 
 
 
-    componentDidMount() {
-        this.loadData(new Date().getFullYear());
+
+    componentWillReceiveProps(nextProps) {
+        this.loadData(new Date().getFullYear(),nextProps.user);
     }
 
-    loadData = (type) => {
+    componentDidMount() {
+        this.loadData(new Date().getFullYear(), this.props.user);
+    }
 
-        fetch(`/home/get_dashboard_two_ing/${type}`, {
+
+    loadData = (type, user) => {
+
+        fetch(`/home/get_dashboard_two_ing/${type}/${user}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -43,7 +49,7 @@ class ReporterHours extends Component {
                 [e.target.name]: e.target.value
             }
         });
-        this.loadData(e.target.value);
+        this.loadData(e.target.value,this.props.user);
     }
 
 

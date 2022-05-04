@@ -27,7 +27,7 @@ class Commission < ApplicationRecord
   belongs_to :customer_report
   belongs_to :cost_center
 
-  after_create :save_total
+  before_save :save_total
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
     search1 != "" ? (scope :user, -> { where(user_invoice_id: search1) }) : (scope :user, -> { where.not(id: nil) })

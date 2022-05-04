@@ -326,6 +326,13 @@ module ApplicationHelper
     end
   end
 
+  def authorization_tablero_user
+    modulo = ModuleControl.find_by_name("Tablero de Ingenieros")
+    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver todos").exists?
+      true
+    end
+  end
+
   def authorization_config
     if authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador" || authorization_report_expense_options
       true

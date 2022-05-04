@@ -28,8 +28,8 @@ class BarDayIng extends React.Component {
         xaxis: {
           categories: [],
           labels: {
-            formatter: function (val) {
-              return val
+            formatter: (val) => {
+              return this.numberToCurrency(val)
             }
           }
         },
@@ -40,8 +40,8 @@ class BarDayIng extends React.Component {
         },
         tooltip: {
           y: {
-            formatter: function (val) {
-              return val
+            formatter: (val) => {
+              return this.numberToCurrency(val)
             }
           }
         },
@@ -59,6 +59,33 @@ class BarDayIng extends React.Component {
     };
 
 
+  }
+
+
+  numberToCurrency = (amount) => {
+    if (amount != undefined) {
+      var thousandsSeparator = ","
+      var currencyNum = "";
+      var amountString = amount.toString();
+      var digits = amountString.split("");
+
+      var countDigits = digits.length;
+      var revDigits = digits.reverse();
+
+      for (var i = 0; i < countDigits; i++) {
+        if ((i % 3 == 0) && (i != 0)) {
+          currencyNum += thousandsSeparator + revDigits[i];
+        } else {
+          currencyNum += digits[i];
+        }
+      };
+
+      var revCurrency = currencyNum.split("").reverse().join("");
+
+      var finalCurrency = "$" + revCurrency;
+
+      return finalCurrency;
+    }
   }
 
 
@@ -89,7 +116,7 @@ class BarDayIng extends React.Component {
           xaxis: {
             categories: nextProps.data.series.length > 0 ? nextProps.data.categories : [],
             labels: {
-              formatter: function (val) {
+              formatter: (val) => {
                 return val
               }
             }
@@ -98,11 +125,25 @@ class BarDayIng extends React.Component {
             title: {
               text: undefined
             },
+            labels: {
+              formatter: (val) => {
+                if (nextProps.type == "currency") {
+                  return this.numberToCurrency(val)
+                } else {
+                  return val
+                }
+
+              }
+            },
           },
           tooltip: {
             y: {
-              formatter: function (val) {
-                return val
+              formatter: (val) => {
+                if (nextProps.type == "currency") {
+                  return this.numberToCurrency(val)
+                } else {
+                  return val
+                }
               }
             }
           },

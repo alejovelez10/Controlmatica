@@ -16,14 +16,19 @@ class HourProjectMonth extends Component {
     }
 
 
-
-    componentDidMount() {
-        this.loadData(new Date().getFullYear(), new Date().getMonth() + 1);
+    componentWillReceiveProps(nextProps) {
+        this.loadData(new Date().getFullYear(), new Date().getMonth() + 1,nextProps.user);
     }
 
-    loadData = (year, month) => {
 
-        fetch(`/home/get_dashboard_three_ing/${year}/${month}`, {
+
+    componentDidMount() {
+        this.loadData(new Date().getFullYear(), new Date().getMonth() + 1, this.props.user);
+    }
+
+    loadData = (year, month, user) => {
+
+        fetch(`/home/get_dashboard_three_ing/${year}/${month}/${user}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,

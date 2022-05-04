@@ -11,6 +11,7 @@ class HomeController < ApplicationController
   end
 
   def get_dashboard_ing
+    user = User.find(params[:user_id])
     real_year = params[:id].to_s
 
     year = Date.today.year
@@ -29,14 +30,12 @@ class HomeController < ApplicationController
 
     month_convert = []
 
-    user = current_user
-
-    cost_center = Report.where(report_execute_id: current_user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
 
     series = []
     cost_center.each do |key, value|
       cc = CostCenter.find(key)
-      data = Report.where(report_execute_id: current_user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
+      data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
 
       months = []
       get_months.each do |val|
@@ -54,6 +53,7 @@ class HomeController < ApplicationController
   end
 
   def get_dashboard_two_ing
+    user = User.find(params[:user_id])
     real_year = params[:id].to_s
     alert = Alert.first
     year = Date.today.year
@@ -70,13 +70,11 @@ class HomeController < ApplicationController
       get_months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
     end
 
-    user = current_user
-
     series = []
     colors = []
     colors_lables = []
 
-    data = Report.where(report_execute_id: current_user.id).where("extract(year  from report_date) = ?", real_year.to_i)
+    data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i)
     month_convert = []
     months = 0
     get_months.each do |val|
@@ -102,6 +100,7 @@ class HomeController < ApplicationController
   end
 
   def get_dashboard_three_ing
+    user = User.find(params[:user_id])
     real_year = params[:ye].to_s
     real_month = params[:mo].to_s
 
@@ -109,7 +108,7 @@ class HomeController < ApplicationController
     month = Date.today.month
     day = Date.today.day
 
-    cost_center = Report.where(report_execute_id: current_user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
     series = []
     cost_centers_array = []
     colors_lables = []
@@ -117,7 +116,7 @@ class HomeController < ApplicationController
     colors = []
     cost_center.each do |key, value|
       cc = CostCenter.find(key)
-      data = Report.where(report_execute_id: current_user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
+      data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
       if data.where("extract(month from report_date) = ?", real_month).sum(:working_time) > 0
         series << data.where("extract(month from report_date) = ?", real_month).sum(:working_time)
         cost_centers_array << cc.code
@@ -135,18 +134,18 @@ class HomeController < ApplicationController
   end
 
   def get_dashboard_four_ing
+    user = User.find(params[:user_id])
     count = params[:id].to_i
     alert = Alert.first
     year = Date.today.year
     month = Date.today.month
     day = Date.today.day
-    user = current_user
 
     series = []
     colors = []
     colors_lables = []
     categories = []
-    data = Report.where(report_execute_id: current_user.id).where("extract(year  from report_date) = ?", year.to_i)
+    data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", year.to_i)
 
     months = 0
 
@@ -171,6 +170,48 @@ class HomeController < ApplicationController
              colors: colors,
              colors_lables: colors_lables,
            }
+  end
+
+  def get_dashboard_five_ing
+    user = User.find(params[:user_id])
+    real_year = params[:id].to_s
+
+    year = Date.today.year
+    month = Date.today.month
+    day = Date.today.day
+
+    month_convert = []
+
+    reports_1 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-01-01").where("start_date <= ?", "#{real_year}-03-30").sum(:total_value)
+    reports_2 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-04-01").where("start_date <= ?", "#{real_year}-06-30").sum(:total_value)
+    reports_3 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-07-01").where("start_date <= ?", "#{real_year}-09-30").sum(:total_value)
+    reports_4 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-10-01").where("start_date <= ?", "#{real_year}-12-31").sum(:total_value)
+
+    # series = []
+    # cost_center.each do |key, value|
+    #   cc = CostCenter.find(key)
+    #   data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
+    #
+    #   months = []
+    #   get_months.each do |val|
+    #     month_convert << get_month(val)
+    #     months << data.where("extract(month from report_date) = ?", val).sum(:working_time)
+    #   end
+    #
+    #   series << { name: cc.code, data: months }
+    # end
+
+    series = [
+      { name: "T1", data: [reports_1] },
+      { name: "T2", data: [reports_2] },
+      { name: "T3", data: [reports_3] },
+      { name: "T4", data: [reports_4] },
+    ]
+
+    render :json => {
+      categories: ["2022"],
+      series: series,
+    }
   end
 
   def users_new
