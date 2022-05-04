@@ -24,7 +24,7 @@ class Commission < ApplicationRecord
   belongs_to :user
   belongs_to :customer_invoice
 
-  belongs_to :customer_report
+  belongs_to :customer_report, optional: true
   belongs_to :cost_center
 
   before_save :save_total

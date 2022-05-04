@@ -55,7 +55,7 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                {(this.props.formValues.start_date && this.props.formValues.end_date) && (
+                                {(this.props.formValues.start_date && this.props.formValues.end_date || true) && (
                                     <div className="col-md-4 mb-3">
                                         <input
                                             type="hidden"
@@ -73,7 +73,7 @@ class FormCreate extends Component {
                                     </div>
                                 )}
 
-                                {this.props.customer_reports.length >= 1 && (
+                                {(this.props.customer_reports.length >= 1 || true) && (
                                     <div className="col-md-4 mb-3">
                                         <input
                                             type="hidden"
@@ -91,7 +91,7 @@ class FormCreate extends Component {
                                     </div>
                                 )}
 
-                                {this.props.customer_invoices.length >= 1 && (
+                                {(this.props.customer_invoices.length >= 1  || true)&& (
                                     <div className="col-md-4 mb-3">
                                         <input
                                             type="hidden"

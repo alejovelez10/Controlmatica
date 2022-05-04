@@ -3,31 +3,31 @@ class CommissionsController < ApplicationController
   before_action :commission_find, only: [:update, :destroy]
 
   def index
-      report_expense = ModuleControl.find_by_name("Comisiones")
+    report_expense = ModuleControl.find_by_name("Comisiones")
 
-      create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
-      edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
-      delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
+    create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
+    edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
+    delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
 
-      accept_commission = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Aceptar comisión").exists?
-      export_exel = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
-      change_responsible = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
-  
-      @estados = {      
-        create: (current_user.rol.name == "Administrador" ? true : create),
-        edit: (current_user.rol.name == "Administrador" ? true : edit),
-        delete: (current_user.rol.name == "Administrador" ? true : delete),
-        accept_commission: (current_user.rol.name == "Administrador" ? true : accept_commission),
-        export_exel: (current_user.rol.name == "Administrador" ? true : export_exel),
-        change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
-      }
+    accept_commission = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Aceptar comisión").exists?
+    export_exel = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
+    change_responsible = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
+
+    @estados = {
+      create: (current_user.rol.name == "Administrador" ? true : create),
+      edit: (current_user.rol.name == "Administrador" ? true : edit),
+      delete: (current_user.rol.name == "Administrador" ? true : delete),
+      accept_commission: (current_user.rol.name == "Administrador" ? true : accept_commission),
+      export_exel: (current_user.rol.name == "Administrador" ? true : export_exel),
+      change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
+    }
   end
 
   def get_commissions
     report_expense = ModuleControl.find_by_name("Comisiones")
     show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
     validation = (current_user.rol.name == "Administrador" ? true : show_all)
-    
+
     if params[:user_invoice_id] || params[:start_date] || params[:end_date] || params[:customer_invoice_id] || params[:observation] || params[:hours_worked] || params[:total_value] || params[:is_acepted]
       if validation
         commissions = Commission.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
@@ -51,7 +51,7 @@ class CommissionsController < ApplicationController
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(commissions, each_serializer: CommissionSerializer),
       total: total,
-    }   
+    }
   end
 
   def update_filter_values_commissions
@@ -115,63 +115,63 @@ class CommissionsController < ApplicationController
       }
     end
   end
-  
+
   def create
     commission = Commission.create(commission_create)
     if commission.save
-        render :json => {
-          success: "El Registro fue creado con exito!",
-          register: ActiveModelSerializers::SerializableResource.new(commission, each_serializer: CommissionSerializer),
-          type: "success",
-        }
+      render :json => {
+               success: "El Registro fue creado con exito!",
+               register: ActiveModelSerializers::SerializableResource.new(commission, each_serializer: CommissionSerializer),
+               type: "success",
+             }
     else
-        render :json => {
-          success: "El Registro No se creo!",
-          message: report_expense_option.errors.full_messages,
-          type: "error",
-        }
+      render :json => {
+               success: "El Registro No se creo!",
+               message: commission.errors.full_messages,
+               type: "error",
+             }
     end
   end
 
   def update
-      update_status = @commission.update(commission_update)
-      if update_status
-          render :json => {
-              success: "El Registro fue actualizado con exito!",
-              register: ActiveModelSerializers::SerializableResource.new(@commission, each_serializer: CommissionSerializer),
-              type: "success",
-          }
-      else
-          render :json => {
-              success: "El Registro No se creo!",
-              message: @report_expense.errors.full_messages,
-              type: "error",
-          }
-      end
+    update_status = @commission.update(commission_update)
+    if update_status
+      render :json => {
+               success: "El Registro fue actualizado con exito!",
+               register: ActiveModelSerializers::SerializableResource.new(@commission, each_serializer: CommissionSerializer),
+               type: "success",
+             }
+    else
+      render :json => {
+               success: "El Registro No se creo!",
+               message: @report_expense.errors.full_messages,
+               type: "error",
+             }
+    end
   end
 
   def destroy
-      if @commission.destroy
-          render :json => {
-              success: "El Registro fue eliminado con exito!",
-              type: "success",
-          }
-      end
+    if @commission.destroy
+      render :json => {
+               success: "El Registro fue eliminado con exito!",
+               type: "success",
+             }
+    end
   end
 
   private
 
-      def commission_find
-          @commission = Commission.find(params[:id])
-      end
-  
-      def commission_create
-          defaults = { user_id: current_user.id}
-          params.permit(:user_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
-      end
+  def commission_find
+    @commission = Commission.find(params[:id])
+  end
 
-      def commission_update
-          defaults = { last_user_edited_id: current_user.id }
-          params.permit(:last_user_edited_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
-      end
+  def commission_create
+    defaults = { user_id: current_user.id }
+    params.permit(:user_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
+  end
+
+  def commission_update
+    defaults = { last_user_edited_id: current_user.id }
+    params.permit(:last_user_edited_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
+  end
 end
