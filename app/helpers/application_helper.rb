@@ -41,9 +41,9 @@ module ApplicationHelper
     elsif controller == "report_expense_options" && action == "index"
       card = "<h1>" + " <i class='fas fa-handshake'></i>  Tipos de Gastos " + "</h1>" + "<p>" + "Gestiona de tipos" + "</p>"
     elsif controller == "commissions" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i>  Comisiónes " + "</h1>" + "<p>" + "Gestion de comisiónes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-handshake'></i>  Comisiones " + "</h1>" + "<p>" + "Gestion de comisiónes" + "</p>"
     elsif controller == "commission_relations" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i>  Relacion de comisiónes " + "</h1>" + "<p>" + "Gestion de relacion de comisiónes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-handshake'></i>  Relacion de comisiones " + "</h1>" + "<p>" + "Gestion de relacion de comisiones" + "</p>"
     else
       "Proyectos"
     end
