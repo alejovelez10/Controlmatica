@@ -59,18 +59,20 @@
           <th class="title-header text-center" style=" text-align: center;"># COTIZACIÓN</th>
           <th class="title-header text-center" style=" text-align: center;">REPORTE CLIENTE</th>
           <th class="title-header text-center" style=" text-align: center;">CLIENTE</th>
+          <th class="title-header text-center" style=" text-align: center;">HORAS</th>
           <th class="title-header text-center" style=" text-align: center;">VALOR COMISIÓN</th>
           <th class="title-header text-center" style=" text-align: center;">%</th>          
         </tr>
 
         <% @commissions.each_with_index do |commission, index| %>
           <tr>
-            <td style="text-align: center;"><%= index %></td>
+            <td style="text-align: center;"><%= index + 1 %></td>
             <td style="text-align: center;"><%= commission.customer_invoice.invoice_date %></td>
             <td style="text-align: center;"><%= commission.customer_invoice.number_invoice %></td>
             <td style="text-align: center;"><%= commission.cost_center.code %></td></td>
             <td style="text-align: center;"><%= commission.customer_report ? commission.customer_report.report_code  : "" %></td>
             <td style="text-align: center;"><%= commission.cost_center.customer.name %></td>
+            <td style="text-align: center;"><%= commission.hours_worked %></td>
             <td style="text-align: center;"><%= number_to_currency(commission.total_value, precision: 0) %></td>
             <td style="text-align: center;">5%</td>
 
