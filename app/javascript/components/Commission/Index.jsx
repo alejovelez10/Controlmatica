@@ -103,7 +103,7 @@ class Index extends Component {
             let arrayCustomerInvoices = [];
     
             data.customer_reports.map((item) => (
-                arrayCustomerReports.push({label: `${item.description}`, value: item.id})
+                arrayCustomerReports.push({label: `${item.report_code}`, value: item.id})
             ))
 
             data.customer_invoices.map((item) => (
