@@ -33,7 +33,7 @@ class Commission < ApplicationRecord
     search1 != "" ? (scope :user, -> { where(user_invoice_id: search1) }) : (scope :user, -> { where.not(id: nil) })
 
     search2 != "" ? (scope :fdesdep, -> { where("start_date >= ?", search2) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search3 != "" ? (scope :fhastap, -> { where("end_date <= ?", search3) }) : (scope :fhastap, -> { where.not(id: nil) })
+    search3 != "" ? (scope :fhastap, -> { where("end_dateComisiónes <= ?", search3) }) : (scope :fhastap, -> { where.not(id: nil) })
 
     search4 != "" ? (scope :customer_invoice_find, -> { where(customer_invoice_id: search4) }) : (scope :customer_invoice_find, -> { where.not(id: nil) })
     search5 != "" ? (scope :descripcion, -> { where("observation like '%#{search5.downcase}%' or observation like '%#{search5.upcase}%' or observation like '%#{search5.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
@@ -46,7 +46,7 @@ class Commission < ApplicationRecord
 
   def save_total
     cost_center = CostCenter.find(self.cost_center_id)
-    value_engineer_hour = cost_center.engineering_value * self.hours_worked * 0.05
+    value_engineer_hour = cost_center.ing_costo_cotizado * self.hours_worked * 0.05
     self.total_value = value_engineer_hour
   end
 end
