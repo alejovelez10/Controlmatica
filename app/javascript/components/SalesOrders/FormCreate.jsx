@@ -163,14 +163,14 @@ class FormCreate extends React.Component {
 
 
                             <div className="col-md-6 mt-3">
-                            <label>Valor de ingenieria <small className="validate-label">*</small></label>
+                            <label>Valor de ingeniería <small className="validate-label">*</small></label>
                               <input 
                                 name="engineering_value"
                                 type="number"
                                 onChange={this.props.onChangeForm}
                                 value={this.props.formValues.engineering_value}
                                 className={`form form-control ${this.props.errorValues == false && this.props.formValues.engineering_value == "" ? "error-class" : ""}`}
-                                placeholder="Numero de factura"
+                                placeholder="Valor ingeniería"
                               /> 
                             </div>
 
@@ -178,7 +178,7 @@ class FormCreate extends React.Component {
                             <label>Numero de factura <small className="validate-label">*</small></label>
                               <input 
                                 name="number_invoice"
-                                type="number"
+                                type="text"
                                 onChange={this.props.onChangeForm}
                                 value={this.props.formValues.number_invoice}
                                 className={`form form-control ${this.props.errorValues == false && this.props.formValues.number_invoice == "" ? "error-class" : ""}`}
