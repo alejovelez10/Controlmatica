@@ -118,11 +118,15 @@ class CommissionIndex extends Component {
             this.setState({
                 data: data.data,
                 total: data.total,
-                isLoaded: false
+                isLoaded: false,
+                isFiltering: false,
             });
         });
     }
 
+    setNewData = (new_data) => {
+        this.setState({ data: new_data })
+    }
 
     HandleClickFilter = e => {
         this.setState({ isLoaded: true, isFiltering: true })
@@ -276,6 +280,7 @@ class CommissionIndex extends Component {
 
                     cost_centers={this.props.cost_centers}
                     customer_reports={this.props.customer_reports}
+                    setNewData={this.setNewData}
                 />
             </React.Fragment>
         );

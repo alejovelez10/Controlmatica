@@ -238,7 +238,7 @@ class FormCreate extends Component {
                                     <h4 className="text-center title-alert">Configuración de horas por mes</h4>
                                 </div>
 
-                                <div className="col-md-6 mt-4 mb-4">
+                                <div className="col-md-6 mb-4">
                                     <label>Menor o igual(Valor)</label>
                                     <input
                                         type="number"
@@ -259,7 +259,7 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                <div className="col-md-6 mt-4 mb-4">
+                                <div className="col-md-6 mb-4">
                                     <label>Mayor que valor anterior y menor que</label>
                                     <input
                                         type="number"
@@ -299,7 +299,7 @@ class FormCreate extends Component {
                                     <h4 className="text-center title-alert">Configuración horas por día</h4>
                                 </div>
 
-                                <div className="col-md-6 mt-4 mb-4">
+                                <div className="col-md-6 mb-4">
                                     <label>Menor o igual(Valor)</label>
                                     <input
                                         type="number"
@@ -320,7 +320,7 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                <div className="col-md-6 mt-4 mb-4">
+                                <div className="col-md-6 mb-4">
                                     <label>Mayor que valor anterior y menor que</label>
                                     <input
                                         type="number"
@@ -341,8 +341,15 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                <div className="col-md-6 mt-4 mb-4">
+                                <div className="col-md-6 mb-4">
                                     <label>Mayor o igual al valor anterior</label>
+                                    <input 
+                                        type="number"
+                                        name="commision_porcentaje"
+                                        value={this.props.formValues.commision_porcentaje}
+                                        onChange={this.props.onChangeForm}
+                                        className={`form form-control`}
+                                    />
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">

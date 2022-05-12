@@ -477,7 +477,6 @@ class Index extends Component {
                                             Filtros
                                         </button>
 
-
                                         {(this.props.estados.export || this.props.estados.create) && (
                                             <div class="dropdown ml-3">
 
@@ -508,7 +507,7 @@ class Index extends Component {
                                                 className="btn btn-secondary ml-3"
                                                 onClick={() => this.updateFilterValues()}
                                             >
-                                                Aceptar Comisiones
+                                                Aceptar comisiones
                                             </button>
                                         )}
 
@@ -531,7 +530,7 @@ class Index extends Component {
                                     <table className="table table-hover table-bordered" id="sampleTable" style={{ width: "2700px", maxWidth: "2500px", tableLayout: "fixed" }} >
                                         <thead>
                                             <tr >
-                                                <th style={{ width: "20px" }} className="text-center">Acciones</th>
+                                                <th style={{ width: "38px" }} className="text-center">Acciones</th>
                                                 <th style={{ width: "70px" }}>Responsable</th>
 
                                                 <th style={{ width: "70px" }}>Centro de costo</th>
