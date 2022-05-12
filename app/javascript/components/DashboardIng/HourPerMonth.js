@@ -86,10 +86,10 @@ class HourPerMonth extends Component {
                     </select>
                     <select
                         name="count"
-                        className={`form form-control`}
+                        className={`form form-control ml-2`}
                         value={this.state.form.count}
                         onChange={this.handleChangeCount}
-                        style={{ width: "200px" }}
+                        style={{ width: "400px" }}
                     >
                         
                         <option value="5">5 CC en los que mas trabajó</option>
