@@ -9,6 +9,7 @@ class HourPerMonth extends Component {
             data: [],
             form: {
                 value: new Date().getFullYear(),
+                count: 5
             }
         }
     }
@@ -16,18 +17,18 @@ class HourPerMonth extends Component {
 
 
     componentWillReceiveProps(nextProps) {
-        this.loadData(new Date().getFullYear(),nextProps.user);
+        this.loadData(new Date().getFullYear(),nextProps.user, 5);
     }
 
     componentDidMount() {
-        this.loadData(new Date().getFullYear(), this.props.user);
+        this.loadData(new Date().getFullYear(), this.props.user, 5);
     }
 
 
 
-    loadData = (type, user) => {
+    loadData = (type, user, count) => {
 
-        fetch(`/home/get_dashboard_ing/${type}/${user}`, {
+        fetch(`/home/get_dashboard_ing/${type}/${user}/${count}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
@@ -49,14 +50,24 @@ class HourPerMonth extends Component {
                 [e.target.name]: e.target.value
             }
         });
-        this.loadData(e.target.value,this.props.user);
+        this.loadData(e.target.value,this.props.user,this.state.form.count );
+    }
+
+    handleChangeCount = e => {
+        this.setState({
+            form: {
+                ...this.state.form,
+                [e.target.name]: e.target.value
+            }
+        });
+        this.loadData(this.state.form.value,this.props.user, e.target.value);
     }
 
 
     render() {
         return (
             <div >
-                <div className='p-1'>
+                <div className='p-1' style={{display:"flex"  }}>
                     <select
                         name="value"
                         className={`form form-control`}
@@ -73,11 +84,23 @@ class HourPerMonth extends Component {
                         <option value="2017">2017</option>
 
                     </select>
+                    <select
+                        name="count"
+                        className={`form form-control`}
+                        value={this.state.form.count}
+                        onChange={this.handleChangeCount}
+                        style={{ width: "200px" }}
+                    >
+                        
+                        <option value="5">5 CC en los que mas trabajó</option>
+                        <option value="10">10 CC en los que mas trabajó</option>
+                        <option value="20">20 CC en los que mas trabajó</option>
+                    </select>
                     {/* <button className='btn btn-primary' onClick={()=>this.loadData("6")}> 6 </button>
                         <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
                 <hr />
-                <BarDayIng data={this.state.data} title={"Horas por proyecto por mes"} type="none" />
+                <BarDayIng data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO POR MES"} type="none"  height={this.props.height}/>
             </div>
         )
 

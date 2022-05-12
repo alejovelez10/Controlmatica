@@ -13,6 +13,7 @@ class HomeController < ApplicationController
   def get_dashboard_ing
     user = User.find(params[:user_id])
     real_year = params[:id].to_s
+    count = params[:count].to_s
 
     year = Date.today.year
     month = Date.today.month
@@ -32,9 +33,11 @@ class HomeController < ApplicationController
 
     cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
 
+    cost_center_last = cost_center.sort_by { |_key, value| value }.reverse.to_h.first(count.to_i)
+
     series = []
-    cost_center.each do |key, value|
-      cc = CostCenter.find(key)
+    cost_center_last.each do |value|
+      cc = CostCenter.find(value[0])
       data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
 
       months = []
@@ -182,10 +185,15 @@ class HomeController < ApplicationController
 
     month_convert = []
 
-    reports_1 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-01-01").where("start_date <= ?", "#{real_year}-03-30").sum(:total_value)
-    reports_2 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-04-01").where("start_date <= ?", "#{real_year}-06-30").sum(:total_value)
-    reports_3 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-07-01").where("start_date <= ?", "#{real_year}-09-30").sum(:total_value)
-    reports_4 = Commission.where(user_invoice_id: user.id).where("start_date >= ?", "#{real_year}-10-01").where("start_date <= ?", "#{real_year}-12-31").sum(:total_value)
+    value_hour = Parameterization.find_by_name("HORA PROMEDIO COTIZADA").money_value
+
+    cost_center_ids = CostCenter.where(customer_id: [4, 1, 15]).ids
+    reports = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", year.to_i).where.not(cost_center_id: [cost_center_ids])
+
+    reports_1 = reports.where("report_date >= ?", "#{real_year}-01-01").where("report_date <= ?", "#{real_year}-03-30").sum(:working_time) * value_hour * 0.05
+    reports_2 = reports.where("report_date >= ?", "#{real_year}-04-01").where("report_date <= ?", "#{real_year}-06-30").sum(:working_time) * value_hour * 0.05
+    reports_3 = reports.where("report_date >= ?", "#{real_year}-07-01").where("report_date <= ?", "#{real_year}-09-30").sum(:working_time) * value_hour * 0.05
+    reports_4 = reports.where("report_date >= ?", "#{real_year}-10-01").where("report_date <= ?", "#{real_year}-12-31").sum(:working_time) * value_hour * 0.05
 
     # series = []
     # cost_center.each do |key, value|

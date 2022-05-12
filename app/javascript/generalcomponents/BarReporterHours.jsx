@@ -5,7 +5,7 @@ class BarReporterHours extends React.Component {
     super(props);
 
     this.state = {
-
+      leyend: this.props.leyend,
       series: [{
         data: []
       }],
@@ -20,7 +20,13 @@ class BarReporterHours extends React.Component {
           }
         },
         title: {
-          text: 'Horas por mes'
+          text: undefined,
+          style: {
+            fontSize: '20px',
+            fontWeight: 'bold',
+            fontFamily: undefined,
+            color: '#a0a0a0'
+          },
         },
         colors: ["blue", "blue", "blue", "blue", "blue", "blue", "blue", "blue"],
         plotOptions: {
@@ -59,6 +65,7 @@ class BarReporterHours extends React.Component {
     console.log('componentWillReceiveProps', nextProps);
     if (this.props !== nextProps) {
       this.setState({
+        leyend: nextProps.leyend,
         series: [{
           data: nextProps.data.series
         }],
@@ -70,10 +77,19 @@ class BarReporterHours extends React.Component {
               click: function (chart, w, e) {
                 // console.log(chart, w, e)
               }
+            },
+            toolbar: {
+              show: false
             }
           },
           title: {
-            text: nextProps.title
+            text: undefined,
+            style: {
+              fontSize: '20px',
+              fontWeight: 'bold',
+              fontFamily: undefined,
+              color: '#a0a0a0'
+            },
           },
           colors: nextProps.data.colors,
           plotOptions: {
@@ -96,7 +112,14 @@ class BarReporterHours extends React.Component {
                 fontSize: '12px'
               }
             }
-          }
+          },
+          tooltip: {
+            y: {
+              formatter: (val) => {
+                  return val
+              }
+            }
+          },
         },
       }
       );
@@ -111,18 +134,23 @@ class BarReporterHours extends React.Component {
 
 
 
-
-      <div id="chart">
-        {this.state.options.xaxis.categories.length > 0 ? (
-          <ApexCharts options={this.state.options} series={this.state.series} type="bar"  />
-        ) : (
-          <div>
-            <p className="no-chart">Horas por mes por proyecto</p>
-            <div className='no-chart-container'><p>No hay datos</p></div>
-          </div>
-
+      <React.Fragment>
+        <div className='title-chart-item'>{this.props.title}</div>
+        {this.state.leyend &&(
+          <div className='chart-leyend'><div className='chart-max chart-leyend-item'>VAS MUY BIEN <span></span></div> <div className='chart-med chart-leyend-item'>PUEDES MEJORAR <span></span></div> <div className='chart-min chart-leyend-item'>NO TE DESCUIDES<span></span></div></div>
         )}
-      </div>
+        <div id="chart">
+          {this.state.options.xaxis.categories.length > 0 ? (
+            <ApexCharts options={this.state.options} series={this.state.series} type="bar" height={this.props.height} />
+          ) : (
+            <div>
+              <p className="no-chart">Horas por mes por proyecto</p>
+              <div className='no-chart-container'><p>No hay datos</p></div>
+            </div>
+
+          )}
+        </div>
+      </React.Fragment>
     );
   }
 }

@@ -77,7 +77,7 @@ class ReporterHours extends Component {
                         <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
                 <hr />
-                <BarReporterHours data={this.state.data} title={"Horas por mes"} />
+                <BarReporterHours leyend={true} data={this.state.data} title={"ESTAS SON TUS HORAS POR MES"} height={this.props.height} />
             </div>
         )
 

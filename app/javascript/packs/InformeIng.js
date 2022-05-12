@@ -63,8 +63,8 @@ class InformeIng extends Component {
     render() {
         return (
             <div className='row'>
-                <div style={{ background: "white", padding: "10px", display: "flex" }} className='col-md-12'>
-                    <p style={{ fontSize: "25px", margin: "0px" }}> TABLERO DE {this.state.form.name.toUpperCase()}</p>
+                <div className='col-md-12 title-board-ing' >
+                    <div style={{ fontSize: "25px", margin: "0px" }}> ¡HOLA! <span> {this.state.form.name.toUpperCase()} A CONTINUACION VAS A VER TU TABLERO</span> </div>
                     {this.props.ver_todos && (
                         <select
                             name="value"
@@ -80,26 +80,27 @@ class InformeIng extends Component {
                         </select>
                     )}
 
+                           
+                </div>
+                <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                    <HourDay user={this.state.form.value} ref="child" height="400" />
+                </div>
 
+                <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                    <ReporterHours user={this.state.form.value} ref="child"  height="350" />
                 </div>
-                <div className='col-md-12'> <hr /></div>
-                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
-                    <HourPerMonth user={this.state.form.value} ref="child" />
-                </div>
-                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
-                    <ReporterHours user={this.state.form.value} ref="child" />
+                <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                    <Commisions user={this.state.form.value} ref="child" height="350" />
                 </div>
                 <div className='col-md-12'> <hr /></div>
 
                 <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                    <HourProjectMonth user={this.state.form.value} ref="child" />
+                    <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
                 </div>
                 <div className='col-md-12'> <hr /></div>
-                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
-                    <Commisions user={this.state.form.value} ref="child" />
-                </div>
-                <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
-                    <HourDay user={this.state.form.value} ref="child" />
+
+                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
+                    <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
                 </div>
 
             </div>

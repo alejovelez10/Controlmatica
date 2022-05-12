@@ -77,7 +77,7 @@ class Commisions extends Component {
                         <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
                 <hr />
-                <BarDayIng data={this.state.data} title={"Aproximado comisiones acumuladas"} type="currency"/>
+                <BarDayIng data={this.state.data} title={"ESTE ES TU ESTIMADO DE COMISIONES ACUMULADAS POR TRIMESTRE"} type="currency" height={this.props.height}/>
             </div>
         )
 

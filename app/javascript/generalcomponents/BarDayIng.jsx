@@ -23,7 +23,13 @@ class BarDayIng extends React.Component {
           colors: ['#fff']
         },
         title: {
-          text: 'Horas por mes por proyecto'
+          text: undefined,
+            style: {
+              fontSize:  '24px',
+              fontWeight:  'bold',
+              fontFamily:  undefined,
+              color:  '#a0a0a0'
+            },
         },
         xaxis: {
           categories: [],
@@ -34,9 +40,7 @@ class BarDayIng extends React.Component {
           }
         },
         yaxis: {
-          title: {
-            text: undefined
-          },
+
         },
         tooltip: {
           y: {
@@ -98,8 +102,10 @@ class BarDayIng extends React.Component {
         options: {
           chart: {
             type: 'bar',
-            height: 350,
             stacked: true,
+            toolbar: {
+              show: false
+            }
           },
           plotOptions: {
             bar: {
@@ -109,9 +115,6 @@ class BarDayIng extends React.Component {
           stroke: {
             width: 1,
             colors: ['#fff']
-          },
-          title: {
-            text: 'Horas por mes por proyecto'
           },
           xaxis: {
             categories: nextProps.data.series.length > 0 ? nextProps.data.categories : [],
@@ -163,11 +166,11 @@ class BarDayIng extends React.Component {
 
   render() {
     return (
-
-
+      <React.Fragment>
+      <div className='title-chart-item'>{this.props.title}</div>
       <div id="chart">
         {this.state.series.length > 0 ? (
-          <ApexCharts options={this.state.options} series={this.state.series} type="bar" />
+          <ApexCharts options={this.state.options} series={this.state.series} type="bar" height={this.props.height} />
         ) : (
           <div>
             <p className="no-chart">Horas por mes por proyecto</p>
@@ -176,7 +179,7 @@ class BarDayIng extends React.Component {
 
         )}
       </div>
-
+      </React.Fragment>
 
     );
   }

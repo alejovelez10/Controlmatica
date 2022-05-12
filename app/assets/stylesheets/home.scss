@@ -276,3 +276,78 @@ input[type="file"] label{
   height: 300px;
   color: #999999;
 }
+
+.home-dashboard_ing{
+  display: none !important;
+  
+}
+
+.home-dashboard_ing-content{
+  margin-top: -20px;
+}
+
+.title-board-ing{
+  background: #ffffff;
+    margin-bottom: 13px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 9px;
+    div{
+      margin: 0px;
+      font-size: 22px;
+      font-weight: bold;
+      font-family: system-ui;
+      color: #009fc8;
+  }
+  
+}
+
+.title-chart-item{
+  color: gray;
+  font-size: 19px;
+  font-weight: bold;
+  font-family: system-ui;
+  margin-bottom: 20px;
+ 
+}
+
+.chart-leyend{
+  display: flex;
+  gap: 30px;
+  .chart-leyend-item{
+    display: flex;
+
+    font-size: 12px;
+    span{
+      width: 23px;
+      height: 15px;
+      display: block;
+      margin-left: 10px;
+    }
+  }
+  .chart-max{
+
+    span{
+
+      background: #24bc6b;
+
+    }
+  }
+  .chart-med{
+
+    span{
+
+      background: #d4b21e;
+
+    }
+  }
+  .chart-min{
+
+    span{
+
+      background: #d26666;
+
+    }
+  }
+}

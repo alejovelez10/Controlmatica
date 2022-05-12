@@ -152,7 +152,7 @@ Rails.application.routes.draw do
   root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"
   get "home/dashboard_ing", to: "home#dashboard_ing", as: "dashboard_ing"
-  get "home/get_dashboard_ing/:id/:user_id", to: "home#get_dashboard_ing", as: "get_dashboard_ing"
+  get "home/get_dashboard_ing/:id/:user_id/:count", to: "home#get_dashboard_ing", as: "get_dashboard_ing"
   get "home/get_dashboard_two_ing/:id/:user_id", to: "home#get_dashboard_two_ing", as: "get_dashboard_two_ing"
   get "home/get_dashboard_three_ing/:ye/:mo/:user_id", to: "home#get_dashboard_three_ing", as: "get_dashboard_three_ing"
   get "home/get_dashboard_four_ing/:id/:user_id", to: "home#get_dashboard_four_ing", as: "get_dashboard_four_ing"

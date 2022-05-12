@@ -37,9 +37,19 @@ class DonutDaysReport extends React.Component {
         options: {
           chart: {
             type: 'donut',
+            toolbar: {
+              show: false
+            }
           },
           title: {
-            text: 'Horas por proyecto mes %'
+            text: undefined,
+            style: {
+              fontSize: '20px',
+              fontWeight: 'bold',
+              fontFamily: undefined,
+              color: '#a0a0a0',
+              marging: 10
+            },
           },
           labels: nextProps.data.categories,
           responsive: [{
@@ -64,18 +74,20 @@ class DonutDaysReport extends React.Component {
 
   render() {
     return (
-      <div id="chart">
-      {this.state.series.length > 0 ? (
-       <ApexCharts options={this.state.options} series={this.state.series} type="donut"  />
-      ) : (
-        <div>
-          <p className="no-chart">Horas por mes por proyecto</p>
-          <div className='no-chart-container'><p>No hay datos</p></div>
+      <React.Fragment>
+        <div className='title-chart-item'>{this.props.title}</div>
+        <div id="chart">
+          {this.state.series.length > 0 ? (
+            <ApexCharts options={this.state.options} series={this.state.series} type="donut" height={this.props.height} />
+          ) : (
+            <div>
+              <p className="no-chart">Horas por mes por proyecto</p>
+              <div className='no-chart-container'><p>No hay datos</p></div>
+            </div>
+
+          )}
         </div>
-
-      )}
-    </div>
-
+      </React.Fragment>
     );
   }
 }

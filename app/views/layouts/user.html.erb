@@ -371,7 +371,7 @@
       </ul>
     </aside>
     <main class="app-content">
-      <div class="app-title">
+      <div class="app-title <%= controller_name%>-<%= action_name%>">
         <div>
             <%= controller_name_helper(controller_name, action_name).html_safe %>
         </div>
@@ -380,7 +380,7 @@
            <%= breadcrumb_actions(controller_name, action_name).html_safe %>
         </ul>
       </div>
-      <div class="row">
+      <div class="row <%= controller_name%>-<%= action_name%>-content">
         <div class="col-md-12 page">
 
     

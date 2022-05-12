@@ -105,11 +105,11 @@ class HourProjectMonth extends Component {
                          <button className='btn btn-primary' onClick={()=>this.filter()}>Filtrar </button>
                     </div>
                     <hr />
-                    <BarReporterHours data={this.state.data} title={"Horas por proyecto por mes"}/>
+                    <BarReporterHours data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES"} leyend={false} height={this.props.height} />
                 </div>
                 <div className='col-md-6' style={{marginTop: "45px"}}>
                 <hr />
-                    <DonutDaysReport data={this.state.data} title={"Horas por proyecto mes %"} />
+                    <DonutDaysReport data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES %"} height={this.props.height}/>
                 </div>
 
             </div>

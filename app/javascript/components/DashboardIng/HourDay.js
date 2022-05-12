@@ -61,16 +61,16 @@ class HourDay extends Component {
                         style={{ width: "200px" }}
                     >
                         <option value="">Seleccione año</option>
-                        <option value="10">10</option>
-                        <option value="15">15</option>
-                        <option value="30">30</option>
+                        <option value="10">Ultimos 10 días</option>
+                        <option value="15">Ultimos 15 días</option>
+                        <option value="30">Ultimos 30 días</option>
 
                     </select>
                     {/* <button className='btn btn-primary' onClick={()=>this.loadData("6")}> 6 </button>
                         <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
                 <hr />
-                <BarReporterHours data={this.state.data} title={"Horas por día"} />
+                <BarReporterHours data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO DÍA"} leyend={true}  height={this.props.height}/>
             </div>
         )
 
