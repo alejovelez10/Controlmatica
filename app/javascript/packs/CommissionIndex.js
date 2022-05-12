@@ -251,6 +251,7 @@ class CommissionIndex extends Component {
                 )}
                 
                 <Table
+                   current_user={this.props.current_user}
                     updateStateLoad={this.updateStateLoad}
                     loadData={this.loadData}
                     data={this.state.data}

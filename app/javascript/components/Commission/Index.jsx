@@ -18,7 +18,7 @@ class Index extends Component {
             id: "",
             commission_id: "",
             formCreate: {
-                user_invoice_id: "",
+                user_invoice_id: this.props.current_user.actual_user,
                 start_date: "",
                 end_date: "",
                 customer_invoice_id: "",
@@ -31,8 +31,8 @@ class Index extends Component {
             },
 
             selectedOptionUser: {
-                user_invoice_id: "",
-                label: "Usuario"
+                user_invoice_id: this.props.current_user.actual_user,
+                label: this.props.current_user.names
             },
 
             selectedOptionCustomerInvoice: {
@@ -182,7 +182,7 @@ class Index extends Component {
             ErrorValues: true,
 
             formCreate: {
-                user_invoice_id: "",
+                user_invoice_id: this.props.current_user.id,
                 start_date: "",
                 end_date: "",
                 customer_invoice_id: "",
@@ -195,8 +195,8 @@ class Index extends Component {
             },
 
             selectedOptionUser: {
-                user_invoice_id: "",
-                label: "Usuario"
+                user_invoice_id: this.props.current_user.id,
+                label: this.props.current_user.names
             },
 
             selectedOptionCustomerInvoice: {

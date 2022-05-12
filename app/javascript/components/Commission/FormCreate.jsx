@@ -30,6 +30,7 @@ class FormCreate extends Component {
                                         autoFocus={false}
                                         className={`link-form ${!this.props.errorValues && this.props.formValues.user_invoice_id == "" ? "error-class" : ""}`}
                                         value={this.props.selectedOptionUser}
+                                        isDisabled={!this.props.estados.change_responsible}
                                     />
                                 </div>
 

@@ -31,8 +31,8 @@
   <table id="table" class="table-info">
     <thead>
         <tr>
-          <th class="">FECHA</th>
-          <th class="">NOMBRE EMPLEADO</th>
+          <th class="">FECHA DE SOLICITUD</th>
+          <th class="">INGENIERO</th>
           <th class="">AREA</th>
           <th class="">FECHA INICIAL</th>
           <th class="">FECHA FINAL</th>
@@ -44,6 +44,21 @@
           <td class=""> <%= @expense_ratio.area %> </td>
           <td class=""> <%= @expense_ratio.start_date %> </td>
           <td class=""> <%= @expense_ratio.end_date %> </td>
+        </tr>
+        <tr>
+          <th class=""></th>
+          <th class=""></th>
+          <th class=""></th>
+          <th class=""></th>
+          <th class="">VALOR TOTAL</th>
+        </tr>
+
+        <tr>
+          <td class=""> </td>
+          <td class=""></th>
+          <td class="">  </td>
+          <td class="">  </td>
+          <td class=""> <%= number_to_currency(@commissions.sum(:total_value), precision: 0) %> </td>
         </tr>
     </thead>
   </table>
