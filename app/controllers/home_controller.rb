@@ -184,16 +184,17 @@ class HomeController < ApplicationController
     day = Date.today.day
 
     month_convert = []
-
+    alert = Alert.first
+    p_alert = alert.commision_porcentaje / 100
     value_hour = Parameterization.find_by_name("HORA PROMEDIO COTIZADA").money_value
 
     cost_center_ids = CostCenter.where(customer_id: [4, 1, 15]).ids
     reports = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", year.to_i).where.not(cost_center_id: [cost_center_ids])
 
-    reports_1 = reports.where("report_date >= ?", "#{real_year}-01-01").where("report_date <= ?", "#{real_year}-03-30").sum(:working_time) * value_hour * 0.05
-    reports_2 = reports.where("report_date >= ?", "#{real_year}-04-01").where("report_date <= ?", "#{real_year}-06-30").sum(:working_time) * value_hour * 0.05
-    reports_3 = reports.where("report_date >= ?", "#{real_year}-07-01").where("report_date <= ?", "#{real_year}-09-30").sum(:working_time) * value_hour * 0.05
-    reports_4 = reports.where("report_date >= ?", "#{real_year}-10-01").where("report_date <= ?", "#{real_year}-12-31").sum(:working_time) * value_hour * 0.05
+    reports_1 = reports.where("report_date >= ?", "#{real_year}-01-01").where("report_date <= ?", "#{real_year}-03-30").sum(:working_time) * value_hour * p_alert
+    reports_2 = reports.where("report_date >= ?", "#{real_year}-04-01").where("report_date <= ?", "#{real_year}-06-30").sum(:working_time) * value_hour * p_alert
+    reports_3 = reports.where("report_date >= ?", "#{real_year}-07-01").where("report_date <= ?", "#{real_year}-09-30").sum(:working_time) * value_hour * p_alert
+    reports_4 = reports.where("report_date >= ?", "#{real_year}-10-01").where("report_date <= ?", "#{real_year}-12-31").sum(:working_time) * value_hour * p_alert
 
     # series = []
     # cost_center.each do |key, value|

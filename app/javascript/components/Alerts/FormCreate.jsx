@@ -9,9 +9,9 @@ class FormCreate extends Component {
             color_mid: false,
             color_max: false,
 
-            color_hour_min: false, 
-            color_hour_med: false, 
-            color_hour_max: false, 
+            color_hour_min: false,
+            color_hour_med: false,
+            color_hour_max: false,
         }
     }
 
@@ -231,9 +231,9 @@ class FormCreate extends Component {
                                         className={`form form-control`}
                                     />
                                 </div>
-                                
+
                                 <hr />
-                                
+
                                 <div className="col-md-12 mt-2 mb-2">
                                     <h4 className="text-center title-alert">Configuración de horas por mes</h4>
                                 </div>
@@ -250,7 +250,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <input 
+                                    <input
                                         type="color"
                                         name="color_min"
                                         value={this.props.formValues.color_min}
@@ -271,7 +271,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <input 
+                                    <input
                                         type="color"
                                         name="color_mid"
                                         value={this.props.formValues.color_mid}
@@ -285,7 +285,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <input 
+                                    <input
                                         type="color"
                                         name="color_max"
                                         value={this.props.formValues.color_max}
@@ -311,7 +311,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <input 
+                                    <input
                                         type="color"
                                         name="color_hour_min"
                                         value={this.props.formValues.color_hour_min}
@@ -332,7 +332,7 @@ class FormCreate extends Component {
                                 </div>
 
                                 <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <input 
+                                    <input
                                         type="color"
                                         name="color_hour_med"
                                         value={this.props.formValues.color_hour_med}
@@ -343,20 +343,28 @@ class FormCreate extends Component {
 
                                 <div className="col-md-6 mb-4">
                                     <label>Mayor o igual al valor anterior</label>
-                                    <input 
-                                        type="number"
-                                        name="commision_porcentaje"
-                                        value={this.props.formValues.commision_porcentaje}
+                                </div>
+
+                                <div className="col-md-6 mt-4 mb-4 text-center">
+                                    <input
+                                        type="color"
+                                        name="color_hour_max"
+                                        value={this.props.formValues.color_hour_max}
                                         onChange={this.props.onChangeForm}
                                         className={`form form-control`}
                                     />
                                 </div>
 
-                                <div className="col-md-6 mt-4 mb-4 text-center">
-                                    <input 
-                                        type="color"
-                                        name="color_hour_max"
-                                        value={this.props.formValues.color_hour_max}
+                                <div className="col-md-12 mt-4 mb-4 text-center">
+                                    <hr />
+                                </div>
+
+                                <div className="col-md-12 mb-4">
+                                    <label>Porcentaje de comisiones %</label>
+                                    <input
+                                        type="number"
+                                        name="commision_porcentaje"
+                                        value={this.props.formValues.commision_porcentaje}
                                         onChange={this.props.onChangeForm}
                                         className={`form form-control`}
                                     />
