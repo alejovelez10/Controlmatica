@@ -355,7 +355,7 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                <div className="col-md-12 mt-4 mb-4 text-center">
+{/*                                 <div className="col-md-12 mt-4 mb-4 text-center">
                                     <hr />
                                 </div>
 
@@ -368,7 +368,7 @@ class FormCreate extends Component {
                                         onChange={this.props.onChangeForm}
                                         className={`form form-control`}
                                     />
-                                </div>
+                                </div> */}
 
 
 

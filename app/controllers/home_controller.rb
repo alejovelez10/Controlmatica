@@ -185,8 +185,9 @@ class HomeController < ApplicationController
 
     month_convert = []
     alert = Alert.first
-    p_alert = alert.commision_porcentaje / 100
+
     value_hour = Parameterization.find_by_name("HORA PROMEDIO COTIZADA").money_value
+    p_alert = Parameterization.find_by_name("PORCENTAJE DE COMISION").money_value / 100
 
     cost_center_ids = CostCenter.where(customer_id: [4, 1, 15]).ids
     reports = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).where.not(cost_center_id: [cost_center_ids])
