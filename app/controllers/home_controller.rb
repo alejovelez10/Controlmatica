@@ -190,7 +190,7 @@ class HomeController < ApplicationController
     p_alert = Parameterization.find_by_name("PORCENTAJE DE COMISION").money_value / 100
 
     cost_center_ids = CostCenter.where(customer_id: [4, 1, 15]).ids
-    reports = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).where.not(cost_center_id: [cost_center_ids])
+    reports = Report.where(report_execute_id: user.id).where.not(cost_center_id: [cost_center_ids])
 
     reports_1 = reports.where("report_date >= ?", "#{real_year}-01-01").where("report_date <= ?", "#{real_year}-03-30").sum(:working_time) * value_hour * p_alert
     reports_2 = reports.where("report_date >= ?", "#{real_year}-04-01").where("report_date <= ?", "#{real_year}-06-30").sum(:working_time) * value_hour * p_alert
