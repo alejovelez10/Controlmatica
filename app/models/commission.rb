@@ -45,7 +45,7 @@ class Commission < ApplicationRecord
   end
 
   def save_total
-    p_alert = Parameterization.find_by_name("PORCENTAJE DE COMISION").money_value / 100
+    p_alert = Parameterization.find_by_name("PORCENTAJE DE COMISION").money_value.to_f / 100
     cost_center = CostCenter.find(self.cost_center_id)
     value_engineer_hour = cost_center.ing_costo_cotizado * self.hours_worked * p_alert
     self.total_value = value_engineer_hour
