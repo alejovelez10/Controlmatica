@@ -164,6 +164,17 @@ module ApplicationHelper
     User.all
   end
 
+  def get_users_rol
+    users = User.all
+    users.collect do |user|
+      {
+        :id => user.id,
+        :names => user.names,
+        :rol => user.rol.name
+      }
+    end
+  end
+
   def get_users_json
     users = User.joins(:rol).where("rols.name = ? OR rols.name = ?", "Administrador", "Comercial")
     users.collect do |user|

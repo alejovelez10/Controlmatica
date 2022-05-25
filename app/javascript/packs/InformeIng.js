@@ -16,7 +16,8 @@ class InformeIng extends Component {
             form: {
                 value: this.props.current_user_id,
                 name: this.props.current_user_name
-            }
+            },
+            is_tablerista: this.props.rol.name
         }
     }
 
@@ -49,8 +50,11 @@ class InformeIng extends Component {
             form: {
                 ...this.state.form,
                 [e.target.name]: value[0],
-                name: value[1]
-            }
+                name: value[1],
+                
+            },
+            is_tablerista: value[2]
+
         });
         /*   this.loadData(e.target.value); */
     }
@@ -72,9 +76,9 @@ class InformeIng extends Component {
                             value={[this.state.form.value, this.state.form.name]}
                             onChange={this.handleChange}
                             style={{ width: "200px", marginLeft: "10px" }}
-                        >  <option value="">Seleccione año</option>
+                        >  <option value="">Seleccione Usuario</option>
                             {this.props.users.map(user => (
-                                <option value={[user.id, user.names]}>{user.names}</option>
+                                <option value={[user.id, user.names, user.rol]}>{user.names}</option>
                             ))}
 
                         </select>
@@ -83,7 +87,7 @@ class InformeIng extends Component {
                            
                 </div>
 
-                {this.props.rol.name == "TABLERISTA" ? (
+                {this.state.is_tablerista == "TABLERISTA" ? (
                                         <div className='row' style={{width:"100%"}}>
                         <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
                         <HourDay user={this.state.form.value} ref="child" height="400" />
