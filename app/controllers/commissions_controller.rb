@@ -33,20 +33,20 @@ class CommissionsController < ApplicationController
 
     if params[:user_invoice_id] || params[:start_date] || params[:end_date] || params[:customer_invoice_id] || params[:observation] || params[:hours_worked] || params[:total_value] || params[:is_acepted]
       if validation
-        commissions = Commission.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
+        commissions = Commission.order(created_at: :desc).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
         total = Commission.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).count
       else
-        commissions = Commission.where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
+        commissions = Commission.order(created_at: :desc).where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
         total = Commission.where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).count
       end
     else
       if validation
         puts "ENTRO A VALIDATION"
-        commissions = Commission.all.paginate(page: params[:page], :per_page => 10)
+        commissions = Commission.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
         total = Commission.all.count
       else
         puts "no ENTRO A VALIDATION"
-        commissions = Commission.where(user_invoice_id: current_user.id).paginate(page: params[:page], :per_page => 10)
+        commissions = Commission.where(user_invoice_id: current_user.id).order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
         total = Commission.where(user_invoice_id: current_user.id).count
       end
     end
