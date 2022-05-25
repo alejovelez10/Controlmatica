@@ -25,7 +25,7 @@ class Index extends Component {
                 observation: "",
                 hours_worked: "",
                 total_value: "",
-
+                value_hour:"",
                 cost_center_id: "",
                 customer_report_id: "",
             },
@@ -69,7 +69,8 @@ class Index extends Component {
             this.state.formCreate.start_date != "" &&
             this.state.formCreate.end_date != "" &&
             this.state.formCreate.customer_invoice_id != "" &&
-            this.state.formCreate.hours_worked != ""
+            this.state.formCreate.hours_worked != "" && 
+            this.state.formCreate.value_hour != ""
         ) {
             this.setState({ ErrorValues: true })
             return true
@@ -79,7 +80,7 @@ class Index extends Component {
         }
     }
 
-    getInfoCostCenter = (cost_center_id) => {
+    getInfoCostCenter = (cost_center_id, type) => {
         const form = {
             start_date: this.state.formCreate.start_date,
             end_date: this.state.formCreate.end_date,
@@ -109,11 +110,25 @@ class Index extends Component {
             data.customer_invoices.map((item) => (
                 arrayCustomerInvoices.push({label: `${item.number_invoice}`, value: item.id})
             ))
-    
-            this.setState({
-                customer_reports: arrayCustomerReports,
-                customer_invoices: arrayCustomerInvoices,
-            })
+            if (type == "si"){
+                console.log("si")
+                this.setState({
+                    customer_reports: arrayCustomerReports,
+                    customer_invoices: arrayCustomerInvoices,
+                    formCreate: {
+                        ...this.state.formCreate,
+                        value_hour: data.value_hour
+                    }
+                })
+            }else
+            {
+                console.log("no")
+                this.setState({
+                    customer_reports: arrayCustomerReports,
+                    customer_invoices: arrayCustomerInvoices,
+                })
+            }
+
         });
     }
 
@@ -189,6 +204,7 @@ class Index extends Component {
                 observation: "",
                 hours_worked: "",
                 total_value: "",
+                value_hour:"",
 
                 cost_center_id: "",
                 customer_report_id: "",
@@ -305,7 +321,7 @@ class Index extends Component {
     }; */
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
-        this.getInfoCostCenter(selectedOptionCostCenter.value);
+        this.getInfoCostCenter(selectedOptionCostCenter.value, "si");
         this.setState({
             selectedOptionCostCenter,
                 formCreate: {
@@ -327,7 +343,7 @@ class Index extends Component {
 
     edit = (report_expense) => {
         if (report_expense.cost_center){
-            this.getInfoCostCenter(report_expense.cost_center.id)
+            this.getInfoCostCenter(report_expense.cost_center.id, "no")
         }
 
         this.setState({
@@ -343,7 +359,8 @@ class Index extends Component {
                 customer_invoice_id: report_expense.customer_invoice_id,
                 observation: report_expense.observation,
                 hours_worked: report_expense.hours_worked,
-                total_value: report_expense.total_value,
+                value_hour: report_expense.value_hour,
+                total_value: 343,
                 is_acepted: report_expense.is_acepted,
 
                 cost_center_id: (report_expense.cost_center ? report_expense.cost_center.id : ""),
@@ -540,6 +557,7 @@ class Index extends Component {
                                                 <th style={{ width: "100px" }}>Fecha hasta</th>
                                                 <th style={{ width: "7%" }}>Factura</th>
                                                 <th style={{ width: "7%" }}>Horas trabajadas</th>
+                                                <th style={{ width: "7%" }}>Valor hora</th>
                                                 <th style={{ width: "7%" }}>Total</th>
                                                 <th style={{ width: "7%" }}>Observaciónes</th>
                                                 <th style={{ width: "7%" }}>Estado</th>
@@ -591,6 +609,7 @@ class Index extends Component {
                                                         <td>{accion.end_date}</td>
                                                         <td>{accion.customer_invoice.number_invoice}</td>
                                                         <td>{accion.hours_worked}</td>
+                                                        <td><NumberFormat value={accion.value_hour} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>                                                       
                                                         <td><NumberFormat value={accion.total_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                         <td>{accion.observation}</td>
                                                         <td>

@@ -25,6 +25,7 @@ class CommissionIndex extends Component {
                 observation: "",
                 hours_worked: "",
                 total_value: "",
+                value_hour: "",
                 is_acepted: "",
             },
 
@@ -87,6 +88,7 @@ class CommissionIndex extends Component {
                 customer_invoice: format.customer_invoice,
                 customer_invoice_id: format.customer_invoice_id,
                 hours_worked: format.hours_worked,
+                value_hour: format.value_hour,
                 is_acepted: format.is_acepted,
                 last_user_edited: format.last_user_edited,
                 observation: format.observation,

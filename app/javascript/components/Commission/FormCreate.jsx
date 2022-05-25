@@ -3,6 +3,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import Select from "react-select";
 
+
 class FormCreate extends Component {
     handleSubmit = e => {
         e.preventDefault();
@@ -92,7 +93,7 @@ class FormCreate extends Component {
                                     </div>
                                 )}
 
-                                {(this.props.customer_invoices.length >= 1  || true)&& (
+                                {(this.props.customer_invoices.length >= 1 || true) && (
                                     <div className="col-md-4 mb-3">
                                         <input
                                             type="hidden"
@@ -109,6 +110,20 @@ class FormCreate extends Component {
                                         />
                                     </div>
                                 )}
+
+                                <div className="col-md-4">
+                                    <label>Valor hora proyecto </label>
+                                    <NumberFormat
+                                        name="value_hour"
+                                        thousandSeparator={true}
+                                        prefix={'$'}
+                                        className={`form form-control ${this.props.errorValues == false && this.props.formValues.value_hour == "" ? "error-class" : ""}`}
+                                        value={this.props.formValues.value_hour}
+                                        onChange={this.props.onChangeForm}
+                                        disabled={!this.props.estados.change_value_hour}
+                                    />
+                                </div>
+
 
                                 <div className="col-md-4">
                                     <label>Horas trabajadas </label>

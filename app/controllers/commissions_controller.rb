@@ -12,6 +12,7 @@ class CommissionsController < ApplicationController
     accept_commission = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Aceptar comisión").exists?
     export_exel = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
     change_responsible = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
+    change_value_hour = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar valor hora").exists?
 
     @estados = {
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -20,6 +21,8 @@ class CommissionsController < ApplicationController
       accept_commission: (current_user.rol.name == "Administrador" ? true : accept_commission),
       export_exel: (current_user.rol.name == "Administrador" ? true : export_exel),
       change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
+      change_value_hour: (current_user.rol.name == "Administrador" ? true : change_value_hour),
+
     }
   end
 
@@ -117,6 +120,8 @@ class CommissionsController < ApplicationController
   end
 
   def create
+    valor1 = commission_create["value_hour"].to_s.gsub("$", "").gsub(",", "")
+    params["value_hour"] = valor1
     commission = Commission.create(commission_create)
     if commission.save
       render :json => {
@@ -134,6 +139,8 @@ class CommissionsController < ApplicationController
   end
 
   def update
+    valor1 = commission_create["value_hour"].to_s.gsub("$", "").gsub(",", "")
+    params["value_hour"] = valor1
     update_status = @commission.update(commission_update)
     if update_status
       render :json => {
@@ -167,11 +174,11 @@ class CommissionsController < ApplicationController
 
   def commission_create
     defaults = { user_id: current_user.id }
-    params.permit(:user_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
+    params.permit(:user_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id, :value_hour).reverse_merge(defaults)
   end
 
   def commission_update
     defaults = { last_user_edited_id: current_user.id }
-    params.permit(:last_user_edited_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id).reverse_merge(defaults)
+    params.permit(:last_user_edited_id, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :is_acepted, :cost_center_id, :customer_report_id, :value_hour).reverse_merge(defaults)
   end
 end

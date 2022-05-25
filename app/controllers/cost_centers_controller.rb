@@ -119,7 +119,7 @@ class CostCentersController < ApplicationController
       render :json => {
         success: message,
         register: get_cost_centers_item(centro),
-        type: type
+        type: type,
       }
     end
   end
@@ -385,10 +385,19 @@ class CostCentersController < ApplicationController
   def get_info_cost_center
     cost_center = CostCenter.find(params[:cost_center_id])
 
-    render :json => {
-      customer_invoices: cost_center.customer_invoices.where("invoice_date >= ?", params[:start_date]).where("invoice_date <= ?", params[:end_date]),
-      customer_reports: cost_center.customer_reports,
-    }
+    if params[:start_date] != "" && params[:end_date] != ""
+      render :json => {
+               customer_invoices: cost_center.customer_invoices.where("invoice_date >= ?", params[:start_date]).where("invoice_date <= ?", params[:end_date]),
+               customer_reports: cost_center.customer_reports,
+               value_hour: cost_center.hour_cotizada,
+             }
+    else
+      render :json => {
+               customer_invoices: [],
+               customer_reports: [],
+               value_hour: 0,
+             }
+    end
   end
 
   def download_file

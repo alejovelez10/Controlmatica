@@ -33,18 +33,18 @@ class ReportExpensesController < ApplicationController
     show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
     if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:type_identification_id] || params[:payment_type_id] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_tax] || params[:invoice_total] || params[:start_date] || params[:end_date] || params[:is_acepted]
       if show_all
-        report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(invoice_date: :desc)
+        report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         total = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).count
       else
-        report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(invoice_date: :desc)
+        report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         total = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).count
       end
     else
       if show_all
-        report_expenses = ReportExpense.all.paginate(page: params[:page], :per_page => 10).order(invoice_date: :desc)
+        report_expenses = ReportExpense.all.paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         total = ReportExpense.all.count
       else
-        report_expenses = ReportExpense.where(user_invoice_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(invoice_date: :desc)
+        report_expenses = ReportExpense.where(user_invoice_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
         total = ReportExpense.where(user_invoice_id: current_user.id).count
       end
     end

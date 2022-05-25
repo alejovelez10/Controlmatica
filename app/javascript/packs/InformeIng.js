@@ -82,7 +82,20 @@ class InformeIng extends Component {
 
                            
                 </div>
-                <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+
+                {this.props.rol.name == "TABLERISTA" ? (
+                                        <div className='row' style={{width:"100%"}}>
+                        <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                        <HourDay user={this.state.form.value} ref="child" height="400" />
+                    </div>
+
+                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                        <ReporterHours user={this.state.form.value} ref="child"  height="350" />
+                    </div>
+                   </div>
+                ): (
+                    <div className='row' style={{width:"100%"}}>
+                    <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
                     <HourDay user={this.state.form.value} ref="child" height="400" />
                 </div>
 
@@ -92,6 +105,12 @@ class InformeIng extends Component {
                 <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
                     <Commisions user={this.state.form.value} ref="child" height="350" />
                 </div>
+                </div>
+                )}
+           
+
+
+
                 <div className='col-md-12'> <hr /></div>
 
                 <div style={{ background: "white", padding: "10px" }} className='col-md-12'>

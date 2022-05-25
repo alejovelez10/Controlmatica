@@ -31,19 +31,38 @@ class HomeController < ApplicationController
 
     month_convert = []
 
-    cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    if user.rol.name == "TABLERISTA"
+      tablerista = true
+    else
+      tablerista = false
+    end
+
+    if !tablerista
+      cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    else
+      cost_center = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    end
 
     cost_center_last = cost_center.sort_by { |_key, value| value }.reverse.to_h.first(count.to_i)
 
     series = []
     cost_center_last.each do |value|
       cc = CostCenter.find(value[0])
-      data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
+
+      if !tablerista
+        data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
+      else
+        data = Contractor.where(user_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from sales_date) = ?", real_year.to_i)
+      end
 
       months = []
       get_months.each do |val|
         month_convert << get_month(val)
-        months << data.where("extract(month from report_date) = ?", val).sum(:working_time)
+        if !tablerista
+          months << data.where("extract(month from report_date) = ?", val).sum(:working_time)
+        else
+          months << data.where("extract(month from sales_date) = ?", val).sum(:hours)
+        end
       end
 
       series << { name: cc.code, data: months }
@@ -77,11 +96,26 @@ class HomeController < ApplicationController
     colors = []
     colors_lables = []
 
-    data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i)
+    if user.rol.name == "TABLERISTA"
+      tablerista = true
+    else
+      tablerista = false
+    end
+
+    if !tablerista
+      data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i)
+    else
+      data = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", real_year.to_i)
+    end
+
     month_convert = []
     months = 0
     get_months.each do |val|
-      months = data.where("extract(month from report_date) = ?", val).sum(:working_time)
+      if !tablerista
+        months = data.where("extract(month from report_date) = ?", val).sum(:working_time)
+      else
+        months = data.where("extract(month from sales_date) = ?", val).sum(:hours)
+      end
       month_convert << get_month(val)
       if months <= alert.alert_min
         colors << "#d26666"
@@ -111,7 +145,18 @@ class HomeController < ApplicationController
     month = Date.today.month
     day = Date.today.day
 
-    cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    if user.rol.name == "TABLERISTA"
+      tablerista = true
+    else
+      tablerista = false
+    end
+
+    if !tablerista
+      cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    else
+      cost_center = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+    end
+
     series = []
     cost_centers_array = []
     colors_lables = []
@@ -119,12 +164,23 @@ class HomeController < ApplicationController
     colors = []
     cost_center.each do |key, value|
       cc = CostCenter.find(key)
-      data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
-      if data.where("extract(month from report_date) = ?", real_month).sum(:working_time) > 0
-        series << data.where("extract(month from report_date) = ?", real_month).sum(:working_time)
-        cost_centers_array << cc.code
-        colors << "#3fb0f0"
-        colors_lables << "gray"
+
+      if !tablerista
+        data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
+        if data.where("extract(month from report_date) = ?", real_month).sum(:working_time) > 0
+          series << data.where("extract(month from report_date) = ?", real_month).sum(:working_time)
+          cost_centers_array << cc.code
+          colors << "#3fb0f0"
+          colors_lables << "gray"
+        end
+      else
+        data = Contractor.where(user_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from sales_date) = ?", real_year.to_i)
+        if data.where("extract(month from sales_date) = ?", real_month).sum(:hours) > 0
+          series << data.where("extract(month from sales_date) = ?", real_month).sum(:hours)
+          cost_centers_array << cc.code
+          colors << "#3fb0f0"
+          colors_lables << "gray"
+        end
       end
     end
 
@@ -148,12 +204,28 @@ class HomeController < ApplicationController
     colors = []
     colors_lables = []
     categories = []
-    data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", year.to_i)
+
+    if user.rol.name == "TABLERISTA"
+      tablerista = true
+    else
+      tablerista = false
+    end
+
+    if !tablerista
+      data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", year.to_i)
+    else
+      data = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", year.to_i)
+    end
 
     months = 0
 
     (1..count).each do |val|
-      months = data.where(report_date: Date.today - count + val.day).sum(:working_time)
+      if !tablerista
+        months = data.where(report_date: Date.today - count + val.day).sum(:working_time)
+      else
+        months = data.where(sales_date: Date.today - count + val.day).sum(:hours)
+      end
+
       categories << Date.today - count + val.day
       if months <= alert.alert_hour_min
         colors << "#d26666"
