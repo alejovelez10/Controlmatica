@@ -18,22 +18,28 @@ class Index extends Component {
             id: "",
             commission_id: "",
             formCreate: {
-                user_invoice_id: this.props.current_user.actual_user,
+                user_invoice_id: this.props.current_user.id,
                 start_date: "",
                 end_date: "",
                 customer_invoice_id: "",
                 observation: "",
                 hours_worked: "",
                 total_value: "",
-                value_hour:"",
+                value_hour: "",
+                hours_worked_code: "",
+                hours_paid: "",
                 cost_center_id: "",
                 customer_report_id: "",
             },
 
             selectedOptionUser: {
-                user_invoice_id: this.props.current_user.actual_user,
+                user_invoice_id: this.props.current_user.id,
                 label: this.props.current_user.names
             },
+
+
+            msg_error: "",
+            state_msg_error: false,
 
             selectedOptionCustomerInvoice: {
                 customer_invoice_id: "",
@@ -69,7 +75,7 @@ class Index extends Component {
             this.state.formCreate.start_date != "" &&
             this.state.formCreate.end_date != "" &&
             this.state.formCreate.customer_invoice_id != "" &&
-            this.state.formCreate.hours_worked != "" && 
+            this.state.formCreate.hours_worked != "" &&
             this.state.formCreate.value_hour != ""
         ) {
             this.setState({ ErrorValues: true })
@@ -84,7 +90,8 @@ class Index extends Component {
         const form = {
             start_date: this.state.formCreate.start_date,
             end_date: this.state.formCreate.end_date,
-            cost_center_id: cost_center_id
+            cost_center_id: cost_center_id,
+            user_id: this.state.formCreate.user_invoice_id
         }
 
         fetch(`/get_info_cost_center/${cost_center_id}`, {
@@ -96,40 +103,42 @@ class Index extends Component {
             }
         })
 
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
 
-            let arrayCustomerReports = [];
-            let arrayCustomerInvoices = [];
-    
-            data.customer_reports.map((item) => (
-                arrayCustomerReports.push({label: `${item.report_code}`, value: item.id})
-            ))
+                let arrayCustomerReports = [];
+                let arrayCustomerInvoices = [];
 
-            data.customer_invoices.map((item) => (
-                arrayCustomerInvoices.push({label: `${item.number_invoice}`, value: item.id})
-            ))
-            if (type == "si"){
-                console.log("si")
-                this.setState({
-                    customer_reports: arrayCustomerReports,
-                    customer_invoices: arrayCustomerInvoices,
-                    formCreate: {
-                        ...this.state.formCreate,
-                        value_hour: data.value_hour
-                    }
-                })
-            }else
-            {
-                console.log("no")
-                this.setState({
-                    customer_reports: arrayCustomerReports,
-                    customer_invoices: arrayCustomerInvoices,
-                })
-            }
+                data.customer_reports.map((item) => (
+                    arrayCustomerReports.push({ label: `${item.report_code}`, value: item.id })
+                ))
 
-        });
+                data.customer_invoices.map((item) => (
+                    arrayCustomerInvoices.push({ label: `${item.number_invoice}`, value: item.id })
+                ))
+                if (type == "si") {
+                    console.log("si")
+                    this.setState({
+                        customer_reports: arrayCustomerReports,
+                        customer_invoices: arrayCustomerInvoices,
+                        formCreate: {
+                            ...this.state.formCreate,
+                            value_hour: data.value_hour,
+                            hours_worked_code: data.hours_worked_code,
+                            hours_paid: data.hours_paid
+
+                        }
+                    })
+                } else {
+                    console.log("no")
+                    this.setState({
+                        customer_reports: arrayCustomerReports,
+                        customer_invoices: arrayCustomerInvoices,
+                    })
+                }
+
+            });
     }
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
@@ -204,7 +213,7 @@ class Index extends Component {
                 observation: "",
                 hours_worked: "",
                 total_value: "",
-                value_hour:"",
+                value_hour: "",
 
                 cost_center_id: "",
                 customer_report_id: "",
@@ -241,12 +250,12 @@ class Index extends Component {
             }
         })
 
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
-            this.props.updateAllData(data.data)
-            this.messageSuccess(data)
-        });
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+                this.props.updateAllData(data.data)
+                this.messageSuccess(data)
+            });
     }
 
     HandleClick = () => {
@@ -292,57 +301,84 @@ class Index extends Component {
     }
 
     HandleChange = (e) => {
-        this.setState({
-            formCreate: {
-                ...this.state.formCreate,
-                [e.target.name]: e.target.value
+        let state = true;
+
+        if (e.target.name == "hours_worked"){
+            if (this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value >= 0){
+                    console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 1")
+                    state = true;
+                    this.setState({
+                
+                            msg_error: "",
+                            state_msg_error : false
+
+                    })
+            }else{
+                    console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 2")
+                    state = false;
+                    this.setState({
+  
+                            msg_error: "No puedes pasarte de las horas",
+                            state_msg_error : true
+ 
+                    })
             }
-        })
+        }
+
+        if ( state ){
+            this.setState({
+                formCreate: {
+                    ...this.state.formCreate,
+                    [e.target.name]: e.target.value
+                }
+            })
+        }
+
     }
 
     handleChangeAutocompleteCustomerInvoice = selectedOptionCustomerInvoice => {
         this.setState({
             selectedOptionCustomerInvoice,
-                formCreate: {
-                    ...this.state.formCreate,
-                    customer_invoice_id: selectedOptionCustomerInvoice.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                customer_invoice_id: selectedOptionCustomerInvoice.value
+            }
         });
     };
 
-/*     handleChangeAutocompleteUser = selectedOptionUser => {
-        this.setState({
-            selectedOptionUser,
-                formCreate: {
-                    ...this.state.formCreate,
-                    customer_report_id: selectedOptionUser.value
-                }
-        });
-    }; */
+    /*     handleChangeAutocompleteUser = selectedOptionUser => {
+            this.setState({
+                selectedOptionUser,
+                    formCreate: {
+                        ...this.state.formCreate,
+                        customer_report_id: selectedOptionUser.value
+                    }
+            });
+        }; */
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
         this.getInfoCostCenter(selectedOptionCostCenter.value, "si");
         this.setState({
             selectedOptionCostCenter,
-                formCreate: {
-                    ...this.state.formCreate,
-                    cost_center_id: selectedOptionCostCenter.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                cost_center_id: selectedOptionCostCenter.value
+            }
         });
     };
 
     handleChangeAutocompleteCustomerReport = selectedOptionCustomerReport => {
         this.setState({
             selectedOptionCustomerReport,
-                formCreate: {
-                    ...this.state.formCreate,
-                    customer_report_id: selectedOptionCustomerReport.value
-                }
+            formCreate: {
+                ...this.state.formCreate,
+                customer_report_id: selectedOptionCustomerReport.value
+            }
         });
     };
 
     edit = (report_expense) => {
-        if (report_expense.cost_center){
+        if (report_expense.cost_center) {
             this.getInfoCostCenter(report_expense.cost_center.id, "no")
         }
 
@@ -391,21 +427,21 @@ class Index extends Component {
 
     getDate = (date) => {
         var d = new Date(date),
-        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
 
         var time = hoursAndMinutes; // your input
-        
+
         time = time.split(':'); // convert to array
-    
+
         // fetch
         var hours = Number(time[0]);
         var minutes = Number(time[1]);
         var seconds = Number(time[2]);
-    
+
         // calculate
         var timeValue = hours;
-    
+
         /*  if (hours > 0 && hours <= 12) {
            timeValue= "" + hours;
          } else if (hours > 12) {
@@ -413,7 +449,7 @@ class Index extends Component {
          } else if (hours == 0) {
            timeValue= "12";
          } */
-        
+
         timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
         //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
 
@@ -429,12 +465,12 @@ class Index extends Component {
             }
         })
 
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
-            this.setState({ commission_id: "" })
-            this.props.updateItem(data.register)
-        });
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+                this.setState({ commission_id: "" })
+                this.props.updateItem(data.register)
+            });
     }
 
     render() {
@@ -458,10 +494,16 @@ class Index extends Component {
                         estados={this.props.estados}
                         //select values
 
+                        state_msg_error={this.state.state_msg_error}
+                        msg_error={this.state.msg_error}
+
+                        hours_worked_code={ this.state.hours_worked_code}
+                        hours_paid= {this.state.hours_paid}
+
                         handleChangeAutocompleteCustomerInvoice={this.handleChangeAutocompleteCustomerInvoice}
                         selectedOptionCustomerInvoice={this.state.selectedOptionCustomerInvoice}
                         customer_invoices={this.state.customer_invoices}
-                        
+
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                         selectedOptionUser={this.state.selectedOptionUser}
                         users={this.props.users}
@@ -557,7 +599,9 @@ class Index extends Component {
                                                 <th style={{ width: "100px" }}>Fecha hasta</th>
                                                 <th style={{ width: "7%" }}>Factura</th>
                                                 <th style={{ width: "7%" }}>Horas trabajadas</th>
-                                                <th style={{ width: "7%" }}>Valor hora</th>
+                                                {this.props.estados.change_value_hour && (
+                                                    <th style={{ width: "7%" }}>Valor hora </th>
+                                                )}
                                                 <th style={{ width: "7%" }}>Total</th>
                                                 <th style={{ width: "7%" }}>Observaciónes</th>
                                                 <th style={{ width: "7%" }}>Estado</th>
@@ -584,13 +628,13 @@ class Index extends Component {
                                                                             {(this.props.estados.edit) && (
                                                                                 <button onClick={() => this.edit(accion)} className="dropdown-item">
                                                                                     Editar
-                                                                            </button>
+                                                                                </button>
                                                                             )}
 
                                                                             {(this.props.estados.delete) && (
                                                                                 <button onClick={() => this.delete(accion.id)} className="dropdown-item">
                                                                                     Eliminar
-                                                                            </button>
+                                                                                </button>
                                                                             )}
 
                                                                         </div>
@@ -601,7 +645,7 @@ class Index extends Component {
 
 
                                                         <td>{accion.user_invoice.names}</td>
-                                                        
+
                                                         <td>{accion.cost_center ? accion.cost_center.code : ""}</td>
                                                         <td>{accion.customer_report ? accion.customer_report.description : ""}</td>
 
@@ -609,13 +653,15 @@ class Index extends Component {
                                                         <td>{accion.end_date}</td>
                                                         <td>{accion.customer_invoice.number_invoice}</td>
                                                         <td>{accion.hours_worked}</td>
-                                                        <td><NumberFormat value={accion.value_hour} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>                                                       
+                                                        {this.props.estados.change_value_hour && (
+                                                            <td><NumberFormat value={accion.value_hour} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                        )}
                                                         <td><NumberFormat value={accion.total_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                         <td>{accion.observation}</td>
                                                         <td>
                                                             {this.state.commission_id == accion.id ? (
                                                                 <React.Fragment>
-                                                                    <select 
+                                                                    <select
                                                                         value={accion.is_acepted}
                                                                         onChange={(e) => this.updateSelect(e, accion)}
                                                                         className={`form form-control`}
@@ -626,22 +672,22 @@ class Index extends Component {
 
                                                                     <hr />
 
-                                                                    <i 
+                                                                    <i
                                                                         className="fas fa-times-circle"
                                                                         onClick={() => this.setState({ commission_id: "" })}
                                                                     >
-                                                                            
+
                                                                     </i>
                                                                 </React.Fragment>
                                                             ) : (
                                                                 <React.Fragment>
-                                                                
-                                                                    <span>{accion.is_acepted ? "Aceptado" : "Creado"} 
+
+                                                                    <span>{accion.is_acepted ? "Aceptado" : "Creado"}
                                                                         {this.props.estados.accept_commission && (
                                                                             <i onClick={() => this.setState({ commission_id: accion.id })} className="fas fa-pencil-alt float-right"></i>
                                                                         )}
                                                                     </span>
-                                                                
+
                                                                 </React.Fragment>
                                                             )}
                                                         </td>
@@ -658,12 +704,12 @@ class Index extends Component {
                                                     </tr>
                                                 ))
                                             ) : (
-                                                    <td colSpan="11" className="text-center">
-                                                        <div className="text-center mt-4 mb-4">
-                                                            <h4>No hay registros</h4>
-                                                        </div>
-                                                    </td>
-                                                )}
+                                                <td colSpan="11" className="text-center">
+                                                    <div className="text-center mt-4 mb-4">
+                                                        <h4>No hay registros</h4>
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>

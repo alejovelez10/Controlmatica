@@ -111,7 +111,7 @@ class FormCreate extends Component {
                                     </div>
                                 )}
 
-                                <div className="col-md-4">
+                                <div className="col-md-4" style={{ display: this.props.estados.change_value_hour ? 'block' : 'none' }}>
                                     <label>Valor hora proyecto </label>
                                     <NumberFormat
                                         name="value_hour"
@@ -120,13 +120,13 @@ class FormCreate extends Component {
                                         className={`form form-control ${this.props.errorValues == false && this.props.formValues.value_hour == "" ? "error-class" : ""}`}
                                         value={this.props.formValues.value_hour}
                                         onChange={this.props.onChangeForm}
-                                        disabled={!this.props.estados.change_value_hour}
+
                                     />
                                 </div>
 
 
                                 <div className="col-md-4">
-                                    <label>Horas trabajadas </label>
+                                    <label>Horas por pagar </label>
                                     <input
                                         type="number"
                                         name="hours_worked"
@@ -134,41 +134,53 @@ class FormCreate extends Component {
                                         onChange={this.props.onChangeForm}
                                         className={`form form-control ${!this.props.errorValues && this.props.formValues.hours_worked == "" ? "error-class" : ""}`}
                                     />
+                                    {this.props.state_msg_error && (
+                                        <span style={{color:"red"}}>{this.props.msg_error}</span>
+                                    )}
                                 </div>
 
-                                <div className="col-md-12 mt-2">
-                                    <textarea
-                                        name="observation"
-                                        onChange={this.props.onChangeForm}
-                                        className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_total == "" ? "error-class" : ""}`}
-                                        value={this.props.formValues.observation}
-                                        rows="8"
-                                    />
+                                <div className="col-md-12 mt-3">
+                                    <div className='alert alert-warning'>
+                                        <div>Horas trabajadas en el centro de costos: <b>{this.props.formValues.hours_worked_code}</b> </div><br />
+                                        <div> Horas comisiónes aceptadas:  <b>{this.props.formValues.hours_paid}</b></div> <br />
+                                        <div> Horas disponibles:  <b>{this.props.formValues.hours_worked_code - this.props.formValues.hours_paid > 0 ? this.props.formValues.hours_worked_code - this.props.formValues.hours_paid : 0 }</b></div>
                                 </div>
-
-                                {!this.props.errorValues && (
-                                    <div className="col-md-12 mt-4">
-                                        <div className="alert alert-danger" role="alert">
-                                            <b>Debes de completar todos los campos requerios</b>
-                                        </div>
-                                    </div>
-                                )}
 
                             </div>
-                        </ModalBody>
 
-                        <ModalFooter>
-                            <label className="btn btn-light mt-2" onClick={() => this.props.toggle()}>Cerrar</label>
-                            <button className="btn btn-secondary"
-                                onClick={this.props.submitForm}
-                                style={{ color: "#ffff" }}
-                            >
-                                {this.props.nameBnt}
-                            </button>
-                        </ModalFooter>
-                    </form>
-                </Modal>
-            </React.Fragment>
+                            <div className="col-md-12 mt-2">
+                                <textarea
+                                    name="observation"
+                                    onChange={this.props.onChangeForm}
+                                    className={`form form-control ${!this.props.errorValues && this.props.formValues.invoice_total == "" ? "error-class" : ""}`}
+                                    value={this.props.formValues.observation}
+                                    rows="8"
+                                />
+                            </div>
+
+                            {!this.props.errorValues && (
+                                <div className="col-md-12 mt-4">
+                                    <div className="alert alert-danger" role="alert">
+                                        <b>Debes de completar todos los campos requerios</b>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <label className="btn btn-light mt-2" onClick={() => this.props.toggle()}>Cerrar</label>
+                        <button className="btn btn-secondary"
+                            onClick={this.props.submitForm}
+                            style={{ color: "#ffff" }}
+                        >
+                            {this.props.nameBnt}
+                        </button>
+                    </ModalFooter>
+                </form>
+            </Modal>
+            </React.Fragment >
         );
     }
 }
