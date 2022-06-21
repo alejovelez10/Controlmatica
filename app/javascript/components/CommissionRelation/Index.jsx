@@ -282,7 +282,7 @@ class Index extends Component {
                         backdrop={"static"}
                         modal={this.state.modal}
                         toggle={this.toogle}
-                        title={this.state.modeEdit ? "Actualizar relación de gasto" : "Crear relación de gasto"}
+                        title={this.state.modeEdit ? "Actualizar relación de comisiónes" : "Crear relación de comisiónes"}
                         nameBnt={this.state.modeEdit ? "Actualizar" : "Añadir"}
 
                         //form props
