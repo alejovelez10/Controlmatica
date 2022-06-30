@@ -27,6 +27,7 @@ class Index extends Component {
                 total_value: "",
                 value_hour: "",
                 hours_worked_code: "",
+                hours_cost:"",
                 hours_paid: "",
                 cost_center_id: "",
                 customer_report_id: "",
@@ -118,7 +119,7 @@ class Index extends Component {
                     arrayCustomerInvoices.push({ label: `${item.number_invoice}`, value: item.id })
                 ))
                 if (type == "si") {
-                    console.log("si")
+                    console.log("si",data.hours_worked_code,)
                     this.setState({
                         customer_reports: arrayCustomerReports,
                         customer_invoices: arrayCustomerInvoices,
@@ -126,7 +127,64 @@ class Index extends Component {
                             ...this.state.formCreate,
                             value_hour: data.value_hour,
                             hours_worked_code: data.hours_worked_code,
-                            hours_paid: data.hours_paid
+                            hours_paid: data.hours_paid,
+                            hours_cost: data.hours_cost
+
+                        }
+                    })
+                } else {
+                    console.log("no")
+                    this.setState({
+                        customer_reports: arrayCustomerReports,
+                        customer_invoices: arrayCustomerInvoices,
+                    })
+                }
+
+            });
+    }
+
+    getInfoCostCenterT = (cost_center_id, type, start_date, end_date) => {
+        const form = {
+            start_date: start_date,
+            end_date: end_date,
+            cost_center_id: cost_center_id,
+            user_id: this.state.formCreate.user_invoice_id
+        }
+
+        fetch(`/get_info_cost_center/${cost_center_id}`, {
+            method: 'POST', // or 'PUT'
+            body: JSON.stringify(form), // data can be `string` or {object}!
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+
+                let arrayCustomerReports = [];
+                let arrayCustomerInvoices = [];
+
+                data.customer_reports.map((item) => (
+                    arrayCustomerReports.push({ label: `${item.report_code}`, value: item.id })
+                ))
+
+                data.customer_invoices.map((item) => (
+                    arrayCustomerInvoices.push({ label: `${item.number_invoice}`, value: item.id })
+                ))
+                if (type == "si") {
+                    console.log("si",data.hours_worked_code,)
+                    this.setState({
+                        customer_reports: arrayCustomerReports,
+                        customer_invoices: arrayCustomerInvoices,
+                        formCreate: {
+                            ...this.state.formCreate,
+                            value_hour: data.value_hour,
+                            hours_worked_code: data.hours_worked_code,
+                            hours_paid: data.hours_paid,
+                            hours_cost: data.hours_cost
 
                         }
                     })
@@ -218,6 +276,9 @@ class Index extends Component {
                 cost_center_id: "",
                 customer_report_id: "",
             },
+            msg_error: "",
+            state_msg_error: false,
+
 
             selectedOptionUser: {
                 user_invoice_id: this.props.current_user.id,
@@ -238,6 +299,7 @@ class Index extends Component {
                 customer_report_id: "",
                 label: "Reporte de cliente"
             },
+            
         })
     }
 
@@ -304,7 +366,14 @@ class Index extends Component {
         let state = true;
 
         if (e.target.name == "hours_worked"){
-            if (this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value >= 0){
+
+            let value = this.state.formCreate.hours_worked_code
+            if (this.state.formCreate.hours_worked_code >= this.state.formCreate.hours_cost)
+            {
+                value = this.state.formCreate.hours_cost;
+            }
+
+            if (value - this.state.formCreate.hours_paid - e.target.value >= 0){
                     console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 1")
                     state = true;
                     this.setState({
@@ -379,9 +448,9 @@ class Index extends Component {
 
     edit = (report_expense) => {
         if (report_expense.cost_center) {
-            this.getInfoCostCenter(report_expense.cost_center.id, "no")
+            this.getInfoCostCenterT(report_expense.cost_center.id, "si", report_expense.start_date, report_expense.end_date)
         }
-
+        console.log("Hola")
         this.setState({
             modeEdit: true,
             modal: true,
@@ -395,7 +464,7 @@ class Index extends Component {
                 customer_invoice_id: report_expense.customer_invoice_id,
                 observation: report_expense.observation,
                 hours_worked: report_expense.hours_worked,
-                value_hour: report_expense.value_hour,
+                hours_paid: report_expense.value_hour,
                 total_value: 343,
                 is_acepted: report_expense.is_acepted,
 
@@ -498,6 +567,7 @@ class Index extends Component {
                         msg_error={this.state.msg_error}
 
                         hours_worked_code={ this.state.hours_worked_code}
+                        hours_cost={ this.state.hours_cost}
                         hours_paid= {this.state.hours_paid}
 
                         handleChangeAutocompleteCustomerInvoice={this.handleChangeAutocompleteCustomerInvoice}

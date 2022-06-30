@@ -142,8 +142,10 @@ class FormCreate extends Component {
                                 <div className="col-md-12 mt-3">
                                     <div className='alert alert-warning'>
                                         <div>Horas trabajadas en el centro de costos: <b>{this.props.formValues.hours_worked_code}</b> </div><br />
+                                        <div>Horas cotizadas en el centro de costos: <b>{this.props.formValues.hours_cost}</b> </div><br /> 
                                         <div> Horas comisiónes aceptadas:  <b>{this.props.formValues.hours_paid}</b></div> <br />
-                                        <div> Horas disponibles:  <b>{this.props.formValues.hours_worked_code - this.props.formValues.hours_paid > 0 ? this.props.formValues.hours_worked_code - this.props.formValues.hours_paid : 0 }</b></div>
+                                        
+                                        <div> Horas disponibles:  <b>{(this.props.formValues.hours_worked_code <= this.props.formValues.hours_cost ? this.props.formValues.hours_worked_code :  this.props.formValues.hours_cost) - this.props.formValues.hours_paid > 0 ? (this.props.formValues.hours_worked_code <= this.props.formValues.hours_cost ? this.props.formValues.hours_worked_code :  this.props.formValues.hours_cost)  - this.props.formValues.hours_paid : 0 }</b></div>
                                 </div>
 
                             </div>
