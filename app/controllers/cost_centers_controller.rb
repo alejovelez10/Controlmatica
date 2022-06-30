@@ -392,7 +392,7 @@ class CostCentersController < ApplicationController
 
     if params[:start_date] != "" && params[:end_date] != ""
       render :json => {
-               customer_invoices: cost_center.customer_invoices.where("invoice_date >= ?", params[:start_date]).where("invoice_date <= ?", params[:end_date]).where("engineering_value > ?", 0).where.not(engineering_value: nil),
+               customer_invoices: cost_center.customer_invoices.where("invoice_date >= ?", params[:start_date]).where("invoice_date <= ?", params[:end_date])
                customer_reports: cost_center.customer_reports,
                value_hour: cost_center.hour_cotizada,
                hours_worked_code: hours,
