@@ -47,24 +47,24 @@ class ReportsController < ApplicationController
     if validate
       if params[:filtering] == "true"
         reports = Report.all.order(report_date: :desc).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).paginate(page: params[:page], :per_page => 10)
-        reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).order(report_date: :desc)
+        reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).count
       elsif params[:filtering] == "false"
         reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.all.order(report_date: :desc)
+        reports_total = Report.all.count
       else
         reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.all.order(report_date: :desc)
+        reports_total = Report.all.count
       end
     else
       if params[:filtering] == "true"
         reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).paginate(page: params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report])
+        reports_total = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).count
       elsif params[:filtering] == "false"
         reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id)
+        reports_total = Report.where(report_execute_id: current_user.id).count
       else
         reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id)
+        reports_total = Report.where(report_execute_id: current_user.id).count
       end
     end
 
