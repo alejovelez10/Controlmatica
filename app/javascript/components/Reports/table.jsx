@@ -590,7 +590,7 @@ class table extends React.Component {
             submit={this.HandleClick}
             FormSubmit={this.handleSubmit}
             titulo={this.state.title}
-            nameSubmit={this.state.modeEdit == true ? "Actualizar" : "Crear"}
+            nameSubmit={this.state.modeEdit ? "Actualizar" : "Crear"}
             errorValues={this.state.ErrorValues}
             users={this.props.users}
 
@@ -648,7 +648,7 @@ class table extends React.Component {
                 {this.props.estados.download_file == true && (
                   <a
                     className=" mr-2"
-                    href={`/download_file/reports/${this.props.filtering == false ? "todos" : this.range(this.props.exel_values)}.xls`}
+                    href={`/download_file/reports/${!this.props.filtering ? "todos.xls" : `filtro.xls?work_description=${this.props.formFilter.work_description}&report_execute_id=${this.props.formFilter.report_execute_id}&date_ejecution=${this.props.formFilter.date_ejecution}&report_sate=${this.props.formFilter.report_sate}&cost_center_id=${this.props.formFilter.cost_center_id}&customer_id=${this.props.formFilter.customer_id ? this.props.formFilter.customer_id : ""}&date_desde=${this.props.formFilter.date_desde}&date_hasta=${this.props.formFilter.date_hasta}&code_report=${this.props.formFilter.code_report}`}`}
                     target="_blank"
                   >
                     <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "35px" }} />

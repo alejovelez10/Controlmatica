@@ -44,7 +44,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.materials_paginate,
-          materials_total: data.materials_total.length,
+          materials_total: data.materials_total,
           exel_values: data.materials_total,
         });
 
@@ -123,7 +123,7 @@ class index extends React.Component {
     .then(data => {
       this.setState({
         data: data.materials_paginate,
-        materials_total: data.materials_total.length,
+        materials_total: data.materials_total,
         exel_values: data.materials_total,
         activePage: 1
       });
@@ -137,7 +137,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({ 
           data: data.materials_paginate,
-          materials_total: data.materials_total.length,
+          materials_total: data.materials_total,
           exel_values: data.materials_total,
         });
       });
@@ -159,7 +159,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.materials_paginate,
-          materials_total: data.materials_total.length,
+          materials_total: data.materials_total,
           exel_values: data.materials_total,
           
         });
@@ -206,6 +206,7 @@ class index extends React.Component {
                                 show={this.showFilter}
                                 exel_values={this.state.exel_values}
                                 filtering={this.state.filtering}
+                                formFilter={this.state.formFilter}
                             />
 
                         ) : (

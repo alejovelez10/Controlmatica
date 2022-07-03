@@ -344,6 +344,7 @@ class index extends React.Component {
 
                         updateData={this.updateData}
                         updateItem={this.updateItem}
+                        formFilter={this.state.formFilter}
                       />
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>

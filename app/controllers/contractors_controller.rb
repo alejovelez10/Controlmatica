@@ -25,15 +25,15 @@ class ContractorsController < ApplicationController
   def get_contractors
     if params[:filtering] == "true"
       contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :user => { :only =>[:names, :id] } })
-      contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc)
+      contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).count
 
     elsif params[:filtering] == "false"
       contractor = Contractor.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-      contractor_total = Contractor.all
+      contractor_total = Contractor.all.count
     else
     
       contractor = Contractor.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-      contractor_total =  Contractor.all
+      contractor_total =  Contractor.all.count
       
     end
     
@@ -45,8 +45,7 @@ class ContractorsController < ApplicationController
   def download_file
 
     if params[:ids] != "todos"
-      id =  params[:ids].split(",")
-      contractor = Contractor.where(id: id)
+      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc)
     else
       contractor = Contractor.all
     end
