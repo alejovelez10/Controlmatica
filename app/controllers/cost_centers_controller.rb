@@ -389,7 +389,6 @@ class CostCentersController < ApplicationController
     hours_cost = cost_center.eng_hours
     hours_paid = cost_center.commissions.where(user_invoice_id: user.id, is_acepted: true).sum(:hours_worked)
 
-
     if params[:start_date] != "" && params[:end_date] != ""
       render :json => {
                customer_invoices: cost_center.customer_invoices.where("invoice_date >= ?", params[:start_date]).where("invoice_date <= ?", params[:end_date]),
@@ -406,7 +405,7 @@ class CostCentersController < ApplicationController
                value_hour: 0,
                hours_worked_code: 0,
                hours_paid: 0,
-               hours_cost: 0
+               hours_cost: 0,
              }
     end
   end
