@@ -234,15 +234,15 @@ class SalesOrdersController < ApplicationController
   def get_sales_order
     if params[:filtering] == "true"
       sales_orders = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
-      sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).order(created_at: :desc)
+      sales_orders_total = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number]).count
 
     elsif params[:filtering] == "false"
       sales_orders = SalesOrder.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10)
-      sales_orders_total =  SalesOrder.all
+      sales_orders_total =  SalesOrder.all.count
     else
       
       sales_orders = SalesOrder.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).order(id: :desc)
-      sales_orders_total = SalesOrder.all
+      sales_orders_total = SalesOrder.all.count
     end
 
     render :json => {sales_order: get_sales_orders_items(sales_orders), sales_orders_total: sales_orders_total}
