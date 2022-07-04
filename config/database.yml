@@ -3,7 +3,7 @@ development:
   encoding: unicode
   database: controlmatica_development
   pool: 5
-  username: postgres 
+  username: alejandrovelez 
   password: Servidual2016
   host: localhost
   port: 5432
@@ -13,7 +13,7 @@ test:
   encoding: unicode
   database: controlmatica_test
   pool: 5
-  username: postgres 
+  username: alejandrovelez 
   password: Servidual2016
   host: localhost
   port: 5432
