@@ -61,7 +61,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.reports_paginate,
-            reports_total: data.reports_total.length,
+            reports_total: data.reports_total,
             exel_values: data.reports_total,
           });
         });
@@ -247,7 +247,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.reports_paginate,
-            reports_total: data.reports_total.length,
+            reports_total: data.reports_total,
             exel_values: data.reports_total,
             activePage: 1
           });
@@ -264,7 +264,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.reports_paginate,
-          reports_total: data.reports_total.length,
+          reports_total: data.reports_total,
           exel_values: data.reports_total,
           activePage: 1
         });
@@ -278,7 +278,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({ 
             data: data.reports_paginate,
-            reports_total: data.reports_total.length,
+            reports_total: data.reports_total,
             exel_values: data.reports_total,
           });
         });
@@ -344,6 +344,7 @@ class index extends React.Component {
 
                         updateData={this.updateData}
                         updateItem={this.updateItem}
+                        formFilter={this.state.formFilter}
                       />
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>

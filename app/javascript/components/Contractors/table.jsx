@@ -417,17 +417,17 @@ class table extends React.Component {
                       Filtros <i className="fas fa-search ml-2"></i>
                     </button>
 
-                      {this.props.estados.download_file == true && (
+                      {this.props.estados.download_file && (
                         <a
                           className=" mr-2"
-                          href={`/download_file/contractors/${this.props.filtering == false ? "todos" : this.range(this.props.exel_values)}.xls`}
+                          href={`/download_file/contractors/${!this.props.filtering ? "todos.xls" : `filtro.xls?user_execute_id=${this.props.formFilter.user_execute_id}&sales_date=${this.props.formFilter.sales_date}&cost_center_id=${this.props.formFilter.cost_center_id}&date_desde=${this.props.formFilter.date_desde}&date_hasta=${this.props.formFilter.date_hasta}&descripcion=${this.props.formFilter.descripcion}`}`}
                           target="_blank"
                         >
                               <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
                         </a>
                       )}
 
-                      {this.props.estados.create == true && (      
+                      {this.props.estados.create && (      
                         <button type="button" onClick={() => this.toggle("new")} className="btn btn-secondary">Agregar tablerista</button>
                       )}
                     </div>

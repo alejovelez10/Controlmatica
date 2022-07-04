@@ -42,7 +42,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.contractors_paginate,
-          contractors_total: data.contractors_total.length,
+          contractors_total: data.contractors_total,
           contractors: data.contractors_total
         });
 
@@ -119,7 +119,7 @@ class index extends React.Component {
     .then(data => {
       this.setState({
         data: data.contractors_paginate,
-        contractors_total: data.contractors_total.length,
+        contractors_total: data.contractors_total,
         contractors: data.contractors_total,
         activePage: 1
       });
@@ -133,7 +133,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({ 
           data: data.contractors_paginate,
-          contractors_total: data.contractors_total.length,
+          contractors_total: data.contractors_total,
           contractors: data.contractors_total,
         });
       });
@@ -155,7 +155,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.contractors_paginate,
-          contractors_total: data.contractors_total.length,
+          contractors_total: data.contractors_total,
           contractors: data.contractors_total,
         });
       });
@@ -202,6 +202,7 @@ class index extends React.Component {
                                 show={this.showFilter}
                                 filtering={this.state.filtering}
                                 exel_values={this.state.contractors}
+                                formFilter={this.state.formFilter}
                             />
 
                         ) : (

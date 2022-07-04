@@ -558,10 +558,10 @@ class table extends React.Component {
                 Filtros <i className="fas fa-search ml-2"></i>
               </button>
 
-              {this.props.estados.download_file == true && (
+              {this.props.estados.download_file && (
                 <a
                   className=" mr-2"
-                  href={`/download_file/materials/${this.props.filtering == false ? "todos" : this.range(this.props.exel_values)}.xls`}
+                  href={`/download_file/materials/${!this.props.filtering ? "todos.xls" : `filtro.xls?provider_id=${this.props.formFilter.provider_id}&sales_date=${this.props.formFilter.sales_date}&description=${this.props.formFilter.description}&cost_center_id=${this.props.formFilter.cost_center_id}&estado=${this.props.formFilter.estado}&date_desde=${this.props.formFilter.date_desde}&date_hasta=${this.props.formFilter.date_hasta}&sales_number=${this.props.formFilter.sales_number}`}`}
                   target="_blank"
                 >
                   <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
