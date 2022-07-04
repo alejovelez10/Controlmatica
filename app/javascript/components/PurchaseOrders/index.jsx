@@ -53,8 +53,7 @@ class index extends React.Component {
           console.log(data.sales_orders_total)
           this.setState({
             data: data.sales_order,
-            sales_orders_total: data.sales_orders_total.length,
-            sales_orders_total_exel: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total,
             isLoaded: true,
           });
         });
@@ -148,8 +147,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.sales_order,
-            sales_orders_total: data.sales_orders_total.length,
-            sales_orders_total_exel: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total,
             activePage: 1
           });
         });
@@ -165,8 +163,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.sales_order,
-          sales_orders_total: data.sales_orders_total.length,
-          sales_orders_total_exel: data.sales_orders_total,
+          sales_orders_total: data.sales_orders_total,
           activePage: 1
         });
       });
@@ -179,8 +176,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({           
             data: data.sales_order,
-            sales_orders_total: data.sales_orders_total.length,
-            sales_orders_total_exel: data.sales_orders_total,
+            sales_orders_total: data.sales_orders_total,
           });
         });
        
