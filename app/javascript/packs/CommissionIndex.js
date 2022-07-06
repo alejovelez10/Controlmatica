@@ -151,7 +151,7 @@ class CommissionIndex extends Component {
 
     handlePageChange = pageNumber => {
         this.setState({ activePage: pageNumber }); 
-        fetch(`/get_commissions?page=${pageNumber}&filter=${this.state.countPage}?user_invoice_id=${this.state.formFilter.user_invoice_id}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&customer_invoice_id=${this.state.formFilter.customer_invoice_id}&observation=${this.state.formFilter.observation}&hours_worked=${this.state.formFilter.hours_worked}&total_value=${this.state.formFilter.total_value}&is_acepted=${this.state.formFilter.is_acepted}`, {
+        fetch(`/get_commissions?page=${pageNumber}&filter=${this.state.countPage}&user_invoice_id=${this.state.formFilter.user_invoice_id}&start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&customer_invoice_id=${this.state.formFilter.customer_invoice_id}&observation=${this.state.formFilter.observation}&hours_worked=${this.state.formFilter.hours_worked}&total_value=${this.state.formFilter.total_value}&is_acepted=${this.state.formFilter.is_acepted}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": this.token,
