@@ -359,7 +359,7 @@ class CostCentersController < ApplicationController
     end
 
     if params["value_displacement_hours"] != "nil" || params["value_displacement_hours"] != ""
-      if cost_center_params_create["value_displacement_hours"].class.to_s != "Integer" && cost_center_params["value_displacement_hours"].class.to_s != "Float"
+      if cost_center_params_create["value_displacement_hours"].class.to_s != "Integer" && cost_center_params_create["value_displacement_hours"].class.to_s != "Float"
         valo10 = cost_center_params_create["value_displacement_hours"].gsub("$", "").gsub(",", "")
         params["value_displacement_hours"] = valo10
       end
