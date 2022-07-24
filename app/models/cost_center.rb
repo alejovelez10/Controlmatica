@@ -97,7 +97,7 @@ class CostCenter < ApplicationRecord
 
   scope :filterCost, -> { where("service_type like 'PROYECTO' or service_type like 'SERVICIO'").where.not(execution_state: "FINALIZADO") }
   scope :tableristas, -> { where(service_type: "PROYECTO") }
-  #filtros
+  #filtros para todo
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
     search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
     search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
