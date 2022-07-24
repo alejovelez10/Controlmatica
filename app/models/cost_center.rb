@@ -95,7 +95,7 @@ class CostCenter < ApplicationRecord
 
   before_save :calculate_costo
 
-  scope :filter, -> { where("service_type like 'PROYECTO' or service_type like 'SERVICIO'").where.not(execution_state: "FINALIZADO") }
+  scope :filterCost, -> { where("service_type like 'PROYECTO' or service_type like 'SERVICIO'").where.not(execution_state: "FINALIZADO") }
   scope :tableristas, -> { where(service_type: "PROYECTO") }
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
