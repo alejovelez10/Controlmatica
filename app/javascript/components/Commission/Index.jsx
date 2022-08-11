@@ -27,7 +27,7 @@ class Index extends Component {
                 total_value: "",
                 value_hour: "",
                 hours_worked_code: "",
-                hours_cost:"",
+                hours_cost: "",
                 hours_paid: "",
                 cost_center_id: "",
                 customer_report_id: "",
@@ -119,7 +119,7 @@ class Index extends Component {
                     arrayCustomerInvoices.push({ label: `${item.number_invoice}`, value: item.id })
                 ))
                 if (type == "si") {
-                    console.log("si",data.hours_worked_code,)
+                    console.log("si", data.hours_worked_code,)
                     this.setState({
                         customer_reports: arrayCustomerReports,
                         customer_invoices: arrayCustomerInvoices,
@@ -175,7 +175,7 @@ class Index extends Component {
                     arrayCustomerInvoices.push({ label: `${item.number_invoice}`, value: item.id })
                 ))
                 if (type == "si") {
-                    console.log("si",data.hours_worked_code,)
+                    console.log("si", data.hours_worked_code,)
                     this.setState({
                         customer_reports: arrayCustomerReports,
                         customer_invoices: arrayCustomerInvoices,
@@ -299,7 +299,7 @@ class Index extends Component {
                 customer_report_id: "",
                 label: "Reporte de cliente"
             },
-            
+
         })
     }
 
@@ -365,36 +365,35 @@ class Index extends Component {
     HandleChange = (e) => {
         let state = true;
 
-        if (e.target.name == "hours_worked"){
+        if (e.target.name == "hours_worked") {
 
             let value = this.state.formCreate.hours_worked_code
-            if (this.state.formCreate.hours_worked_code >= this.state.formCreate.hours_cost)
-            {
+            if (this.state.formCreate.hours_worked_code >= this.state.formCreate.hours_cost) {
                 value = this.state.formCreate.hours_cost;
             }
 
-            if (value - this.state.formCreate.hours_paid - e.target.value >= 0){
-                    console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 1")
-                    state = true;
-                    this.setState({
-                
-                            msg_error: "",
-                            state_msg_error : false
+            if (value - this.state.formCreate.hours_paid - e.target.value >= 0) {
+                console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 1")
+                state = true;
+                this.setState({
 
-                    })
-            }else{
-                    console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 2")
-                    state = false;
-                    this.setState({
-  
-                            msg_error: "No puedes pasarte de las horas",
-                            state_msg_error : true
- 
-                    })
+                    msg_error: "",
+                    state_msg_error: false
+
+                })
+            } else {
+                console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 2")
+                state = false;
+                this.setState({
+
+                    msg_error: "No puedes pasarte de las horas",
+                    state_msg_error: true
+
+                })
             }
         }
 
-        if ( state ){
+        if (state) {
             this.setState({
                 formCreate: {
                     ...this.state.formCreate,
@@ -566,9 +565,9 @@ class Index extends Component {
                         state_msg_error={this.state.state_msg_error}
                         msg_error={this.state.msg_error}
 
-                        hours_worked_code={ this.state.hours_worked_code}
-                        hours_cost={ this.state.hours_cost}
-                        hours_paid= {this.state.hours_paid}
+                        hours_worked_code={this.state.hours_worked_code}
+                        hours_cost={this.state.hours_cost}
+                        hours_paid={this.state.hours_paid}
 
                         handleChangeAutocompleteCustomerInvoice={this.handleChangeAutocompleteCustomerInvoice}
                         selectedOptionCustomerInvoice={this.state.selectedOptionCustomerInvoice}
@@ -686,30 +685,34 @@ class Index extends Component {
                                                     <tr key={accion.id}>
 
                                                         <td className="text-center" style={{ width: "10px" }}>
-                                                            {(!accion.is_acepted || this.props.estados.edit || this.props.estados.delete) && (
-                                                                <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                                    <div className="btn-group" role="group">
-                                                                        <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                            <i className="fas fa-bars"></i>
-                                                                        </button>
-
-                                                                        <div className="dropdown-menu dropdown-menu-right">
-
-                                                                            {(this.props.estados.edit) && (
-                                                                                <button onClick={() => this.edit(accion)} className="dropdown-item">
-                                                                                    Editar
+                                                            {(!accion.is_acepted || (this.props.estados.edit_after_acepted || this.props.estados.delete_after_acepted)) && (
+                                                                <React.Fragment>
+                                                                    {(!accion.is_acepted || this.props.estados.edit || this.props.estados.delete) && (
+                                                                        <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                                            <div className="btn-group" role="group">
+                                                                                <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                                    <i className="fas fa-bars"></i>
                                                                                 </button>
-                                                                            )}
 
-                                                                            {(this.props.estados.delete) && (
-                                                                                <button onClick={() => this.delete(accion.id)} className="dropdown-item">
-                                                                                    Eliminar
-                                                                                </button>
-                                                                            )}
+                                                                                <div className="dropdown-menu dropdown-menu-right">
 
+                                                                                    {((this.props.estados.edit && !accion.is_acepted) || (accion.is_acepted && this.props.estados.edit_after_acepted)) && (
+                                                                                        <button onClick={() => this.edit(accion)} className="dropdown-item">
+                                                                                            Editar
+                                                                                        </button>
+                                                                                    )}
+
+                                                                                    {((this.props.estados.delete && !accion.is_acepted) || (accion.is_acepted && this.props.estados.delete_after_acepted)) && (
+                                                                                        <button onClick={() => this.delete(accion.id)} className="dropdown-item">
+                                                                                            Eliminar
+                                                                                        </button>
+                                                                                    )}
+
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </div>
+                                                                    )}
+                                                                </React.Fragment>
                                                             )}
                                                         </td>
 
@@ -753,7 +756,7 @@ class Index extends Component {
                                                                 <React.Fragment>
 
                                                                     <span>{accion.is_acepted ? "Aceptado" : "Creado"}
-                                                                        {this.props.estados.accept_commission && (
+                                                                        {((this.props.estados.accept_commission && !accion.is_acepted) || (accion.is_acepted && this.props.estados.edit_after_acepted)) && (
                                                                             <i onClick={() => this.setState({ commission_id: accion.id })} className="fas fa-pencil-alt float-right"></i>
                                                                         )}
                                                                     </span>

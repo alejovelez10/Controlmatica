@@ -13,6 +13,8 @@ class CommissionsController < ApplicationController
     export_exel = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
     change_responsible = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
     change_value_hour = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar valor hora").exists?
+    edit_after_acepted = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar despues de aceptado").exists?
+    delete_after_acepted = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar despues de aceptado").exists?
 
     @estados = {
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -21,7 +23,8 @@ class CommissionsController < ApplicationController
       accept_commission: (current_user.rol.name == "Administrador" ? true : accept_commission),
       export_exel: (current_user.rol.name == "Administrador" ? true : export_exel),
       change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
-      change_value_hour: (current_user.rol.name == "Administrador" ? true : change_value_hour),
+      edit_after_acepted: (edit_after_acepted),
+      delete_after_acepted: (delete_after_acepted),
 
     }
   end
