@@ -82,13 +82,15 @@ class FormCreate extends Component {
                                             name="customer_report_id"
                                             value={this.props.selectedOptionCustomerReport.customer_report_id}
                                         />
-                                        <label>Reporte de cliente </label>
+                                        <label>Reporte de cliente ddd</label>
+                                        
                                         <Select
                                             onChange={this.props.handleChangeAutocompleteCustomerReport}
                                             options={this.props.customer_reports}
                                             autoFocus={false}
-                                            className={`link-form`}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.customer_report_id == ""  ? "error-class" : ""}`}
                                             value={this.props.selectedOptionCustomerReport}
+                                            
                                         />
                                     </div>
                                 )}

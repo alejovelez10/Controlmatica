@@ -77,7 +77,8 @@ class Index extends Component {
             this.state.formCreate.end_date != "" &&
             this.state.formCreate.customer_invoice_id != "" &&
             this.state.formCreate.hours_worked != "" &&
-            this.state.formCreate.value_hour != ""
+            this.state.formCreate.value_hour != "" && 
+            this.state.formCreate.customer_report_id != ""
         ) {
             this.setState({ ErrorValues: true })
             return true

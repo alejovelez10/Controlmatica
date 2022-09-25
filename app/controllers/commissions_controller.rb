@@ -23,8 +23,8 @@ class CommissionsController < ApplicationController
       accept_commission: (current_user.rol.name == "Administrador" ? true : accept_commission),
       export_exel: (current_user.rol.name == "Administrador" ? true : export_exel),
       change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
-      edit_after_acepted: (edit_after_acepted),
-      delete_after_acepted: (delete_after_acepted),
+      edit_after_acepted: (current_user.rol.name == "Administrador" ? true : edit_after_acepted),
+      delete_after_acepted: (current_user.rol.name == "Administrador" ? true : delete_after_acepted),
 
     }
   end
