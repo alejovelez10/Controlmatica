@@ -388,6 +388,8 @@ class CostCentersController < ApplicationController
     hours = cost_center.reports.where(report_execute_id: user.id).sum(:working_time)
     hours_cost = cost_center.eng_hours
     hours_paid = cost_center.commissions.where(user_invoice_id: user.id, is_acepted: true).sum(:hours_worked)
+    has_ing_invoice = cost_center.commissions.where(user_invoice_id: user.id, is_acepted: true).sum(:hours_worked)
+
 
     if params[:start_date] != "" && params[:end_date] != ""
       render :json => {
@@ -408,6 +410,16 @@ class CostCentersController < ApplicationController
                hours_cost: 0,
              }
     end
+  end
+
+  def get_info_inovoice
+    invoice = CustomerInvoice.find(params[:invoice_id])
+
+    render :json => {
+      engineering_value: invoice.engineering_value > 0,
+    }
+
+
   end
 
   def download_file

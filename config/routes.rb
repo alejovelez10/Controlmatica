@@ -40,6 +40,8 @@ Rails.application.routes.draw do
   get "commission_relations_pdf/:id", to: "commission_relations#pdf"
   post "get_info_cost_center/:cost_center_id", to: "cost_centers#get_info_cost_center"
 
+  get "get_info_inovoice/:invoice_id", to: "cost_centers#get_info_inovoice"
+  
   resources :module_controls
   resources :accion_modules
   get "get_report_expense_options", to: "report_expense_options#get_report_expense_options"

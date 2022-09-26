@@ -32,6 +32,7 @@ class Index extends Component {
                 cost_center_id: "",
                 customer_report_id: "",
             },
+            engineering_value: false,
 
             selectedOptionUser: {
                 user_invoice_id: this.props.current_user.id,
@@ -143,6 +144,24 @@ class Index extends Component {
 
             });
     }
+
+
+    getInfoInvoice(invoice){
+        const form = {
+            invoice_id: invoice,
+        }
+
+        fetch(`/get_info_inovoice/${invoice}`)
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+                this.setState({
+                    engineering_value: data.engineering_value
+                })
+             });
+    }
+
+
 
     getInfoCostCenterT = (cost_center_id, type, start_date, end_date) => {
         const form = {
@@ -368,30 +387,47 @@ class Index extends Component {
 
         if (e.target.name == "hours_worked") {
 
-            let value = this.state.formCreate.hours_worked_code
-            if (this.state.formCreate.hours_worked_code >= this.state.formCreate.hours_cost) {
-                value = this.state.formCreate.hours_cost;
-            }
+            if (!this.props.estados.force_hour){
+            
+            if (this.state.engineering_value){
+                let value = this.state.formCreate.hours_worked_code
+                if (this.state.formCreate.hours_worked_code >= this.state.formCreate.hours_cost) {
+                    value = this.state.formCreate.hours_cost;
+                }
+    
+                if (value - this.state.formCreate.hours_paid - e.target.value >= 0) {
+                    console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 1")
+                    state = true;
+                    this.setState({
+    
+                        msg_error: "",
+                        state_msg_error: false
+    
+                    })
+                } else {
+                    console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 2")
+                    state = false;
+                    this.setState({
+    
+                        msg_error: "No puedes pasarte de las horas",
+                        state_msg_error: true
+    
+                    })
+                }
 
-            if (value - this.state.formCreate.hours_paid - e.target.value >= 0) {
-                console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 1")
-                state = true;
-                this.setState({
-
-                    msg_error: "",
-                    state_msg_error: false
-
-                })
-            } else {
+            }else{
                 console.log(this.state.formCreate.hours_worked_code - this.state.formCreate.hours_paid - e.target.value, " 2")
                 state = false;
                 this.setState({
 
-                    msg_error: "No puedes pasarte de las horas",
+                    msg_error: "Esta factura no tiene valor de ingeniería",
                     state_msg_error: true
 
                 })
             }
+        }
+
+
         }
 
         if (state) {
@@ -406,6 +442,7 @@ class Index extends Component {
     }
 
     handleChangeAutocompleteCustomerInvoice = selectedOptionCustomerInvoice => {
+        this.getInfoInvoice(selectedOptionCustomerInvoice.value)
         this.setState({
             selectedOptionCustomerInvoice,
             formCreate: {
@@ -447,9 +484,7 @@ class Index extends Component {
     };
 
     edit = (report_expense) => {
-        if (report_expense.cost_center) {
-            this.getInfoCostCenterT(report_expense.cost_center.id, "si", report_expense.start_date, report_expense.end_date)
-        }
+
         console.log("Hola")
         this.setState({
             modeEdit: true,
@@ -491,6 +526,10 @@ class Index extends Component {
                 customer_report_id: `${report_expense.customer_report != null ? report_expense.customer_report.id : ""}`,
                 label: `${report_expense.customer_report != null ? report_expense.customer_report.description : "Reporte de cliente"}`
             },
+        }, ()=>{
+            if (report_expense.cost_center) {
+                this.getInfoCostCenterT(report_expense.cost_center.id, "si", report_expense.start_date, report_expense.end_date)
+            }
         })
     }
 
@@ -550,6 +589,7 @@ class Index extends Component {
                     <FormCreate
                         //modal props
                         backdrop={"static"}
+                        engineering_value={this.state.engineering_value}
                         modal={this.state.modal}
                         toggle={this.toogle}
                         title={this.state.modeEdit ? "Actualizar comisión" : "Crear comisión"}

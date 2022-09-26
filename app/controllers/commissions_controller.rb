@@ -15,6 +15,7 @@ class CommissionsController < ApplicationController
     change_value_hour = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar valor hora").exists?
     edit_after_acepted = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar despues de aceptado").exists?
     delete_after_acepted = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar despues de aceptado").exists?
+    force_hour = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Forzar horas").exists?
 
     @estados = {
       create: (current_user.rol.name == "Administrador" ? true : create),
@@ -25,6 +26,8 @@ class CommissionsController < ApplicationController
       change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
       edit_after_acepted: (current_user.rol.name == "Administrador" ? true : edit_after_acepted),
       delete_after_acepted: (current_user.rol.name == "Administrador" ? true : delete_after_acepted),
+      force_hour: (force_hour),
+
 
     }
   end
