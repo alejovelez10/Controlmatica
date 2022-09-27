@@ -387,7 +387,7 @@ class CostCentersController < ApplicationController
     user = User.find(params[:user_id])
     hours = cost_center.reports.where(report_execute_id: user.id).sum(:working_time)
     hours_cost = cost_center.eng_hours
-    hours_paid = cost_center.commissions.where(user_invoice_id: user.id, is_acepted: true).sum(:hours_worked)
+    hours_paid = cost_center.commissions.where(user_invoice_id: user.id).sum(:hours_worked)
 
     if params[:invoice_id]
       puts params[:invoice_id]

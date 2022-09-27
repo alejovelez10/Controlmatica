@@ -82,7 +82,7 @@ class FormCreate extends Component {
                                             name="customer_report_id"
                                             value={this.props.selectedOptionCustomerReport.customer_report_id}
                                         />
-                                        <label>Reporte de cliente ddd</label>
+                                        <label>Reporte de cliente</label>
                                         
                                         <Select
                                             onChange={this.props.handleChangeAutocompleteCustomerReport}

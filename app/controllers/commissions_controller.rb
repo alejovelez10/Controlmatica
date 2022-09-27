@@ -26,6 +26,7 @@ class CommissionsController < ApplicationController
       change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
       edit_after_acepted: (current_user.rol.name == "Administrador" ? true : edit_after_acepted),
       delete_after_acepted: (current_user.rol.name == "Administrador" ? true : delete_after_acepted),
+      change_value_hour: (current_user.rol.name == "Administrador" ? true : change_value_hour)
       force_hour: (force_hour),
 
 
