@@ -135,6 +135,7 @@ class FormCreate extends Component {
                                         value={this.props.formValues.hours_worked}
                                         onChange={this.props.onChangeForm}
                                         className={`form form-control ${!this.props.errorValues && this.props.formValues.hours_worked == "" ? "error-class" : ""}`}
+                                        disabled={this.props.formValues.customer_invoice_id == ""}
                                     />
                                     {this.props.state_msg_error && (
                                         <span style={{color:"red"}}>{this.props.msg_error}</span>

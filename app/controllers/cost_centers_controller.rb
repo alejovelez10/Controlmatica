@@ -388,8 +388,19 @@ class CostCentersController < ApplicationController
     hours = cost_center.reports.where(report_execute_id: user.id).sum(:working_time)
     hours_cost = cost_center.eng_hours
     hours_paid = cost_center.commissions.where(user_invoice_id: user.id, is_acepted: true).sum(:hours_worked)
-    has_ing_invoice = cost_center.commissions.where(user_invoice_id: user.id, is_acepted: true).sum(:hours_worked)
 
+    if params[:invoice_id]
+      puts params[:invoice_id]
+      puts "haha"
+      puts CustomerInvoice.find(params[:invoice_id]).engineering_value
+      engineering_value = CustomerInvoice.find(params[:invoice_id]).engineering_value > 0
+      puts  CustomerInvoice.find(params[:invoice_id]).number_invoice
+      puts  CustomerInvoice.find(params[:invoice_id]).invoice_value
+    end
+
+    puts params[:invoice_id]
+
+    
 
     if params[:start_date] != "" && params[:end_date] != ""
       render :json => {
@@ -399,6 +410,7 @@ class CostCentersController < ApplicationController
                hours_worked_code: hours,
                hours_cost: hours_cost,
                hours_paid: hours_paid,
+               engineering_value: engineering_value
              }
     else
       render :json => {
@@ -408,6 +420,7 @@ class CostCentersController < ApplicationController
                hours_worked_code: 0,
                hours_paid: 0,
                hours_cost: 0,
+               engineering_value: false
              }
     end
   end

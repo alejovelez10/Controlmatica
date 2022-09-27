@@ -163,12 +163,13 @@ class Index extends Component {
 
 
 
-    getInfoCostCenterT = (cost_center_id, type, start_date, end_date) => {
+    getInfoCostCenterT = (cost_center_id, type, start_date, end_date, invoice_id) => {
         const form = {
             start_date: start_date,
             end_date: end_date,
             cost_center_id: cost_center_id,
-            user_id: this.state.formCreate.user_invoice_id
+            user_id: this.state.formCreate.user_invoice_id,
+            invoice_id: invoice_id
         }
 
         fetch(`/get_info_cost_center/${cost_center_id}`, {
@@ -198,6 +199,7 @@ class Index extends Component {
                     console.log("si", data.hours_worked_code,)
                     this.setState({
                         customer_reports: arrayCustomerReports,
+                        engineering_value: data.engineering_value,
                         customer_invoices: arrayCustomerInvoices,
                         formCreate: {
                             ...this.state.formCreate,
@@ -466,9 +468,20 @@ class Index extends Component {
         this.getInfoCostCenter(selectedOptionCostCenter.value, "si");
         this.setState({
             selectedOptionCostCenter,
+            selectedOptionCustomerInvoice: {
+                customer_invoice_id: "",
+                label: "Facturas"
+            },
+            selectedOptionCustomerReport: {
+                customer_report_id: "",
+                label: "Reporte de cliente"
+            },
             formCreate: {
                 ...this.state.formCreate,
-                cost_center_id: selectedOptionCostCenter.value
+                cost_center_id: selectedOptionCostCenter.value,
+                customer_report_id: "",
+                customer_invoice_id: "",
+                hours_worked: 0,
             }
         });
     };
@@ -528,7 +541,7 @@ class Index extends Component {
             },
         }, ()=>{
             if (report_expense.cost_center) {
-                this.getInfoCostCenterT(report_expense.cost_center.id, "si", report_expense.start_date, report_expense.end_date)
+                this.getInfoCostCenterT(report_expense.cost_center.id, "si", report_expense.start_date, report_expense.end_date , report_expense.customer_invoice_id)
             }
         })
     }
