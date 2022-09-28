@@ -56,7 +56,8 @@ class CommissionSerializer < ActiveModel::Serializer
     if object.customer_report.present?
       {
         id: object.customer_report.id,
-        description: object.customer_report.description,
+        description: object.customer_report.report_code,
+      
       }
     end
   end
