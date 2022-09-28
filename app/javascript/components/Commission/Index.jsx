@@ -169,7 +169,8 @@ class Index extends Component {
             end_date: end_date,
             cost_center_id: cost_center_id,
             user_id: this.state.formCreate.user_invoice_id,
-            invoice_id: invoice_id
+            invoice_id: invoice_id,
+            id: this.state.id
         }
 
         fetch(`/get_info_cost_center/${cost_center_id}`, {
