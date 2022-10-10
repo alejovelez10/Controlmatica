@@ -119,7 +119,7 @@ class tableIndex extends React.Component {
       this.state.form.quotation_value != "" &&
 
       this.state.form.displacement_hours != "" &&
-      this.state.form.value_displacement_hours != ""
+      (this.state.form.value_displacement_hours != "" || this.state.form.value_displacement_hours == 0)
 
     ) {
       console.log("los campos estan llenos")
