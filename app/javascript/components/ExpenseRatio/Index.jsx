@@ -118,9 +118,10 @@ class Index extends Component {
         Swal.fire({
             position: "center",
             type: `${response.type}`,
-            title: `${response.success}`,
+            html: '<p>'  + response.success +  '</p>',
+            title: name_success,
             showConfirmButton: false,
-            timer: 1500,
+            timer: 1500
         });
     };
 

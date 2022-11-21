@@ -5,6 +5,7 @@ import FormCreate from "./FormCreate";
 import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import TabContentShow from '../ShowConstCenter/TabContentShow'
+import Calendar from '../Shifts/Calendar';
 
 class Show extends React.Component {
     constructor(props) {
@@ -30,6 +31,7 @@ class Show extends React.Component {
             dataSalesOrdes: [],
             dataReports: [],
             dataExpenses: [],
+            current_tab: this.props.current_tab,
 
             title: "Nuevo centro de costo",
             ErrorValues: true,
@@ -896,244 +898,262 @@ class Show extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <Card className="card-show">
-                    <CardBody className="mt-2">
+                <ul className="nav nav-tabs" id="myTab" role="tablist">
+                    <li className="nav-item">
+                        <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Informacion del centro de costo</a>
+                    </li>
 
-                        <div className="col-md-12">
-                            <div className="row">
-                                <div className="col-md-12 text-center">
-                                    <h5>
-                                        {this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."} / {this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."} ({this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."})
+                    <li className="nav-item">
+                        <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=calendar`}>Calendario</a>
+                    </li>
+                </ul>
 
-                                        {this.state.show_btn_update == true && (
-                                            <React.Fragment>
-                                                <button className="btn btn-danger float-right" onClick={() => this.SubmitBnt()}><i className="fas fa-window-close"></i></button>
-                                                <button className="btn btn-secondary float-right mr-2" onClick={() => this.SubmitBnt("save")}>Actualizar</button>
-                                            </React.Fragment>
-                                        )}
+                <div className="tab-content" id="myTabContent">
 
-                                    </h5>
-                                </div>
-                            </div>
+                    <div className={`tab-pane fade ${this.props.current_tab == "home" ? "show active" : ""}`} id="home" role="tabpanel" aria-labelledby="home-tab">
+                        <Card className="card-show">
+                            <CardBody className="mt-2">
 
-                            <hr />
-                            <div className="row">
+                                <div className="col-md-12">
+                                    <div className="row">
+                                        <div className="col-md-12 text-center">
+                                            <h5>
+                                                {this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."} / {this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."} ({this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."})
+
+                                                {this.state.show_btn_update == true && (
+                                                    <React.Fragment>
+                                                        <button className="btn btn-danger float-right" onClick={() => this.SubmitBnt()}><i className="fas fa-window-close"></i></button>
+                                                        <button className="btn btn-secondary float-right mr-2" onClick={() => this.SubmitBnt("save")}>Actualizar</button>
+                                                    </React.Fragment>
+                                                )}
+
+                                            </h5>
+                                        </div>
+                                    </div>
+
+                                    <hr />
+                                    <div className="row">
 
 
-                                <div className="col-md-3 text-center mb-3">
-                                    <strong> Estado Ejecucion</strong> <br />
-                                    {(this.props.data_info.service_type == "PROYECTO" || this.props.data_info.service_type == "SERVICIO") && (
-                                        <React.Fragment>
-                                            {this.state.state_ejecution == true ? (
+                                        <div className="col-md-3 text-center mb-3">
+                                            <strong> Estado Ejecucion</strong> <br />
+                                            {(this.props.data_info.service_type == "PROYECTO" || this.props.data_info.service_type == "SERVICIO") && (
+                                                <React.Fragment>
+                                                    {this.state.state_ejecution == true ? (
+                                                        <select
+                                                            name="execution_state"
+                                                            className={`form form-control`}
+                                                            value={this.state.formUpdate.execution_state}
+                                                            onChange={this.handleChange}
+                                                        >
+                                                            <option value="">Seleccione un tipo</option>
+                                                            <option value="EJECUCION">EJECUCION</option>
+                                                            <option value="FINALIZADO">FINALIZADO</option>
+                                                            <option value="PENDIENTE">PENDIENTE</option>
+                                                        </select>
+                                                    ) : (
+                                                            <React.Fragment>
+                                                                {this.props.estados.update_state == true ? (
+                                                                    <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                                                ) : (
+                                                                        <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."}</p>
+                                                                    )}
+                                                            </React.Fragment>
+                                                        )}
+                                                </React.Fragment>
+                                            )}
+                                        </div>
+                                        <div className="col-md-3 text-center mb-3">
+                                            <strong> Estado de compras</strong> <br />
+                                            {(this.props.data_info.service_type == "PROYECTO" || this.props.data_info.service_type == "VENTA") && (
+                                                <React.Fragment>
+                                                    {this.state.state_compras == true ? (
+                                                        <select
+                                                            name="sales_state"
+                                                            className={`form form-control`}
+                                                            value={this.state.formUpdate.sales_state}
+                                                            onChange={this.handleChange}
+                                                        >
+                                                            <option value="">Seleccione un estado</option>
+                                                            <option value="SIN COMPRAS">SIN COMPRAS</option>
+                                                            <option value="COMPRANDO">COMPRANDO</option>
+                                                            <option value="CERRADO">CERRADO</option>
+                                                        </select>
+                                                    ) : (
+                                                            <React.Fragment>
+                                                                {this.props.estados.update_state == true ? (
+                                                                    <p onClick={() => this.changeState("sales_state")} >{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."} </p>
+                                                                ) : (
+                                                                        <p>{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."}</p>
+                                                                    )}
+                                                            </React.Fragment>
+                                                        )}
+                                                </React.Fragment>
+                                            )}
+                                        </div>
+
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Estado Facturacion</strong><br />
+                                            {this.state.invoiced_state == true ? (
                                                 <select
-                                                    name="execution_state"
+                                                    name="invoiced_state"
                                                     className={`form form-control`}
-                                                    value={this.state.formUpdate.execution_state}
+                                                    value={this.state.formUpdate.invoiced_state}
                                                     onChange={this.handleChange}
                                                 >
                                                     <option value="">Seleccione un tipo</option>
-                                                    <option value="EJECUCION">EJECUCION</option>
-                                                    <option value="FINALIZADO">FINALIZADO</option>
-                                                    <option value="PENDIENTE">PENDIENTE</option>
+                                                    <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
+                                                    <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
+                                                    <option value="LEGALIZADO">LEGALIZADO</option>
+                                                    <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
+                                                    <option value="FACTURADO">FACTURADO</option>
+                                                    <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
+                                                    <option value="POR FACTURAR">POR FACTURAR</option>
+
                                                 </select>
                                             ) : (
                                                     <React.Fragment>
                                                         {this.props.estados.update_state == true ? (
-                                                            <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                                            <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
                                                         ) : (
-                                                                <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."}</p>
+                                                                <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
                                                             )}
                                                     </React.Fragment>
                                                 )}
-                                        </React.Fragment>
-                                    )}
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Contacto</strong><br />
+                                            <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : "SIN INFORMACIÓN"}</p>
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Fecha de Inicio</strong><br />
+                                            <p>{this.props.data_info.start_date != undefined ? this.props.data_info.start_date : "SIN INFORMACIÓN"}</p>
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Fecha Final</strong><br />
+                                            <p>{this.props.data_info.end_date != undefined ? this.props.data_info.end_date : "SIN INFORMACIÓN"}</p>
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Numero de Cotizacion</strong><br />
+                                            <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "SIN INFORMACIÓN"}</p>
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Descripción</strong><br />
+                                            <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "SIN INFORMACIÓN"}</p>
+                                        </div>
+
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Propietario</strong><br />
+                                            <p>{this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "SIN INFORMACIÓN"}</p>
+                                        </div>
+                                        <div className="col-md-3 text-center">
+                                            <strong>MARGEN GLOBAL (REAL)</strong><br />
+
+                                            <p className="mr-4"><NumberFormat style={{ fontSize: "20px" }} value={this.props.data_info.aiu} displayType={"text"} thousandSeparator={true} prefix={"$"} />/ <span style={{ color: this.alertIngCosto(this.props.data_info.aiu_percent, this.props.alerts[0].total_min, this.props.alerts[0].total_med), fontSize: "20px" }}>{this.props.data_info.aiu_percent}%</span></p>
+
+                                        </div>
+                                        <div className="col-md-3 text-center">
+                                            <strong>MARGEN GLOBAL (COTIZADO)</strong><br />
+
+                                            <p><NumberFormat style={{ fontSize: "20px" }} value={this.props.data_info.aiu_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /> / <span style={{ color: this.alertIngCosto(this.props.data_info.aiu_percent_real, this.props.alerts[0].total_min, this.props.alerts[0].total_med), fontSize: "20px" }}>{this.props.data_info.aiu_percent_real}%</span></p>
+
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Creación</strong><br />
+                                            {this.getDate(this.props.data_info.created_at)} <br />
+                                            {this.props.data_info.user != undefined ? <React.Fragment> <b> </b> {this.props.data_info.user != undefined ? this.props.data_info.user.names : ""} </React.Fragment> : null}
+                                        </div>
+
+                                        <div className="col-md-3 text-center">
+                                            <strong>Ultima actualización</strong><br />
+                                            {this.getDate(this.props.data_info.updated_at)} <br />
+                                            {this.props.data_info.last_user_edited != undefined ? <React.Fragment> <b> </b> {this.props.data_info.last_user_edited != undefined ? this.props.data_info.last_user_edited.names : ""} </React.Fragment> : null}
+                                        </div>
+
+
+
+                                    </div>
                                 </div>
-                                <div className="col-md-3 text-center mb-3">
-                                    <strong> Estado de compras</strong> <br />
-                                    {(this.props.data_info.service_type == "PROYECTO" || this.props.data_info.service_type == "VENTA") && (
+
+                                <div className="row valores">
+                                    {this.props.data_info.service_type != "" && (
                                         <React.Fragment>
-                                            {this.state.state_compras == true ? (
-                                                <select
-                                                    name="sales_state"
-                                                    className={`form form-control`}
-                                                    value={this.state.formUpdate.sales_state}
-                                                    onChange={this.handleChange}
-                                                >
-                                                    <option value="">Seleccione un estado</option>
-                                                    <option value="SIN COMPRAS">SIN COMPRAS</option>
-                                                    <option value="COMPRANDO">COMPRANDO</option>
-                                                    <option value="CERRADO">CERRADO</option>
-                                                </select>
-                                            ) : (
-                                                    <React.Fragment>
-                                                        {this.props.estados.update_state == true ? (
-                                                            <p onClick={() => this.changeState("sales_state")} >{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."} </p>
-                                                        ) : (
-                                                                <p>{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."}</p>
-                                                            )}
-                                                    </React.Fragment>
-                                                )}
+                                            {this.getCards()}
                                         </React.Fragment>
                                     )}
+
+                                    {this.state.modal && (
+                                        <FormCreate
+                                            toggle={this.toggle}
+                                            backdrop={this.state.backdrop}
+                                            modal={this.state.modal}
+                                            onChangeForm={this.handleChangeForm}
+                                            formValues={this.state.form}
+                                            submit={this.HandleClick}
+                                            FormSubmit={this.handleSubmit}
+
+                                            titulo={"Actualizar centro de costo"}
+                                            nameSubmit={true ? "Actualizar" : "Crear"}
+                                            errorValues={this.state.ErrorValues}
+                                            modeEdit={true}
+
+
+                                            /* AUTOCOMPLETE CLIENTE */
+
+                                            clientes={this.state.clients}
+                                            onChangeAutocomplete={this.handleChangeAutocomplete}
+                                            formAutocomplete={this.state.selectedOption}
+
+                                            /* AUTOCOMPLETE CONTACTO */
+
+                                            contacto={this.state.dataContact}
+                                            onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+                                            formAutocompleteContact={this.state.selectedOptionContact}
+
+                                            /* AUTOCOMPLETE USERS */
+
+                                            formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
+                                            onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
+                                            users={this.state.users}
+
+                                            estados={this.props.estados}
+
+                                        />
+                                    )}
+
+                                    <div className="col-md-12 text-center mt-5">
+                                        <button onClick={() => this.edit()} className="btn btn-secondary">
+                                            Editar información
+                                        </button>
+                                    </div>
                                 </div>
 
+                            </CardBody>
+                        </Card>
 
-                                <div className="col-md-3 text-center">
-                                    <strong>Estado Facturacion</strong><br />
-                                    {this.state.invoiced_state == true ? (
-                                        <select
-                                            name="invoiced_state"
-                                            className={`form form-control`}
-                                            value={this.state.formUpdate.invoiced_state}
-                                            onChange={this.handleChange}
-                                        >
-                                            <option value="">Seleccione un tipo</option>
-                                            <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
-                                            <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
-                                            <option value="LEGALIZADO">LEGALIZADO</option>
-                                            <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
-                                            <option value="FACTURADO">FACTURADO</option>
-                                            <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
-                                            <option value="POR FACTURAR">POR FACTURAR</option>
+                        <Card className="mt-3">
+                            <CardBody>
+                                <TabContentShow dataMateriales={this.state.dataMateriales} dataContractors={this.state.dataContractors} dataSalesOrdes={this.state.dataSalesOrdes} dataReports={this.state.dataReports}  dataExpenses={this.state.dataExpenses}/>
+                            </CardBody>
+                        </Card>
+                    </div>
 
-                                        </select>
-                                    ) : (
-                                            <React.Fragment>
-                                                {this.props.estados.update_state == true ? (
-                                                    <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
-                                                ) : (
-                                                        <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
-                                                    )}
-                                            </React.Fragment>
-                                        )}
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Contacto</strong><br />
-                                    <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : "SIN INFORMACIÓN"}</p>
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Fecha de Inicio</strong><br />
-                                    <p>{this.props.data_info.start_date != undefined ? this.props.data_info.start_date : "SIN INFORMACIÓN"}</p>
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Fecha Final</strong><br />
-                                    <p>{this.props.data_info.end_date != undefined ? this.props.data_info.end_date : "SIN INFORMACIÓN"}</p>
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Numero de Cotizacion</strong><br />
-                                    <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "SIN INFORMACIÓN"}</p>
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Descripción</strong><br />
-                                    <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "SIN INFORMACIÓN"}</p>
-                                </div>
-
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Propietario</strong><br />
-                                    <p>{this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "SIN INFORMACIÓN"}</p>
-                                </div>
-                                <div className="col-md-3 text-center">
-                                    <strong>MARGEN GLOBAL (REAL)</strong><br />
-
-                                    <p className="mr-4"><NumberFormat style={{ fontSize: "20px" }} value={this.props.data_info.aiu} displayType={"text"} thousandSeparator={true} prefix={"$"} />/ <span style={{ color: this.alertIngCosto(this.props.data_info.aiu_percent, this.props.alerts[0].total_min, this.props.alerts[0].total_med), fontSize: "20px" }}>{this.props.data_info.aiu_percent}%</span></p>
-
-                                </div>
-                                <div className="col-md-3 text-center">
-                                    <strong>MARGEN GLOBAL (COTIZADO)</strong><br />
-
-                                    <p><NumberFormat style={{ fontSize: "20px" }} value={this.props.data_info.aiu_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /> / <span style={{ color: this.alertIngCosto(this.props.data_info.aiu_percent_real, this.props.alerts[0].total_min, this.props.alerts[0].total_med), fontSize: "20px" }}>{this.props.data_info.aiu_percent_real}%</span></p>
-
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Creación</strong><br />
-                                    {this.getDate(this.props.data_info.created_at)} <br />
-                                    {this.props.data_info.user != undefined ? <React.Fragment> <b> </b> {this.props.data_info.user != undefined ? this.props.data_info.user.names : ""} </React.Fragment> : null}
-                                </div>
-
-                                <div className="col-md-3 text-center">
-                                    <strong>Ultima actualización</strong><br />
-                                    {this.getDate(this.props.data_info.updated_at)} <br />
-                                    {this.props.data_info.last_user_edited != undefined ? <React.Fragment> <b> </b> {this.props.data_info.last_user_edited != undefined ? this.props.data_info.last_user_edited.names : ""} </React.Fragment> : null}
-                                </div>
-
-
-
-                            </div>
-                        </div>
-
-                        {/*<div className="col-md-12">
-                            <a href="/cost_centers" className="btn btn-info">Volver</a>
-                            <a href={`/cost_centers/${this.props.data_info.id}/edit`} className="btn btn-info">Editar</a>
-                        </div>*/}
-
-                        <div className="row valores">
-                            {this.props.data_info.service_type != "" && (
-                                <React.Fragment>
-                                    {this.getCards()}
-                                </React.Fragment>
-                            )}
-
-                            {this.state.modal && (
-                                <FormCreate
-                                    toggle={this.toggle}
-                                    backdrop={this.state.backdrop}
-                                    modal={this.state.modal}
-                                    onChangeForm={this.handleChangeForm}
-                                    formValues={this.state.form}
-                                    submit={this.HandleClick}
-                                    FormSubmit={this.handleSubmit}
-
-                                    titulo={"Actualizar centro de costo"}
-                                    nameSubmit={true ? "Actualizar" : "Crear"}
-                                    errorValues={this.state.ErrorValues}
-                                    modeEdit={true}
-
-
-                                    /* AUTOCOMPLETE CLIENTE */
-
-                                    clientes={this.state.clients}
-                                    onChangeAutocomplete={this.handleChangeAutocomplete}
-                                    formAutocomplete={this.state.selectedOption}
-
-                                    /* AUTOCOMPLETE CONTACTO */
-
-                                    contacto={this.state.dataContact}
-                                    onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
-                                    formAutocompleteContact={this.state.selectedOptionContact}
-
-                                    /* AUTOCOMPLETE USERS */
-
-                                    formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
-                                    onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
-                                    users={this.state.users}
-
-                                    estados={this.props.estados}
-
-                                />
-                            )}
-
-                            <div className="col-md-12 text-center mt-5">
-                                <button onClick={() => this.edit()} className="btn btn-secondary">
-                                    Editar información
-                                </button>
-                            </div>
-                        </div>
-
-                    </CardBody>
-                </Card>
-
-                <Card className="mt-3">
-                    <CardBody>
-                        <TabContentShow dataMateriales={this.state.dataMateriales} dataContractors={this.state.dataContractors} dataSalesOrdes={this.state.dataSalesOrdes} dataReports={this.state.dataReports}  dataExpenses={this.state.dataExpenses}/>
-                    </CardBody>
-                </Card>
+                    <div className={`tab-pane fade ${this.props.current_tab != "home" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
+                        <Calendar
+                            url_calendar={`/get_shifts_const_center/${this.props.cost_center.id}`}
+                            cost_centers={[ { value: this.props.cost_center.id, label: this.props.cost_center.code } ]}
+                            users={this.props.users_select}
+                        />
+                    </div>
+                </div>
 
 
             </React.Fragment>

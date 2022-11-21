@@ -988,7 +988,7 @@ class tableIndex extends React.Component {
                           <div className="dropdown-menu dropdown-menu-right">
 
                             {this.props.estados.manage_module && (
-                              <a href={`/cost_centers/${accion.id}`} target="_blank" className="dropdown-item">
+                              <a href={`/cost_centers/${accion.id}?tab=home`} target="_blank" className="dropdown-item">
                                 Gestionar
                               </a>
                             )}

@@ -9,6 +9,7 @@
 #  observation         :text
 #  start_date          :date
 #  total_value         :float
+#  value_hour          :float
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  cost_center_id      :integer

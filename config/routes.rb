@@ -26,6 +26,11 @@ Rails.application.routes.draw do
 
   resources :commission_relations, :except => [:show, :edit, :new]
   resources :commissions, :except => [:show, :edit, :new]
+  resources :shifts, :except => [:show, :edit, :new]
+
+  get "get_shifts", to: "shifts#get_shifts"
+  get "shifts/calendar", to: "shifts#calendar"
+  get "get_shifts_const_center/:const_center_id", to: "shifts#get_shifts_const_center"
 
   ## commissions routes
   get "download_file/commissions/:type", to: "commissions#download_file"
