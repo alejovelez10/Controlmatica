@@ -1,6 +1,7 @@
 import WebpackerReact from 'webpacker-react';
 import React, { useState, useEffect } from 'react';
 import FormCreate from '../components/Shifts/FormCreate';
+import FormFilter from '../components/Shifts/FormFilter';
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 
@@ -10,13 +11,16 @@ const Shifts = (props) => {
     const token = document.querySelector("[name='csrf-token']").content;
     const [id, setId] = useState("");
     const [form, setForm] = useState({ end_date: "", start_date: "", cost_center_id: "", user_responsible_id: "" });
+    const [formFilter, setFormFilter] = useState({ end_date: "", start_date: "", cost_center_id: "", user_responsible_id: "" });
 
     const [selectedOptionCostCenter, setSelectedOptionCostCenter] = useState({ cost_center_id: "", label: "Seleccione el centro de costo" });
     const [selectedOptionUser, setSelectedOptionUser] = useState({ user_responsible_id: "", label: "Seleccione el usuario responsable" });
 
     //modal state
     const [modal, setModal] = useState(false);
+    const [modalFilter, setModalFilter] = useState(false);
     const [modeEdit, setModeEdit] = useState(false);
+
     const [errorValues, setErrorValues] = useState(true);
   
     useEffect(() => {
@@ -56,6 +60,41 @@ const Shifts = (props) => {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value })
+    }
+
+    const handleChangeFilter = (e) => {
+        setFormFilter({ ...formFilter, [e.target.name]: e.target.value })
+    }
+
+    const toogleFilter = (from) => {
+        if (from == "new") {
+            setModalFilter(true);
+        } else {
+            setModalFilter(false);
+            clearValues();
+        }
+    }
+
+    const handleClickFilter = () => {
+        setIsLoaded(true);
+
+        fetch(`/get_shifts?cost_center_id=${formFilter.cost_center_id}&user_responsible_id=${formFilter.user_responsible_id}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            setIsLoaded(false);
+            setData(data.data);
+        });
+    }
+
+    const closeFilter = () => {
+        setModalFilter(false);
+        loadData();
     }
 
     const clearValues = () => {
@@ -203,16 +242,6 @@ const Shifts = (props) => {
         setId(shift.id);
     }
 
-    if (isLoaded) {
-        return (
-            <div className="card">
-                <div className="card-body">
-                    <p>Cargando informacion...</p>
-                </div>
-            </div>
-        )
-    }
-
     return (
         <React.Fragment>
             {modal && (
@@ -239,6 +268,17 @@ const Shifts = (props) => {
                 />
             )}
 
+            {modalFilter && (
+                <FormFilter
+                    formValues={formFilter}
+                    handleChangeFilter={handleChangeFilter}
+                    handleClickFilter={handleClickFilter}
+                    closeFilter={closeFilter}
+                    users={props.users}
+                    cost_centers={props.cost_centers}
+                />
+            )}
+
             <div className="">
                 <div className="tile">
                     <div className="col-md-12 text-right mb-3 pr-0">
@@ -246,7 +286,7 @@ const Shifts = (props) => {
                         {false && (
                             <button 
                                 className="btn btn-primary ml-3"
-                                onClick={() => filter(true)}
+                                onClick={() => toogleFilter("new")}
                             >
                                 Filtros
                             </button> 
@@ -263,64 +303,73 @@ const Shifts = (props) => {
                     </div>
 
                     <div className="tile-body">
-                        <table className="table table-hover table-bordered">
-                            <thead>
-                                <tr className="tr-title">
-                                    <th>Acciones</th>
-                                    <th>Centro de costo</th>
-                                    <th>Fecha inicial</th>
-                                    <th>Fecha final</th>
-                                    <th>Usuario responsable</th>
-                                </tr>
-                            </thead>
+                        {!isLoaded ? (
+                            <table className="table table-hover table-bordered">
+                                <thead>
+                                    <tr className="tr-title">
+                                        <th>Acciones</th>
+                                        <th>Centro de costo</th>
+                                        <th>Fecha inicial</th>
+                                        <th>Fecha final</th>
+                                        <th>Usuario responsable</th>
+                                    </tr>
+                                </thead>
 
-                            <tbody>
-                                {data.length >= 1 ? (
-                                    data.map(shift => (
-                                        <tr key={shift.id}>
-                                            {(true || true) && (
-                                                <td className="text-right" style={{ width: "10px"}}>          
-                                                    <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                        <div className="btn-group" role="group">
-                                                            <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                <i className="fas fa-bars"></i>
-                                                            </button>
-                                                                        
-                                                            <div className="dropdown-menu dropdown-menu-right">
+                                <tbody>
+                                    {data.length >= 1 ? (
+                                        data.map(shift => (
+                                            <tr key={shift.id}>
+                                                {(true || true) && (
+                                                    <td className="text-right" style={{ width: "10px"}}>          
+                                                        <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
+                                                            <div className="btn-group" role="group">
+                                                                <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                    <i className="fas fa-bars"></i>
+                                                                </button>
+                                                                            
+                                                                <div className="dropdown-menu dropdown-menu-right">
 
-                                                                {true && (
-                                                                    <button onClick={() => edit(shift)} className="dropdown-item">
-                                                                        Editar
-                                                                    </button>
-                                                                )}
+                                                                    {true && (
+                                                                        <button onClick={() => edit(shift)} className="dropdown-item">
+                                                                            Editar
+                                                                        </button>
+                                                                    )}
 
-                                                                {true && (
-                                                                    <button onClick={() => destroy(shift.id)} className="dropdown-item">
-                                                                        Eliminar
-                                                                    </button>
-                                                                )}
+                                                                    {true && (
+                                                                        <button onClick={() => destroy(shift.id)} className="dropdown-item">
+                                                                            Eliminar
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+
                                                             </div>
-
                                                         </div>
-                                                    </div>
-                                                </td>
-                                            )}
+                                                    </td>
+                                                )}
 
-                                            <td>{shift.cost_center.code}</td>
-                                            <td>{shift.start_date}</td>
-                                            <td>{shift.end_date}</td>
-                                            <td>{shift.user_responsible.names}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <td colSpan="13" className="text-center">
-                                        <div className="text-center mt-4 mb-4">
-                                            <h4>No hay registros</h4>
-                                        </div>
-                                    </td>
-                                )}
-                            </tbody>
-                        </table>
+                                                <td>{shift.cost_center.code}</td>
+                                                <td>{shift.start_date}</td>
+                                                <td>{shift.end_date}</td>
+                                                <td>{shift.user_responsible.names}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <td colSpan="13" className="text-center">
+                                            <div className="text-center mt-4 mb-4">
+                                                <h4>No hay registros</h4>
+                                            </div>
+                                        </td>
+                                    )}
+                                </tbody>
+                            </table>
+                                 
+                        ) : (
+                            <div className="card">
+                                <div className="card-body">
+                                    <p>Cargando informacion...</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

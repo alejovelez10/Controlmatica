@@ -6,7 +6,7 @@ class ShiftsCalendar extends Component {
     render() {
         return (
             <Calendar
-                url_calendar={"/get_shifts"}
+                url_calendar={`/get_shifts/${this.props.view}`}
                 cost_centers={this.props.cost_centers}
                 users={this.props.users}
             />
