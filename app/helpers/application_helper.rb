@@ -204,7 +204,7 @@ module ApplicationHelper
   end  
 
   def get_users_select
-    users = User.joins(:rol).where("rols.name = ? OR rols.name = ?", "Administrador", "Comercial")
+    users = User.all
     users.collect do |user|
       {
         :value => user.id,
