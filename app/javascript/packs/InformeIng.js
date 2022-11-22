@@ -5,6 +5,7 @@ import ReporterHours from '../components/DashboardIng/ReporterHours';
 import HourProjectMonth from '../components/DashboardIng/HourProjectMonth';
 import HourDay from '../components/DashboardIng/HourDay';
 import Commisions from '../components/DashboardIng/Commisions';
+import Calendar from '../components/Shifts/Calendar';
 
 
 
@@ -66,14 +67,28 @@ class InformeIng extends Component {
 
     render() {
         return (
-            <div className='row'>
+            <div className={`${this.props.current_tab != "home" ? "" : "row"}`}>
+
+                <div className="col-md-12 pl-0">
+                    <ul className="nav nav-tabs" id="myTab" role="tablist">
+                        <li className="nav-item">
+                            <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>Informacion</a>
+                        </li>
+
+                        <li className="nav-item">
+                            <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>Calendario</a>
+                        </li>
+                    </ul>
+                </div>
+
                 <div className='col-md-12 title-board-ing' >
+
                     <div style={{ fontSize: "25px", margin: "0px" }}> 
                         ¡HOLA! <span> {this.state.form.name ? this.state.form.name.toUpperCase() : ""} A CONTINUACION VAS A VER TU TABLERO</span> 
                     </div>
 
-                    <a href={`/shifts/calendar/MY`} data-turbolinks="false" className="btn btn-secondary float-right mr-2">Vista calendario</a>
-                    
+                    {/*<a href={`/shifts/calendar/MY`} data-turbolinks="false" className="btn btn-secondary float-right mr-2">Vista calendario</a>*/}
+
                     {this.props.ver_todos && (
                         <select
                             name="value"
@@ -87,50 +102,69 @@ class InformeIng extends Component {
                             ))}
 
                         </select>
-                    )}
-
-                           
+                    )}                           
                 </div>
 
-                {this.state.is_tablerista == "TABLERISTA" ? (
-                                        <div className='row' style={{width:"100%"}}>
-                        <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
-                        <HourDay user={this.state.form.value} ref="child" height="400" />
+                <div className="tab-content" id="myTabContent">
+                    <div className={`tab-pane fade ${this.props.current_tab == "home" ? "show active" : ""}`} id="home" role="tabpanel" aria-labelledby="home-tab">
+                        <div className="row">
+
+                            {this.state.is_tablerista == "TABLERISTA" ? (
+                                <div className='row pl-3' style={{width:"100%"}}>
+                                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                                        <HourDay user={this.state.form.value} ref="child" height="400" />
+                                    </div>
+
+                                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                                        <ReporterHours user={this.state.form.value} ref="child"  height="350" />
+                                    </div>
+                                </div>
+                            ): (
+                                <div className='col-md-12'>
+                                    <div className="row pl-3" style={{width:"100%"}}>
+                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                            <HourDay user={this.state.form.value} ref="child" height="400" />
+                                        </div>
+
+                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                            <ReporterHours user={this.state.form.value} ref="child"  height="350" />
+                                        </div>
+                                        
+                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                            <Commisions user={this.state.form.value} ref="child" height="350" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                    
+
+
+
+                            <div className="col-md-12">
+                                <div className='col-md-12'> <hr /></div>
+
+                                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
+                                    <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
+                                </div>
+                                <div className='col-md-12'> <hr /></div>
+
+                                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
+                                    <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
-                        <ReporterHours user={this.state.form.value} ref="child"  height="350" />
+                    <div className={`tab-pane fade ${this.props.current_tab != "home" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
+                                
+                            <Calendar
+                                url_calendar={`/get_shifts/MY`}
+                                cost_centers={this.props.cost_centers}
+                                users={this.props.users_select}
+                            />
                     </div>
-                   </div>
-                ): (
-                    <div className='row' style={{width:"100%"}}>
-                    <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
-                    <HourDay user={this.state.form.value} ref="child" height="400" />
+
                 </div>
-
-                <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
-                    <ReporterHours user={this.state.form.value} ref="child"  height="350" />
-                </div>
-                <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
-                    <Commisions user={this.state.form.value} ref="child" height="350" />
-                </div>
-                </div>
-                )}
-           
-
-
-
-                <div className='col-md-12'> <hr /></div>
-
-                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                    <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
-                </div>
-                <div className='col-md-12'> <hr /></div>
-
-                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                    <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
-                </div>
-
             </div>
         )
 
