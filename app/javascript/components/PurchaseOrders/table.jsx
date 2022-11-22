@@ -64,12 +64,12 @@ class table extends React.Component {
 
     MessageSucces = (name_success, type, error_message) => {
         Swal.fire({
-        position: "center",
-        type: type,
-        html: '<p>'  + error_message !=  undefined ? error_message : "asdasdasd"  +  '</p>',
-        title: name_success,
-        showConfirmButton: false,
-        timer: 1500
+          position: "center",
+          type: type,
+          html: '<p>'  + error_message !=  undefined ? error_message : "asdasdasd"  +  '</p>',
+          title: name_success,
+          showConfirmButton: false,
+          timer: 1500
         });
     }
 

@@ -47,6 +47,7 @@ class User < ApplicationRecord
   has_many :cost_centers, dependent: :destroy
   has_many :customer_reports, dependent: :destroy
   has_many :expense_ratios, dependent: :destroy
+  has_many :shifts, dependent: :destroy
   has_many :materials, dependent: :destroy
   has_many :report_expenses, dependent: :destroy
   has_many :reports, dependent: :destroy

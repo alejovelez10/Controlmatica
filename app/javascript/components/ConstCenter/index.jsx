@@ -219,6 +219,9 @@ class index extends React.Component {
                           estados={this.props.estados}
                           alerts={this.props.alerts}
                           users={this.props.users}
+                          users_select={this.props.users_select}
+                          cost_center={this.props.cost_center}
+                          current_tab={this.props.current_tab}
                           
                       />
 

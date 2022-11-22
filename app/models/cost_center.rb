@@ -79,6 +79,7 @@ class CostCenter < ApplicationRecord
   has_many :customer_invoices, dependent: :destroy
   has_many :materials, dependent: :destroy
   has_many :contractors, dependent: :destroy
+  has_many :shifts, dependent: :destroy
   has_many :notification_alerts, dependent: :destroy
   has_many :report_expenses
   has_many :commissions

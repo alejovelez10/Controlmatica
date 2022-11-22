@@ -1,0 +1,27 @@
+# == Schema Information
+#
+# Table name: shifts
+#
+#  id                  :bigint           not null, primary key
+#  end_date            :date
+#  start_date          :date
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  cost_center_id      :integer
+#  user_id             :integer
+#  user_responsible_id :integer
+#
+
+one:
+  user_id: 1
+  user_responsible_id: 1
+  start_date: 2022-11-18
+  start_date: 2022-11-18
+  cost_center_id: 1
+
+two:
+  user_id: 1
+  user_responsible_id: 1
+  start_date: 2022-11-18
+  start_date: 2022-11-18
+  cost_center_id: 1

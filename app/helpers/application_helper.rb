@@ -36,6 +36,10 @@ module ApplicationHelper
       card = "<h1>" + " <i class='fas fa-handshake'></i> Control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
     elsif controller == "report_expenses" && action == "indicators_expenses"
       card = "<h1>" + " <i class='fas fa-handshake'></i> Informe de control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+    elsif controller == "shifts" && action == "index"
+      card = "<h1>" + " <i class='fas fa-handshake'></i> Turnos " + "</h1>" + "<p>" + "Gestiona de turnos" + "</p>"
+    elsif controller == "shifts" && action == "calendar"
+      card = "<h1>" + " <i class='fas fa-handshake'></i> Vista de los turnos en calendario " + "</h1>" + "<p>" + "Gestiona de turnos" + "</p>"
     elsif controller == "expense_ratios" && action == "index"
       card = "<h1>" + " <i class='fas fa-handshake'></i> Relacion de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
     elsif controller == "report_expense_options" && action == "index"
@@ -72,6 +76,10 @@ module ApplicationHelper
       card = "<li class='breadcrumb-item'> <a href='/'>Index</a></li>"
     elsif controller == "report_expenses" && action == "index"
       card = "<li class='breadcrumb-item'> <a href='/report_expenses'>Index</a></li>"
+    elsif controller == "shifts" && action == "index"
+      card = "<li class='breadcrumb-item'> <a href='/shifts' data-turbolinks='false'>Index</a></li> <li class='breadcrumb-item'> <a href='/shifts/calendar' data-turbolinks='false' >Vista calendario</a></li>"
+    elsif controller == "shifts" && action == "calendar"
+      card = "<li class='breadcrumb-item'> <a href='/shifts' data-turbolinks='false'>Index</a></li> <li class='breadcrumb-item'> <a href='/shifts/calendar' data-turbolinks='false'>Vista calendario</a></li>"
     else
       ""
     end
@@ -181,6 +189,26 @@ module ApplicationHelper
       {
         :id => user.id,
         :name => user.names,
+      }
+    end
+  end
+
+  def get_cost_center_select
+    cost_centers = CostCenter.all
+    cost_centers.collect do |cost_center|
+      {
+        :value => cost_center.id,
+        :label => cost_center.code,
+      }
+    end
+  end  
+
+  def get_users_select
+    users = User.joins(:rol).where("rols.name = ? OR rols.name = ?", "Administrador", "Comercial")
+    users.collect do |user|
+      {
+        :value => user.id,
+        :label => user.names,
       }
     end
   end
