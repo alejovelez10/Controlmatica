@@ -68,7 +68,7 @@ class InformeIng extends Component {
         return (
             <div className='row'>
                 <div className='col-md-12 title-board-ing' >
-                    <div style={{ fontSize: "25px", margin: "0px" }}> ¡HOLA! <span> {this.state.form.name.toUpperCase()} A CONTINUACION VAS A VER TU TABLERO</span> </div>
+                    <div style={{ fontSize: "25px", margin: "0px" }}> ¡HOLA! <span> {this.state.form.name ? this.state.form.name.toUpperCase() : ""} A CONTINUACION VAS A VER TU TABLERO</span> </div>
                     {this.props.ver_todos && (
                         <select
                             name="value"

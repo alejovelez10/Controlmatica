@@ -11,18 +11,18 @@ import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClic
 import esLocale from '@fullcalendar/core/locales/es';
 
 class Calendar extends Component {
-    constructor(props){
+    constructor(props) {
         super(props)
         this.token = document.querySelector("[name='csrf-token']").content;
         this.state = {
             data: [],
             isLoaded: false,
-            canDrop: true, 
+            canDrop: true,
             calendarWeekends: true,
             modal: false,
             errorValues: true,
             arg: "",
-    
+
             form: {
                 start_date: "",
                 end_date: "",
@@ -36,7 +36,7 @@ class Calendar extends Component {
             },
 
             selectedOptionUser: {
-                user_responsible_id: "", 
+                user_responsible_id: "",
                 label: "Seleccione el usuario responsable"
             }
         }
@@ -54,22 +54,22 @@ class Calendar extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            const array = []
+            .then(response => response.json())
+            .then(data => {
+                const array = []
 
-            data.data.map((item) => (
-                array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate() + 1), id: item.id  })
-            ))
-    
-            this.setState({
-                data: array,
-                isLoaded: false
-            })
-        });
+                data.data.map((item) => (
+                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate() + 1), id: item.id })
+                ))
+
+                this.setState({
+                    data: array,
+                    isLoaded: false
+                })
+            });
     }
 
-    setCanDrop = () => {};
+    setCanDrop = () => { };
     calendarComponentRef = React.createRef();
 
     clearValues = () => {
@@ -96,10 +96,10 @@ class Calendar extends Component {
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
         this.setState({
             selectedOptionCostCenter,
-                form: {
-                    ...this.state.form,
-                    cost_center_id: selectedOptionCostCenter.value
-                }
+            form: {
+                ...this.state.form,
+                cost_center_id: selectedOptionCostCenter.value
+            }
         });
     };
 
@@ -107,10 +107,10 @@ class Calendar extends Component {
     handleChangeAutocompleteUser = (selectedOptionUser) => {
         this.setState({
             selectedOptionUser,
-                form: {
-                    ...this.state.form,
-                    user_responsible_id: selectedOptionUser.value
-                }
+            form: {
+                ...this.state.form,
+                user_responsible_id: selectedOptionUser.value
+            }
         });
     }
 
@@ -127,7 +127,7 @@ class Calendar extends Component {
     };
 
     handleDateClick = arg => {
-        if (true){
+        if (true) {
             this.setState({
                 modal: true,
                 arg: arg,
@@ -148,11 +148,11 @@ class Calendar extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
 
-        });
+            });
     }
 
     handleClickCreate = () => {
@@ -189,13 +189,13 @@ class Calendar extends Component {
     }
 
     validationForm = () => {
-        if (this.state.form.name != "" &&  
-            this.state.form.due_date != "" && 
-            this.state.form.user_owner_id != "" 
+        if (this.state.form.name != "" &&
+            this.state.form.due_date != "" &&
+            this.state.form.user_owner_id != ""
         ) {
             this.setState({ ErrorValues: true })
             return true
-        }else{
+        } else {
             this.setState({ ErrorValues: false })
             return false
         }
@@ -205,7 +205,7 @@ class Calendar extends Component {
         const array = []
 
         data.data.map((item) => (
-            array.push({ title: `${item.name}`, start: new Date(item.due_date), id: item.id  })
+            array.push({ title: `${item.name}`, start: new Date(item.due_date), id: item.id })
         ))
 
         this.setState({
@@ -248,18 +248,18 @@ class Calendar extends Component {
         if (this.state.form.end_date != "" &&
             this.state.form.start_date != "" &&
             this.state.form.cost_center_id != "" &&
-            this.state.form.user_responsible_id != "" 
+            this.state.form.user_responsible_id != ""
         ) {
             this.setState({ errorValues: true })
             return true
-        }else{
+        } else {
             this.setState({ errorValues: false })
             return false
         }
     }
 
     handleClick = () => {
-        if(this.validationForm() == true){
+        if (this.validationForm() == true) {
             fetch(`/shifts`, {
                 method: 'POST', // or 'PUT'
                 body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -269,19 +269,19 @@ class Calendar extends Component {
                 }
             })
 
-            .then(res => res.json())
-            .catch(error => console.error("Error:", error))
-            .then(data => {
-                this.setState({ modal: false })
-                this.setState({
-                    data: this.state.data.concat({
-                        // creates a new array
-                        id: data.register.id,
-                        title: data.register.cost_center.code,
-                        start: this.state.arg.date,
+                .then(res => res.json())
+                .catch(error => console.error("Error:", error))
+                .then(data => {
+                    this.setState({ modal: false })
+                    this.setState({
+                        data: this.state.data.concat({
+                            // creates a new array
+                            id: data.register.id,
+                            title: data.register.cost_center.code,
+                            start: this.state.arg.date,
+                        })
                     })
-                })
-            });
+                });
         }
     }
 
@@ -292,11 +292,11 @@ class Calendar extends Component {
                 [e.target.name]: e.target.value
             }
         })
-    }    
+    }
 
     render() {
-        if(this.state.isLoaded){
-            return(
+        if (this.state.isLoaded) {
+            return (
                 <div className="card">
                     <div className="card-body">
                         <p>Cargando informacion..</p>
@@ -304,7 +304,7 @@ class Calendar extends Component {
                 </div>
             )
         }
-        
+
         return (
             <React.Fragment>
                 {this.state.modal && (
@@ -343,8 +343,13 @@ class Calendar extends Component {
                             weekends={this.state.calendarWeekends}
                             events={this.state.data}
                             dateClick={this.handleDateClick}
+                            headerToolbar={{
+                                left: 'prev,next today',
+                                center: 'title',
+                                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                            }}
 
-                            
+
                             eventColor={'#3f69d7'}
                             eventClick={(item) => this.handleClickShow(item.event._def.publicId)}
                             eventDrop={info => { this.eventDrop(info) }}
