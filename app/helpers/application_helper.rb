@@ -77,9 +77,9 @@ module ApplicationHelper
     elsif controller == "report_expenses" && action == "index"
       card = "<li class='breadcrumb-item'> <a href='/report_expenses'>Index</a></li>"
     elsif controller == "shifts" && action == "index"
-      card = "<li class='breadcrumb-item'> <a href='/shifts' data-turbolinks='false'>Index</a></li> <li class='breadcrumb-item'> <a href='/shifts/calendar' data-turbolinks='false' >Vista calendario</a></li>"
+      card = "<li class='breadcrumb-item'> <a href='/shifts' data-turbolinks='false'>Index</a></li> <li class='breadcrumb-item'> <a href='/shifts/calendar/ALL' data-turbolinks='false' >Vista calendario</a></li>"
     elsif controller == "shifts" && action == "calendar"
-      card = "<li class='breadcrumb-item'> <a href='/shifts' data-turbolinks='false'>Index</a></li> <li class='breadcrumb-item'> <a href='/shifts/calendar' data-turbolinks='false'>Vista calendario</a></li>"
+      card = "<li class='breadcrumb-item'> <a href='/shifts' data-turbolinks='false'>Index</a></li> <li class='breadcrumb-item'> <a href='/shifts/calendar/#{params[:from]}' data-turbolinks='false'>Vista calendario</a></li>"
     else
       ""
     end

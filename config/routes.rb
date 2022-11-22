@@ -28,8 +28,8 @@ Rails.application.routes.draw do
   resources :commissions, :except => [:show, :edit, :new]
   resources :shifts, :except => [:show, :edit, :new]
 
-  get "get_shifts", to: "shifts#get_shifts"
-  get "shifts/calendar", to: "shifts#calendar" , as: "shift_calendar"
+  get "get_shifts/(:from)", to: "shifts#get_shifts"
+  get "shifts/calendar/:from", to: "shifts#calendar" , as: "shift_calendar"
   get "get_shifts_const_center/:const_center_id", to: "shifts#get_shifts_const_center"
 
   ## commissions routes
