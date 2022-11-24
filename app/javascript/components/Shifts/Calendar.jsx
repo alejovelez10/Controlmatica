@@ -81,7 +81,7 @@ class Calendar extends Component {
                 const array = []
 
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), id: item.id })
+                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 ))
 
                 this.setState({
@@ -316,7 +316,8 @@ class Calendar extends Component {
                 if (shift.id === item.id) {
                     return {
                         ...item,
-                        start: new Date(shift.start_date).setDate(new Date(shift.start_date).getDate() + 1),
+                        start: new Date(shift.start_date).setDate(new Date(shift.start_date).getDate()),
+                        end: new Date(shift.end_date).setDate(new Date(shift.end_date).getDate()),
                         title: shift.cost_center.code,
                     }
                 }
