@@ -20,6 +20,7 @@ class Calendar extends Component {
             canDrop: true,
             calendarWeekends: true,
             modal: false,
+            shift_id: "",
             errorValues: true,
             arg: "",
 
@@ -42,6 +43,27 @@ class Calendar extends Component {
         }
     }
 
+    clearValues = () => {
+        this.setState({
+            form: {
+                start_date: "",
+                end_date: "",
+                cost_center_id: "",
+                user_responsible_id: "",
+            },
+
+            selectedOptionCostCenter: {
+                cost_center_id: "",
+                label: "Seleccione el centro de costo",
+            },
+
+            selectedOptionUser: {
+                user_responsible_id: "",
+                label: "Seleccione el usuario responsable"
+            }
+        })
+    }
+
     componentDidMount = () => {
         this.loadData();
     }
@@ -59,7 +81,7 @@ class Calendar extends Component {
                 const array = []
 
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate() + 1), id: item.id })
+                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), id: item.id })
                 ))
 
                 this.setState({
@@ -71,16 +93,6 @@ class Calendar extends Component {
 
     setCanDrop = () => { };
     calendarComponentRef = React.createRef();
-
-    clearValues = () => {
-        this.setState({
-            form: {
-                name: "",
-                due_date: "",
-                user_owner_id: "",
-            },
-        })
-    }
 
     HandleChange = (e) => {
         this.setState({
@@ -140,19 +152,25 @@ class Calendar extends Component {
         }
     };
 
-    updateDate = (task_id, date) => {
-        fetch(`/task/update_date_calendar/${task_id}/${date}`, {
+    updateDate = (shift_id, date) => {
+        const form = {
+            start_date: date
+        }
+        
+        fetch(`/shifts/${shift_id}`, {
             method: 'PATCH', // or 'PUT'
+            body: JSON.stringify(form), // data can be `string` or {object}!
             headers: {
                 "X-CSRF-Token": this.token,
                 "Content-Type": "application/json"
             }
         })
-            .then(res => res.json())
-            .catch(error => console.error("Error:", error))
-            .then(data => {
 
-            });
+        .then(res => res.json())
+        .catch(error => console.error("Error:", error))
+        .then(data => {
+
+        });
     }
 
     handleClickCreate = () => {
@@ -235,12 +253,46 @@ class Calendar extends Component {
         })
     }
 
+    handleClickShow = (shift_id, event) => {
+        fetch(`/get_shift_info/${shift_id}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => { 
+            this.setState({
+                modal: true,    
+                shift_id: shift_id,
+
+                form: {
+                    start_date: data.register.start_date,
+                    end_date: data.register.end_date,
+                    cost_center_id: data.register.cost_center.id,
+                    user_responsible_id: data.register.user_responsible.id,
+                },
+    
+                selectedOptionCostCenter: {
+                    cost_center_id: data.register.cost_center.id,
+                    label: data.register.cost_center.code,
+                },
+    
+                selectedOptionUser: {
+                    user_responsible_id: data.register.user_responsible.id,
+                    label: data.register.user_responsible.names,
+                }
+            })
+        });
+    }
+
     toogle = (from) => {
         if (from == "new") {
             this.setState({ modal: true })
         } else {
             this.setState({ modal: false })
-            clearValues();
+            this.clearValues();
         }
     }
 
@@ -258,30 +310,69 @@ class Calendar extends Component {
         }
     }
 
-    handleClick = () => {
-        if (this.validationForm() == true) {
-            fetch(`/shifts`, {
-                method: 'POST', // or 'PUT'
-                body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-                headers: {
-                    "X-CSRF-Token": this.token,
-                    "Content-Type": "application/json"
+    updateItem = (shift) => {
+        this.setState({
+            data: this.state.data.map(item => {
+                if (shift.id === item.id) {
+                    return {
+                        ...item,
+                        start: new Date(shift.start_date).setDate(new Date(shift.start_date).getDate() + 1),
+                        title: shift.cost_center.code,
+                    }
                 }
+                return item;
             })
+        });
+    }
 
+    handleClick = () => {
+        if (this.validationForm()) {
+            if(this.state.shift_id){
+                fetch(`/shifts/${this.state.shift_id}`, {
+                    method: 'PATCH', // or 'PUT'
+                    body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+                    headers: {
+                        "X-CSRF-Token": this.token,
+                        "Content-Type": "application/json"
+                    }
+                })
+    
                 .then(res => res.json())
                 .catch(error => console.error("Error:", error))
                 .then(data => {
-                    this.setState({ modal: false })
+                    this.updateItem(data.register);
+                    this.clearValues();
                     this.setState({
+                        modal: false, 
+                        shift_id: "",
+                    })
+                });
+            }else{
+                fetch(`/shifts`, {
+                    method: 'POST', // or 'PUT'
+                    body: JSON.stringify(this.state.form), // data can be `string` or {object}!
+                    headers: {
+                        "X-CSRF-Token": this.token,
+                        "Content-Type": "application/json"
+                    }
+                })
+    
+                .then(res => res.json())
+                .catch(error => console.error("Error:", error))
+                .then(data => {
+                    this.clearValues();
+                    this.setState({
+                        modal: false, 
+                        shift_id: "",
+    
                         data: this.state.data.concat({
-                            // creates a new array
                             id: data.register.id,
                             title: data.register.cost_center.code,
                             start: this.state.arg.date,
                         })
                     })
                 });
+            }
         }
     }
 
@@ -312,14 +403,15 @@ class Calendar extends Component {
                         backdrop={"static"}
                         modal={this.state.modal}
                         toggle={this.toogle}
-                        title={this.state.modeEdit ? "Actualizar" : "Crear"}
-                        nameBnt={this.state.modeEdit ? "Actualizar" : "Crear"}
+                        title={this.state.shift_id ? "Actualizar" : "Crear"}
+                        nameBnt={this.state.shift_id ? "Actualizar" : "Crear"}
 
                         //form props
                         formValues={this.state.form}
                         onChangeForm={this.handleChange}
                         submitForm={this.handleClick}
                         errorValues={this.state.errorValues}
+                        microsoft_auth={this.props.microsoft_auth}
 
                         selectedOptionCostCenter={this.state.selectedOptionCostCenter}
                         handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
@@ -351,7 +443,7 @@ class Calendar extends Component {
 
 
                             eventColor={'#3f69d7'}
-                            eventClick={(item) => this.handleClickShow(item.event._def.publicId)}
+                            eventClick={(item) => this.handleClickShow(item.event._def.publicId, item.event)}
                             eventDrop={info => { this.eventDrop(info) }}
                         />
                     </div>

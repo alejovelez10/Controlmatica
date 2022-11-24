@@ -18,6 +18,16 @@ gem "webpacker"
 gem "webpacker-react", "~> 0.3.2"
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'mini_racer', platforms: :ruby
+
+# OAuth
+gem 'omniauth-oauth2'
+# OmniAuth CSRF protection
+gem 'omniauth-rails_csrf_protection'
+# REST calls to Microsoft Graph
+gem 'httparty'
+# Session storage in database
+gem 'activerecord-session_store'
+
 # control de usuario
 gem "devise"
 # Use ActiveStorage variant

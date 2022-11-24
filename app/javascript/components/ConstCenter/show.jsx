@@ -1151,6 +1151,7 @@ class Show extends React.Component {
                             url_calendar={`/get_shifts_const_center/${this.props.cost_center.id}`}
                             cost_centers={[ { value: this.props.cost_center.id, label: this.props.cost_center.code } ]}
                             users={this.props.users_select}
+                            microsoft_auth={this.props.microsoft_auth}
                         />
                     </div>
                 </div>
