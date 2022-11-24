@@ -257,6 +257,7 @@ const Shifts = (props) => {
                     onChangeForm={handleChange}
                     submitForm={handleClick}
                     errorValues={errorValues}
+                    microsoft_auth={props.microsoft_auth}
 
                     selectedOptionCostCenter={selectedOptionCostCenter}
                     handleChangeAutocompleteCostCenter={handleChangeAutocompleteCostCenter}

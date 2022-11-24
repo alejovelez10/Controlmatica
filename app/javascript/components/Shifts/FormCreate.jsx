@@ -74,6 +74,25 @@ const FormCreate = (props) => {
                                     />
                                 </div>
 
+                                {props.microsoft_auth.is_user_logged_in && (
+                                    <div className="col-md-12">
+                                        <div className="tile">
+                                            <div className="tile-body">
+                                                <div className="row">
+                                                    <div className="col-md-2">
+                                                        <img class="rounded-circle" alt="avatar1" src={props.microsoft_auth.user_avatar} />
+                                                    </div>
+
+                                                    <div className="col-md-10">
+                                                        <p><b>Nombre: </b> {props.microsoft_auth.username}</p>
+                                                        <p><b>Email: </b> {props.microsoft_auth.user_email} </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                             </div>
                         </ModalBody>
 

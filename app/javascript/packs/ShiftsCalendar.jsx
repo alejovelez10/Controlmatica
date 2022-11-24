@@ -9,6 +9,7 @@ class ShiftsCalendar extends Component {
                 url_calendar={`/get_shifts/${this.props.view}`}
                 cost_centers={this.props.cost_centers}
                 users={this.props.users}
+                microsoft_auth={this.props.microsoft_auth}
             />
         );
     }
