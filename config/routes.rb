@@ -16,6 +16,8 @@ Rails.application.routes.draw do
 
   get "customer_user/:id", to: "customers#customer_user", as: "customer_user"
 
+  match '/auth/:provider/callback', :to => 'auth#callback', :via => [:get, :post]
+
   resources :parameterizations, :except => [:new, :edit]
   resources :reports
   resources :cost_centers, :except => [:new, :edit]
