@@ -45,14 +45,14 @@ class ShiftsController < ApplicationController
     end
 
     def get_shifts
-        if params[:view] == "All"
+        if params[:from] == "All"
             if params[:cost_center_id] || params[:user_responsible_id]
                 shifts = Shift.search(params[:cost_center_id], params[:user_responsible_id]).order(created_at: :asc)
             else
                 shifts = Shift.all.order(created_at: :asc)
             end
 
-        elsif params[:view] == "MY"
+        elsif params[:from] == "MY"
             if params[:cost_center_id] || params[:user_responsible_id]
                 shifts = Shift.where(user_responsible_id: current_user.id).search(params[:cost_center_id], params[:user_responsible_id]).order(created_at: :asc)
             else
