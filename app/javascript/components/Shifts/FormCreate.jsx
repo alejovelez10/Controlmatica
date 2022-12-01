@@ -76,7 +76,7 @@ const FormCreate = (props) => {
 
                                 {props.microsoft_auth.is_user_logged_in && (
                                     <div className="col-md-12">
-                                        <div className="tile">
+                                        <div className="tile pb-0">
                                             <div className="tile-body">
                                                 <div className="row">
                                                     <div className="col-md-2">
