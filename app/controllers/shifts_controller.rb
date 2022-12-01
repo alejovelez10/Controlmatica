@@ -27,7 +27,10 @@ class ShiftsController < ApplicationController
     def create
         shift = Shift.create(shift_create_params)
         if shift.save
-            CreateEvenInMicrosoftJob.set(wait: 5.seconds).perform_later(shift, access_token, user_timezone)
+            if @user_name 
+                CreateEvenInMicrosoftJob.set(wait: 5.seconds).perform_later(shift, access_token, user_timezone)
+            end
+
             render :json => {
                 success: "¡El Registro fue creado con éxito!",
                 register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
