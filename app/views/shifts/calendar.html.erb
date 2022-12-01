@@ -1,2 +1,10 @@
+<% 
+    if @user_name 
+        microsoft_auth = { is_user_logged_in: true, username: @user_name, user_email: @user_email, user_avatar: @user_avatar ? @user_avatar : "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcRuEG5mQKFGi9hNgrdBJnEyBfw2Kl0JNXwoHiXjVeKQemKOQqFe" }
+    else    
+        microsoft_auth = { is_user_logged_in: false, username: "", user_email: "", user_avatar: "" }
+    end
+%>
+ 
 <%= javascript_pack_tag 'ShiftsCalendar' %> 
-<%= react_component('ShiftsCalendar', cost_centers: get_cost_center_select, users: get_users_select, view: params[:from]) %>
+<%= react_component('ShiftsCalendar', cost_centers: get_cost_center_select, users: get_users_select, view: params[:from], microsoft_auth: microsoft_auth) %>

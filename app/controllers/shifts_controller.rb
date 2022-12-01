@@ -15,6 +15,15 @@ class ShiftsController < ApplicationController
         #render :layout => "application"
     end
 
+    def get_shift_info
+        shift = Shift.find(params[:shift_id])
+
+        render :json => {
+            register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
+            type: "success"
+        }
+    end
+
     def create
         shift = Shift.create(shift_create_params)
         if shift.save

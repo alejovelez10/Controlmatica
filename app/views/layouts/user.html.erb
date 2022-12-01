@@ -107,6 +107,18 @@
                   <i class="fas fa-sign-out-alt mr-2 fa-lg"></i> Salir</a>
               <% end -%>
             </li>
+
+            <% if @user_name %>
+              <li>
+                <%= link_to "Salir de microsoft", {:controller => :auth, :action => :signout}, class: "dropdown-item" %>
+              </li>
+            <% else %>
+              <li>
+                <%= link_to "Ingresar a microsoft", "/auth/microsoft_graph_auth", method: :post, class: "dropdown-item" %>
+              </li>
+            <% end %>
+            
+
           </ul>
         </li>
       </ul>
