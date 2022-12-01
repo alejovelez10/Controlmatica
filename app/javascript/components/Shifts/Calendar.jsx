@@ -59,7 +59,7 @@ class Calendar extends Component {
                 const array = []
 
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate() + 1), id: item.id })
+                    array.push({ title: `${item.cost_center.code} ${item.user_responsible.names}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate() + 1), id: item.id })
                 ))
 
                 this.setState({
