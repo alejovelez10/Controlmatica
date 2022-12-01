@@ -81,8 +81,7 @@ class Calendar extends Component {
                 const array = []
 
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
-
+                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible.names}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 ))
 
                 this.setState({
@@ -369,7 +368,7 @@ class Calendar extends Component {
     
                         data: this.state.data.concat({
                             id: data.register.id,
-                            title: data.register.cost_center.code,
+                            title: `${data.register.cost_center.code} - ${data.register.user_responsible.names}`,
                             start: this.state.arg.date,
                         })
                     })
