@@ -164,13 +164,13 @@ module CostCentersHelper
 		}
 	end
 
-	def get_cost_center_select
-		cost_centers = CostCenter.all
-		cost_centers.collect do |cost_center|
-			{
-                :label => cost_center.code,
-                :value => cost_center.id,
-			}
-		end
-	end
+	#def get_cost_center_select
+	#	cost_centers = CostCenter.all
+	#		cost_centers.collect do |cost_center|
+	#		{
+    #            :label => cost_center.code,
+    #            :value => cost_center.id,
+	#			}
+	#	end
+	#end
 end

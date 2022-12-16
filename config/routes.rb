@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   resources :shifts, :except => [:show, :edit, :new]
 
   get "get_shift_info/:shift_id", to: "shifts#get_shift_info"
+  get "get_cost_center_description/:cost_center_id", to: "shifts#get_cost_center_description"
   get 'auth/signout'
   get "get_shifts/(:from)", to: "shifts#get_shifts"
   get "shifts/calendar/:from", to: "shifts#calendar" , as: "shift_calendar"

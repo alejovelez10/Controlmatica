@@ -9,6 +9,7 @@ import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClic
 // import "@fullcalendar/core/main.css";
 
 import esLocale from '@fullcalendar/core/locales/es';
+import { array } from 'prop-types';
 
 class Calendar extends Component {
     constructor(props) {
@@ -29,7 +30,12 @@ class Calendar extends Component {
                 end_date: "",
                 cost_center_id: "",
                 user_responsible_id: "",
+                description: "",
+                subject: "",
+                user_ids: [],
             },
+
+            defaultValues: [],
 
             selectedOptionCostCenter: {
                 cost_center_id: "",
@@ -39,6 +45,11 @@ class Calendar extends Component {
             selectedOptionUser: {
                 user_responsible_id: "",
                 label: "Seleccione el usuario responsable"
+            },
+
+            selectedOptionMulti: {
+                user_ids: [],
+                label: "Seleccione los usuarios"
             }
         }
     }
@@ -50,6 +61,9 @@ class Calendar extends Component {
                 end_date: "",
                 cost_center_id: "",
                 user_responsible_id: "",
+                description: "",
+                subject: "",
+                user_ids: [],
             },
 
             selectedOptionCostCenter: {
@@ -263,15 +277,25 @@ class Calendar extends Component {
         })
         .then(response => response.json())
         .then(data => { 
+            const arrayIds = [];
+    
+            data.register.users.map((user) => (
+                arrayIds.push(user.value)
+            ))    
+
             this.setState({
                 modal: true,    
                 shift_id: shift_id,
+                defaultValues: data.register.users,
 
                 form: {
                     start_date: data.register.start_date,
                     end_date: data.register.end_date,
                     cost_center_id: data.register.cost_center.id,
                     user_responsible_id: data.register.user_responsible.id,
+                    description: data.register.description,
+                    subject: data.register.subject,
+                    user_ids: arrayIds
                 },
     
                 selectedOptionCostCenter: {
@@ -282,7 +306,7 @@ class Calendar extends Component {
                 selectedOptionUser: {
                     user_responsible_id: data.register.user_responsible.id,
                     label: data.register.user_responsible.names,
-                }
+                },
             })
         });
     }
@@ -386,6 +410,23 @@ class Calendar extends Component {
         })
     }
 
+    handleChangeAutocompleteMulti = selectedOptionMulti => {
+        let array = []
+
+        if(selectedOptionMulti){
+            selectedOptionMulti.map((item) => (
+                array.push(item.value)
+            ))
+        }
+
+        this.setState({
+            form: {
+                ...this.state.form,
+                user_ids: selectedOptionMulti ? array : [],
+            }
+        })
+    }
+
     render() {
         if (this.state.isLoaded) {
             return (
@@ -404,7 +445,7 @@ class Calendar extends Component {
                         backdrop={"static"}
                         modal={this.state.modal}
                         toggle={this.toogle}
-                        title={this.state.shift_id ? "Actualizar" : "Crear"}
+                        title={this.state.shift_id ? "Actualizar turno" : "Crear turno"}
                         nameBnt={this.state.shift_id ? "Actualizar" : "Crear"}
 
                         //form props
@@ -421,6 +462,10 @@ class Calendar extends Component {
                         selectedOptionUser={this.state.selectedOptionUser}
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
                         users={this.props.users}
+
+                        handleChangeAutocompleteMulti={this.handleChangeAutocompleteMulti}
+                        selectedOptionMulti={this.state.selectedOptionMulti}
+                        defaultValues={this.state.defaultValues}
                     />
                 )}
 

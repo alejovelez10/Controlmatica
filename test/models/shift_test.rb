@@ -3,8 +3,10 @@
 # Table name: shifts
 #
 #  id                  :bigint           not null, primary key
-#  end_date            :date
-#  start_date          :date
+#  description         :text
+#  end_date            :datetime
+#  start_date          :datetime
+#  subject             :string
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  cost_center_id      :integer
