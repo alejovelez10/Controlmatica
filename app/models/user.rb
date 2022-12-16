@@ -60,6 +60,7 @@ class User < ApplicationRecord
 
   #mount_uploader :avatar, AvatarUploader  
   belongs_to :rol, optional: true
+  has_and_belongs_to_many :shifts
 
   def self.current
     Thread.current[:user]

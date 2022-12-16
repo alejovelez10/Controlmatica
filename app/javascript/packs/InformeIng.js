@@ -160,7 +160,8 @@ class InformeIng extends Component {
                             <Calendar
                                 url_calendar={`/get_shifts/MY`}
                                 cost_centers={this.props.cost_centers}
-                                users={this.props.users_select}
+                                users={this.props.current_user}
+                                microsoft_auth={this.props.microsoft_auth}
                             />
                     </div>
 

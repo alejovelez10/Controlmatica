@@ -3,8 +3,10 @@
 # Table name: shifts
 #
 #  id                  :bigint           not null, primary key
-#  end_date            :date
-#  start_date          :date
+#  description         :text
+#  end_date            :datetime
+#  start_date          :datetime
+#  subject             :string
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  cost_center_id      :integer
@@ -12,7 +14,7 @@
 #  user_responsible_id :integer
 #
 class ShiftSerializer < ActiveModel::Serializer
-  attributes :id, :end_date, :start_date, :cost_center, :user_responsible
+  attributes :id, :end_date, :start_date, :subject, :description, :cost_center, :user_responsible, :users
 
   def user_responsible
     {
@@ -28,4 +30,12 @@ class ShiftSerializer < ActiveModel::Serializer
     }
   end
 
+  def users
+    object.users.collect do |user|
+			{
+        :label => user.names,
+        :value => user.id,
+			}
+		end
+  end
 end

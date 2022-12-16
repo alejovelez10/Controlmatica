@@ -44,25 +44,52 @@ class ShiftsController < ApplicationController
         end
     end
 
+    def get_cost_center_description
+        cost_center = CostCenter.find(params[:cost_center_id])
+        render json: {
+            register: { id: cost_center.id, description: cost_center.description },
+        }
+    end
+
     def get_shifts
-        if params[:from] == "All"
-            if params[:cost_center_id] || params[:user_responsible_id]
-                shifts = Shift.search(params[:cost_center_id], params[:user_responsible_id]).order(created_at: :asc)
+        module_control = ModuleControl.find_by_name("Turnos")
+        show = current_user.rol.accion_modules.where(module_control_id: module_control.id).where(name: "Ver todos").exists?
+
+        if params[:view] == "All"
+            if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
+                const_center_ids = params[:cost_center_ids].split(",")
+                user_responsible_ids = params[:user_responsible_ids].split(",")
+
+                shifts = Shift.search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
             else
                 shifts = Shift.all.order(created_at: :asc)
             end
 
-        elsif params[:from] == "MY"
-            if params[:cost_center_id] || params[:user_responsible_id]
-                shifts = Shift.where(user_responsible_id: current_user.id).search(params[:cost_center_id], params[:user_responsible_id]).order(created_at: :asc)
+        elsif params[:view] == "MY"
+            if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
+                const_center_ids = params[:cost_center_ids].split(",")
+                user_responsible_ids = params[:user_responsible_ids].split(",")
+
+                shifts = Shift.where(user_responsible_id: current_user.id).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
             else
                 shifts = Shift.where(user_responsible_id: current_user.id).order(created_at: :asc)
             end
         else
-            if params[:cost_center_id] || params[:user_responsible_id]
-                shifts = Shift.search(params[:cost_center_id], params[:user_responsible_id]).order(created_at: :asc)
+            if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
+                const_center_ids = params[:cost_center_ids].split(",")
+                user_responsible_ids = params[:user_responsible_ids].split(",")
+
+                if show
+                    shifts = Shift.search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
+                else
+                    shifts = Shift.where(user_responsible_id: current_user.id).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
+                end
             else
-                shifts = Shift.all.order(created_at: :asc)
+                if show
+                    shifts = Shift.all.order(created_at: :asc)
+                else
+                    shifts = Shift.where(user_responsible_id: current_user.id).order(created_at: :asc)
+                end
             end
         end
         
@@ -107,10 +134,10 @@ class ShiftsController < ApplicationController
         
         def shift_create_params
             defaults = { user_id: current_user.id }
-            params.permit(:user_id, :end_date, :start_date, :cost_center_id, :user_responsible_id).reverse_merge(defaults)
+            params.permit(:user_id, :end_date, :start_date, :cost_center_id, :user_responsible_id, :subject, :description, :user_ids => []).reverse_merge(defaults)
         end
 
         def shift_update_params
-            params.permit(:end_date, :start_date, :cost_center_id, :user_responsible_id)
+            params.permit(:end_date, :start_date, :cost_center_id, :user_responsible_id, :subject, :description, :user_ids => [])
         end
 end

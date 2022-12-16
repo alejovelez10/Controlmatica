@@ -194,7 +194,7 @@ module ApplicationHelper
   end
 
   def get_cost_center_select
-    cost_centers = CostCenter.all
+    cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO")
     cost_centers.collect do |cost_center|
       {
         :value => cost_center.id,

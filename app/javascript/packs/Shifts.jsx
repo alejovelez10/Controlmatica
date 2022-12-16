@@ -10,11 +10,13 @@ const Shifts = (props) => {
     const [isLoaded, setIsLoaded] = useState(true);
     const token = document.querySelector("[name='csrf-token']").content;
     const [id, setId] = useState("");
-    const [form, setForm] = useState({ end_date: "", start_date: "", cost_center_id: "", user_responsible_id: "" });
-    const [formFilter, setFormFilter] = useState({ end_date: "", start_date: "", cost_center_id: "", user_responsible_id: "" });
+    const [defaultValues, setDefaultValues] = useState([]);
+    const [form, setForm] = useState({ end_date: "", start_date: "", cost_center_id: "", description: "", subject: "", user_responsible_id: "", user_ids: [] });
+    const [formFilter, setFormFilter] = useState({ end_date: "", start_date: "", cost_center_ids: [], user_responsible_ids: [] });
 
     const [selectedOptionCostCenter, setSelectedOptionCostCenter] = useState({ cost_center_id: "", label: "Seleccione el centro de costo" });
     const [selectedOptionUser, setSelectedOptionUser] = useState({ user_responsible_id: "", label: "Seleccione el usuario responsable" });
+    const [selectedOptionMulti, setSelectedOptionMulti] = useState({ user_ids: [], label: "Seleccione los usuarios" });
 
     //modal state
     const [modal, setModal] = useState(false);
@@ -26,8 +28,6 @@ const Shifts = (props) => {
     useEffect(() => {
         loadData();
     }, []);
-
-
 
     const messageSuccess = (response) => {
         console.log("response", response);
@@ -48,6 +48,9 @@ const Shifts = (props) => {
                 start_date: page.start_date,
                 cost_center: page.cost_center,
                 user_responsible: page.user_responsible,
+                users: page.users,
+                description: page.description,
+                subject: page.subject,
             }
           }
           return item;
@@ -78,7 +81,7 @@ const Shifts = (props) => {
     const handleClickFilter = () => {
         setIsLoaded(true);
 
-        fetch(`/get_shifts?cost_center_id=${formFilter.cost_center_id}&user_responsible_id=${formFilter.user_responsible_id}`, {
+        fetch(`/get_shifts?start_date=${formFilter.start_date}&end_date=${formFilter.end_date}&cost_center_ids=${formFilter.cost_center_ids}&user_responsible_ids=${formFilter.user_responsible_ids}`, {
             method: 'GET', // or 'PUT'
             headers: {
                 "X-CSRF-Token": token,
@@ -224,8 +227,22 @@ const Shifts = (props) => {
     }
 
     const handleChangeAutocompleteCostCenter = (selectedOptionCostCenter) => {
-        setForm({ ...form, cost_center_id: selectedOptionCostCenter.value })
         setSelectedOptionCostCenter(selectedOptionCostCenter);
+        getDescriptionCostCenter(selectedOptionCostCenter.value);
+    }
+
+    const getDescriptionCostCenter = (cost_center_id) => {
+        fetch(`/get_cost_center_description/${cost_center_id}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            setForm({ ...form, description: data.register.description, cost_center_id: data.register.id })
+        });
     }
 
     const handleChangeAutocompleteUser = (selectedOptionUser) => {
@@ -233,13 +250,35 @@ const Shifts = (props) => {
         setSelectedOptionUser(selectedOptionUser);
     }
 
+    const handleChangeAutocompleteMulti = selectedOptionMulti => {
+        let array = []
+
+        if(selectedOptionMulti){
+            selectedOptionMulti.map((item) => (
+                array.push(item.value)
+            ))
+        }
+
+        setForm({ 
+            ...form, 
+            user_ids: selectedOptionMulti ? array : [],
+        })
+    }
+
     const edit = (shift) => {
-        setForm({ end_date: shift.end_date, start_date: shift.start_date, cost_center_id: shift.cost_center.id, user_responsible_id: shift.user_responsible.id })
+        const arrayIds = [];
+    
+        shift.users.map((user) => (
+            arrayIds.push(user.value)
+        ))    
+
+        setForm({ end_date: shift.end_date, start_date: shift.start_date,  description: shift.description, subject: shift.subject, cost_center_id: shift.cost_center.id, user_responsible_id: shift.user_responsible.id, user_ids: arrayIds })
         setSelectedOptionUser({ user_responsible_id: shift.user_responsible.id, label: shift.user_responsible.names });
         setSelectedOptionCostCenter({ cost_center_id: shift.cost_center.id, label: shift.cost_center.code });
         setModal(true);
         setModeEdit(true);
         setId(shift.id);
+        setDefaultValues(shift.users);
     }
 
     return (
@@ -249,7 +288,7 @@ const Shifts = (props) => {
                     backdrop={"static"}
                     modal={modal}
                     toggle={toogle}
-                    title={modeEdit ? "Actualizar" : "Crear"}
+                    title={modeEdit ? "Actualizar turno" : "Crear turno"}
                     nameBnt={modeEdit ? "Actualizar" : "Crear"}
 
                     //form props
@@ -266,6 +305,10 @@ const Shifts = (props) => {
                     selectedOptionUser={selectedOptionUser}
                     handleChangeAutocompleteUser={handleChangeAutocompleteUser}
                     users={props.users}
+
+                    handleChangeAutocompleteMulti={handleChangeAutocompleteMulti}
+                    selectedOptionMulti={selectedOptionMulti}
+                    defaultValues={defaultValues}
                 />
             )}
 
@@ -284,7 +327,7 @@ const Shifts = (props) => {
                 <div className="tile">
                     <div className="col-md-12 text-right mb-3 pr-0">
 
-                        {false && (
+                        {true && (
                             <button 
                                 className="btn btn-primary ml-3"
                                 onClick={() => toogleFilter("new")}
