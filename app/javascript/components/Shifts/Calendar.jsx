@@ -163,7 +163,8 @@ class Calendar extends Component {
 
     handleDateClick = arg => {
         const date = new Date()
-        const start_date = `${arg.dateStr}T${date.getHours()}:${date.getMinutes()}`
+        const start_date = `${arg.dateStr}T08:00`
+        const end_date = `${arg.dateStr}T17:00`
         
         if (true) {
             this.setState({
@@ -173,10 +174,30 @@ class Calendar extends Component {
                 form: {
                     ...this.state.form,
                     start_date: start_date,
+                    end_date: end_date,
                 },
             });
         }
     };
+
+    digits_count = (n) => {
+        var count = 0;
+        if (n >= 1) ++count;
+      
+        while (n / 10 >= 1) {
+          n /= 10;
+          ++count;
+        }
+      
+        return count;
+    }
+
+    getDate = (register_date) => {
+        let date = new Date(register_date)
+        let date_month = this.digits_count(date.getUTCDate()) == 1 ? `0${date.getUTCDate()}` : `${date.getUTCDate()}`
+        let new_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date_month}T${date.getHours()}:${date.getMinutes()}`
+        return new_date
+    }
 
     updateDate = (shift_id, date) => {
         const form = {
@@ -301,10 +322,10 @@ class Calendar extends Component {
                 defaultValues: data.register.users,
 
                 form: {
-                    start_date: data.register.start_date,
-                    end_date: data.register.end_date,
+                    start_date: this.getDate(data.register.start_date),
+                    end_date: this.getDate(data.register.end_date),
                     cost_center_id: data.register.cost_center.id,
-                    user_responsible_id: data.register.user_responsible.id,
+                    user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
                     description: data.register.description,
                     subject: data.register.subject,
                     user_ids: arrayIds
@@ -316,8 +337,8 @@ class Calendar extends Component {
                 },
     
                 selectedOptionUser: {
-                    user_responsible_id: data.register.user_responsible.id,
-                    label: data.register.user_responsible.names,
+                    user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
+                    label: (data.register.user_responsible ? data.register.user_responsible.names : ""),
                 },
             })
         });
@@ -397,15 +418,10 @@ class Calendar extends Component {
                 .catch(error => console.error("Error:", error))
                 .then(data => {
                     this.clearValues();
+                    this.loadData();
                     this.setState({
                         modal: false, 
                         shift_id: "",
-    
-                        data: this.state.data.concat({
-                            id: data.register.id,
-                            title: `${data.register.cost_center.code} - ${data.register.user_responsible.names}`,
-                            start: this.state.arg.date,
-                        })
                     })
                 });
             }
