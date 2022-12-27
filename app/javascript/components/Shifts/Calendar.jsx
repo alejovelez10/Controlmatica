@@ -129,12 +129,9 @@ class Calendar extends Component {
 
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
+        this.getDescriptionCostCenter(selectedOptionCostCenter.value)
         this.setState({
             selectedOptionCostCenter,
-            form: {
-                ...this.state.form,
-                cost_center_id: selectedOptionCostCenter.value
-            }
         });
     };
 
@@ -198,6 +195,27 @@ class Calendar extends Component {
         let new_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date_month}T${date.getHours()}:${date.getMinutes()}`
         return new_date
     }
+
+    getDescriptionCostCenter = (cost_center_id) => {
+        fetch(`/get_cost_center_description/${cost_center_id}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setState({
+                form: {
+                    ...this.state.form,
+                    subject: data.register.description,
+                    cost_center_id: data.register.id,
+                },
+            });
+        });
+    }
+
 
     updateDate = (shift_id, date) => {
         const form = {
