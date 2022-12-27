@@ -16,7 +16,7 @@
 class Shift < ApplicationRecord
     belongs_to :user
     belongs_to :cost_center
-    belongs_to :user_responsible, class_name: "User"
+    belongs_to :user_responsible, class_name: "User", optional: true
     has_and_belongs_to_many :users
     after_create :create_shift
 
@@ -34,11 +34,14 @@ class Shift < ApplicationRecord
         end
     end
 
-    def self.search(search1, search2, search3, search4)
-        search1 != "" ? (scope :fecha_comienzo, -> { where(start_date: search1) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
-        search2 != "" ? (scope :fecha_final, -> { where(end_date: search2) }) : (scope :fecha_final, -> { where.not(id: nil) })
-        search3 != "" ? (scope :centro_de_costo, -> { where(cost_center_id: search3) }) : (scope :centro_de_costo, -> { where.not(id: nil) })
-        search4 != "" ? (scope :usuario_responsable, -> { where(user_responsible_id: search4) }) : (scope :usuario_responsable, -> { where.not(id: nil) })
+    def self.search(start_date, end_date, cost_center_ids, user_responsible_ids)
+        puts "cost_center_idscost_center_idscost_center_ids #{cost_center_ids}"
+        puts "user_responsible_ids #{user_responsible_ids}"
+
+        start_date != "" ? (scope :fecha_comienzo, -> { where(start_date: start_date) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
+        end_date != "" ? (scope :fecha_final, -> { where(end_date: end_date) }) : (scope :fecha_final, -> { where.not(id: nil) })
+        cost_center_ids != "" ? (scope :centro_de_costo, -> { where(cost_center_id: cost_center_ids) }) : (scope :centro_de_costo, -> { where.not(id: nil) })
+        user_responsible_ids != "" ? (scope :usuario_responsable, -> { where(user_responsible_id: user_responsible_ids) }) : (scope :usuario_responsable, -> { where.not(id: nil) })
 
         fecha_comienzo.fecha_final.centro_de_costo.usuario_responsable
     end

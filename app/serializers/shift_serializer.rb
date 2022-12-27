@@ -17,10 +17,14 @@ class ShiftSerializer < ActiveModel::Serializer
   attributes :id, :end_date, :start_date, :subject, :description, :cost_center, :user_responsible, :users
 
   def user_responsible
-    {
-      id: object.user_responsible.id,
-      names: object.user_responsible.names,
-    }
+    if object.user_responsible_id.present?
+      {
+        id: object.user_responsible.id,
+        names: object.user_responsible.names,
+      }
+    else
+      nil
+    end
   end
 
   def cost_center

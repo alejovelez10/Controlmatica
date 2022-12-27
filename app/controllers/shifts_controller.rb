@@ -55,17 +55,18 @@ class ShiftsController < ApplicationController
         module_control = ModuleControl.find_by_name("Turnos")
         show = current_user.rol.accion_modules.where(module_control_id: module_control.id).where(name: "Ver todos").exists?
 
-        if params[:view] == "All"
+        if params[:from] == "ALL"
             if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
                 const_center_ids = params[:cost_center_ids].split(",")
                 user_responsible_ids = params[:user_responsible_ids].split(",")
 
                 shifts = Shift.search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
             else
+                puts "ALLALLALLALLALLALLALLALLALLALLALLALLALLALLALLALLALL"
                 shifts = Shift.all.order(created_at: :asc)
             end
 
-        elsif params[:view] == "MY"
+        elsif params[:from] == "MY"
             if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
                 const_center_ids = params[:cost_center_ids].split(",")
                 user_responsible_ids = params[:user_responsible_ids].split(",")
@@ -79,27 +80,37 @@ class ShiftsController < ApplicationController
                 const_center_ids = params[:cost_center_ids].split(",")
                 user_responsible_ids = params[:user_responsible_ids].split(",")
 
-                if show
+                if true
+                    puts "filtrando todos"
                     shifts = Shift.search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
                 else
+                    puts "filtrando los que soy responsable mas los filtros"
                     shifts = Shift.where(user_responsible_id: current_user.id).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
                 end
             else
-                if show
+                if true
                     shifts = Shift.all.order(created_at: :asc)
                 else
                     shifts = Shift.where(user_responsible_id: current_user.id).order(created_at: :asc)
                 end
             end
         end
-        
+
         render json: {
             data: ActiveModelSerializers::SerializableResource.new(shifts, each_serializer: ShiftSerializer),
         }
     end
 
     def get_shifts_const_center
-        shifts = CostCenter.find(params[:const_center_id]).shifts
+        if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
+            const_center_ids = [] << params[:const_center_id]
+            user_responsible_ids = params[:user_responsible_ids].split(",")
+
+            shifts = Shift.where(cost_center_id: params[:const_center_id]).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
+        else
+            shifts = Shift.where(cost_center_id: params[:const_center_id])
+        end
+        
         render json: {
             data: ActiveModelSerializers::SerializableResource.new(shifts, each_serializer: ShiftSerializer),
         }

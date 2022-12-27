@@ -60,44 +60,49 @@ const FormCreate = (props) => {
                                                 value={props.selectedOptionCostCenter}
                                             />
                                         </div>
+                                        
+                                        {!props.modeEdit && (
+                                            <div className="col-md-12 mt-2 mb-3">
+                                                <label>Usuarios que se les va a crear este turno</label>
+                                                <input
+                                                    type="hidden"
+                                                    name="user_ids"
+                                                    value={props.selectedOptionMulti.user_ids}
+                                                />
 
-                                        <div className="col-md-12 mt-2 mb-3">
-                                            <label>Usuarios que se les va a crear este turno</label>
-                                            <input
-                                                type="hidden"
-                                                name="user_ids"
-                                                value={props.selectedOptionMulti.user_ids}
-                                            />
+                                                <Select
+                                                    onChange={props.handleChangeAutocompleteMulti}
+                                                    options={props.users}
+                                                    isMulti
+                                                    closeMenuOnSelect={false}
+                                                    autoFocus={false}
+                                                    className={`link-form`}
+                                                    classNamePrefix="select"
+                                                    placeholder="Seleccione"
+                                                    name="user_ids"
+                                                    defaultValue={props.defaultValues}
+                                                />
+                                            </div>
+                                        )}
+                                        
 
-                                            <Select
-                                                onChange={props.handleChangeAutocompleteMulti}
-                                                options={props.users}
-                                                isMulti
-                                                closeMenuOnSelect={false}
-                                                autoFocus={false}
-                                                className={`link-form`}
-                                                classNamePrefix="select"
-                                                placeholder="Seleccione"
-                                                name="user_ids"
-                                                defaultValue={props.defaultValues}
-                                            />
-                                        </div>
-
-                                        <div className="col-md-12 mb-3">
-                                            <input
-                                                type="hidden"
-                                                name="user_responsible_id"
-                                                value={props.selectedOptionUser.user_responsible_id}
-                                            />                                                        
-                                            <label>Usuario responsable </label>
-                                            <Select
-                                                onChange={props.handleChangeAutocompleteUser}
-                                                options={props.users}
-                                                autoFocus={false}
-                                                className={`link-form ${!props.errorValues && props.formValues.user_responsible_id == "" ? "error-class" : ""}`}
-                                                value={props.selectedOptionUser}
-                                            />
-                                        </div>
+                                        {props.modeEdit && (
+                                            <div className="col-md-12 mb-3">
+                                                <input
+                                                    type="hidden"
+                                                    name="user_responsible_id"
+                                                    value={props.selectedOptionUser.user_responsible_id}
+                                                />                                                        
+                                                <label>Usuario responsable </label>
+                                                <Select
+                                                    onChange={props.handleChangeAutocompleteUser}
+                                                    options={props.users}
+                                                    autoFocus={false}
+                                                    className={`link-form ${!props.errorValues && props.formValues.user_responsible_id == "" ? "error-class" : ""}`}
+                                                    value={props.selectedOptionUser}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
