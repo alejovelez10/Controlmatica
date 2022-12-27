@@ -11,7 +11,7 @@ class FormFilter extends Component {
             },
 
             selectedOptionUser: {
-                user_responsible_ids: "", 
+                user_responsible_ids: [], 
                 label: "Seleccione el usuario responsable"
             }
         }
@@ -27,7 +27,12 @@ class FormFilter extends Component {
         }
 
         this.props.handleChangeFilter({ target: { name: "cost_center_ids", value: selectedOptionCostCenter ? array : [] } } )
-        this.setState({ selectedOptionCostCenter });
+        this.setState({ 
+            selectedOptionCostCenter: {
+                cost_center_ids: array,
+                label: "Seleccione el centro de costo",
+            },
+        });
     };
 
 
@@ -41,7 +46,12 @@ class FormFilter extends Component {
         }
 
         this.props.handleChangeFilter({ target: { name: "user_responsible_ids", value: selectedOptionUser ? array : [] } } )
-        this.setState({ selectedOptionUser });
+        this.setState({ 
+            selectedOptionUser: {
+                user_responsible_ids: array, 
+                label: "Seleccione el usuario responsable"
+            }
+        });
     }
 
     render() {
@@ -95,7 +105,7 @@ class FormFilter extends Component {
                                 </div>   
                             )}
 
-                            {this.props.cost_centers.length >= 2 && (
+                            {true && (
                                 <div className="col-md-4 mb-3">
                                     <input
                                         type="hidden"

@@ -6,12 +6,15 @@ import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 
 const Shifts = (props) => {
+    const date = new Date()
+    const start_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}T${date.getHours()}:${date.getMinutes()}`
+    
     const [data, setData] = useState([]);
     const [isLoaded, setIsLoaded] = useState(true);
     const token = document.querySelector("[name='csrf-token']").content;
     const [id, setId] = useState("");
     const [defaultValues, setDefaultValues] = useState([]);
-    const [form, setForm] = useState({ end_date: "", start_date: "", cost_center_id: "", description: "", subject: "", user_responsible_id: "", user_ids: [] });
+    const [form, setForm] = useState({ end_date: "", start_date: start_date, cost_center_id: "", description: "", subject: "", user_responsible_id: "", user_ids: [] });
     const [formFilter, setFormFilter] = useState({ end_date: "", start_date: "", cost_center_ids: [], user_responsible_ids: [] });
 
     const [selectedOptionCostCenter, setSelectedOptionCostCenter] = useState({ cost_center_id: "", label: "Seleccione el centro de costo" });
@@ -69,12 +72,16 @@ const Shifts = (props) => {
         setFormFilter({ ...formFilter, [e.target.name]: e.target.value })
     }
 
+    const clearValuesFilter = () => {
+        setFormFilter({ end_date: "", start_date: "", cost_center_ids: [], user_responsible_ids: [] });
+    }
+
     const toogleFilter = (from) => {
         if (from == "new") {
             setModalFilter(true);
         } else {
             setModalFilter(false);
-            clearValues();
+            clearValuesFilter();
         }
     }
 
@@ -97,11 +104,12 @@ const Shifts = (props) => {
 
     const closeFilter = () => {
         setModalFilter(false);
+        clearValuesFilter();
         loadData();
     }
 
     const clearValues = () => {
-        setForm({ end_date: "", start_date: "", cost_center_id: "", user_responsible_id: "" });
+        setForm({ end_date: start_date, start_date: "", cost_center_id: "", user_responsible_id: "" });
         setId("");
         setModeEdit(false);
         setErrorValues(true);
@@ -121,8 +129,7 @@ const Shifts = (props) => {
     const validationForm = () => {
         if (form.end_date != "" &&
             form.start_date != "" &&
-            form.cost_center_id != "" &&
-            form.user_responsible_id != "" 
+            form.cost_center_id != "" 
         ) {
             setErrorValues(true)
             return true
@@ -241,7 +248,7 @@ const Shifts = (props) => {
         })
         .then(response => response.json())
         .then(data => {
-            setForm({ ...form, description: data.register.description, cost_center_id: data.register.id })
+            setForm({ ...form, subject: data.register.description, cost_center_id: data.register.id })
         });
     }
 
@@ -265,15 +272,34 @@ const Shifts = (props) => {
         })
     }
 
+    const digits_count = (n) => {
+        var count = 0;
+        if (n >= 1) ++count;
+      
+        while (n / 10 >= 1) {
+          n /= 10;
+          ++count;
+        }
+      
+        return count;
+    }
+
+    const getDate = (register_date) => {
+        let date = new Date(register_date)
+        let date_month = digits_count(date.getUTCDate()) == 1 ? `0${date.getUTCDate()}` : `${date.getUTCDate()}`
+        let new_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date_month}T${date.getHours()}:${date.getMinutes()}`
+        return new_date
+    }
+
     const edit = (shift) => {
         const arrayIds = [];
     
         shift.users.map((user) => (
             arrayIds.push(user.value)
         ))    
-
-        setForm({ end_date: shift.end_date, start_date: shift.start_date,  description: shift.description, subject: shift.subject, cost_center_id: shift.cost_center.id, user_responsible_id: shift.user_responsible.id, user_ids: arrayIds })
-        setSelectedOptionUser({ user_responsible_id: shift.user_responsible.id, label: shift.user_responsible.names });
+        
+        setForm({ end_date: getDate(shift.end_date), start_date: getDate(shift.start_date), description: shift.description, subject: shift.subject, cost_center_id: shift.cost_center.id, user_responsible_id: (shift.user_responsible ? shift.user_responsible.id : ""), user_ids: arrayIds })
+        setSelectedOptionUser({ user_responsible_id: (shift.user_responsible ? shift.user_responsible.id : ""), label: (shift.user_responsible ? shift.user_responsible.names : "Seleccione el usuario responsable") });
         setSelectedOptionCostCenter({ cost_center_id: shift.cost_center.id, label: shift.cost_center.code });
         setModal(true);
         setModeEdit(true);
@@ -290,6 +316,7 @@ const Shifts = (props) => {
                     toggle={toogle}
                     title={modeEdit ? "Actualizar turno" : "Crear turno"}
                     nameBnt={modeEdit ? "Actualizar" : "Crear"}
+                    modeEdit={modeEdit}
 
                     //form props
                     formValues={form}
@@ -392,9 +419,9 @@ const Shifts = (props) => {
                                                 )}
 
                                                 <td>{shift.cost_center.code}</td>
-                                                <td>{shift.start_date}</td>
-                                                <td>{shift.end_date}</td>
-                                                <td>{shift.user_responsible.names}</td>
+                                                <td>{getDate(shift.start_date)}</td>
+                                                <td>{getDate(shift.end_date)}</td>
+                                                <td>{shift.user_responsible ? shift.user_responsible.names : ""}</td>
                                             </tr>
                                         ))
                                     ) : (

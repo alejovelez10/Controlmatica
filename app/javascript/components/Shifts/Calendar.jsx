@@ -4,6 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FormCreate from './FormCreate'
 import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
+import FormFilter from './FormFilter';
 // import esLocale from '@fullcalendar/core/locales/es';
 // must manually import the stylesheets for each plugin
 // import "@fullcalendar/core/main.css";
@@ -19,6 +20,7 @@ class Calendar extends Component {
             data: [],
             isLoaded: false,
             canDrop: true,
+            modalFilter: false,
             calendarWeekends: true,
             modal: false,
             shift_id: "",
@@ -33,6 +35,13 @@ class Calendar extends Component {
                 description: "",
                 subject: "",
                 user_ids: [],
+            },
+
+            formFilter: {
+                end_date: "", 
+                start_date: "", 
+                cost_center_ids: [], 
+                user_responsible_ids: []
             },
 
             defaultValues: [],
@@ -95,7 +104,7 @@ class Calendar extends Component {
                 const array = []
 
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible.names}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
+                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 ))
 
                 this.setState({
@@ -153,6 +162,9 @@ class Calendar extends Component {
     };
 
     handleDateClick = arg => {
+        const date = new Date()
+        const start_date = `${arg.dateStr}T${date.getHours()}:${date.getMinutes()}`
+        
         if (true) {
             this.setState({
                 modal: true,
@@ -160,7 +172,7 @@ class Calendar extends Component {
 
                 form: {
                     ...this.state.form,
-                    start_date: arg.dateStr,
+                    start_date: start_date,
                 },
             });
         }
@@ -323,8 +335,7 @@ class Calendar extends Component {
     validationForm = () => {
         if (this.state.form.end_date != "" &&
             this.state.form.start_date != "" &&
-            this.state.form.cost_center_id != "" &&
-            this.state.form.user_responsible_id != ""
+            this.state.form.cost_center_id != ""
         ) {
             this.setState({ errorValues: true })
             return true
@@ -427,6 +438,56 @@ class Calendar extends Component {
         })
     }
 
+    handleClickFilter = () => {
+        fetch(`${this.props.url_calendar}?start_date=${this.state.formFilter.start_date}&end_date=${this.state.formFilter.end_date}&cost_center_ids=${this.state.formFilter.cost_center_ids}&user_responsible_ids=${this.state.formFilter.user_responsible_ids}`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setState({ data: data.data })
+        });
+    }
+
+    handleChangeFilter = (e) => {
+        this.setState({
+            formFilter: {
+                ...this.state.formFilter,
+                [e.target.name]: e.target.value,
+            }
+        });
+    }
+
+    clearValuesFilter = () => {
+        this.setState({
+            formFilter: {
+                end_date: "", 
+                start_date: "", 
+                cost_center_ids: [], 
+                user_responsible_ids: []
+            },
+        })
+    }
+
+    toogleFilter = (from) => {
+        if (from == "new") {
+            this.setState({ modalFilter: true })
+        } else {
+            this.setState({ modalFilter: false })
+            this.clearValuesFilter();
+        }
+    }
+
+    closeFilter = () => {
+        this.setState({ modalFilter: false })
+        this.clearValuesFilter();
+        this.loadData();
+    }
+
+    
     render() {
         if (this.state.isLoaded) {
             return (
@@ -447,6 +508,7 @@ class Calendar extends Component {
                         toggle={this.toogle}
                         title={this.state.shift_id ? "Actualizar turno" : "Crear turno"}
                         nameBnt={this.state.shift_id ? "Actualizar" : "Crear"}
+                        modeEdit={this.state.shift_id ? true : false}
 
                         //form props
                         formValues={this.state.form}
@@ -469,7 +531,33 @@ class Calendar extends Component {
                     />
                 )}
 
+                {this.state.modalFilter && (
+                    <FormFilter
+                        formValues={this.state.formFilter}
+                        handleChangeFilter={this.handleChangeFilter}
+                        handleClickFilter={this.handleClickFilter}
+                        closeFilter={this.closeFilter}
+                        users={this.props.users}
+                        cost_centers={this.props.cost_centers}
+                    />
+                )}
+
+
                 <div className="content main-card mb-3 card">
+
+                    {!this.state.modalFilter && (
+                        <div className="card-header">
+                            {true && (
+                                <button 
+                                    className="btn btn-primary ml-3"
+                                    onClick={() => this.toogleFilter("new")}
+                                >
+                                    Filtros
+                                </button> 
+                            )}  
+                        </div>
+                    )}
+
                     <div className="card-body">
 
                         <FullCalendar
