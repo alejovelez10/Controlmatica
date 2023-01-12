@@ -191,8 +191,10 @@ class Calendar extends Component {
 
     getDate = (register_date) => {
         let date = new Date(register_date)
-        let date_month = this.digits_count(date.getUTCDate()) == 1 ? `0${date.getUTCDate()}` : `${date.getUTCDate()}`
-        let new_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date_month}T${date.getHours()}:${date.getMinutes()}`
+        let mins = ('0'+date.getMinutes()).slice(-2);
+        let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
+        let day = ("0" + (date.getDay() + 1)).slice(-2)
+        let new_date = `${date.getFullYear()}-${day}-${date_month}T${date.getHours()}:${mins}`
         return new_date
     }
 
@@ -415,7 +417,7 @@ class Calendar extends Component {
                 .then(res => res.json())
                 .catch(error => console.error("Error:", error))
                 .then(data => {
-                    this.updateItem(data.register);
+                    this.loadData();
                     this.clearValues();
                     this.setState({
                         modal: false, 

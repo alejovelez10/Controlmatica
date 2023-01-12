@@ -34,7 +34,8 @@ class Shift < ApplicationRecord
         end
 
         if self.user_responsible_id.nil?
-            DeleteShiftJob.set(wait: 5.seconds).perform_later(self)
+            Shift.find(self.id).destroy
+            #DeleteShiftJob.set(wait: 5.seconds).perform_later(self)
         end
     end
 
