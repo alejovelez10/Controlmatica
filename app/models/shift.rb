@@ -21,22 +21,22 @@ class Shift < ApplicationRecord
     after_create :create_shift
 
     def create_shift
-        if self.users.any?
-            self.users.each do |user|
-                Shift.create(
-                    start_date: self.start_date,
-                    end_date: self.end_date,
-                    cost_center_id: self.cost_center_id,
-                    user_id: self.user_id,
-                    user_responsible_id: user.id,
-                )
-            end
-        end
+      #  if self.users.any?
+      #      self.users.each do |user|
+      #          Shift.create(
+      #              start_date: self.start_date,
+      #              end_date: self.end_date,
+      #              cost_center_id: self.cost_center_id,
+      #              user_id: self.user_id,
+      #              user_responsible_id: user.id,
+      #          )
+      #      end
+      #  end
 
-        if self.user_responsible_id.nil?
-            Shift.find(self.id).destroy
-            #DeleteShiftJob.set(wait: 5.seconds).perform_later(self)
-        end
+      #  if self.user_responsible_id.nil?
+       #     Shift.find(self.id).destroy
+        #    #DeleteShiftJob.set(wait: 5.seconds).perform_later(self)
+       # end
     end
 
     def self.search(start_date, end_date, cost_center_ids, user_responsible_ids)

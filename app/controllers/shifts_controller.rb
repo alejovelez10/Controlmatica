@@ -25,23 +25,49 @@ class ShiftsController < ApplicationController
     end
 
     def create
-        shift = Shift.create(shift_create_params)
-        if shift.save
-            if @user_name 
-                CreateEvenInMicrosoftJob.set(wait: 5.seconds).perform_later(shift, access_token, user_timezone)
+      
+
+       users = User.where(id: shift_create_params["user_ids"])
+      
+       users.each do |user|
+        create_row = true
+        Shift.where(user_responsible_id: user.id).each do |s|
+            
+            if  shift_create_params["start_date"] >= s.start_date && shift_create_params["start_date"] <= s.end_date
+                create_row = false
             end
+
+            if  shift_create_params["start_date"] < s.start_date && shift_create_params["end_date"] >= s.start_date
+                create_row = false
+            end
+            
+        end
+
+        if create_row
+            shift =  Shift.create(
+                    start_date: shift_create_params["start_date"],
+                    end_date: shift_create_params["end_date"],
+                    cost_center_id: shift_create_params["cost_center_id"],
+                    description: shift_create_params["description"],
+                    subject: shift_create_params["subject"],
+                    user_id: current_user.id,
+                    user_responsible_id: user.id,
+                )
+                if shift.save
+                    if @user_name 
+                        CreateEvenInMicrosoftJob.set(wait: 2.seconds).perform_later(shift, access_token, user_timezone)
+                    end
+                end
+        end
+
+
+       end
 
             render :json => {
                 success: "¡El Registro fue creado con éxito!",
-                register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
+                #register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
                 type: "success"
             }
-        else
-            render :json => {
-                success: "¡El Registro No se creó!",
-                type: "error" 
-            }
-        end
     end
 
     def get_cost_center_description

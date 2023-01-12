@@ -9,14 +9,15 @@ class CreateEvenInMicrosoftJob < ApplicationJob
       array = []
     end
     
+
     ApplicationController.helpers.create_event(
       access_token,
       user_timezone,
-      "Creacion de evento",
-      shift.start_date,
-      shift.end_date,
+      shift.subject,
+      DateTime.new(2023,1,1,8,0,0 , + '-5'),
+      DateTime.new(2023,1,1,17,0,0 , + '-5'),
       array,
-      shift.cost_center.code
+      shift.description
     )
   end
 end

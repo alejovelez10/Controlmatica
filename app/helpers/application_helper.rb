@@ -365,6 +365,12 @@ module ApplicationHelper
     end
   end
 
+  def authorization_turnos
+    modulo = ModuleControl.find_by_name("Turnos")
+    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver todos").exists?
+      true
+    end
+  end
   def authorization_tablero_user
     modulo = ModuleControl.find_by_name("Tablero de Ingenieros")
     if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver todos").exists?
