@@ -415,7 +415,7 @@ class Calendar extends Component {
                 .then(res => res.json())
                 .catch(error => console.error("Error:", error))
                 .then(data => {
-                    this.updateItem(data.register);
+                    this.loadData();
                     this.clearValues();
                     this.setState({
                         modal: false, 
