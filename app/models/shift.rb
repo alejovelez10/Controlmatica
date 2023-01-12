@@ -32,6 +32,10 @@ class Shift < ApplicationRecord
                 )
             end
         end
+
+        if self.user_responsible_id.nil?
+            DeleteShiftJob.set(wait: 5.seconds).perform_later(self)
+        end
     end
 
     def self.search(start_date, end_date, cost_center_ids, user_responsible_ids)
