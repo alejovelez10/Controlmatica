@@ -110,7 +110,7 @@ class ApplicationController < ActionController::Base
 
     if user_signed_in?
       if estado_tablero
-        dashboard_ing_path
+        dashboard_ing_path + "?tab=home"
       else
         if validate
           reports_path
