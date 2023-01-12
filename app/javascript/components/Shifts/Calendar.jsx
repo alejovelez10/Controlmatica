@@ -103,6 +103,7 @@ class Calendar extends Component {
             .then(data => {
                 const array = []
 
+                //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 data.data.map((item) => (
                     array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 ))
@@ -158,10 +159,17 @@ class Calendar extends Component {
         calendarApi.gotoDate("2000-01-01"); // call a method on the Calendar object
     };
 
+    getDateOpenModal = (register_date, hours) => {
+        let date = new Date(register_date)
+        let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
+        let day = ("0" + (date.getDate() + 1)).slice(-2)
+        let new_date = `${date.getFullYear()}-${date_month}-${day}T${hours}`
+        return new_date
+    }
+
     handleDateClick = arg => {
-        const date = new Date()
-        const start_date = `${arg.dateStr}T08:00`
-        const end_date = `${arg.dateStr}T17:00`
+        const start_date = `${arg.dateStr}`
+        const end_date = `${arg.dateStr}`
         
         if (true) {
             this.setState({
@@ -170,8 +178,8 @@ class Calendar extends Component {
 
                 form: {
                     ...this.state.form,
-                    start_date: start_date,
-                    end_date: end_date,
+                    start_date: this.getDateOpenModal(start_date, "08:00"),
+                    end_date: this.getDateOpenModal(end_date, "17:00"),
                 },
             });
         }
@@ -194,8 +202,8 @@ class Calendar extends Component {
         let mins = ('0'+date.getMinutes()).slice(-2);
         let hours = ('0'+date.getHours()).slice(-2);
         let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
-        let day = ("0" + (date.getDay() + 1)).slice(-2)
-        let new_date = `${date.getFullYear()}-${day}-${date_month}T${hours}:${mins}`
+        let day = ("0" + (date.getDate())).slice(-2)
+        let new_date = `${date.getFullYear()}-${date_month}-${day}T${hours}:${mins}`
         return new_date
     }
 
@@ -250,7 +258,7 @@ class Calendar extends Component {
         const task_id = info.event._def.publicId
         const { start, end } = info.oldEvent._instance.range;
         const { start: newStart, end: newEnd } = info.event._instance.range;
-        const date = `${newStart.getFullYear()}-${newStart.getMonth() + 1}-${newStart.getDate() + 1}`
+        const date = this.getDate(newStart)
         this.updateDate(task_id, date)
 
         if (new Date(start).getDate() === new Date(newStart).getDate()) {
@@ -394,8 +402,8 @@ class Calendar extends Component {
                 if (shift.id === item.id) {
                     return {
                         ...item,
-                        start: new Date(shift.start_date).setDate(new Date(shift.start_date).getDate()),
-                        end: new Date(shift.end_date).setDate(new Date(shift.end_date).getDate()),
+                        start: shift.start_date,
+                        end: shift.end_date,
                         title: shift.cost_center.code,
                     }
                 }
