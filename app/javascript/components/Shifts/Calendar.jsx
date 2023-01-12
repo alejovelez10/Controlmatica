@@ -192,9 +192,10 @@ class Calendar extends Component {
     getDate = (register_date) => {
         let date = new Date(register_date)
         let mins = ('0'+date.getMinutes()).slice(-2);
+        let hours = ('0'+date.getHours()).slice(-2);
         let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
         let day = ("0" + (date.getDay() + 1)).slice(-2)
-        let new_date = `${date.getFullYear()}-${day}-${date_month}T${date.getHours()}:${mins}`
+        let new_date = `${date.getFullYear()}-${day}-${date_month}T${hours}:${mins}`
         return new_date
     }
 
@@ -321,6 +322,7 @@ class Calendar extends Component {
     }
 
     handleClickShow = (shift_id, event) => {
+        console.log("Shift", event._instance.range.end);
         fetch(`/get_shift_info/${shift_id}`, {
             method: 'GET', // or 'PUT'
             headers: {
