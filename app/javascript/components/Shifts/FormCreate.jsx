@@ -20,7 +20,7 @@ const FormCreate = (props) => {
                                 <div className="col-md-6">
                                     <div className="row">
                                         {true && (
-                                            <div className="col-md-6">
+                                            <div className="col-md-12 mb-3">
                                                 <label>Fecha inicial</label>
                                                 <input
                                                     type="datetime-local"
@@ -33,7 +33,7 @@ const FormCreate = (props) => {
                                             </div>  
                                         )}
 
-                                        <div className={`col-md-6 mb-3`}>
+                                        <div className={`col-md-12 mb-3`}>
                                             <label>Fecha final</label>
                                             <input
                                                 type="datetime-local"
