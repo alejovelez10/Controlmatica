@@ -28,22 +28,25 @@ class ShiftsController < ApplicationController
       
 
        users = User.where(id: shift_create_params["user_ids"])
-      
+       errors = []
        users.each do |user|
         create_row = true
         Shift.where(user_responsible_id: user.id).each do |s|
             
             if  shift_create_params["start_date"] >= s.start_date && shift_create_params["start_date"] <= s.end_date
                 create_row = false
+                errors << user.email
             end
 
             if  shift_create_params["start_date"] < s.start_date && shift_create_params["end_date"] >= s.start_date
                 create_row = false
+                errors << user.email
+
             end
             
         end
 
-        if create_row
+        if create_row && errors.length == 0
             shift =  Shift.create(
                     start_date: shift_create_params["start_date"],
                     end_date: shift_create_params["end_date"],
@@ -65,6 +68,7 @@ class ShiftsController < ApplicationController
 
             render :json => {
                 success: "¡El Registro fue creado con éxito!",
+                errors: errors,
                 #register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
                 type: "success"
             }

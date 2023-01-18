@@ -903,9 +903,9 @@ class Show extends React.Component {
                         <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Informacion del centro de costo</a>
                     </li>
 
-                    <li className="nav-item">
+                  {/*   <li className="nav-item">
                         <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=calendar`}>Calendario</a>
-                    </li>
+                    </li> */}
                 </ul>
 
                 <div className="tab-content" id="myTabContent">

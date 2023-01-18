@@ -74,10 +74,10 @@ class InformeIng extends Component {
                         <li className="nav-item">
                             <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>Informacion</a>
                         </li>
-
+{/* 
                         <li className="nav-item">
                             <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>Calendario</a>
-                        </li>
+                        </li> */}
                     </ul>
                 </div>
 

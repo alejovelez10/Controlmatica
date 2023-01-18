@@ -26,6 +26,7 @@ class Calendar extends Component {
             shift_id: "",
             errorValues: true,
             arg: "",
+            errors_create: [],
 
             form: {
                 start_date: "",
@@ -38,9 +39,9 @@ class Calendar extends Component {
             },
 
             formFilter: {
-                end_date: "", 
-                start_date: "", 
-                cost_center_ids: [], 
+                end_date: "",
+                start_date: "",
+                cost_center_ids: [],
                 user_responsible_ids: []
             },
 
@@ -170,7 +171,7 @@ class Calendar extends Component {
     handleDateClick = arg => {
         const start_date = `${arg.dateStr}`
         const end_date = `${arg.dateStr}`
-        
+
         if (true) {
             this.setState({
                 modal: true,
@@ -188,19 +189,19 @@ class Calendar extends Component {
     digits_count = (n) => {
         var count = 0;
         if (n >= 1) ++count;
-      
+
         while (n / 10 >= 1) {
-          n /= 10;
-          ++count;
+            n /= 10;
+            ++count;
         }
-      
+
         return count;
     }
 
     getDate = (register_date) => {
         let date = new Date(register_date)
-        let mins = ('0'+date.getMinutes()).slice(-2);
-        let hours = ('0'+date.getHours()).slice(-2);
+        let mins = ('0' + date.getMinutes()).slice(-2);
+        let hours = ('0' + date.getHours()).slice(-2);
         let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
         let day = ("0" + (date.getDate())).slice(-2)
         let new_date = `${date.getFullYear()}-${date_month}-${day}T${hours}:${mins}`
@@ -215,16 +216,16 @@ class Calendar extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            this.setState({
-                form: {
-                    ...this.state.form,
-                    subject: data.register.description,
-                    cost_center_id: data.register.id,
-                },
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    form: {
+                        ...this.state.form,
+                        subject: data.register.description,
+                        cost_center_id: data.register.id,
+                    },
+                });
             });
-        });
     }
 
 
@@ -232,7 +233,7 @@ class Calendar extends Component {
         const form = {
             start_date: date
         }
-        
+
         fetch(`/shifts/${shift_id}`, {
             method: 'PATCH', // or 'PUT'
             body: JSON.stringify(form), // data can be `string` or {object}!
@@ -242,11 +243,11 @@ class Calendar extends Component {
             }
         })
 
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
 
-        });
+            });
     }
 
     handleClickCreate = () => {
@@ -338,40 +339,40 @@ class Calendar extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => { 
-            const arrayIds = [];
-    
-            data.register.users.map((user) => (
-                arrayIds.push(user.value)
-            ))    
+            .then(response => response.json())
+            .then(data => {
+                const arrayIds = [];
 
-            this.setState({
-                modal: true,    
-                shift_id: shift_id,
-                defaultValues: data.register.users,
+                data.register.users.map((user) => (
+                    arrayIds.push(user.value)
+                ))
 
-                form: {
-                    start_date: this.getDate(data.register.start_date),
-                    end_date: this.getDate(data.register.end_date),
-                    cost_center_id: data.register.cost_center.id,
-                    user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
-                    description: data.register.description,
-                    subject: data.register.subject,
-                    user_ids: arrayIds
-                },
-    
-                selectedOptionCostCenter: {
-                    cost_center_id: data.register.cost_center.id,
-                    label: data.register.cost_center.code,
-                },
-    
-                selectedOptionUser: {
-                    user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
-                    label: (data.register.user_responsible ? data.register.user_responsible.names : ""),
-                },
-            })
-        });
+                this.setState({
+                    modal: true,
+                    shift_id: shift_id,
+                    defaultValues: data.register.users,
+
+                    form: {
+                        start_date: this.getDate(data.register.start_date),
+                        end_date: this.getDate(data.register.end_date),
+                        cost_center_id: data.register.cost_center.id,
+                        user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
+                        description: data.register.description,
+                        subject: data.register.subject,
+                        user_ids: arrayIds
+                    },
+
+                    selectedOptionCostCenter: {
+                        cost_center_id: data.register.cost_center.id,
+                        label: data.register.cost_center.code,
+                    },
+
+                    selectedOptionUser: {
+                        user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
+                        label: (data.register.user_responsible ? data.register.user_responsible.names : ""),
+                    },
+                })
+            });
     }
 
     toogle = (from) => {
@@ -414,7 +415,7 @@ class Calendar extends Component {
 
     handleClick = () => {
         if (this.validationForm()) {
-            if(this.state.shift_id){
+            if (this.state.shift_id) {
                 fetch(`/shifts/${this.state.shift_id}`, {
                     method: 'PATCH', // or 'PUT'
                     body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -423,18 +424,18 @@ class Calendar extends Component {
                         "Content-Type": "application/json"
                     }
                 })
-    
-                .then(res => res.json())
-                .catch(error => console.error("Error:", error))
-                .then(data => {
-                    this.loadData();
-                    this.clearValues();
-                    this.setState({
-                        modal: false, 
-                        shift_id: "",
-                    })
-                });
-            }else{
+
+                    .then(res => res.json())
+                    .catch(error => console.error("Error:", error))
+                    .then(data => {
+                        this.loadData();
+                        this.clearValues();
+                        this.setState({
+                            modal: false,
+                            shift_id: "",
+                        })
+                    });
+            } else {
                 fetch(`/shifts`, {
                     method: 'POST', // or 'PUT'
                     body: JSON.stringify(this.state.form), // data can be `string` or {object}!
@@ -443,17 +444,28 @@ class Calendar extends Component {
                         "Content-Type": "application/json"
                     }
                 })
+
+                    .then(res => res.json())
+                    .catch(error => console.error("Error:", error))
+                    .then(data => {
+                        console.log(data)
+                       
+                        if (data.errors.length == 0) {
+                            this.setState({
+                                modal: false,
+                                shift_id: "",
+                                
+                            })
+                            this.clearValues();
+                            this.loadData();
     
-                .then(res => res.json())
-                .catch(error => console.error("Error:", error))
-                .then(data => {
-                    this.clearValues();
-                    this.loadData();
-                    this.setState({
-                        modal: false, 
-                        shift_id: "",
-                    })
-                });
+                        }else{
+                            this.setState({
+                                errors_create: data.errors,
+                               
+                            })
+                        }
+                    });
             }
         }
     }
@@ -470,7 +482,7 @@ class Calendar extends Component {
     handleChangeAutocompleteMulti = selectedOptionMulti => {
         let array = []
 
-        if(selectedOptionMulti){
+        if (selectedOptionMulti) {
             selectedOptionMulti.map((item) => (
                 array.push(item.value)
             ))
@@ -492,10 +504,10 @@ class Calendar extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            this.setState({ data: data.data })
-        });
+            .then(response => response.json())
+            .then(data => {
+                this.setState({ data: data.data })
+            });
     }
 
     handleChangeFilter = (e) => {
@@ -510,9 +522,9 @@ class Calendar extends Component {
     clearValuesFilter = () => {
         this.setState({
             formFilter: {
-                end_date: "", 
-                start_date: "", 
-                cost_center_ids: [], 
+                end_date: "",
+                start_date: "",
+                cost_center_ids: [],
                 user_responsible_ids: []
             },
         })
@@ -533,7 +545,7 @@ class Calendar extends Component {
         this.loadData();
     }
 
-    
+
     render() {
         if (this.state.isLoaded) {
             return (
@@ -549,6 +561,7 @@ class Calendar extends Component {
             <React.Fragment>
                 {this.state.modal && (
                     <FormCreate
+                        errors={this.state.errors_create}
                         backdrop={"static"}
                         modal={this.state.modal}
                         toggle={this.toogle}
@@ -594,13 +607,13 @@ class Calendar extends Component {
                     {!this.state.modalFilter && (
                         <div className="card-header">
                             {true && (
-                                <button 
+                                <button
                                     className="btn btn-primary ml-3"
                                     onClick={() => this.toogleFilter("new")}
                                 >
                                     Filtros
-                                </button> 
-                            )}  
+                                </button>
+                            )}
                         </div>
                     )}
 
