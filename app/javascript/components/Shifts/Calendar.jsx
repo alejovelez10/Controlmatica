@@ -201,9 +201,9 @@ class Calendar extends Component {
     getDate = (register_date) => {
         let date = new Date(register_date)
         let mins = ('0' + date.getMinutes()).slice(-2);
-        let hours = ('0' + date.getHours()).slice(-2);
         let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
         let day = ("0" + (date.getDate())).slice(-2)
+        let hours = ('0'+date.getUTCHours()).slice(-2);
         let new_date = `${date.getFullYear()}-${date_month}-${day}T${hours}:${mins}`
         return new_date
     }
