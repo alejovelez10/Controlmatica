@@ -1,3 +1,12 @@
+<%
+   if params[:view] == "tableristas"
+      rol = Rol.find_by_name("TABLERISTA")
+      users = User.where(rol_id: rol.id)
+   else
+      users = User.all
+   end
+%>
+
 <div class="row">
 	<div class="col-md-12">
      <h3 class="text-center mb-4">INFORME DE RENDIMIENTO <%= current_user.names.upcase if current_user.rol_user == "Ingeniero"%></h3></div>
@@ -10,11 +19,13 @@
                <% if @validate %>
                   <div class="form-group">   
                      <label>Seleccione Empleado</label>
-                     <%= select_tag 'user_id', options_for_select(User.all.collect{ |u| [u.names, u.id] }),{:class => "form1 form form-control", :prompt => 'Selecciona un Empleado', id: "", :required => true}%>
+                     <%= select_tag 'user_id', options_for_select(users.collect{ |u| [u.names, u.id] }),{:class => "form1 form form-control", :prompt => 'Selecciona un Empleado', id: "", :required => true}%>
                   </div>
                <% else %>
                   <%= hidden_field_tag :user_id, current_user.id %>
                <% end %>
+
+               <%= hidden_field_tag :view, params[:view] %>
 
                <div class="form-group">
                   <label>Seleccione Desde</label>

@@ -648,11 +648,13 @@ class table extends React.Component {
                 </th>
                 <th style={{width:"253px"}}>Centro de costo</th>
                 <th style={{width:"184px"}}>Proveedor</th>
+                <th style={{width:"854px"}}>Facturas</th>
+                <th style={{width:"184px"}}>Suma facturas</th>
                 <th style={{width:"184px"}}># Orden</th>
                 <th style={{width:"184px"}}>Valor</th>
                 <th style={{width:"370px"}}>Descripción</th>
-                <th style={{width:"150px"}}>Fecha de Orden</th>
-                <th style={{width:"150px"}}>Fecha Entrega</th>
+                <th style={{width:"217px"}}>Fecha de Orden</th>
+                <th style={{width:"217px"}}>Fecha Entrega</th>
                 <th style={{width:"150px"}}>Valor Facturas</th>
                 <th style={{width:"184px"}}>Estado</th>
                 <th style={{width: "250px"}}>Creación</th>
@@ -720,6 +722,24 @@ class table extends React.Component {
                     </td>
                     <td>{accion.cost_center != undefined ? accion.cost_center.code : "" }</td>
                     <td>{accion.provider != undefined ? accion.provider.name : "" }</td>
+                    <td>  
+                      <table style={{tableLayout: "fixed", width:"100%"}}>
+                          <tr>
+                              <td style={{padding:"3px", textAlign:"left"}}>Numero de factura</td>
+                              <td style={{padding:"3px", textAlign:"left"}}>Valor</td>
+                              <td style={{padding:"3px", textAlign:"left"}}>Descripcion</td>
+                          </tr>
+                          {accion.material_invoices.map(material_invoice => (
+                            <tr>
+                              <td style={{padding:"5px", textAlign:"left"}}>{material_invoice.number}</td>
+                              <td style={{padding:"5px", textAlign:"left"}} ><NumberFormat value={material_invoice.value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                              <td style={{padding:"5px", textAlign:"left"}}>{material_invoice.observation}</td>
+                            </tr>
+                          ))}
+                            
+                      </table>
+                    </td>
+                    <td><NumberFormat value={accion.sum_material_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                     <td>{accion.sales_number}</td>
                     <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                     <td>{accion.description}</td>

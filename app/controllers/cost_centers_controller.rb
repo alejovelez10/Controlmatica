@@ -614,11 +614,56 @@ class CostCentersController < ApplicationController
   # DELETE /cost_centers/1
   # DELETE /cost_centers/1.json
   def destroy
-    if @cost_center.destroy
-      render :json => @cost_center
-    else
-      render :json => @cost_center.errors.full_messages
+
+    message = []
+
+    #materiales
+    materials = @cost_center.materials.count
+
+    #ordenes de compra
+    sales_orders = @cost_center.sales_orders.count
+
+    #tableristas
+    contractors = @cost_center.contractors.count
+
+    #turnos
+    shifts = @cost_center.shifts.count
+
+    if materials >= 1
+      message << "Tiene <b> #{material} materiales </b> relacionado  todavia"
     end
+
+    if sales_orders >= 1
+      message << "Tiene <b> #{sales_orders} ordenes de compra </b> relacionado todavia"
+    end
+    
+    if contractors >= 1
+      message << "Tiene <b> #{contractors} tableristas </b> relacionado todavia"
+    end
+
+    if shifts >= 1
+      message << "Tiene <b> #{shifts} turnos </b> relacionado todavia"
+    end
+
+    puts "materials #{materials}"
+    puts "sales_orders #{sales_orders}"
+    puts "contractors #{contractors}"
+    puts "shifts #{shifts}"
+
+
+    if materials >= 1 || sales_orders >= 1 || contractors >= 1 || shifts >= 1
+      render :json => {
+        message: message,
+        type: "error"
+      }
+    else
+      if @cost_center.destroy
+        render :json => {
+          type: "delete"
+        }
+      end
+    end
+
   end
 
   def change_state_ended

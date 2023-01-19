@@ -246,6 +246,13 @@ module ApplicationHelper
     end
   end
 
+  def authorization_report_contractors
+    providers = ModuleControl.find_by_name("Rendimiento tableristas")
+    if current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Ingreso al modulo").exists?
+      true
+    end
+  end
+
   def authorization_providers
     providers = ModuleControl.find_by_name("Proveedores")
     if current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Ingreso al modulo").exists?
