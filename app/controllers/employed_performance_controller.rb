@@ -65,7 +65,7 @@ class EmployedPerformanceController < ApplicationController
 
         pdf.text content
 
-        pdf.table([headers] + array, :header => true, :width => 540, :column_widths => [38, 20, 9, 63, 98, 154], cell_style: { align: :center, :top_margin => 100, :size => 7 }) do |table|
+        pdf.table([headers] + array, :header => true, :width => 540, cell_style: { align: :center, :top_margin => 100, :size => 7 }) do |table|
           table.row(0).background_color = "2a3f54"
           table.row(0).size = 7
           table.row(0).text_color = "FFFFFF"
