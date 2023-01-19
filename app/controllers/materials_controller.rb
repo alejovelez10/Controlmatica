@@ -26,19 +26,20 @@ class MaterialsController < ApplicationController
 
   def get_materials
     if params[:filtering] == "true"
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json(:include => { :cost_center => { :only => [:code, :sales_state] }, :provider => { :only => [:name] }, :last_user_edited => { :only => [:names, :id] }, :user => { :only => [:names, :id] } })
+      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
       materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).count
     elsif params[:filtering] == "false"
-      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json(:include => { :cost_center => { :only => [:code, :sales_state] }, :provider => { :only => [:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only => [:names, :id] }, :user => { :only => [:names, :id] } })
+      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
       materials_total = Material.all.count
     else
-      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json(:include => { :cost_center => { :only => [:code, :sales_state] }, :provider => { :only => [:name] }, :material_invoices => { :only => [:number, :value, :observation] }, :last_user_edited => { :only => [:names, :id] }, :user => { :only => [:names, :id] } })
+      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10)
       materials_total = Material.all.count
     end
 
-    materials = JSON.parse(materials)
-
-    render :json => { materials_paginate: materials, materials_total: materials_total }
+    render :json => { 
+      materials_paginate: ActiveModelSerializers::SerializableResource.new(materials, each_serializer: MaterialSerializer),
+      materials_total: materials_total 
+    }
   end
 
   def update_state_materials

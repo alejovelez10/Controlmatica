@@ -3,6 +3,7 @@ import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import NumberFormat from 'react-number-format';
 import FormCreate from "../ConstCenter/FormCreate";
+import ModalError from "./ModalError";
 
 
 class tableIndex extends React.Component {
@@ -18,6 +19,9 @@ class tableIndex extends React.Component {
       modal: false,
       backdrop: "static",
       isLoading: false,
+
+      modalError: false,
+      messages: [],
 
       formUpdate: {
         execution_state: "",
@@ -509,7 +513,19 @@ class tableIndex extends React.Component {
                   .then(res => res.json())
                   .catch(error => console.error("Error:", error))
                   .then(data => {
-                      this.props.loadInfo()
+                      if(data.type != "delete"){
+                        this.setState({
+                          modalError: true,
+                          messages: data.message
+                        })
+                      }else{
+                        this.setState({
+                          modalError: false,
+                          messages: []
+                        })
+                        this.props.loadInfo()
+                      }
+                      
                   });
             } else {
               Swal.showValidationMessage("El codigo no concuerda")
@@ -523,6 +539,16 @@ class tableIndex extends React.Component {
         }
     })
   }
+
+
+  toogleModalError = (from) => {
+    if (from == "new") {
+        this.setState({ modalError: true })
+    } else {
+        this.setState({ modalError: false, messages: [] })
+    }
+  }
+
 
   edit = modulo => {
     if (this.state.modeEdit === true) {
@@ -880,6 +906,15 @@ class tableIndex extends React.Component {
             estados={this.props.estados}
             isLoading={this.state.isLoading}
           />
+        )}
+
+        {this.state.modalError && (
+          <ModalError
+            toggle={this.toogleModalError}
+            backdrop={this.state.backdrop}
+            modal={this.state.modalError}
+            messages={this.state.messages}
+          /> 
         )}
 
         <div className="col-md-12 p-0 mb-4">
