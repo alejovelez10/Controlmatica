@@ -274,7 +274,7 @@
           </li>
         <% end %>
 
-        <% if (authorization_turnos || current_user.rol.name == "Administrador") && false %>
+        <% if (authorization_turnos || current_user.rol.name == "Administrador") %>
           <li>
             <%= link_to shift_calendar_path("All"), class: "app-menu__item" do %>
               <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Turnos</span>
