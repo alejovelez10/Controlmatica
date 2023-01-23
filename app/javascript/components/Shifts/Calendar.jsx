@@ -106,7 +106,7 @@ class Calendar extends Component {
 
                 //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
+                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: this.getDate(item.start_date), end: this.getDate(item.end_date), id: item.id })
                 ))
 
                 this.setState({
@@ -175,6 +175,7 @@ class Calendar extends Component {
         if (true) {
             this.setState({
                 modal: true,
+                shift_id: "",
                 arg: arg,
 
                 form: {
@@ -331,7 +332,6 @@ class Calendar extends Component {
     }
 
     handleClickShow = (shift_id, event) => {
-        console.log("Shift", event._instance.range.end);
         fetch(`/get_shift_info/${shift_id}`, {
             method: 'GET', // or 'PUT'
             headers: {
