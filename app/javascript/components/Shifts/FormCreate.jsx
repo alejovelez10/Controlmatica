@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import Select from "react-select";
+import { CirclePicker } from 'react-color'
 
 const FormCreate = (props) => {
 
@@ -15,14 +16,22 @@ const FormCreate = (props) => {
 
                 {props.errors.length > 0 && (
                     <div className="alert alert-danger">
-                           <div className="mb-2"> No se pudieron crear los registro ya que los siguientes usuarios tienen conflictos: </div>
+                        <div className="mb-2"> No se pudieron crear los registro ya que los siguientes usuarios tienen conflictos: </div>
                         {props.errors.map(value => (
                             <div className="mb-1">{value}</div>
                         ))}
-                    </div>
 
-                )
-                }
+                        <div className="col-md-4 text-center ui-showFormatCategories-RequiredSelect mt-2 mb-2 pl-0">
+                            <input type="checkbox" onChange={(e) => props.onChangeForm({ target: { name: "force_save", value: !props.formValues.force_save } } )} className="custom-control-input" id={`customSwitch`} checked={props.formValues.force_save} />
+                            <label className="custom-control-label" htmlFor={`customSwitch`}><b>¿Quieres forzar el guardado?</b></label>
+                        </div>
+
+                        {props.formValues.force_save && (
+                            <b className="mt-3">El registro sera forzado, dale otravez al boton "Crear"</b>
+                        )}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     <ModalBody>
                         <div className="row">
@@ -138,6 +147,19 @@ const FormCreate = (props) => {
                                         value={props.formValues.description}
                                         onChange={props.onChangeForm}
                                         placeholder="Descripcion"
+                                    />
+                                </div>
+
+                                {props.formValues.color && (
+                                    <div className="col-md-12 mt-4 mb-4">
+                                        <span className="badge label-preview" style={{ backgroundColor: props.formValues.color }}>{props.str_label}</span>
+                                    </div>
+                                )}
+
+                                <div className="col-md-12">
+                                    <CirclePicker 
+                                        color={props.formValues.color} 
+                                        onChange={(color) => props.onChangeForm({ target: { name: "color", value: color.hex } } )} 
                                     />
                                 </div>
 

@@ -10,6 +10,7 @@ class ShiftsCalendar extends Component {
                 cost_centers={this.props.cost_centers}
                 users={this.props.users}
                 microsoft_auth={this.props.microsoft_auth}
+                current_user_name={this.props.current_user_name}
             />
         );
     }

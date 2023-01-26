@@ -6,7 +6,7 @@ class ConstCenterShow extends React.Component {
     render() {
         return (
             <React.Fragment>
-                <Index microsoft_auth={this.props.microsoft_auth} alerts={this.props.alerts} current_tab={this.props.current_tab} users_select={this.props.users_select} cost_center={this.props.cost_center} usuario={this.props.usuario} estados={this.props.estados} clientes={this.props.clientes} users={this.props.users} />
+                <Index microsoft_auth={this.props.microsoft_auth} current_user_name={this.props.current_user_name} alerts={this.props.alerts} current_tab={this.props.current_tab} users_select={this.props.users_select} cost_center={this.props.cost_center} usuario={this.props.usuario} estados={this.props.estados} clientes={this.props.clientes} users={this.props.users} />
             </React.Fragment>
         );
     }

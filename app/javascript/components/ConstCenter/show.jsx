@@ -1152,6 +1152,7 @@ class Show extends React.Component {
                             cost_centers={[ { value: this.props.cost_center.id, label: this.props.cost_center.code } ]}
                             users={this.props.users_select}
                             microsoft_auth={this.props.microsoft_auth}
+                            current_user_name={this.props.current_user_name}
                         />
                     </div>
                 </div>
