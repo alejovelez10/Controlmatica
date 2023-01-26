@@ -3,8 +3,10 @@
 # Table name: shifts
 #
 #  id                  :bigint           not null, primary key
+#  color               :string           default("#1aa9fb")
 #  description         :text
 #  end_date            :datetime
+#  force_save          :boolean          default(FALSE)
 #  start_date          :datetime
 #  subject             :string
 #  created_at          :datetime         not null
@@ -14,7 +16,7 @@
 #  user_responsible_id :integer
 #
 class ShiftSerializer < ActiveModel::Serializer
-  attributes :id, :end_date, :start_date, :subject, :description, :cost_center, :user_responsible, :users
+  attributes :id, :end_date, :start_date, :subject, :description, :cost_center, :user_responsible, :users, :color, :force_save
 
   def user_responsible
     if object.user_responsible_id.present?
