@@ -29,7 +29,9 @@ Rails.application.routes.draw do
   resources :commission_relations, :except => [:show, :edit, :new]
   resources :commissions, :except => [:show, :edit, :new]
   resources :shifts, :except => [:show, :edit, :new]
-
+  resources :quotations, :except => [:show, :edit, :new]
+  
+  get "get_quotations/:cost_center_id", to: "quotations#get_quotations"
   get "get_shift_info/:shift_id", to: "shifts#get_shift_info"
   get "get_cost_center_description/:cost_center_id", to: "shifts#get_cost_center_description"
   get 'auth/signout'

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2/dist/sweetalert2.js'
 import NumberFormat from 'react-number-format';
 import FormCreate from "../ConstCenter/FormCreate";
 import ModalError from "./ModalError";
+import QuotationIndex from './Quotation/Index';
 
 
 class tableIndex extends React.Component {
@@ -34,6 +35,7 @@ class tableIndex extends React.Component {
       },
 
       cost_center_id: "",
+      quotation_cost_center_id: "",
 
       id: "",
       from_state: "",
@@ -864,6 +866,20 @@ class tableIndex extends React.Component {
     }
   }
 
+  setQuotationCostCenter = (cost_center_id) => {
+    this.setState({
+      quotation_cost_center_id: cost_center_id
+    })
+  }
+
+  toogleModalQuotationIndex = (from) => {
+    if (from == "new") {
+        this.setState({ quotation_cost_center_id: true })
+    } else {
+        this.setState({ quotation_cost_center_id: "" })
+    }
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -914,6 +930,15 @@ class tableIndex extends React.Component {
             backdrop={this.state.backdrop}
             modal={this.state.modalError}
             messages={this.state.messages}
+          /> 
+        )}
+
+        {this.state.quotation_cost_center_id && (
+          <QuotationIndex
+            toggle={this.toogleModalQuotationIndex}
+            backdrop={this.state.backdrop}
+            modal={this.state.quotation_cost_center_id ? true : false}
+            cost_center_id={this.state.quotation_cost_center_id}
           /> 
         )}
 
@@ -1039,6 +1064,12 @@ class tableIndex extends React.Component {
                             {this.props.estados.delete && (
                               <button onClick={() => this.delete(accion)} className="dropdown-item">
                                 Eliminar
+                              </button>
+                            )}
+
+                            {true && (
+                              <button onClick={() => this.setQuotationCostCenter(accion.id)} className="dropdown-item">
+                                Cotizaciones
                               </button>
                             )}
 
