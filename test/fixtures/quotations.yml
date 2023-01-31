@@ -1,0 +1,54 @@
+# == Schema Information
+#
+# Table name: quotations
+#
+#  id                        :bigint           not null, primary key
+#  description               :text
+#  displacement_hours        :float
+#  eng_hours                 :float
+#  hour_cotizada             :float
+#  hour_real                 :float
+#  hours_contractor          :float
+#  hours_contractor_invoices :float
+#  hours_contractor_real     :float
+#  materials_value           :float
+#  quotation_number          :float
+#  quotation_value           :float
+#  value_displacement_hours  :float
+#  viatic_value              :float
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  cost_center_id            :integer
+#
+
+one:
+  cost_center_id: 1
+  description: MyText
+  quotation_number: 1.5
+  eng_hours: 1.5
+  hour_real: 1.5
+  hour_cotizada: 1.5
+  hours_contractor: 
+  hours_contractor_real: 1.5
+  hours_contractor_invoices: 1.5
+  displacement_hours: 1.5
+  value_displacement_hours: 1.5
+  materials_value: 1.5
+  viatic_value: 1.5
+  quotation_value: 1.5
+
+two:
+  cost_center_id: 1
+  description: MyText
+  quotation_number: 1.5
+  eng_hours: 1.5
+  hour_real: 1.5
+  hour_cotizada: 1.5
+  hours_contractor: 
+  hours_contractor_real: 1.5
+  hours_contractor_invoices: 1.5
+  displacement_hours: 1.5
+  value_displacement_hours: 1.5
+  materials_value: 1.5
+  viatic_value: 1.5
+  quotation_value: 1.5
