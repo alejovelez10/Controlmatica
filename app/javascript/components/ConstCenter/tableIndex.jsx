@@ -1067,7 +1067,7 @@ class tableIndex extends React.Component {
                               </button>
                             )}
 
-                            {true && (
+                            {false && (
                               <button onClick={() => this.setQuotationCostCenter(accion.id)} className="dropdown-item">
                                 Cotizaciones
                               </button>

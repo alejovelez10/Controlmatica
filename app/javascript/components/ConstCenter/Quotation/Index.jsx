@@ -253,11 +253,6 @@ class Index extends Component {
     render() {
         return (
             <React.Fragment>
-                <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered modal-lg" backdrop={this.props.backdrop}>
-                    <ModalHeader className="title-modal" toggle={this.props.toggle}>{"Cotizaciones para este centro de costo"}</ModalHeader>
-
-                    <ModalBody>
-
                         {this.state.modal && (
                             <FormCreate
                                 backdrop={"static"}
@@ -286,13 +281,13 @@ class Index extends Component {
                             )}
                         </div>
 
-                        <div className="">
+                        <div className="tile">
                             <div className="background-gray">
                                 <div className="content-table">
                                     <table className="table table-hover table-bordered table-width" style={{ tableLayout: "fixed" }} id="sampleTable">
                                         <thead style={{ color: "gray" }}>
                                             <tr>
-                                                <th className="text-right" style={{ width: "5%" }}>Acciones</th>
+                                                <th className="text-right" style={{ width: "2%" }}>Acciones</th>
                                                 <th>Descripción</th>
                                                 <th style={{ width: "11%" }}>Número de cotización</th>
                                                 <th>Horas tablerista</th>
@@ -367,9 +362,6 @@ class Index extends Component {
                             </div>
                         </div>
 
-
-                    </ModalBody>
-                </Modal>
             </React.Fragment>
         );
     }
