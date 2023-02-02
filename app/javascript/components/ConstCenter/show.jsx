@@ -6,6 +6,7 @@ import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import TabContentShow from '../ShowConstCenter/TabContentShow'
 import Calendar from '../Shifts/Calendar';
+import QuotationIndex from './Quotation/Index';
 
 class Show extends React.Component {
     constructor(props) {
@@ -903,6 +904,11 @@ class Show extends React.Component {
                         <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Informacion del centro de costo</a>
                     </li>
 
+                    <li className="nav-item">
+                        <a className={`nav-link ${this.props.current_tab == "quotations" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=quotations`}>Cotizaciones</a>
+                    </li>
+
+
                   {/*   <li className="nav-item">
                         <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=calendar`}>Calendario</a>
                     </li> */}
@@ -1146,7 +1152,7 @@ class Show extends React.Component {
                         </Card>
                     </div>
 
-                    <div className={`tab-pane fade ${this.props.current_tab != "home" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
+                    <div className={`tab-pane fade ${this.props.current_tab == "calendar" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
                         <Calendar
                             url_calendar={`/get_shifts_const_center/${this.props.cost_center.id}`}
                             cost_centers={[ { value: this.props.cost_center.id, label: this.props.cost_center.code } ]}
@@ -1154,6 +1160,12 @@ class Show extends React.Component {
                             microsoft_auth={this.props.microsoft_auth}
                             current_user_name={this.props.current_user_name}
                         />
+                    </div>
+
+                    <div className={`tab-pane fade ${this.props.current_tab == "quotations" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
+                        <QuotationIndex 
+                            cost_center_id={this.props.cost_center.id}
+                        /> 
                     </div>
                 </div>
 
