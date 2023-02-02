@@ -34,7 +34,7 @@ class EmployedPerformanceController < ApplicationController
       reports = Contractor.where(user_execute_id: user.id).where("sales_date >= ?", fecha_desde).where("sales_date <= ?", fecha_hasta).order(sales_date: :asc)
       
       reports.each do |report|
-        array << [report.sales_date.strftime("%d-%m-%Y"), report.hours, report.cost_center.code, report.customer.name, report.description, report.cost_center.description]
+        array << [report.sales_date.strftime("%d-%m-%Y"), report.hours, report.cost_center.code, report.cost_center.customer.name, report.description, report.cost_center.description]
       end  
       
     else

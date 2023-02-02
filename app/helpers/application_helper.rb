@@ -247,7 +247,7 @@ module ApplicationHelper
   end
 
   def authorization_report_contractors
-    providers = ModuleControl.find_by_name("Rendimiento tableristas")
+    providers = ModuleControl.find_by_name("Informe de rendimiento tableristas")
     if current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Ingreso al modulo").exists?
       true
     end
@@ -371,7 +371,6 @@ module ApplicationHelper
       true
     end
   end
-
   def authorization_turnos
     modulo = ModuleControl.find_by_name("Turnos")
     if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver todos").exists?

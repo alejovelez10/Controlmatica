@@ -630,7 +630,7 @@ class CostCentersController < ApplicationController
     shifts = @cost_center.shifts.count
 
     if materials >= 1
-      message << "Tiene <b> #{material} materiales </b> relacionado  todavia"
+      message << "Tiene <b> #{materials} materiales </b> relacionado  todavia"
     end
 
     if sales_orders >= 1

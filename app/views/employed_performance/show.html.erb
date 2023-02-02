@@ -2,14 +2,16 @@
    if params[:view] == "tableristas"
       rol = Rol.find_by_name("TABLERISTA")
       users = User.where(rol_id: rol.id)
+      title = "TABLERISTAS"
    else
+      title = "INGENIEROS"
       users = User.all
    end
 %>
 
 <div class="row">
 	<div class="col-md-12">
-     <h3 class="text-center mb-4">INFORME DE RENDIMIENTO <%= current_user.names.upcase if current_user.rol_user == "Ingeniero"%></h3></div>
+     <h3 class="text-center mb-4">INFORME DE RENDIMIENTO <%=title%><!-- <%= current_user.names.upcase if current_user.rol_user == "Ingeniero"%> --></h3></div>
 
       <div class="col-md-4 offset-md-4">
          <div class="card card-table">
