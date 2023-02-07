@@ -22,13 +22,13 @@ class Index extends Component {
                 description: "", 
                 quotation_number: "", 
                 eng_hours: "", 
-                hour_real: "", 
-                hour_cotizada: "", 
+                hour_real: 50000, 
+                hour_cotizada: 80000, 
                 hours_contractor: "", 
-                hours_contractor_real: "", 
+                hours_contractor_real: 50000, 
                 hours_contractor_invoices: "", 
                 displacement_hours: "", 
-                value_displacement_hours: "", 
+                value_displacement_hours: 50000, 
                 materials_value: "", 
                 viatic_value: "", 
                 quotation_value: ""
@@ -99,13 +99,13 @@ class Index extends Component {
                 description: "", 
                 quotation_number: "", 
                 eng_hours: "", 
-                hour_real: "", 
-                hour_cotizada: "", 
+                hour_real: 50000, 
+                hour_cotizada: 80000, 
                 hours_contractor: "", 
-                hours_contractor_real: "", 
+                hours_contractor_real: 50000, 
                 hours_contractor_invoices: "", 
                 displacement_hours: "", 
-                value_displacement_hours: "", 
+                value_displacement_hours: 50000, 
                 materials_value: "", 
                 viatic_value: "", 
                 quotation_value: ""
@@ -281,12 +281,10 @@ class Index extends Component {
                             )}
                         </div>
 
-                        <div className="tile">
-                            <div className="background-gray">
-                                <div className="content-table">
-                                    <table className="table table-hover table-bordered table-width" style={{ tableLayout: "fixed" }} id="sampleTable">
+
+                                    <table className="table table-hover table-bordered" id="sampleTable">
                                         <thead style={{ color: "gray" }}>
-                                            <tr>
+                                            <tr className="tr-title">
                                                 <th className="text-right" style={{ width: "2%" }}>Acciones</th>
                                                 <th>Descripción</th>
                                                 <th style={{ width: "11%" }}>Número de cotización</th>
@@ -358,10 +356,6 @@ class Index extends Component {
                                             )}
                                         </tbody>
                                     </table>
-                                </div>
-                            </div>
-                        </div>
-
             </React.Fragment>
         );
     }

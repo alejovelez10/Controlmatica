@@ -12,7 +12,7 @@
 #  hours_contractor_invoices :float
 #  hours_contractor_real     :float
 #  materials_value           :float
-#  quotation_number          :float
+#  quotation_number          :string
 #  quotation_value           :float
 #  value_displacement_hours  :float
 #  viatic_value              :float

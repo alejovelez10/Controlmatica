@@ -3,7 +3,7 @@ class CreateQuotations < ActiveRecord::Migration[6.1]
     create_table :quotations do |t|
       t.integer :cost_center_id
       t.text :description
-      t.float :quotation_number
+      t.string :quotation_number
       t.float :eng_hours
       t.float :hour_real
       t.float :hour_cotizada
