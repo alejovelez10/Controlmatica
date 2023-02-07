@@ -29,17 +29,27 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                <div className="col-md-4 mb-4">
-                                    <label>Número de cotización *</label>
-                                    <NumberFormat 
-                                        name="quotation_number"
-                                        thousandSeparator={true} 
-                                        prefix={'$'} 
-                                        className={`form form-control`}
-                                        value={this.props.formValues.quotation_number}
-                                        onChange={this.props.handleChangeMoney}
-                                        placeholder="Valor hora costo"
-                                    /> 
+                                <div className="col-md-12">
+                                    <div className="row">
+                                        <div className="col-md-4"></div>
+                                        <div className="col-md-4"></div>
+
+                                        <div className="col-md-4 mb-4">
+                                            <label>Número de cotización *</label>
+                                            <input 
+                                                name="quotation_number"
+                                                type="text"
+                                                className={`form form-control`}
+                                                value={this.props.formValues.quotation_number}
+                                                onChange={this.props.handleChangeMoney}
+                                                placeholder=""
+                                            /> 
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-md-12 mt-4 mb-4">
+                                    <hr/>
                                 </div>
 
                                 <div className="col-md-4">
@@ -81,6 +91,10 @@ class FormCreate extends Component {
                                     /> 
                                 </div>
 
+                                <div className="col-md-12 mt-4 mb-4">
+                                    <hr/>
+                                </div>
+
                                 <div className="col-md-4">
                                     <label>Horas tablerista *</label>
                                     <NumberFormat 
@@ -120,7 +134,11 @@ class FormCreate extends Component {
                                     /> 
                                 </div>
 
-                                <div className="col-md-4">
+                                <div className="col-md-12 mt-4 mb-4">
+                                    <hr/>
+                                </div>
+
+                                <div className="col-md-6">
                                     <label>Horas de desplazamiento*</label>
                                     <NumberFormat 
                                         name="displacement_hours"
@@ -133,7 +151,7 @@ class FormCreate extends Component {
                                     /> 
                                 </div>
 
-                                <div className="col-md-4">
+                                <div className="col-md-6">
                                     <label>Valor hora de desplazamiento*</label>
                                     <NumberFormat 
                                         name="value_displacement_hours"
@@ -146,6 +164,10 @@ class FormCreate extends Component {
                                     /> 
                                 </div>
 
+                                <div className="col-md-12 mt-4 mb-4">
+                                    <hr/>
+                                </div>
+                                
                                 <div className="col-md-4 mb-4">
                                     <label>Valor materiales *</label>
                                     <NumberFormat 
