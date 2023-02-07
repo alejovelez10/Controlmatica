@@ -629,20 +629,35 @@ class CostCentersController < ApplicationController
     #turnos
     shifts = @cost_center.shifts.count
 
+    #reports_expenses
+    reports_expenses = @cost_center.report_expenses.count
+    
+    #reports servicios
+    reports = @cost_center.reports.count
+
+
     if materials >= 1
-      message << "Tiene <b> #{materials} materiales </b> relacionado  todavia"
+      message << "#{materials} #{materials == 1 ? 'Material' : 'Materiales'}  </b> "
     end
 
     if sales_orders >= 1
-      message << "Tiene <b> #{sales_orders} ordenes de compra </b> relacionado todavia"
+      message << "#{sales_orders} #{sales_orders == 1 ? 'Orden de compra' : 'Ordenes de compra'} </b> "
     end
     
     if contractors >= 1
-      message << "Tiene <b> #{contractors} tableristas </b> relacionado todavia"
+      message << "#{contractors} #{shifts == 1 ? 'Tablerista' : 'Tableristas'} </b>  "
     end
 
     if shifts >= 1
-      message << "Tiene <b> #{shifts} turnos </b> relacionado todavia"
+      message << "#{shifts} #{shifts == 1 ? 'Turno' : 'Turnos'} </b>  "
+    end
+
+    if reports_expenses >= 1
+      message << "#{reports_expenses} #{reports_expenses == 1 ? 'Reporte de gastos' : 'Reportes de gastos'} </b>  "
+    end
+
+    if reports >= 1
+      message << "#{reports} #{reports == 1 ? 'Reporte de servicio' : 'Reportes de servicios'} </b>  "
     end
 
     puts "materials #{materials}"
@@ -651,7 +666,7 @@ class CostCentersController < ApplicationController
     puts "shifts #{shifts}"
 
 
-    if materials >= 1 || sales_orders >= 1 || contractors >= 1 || shifts >= 1
+    if materials >= 1 || sales_orders >= 1 || contractors >= 1 || shifts >= 1 || reports_expenses >= 1 || reports >= 1
       render :json => {
         message: message,
         type: "error"

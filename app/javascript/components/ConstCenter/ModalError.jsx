@@ -13,7 +13,7 @@ class ModalError extends Component {
                         <ModalBody>
                             <div className="row">
                                 <div className="col-md-12">
-                                    <h4 className="text-center">Errores por los cuales no puedes eliminar este centro de costo</h4>
+                                    <h4 className="text-center">El Centro de Costos no se pudo eliminar ya que tiene los siguientes items asociados</h4>
                                 </div>
 
                                 <div className="col-md-12 mt-4">
@@ -24,7 +24,7 @@ class ModalError extends Component {
                                     </ul>
 
                                     <div className="alert alert-primary mr-5 text-center w-100" role="alert">
-                                        <b>Cuando elimines los registros que tiene asociado este centro de costo, lo podras eliminar</b>
+                                        <b>Debes asignar los anteriores itemas a otro centro de costos o eliminarlos para poder eliminar el centro de costos</b>
                                     </div>
                                 </div>
                             </div>
