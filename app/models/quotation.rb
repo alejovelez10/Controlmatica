@@ -22,4 +22,17 @@
 #
 class Quotation < ApplicationRecord
     belongs_to :cost_center
+    before_save :calculate_costo
+
+    def calculate_costo
+        self.ingenieria_total_costo = self.eng_hours * self.hour_real
+        self.engineering_value = self.eng_hours * self.hour_cotizada
+        self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
+        self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+    
+        if self.displacement_hours.present? || self.value_displacement_hours.present?
+          valor = self.displacement_hours * self.hour_real
+          self.offset_value = valor
+        end
+      end
 end
