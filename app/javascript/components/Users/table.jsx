@@ -129,7 +129,7 @@ class Table extends React.Component {
       form: {
         names: user.names,
         email: user.email,
-        avatar: user.avatar.url,
+        avatar: user.avatar ?  user.avatar.url : "https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg", 
         number_document: user.number_document,
         document_type: user.document_type,
         password: "",
