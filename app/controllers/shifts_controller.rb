@@ -1,6 +1,7 @@
 class ShiftsController < ApplicationController
     before_action :authenticate_user!, except: [:show]
     before_action :shift_find, :only => [:update, :destroy]
+    include GraphHelper
 
     def index
         @estados = {
@@ -163,7 +164,20 @@ class ShiftsController < ApplicationController
     end
 
     def destroy 
-        if @shift.destroy
+
+        if true
+            if @user_name && @shift.microsoft_id.present?
+                @shift.destroy
+
+                new_event = {
+                    'contentType' => 'text',
+                    'content' => ""
+                }
+                delete_in_calendar("DELETE", "/v1.0/me/events/#{@shift.microsoft_id}", access_token, nil, nil, new_event)
+            else
+                @shift.destroy
+            end
+
             render :json => {
                 success: "¡El Registro fue eliminado con éxito!",
                 type: "success"
