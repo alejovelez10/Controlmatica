@@ -5,7 +5,8 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import FormCreate from './FormCreate'
 import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
 import FormFilter from './FormFilter';
-
+import SweetAlert from "sweetalert2-react";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import esLocale from '@fullcalendar/core/locales/es';
 import { array } from 'prop-types';
 
@@ -131,6 +132,44 @@ class Calendar extends Component {
         });
     }
 
+    messageSuccess = (response) => {
+        Swal.fire({
+            position: "center",
+            type: `${response.type}`,
+            title: `${response.success}`,
+            showConfirmButton: false,
+            timer: 1500,
+        });
+    };
+
+    destroy = (shift_id) => {
+        Swal.fire({
+            title: 'Estas seguro?',
+            text: "El registro sera eliminado para siempre!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#009688',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Si'
+        }).then((result) => {
+            if (result.value) {
+                fetch(`/shifts/${shift_id}`, {
+                    method: "delete",
+                    headers: {
+                        "X-CSRF-Token": this.token,
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then(response => {
+                    this.messageSuccess(response);
+                    this.loadData();
+                    this.clearValues();
+                    this.setState({ modal: false, modeEdit: false, shift_id: "", str_label: "" })
+                });
+            }
+        })
+    };
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
         this.getDescriptionCostCenter(selectedOptionCostCenter.value)
@@ -603,6 +642,9 @@ class Calendar extends Component {
                         handleChangeAutocompleteMulti={this.handleChangeAutocompleteMulti}
                         selectedOptionMulti={this.state.selectedOptionMulti}
                         defaultValues={this.state.defaultValues}
+
+                        destroy={this.destroy}
+                        shift_id={this.state.shift_id}
                     />
                 )}
 

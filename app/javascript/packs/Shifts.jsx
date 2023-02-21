@@ -217,8 +217,13 @@ const Shifts = (props) => {
                 })
                 .then(response => response.json())
                 .then(response => {
+                    setId("");
+                    setModal(false);
+                    setModeEdit(false);
+                    clearValues();
+                    setStrLabel("");
                     messageSuccess(response);
-                    loadData()
+                    loadData();
                 });
             }
         })
@@ -350,6 +355,9 @@ const Shifts = (props) => {
                     handleChangeAutocompleteMulti={handleChangeAutocompleteMulti}
                     selectedOptionMulti={selectedOptionMulti}
                     defaultValues={defaultValues}
+
+                    destroy={destroy}
+                    shift_id={id}
                 />
             )}
 

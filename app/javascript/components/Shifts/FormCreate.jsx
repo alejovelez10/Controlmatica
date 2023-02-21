@@ -122,6 +122,23 @@ const FormCreate = (props) => {
                                             />
                                         </div>
                                     )}
+
+                                    {props.modeEdit && (
+                                        <div className="col-md-12 mb-3">
+                                            <div className="alert alert-danger" role="alert">
+                                                <h4 className="alert-heading">Eliminacion de turno</h4>
+                                                <p>En el siguiente boton se puede eliminar este turno</p>
+                                                <hr />
+                                                <button
+                                                    className="btn btn-danger"
+                                                    onClick={() => props.destroy(props.shift_id)}
+                                                >
+                                                    <i  className="fas fa-trash-alt mr-2"></i>Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
 
@@ -150,18 +167,20 @@ const FormCreate = (props) => {
                                     />
                                 </div>
 
-                                {props.formValues.color && (
-                                    <div className="col-md-12 mt-4 mb-4">
-                                        <span className="badge label-preview" style={{ backgroundColor: props.formValues.color }}>{props.str_label}</span>
-                                    </div>
-                                )}
+                                {props.str_label && (
+                                    <React.Fragment>
+                                        <div className="col-md-12 mt-4 mb-4">
+                                            <span className="badge label-preview" style={{ backgroundColor: props.formValues.color }}>{props.str_label}</span>
+                                        </div>
 
-                                <div className="col-md-12">
-                                    <CirclePicker 
-                                        color={props.formValues.color} 
-                                        onChange={(color) => props.onChangeForm({ target: { name: "color", value: color.hex } } )} 
-                                    />
-                                </div>
+                                        <div className="col-md-12">
+                                            <CirclePicker 
+                                                color={props.formValues.color} 
+                                                onChange={(color) => props.onChangeForm({ target: { name: "color", value: color.hex } } )} 
+                                            />
+                                        </div>
+                                    </React.Fragment>
+                                )}
 
 
                             </div>
