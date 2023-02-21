@@ -12,6 +12,7 @@
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  cost_center_id      :integer
+#  microsoft_id        :string
 #  user_id             :integer
 #  user_responsible_id :integer
 #

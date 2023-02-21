@@ -168,6 +168,26 @@ module GraphHelper
       end
     end
 
+    def delete_in_calendar(method, endpoint, token, headers = nil, params = nil, payload = nil)
+      headers ||= {}
+      headers[:Authorization] = "Bearer #{token}"
+      headers[:Accept] = 'application/json'
+  
+      params ||= {}
+  
+      case method.upcase
+
+      when 'DELETE'
+        headers['Content-Type'] = 'application/json'
+        HTTParty.delete "#{GRAPH_HOST}#{endpoint}",
+                      :headers => headers,
+                      :query => params,
+                      :body => payload ? payload.to_json : nil
+      else
+        raise "HTTP method #{method.upcase} not implemented"
+      end
+    end
+
     def get_calendar_view(token, start_datetime, end_datetime, timezone)
         get_events_url = '/v1.0/me/calendarview'
       
@@ -197,7 +217,7 @@ module GraphHelper
       iana || windows_tz_name
     end
 
-    def create_event(token, timezone, subject, start_datetime, end_datetime, attendees, body)
+    def create_event(token, timezone, subject, start_datetime, end_datetime, attendees, body, shift_id)
       create_event_url = '/v1.0/me/events'
     
       # Create an event object
@@ -237,6 +257,9 @@ module GraphHelper
                                nil,
                                nil,
                                new_event
+  
+      parsed_response = JSON.parse(response&.body || "{}")
+      Shift.find(shift_id).update(microsoft_id: parsed_response["id"])
     
       raise response.parsed_response.to_s || "Request returned #{response.code}" unless response.code == 201
     end
