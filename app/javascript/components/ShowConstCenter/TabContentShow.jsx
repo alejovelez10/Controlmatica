@@ -22,13 +22,23 @@ const TabContentShow = (props) => {
     <div>
       <Nav tabs className="mb-3">
 
-        <NavItem>
+ {/*        <NavItem>
           <NavLink
             className={classnames({ active: activeTab === '1' })}
             style={{ cursor: "pointer" }}
             onClick={() => { toggle('1'); }}
           >
             Cotizaciones
+          </NavLink>
+        </NavItem> */}
+
+        <NavItem>
+          <NavLink
+            className={classnames({ active: activeTab === '1' })}
+            style={{ cursor: "pointer" }}
+            onClick={() => { toggle('1'); }}
+          >
+            Materiales
           </NavLink>
         </NavItem>
 
@@ -38,7 +48,7 @@ const TabContentShow = (props) => {
             style={{ cursor: "pointer" }}
             onClick={() => { toggle('2'); }}
           >
-            Materiales
+             Ordenes de Compra
           </NavLink>
         </NavItem>
 
@@ -48,7 +58,7 @@ const TabContentShow = (props) => {
             style={{ cursor: "pointer" }}
             onClick={() => { toggle('3'); }}
           >
-             Ordenes de Compra
+            Reportes de servicios
           </NavLink>
         </NavItem>
 
@@ -58,7 +68,7 @@ const TabContentShow = (props) => {
             style={{ cursor: "pointer" }}
             onClick={() => { toggle('4'); }}
           >
-            Reportes de servicios
+            Tableristas
           </NavLink>
         </NavItem>
 
@@ -68,16 +78,6 @@ const TabContentShow = (props) => {
             style={{ cursor: "pointer" }}
             onClick={() => { toggle('5'); }}
           >
-            Tableristas
-          </NavLink>
-        </NavItem>
-
-        <NavItem>
-          <NavLink
-            className={classnames({ active: activeTab === '6' })}
-            style={{ cursor: "pointer" }}
-            onClick={() => { toggle('6'); }}
-          >
             Gastos
           </NavLink>
         </NavItem>
@@ -85,29 +85,29 @@ const TabContentShow = (props) => {
       </Nav>
 
       <TabContent activeTab={activeTab}>
-        <TabPane tabId="1">
+{/*         <TabPane tabId="1">
           <QuotationIndex 
             cost_center_id={props.cost_center.id}
           /> 
-        </TabPane>
+        </TabPane> */}
 
-        <TabPane tabId="2">
+        <TabPane tabId="1">
           <MaterialesTable dataMateriales={props.dataMateriales}/>
         </TabPane>
 
-        <TabPane tabId="3">
+        <TabPane tabId="2">
           <OrdenesDeCompraTable dataSalesOrdes={props.dataSalesOrdes} />
         </TabPane>
 
-        <TabPane tabId="4">
+        <TabPane tabId="3">
           <ReportesDeServiciosTable dataReports={props.dataReports} />
         </TabPane>
 
-        <TabPane tabId="5">
+        <TabPane tabId="4">
           <TableristasTable dataContractors={props.dataContractors} />
         </TabPane>
 
-        <TabPane tabId="6">
+        <TabPane tabId="5">
           <ExpensesTable dataContractors={props.dataExpenses} />
         </TabPane>
 
