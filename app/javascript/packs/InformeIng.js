@@ -74,10 +74,10 @@ class InformeIng extends Component {
                         <li className="nav-item">
                             <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>Informacion</a>
                         </li>
-{/* 
+
                         <li className="nav-item">
                             <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>Calendario</a>
-                        </li> */}
+                        </li>
                     </ul>
                 </div>
 
@@ -162,6 +162,7 @@ class InformeIng extends Component {
                                 cost_centers={this.props.cost_centers}
                                 users={this.props.current_user}
                                 microsoft_auth={this.props.microsoft_auth}
+                                current_user_name={this.props.current_user_name}
                             />
                     </div>
 

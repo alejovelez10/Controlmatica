@@ -614,11 +614,71 @@ class CostCentersController < ApplicationController
   # DELETE /cost_centers/1
   # DELETE /cost_centers/1.json
   def destroy
-    if @cost_center.destroy
-      render :json => @cost_center
-    else
-      render :json => @cost_center.errors.full_messages
+
+    message = []
+
+    #materiales
+    materials = @cost_center.materials.count
+
+    #ordenes de compra
+    sales_orders = @cost_center.sales_orders.count
+
+    #tableristas
+    contractors = @cost_center.contractors.count
+
+    #turnos
+    shifts = @cost_center.shifts.count
+
+    #reports_expenses
+    reports_expenses = @cost_center.report_expenses.count
+    
+    #reports servicios
+    reports = @cost_center.reports.count
+
+
+    if materials >= 1
+      message << "#{materials} #{materials == 1 ? 'Material' : 'Materiales'}  </b> "
     end
+
+    if sales_orders >= 1
+      message << "#{sales_orders} #{sales_orders == 1 ? 'Orden de compra' : 'Ordenes de compra'} </b> "
+    end
+    
+    if contractors >= 1
+      message << "#{contractors} #{shifts == 1 ? 'Tablerista' : 'Tableristas'} </b>  "
+    end
+
+    if shifts >= 1
+      message << "#{shifts} #{shifts == 1 ? 'Turno' : 'Turnos'} </b>  "
+    end
+
+    if reports_expenses >= 1
+      message << "#{reports_expenses} #{reports_expenses == 1 ? 'Reporte de gastos' : 'Reportes de gastos'} </b>  "
+    end
+
+    if reports >= 1
+      message << "#{reports} #{reports == 1 ? 'Reporte de servicio' : 'Reportes de servicios'} </b>  "
+    end
+
+    puts "materials #{materials}"
+    puts "sales_orders #{sales_orders}"
+    puts "contractors #{contractors}"
+    puts "shifts #{shifts}"
+
+
+    if materials >= 1 || sales_orders >= 1 || contractors >= 1 || shifts >= 1 || reports_expenses >= 1 || reports >= 1
+      render :json => {
+        message: message,
+        type: "error"
+      }
+    else
+      if @cost_center.destroy
+        render :json => {
+          type: "delete"
+        }
+      end
+    end
+
   end
 
   def change_state_ended

@@ -6,6 +6,7 @@ import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import TabContentShow from '../ShowConstCenter/TabContentShow'
 import Calendar from '../Shifts/Calendar';
+import QuotationIndex from './Quotation/Index';
 
 class Show extends React.Component {
     constructor(props) {
@@ -900,12 +901,12 @@ class Show extends React.Component {
             <React.Fragment>
                 <ul className="nav nav-tabs" id="myTab" role="tablist">
                     <li className="nav-item">
-                        <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Informacion del centro de costo</a>
+                        <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Información del centro de costo</a>
                     </li>
 
-                  {/*   <li className="nav-item">
+                  <li className="nav-item">
                         <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=calendar`}>Calendario</a>
-                    </li> */}
+                    </li> 
                 </ul>
 
                 <div className="tab-content" id="myTabContent">
@@ -1141,17 +1142,25 @@ class Show extends React.Component {
 
                         <Card className="mt-3">
                             <CardBody>
-                                <TabContentShow dataMateriales={this.state.dataMateriales} dataContractors={this.state.dataContractors} dataSalesOrdes={this.state.dataSalesOrdes} dataReports={this.state.dataReports}  dataExpenses={this.state.dataExpenses}/>
+                                <TabContentShow 
+                                    dataMateriales={this.state.dataMateriales} 
+                                    dataContractors={this.state.dataContractors} 
+                                    dataSalesOrdes={this.state.dataSalesOrdes} 
+                                    dataReports={this.state.dataReports}  
+                                    dataExpenses={this.state.dataExpenses}
+                                    cost_center={this.props.cost_center}
+                                />
                             </CardBody>
                         </Card>
                     </div>
 
-                    <div className={`tab-pane fade ${this.props.current_tab != "home" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
+                    <div className={`tab-pane fade ${this.props.current_tab == "calendar" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
                         <Calendar
                             url_calendar={`/get_shifts_const_center/${this.props.cost_center.id}`}
                             cost_centers={[ { value: this.props.cost_center.id, label: this.props.cost_center.code } ]}
                             users={this.props.users_select}
                             microsoft_auth={this.props.microsoft_auth}
+                            current_user_name={this.props.current_user_name}
                         />
                     </div>
                 </div>

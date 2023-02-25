@@ -13,8 +13,13 @@ const Shifts = (props) => {
     const [isLoaded, setIsLoaded] = useState(true);
     const token = document.querySelector("[name='csrf-token']").content;
     const [id, setId] = useState("");
+
+    const [str_label, setStrLabel] = useState("");
+    const [errors_create, setErrorsCreate] = useState([]);
+
+
     const [defaultValues, setDefaultValues] = useState([]);
-    const [form, setForm] = useState({ end_date: "", start_date: start_date, cost_center_id: "", description: "", subject: "", user_responsible_id: "", user_ids: [] });
+    const [form, setForm] = useState({ end_date: "", start_date: start_date, cost_center_id: "", description: "", subject: "", user_responsible_id: "", user_ids: [], color: "#1aa9fb", force_save: false });
     const [formFilter, setFormFilter] = useState({ end_date: "", start_date: "", cost_center_ids: [], user_responsible_ids: [] });
 
     const [selectedOptionCostCenter, setSelectedOptionCostCenter] = useState({ cost_center_id: "", label: "Seleccione el centro de costo" });
@@ -54,6 +59,8 @@ const Shifts = (props) => {
                 users: page.users,
                 description: page.description,
                 subject: page.subject,
+                color: page.color,
+                force_save: page.force_save,
             }
           }
           return item;
@@ -109,7 +116,7 @@ const Shifts = (props) => {
     }
 
     const clearValues = () => {
-        setForm({ end_date: start_date, start_date: "", cost_center_id: "", user_responsible_id: "" });
+        setForm({ end_date: start_date, start_date: "", cost_center_id: "", user_responsible_id: "", color: "#1aa9fb", force_save: false });
         setId("");
         setModeEdit(false);
         setErrorValues(true);
@@ -154,13 +161,12 @@ const Shifts = (props) => {
                 .then(res => res.json())
                 .catch(error => console.error("Error:", error))
                 .then(data => {
-                    if(data.type == "success"){
+                    if (!data.force_save) {
+                        setErrorsCreate(data.errors);
+                    }else{
                         setModal(false);
                         messageSuccess(data);
-                        updateData(data.register);
-                        clearValues();
-                    }else{
-                        messageSuccess(data);
+                        loadData();
                         clearValues();
                     }
                 });
@@ -193,7 +199,7 @@ const Shifts = (props) => {
 
     const destroy = (page_id) => {
         Swal.fire({
-            title: 'Estas seguro?',
+            title: '¿Estas seguro?',
             text: "El registro sera eliminado para siempre!",
             type: 'warning',
             showCancelButton: true,
@@ -211,8 +217,13 @@ const Shifts = (props) => {
                 })
                 .then(response => response.json())
                 .then(response => {
+                    setId("");
+                    setModal(false);
+                    setModeEdit(false);
+                    clearValues();
+                    setStrLabel("");
                     messageSuccess(response);
-                    loadData()
+                    loadData();
                 });
             }
         })
@@ -236,6 +247,7 @@ const Shifts = (props) => {
     const handleChangeAutocompleteCostCenter = (selectedOptionCostCenter) => {
         setSelectedOptionCostCenter(selectedOptionCostCenter);
         getDescriptionCostCenter(selectedOptionCostCenter.value);
+        setStrLabel(`${selectedOptionCostCenter.label} - ${props.current_user_name}`);
     }
 
     const getDescriptionCostCenter = (cost_center_id) => {
@@ -286,8 +298,11 @@ const Shifts = (props) => {
 
     const getDate = (register_date) => {
         let date = new Date(register_date)
-        let date_month = digits_count(date.getUTCDate()) == 1 ? `0${date.getUTCDate()}` : `${date.getUTCDate()}`
-        let new_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date_month}T${date.getHours()}:${date.getMinutes()}`
+        let mins = ('0' + date.getMinutes()).slice(-2);
+        let date_month = ("0" + (date.getMonth() + 1)).slice(-2)
+        let day = ("0" + (date.getDate())).slice(-2)
+        let hours = ('0'+date.getUTCHours()).slice(-2);
+        let new_date = `${date.getFullYear()}-${date_month}-${day}T${hours}:${mins}`
         return new_date
     }
 
@@ -297,8 +312,10 @@ const Shifts = (props) => {
         shift.users.map((user) => (
             arrayIds.push(user.value)
         ))    
+
+        setStrLabel(`${shift.cost_center.code} - ${props.current_user_name}`)
         
-        setForm({ end_date: getDate(shift.end_date), start_date: getDate(shift.start_date), description: shift.description, subject: shift.subject, cost_center_id: shift.cost_center.id, user_responsible_id: (shift.user_responsible ? shift.user_responsible.id : ""), user_ids: arrayIds })
+        setForm({ end_date: getDate(shift.end_date), start_date: getDate(shift.start_date), description: shift.description, subject: shift.subject, cost_center_id: shift.cost_center.id, user_responsible_id: (shift.user_responsible ? shift.user_responsible.id : ""), user_ids: arrayIds, color: shift.color, force_save: shift.force_save })
         setSelectedOptionUser({ user_responsible_id: (shift.user_responsible ? shift.user_responsible.id : ""), label: (shift.user_responsible ? shift.user_responsible.names : "Seleccione el usuario responsable") });
         setSelectedOptionCostCenter({ cost_center_id: shift.cost_center.id, label: shift.cost_center.code });
         setModal(true);
@@ -324,6 +341,8 @@ const Shifts = (props) => {
                     submitForm={handleClick}
                     errorValues={errorValues}
                     microsoft_auth={props.microsoft_auth}
+                    str_label={str_label}
+                    errors={errors_create}
 
                     selectedOptionCostCenter={selectedOptionCostCenter}
                     handleChangeAutocompleteCostCenter={handleChangeAutocompleteCostCenter}
@@ -336,6 +355,9 @@ const Shifts = (props) => {
                     handleChangeAutocompleteMulti={handleChangeAutocompleteMulti}
                     selectedOptionMulti={selectedOptionMulti}
                     defaultValues={defaultValues}
+
+                    destroy={destroy}
+                    shift_id={id}
                 />
             )}
 
@@ -383,6 +405,8 @@ const Shifts = (props) => {
                                         <th>Fecha inicial</th>
                                         <th>Fecha final</th>
                                         <th>Usuario responsable</th>
+                                        <th style={{ width: "9%" }}>¿Registro forzado?</th>
+                                        <th style={{ width: "10px" }}>Vista en el calendario</th>
                                     </tr>
                                 </thead>
 
@@ -422,6 +446,10 @@ const Shifts = (props) => {
                                                 <td>{getDate(shift.start_date)}</td>
                                                 <td>{getDate(shift.end_date)}</td>
                                                 <td>{shift.user_responsible ? shift.user_responsible.names : ""}</td>
+                                                <td>{shift.force_save ? "Si" : "No"}</td>
+                                                <td>
+                                                    <span className="badge label-preview" style={{ backgroundColor: shift.color }}>{shift.cost_center.code} - {shift.user_responsible.names}</span>
+                                                </td>
                                             </tr>
                                         ))
                                     ) : (

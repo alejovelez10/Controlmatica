@@ -29,12 +29,23 @@ class EmployedPerformanceController < ApplicationController
     user = User.find(params[:user_id])
     fecha_desde = params[:fecha_desde]
     fecha_hasta = params[:fecha_hasta]
-    reports = Report.where(report_execute: user).where("report_date >= ?", fecha_desde).where("report_date <= ?", fecha_hasta).order(report_date: :asc)
 
-    reports.each do |report|
-      array << [report.report_date.strftime("%d-%m-%Y"), report.working_time + report.displacement_hours, report.cost_center.code, report.customer.name, report.work_description, report.cost_center.description]
+    if params[:view] != ""
+      reports = Contractor.where(user_execute_id: user.id).where("sales_date >= ?", fecha_desde).where("sales_date <= ?", fecha_hasta).order(sales_date: :asc)
+      
+      reports.each do |report|
+        array << [report.sales_date.strftime("%d-%m-%Y"), report.hours, report.cost_center.code, report.cost_center.customer.name, report.description, report.cost_center.description]
+      end  
+      
+    else
+      reports = Report.where(report_execute: user).where("report_date >= ?", fecha_desde).where("report_date <= ?", fecha_hasta).order(report_date: :asc)
+
+      reports.each do |report|
+        array << [report.report_date.strftime("%d-%m-%Y"), report.working_time + report.displacement_hours, report.cost_center.code, report.customer.name, report.work_description, report.cost_center.description]
+      end  
+
     end
-
+    
     headers = ["FECHA", "HORAS", "CENTRO DE COSTO", "CLIENTE", "DESCRIPCION ACTIVIDAD", "DESCRIPCION CENTRO DE COSTO"]
 
     data = [
@@ -46,7 +57,11 @@ class EmployedPerformanceController < ApplicationController
       ["Fecha Desde: #{fecha_desde}", "Fecha hasta: #{fecha_hasta}"],
     ]
 
-    dataTable2 = [["Total: #{reports.sum(:working_time)}"]]
+    if params[:view] != ""
+      dataTable2 = [["Total: #{reports.sum(:hours)}"]]
+    else
+      dataTable2 = [["Total: #{reports.sum(:working_time)}"]]
+    end
 
     content = "\n"
 

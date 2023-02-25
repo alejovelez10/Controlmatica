@@ -5,10 +5,8 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import FormCreate from './FormCreate'
 import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
 import FormFilter from './FormFilter';
-// import esLocale from '@fullcalendar/core/locales/es';
-// must manually import the stylesheets for each plugin
-// import "@fullcalendar/core/main.css";
-
+import SweetAlert from "sweetalert2-react";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import esLocale from '@fullcalendar/core/locales/es';
 import { array } from 'prop-types';
 
@@ -26,6 +24,7 @@ class Calendar extends Component {
             shift_id: "",
             errorValues: true,
             arg: "",
+            str_label: "",
             errors_create: [],
 
             form: {
@@ -36,6 +35,8 @@ class Calendar extends Component {
                 description: "",
                 subject: "",
                 user_ids: [],
+                force_save: false,
+                color: "#1aa9fb"
             },
 
             formFilter: {
@@ -74,6 +75,8 @@ class Calendar extends Component {
                 description: "",
                 subject: "",
                 user_ids: [],
+                force_save: false,
+                color: "#1aa9fb"
             },
 
             selectedOptionCostCenter: {
@@ -106,7 +109,7 @@ class Calendar extends Component {
 
                 //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
+                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: this.getDate(item.start_date), end: this.getDate(item.end_date), id: item.id, backgroundColor: item.color })
                 ))
 
                 this.setState({
@@ -129,11 +132,50 @@ class Calendar extends Component {
         });
     }
 
+    messageSuccess = (response) => {
+        Swal.fire({
+            position: "center",
+            type: `${response.type}`,
+            title: `${response.success}`,
+            showConfirmButton: false,
+            timer: 1500,
+        });
+    };
+
+    destroy = (shift_id) => {
+        Swal.fire({
+            title: 'Estas seguro?',
+            text: "El registro sera eliminado para siempre!",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#009688',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Si'
+        }).then((result) => {
+            if (result.value) {
+                fetch(`/shifts/${shift_id}`, {
+                    method: "delete",
+                    headers: {
+                        "X-CSRF-Token": this.token,
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then(response => {
+                    this.messageSuccess(response);
+                    this.loadData();
+                    this.clearValues();
+                    this.setState({ modal: false, modeEdit: false, shift_id: "", str_label: "" })
+                });
+            }
+        })
+    };
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
         this.getDescriptionCostCenter(selectedOptionCostCenter.value)
         this.setState({
             selectedOptionCostCenter,
+            str_label: `${selectedOptionCostCenter.label} - ${this.props.current_user_name}`
         });
     };
 
@@ -175,6 +217,8 @@ class Calendar extends Component {
         if (true) {
             this.setState({
                 modal: true,
+                shift_id: "",
+                errors_create: [],
                 arg: arg,
 
                 form: {
@@ -331,7 +375,6 @@ class Calendar extends Component {
     }
 
     handleClickShow = (shift_id, event) => {
-        console.log("Shift", event._instance.range.end);
         fetch(`/get_shift_info/${shift_id}`, {
             method: 'GET', // or 'PUT'
             headers: {
@@ -351,6 +394,7 @@ class Calendar extends Component {
                     modal: true,
                     shift_id: shift_id,
                     defaultValues: data.register.users,
+                    str_label: `${data.register.cost_center.code} - ${this.props.current_user_name}`,
 
                     form: {
                         start_date: this.getDate(data.register.start_date),
@@ -359,8 +403,11 @@ class Calendar extends Component {
                         user_responsible_id: (data.register.user_responsible ? data.register.user_responsible.id : ""),
                         description: data.register.description,
                         subject: data.register.subject,
+                        force_save: data.register.force_save,
+                        color: data.register.color,
                         user_ids: arrayIds
                     },
+                    
 
                     selectedOptionCostCenter: {
                         cost_center_id: data.register.cost_center.id,
@@ -450,20 +497,18 @@ class Calendar extends Component {
                     .then(data => {
                         console.log(data)
                        
-                        if (data.errors.length == 0) {
+                        if (!data.force_save) {
+                            this.setState({
+                                errors_create: data.errors, 
+                            })
+                        }else{
                             this.setState({
                                 modal: false,
-                                shift_id: "",
-                                
+                                shift_id: "",  
+                                errors_create: [],
                             })
                             this.clearValues();
                             this.loadData();
-    
-                        }else{
-                            this.setState({
-                                errors_create: data.errors,
-                               
-                            })
                         }
                     });
             }
@@ -506,7 +551,17 @@ class Calendar extends Component {
         })
             .then(response => response.json())
             .then(data => {
-                this.setState({ data: data.data })
+                const array = []
+
+                //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
+                data.data.map((item) => (
+                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: this.getDate(item.start_date), end: this.getDate(item.end_date), id: item.id, backgroundColor: item.color })
+                ))
+
+                this.setState({
+                    data: array,
+                    isLoaded: false
+                })
             });
     }
 
@@ -545,6 +600,15 @@ class Calendar extends Component {
         this.loadData();
     }
 
+    renderEventContent(eventInfo) {
+        console.log("eventInfo", eventInfo);
+        return (
+          <div style={{ backgroundColor: eventInfo.backgroundColor, width: "100%", padding: "3px", border: "1px", textAlign: "center" }}>
+            <b>{eventInfo.event.title}</b>
+          </div>
+        )
+    }
+
 
     render() {
         if (this.state.isLoaded) {
@@ -575,6 +639,7 @@ class Calendar extends Component {
                         submitForm={this.handleClick}
                         errorValues={this.state.errorValues}
                         microsoft_auth={this.props.microsoft_auth}
+                        str_label={this.state.str_label}
 
                         selectedOptionCostCenter={this.state.selectedOptionCostCenter}
                         handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
@@ -587,6 +652,9 @@ class Calendar extends Component {
                         handleChangeAutocompleteMulti={this.handleChangeAutocompleteMulti}
                         selectedOptionMulti={this.state.selectedOptionMulti}
                         defaultValues={this.state.defaultValues}
+
+                        destroy={this.destroy}
+                        shift_id={this.state.shift_id}
                     />
                 )}
 
@@ -634,7 +702,7 @@ class Calendar extends Component {
                                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
                             }}
 
-
+                            eventContent={this.renderEventContent}
                             eventColor={'#3f69d7'}
                             eventClick={(item) => this.handleClickShow(item.event._def.publicId, item.event)}
                             eventDrop={info => { this.eventDrop(info) }}

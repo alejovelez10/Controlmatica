@@ -326,7 +326,15 @@
         <% if authorization_employed_performance || current_user.rol.name == "Administrador" %>
           <li>
             <%= link_to employed_performance_show_path, class: "app-menu__item" do %>
-            <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Rendimiento</span>
+            <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Rendimiento Ingenieros</span>
+            <% end -%>
+          </li>
+        <% end %>
+
+        <% if authorization_report_contractors || current_user.rol.name == "Administrador" %>
+          <li>
+            <%= link_to employed_performance_show_path + "?view=tableristas", class: "app-menu__item" do %>
+            <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label"> Rendimineto tableristas</span>
             <% end -%>
           </li>
         <% end %>

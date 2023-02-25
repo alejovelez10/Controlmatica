@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import Select from "react-select";
+import { CirclePicker } from 'react-color'
 
 const FormCreate = (props) => {
 
@@ -15,14 +16,22 @@ const FormCreate = (props) => {
 
                 {props.errors.length > 0 && (
                     <div className="alert alert-danger">
-                           <div className="mb-2"> No se pudieron crear los registro ya que los siguientes usuarios tienen conflictos: </div>
+                        <div className="mb-2"> No se pudieron crear los registro ya que los siguientes usuarios tienen conflictos: </div>
                         {props.errors.map(value => (
                             <div className="mb-1">{value}</div>
                         ))}
-                    </div>
 
-                )
-                }
+                        <div className="col-md-4 text-center mt-2 mb-2 pl-0 d-flex">
+                            <input type="checkbox" onChange={(e) => props.onChangeForm({ target: { name: "force_save", value: !props.formValues.force_save } })} id={`customSwitch`} checked={props.formValues.force_save} />
+                            <label className="ml-2" htmlFor={`customSwitch`}><b>¿Quieres forzar el guardado?</b></label>
+                        </div>
+
+                        {/* {props.formValues.force_save && (
+                            <b className="mt-3">El registro sera forzado"</b>
+                        )} */}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     <ModalBody>
                         <div className="row">
@@ -113,6 +122,23 @@ const FormCreate = (props) => {
                                             />
                                         </div>
                                     )}
+
+                                    {/*               {props.modeEdit && (
+                                        <div className="col-md-12 mb-3">
+                                            <div className="alert alert-danger" role="alert">
+                                                <h4 className="alert-heading">Eliminacion de turno</h4>
+                                                <p>En el siguiente boton se puede eliminar este turno</p>
+                                                <hr />
+                                                <button
+                                                    className="btn btn-danger"
+                                                    onClick={() => props.destroy(props.shift_id)}
+                                                >
+                                                    <i className="fas fa-trash-alt mr-2"></i>Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    */}
                                 </div>
                             </div>
 
@@ -141,11 +167,26 @@ const FormCreate = (props) => {
                                     />
                                 </div>
 
+                                {props.str_label && (
+                                    <React.Fragment>
+                                        <div className="col-md-12 mt-4 mb-4">
+                                            <span className="badge label-preview" style={{ backgroundColor: props.formValues.color }}>{props.str_label}</span>
+                                        </div>
+
+                                        <div className="col-md-12 mt-2">
+                                            <CirclePicker
+                                                color={props.formValues.color}
+                                                onChange={(color) => props.onChangeForm({ target: { name: "color", value: color.hex } })}
+                                            />
+                                        </div>
+                                    </React.Fragment>
+                                )}
+
 
                             </div>
 
                             {props.microsoft_auth.is_user_logged_in && (
-                                <div className="col-md-12">
+                                <div className="col-md-12 mt-2">
                                     <div className="tile pb-0">
                                         <div className="tile-body">
                                             <div className="row">
@@ -168,7 +209,17 @@ const FormCreate = (props) => {
 
                     <ModalFooter>
                         <label className="btn btn-light mt-2" onClick={() => props.toggle()}>Cerrar</label>
-                        <button className="btn-shadow btn btn-secondary" onClick={props.submitForm}>{props.nameBnt}</button>
+                        {props.modeEdit && (
+                            <button
+                                className="btn btn-danger"
+                                onClick={() => props.destroy(props.shift_id)}
+                            >
+                                <i className="fas fa-trash-alt mr-2"></i>Eliminar
+                            </button>
+                        )}
+                        {!props.modeEdit && (
+                            <button className="btn-shadow btn btn-secondary" onClick={props.submitForm}>{props.nameBnt}</button>
+                        )}
                     </ModalFooter>
                 </form>
             </Modal>

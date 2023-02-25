@@ -223,6 +223,7 @@ class index extends React.Component {
                           cost_center={this.props.cost_center}
                           current_tab={this.props.current_tab}
                           microsoft_auth={this.props.microsoft_auth}
+                          current_user_name={this.props.current_user_name}
                           
                       />
 

@@ -3,13 +3,16 @@
 # Table name: shifts
 #
 #  id                  :bigint           not null, primary key
+#  color               :string           default("#1aa9fb")
 #  description         :text
 #  end_date            :datetime
+#  force_save          :boolean          default(FALSE)
 #  start_date          :datetime
 #  subject             :string
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
 #  cost_center_id      :integer
+#  microsoft_id        :string
 #  user_id             :integer
 #  user_responsible_id :integer
 #
@@ -42,11 +45,11 @@ class Shift < ApplicationRecord
     def self.search(start_date, end_date, cost_center_ids, user_responsible_ids)
         puts "cost_center_idscost_center_idscost_center_ids #{cost_center_ids}"
         puts "user_responsible_ids #{user_responsible_ids}"
-
-        start_date != "" ? (scope :fecha_comienzo, -> { where(start_date: start_date) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
-        end_date != "" ? (scope :fecha_final, -> { where(end_date: end_date) }) : (scope :fecha_final, -> { where.not(id: nil) })
-        cost_center_ids != "" ? (scope :centro_de_costo, -> { where(cost_center_id: cost_center_ids) }) : (scope :centro_de_costo, -> { where.not(id: nil) })
-        user_responsible_ids != "" ? (scope :usuario_responsable, -> { where(user_responsible_id: user_responsible_ids) }) : (scope :usuario_responsable, -> { where.not(id: nil) })
+        puts end_date
+        start_date != "" ? (scope :fecha_comienzo, -> { where(["start_date >= ?", start_date]) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
+        end_date != "" ? (scope :fecha_final, -> { where(["end_date <= ?", end_date]) }) : (scope :fecha_final, -> { where.not(id: nil) })
+        cost_center_ids != [] ? (scope :centro_de_costo, -> { where(cost_center_id: cost_center_ids) }) : (scope :centro_de_costo, -> { where.not(id: nil) })
+        user_responsible_ids != [] ? (scope :usuario_responsable, -> { where(user_responsible_id: user_responsible_ids) }) : (scope :usuario_responsable, -> { where.not(id: nil) })
 
         fecha_comienzo.fecha_final.centro_de_costo.usuario_responsable
     end

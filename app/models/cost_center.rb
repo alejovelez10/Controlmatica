@@ -81,8 +81,9 @@ class CostCenter < ApplicationRecord
   has_many :contractors, dependent: :destroy
   has_many :shifts, dependent: :destroy
   has_many :notification_alerts, dependent: :destroy
-  has_many :report_expenses
-  has_many :commissions
+  has_many :report_expenses, dependent: :destroy
+  has_many :commissions, dependent: :destroy
+  has_many :quotations, dependent: :destroy
 
   belongs_to :customer, optional: :true
   belongs_to :contact, optional: :true

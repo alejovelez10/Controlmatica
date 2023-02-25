@@ -1,6 +1,7 @@
 class ShiftsController < ApplicationController
     before_action :authenticate_user!, except: [:show]
     before_action :shift_find, :only => [:update, :destroy]
+    include GraphHelper
 
     def index
         @estados = {
@@ -32,7 +33,6 @@ class ShiftsController < ApplicationController
        users.each do |user|
         create_row = true
         Shift.where(user_responsible_id: user.id).each do |s|
-            
             if  shift_create_params["start_date"] >= s.start_date && shift_create_params["start_date"] <= s.end_date
                 create_row = false
                 errors << user.email
@@ -41,21 +41,24 @@ class ShiftsController < ApplicationController
             if  shift_create_params["start_date"] < s.start_date && shift_create_params["end_date"] >= s.start_date
                 create_row = false
                 errors << user.email
-
             end
-            
         end
 
-        if create_row && errors.length == 0
+        force_save = (shift_create_params["force_save"] ? true : (errors.length == 0 ? true : false) )
+
+        if force_save
             shift =  Shift.create(
                     start_date: shift_create_params["start_date"],
                     end_date: shift_create_params["end_date"],
                     cost_center_id: shift_create_params["cost_center_id"],
                     description: shift_create_params["description"],
                     subject: shift_create_params["subject"],
+                    force_save: shift_create_params["force_save"],
+                    color: shift_create_params["color"],
                     user_id: current_user.id,
                     user_responsible_id: user.id,
                 )
+
                 if shift.save
                     if @user_name 
                         CreateEvenInMicrosoftJob.set(wait: 2.seconds).perform_later(shift, access_token, user_timezone)
@@ -66,9 +69,12 @@ class ShiftsController < ApplicationController
 
        end
 
+       force_save = (shift_create_params["force_save"] ? true : (errors.length == 0 ? true : false) )
+
             render :json => {
                 success: "¡El Registro fue creado con éxito!",
                 errors: errors,
+                force_save: force_save,
                 #register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
                 type: "success"
             }
@@ -126,6 +132,9 @@ class ShiftsController < ApplicationController
             end
         end
 
+        puts shifts
+        puts "jajaajjaajajajajaj"
+
         render json: {
             data: ActiveModelSerializers::SerializableResource.new(shifts, each_serializer: ShiftSerializer),
         }
@@ -158,7 +167,20 @@ class ShiftsController < ApplicationController
     end
 
     def destroy 
-        if @shift.destroy
+
+        if true
+            if @user_name && @shift.microsoft_id.present?
+                @shift.destroy
+
+                new_event = {
+                    'contentType' => 'text',
+                    'content' => ""
+                }
+                delete_in_calendar("DELETE", "/v1.0/me/events/#{@shift.microsoft_id}", access_token, nil, nil, new_event)
+            else
+                @shift.destroy
+            end
+
             render :json => {
                 success: "¡El Registro fue eliminado con éxito!",
                 type: "success"
@@ -175,10 +197,10 @@ class ShiftsController < ApplicationController
         
         def shift_create_params
             defaults = { user_id: current_user.id }
-            params.permit(:user_id, :end_date, :start_date, :cost_center_id, :user_responsible_id, :subject, :description, :user_ids => []).reverse_merge(defaults)
+            params.permit(:user_id, :end_date, :start_date, :cost_center_id, :user_responsible_id, :subject, :description, :force_save, :color, :user_ids => []).reverse_merge(defaults)
         end
 
         def shift_update_params
-            params.permit(:end_date, :start_date, :cost_center_id, :user_responsible_id, :subject, :description, :user_ids => [])
+            params.permit(:end_date, :start_date, :cost_center_id, :user_responsible_id, :subject, :description, :force_save, :color, :user_ids => [])
         end
 end
