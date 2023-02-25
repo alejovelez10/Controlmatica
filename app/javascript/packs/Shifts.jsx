@@ -199,7 +199,7 @@ const Shifts = (props) => {
 
     const destroy = (page_id) => {
         Swal.fire({
-            title: 'Estas seguro?',
+            title: '¿Estas seguro?',
             text: "El registro sera eliminado para siempre!",
             type: 'warning',
             showCancelButton: true,

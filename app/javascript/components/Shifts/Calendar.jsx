@@ -551,7 +551,17 @@ class Calendar extends Component {
         })
             .then(response => response.json())
             .then(data => {
-                this.setState({ data: data.data })
+                const array = []
+
+                //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
+                data.data.map((item) => (
+                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: this.getDate(item.start_date), end: this.getDate(item.end_date), id: item.id, backgroundColor: item.color })
+                ))
+
+                this.setState({
+                    data: array,
+                    isLoaded: false
+                })
             });
     }
 

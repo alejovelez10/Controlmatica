@@ -132,6 +132,9 @@ class ShiftsController < ApplicationController
             end
         end
 
+        puts shifts
+        puts "jajaajjaajajajajaj"
+
         render json: {
             data: ActiveModelSerializers::SerializableResource.new(shifts, each_serializer: ShiftSerializer),
         }
