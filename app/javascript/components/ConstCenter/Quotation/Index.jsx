@@ -287,12 +287,20 @@ class Index extends Component {
                                             <tr className="tr-title">
                                                 <th className="text-right" style={{ width: "2%" }}>Acciones</th>
                                                 <th>Descripción</th>
-                                                <th style={{ width: "11%" }}>Número de cotización</th>
-                                                <th>Horas tablerista</th>
-                                                <th>Valor hora Costo</th>
-                                                <th>Valor hora cotizada</th>
-                                                <th style={{ width: "15%" }}>Horas de desplazamiento</th>
-                                                <th style={{ width: "15%" }}>Valor hora de desplazamiento</th>
+                                                <th >Número de cotización</th>
+                                                <th>Hora Ingeniería</th>
+                                                <th>Valor hora costo</th>
+                                                <th>Total Ingenería costo</th>
+                                                <th>Valor hora cotiazada</th>
+                                                <th>Total Ingenería cotizada</th>
+                                                <th>Hora Tablerista</th>
+                                                <th>Valor hora costo Tablerista</th>
+                                                <th>Total Tablerista costo</th>
+                                                <th>Valor hora cotizada Tablerista</th>
+                                                <th>Total Tablerista cotizado</th>
+                                                <th >Horas de desplazamiento</th>
+                                                <th >Valor hora de desplazamiento</th>
+                                                <th>Total desplazamiento</th>
                                                 <th>Valor materiales</th>
                                                 <th>Valor Viaticos</th>
                                                 <th>Total Cotizacion</th>
@@ -333,12 +341,20 @@ class Index extends Component {
                                                             </td>
 
                                                             <td>{quotation.description}</td>
-                                                            <td><NumberFormat value={quotation.quotation_number} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.hours_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td>{quotation.quotation_number}</td>
+                                                            <td>{quotation.eng_hours}</td>
                                                             <td><NumberFormat value={quotation.hour_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td><NumberFormat value={quotation.ingenieria_total_costo} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                             <td><NumberFormat value={quotation.hour_cotizada} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.displacement_hours} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td><NumberFormat value={quotation.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td>{quotation.hours_contractor}</td>
+                                                            <td><NumberFormat value={quotation.hours_contractor_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td><NumberFormat value={quotation.contractor_total_costo} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td><NumberFormat value={quotation.hours_contractor_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td><NumberFormat value={quotation.work_force_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td>{quotation.displacement_hours}</td>
                                                             <td><NumberFormat value={quotation.value_displacement_hours} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td><NumberFormat value={quotation.offset_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                             <td><NumberFormat value={quotation.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                             <td><NumberFormat value={quotation.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                                             <td><NumberFormat value={quotation.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>

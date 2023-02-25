@@ -26,5 +26,5 @@
 #  cost_center_id            :integer
 #
 class QuotationSerializer < ActiveModel::Serializer
-  attributes :id, :description, :quotation_number, :eng_hours, :hour_real, :hour_cotizada, :hours_contractor, :hours_contractor_real, :hours_contractor_invoices, :displacement_hours, :value_displacement_hours, :materials_value, :viatic_value, :quotation_value
+  attributes :id, :description, :quotation_number, :eng_hours, :hour_real, :hour_cotizada, :hours_contractor, :hours_contractor_real, :hours_contractor_invoices, :displacement_hours, :value_displacement_hours, :materials_value, :viatic_value, :quotation_value, :ingenieria_total_costo, :engineering_value, :contractor_total_costo,:work_force_contractor,:offset_value
 end

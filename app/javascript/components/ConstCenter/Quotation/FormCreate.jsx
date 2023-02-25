@@ -54,10 +54,9 @@ class FormCreate extends Component {
 
                                 <div className="col-md-4">
                                     <label>Horas ingeniería *</label>
-                                    <NumberFormat 
+                                    <input 
                                         name="eng_hours"
-                                        thousandSeparator={true} 
-                                        prefix={'$'} 
+                                        type="number"
                                         className={`form form-control`}
                                         value={this.props.formValues.eng_hours}
                                         onChange={this.props.handleChangeMoney}
@@ -97,10 +96,9 @@ class FormCreate extends Component {
 
                                 <div className="col-md-4">
                                     <label>Horas tablerista *</label>
-                                    <NumberFormat 
+                                    <input 
                                         name="hours_contractor"
-                                        thousandSeparator={true} 
-                                        prefix={'$'} 
+                                        type="number"
                                         className={`form form-control`}
                                         value={this.props.formValues.hours_contractor}
                                         onChange={this.props.handleChangeMoney}
@@ -140,10 +138,9 @@ class FormCreate extends Component {
 
                                 <div className="col-md-6">
                                     <label>Horas de desplazamiento*</label>
-                                    <NumberFormat 
+                                    <input 
                                         name="displacement_hours"
-                                        thousandSeparator={true} 
-                                        prefix={'$'} 
+                                        type="number"
                                         className={`form form-control`}
                                         value={this.props.formValues.displacement_hours}
                                         onChange={this.props.handleChangeMoney}
