@@ -46,11 +46,8 @@ class Shift < ApplicationRecord
         puts "cost_center_idscost_center_idscost_center_ids #{cost_center_ids}"
         puts "user_responsible_ids #{user_responsible_ids}"
 
-        start_date != "" ? (scope :fecha_comienzo, -> { where(start_date: start_date) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
-        end_date != "" ? (scope :fecha_final, -> { where(end_date: end_date) }) : (scope :fecha_final, -> { where.not(id: nil) })
-        cost_center_ids != "" ? (scope :centro_de_costo, -> { where(cost_center_id: cost_center_ids) }) : (scope :centro_de_costo, -> { where.not(id: nil) })
-        user_responsible_ids != "" ? (scope :usuario_responsable, -> { where(user_responsible_id: user_responsible_ids) }) : (scope :usuario_responsable, -> { where.not(id: nil) })
+        start_date != "" ? (scope :fecha_comienzo, -> { where(["start_date >= ?", start_date]) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
 
-        fecha_comienzo.fecha_final.centro_de_costo.usuario_responsable
+        fecha_comienzo
     end
 end
