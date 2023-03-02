@@ -17,6 +17,7 @@ class FormCreate extends React.Component {
       return this.draft()
     }
        
+
         
   }
 
@@ -33,6 +34,7 @@ class FormCreate extends React.Component {
               value={this.props.formValues.eng_hours}
               onChange={this.props.onChangeForm}
               placeholder="Horas ingeniería"
+              disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
             /> 
           </div>
 
@@ -48,6 +50,7 @@ class FormCreate extends React.Component {
                 value={this.props.formValues.hour_real}
                 onChange={this.props.onChangeForm}
                 placeholder="Valor hora costo"
+                disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
               /> 
             </div>
           )}
@@ -63,6 +66,7 @@ class FormCreate extends React.Component {
               value={this.props.formValues.hour_cotizada}
               onChange={this.props.onChangeForm}
               placeholder="Hora valor cotizada"
+              disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
             /> 
           </div>
 
@@ -81,7 +85,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.displacement_hours}
                       onChange={this.props.onChangeForm}
                       placeholder="Horas de desplazamiento"
-                    /> 
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}                    /> 
 
                     
                   </div>
@@ -96,6 +100,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.value_displacement_hours}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora de desplazamiento"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
           {/* HR */}
@@ -113,6 +118,7 @@ class FormCreate extends React.Component {
               value={this.props.formValues.viatic_value}
               onChange={this.props.onChangeForm}
               placeholder="Valor Viaticos"
+              disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
             /> 
           </div>
 
@@ -127,6 +133,7 @@ class FormCreate extends React.Component {
                 value={this.props.formValues.quotation_value}
                 onChange={this.props.onChangeForm}
                 placeholder="Total Cotizacion"
+                disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
               /> 
             </div>
         </React.Fragment>
@@ -147,6 +154,7 @@ class FormCreate extends React.Component {
               value={this.props.formValues.materials_value}
               onChange={this.props.onChangeForm}
               placeholder="Valor materiales"
+              disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
             />
              
           </div>
@@ -165,6 +173,7 @@ class FormCreate extends React.Component {
                 value={this.props.formValues.quotation_value}
                 onChange={this.props.onChangeForm}
                 placeholder="Total Cotizacion"
+                 disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
               /> 
             </div>
 
@@ -176,7 +185,7 @@ class FormCreate extends React.Component {
   draft = () => { //proyecto
       return(
         <React.Fragment>
-<div className="col-md-4">
+            <div className="col-md-4">
                   <label>Horas ingeniería <small className="validate-label">*</small></label>
                     <input 
                       name="eng_hours"
@@ -185,6 +194,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.eng_hours}
                       onChange={this.props.onChangeForm}
                       placeholder="Horas ingeniería"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
 
@@ -199,6 +209,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.hour_real}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora costo"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
                 )}
@@ -213,6 +224,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.hour_cotizada}
                       onChange={this.props.onChangeForm}
                       placeholder="Hora valor cotizada"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
 
@@ -231,6 +243,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.hours_contractor}
                       onChange={this.props.onChangeForm}
                       placeholder="Horas tablerista"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
 
@@ -245,6 +258,7 @@ class FormCreate extends React.Component {
                         value={this.props.formValues.hours_contractor_real}
                         onChange={this.props.onChangeForm}
                         placeholder="Valor hora Costo"
+                        disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                       /> 
                     </div>
                   )}
@@ -260,6 +274,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.hours_contractor_invoices}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora cotizada"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
 
@@ -280,6 +295,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.displacement_hours}
                       onChange={this.props.onChangeForm}
                       placeholder="Horas de desplazamiento"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
                   {this.props.estados.show_hours == true && (
@@ -293,6 +309,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.value_displacement_hours}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor hora de desplazamiento"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
                    )}
@@ -313,6 +330,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.materials_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor materiales"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
 
@@ -326,6 +344,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.viatic_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Valor Viaticos"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
 
@@ -339,6 +358,7 @@ class FormCreate extends React.Component {
                       value={this.props.formValues.quotation_value}
                       onChange={this.props.onChangeForm}
                       placeholder="Total Cotizacion"
+                      disabled={this.props.formValues.has_many_quotes && this.props.modeEdit}
                     /> 
                   </div>
         </React.Fragment>

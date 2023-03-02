@@ -3,73 +3,74 @@
 # Table name: cost_centers
 #
 #  id                        :bigint           not null, primary key
-#  customer_id               :integer
-#  contact_id                :integer
-#  description               :text
-#  start_date                :date
-#  end_date                  :date
-#  quotation_number          :string
-#  engineering_value         :float
-#  viatic_value              :float
-#  execution_state           :string
-#  invoiced_state            :string
-#  service_type              :string
-#  created_at                :datetime         not null
-#  updated_at                :datetime         not null
-#  count                     :integer
+#  aiu                       :float            default(0.0)
+#  aiu_percent               :float            default(0.0)
+#  aiu_percent_real          :float            default(0.0)
+#  aiu_real                  :float            default(0.0)
 #  code                      :string
+#  cont_costo_cotizado       :float            default(0.0)
+#  cont_costo_porcentaje     :float            default(0.0)
+#  cont_costo_real           :float            default(0.0)
+#  cont_horas_eje            :float            default(0.0)
+#  cont_horas_porcentaje     :float            default(0.0)
+#  contractor_total_costo    :float            default(0.0)
+#  count                     :integer
 #  create_type               :boolean
+#  description               :text
+#  desp_horas_eje            :float            default(0.0)
+#  desp_horas_porcentaje     :float            default(0.0)
+#  displacement_hours        :float
+#  end_date                  :date
 #  eng_hours                 :float
+#  engineering_value         :float
+#  execution_state           :string
+#  fact_porcentaje           :float            default(0.0)
+#  fact_real                 :float            default(0.0)
+#  has_many_quotes           :boolean          default(FALSE)
 #  hour_cotizada             :float
 #  hour_real                 :float
-#  quotation_value           :float
-#  work_force_contractor     :float
 #  hours_contractor          :float
 #  hours_contractor_invoices :float
 #  hours_contractor_real     :float
-#  materials_value           :float
-#  user_id                   :integer
-#  sum_materials             :string
-#  sum_contractors           :string
-#  sum_executed              :string
-#  sum_viatic                :float
-#  ingenieria_total_costo    :float            default(0.0)
-#  sum_materials_costo       :float            default(0.0)
-#  sum_materials_cot         :float            default(0.0)
-#  contractor_total_costo    :float            default(0.0)
-#  sum_contractor_costo      :float            default(0.0)
-#  sum_contractor_cot        :float            default(0.0)
-#  sum_materials_value       :float            default(0.0)
-#  displacement_hours        :float
-#  value_displacement_hours  :float
-#  offset_value              :float
-#  update_user               :integer
+#  ing_costo_cotizado        :float            default(0.0)
+#  ing_costo_porcentaje      :float            default(0.0)
+#  ing_costo_real            :float            default(0.0)
 #  ing_horas_eje             :float            default(0.0)
 #  ing_horas_porcentaje      :float            default(0.0)
-#  ing_costo_cotizado        :float            default(0.0)
-#  ing_costo_real            :float            default(0.0)
-#  ing_costo_porcentaje      :float            default(0.0)
-#  cont_horas_eje            :float            default(0.0)
-#  cont_horas_porcentaje     :float            default(0.0)
-#  cont_costo_cotizado       :float            default(0.0)
-#  cont_costo_real           :float            default(0.0)
-#  cont_costo_porcentaje     :float            default(0.0)
-#  mat_costo_real            :float            default(0.0)
+#  ingenieria_total_costo    :float            default(0.0)
+#  invoiced_state            :string
 #  mat_costo_porcentaje      :float            default(0.0)
-#  viat_costo_real           :float            default(0.0)
-#  viat_costo_porcentaje     :float            default(0.0)
-#  fact_real                 :float            default(0.0)
-#  fact_porcentaje           :float            default(0.0)
-#  desp_horas_eje            :float            default(0.0)
-#  desp_horas_porcentaje     :float            default(0.0)
-#  aiu                       :float            default(0.0)
-#  aiu_percent               :float            default(0.0)
-#  aiu_real                  :float            default(0.0)
-#  aiu_percent_real          :float            default(0.0)
-#  total_expenses            :float            default(0.0)
-#  last_user_edited_id       :integer
-#  user_owner_id             :integer
+#  mat_costo_real            :float            default(0.0)
+#  materials_value           :float
+#  offset_value              :float
+#  quotation_number          :string
+#  quotation_value           :float
 #  sales_state               :string           default("SIN COMPRAS")
+#  service_type              :string
+#  start_date                :date
+#  sum_contractor_costo      :float            default(0.0)
+#  sum_contractor_cot        :float            default(0.0)
+#  sum_contractors           :string
+#  sum_executed              :string
+#  sum_materials             :string
+#  sum_materials_costo       :float            default(0.0)
+#  sum_materials_cot         :float            default(0.0)
+#  sum_materials_value       :float            default(0.0)
+#  sum_viatic                :float
+#  total_expenses            :float            default(0.0)
+#  update_user               :integer
+#  value_displacement_hours  :float
+#  viat_costo_porcentaje     :float            default(0.0)
+#  viat_costo_real           :float            default(0.0)
+#  viatic_value              :float
+#  work_force_contractor     :float
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  contact_id                :integer
+#  customer_id               :integer
+#  last_user_edited_id       :integer
+#  user_id                   :integer
+#  user_owner_id             :integer
 #
 
 class CostCenter < ApplicationRecord
@@ -92,6 +93,7 @@ class CostCenter < ApplicationRecord
   belongs_to :user_owner, :class_name => "User", optional: :true
 
   before_create :create_code
+  after_create :create_quotation
   before_update :change_state
   before_update :change_state_cost_center
 
@@ -162,6 +164,7 @@ class CostCenter < ApplicationRecord
   end
 
   def create_code
+    self.has_many_quotes = true
     self.sum_executed = 0
     self.sum_contractors = 0
     self.sum_materials = 0
@@ -298,4 +301,33 @@ class CostCenter < ApplicationRecord
       end
     end
   end
+
+
+  def create_quotation
+
+    if self.has_many_quotes
+      quotation = Quotation.create(
+        cost_center_id: self.id,
+        description: self.description,
+        quotation_number: self.quotation_number,
+        eng_hours: self.displacement_hours,
+        engineering_value: self.engineering_value,
+        hour_cotizada: self.hour_cotizada,
+        hour_real: self.hour_real,
+        hours_contractor: self.hours_contractor,
+        hours_contractor_invoices: self.hours_contractor_invoices,
+        hours_contractor_real: self.hours_contractor_real,
+        ingenieria_total_costo: self.ingenieria_total_costo,
+        materials_value: self.materials_value,
+        quotation_value: self.quotation_value,
+        value_displacement_hours: self.value_displacement_hours,
+        displacement_hours: self.displacement_hours,
+        viatic_value: self.viatic_value,
+        work_force_contractor: self.work_force_contractor,
+
+      )
+  end
+  end
+
+
 end

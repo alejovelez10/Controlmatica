@@ -553,6 +553,7 @@ class tableIndex extends React.Component {
 
 
   edit = modulo => {
+    console.log("asdfa", modulo)
     if (this.state.modeEdit === true) {
       this.setState({ modeEdit: false })
     } else {
@@ -596,7 +597,7 @@ class tableIndex extends React.Component {
 
       action: modulo,
       title: "Editar Centro de costo",
-
+      
       form: {
         customer_id: modulo.customer_id,
         contact_id: modulo.contact_id,
@@ -625,6 +626,7 @@ class tableIndex extends React.Component {
         materials_value: modulo.materials_value != "" ? modulo.materials_value : "0.0",
         viatic_value: modulo.viatic_value != "" ? modulo.viatic_value : "0.0",
         quotation_value: modulo.quotation_value != "" ? modulo.quotation_value : "0.0",
+        has_many_quotes: modulo.has_many_quotes
       },
 
     }

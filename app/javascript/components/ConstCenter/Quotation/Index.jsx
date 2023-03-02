@@ -18,19 +18,19 @@ class Index extends Component {
             quotation_id: "",
 
             form: {
-                cost_center_id: this.props.cost_center_id, 
-                description: "", 
-                quotation_number: "", 
-                eng_hours: "", 
-                hour_real: 50000, 
-                hour_cotizada: 80000, 
-                hours_contractor: "", 
-                hours_contractor_real: 50000, 
-                hours_contractor_invoices: "", 
-                displacement_hours: "", 
-                value_displacement_hours: 50000, 
-                materials_value: "", 
-                viatic_value: "", 
+                cost_center_id: this.props.cost_center_id,
+                description: "",
+                quotation_number: "",
+                eng_hours: "",
+                hour_real: 50000,
+                hour_cotizada: 80000,
+                hours_contractor: "",
+                hours_contractor_real: 50000,
+                hours_contractor_invoices: "",
+                displacement_hours: "",
+                value_displacement_hours: 50000,
+                materials_value: "",
+                viatic_value: "",
                 quotation_value: ""
             },
         }
@@ -69,18 +69,18 @@ class Index extends Component {
                 if (quotation.id === item.id) {
                     return {
                         ...item,
-                        description: quotation.description, 
-                        quotation_number: quotation.quotation_number, 
-                        eng_hours: quotation.eng_hours, 
-                        hour_real: quotation.hour_real, 
-                        hour_cotizada: quotation.hour_cotizada, 
-                        hours_contractor: quotation.hours_contractor, 
-                        hours_contractor_real: quotation.hours_contractor_real, 
-                        hours_contractor_invoices: quotation.hours_contractor_invoices, 
-                        displacement_hours: quotation.displacement_hours, 
-                        value_displacement_hours: quotation.value_displacement_hours, 
-                        materials_value: quotation.materials_value, 
-                        viatic_value: quotation.viatic_value, 
+                        description: quotation.description,
+                        quotation_number: quotation.quotation_number,
+                        eng_hours: quotation.eng_hours,
+                        hour_real: quotation.hour_real,
+                        hour_cotizada: quotation.hour_cotizada,
+                        hours_contractor: quotation.hours_contractor,
+                        hours_contractor_real: quotation.hours_contractor_real,
+                        hours_contractor_invoices: quotation.hours_contractor_invoices,
+                        displacement_hours: quotation.displacement_hours,
+                        value_displacement_hours: quotation.value_displacement_hours,
+                        materials_value: quotation.materials_value,
+                        viatic_value: quotation.viatic_value,
                         quotation_value: quotation.quotation_value
                     }
                 }
@@ -96,18 +96,18 @@ class Index extends Component {
 
             form: {
                 ...this.state.form,
-                description: "", 
-                quotation_number: "", 
-                eng_hours: "", 
-                hour_real: 50000, 
-                hour_cotizada: 80000, 
-                hours_contractor: "", 
-                hours_contractor_real: 50000, 
-                hours_contractor_invoices: "", 
-                displacement_hours: "", 
-                value_displacement_hours: 50000, 
-                materials_value: "", 
-                viatic_value: "", 
+                description: "",
+                quotation_number: "",
+                eng_hours: "",
+                hour_real: 50000,
+                hour_cotizada: 80000,
+                hours_contractor: "",
+                hours_contractor_real: 50000,
+                hours_contractor_invoices: "",
+                displacement_hours: "",
+                value_displacement_hours: 50000,
+                materials_value: "",
+                viatic_value: "",
                 quotation_value: ""
             },
         })
@@ -153,13 +153,13 @@ class Index extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            this.setState({
-                data: data.data,
-                isLoaded: false
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    data: data.data,
+                    isLoaded: false
+                });
             });
-        });
     }
 
     validationForm = () => {
@@ -222,18 +222,18 @@ class Index extends Component {
 
             form: {
                 ...this.state.form,
-                description: quotation.description, 
-                quotation_number: quotation.quotation_number, 
-                eng_hours: quotation.eng_hours, 
-                hour_real: quotation.hour_real, 
-                hour_cotizada: quotation.hour_cotizada, 
-                hours_contractor: quotation.hours_contractor, 
-                hours_contractor_real: quotation.hours_contractor_real, 
-                hours_contractor_invoices: quotation.hours_contractor_invoices, 
-                displacement_hours: quotation.displacement_hours, 
-                value_displacement_hours: quotation.value_displacement_hours, 
-                materials_value: quotation.materials_value, 
-                viatic_value: quotation.viatic_value, 
+                description: quotation.description,
+                quotation_number: quotation.quotation_number,
+                eng_hours: quotation.eng_hours,
+                hour_real: quotation.hour_real,
+                hour_cotizada: quotation.hour_cotizada,
+                hours_contractor: quotation.hours_contractor,
+                hours_contractor_real: quotation.hours_contractor_real,
+                hours_contractor_invoices: quotation.hours_contractor_invoices,
+                displacement_hours: quotation.displacement_hours,
+                value_displacement_hours: quotation.value_displacement_hours,
+                materials_value: quotation.materials_value,
+                viatic_value: quotation.viatic_value,
                 quotation_value: quotation.quotation_value
             },
         })
@@ -253,125 +253,129 @@ class Index extends Component {
     render() {
         return (
             <React.Fragment>
-                        {this.state.modal && (
-                            <FormCreate
-                                backdrop={"static"}
-                                modal={this.state.modal}
-                                toggle={this.toogle}
-                                title={this.state.modeEdit ? "Actualizar cotizacion" : "Crear cotizacion"}
-                                nameBnt={this.state.modeEdit ? "Actualizar" : "Crear"}
+                {this.state.modal && (
+                    <FormCreate
+                        backdrop={"static"}
+                        modal={this.state.modal}
+                        toggle={this.toogle}
+                        title={this.state.modeEdit ? "Actualizar cotizacion" : "Crear cotizacion"}
+                        nameBnt={this.state.modeEdit ? "Actualizar" : "Crear"}
 
-                                //form props
-                                formValues={this.state.form}
-                                onChangeForm={this.HandleChange}
-                                handleChangeMoney={this.HandleChangeMoney}
-                                submitForm={this.HandleClick}
-                                errorValues={this.state.ErrorValues}
-                            />
-                        )}
+                        //form props
+                        formValues={this.state.form}
+                        onChangeForm={this.HandleChange}
+                        handleChangeMoney={this.HandleChangeMoney}
+                        submitForm={this.HandleClick}
+                        errorValues={this.state.ErrorValues}
+                        cost_center={this.props.cost_center}
+                    />
+                )}
 
-                        <div className="col-md-12 mb-3 text-right pr-0">
-                            {!this.state.modal && (
-                                <button
-                                    className="btn-shadow btn btn-secondary"
-                                    onClick={() => this.toogle("new")}
-                                >
-                                    Abrir formulario
-                                </button>
+                <div className="col-md-12 mb-3 text-right pr-0">
+                    {!this.state.modal && (
+                        <button
+                            className="btn-shadow btn btn-secondary"
+                            onClick={() => this.toogle("new")}
+                        >
+                            Crear Cotización
+                        </button>
+                    )}
+                </div>
+                <div className="content-table">
+
+                    <table
+                        className="table table-hover table-bordered table-width-150"
+                        id="sampleTable" style={{ tableLayout: "fixed" }}>
+                        <thead style={{ color: "gray" }}>
+                            <tr className="tr-title">
+                                <th className="text-right" style={{ width: "70px" }}>Acciones</th>
+                                <th>Descripción</th>
+                                <th >Número de cotización</th>
+                                <th>Hora Ingeniería</th>
+                                <th>Valor hora costo</th>
+                                <th>Total Ingenería costo</th>
+                                <th>Valor hora cotiazada</th>
+                                <th>Total Ingenería cotizada</th>
+                                <th>Hora Tablerista</th>
+                                <th>Valor hora costo Tablerista</th>
+                                <th>Total Tablerista costo</th>
+                                <th>Valor hora cotizada Tablerista</th>
+                                <th>Total Tablerista cotizado</th>
+                                <th >Horas de desplazamiento</th>
+                                <th >Valor hora de desplazamiento</th>
+                                <th>Total desplazamiento</th>
+                                <th>Valor materiales</th>
+                                <th>Valor Viaticos</th>
+                                <th>Total Cotizacion</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {this.state.data.length >= 1 ? (
+                                this.state.data.map((quotation, index) => (
+                                    <React.Fragment>
+                                        <tr key={quotation.id}>
+                                            <td className="text-right">
+                                                {true && (
+                                                    <UncontrolledDropdown className='btn-group'>
+                                                        <DropdownToggle className='btn-shadow btn btn-info'>
+                                                            <i className="fas fa-bars"></i>
+                                                        </DropdownToggle>
+                                                        <DropdownMenu className="dropdown-menu dropdown-menu-right">
+                                                            {true && (
+                                                                <DropdownItem
+                                                                    className="dropdown-item"
+                                                                    onClick={() => this.edit(quotation)}
+                                                                >
+                                                                    Editar
+                                                                </DropdownItem>
+                                                            )}
+                                                            {true && (
+                                                                <DropdownItem
+                                                                    onClick={() => this.delete(quotation.id)}
+                                                                    className="dropdown-item"
+                                                                >
+                                                                    Eliminar
+                                                                </DropdownItem>
+                                                            )}
+                                                        </DropdownMenu>
+                                                    </UncontrolledDropdown>
+                                                )}
+                                            </td>
+
+                                            <td>{quotation.description}</td>
+                                            <td>{quotation.quotation_number}</td>
+                                            <td>{quotation.eng_hours}</td>
+                                            <td><NumberFormat value={quotation.hour_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.ingenieria_total_costo} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.hour_cotizada} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td>{quotation.hours_contractor}</td>
+                                            <td><NumberFormat value={quotation.hours_contractor_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.contractor_total_costo} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.hours_contractor_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.work_force_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td>{quotation.displacement_hours}</td>
+                                            <td><NumberFormat value={quotation.value_displacement_hours} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.offset_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                            <td><NumberFormat value={quotation.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                        </tr>
+                                    </React.Fragment>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="11" className="text-center">
+                                        <div className="text-center mt-4 mb-4">
+                                            <h4>No hay registros</h4>
+                                        </div>
+                                    </td>
+                                </tr>
                             )}
-                        </div>
-
-
-                                    <table className="table table-hover table-bordered" id="sampleTable">
-                                        <thead style={{ color: "gray" }}>
-                                            <tr className="tr-title">
-                                                <th className="text-right" style={{ width: "2%" }}>Acciones</th>
-                                                <th>Descripción</th>
-                                                <th >Número de cotización</th>
-                                                <th>Hora Ingeniería</th>
-                                                <th>Valor hora costo</th>
-                                                <th>Total Ingenería costo</th>
-                                                <th>Valor hora cotiazada</th>
-                                                <th>Total Ingenería cotizada</th>
-                                                <th>Hora Tablerista</th>
-                                                <th>Valor hora costo Tablerista</th>
-                                                <th>Total Tablerista costo</th>
-                                                <th>Valor hora cotizada Tablerista</th>
-                                                <th>Total Tablerista cotizado</th>
-                                                <th >Horas de desplazamiento</th>
-                                                <th >Valor hora de desplazamiento</th>
-                                                <th>Total desplazamiento</th>
-                                                <th>Valor materiales</th>
-                                                <th>Valor Viaticos</th>
-                                                <th>Total Cotizacion</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            {this.state.data.length >= 1 ? (
-                                                this.state.data.map((quotation, index) => (
-                                                    <React.Fragment>
-                                                        <tr key={quotation.id}>
-                                                            <td className="text-right">
-                                                                {true && (
-                                                                    <UncontrolledDropdown className='btn-group'>
-                                                                        <DropdownToggle className='btn-shadow btn btn-info'>
-                                                                            <i className="fas fa-bars"></i>
-                                                                        </DropdownToggle>
-                                                                        <DropdownMenu className="dropdown-menu dropdown-menu-right">
-                                                                            {true && (
-                                                                                <DropdownItem
-                                                                                    className="dropdown-item"
-                                                                                    onClick={() => this.edit(quotation)}
-                                                                                >
-                                                                                    Editar
-                                                                                </DropdownItem>
-                                                                            )}
-                                                                            {true && (
-                                                                                <DropdownItem
-                                                                                    onClick={() => this.delete(quotation.id)}
-                                                                                    className="dropdown-item"
-                                                                                >
-                                                                                    Eliminar
-                                                                                </DropdownItem>
-                                                                            )}
-                                                                        </DropdownMenu>
-                                                                    </UncontrolledDropdown>
-                                                                )}
-                                                            </td>
-
-                                                            <td>{quotation.description}</td>
-                                                            <td>{quotation.quotation_number}</td>
-                                                            <td>{quotation.eng_hours}</td>
-                                                            <td><NumberFormat value={quotation.hour_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.ingenieria_total_costo} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.hour_cotizada} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.engineering_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td>{quotation.hours_contractor}</td>
-                                                            <td><NumberFormat value={quotation.hours_contractor_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.contractor_total_costo} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.hours_contractor_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.work_force_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td>{quotation.displacement_hours}</td>
-                                                            <td><NumberFormat value={quotation.value_displacement_hours} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.offset_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td><NumberFormat value={quotation.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                        </tr>
-                                                    </React.Fragment>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="11" className="text-center">
-                                                        <div className="text-center mt-4 mb-4">
-                                                            <h4>No hay registros</h4>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                        </tbody>
+                    </table>
+                </div>
             </React.Fragment>
         );
     }
