@@ -21,6 +21,7 @@ const TabContentShow = (props) => {
   return (
     <div>
 
+
       {props.cost_center.has_many_quotes ? (
         <div>
           <Nav tabs className="mb-3">
@@ -205,6 +206,7 @@ const TabContentShow = (props) => {
           </TabContent>
         </div>
       )}
+
     </div>
   );
 }
