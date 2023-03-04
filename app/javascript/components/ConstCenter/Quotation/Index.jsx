@@ -263,6 +263,7 @@ class Index extends Component {
                         title={this.state.modeEdit ? "Actualizar cotizacion" : "Crear cotizacion"}
                         nameBnt={this.state.modeEdit ? "Actualizar" : "Crear"}
 
+                        
                         //form props
                         formValues={this.state.form}
                         onChangeForm={this.HandleChange}
