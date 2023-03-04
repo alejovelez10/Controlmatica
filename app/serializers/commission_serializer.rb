@@ -32,10 +32,14 @@ class CommissionSerializer < ActiveModel::Serializer
   end
 
   def customer_invoice
-    {
-      id: object.customer_invoice.id,
-      number_invoice: object.customer_invoice.number_invoice,
-    }
+    if !object.customer_invoice.nil?
+          {
+            id: object.customer_invoice.id,
+            number_invoice: object.customer_invoice.number_invoice,
+          }
+    else
+      ""
+   end
   end
 
   def user
