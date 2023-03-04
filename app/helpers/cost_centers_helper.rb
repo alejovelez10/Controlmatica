@@ -162,6 +162,7 @@ module CostCentersHelper
 			:viat_costo_real => cost_center.viat_costo_real,
 			:viatic_value => cost_center.viatic_value,
 			:work_force_contractor => cost_center.work_force_contractor,
+			:has_many_quotes => cost_center.has_many_quotes
 		}
 	end
 

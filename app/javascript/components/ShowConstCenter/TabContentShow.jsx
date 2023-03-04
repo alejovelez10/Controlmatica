@@ -95,6 +95,7 @@ const TabContentShow = (props) => {
               <QuotationIndex
                 cost_center_id={props.cost_center.id}
                 cost_center={props.cost_center}
+                loadData={props.loadData}
               />
             </TabPane>
 

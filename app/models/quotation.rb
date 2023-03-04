@@ -29,6 +29,7 @@ class Quotation < ApplicationRecord
     belongs_to :cost_center
     before_save :calculate_costo
     after_save :calculate_costo_cc
+    after_destroy :calculate_costo_cc
 
     def calculate_costo
 
@@ -45,7 +46,7 @@ class Quotation < ApplicationRecord
         self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
         self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
         if self.value_displacement_hours.present? || self.displacement_hours.present?
-          valor = self.value_displacement_hours * self.hour_real
+          valor = self.displacement_hours * self.value_displacement_hours
           self.offset_value = valor
         end
     end

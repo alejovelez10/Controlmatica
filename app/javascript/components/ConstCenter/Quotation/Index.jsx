@@ -192,6 +192,7 @@ class Index extends Component {
                         this.updateItem(data.register)
                         this.clearValues();
                         this.setState({ modal: false })
+                        this.props.loadData();
                     });
             } else {
                 fetch(`/quotations`, {
@@ -208,6 +209,7 @@ class Index extends Component {
                         this.updateData(data.register)
                         this.clearValues();
                         this.setState({ modal: false, showTable: true })
+                        this.props.loadData();
                     });
             }
         }

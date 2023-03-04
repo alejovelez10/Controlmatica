@@ -305,6 +305,7 @@ class Show extends React.Component {
                 materials_value: this.props.data_info.materials_value != "" ? this.props.data_info.materials_value : "0.0",
                 viatic_value: this.props.data_info.viatic_value != "" ? this.props.data_info.viatic_value : "0.0",
                 quotation_value: this.props.data_info.quotation_value != "" ? this.props.data_info.quotation_value : "0.0",
+                has_many_quotes: this.props.data_info.has_many_quotes
             },
         })
     };
@@ -464,6 +465,11 @@ class Show extends React.Component {
             }
         });
     }
+
+    loadData = ()=>{
+        this.props.loadData();
+    }
+   
 
 
     getServices = () => {
@@ -1143,6 +1149,7 @@ class Show extends React.Component {
                         <Card className="mt-3">
                             <CardBody>
                                 <TabContentShow 
+                                    loadData={this.loadData}
                                     dataMateriales={this.state.dataMateriales} 
                                     dataContractors={this.state.dataContractors} 
                                     dataSalesOrdes={this.state.dataSalesOrdes} 

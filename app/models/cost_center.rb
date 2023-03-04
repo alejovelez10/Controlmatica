@@ -199,14 +199,16 @@ class CostCenter < ApplicationRecord
   end
 
   def calculate_costo
-    self.ingenieria_total_costo = self.eng_hours * self.hour_real
-    self.engineering_value = self.eng_hours * self.hour_cotizada
-    self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
-    self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
+    if !self.has_many_quotes
+      self.ingenieria_total_costo = self.eng_hours * self.hour_real
+      self.engineering_value = self.eng_hours * self.hour_cotizada
+      self.contractor_total_costo = self.hours_contractor * self.hours_contractor_real
+      self.work_force_contractor = self.hours_contractor * self.hours_contractor_invoices
 
-    if self.displacement_hours.present? || self.value_displacement_hours.present?
-      valor = self.displacement_hours * self.hour_real
-      self.offset_value = valor
+      if self.displacement_hours.present? || self.value_displacement_hours.present?
+        valor = self.displacement_hours * self.hour_real
+        self.offset_value = valor
+      end
     end
   end
 
