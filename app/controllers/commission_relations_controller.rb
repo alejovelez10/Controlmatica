@@ -42,7 +42,7 @@ class CommissionRelationsController < ApplicationController
     end
 
     render json: {
-      data: ActiveModelSerializers::SerializableResource.new(expense_ratios, each_serializer: CommissionRelationSerializer),
+      data: ActiveModelSerializers::SerializableResource.new(expense_ratios.order(created_at: :desc), each_serializer: CommissionRelationSerializer),
       total: total,
     }
   end
