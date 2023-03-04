@@ -90,7 +90,7 @@ class ExpenseRatiosController < ApplicationController
         end
 
         render json: {
-          data: ActiveModelSerializers::SerializableResource.new(expense_ratios, each_serializer: ExpenseRatioSerializer),
+          data: ActiveModelSerializers::SerializableResource.new(expense_ratios.order(created_at: :desc), each_serializer: ExpenseRatioSerializer),
           total: total
         }   
     end
