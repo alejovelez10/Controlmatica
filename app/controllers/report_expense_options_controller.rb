@@ -17,7 +17,7 @@ class ReportExpenseOptionsController < ApplicationController
   end
 
   def get_report_expense_options
-      report_expense_options = ReportExpenseOption.all
+      report_expense_options = ReportExpenseOption.all.order(created_at: :desc)
       render json: {
         data: ActiveModelSerializers::SerializableResource.new(report_expense_options, each_serializer: ReportExpenseOptionSerializer),
       }   
