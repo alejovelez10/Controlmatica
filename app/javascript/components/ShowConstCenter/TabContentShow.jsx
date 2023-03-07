@@ -130,7 +130,7 @@ const TabContentShow = (props) => {
               <NavLink
                 className={classnames({ active: activeTab === '1' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('2'); }}
+                onClick={() => { toggle('1'); }}
               >
                 Materiales
               </NavLink>
@@ -140,7 +140,7 @@ const TabContentShow = (props) => {
               <NavLink
                 className={classnames({ active: activeTab === '2' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('3'); }}
+                onClick={() => { toggle('2'); }}
               >
                 Ordenes de Compra
               </NavLink>
@@ -150,7 +150,7 @@ const TabContentShow = (props) => {
               <NavLink
                 className={classnames({ active: activeTab === '3' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('4'); }}
+                onClick={() => { toggle('3'); }}
               >
                 Reportes de servicios
               </NavLink>
@@ -160,7 +160,7 @@ const TabContentShow = (props) => {
               <NavLink
                 className={classnames({ active: activeTab === '4' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('5'); }}
+                onClick={() => { toggle('4'); }}
               >
                 Tableristas
               </NavLink>
@@ -170,7 +170,7 @@ const TabContentShow = (props) => {
               <NavLink
                 className={classnames({ active: activeTab === '5' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('6'); }}
+                onClick={() => { toggle('5'); }}
               >
                 Gastos
               </NavLink>
