@@ -591,8 +591,8 @@ class tableIndex extends React.Component {
       },
 
       selectedOptionUserOwner: {
-        user_owner_id: modulo.user_owner.id,
-        label: modulo.user_owner.name,
+        user_owner_id: modulo.user_owner ? modulo.user_owner.id : null,
+        label: modulo.user_owner ? modulo.user_owner.name : "",
       },
 
       action: modulo,

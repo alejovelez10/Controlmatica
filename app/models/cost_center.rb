@@ -294,7 +294,7 @@ class CostCenter < ApplicationRecord
     elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
       self.invoiced_state = "FACTURADO PARCIAL"
     elsif (customer_invoice <= 0 && !self.quotation_number.blank? && !self.quotation_number.nil?)
-      if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0)
+      if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0 && cost_center.quotation_value > 0)
         self.invoiced_state = "LEGALIZADO"
       elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
         self.invoiced_state = "LEGALIZADO PARCIAL"
