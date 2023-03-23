@@ -52,6 +52,7 @@ class index extends React.Component {
             dataCostCenter: [],
             dataUsers: [],
             clients: [],
+            array_reports: []
         }
     }
 
@@ -128,6 +129,7 @@ class index extends React.Component {
         let array = []
         let arrayUsers = []
         let arrayClients = []
+        let array_reports = []
 
         this.props.cost_centers.map((item) => (
           array.push({label: item.code, value: item.id})
@@ -140,12 +142,19 @@ class index extends React.Component {
         this.props.clientes.map((item) => (
           arrayClients.push({label: item.name, value: item.id})
         ))
+
+        this.props.reports.map((item) => (
+          array_reports.push({label: item.code_report, value: item.id})
+        ))
     
         this.setState({
           dataCostCenter: array,
           dataUsers: arrayUsers,
-          clients: arrayClients
+          clients: arrayClients,
+          array_reports: array_reports
         })
+
+        
     }
 
     handleChangeAutocompleteCentro = selectedOptionCentro => {
@@ -295,6 +304,7 @@ class index extends React.Component {
             <React.Fragment>
               {this.state.show_filter && (
                 <Filter
+                  array_reports={this.state.array_reports}
                   onChangeFilter={this.handleChangeFilter}
                   formValuesFilter={this.state.formFilter}
                   onClick={this.HandleClickFilter}
