@@ -192,8 +192,11 @@ class CostCentersController < ApplicationController
     ejecutado_desplazamiento_horas = @cost_center.reports.sum(:displacement_hours)
 
     porc_desplazamiento = @cost_center.displacement_hours > 0 ? (((ejecutado_desplazamiento_horas.to_f / @cost_center.displacement_hours)) * 100).round(1) : "N/A"
-
-    costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).round(1) + cotizado_desplazamiento
+    if !@cost_center.has_many_quotes
+      costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).round(1) + cotizado_desplazamiento
+    else
+      costo_en_dinero =  @cost_center.quotations.sum(:engineering_value) + cotizado_desplazamiento
+    end
     costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i + ejecutado_desplazamiento
     porc_eje_costo = costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f / costo_en_dinero)) * 100)).round(1) : "N/A"
     #FIN INGENIERIA COSTO

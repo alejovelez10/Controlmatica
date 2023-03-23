@@ -71,6 +71,7 @@ class Index extends Component {
                         ...item,
                         description: quotation.description,
                         quotation_number: quotation.quotation_number,
+                        engineering_value: quotation.engineering_value,
                         eng_hours: quotation.eng_hours,
                         hour_real: quotation.hour_real,
                         hour_cotizada: quotation.hour_cotizada,

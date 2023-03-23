@@ -214,7 +214,10 @@ class CostCenter < ApplicationRecord
 
   def change_state
     self.last_user_edited_id = !User.current.nil? ? User.current.id : 1
-    self.engineering_value = self.hour_cotizada * self.eng_hours
+    if !self.has_many_quotes
+      puts "alejooooooooooooo"
+      self.engineering_value = self.hour_cotizada * self.eng_hours
+    end
     if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil? && (self.quotation_number != "N/A")
       self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
     end
