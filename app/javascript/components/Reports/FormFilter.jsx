@@ -162,7 +162,7 @@ class FormFilter extends Component {
                         value={this.props.selectedOptionCodeReport.code_report}
                       />
                       <Select
-                        options={this.state.reports}
+                        options={this.props.array_reports}
                         autoFocus={false}
                         className={`link-form`}
                         onChange={this.props.handleChangeAutocompleteCodeReport}
