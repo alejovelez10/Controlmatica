@@ -156,18 +156,14 @@ class FormFilter extends Component {
 
                   <div className="col-md-3 mt-3">
                     <label>Busqueda por codigo</label>
-                      <input
-                        type="hidden"
-                        name="code_report"
-                        value={this.props.selectedOptionCodeReport.code_report}
-                      />
-                      <Select
-                        options={this.props.array_reports}
-                        autoFocus={false}
-                        className={`link-form`}
-                        onChange={this.props.handleChangeAutocompleteCodeReport}
-                        value={this.props.selectedOptionCodeReport}
-                      />
+                    <input
+                      className="form form-control"
+                      type="text"
+                      name="code_report"
+                      placeholder="Descripcion del trabajo"
+                      onChange={this.props.onChangeFilter}
+                      value={this.props.formValuesFilter.code_report}
+                    />
                   </div>
 
 

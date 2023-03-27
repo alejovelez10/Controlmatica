@@ -57,7 +57,7 @@ class Report < ApplicationRecord
     search6 != "" ? (scope :customer, -> { where(customer_id: search6) }) : (scope :customer, -> { where.not(id: nil) })
     search7 != "" ? (scope :fdesdep, -> { where(["report_date > ?", search7]) }) : (scope :fdesdep, -> { where.not(id: nil) })
     search8 != "" ? (scope :fhastap, -> { where(["report_date < ?", search8]) }) : (scope :fhastap, -> { where.not(id: nil) })
-    search9 != "" ? (scope :code_report, -> { where(id: search9) }) : (scope :code_report, -> { where.not(id: nil) })
+    search9 != "" ? (scope :code_report, ->  { where("code_report like '%#{search9.downcase}%' or code_report like '%#{search9.upcase}%' or code_report like '%#{search9.capitalize}%' ") }) : (scope :code_report, -> { where.not(id: nil) })
 
     descripcion.responsible.date_ejecution.state_report.centro.customer.fdesdep.fhastap.code_report
   end
