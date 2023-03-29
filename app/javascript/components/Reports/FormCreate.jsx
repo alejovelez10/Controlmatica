@@ -8,13 +8,17 @@ class FormCreate extends React.Component {
     super(props);
   }
 
+  handleSubmit = e => {
+    e.preventDefault();
+  };
+
   render() {
     return (
       <React.Fragment>
         <Modal returnFocusAfterClose={true} isOpen={this.props.modal} className="modal-lg modal-dialog-centered" toggle={this.props.toggle} backdrop={this.props.backdrop}>
           <ModalHeader className="title-modal" toggle={this.props.toggle}> <i className="app-menu__icon fa fa-street-view mr-2"></i> {this.props.titulo} </ModalHeader>
 
-          <form onSubmit={this.props.FormSubmit}>
+          <form onSubmit={this.handleSubmit}>
             <ModalBody>
 
             <div className="row">
@@ -56,25 +60,29 @@ class FormCreate extends React.Component {
                           </a>
                       )}
                   </div>
-
-                  <div className="col-md-12">
-                      <input
-                        type="hidden"
-                        name="cost_center_id"
-                        value={this.props.formAutocompleteCentro.cost_center_id}
-                      />
-                      <label>Centro de costo <small className="validate-label">*</small></label>
-                      <Select
-                        onChange={this.props.onChangeAutocompleteCentro}
-                        options={this.props.centro}
-                        autoFocus={false}
-                        className={`link-form`}
-                        value={this.props.formAutocompleteCentro}
-                      />
-                  </div>
-                  <div className="col-md-4 text-center"></div>
                   
-                  <div className="col-md-4 mt-4 text-center"></div>
+                  {this.props.cost_center_id == undefined && (
+                    <React.Fragment>
+                                          <div className="col-md-12">
+                        <input
+                          type="hidden"
+                          name="cost_center_id"
+                          value={this.props.formAutocompleteCentro.cost_center_id}
+                        />
+                        <label>Centro de costo <small className="validate-label">*</small></label>
+                        <Select
+                          onChange={this.props.onChangeAutocompleteCentro}
+                          options={this.props.centro}
+                          autoFocus={false}
+                          className={`link-form`}
+                          value={this.props.formAutocompleteCentro}
+                        />
+                    </div>
+                    <div className="col-md-4 text-center"></div>
+                    
+                    <div className="col-md-4 mt-4 text-center"></div>
+                    </React.Fragment>
+                  )}
 
 
                   {this.props.create_state == false && (

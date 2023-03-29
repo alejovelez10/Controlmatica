@@ -170,16 +170,11 @@ class Show extends React.Component {
             clients: array
         })
 
-        setTimeout(() => {
-            this.getValues()
-        }, 1000)
-
-
-
+        this.getValues()
     }
 
     getValues() {
-        fetch(`/getValues/${this.props.data_info.id}`)
+        fetch(`/getValues/${this.props.cost_center.id}`)
             .then(response => response.json())
             .then(data => {
                 this.setState({
@@ -1156,6 +1151,11 @@ class Show extends React.Component {
                                     dataReports={this.state.dataReports}  
                                     dataExpenses={this.state.dataExpenses}
                                     cost_center={this.props.cost_center}
+                                    usuario={this.props.usuario}
+                                    providers={this.props.providers}
+                                    users={this.state.users}
+                                    report_expense_options={this.props.report_expense_options}
+                                    clients={this.state.clients}
                                 />
                             </CardBody>
                         </Card>

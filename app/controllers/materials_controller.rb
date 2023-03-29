@@ -153,6 +153,7 @@ class MaterialsController < ApplicationController
       recalculate_cost_center(@material.cost_center_id, "materiales")
       render :json => {
                message: "¡El Registro fue creado con exito!",
+               register: material_object(@material),
                type: "success",
              }
 
@@ -177,6 +178,7 @@ class MaterialsController < ApplicationController
       recalculate_cost_center(@material.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
+        register: material_object(@material),
         type: "success",
       }
 
@@ -200,6 +202,28 @@ class MaterialsController < ApplicationController
 
   def set_material
     @material = Material.find(params[:id])
+  end
+
+  def material_object(material)
+    {
+      id: material.id,
+      amount: material.amount,
+      cost_center: { code: material.cost_center.code },
+      cost_center_id: material.cost_center.id,
+      created_at: material.created_at,
+      delivery_date: material.delivery_date,
+      description: material.description,
+      provider: { name: material.provider.name },
+      provider_id: material.provider_id,
+      provider_invoice_number: material.provider_invoice_number,
+      provider_invoice_value: material.provider_invoice_value,
+      sales_date: material.sales_date,
+      sales_number: material.sales_number,
+      sales_state: material.sales_state,
+      update_user: material.update_user,
+      updated_at: material.updated_at,
+      user_id: material.user_id,
+    }
   end
 
   def material_params_create

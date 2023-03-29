@@ -4,7 +4,7 @@ namespace :create_config do
 
         ModuleControl.destroy_all
         
-        user = User.find_by_email("alejovelez10@gmail.com")
+        user = User.last
 
         rol = Rol.create(name: "Administrador")
 
@@ -98,6 +98,8 @@ namespace :create_config do
             AccionModule.create(name: "Editar", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Ver Responsables", module_control_id: report.id, user_id: user.id)
             AccionModule.create(name: "Descargar excel", module_control_id: report.id, user_id: user.id)
+            AccionModule.create(name: "Editar todos", module_control_id: report.id, user_id: user.id)
+            AccionModule.create(name: "Ingresar viaticos", module_control_id: report.id, user_id: user.id)
         end
 
         customer_reports = ModuleControl.create(name: "Reportes de clientes", user_id: user.id)
@@ -110,7 +112,9 @@ namespace :create_config do
             AccionModule.create(name: "Editar", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Generar pdf", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Enviar para aprobaciòn", module_control_id: customer_reports.id, user_id: user.id)
+            AccionModule.create(name: "Editar email", module_control_id: customer_reports.id, user_id: user.id)
             AccionModule.create(name: "Descargar excel", module_control_id: customer_reports.id, user_id: user.id)
+            AccionModule.create(name: "Editar todos", module_control_id: customer_reports.id, user_id: user.id)
         end
 
         employed_performance = ModuleControl.create(name: "Informe de rendimiento", user_id: user.id)
@@ -118,16 +122,6 @@ namespace :create_config do
         if employed_performance
             AccionModule.create(name: "Ingreso al modulo", module_control_id: employed_performance.id, user_id: user.id)
             AccionModule.create(name: "Ver Responsables", module_control_id: employed_performance.id, user_id: user.id)
-        end
-
-        contractors = ModuleControl.create(name: "Tableristas", user_id: user.id)
-
-        if contractors
-            AccionModule.create(name: "Ingreso al modulo", module_control_id: contractors.id, user_id: user.id)
-            AccionModule.create(name: "Crear", module_control_id: contractors.id, user_id: user.id)
-            AccionModule.create(name: "Eliminar", module_control_id: contractors.id, user_id: user.id)
-            AccionModule.create(name: "Editar", module_control_id: contractors.id, user_id: user.id)
-            AccionModule.create(name: "Descargar excel", module_control_id: contractors.id, user_id: user.id)
         end
 
 
@@ -139,36 +133,10 @@ namespace :create_config do
             AccionModule.create(name: "Eliminar", module_control_id: materials.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: materials.id, user_id: user.id)
             AccionModule.create(name: "Descargar excel", module_control_id: materials.id, user_id: user.id)
+
+            AccionModule.create(name: "Forzar estados", module_control_id: materials.id, user_id: user.id)
+            AccionModule.create(name: "Editar todos", module_control_id: materials.id, user_id: user.id)
         end
-
-        
-        commission_relation = ModuleControl.create(name: "Relación de comisiones", user_id: user.id)
-
-        if commission_relation
-            AccionModule.create(name: "Ingreso al modulo", module_control_id: commission_relation.id, user_id: user.id)
-            AccionModule.create(name: "Crear", module_control_id: commission_relation.id, user_id: user.id)
-            AccionModule.create(name: "Eliminar", module_control_id: commission_relation.id, user_id: user.id)
-            AccionModule.create(name: "Editar", module_control_id: commission_relation.id, user_id: user.id)
-
-            AccionModule.create(name: "Ver todos", module_control_id: commission_relation.id, user_id: user.id)
-            AccionModule.create(name: "Ver pdf", module_control_id: commission_relation.id, user_id: user.id)
-        end
-
-
-        commission = ModuleControl.create(name: "Comisiones", user_id: user.id)
-
-        if commission
-            AccionModule.create(name: "Ingreso al modulo", module_control_id: commission.id, user_id: user.id)
-            AccionModule.create(name: "Crear", module_control_id: commission.id, user_id: user.id)
-            AccionModule.create(name: "Eliminar", module_control_id: commission.id, user_id: user.id)
-            AccionModule.create(name: "Editar", module_control_id: commission.id, user_id: user.id)
-            
-            AccionModule.create(name: "Ver todos", module_control_id: commission.id, user_id: user.id)
-            AccionModule.create(name: "Aceptar comisión", module_control_id: commission.id, user_id: user.id)
-            AccionModule.create(name: "Exportar a excel", module_control_id: commission.id, user_id: user.id)
-            AccionModule.create(name: "Cambiar responsable", module_control_id: commission.id, user_id: user.id)
-        end
-
 
         sales_orders = ModuleControl.create(name: "Ordenes de Compra", user_id: user.id)
 
@@ -179,8 +147,33 @@ namespace :create_config do
             AccionModule.create(name: "Eliminar", module_control_id: sales_orders.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: sales_orders.id, user_id: user.id)
             AccionModule.create(name: "Descargar excel", module_control_id: sales_orders.id, user_id: user.id)
+            AccionModule.create(name: "Editar todos", module_control_id: sales_orders.id, user_id: user.id)
         end
 
+        contractors = ModuleControl.create(name: "Tableristas", user_id: user.id)
+
+        if contractors
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: contractors.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: contractors.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: contractors.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: contractors.id, user_id: user.id)
+            AccionModule.create(name: "Descargar excel", module_control_id: contractors.id, user_id: user.id)
+            AccionModule.create(name: "Editar todos", module_control_id: contractors.id, user_id: user.id)
+        end
+
+        notification_alert = ModuleControl.create(name: "Notificación de alertas", user_id: user.id)
+
+        if notification_alert
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: notification_alert.id, user_id: user.id)
+            AccionModule.create(name: "Revisar", module_control_id: notification_alert.id, user_id: user.id)
+        end
+
+        register_edit = ModuleControl.create(name: "Registro de edicion", user_id: user.id)
+
+        if register_edit
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: register_edit.id, user_id: user.id)
+            AccionModule.create(name: "Revisar", module_control_id: register_edit.id, user_id: user.id)
+        end
 
         report_expense = ModuleControl.create(name: "Gastos", user_id: user.id)
 
@@ -190,17 +183,10 @@ namespace :create_config do
             AccionModule.create(name: "Eliminar", module_control_id: report_expense.id, user_id: user.id)
             AccionModule.create(name: "Editar", module_control_id: report_expense.id, user_id: user.id)
             AccionModule.create(name: "Ver todos", module_control_id: report_expense.id, user_id: user.id)
-        end
 
-        expense_ratio = ModuleControl.create(name: "Relación de gastos", user_id: user.id)
-
-        if expense_ratio
-            AccionModule.create(name: "Ingreso al modulo", module_control_id: expense_ratio.id, user_id: user.id)
-            AccionModule.create(name: "Crear", module_control_id: expense_ratio.id, user_id: user.id)
-            AccionModule.create(name: "Eliminar", module_control_id: expense_ratio.id, user_id: user.id)
-            AccionModule.create(name: "Editar", module_control_id: expense_ratio.id, user_id: user.id)
-            AccionModule.create(name: "Ver pdf", module_control_id: expense_ratio.id, user_id: user.id)
-            AccionModule.create(name: "Ver todos", module_control_id: expense_ratio.id, user_id: user.id)
+            AccionModule.create(name: "Aceptar gasto", module_control_id: report_expense.id, user_id: user.id)
+            AccionModule.create(name: "Exportar a excel", module_control_id: report_expense.id, user_id: user.id)
+            AccionModule.create(name: "Cambiar responsable", module_control_id: report_expense.id, user_id: user.id)
         end
 
         expense_ratio = ModuleControl.create(name: "Relación de gastos", user_id: user.id)
@@ -223,20 +209,60 @@ namespace :create_config do
             AccionModule.create(name: "Editar", module_control_id: type_expense.id, user_id: user.id)
         end
 
-        notification_alert = ModuleControl.create(name: "Notificación de alertas", user_id: user.id)
+        commission = ModuleControl.create(name: "Comisiones", user_id: user.id)
 
-        if notification_alert
-            AccionModule.create(name: "Ingreso al modulo", module_control_id: notification_alert.id, user_id: user.id)
-            AccionModule.create(name: "Revisar", module_control_id: notification_alert.id, user_id: user.id)
+        if commission
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Aceptar comisión", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Exportar a excel", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Cambiar responsable", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Cambiar valor hora", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Editar despues de aceptado", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar despues de aceptado", module_control_id: commission.id, user_id: user.id)
+            AccionModule.create(name: "Forzar horas", module_control_id: commission.id, user_id: user.id)
         end
-        
-        edit_register = ModuleControl.create(name: "Registro de edicion", user_id: user.id)
 
-        if edit_register
-            AccionModule.create(name: "Ingreso al modulo", module_control_id: edit_register.id, user_id: user.id)
-            AccionModule.create(name: "Revisar", module_control_id: edit_register.id, user_id: user.id)
+        commission_relation = ModuleControl.create(name: "Relación de comisiones", user_id: user.id)
+
+        if commission_relation
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: commission_relation.id, user_id: user.id)
+            AccionModule.create(name: "Ver pdf", module_control_id: commission_relation.id, user_id: user.id)
         end
-        
+
+
+        tablero = ModuleControl.create(name: "Tablero de Ingenieros", user_id: user.id)
+
+        if tablero
+            AccionModule.create(name: "Ver tablero", module_control_id: tablero.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: tablero.id, user_id: user.id)
+        end
+
+
+        shift = ModuleControl.create(name: "Turnos", user_id: user.id)
+
+        if shift
+            AccionModule.create(name: "Ver tablero", module_control_id: shift.id, user_id: user.id)
+        end
+
+        red = ModuleControl.create(name: "Informe de rendimiento tableristas", user_id: user.id)
+
+        if red
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: red.id, user_id: user.id)
+        end
+
+
+
+
+
+    
         Parameterization.create(name: "HORA HOMBRE COSTO", money_value: 50000)
         Parameterization.create(name: "HORA HOMBRE COTIZADA", money_value: 80000)
         Parameterization.create(name: "HORA TABLERISTA COSTO", money_value: 50000)

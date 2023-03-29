@@ -55,6 +55,21 @@ class ReportExpensesController < ApplicationController
            }
   end
 
+  def get_cost_center_report_expenses
+    if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:type_identification_id] || params[:payment_type_id] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_tax] || params[:invoice_total] || params[:start_date] || params[:end_date] || params[:is_acepted]
+        report_expenses = ReportExpense.where(cost_center_id: params[:id]).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
+        total = ReportExpense.where(cost_center_id: params[:id]).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).count
+    else
+        report_expenses = ReportExpense.where(cost_center_id: params[:id]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
+        total = ReportExpense.where(cost_center_id: params[:id]).count
+    end
+
+    render json: {
+      data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),
+      total: total,
+    }
+  end
+
   def update_state_report_expense
     report_expense = ReportExpense.find(params[:id])
     update_status = report_expense.update(is_acepted: params[:state])

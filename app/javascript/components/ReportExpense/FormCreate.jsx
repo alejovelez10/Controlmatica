@@ -44,23 +44,24 @@ class FormCreate extends Component {
                                         <div className="alert alert-warning">{this.state.message} copiado</div>
                                     )}
                                 </div>
-                                <div className="col-md-4 mb-3">
-                                    <input
-                                        type="hidden"
-                                        name="cost_center_id"
-                                        value={this.props.selectedOptionCostCenter.cost_center_id}
-                                    />
-                                    <label>Centro de costo </label>
-                                    <Select
-                                        onChange={this.props.handleChangeAutocompleteCostCenter}
-                                        options={this.props.cost_centers}
-                                        autoFocus={false}
-                                        className={`link-form ${!this.props.errorValues && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
-                                        value={this.props.selectedOptionCostCenter}
-                                    />
-                                    <div className="mt-1">{this.props.selectedOptionCostCenter.label}</div>
-{/*                                     <div className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionCostCenter.label, "Centro de costo")} >Copiar</div>
- */}                                </div>
+                                
+                                {this.props.cost_center_id == undefined && (
+                                    <div className="col-md-4 mb-3">
+                                        <input
+                                            type="hidden"
+                                            name="cost_center_id"
+                                            value={this.props.selectedOptionCostCenter.cost_center_id}
+                                        />
+                                        <label>Centro de costo </label>
+                                        <Select
+                                            onChange={this.props.handleChangeAutocompleteCostCenter}
+                                            options={this.props.cost_centers}
+                                            autoFocus={false}
+                                            className={`link-form ${!this.props.errorValues && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
+                                            value={this.props.selectedOptionCostCenter}
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="col-md-4 mb-3">
                                     <input
@@ -78,9 +79,8 @@ class FormCreate extends Component {
                 
                                         isDisabled={!this.props.estados.show_user}
                                     />
-                                    <div className="mt-1">{this.props.selectedOptionUser.label}</div>
-{/*                                     <p className="mt-1" style={{ cursor: "pointer", color: "#4d99db", textDecorationLine: "underline" }} onClick={() => this.copyQuestion(this.props.selectedOptionUser.label, "Usuario")} >Copiar</p>
- */}                                </div>
+                                </div>
+
                                 <div className="col-md-4 mb-3">
                                     <label>Fecha de factura </label>
                                     <input
@@ -92,7 +92,7 @@ class FormCreate extends Component {
                                     />
                                 </div>
 
-                                <div className="col-md-4 mb-3 mt-3">
+                                <div className={`col-md-4 mb-3 ${this.props.cost_center_id == undefined ? "mt-3" : ""}`}>
                                     <label>NIT / CEDULA</label>
                                     <input
                                         type="text"

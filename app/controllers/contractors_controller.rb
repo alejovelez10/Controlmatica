@@ -153,6 +153,7 @@ class ContractorsController < ApplicationController
         recalculate_cost_center(@contractor.cost_center_id, "contractor")
         render :json => {
           message: "¡El Registro fue creado con exito!",
+          register: contractor_object(@contractor),
           type: "success"
         }
       else
@@ -177,6 +178,7 @@ class ContractorsController < ApplicationController
       recalculate_cost_center(@contractor.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
+        register: contractor_object(@contractor),
         type: "success"
       }
     else 
@@ -196,17 +198,28 @@ class ContractorsController < ApplicationController
     end
   end
 
+  private
 
-  def set_contractor
-  	@contractor = Contractor.find(params[:id])
-  end
+    def set_contractor
+      @contractor = Contractor.find(params[:id])
+    end
 
-  def contractor_params_create
-    defaults = { user_id: current_user.id}
-    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id, :update_user).reverse_merge(defaults)
-  end
+    def contractor_object(contractor)
+      {
+        id: contractor.id,
+        sales_date: contractor.sales_date,
+        hours: contractor.hours,
+        user_execute: { names: contractor.user_execute.names, id: contractor.user_execute.id },
+        description: contractor.description,
+      }
+    end
 
-  def contractor_params_update
-    params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :description, :hours, :user_execute_id, :update_user)
-  end
+    def contractor_params_create
+      defaults = { user_id: current_user.id}
+      params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :user_id, :description, :hours, :user_execute_id, :update_user).reverse_merge(defaults)
+    end
+
+    def contractor_params_update
+      params.permit(:sales_date, :sales_number, :ammount, :cost_center_id, :description, :hours, :user_execute_id, :update_user)
+    end
 end

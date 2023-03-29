@@ -78,7 +78,6 @@ class Index extends Component {
                 }
             })
         });
-
     }
 
     toogle = (from) => {

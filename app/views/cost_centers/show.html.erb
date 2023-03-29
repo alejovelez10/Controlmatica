@@ -7,4 +7,4 @@
 %>
 
 <%= javascript_pack_tag 'ConstCenterShow' %> 
-<%= react_component('ConstCenterShow', alerts: get_alerts ,cost_center: @cost_center, usuario: current_user, estados: @estados, clientes: get_customer, users: get_users_json, users_select: get_users_select, current_tab: params[:tab], microsoft_auth: microsoft_auth, current_user_name: current_user.names) %>
+<%= react_component('ConstCenterShow', alerts: get_alerts ,cost_center: @cost_center, report_expense_options: get_report_expense_options, providers: get_provider, usuario: current_user, estados: @estados, clientes: get_customer, users: get_users_json, users_select: get_users_select, current_tab: params[:tab], microsoft_auth: microsoft_auth, current_user_name: current_user.names) %>

@@ -224,6 +224,9 @@ class index extends React.Component {
                           current_tab={this.props.current_tab}
                           microsoft_auth={this.props.microsoft_auth}
                           current_user_name={this.props.current_user_name}
+                          providers={this.props.providers}
+                          usuario={this.props.usuario} 
+                          report_expense_options={this.props.report_expense_options}
                           
                       />
 

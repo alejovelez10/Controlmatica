@@ -8,12 +8,17 @@ class FormCreate extends React.Component {
     super(props);
   }
 
+  handleSubmit = e => {
+    e.preventDefault();
+  };
+
+
   render() {
     return (
       <React.Fragment>
         <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered" backdrop={this.props.backdrop}>
           <ModalHeader className="title-modal"  toggle={this.props.toggle}><i className="fas fa-money-check-alt mr-2"></i> {this.props.titulo}</ModalHeader>
-          <form onSubmit={this.props.FormSubmit}>
+          <form onSubmit={this.handleSubmit}>
             <ModalBody>
               <div className="row">
 
@@ -28,25 +33,26 @@ class FormCreate extends React.Component {
                   />
                 </div>
 
-                <div className="col-md-6">
-                      <input
-                        type="hidden"
-                        name="cost_center_id"
-                        value={this.props.formAutocompleteCentro.cost_center_id}
-                      />
-                      <label>Centro de costo <small className="validate-label">*</small></label>
-                      <Select
-                        onChange={this.props.onChangeAutocompleteCentro}
-                        options={this.props.centro}
-                        autoFocus={false}
-                        className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
-                        value={this.props.formAutocompleteCentro}
-                      />
-                  </div>
-              
+                {this.props.cost_center_id == undefined && (
+                  <div className="col-md-6">
+                        <input
+                          type="hidden"
+                          name="cost_center_id"
+                          value={this.props.formAutocompleteCentro.cost_center_id}
+                        />
+                        <label>Centro de costo <small className="validate-label">*</small></label>
+                        <Select
+                          onChange={this.props.onChangeAutocompleteCentro}
+                          options={this.props.centro}
+                          autoFocus={false}
+                          className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
+                          value={this.props.formAutocompleteCentro}
+                        />
+                    </div>
+                )}              
 
                                 
-                <div className="col-md-6 mb-4">
+                <div className={`col-md-6 mb-4`}>
                 <label>Horas trabajadas<small className="validate-label">*</small></label>
                   <input
                     type="text"
@@ -58,7 +64,7 @@ class FormCreate extends React.Component {
                   />
                 </div>
 
-                <div className="col-md-6">
+                <div className={`col-md-${this.props.cost_center_id == undefined ? "6" : "12" }`}>
                       <input
                         type="hidden"
                         name="user_execute_id"

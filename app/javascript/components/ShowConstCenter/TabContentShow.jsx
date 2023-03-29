@@ -100,23 +100,29 @@ const TabContentShow = (props) => {
             </TabPane>
 
             <TabPane tabId="2">
-              <MaterialesTable dataMateriales={props.dataMateriales} />
+              <MaterialesTable usuario={props.usuario} providers={props.providers} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
             </TabPane>
 
             <TabPane tabId="3">
-              <OrdenesDeCompraTable dataSalesOrdes={props.dataSalesOrdes} />
+              <OrdenesDeCompraTable usuario={props.usuario} cost_center={props.cost_center} dataSalesOrdes={props.dataSalesOrdes} />
             </TabPane>
 
             <TabPane tabId="4">
-              <ReportesDeServiciosTable dataReports={props.dataReports} />
+              <ReportesDeServiciosTable clients={props.clients} users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataReports={props.dataReports} />
             </TabPane>
 
             <TabPane tabId="5">
-              <TableristasTable dataContractors={props.dataContractors} />
+              <TableristasTable users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataContractors={props.dataContractors} />
             </TabPane>
 
             <TabPane tabId="6">
-              <ExpensesTable dataContractors={props.dataExpenses} />
+              <ExpensesTable 
+                usuario={props.usuario} 
+                cost_center={props.cost_center} 
+                dataExpenses={props.dataExpenses} 
+                users={props.users}
+                report_expense_options={props.report_expense_options}
+              />
             </TabPane>
 
           </TabContent>
@@ -185,23 +191,29 @@ const TabContentShow = (props) => {
 
 
             <TabPane tabId="1">
-              <MaterialesTable dataMateriales={props.dataMateriales} />
+              <MaterialesTable providers={props.providers} usuario={props.usuario} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
             </TabPane>
 
             <TabPane tabId="2">
-              <OrdenesDeCompraTable dataSalesOrdes={props.dataSalesOrdes} />
+              <OrdenesDeCompraTable usuario={props.usuario} cost_center={props.cost_center} dataSalesOrdes={props.dataSalesOrdes} />
             </TabPane>
 
             <TabPane tabId="3">
-              <ReportesDeServiciosTable dataReports={props.dataReports} />
+              <ReportesDeServiciosTable users={props.users} clients={props.clients} usuario={props.usuario} cost_center={props.cost_center} dataReports={props.dataReports} />
             </TabPane>
 
             <TabPane tabId="4">
-              <TableristasTable dataContractors={props.dataContractors} />
+              <TableristasTable users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataContractors={props.dataContractors} />
             </TabPane>
 
             <TabPane tabId="5">
-              <ExpensesTable dataContractors={props.dataExpenses} />
+              <ExpensesTable
+                usuario={props.usuario} 
+                cost_center={props.cost_center} 
+                dataExpenses={props.dataExpenses} 
+                users={props.users}
+                report_expense_options={props.report_expense_options}
+              />
             </TabPane>
 
           </TabContent>
