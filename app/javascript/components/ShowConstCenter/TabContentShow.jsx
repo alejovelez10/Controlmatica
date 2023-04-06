@@ -41,7 +41,7 @@ const TabContentShow = (props) => {
                 style={{ cursor: "pointer" }}
                 onClick={() => { toggle('2'); }}
               >
-                Materiales
+                Gastos
               </NavLink>
             </NavItem>
 
@@ -55,35 +55,46 @@ const TabContentShow = (props) => {
               </NavLink>
             </NavItem>
 
-            <NavItem>
-              <NavLink
-                className={classnames({ active: activeTab === '4' })}
-                style={{ cursor: "pointer" }}
-                onClick={() => { toggle('4'); }}
-              >
-                Reportes de servicios
-              </NavLink>
-            </NavItem>
 
-            <NavItem>
-              <NavLink
-                className={classnames({ active: activeTab === '5' })}
-                style={{ cursor: "pointer" }}
-                onClick={() => { toggle('5'); }}
-              >
-                Tableristas
-              </NavLink>
-            </NavItem>
+            {(props.cost_center.service_type == "SERVICIO" || props.cost_center.service_type == "PROYECTO") && (
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === '4' })}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { toggle('4'); }}
+                >
+                  Reportes de servicios
+                </NavLink>
+              </NavItem>
+            )}
 
-            <NavItem>
-              <NavLink
-                className={classnames({ active: activeTab === '6' })}
-                style={{ cursor: "pointer" }}
-                onClick={() => { toggle('6'); }}
-              >
-                Gastos
-              </NavLink>
-            </NavItem>
+
+
+
+            {(props.cost_center.service_type == "VENTA" || props.cost_center.service_type == "PROYECTO") && (
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === '5' })}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { toggle('5'); }}
+                >
+                  Materiales
+                </NavLink>
+              </NavItem>
+            )}
+
+            {(props.cost_center.service_type == "PROYECTO") && (
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === '6' })}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { toggle('6'); }}
+                >
+                  Tableristas
+                </NavLink>
+              </NavItem>
+
+            )}
 
           </Nav>
 
@@ -100,48 +111,53 @@ const TabContentShow = (props) => {
             </TabPane>
 
             <TabPane tabId="2">
-              <MaterialesTable usuario={props.usuario} providers={props.providers} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
+              <ExpensesTable
+                usuario={props.usuario}
+                cost_center={props.cost_center}
+                dataExpenses={props.dataExpenses}
+                users={props.users}
+                report_expense_options={props.report_expense_options}
+              />
             </TabPane>
 
             <TabPane tabId="3">
               <OrdenesDeCompraTable usuario={props.usuario} cost_center={props.cost_center} dataSalesOrdes={props.dataSalesOrdes} />
             </TabPane>
 
-            <TabPane tabId="4">
-              <ReportesDeServiciosTable clients={props.clients} users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataReports={props.dataReports} />
-            </TabPane>
+            {(props.cost_center.service_type == "SERVICIO" || props.cost_center.service_type == "PROYECTO") && (
+              <TabPane tabId="4">
+                <ReportesDeServiciosTable clients={props.clients} users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataReports={props.dataReports} />
+              </TabPane>
+            )}
 
-            <TabPane tabId="5">
-              <TableristasTable users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataContractors={props.dataContractors} />
-            </TabPane>
+            {(props.cost_center.service_type == "VENTA" || props.cost_center.service_type == "PROYECTO") && (
 
-            <TabPane tabId="6">
-              <ExpensesTable 
-                usuario={props.usuario} 
-                cost_center={props.cost_center} 
-                dataExpenses={props.dataExpenses} 
-                users={props.users}
-                report_expense_options={props.report_expense_options}
-              />
-            </TabPane>
+              <TabPane tabId="5">
+                <MaterialesTable usuario={props.usuario} providers={props.providers} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
+              </TabPane>
+
+            )}
+            {(props.cost_center.service_type == "PROYECTO") && (
+              <TabPane tabId="6">
+                <TableristasTable users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataContractors={props.dataContractors} />
+              </TabPane>
+
+            )}
 
           </TabContent>
         </div>
       ) : (
         <div>
           <Nav tabs className="mb-3">
-
-
             <NavItem>
               <NavLink
-                className={classnames({ active: activeTab === '1' })}
+                className={classnames({ active: activeTab === '2' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('1'); }}
+                onClick={() => { toggle('2'); }}
               >
-                Materiales
+                Gastos
               </NavLink>
             </NavItem>
-
             <NavItem>
               <NavLink
                 className={classnames({ active: activeTab === '2' })}
@@ -152,35 +168,42 @@ const TabContentShow = (props) => {
               </NavLink>
             </NavItem>
 
-            <NavItem>
-              <NavLink
-                className={classnames({ active: activeTab === '3' })}
-                style={{ cursor: "pointer" }}
-                onClick={() => { toggle('3'); }}
-              >
-                Reportes de servicios
-              </NavLink>
-            </NavItem>
+            {(props.cost_center.service_type == "SERVICIO" || props.cost_center.service_type == "PROYECTO") && (
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === '3' })}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { toggle('3'); }}
+                >
+                  Reportes de servicios
+                </NavLink>
+              </NavItem>
+            )}
 
-            <NavItem>
-              <NavLink
-                className={classnames({ active: activeTab === '4' })}
-                style={{ cursor: "pointer" }}
-                onClick={() => { toggle('4'); }}
-              >
-                Tableristas
-              </NavLink>
-            </NavItem>
+            {(props.cost_center.service_type == "VENTA" || props.cost_center.service_type == "PROYECTO") && (
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === '4' })}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { toggle('4'); }}
+                >
+                  Materiales
+                </NavLink>
+              </NavItem>
+            )}
 
-            <NavItem>
-              <NavLink
-                className={classnames({ active: activeTab === '5' })}
-                style={{ cursor: "pointer" }}
-                onClick={() => { toggle('5'); }}
-              >
-                Gastos
-              </NavLink>
-            </NavItem>
+            {(props.cost_center.service_type == "PROYECTO") && (
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === '5' })}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => { toggle('5'); }}
+                >
+                  Tableristas
+                </NavLink>
+              </NavItem>
+            )}
+
 
           </Nav>
 
@@ -188,33 +211,41 @@ const TabContentShow = (props) => {
 
 
           <TabContent activeTab={activeTab}>
-
-
             <TabPane tabId="1">
-              <MaterialesTable providers={props.providers} usuario={props.usuario} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
-            </TabPane>
-
-            <TabPane tabId="2">
-              <OrdenesDeCompraTable usuario={props.usuario} cost_center={props.cost_center} dataSalesOrdes={props.dataSalesOrdes} />
-            </TabPane>
-
-            <TabPane tabId="3">
-              <ReportesDeServiciosTable users={props.users} clients={props.clients} usuario={props.usuario} cost_center={props.cost_center} dataReports={props.dataReports} />
-            </TabPane>
-
-            <TabPane tabId="4">
-              <TableristasTable users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataContractors={props.dataContractors} />
-            </TabPane>
-
-            <TabPane tabId="5">
               <ExpensesTable
-                usuario={props.usuario} 
-                cost_center={props.cost_center} 
-                dataExpenses={props.dataExpenses} 
+                usuario={props.usuario}
+                cost_center={props.cost_center}
+                dataExpenses={props.dataExpenses}
                 users={props.users}
                 report_expense_options={props.report_expense_options}
               />
             </TabPane>
+            <TabPane tabId="2">
+              <OrdenesDeCompraTable usuario={props.usuario} cost_center={props.cost_center} dataSalesOrdes={props.dataSalesOrdes} />
+            </TabPane>
+
+
+            {(props.cost_center.service_type == "SERVICIO" || props.cost_center.service_type == "PROYECTO") && (
+              <TabPane tabId="3">
+                <ReportesDeServiciosTable users={props.users} clients={props.clients} usuario={props.usuario} cost_center={props.cost_center} dataReports={props.dataReports} />
+              </TabPane>
+
+            )}
+
+
+            {(props.cost_center.service_type == "PROYECTO" || props.cost_center.service_type == "VENTA") && (
+              <TabPane tabId="4">
+                <MaterialesTable providers={props.providers} usuario={props.usuario} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
+              </TabPane>
+            )}
+
+
+            {(props.cost_center.service_type == "PROYECTO") && (
+              <TabPane tabId="5">
+                <TableristasTable users={props.users} usuario={props.usuario} cost_center={props.cost_center} dataContractors={props.dataContractors} />
+              </TabPane>
+            )}
+
 
           </TabContent>
         </div>
