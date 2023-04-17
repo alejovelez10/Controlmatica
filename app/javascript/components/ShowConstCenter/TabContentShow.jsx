@@ -151,7 +151,7 @@ const TabContentShow = (props) => {
           <Nav tabs className="mb-3">
             <NavItem>
               <NavLink
-                className={classnames({ active: activeTab === '2' })}
+                className={classnames({ active: activeTab === '1' })}
                 style={{ cursor: "pointer" }}
                 onClick={() => { toggle('2'); }}
               >
