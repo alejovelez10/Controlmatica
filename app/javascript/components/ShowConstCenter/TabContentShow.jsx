@@ -153,7 +153,7 @@ const TabContentShow = (props) => {
               <NavLink
                 className={classnames({ active: activeTab === '1' })}
                 style={{ cursor: "pointer" }}
-                onClick={() => { toggle('2'); }}
+                onClick={() => { toggle('1'); }}
               >
                 Gastos
               </NavLink>
