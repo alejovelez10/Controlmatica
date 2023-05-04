@@ -5,6 +5,7 @@ import FormCreate from "../Materials/FormCreate";
 import ShowInfo from "../Materials/ShowInfo";
 import NumberFormat from "react-number-format";
 import FormIncomeDetail from "../incomeDetail/formCreate"
+import IndexInvoice from '../incomeDetail/IndexInvoice';
 
 class table extends React.Component {
   constructor(props) {
@@ -16,6 +17,8 @@ class table extends React.Component {
       modeEdit: false,
       modalShow: false,
       isLoading: false,
+      modalIndexInvoice: false,
+      material: {},
 
       modalIncomeDetail: false,
       ErrorValuesIncome: true,
@@ -535,6 +538,14 @@ class table extends React.Component {
     return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear() + " / " + timeValue
   }
 
+  toogleIndexInvoice = (from, material) => {
+    if (from == "new") {
+        this.setState({ modalIndexInvoice: true, material: material })
+    } else {
+        this.setState({ modalIndexInvoice: false, material: {} })
+    }
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -639,6 +650,16 @@ class table extends React.Component {
           titulo={"Informacion detallada"}
         />
 
+        {this.state.modalIndexInvoice && (
+          <IndexInvoice
+              toggle={this.toogleIndexInvoice}
+              backdrop={"static"}
+              modal={this.state.modalIndexInvoice}
+              material={this.state.material}
+              loadData={this.props.loadInfo}
+          />
+        )}
+
         <div className="content-table">
           <table className="table table-hover table-bordered" style={{width:"2350px",maxWidth:"2350px"}} id="sampleTable">
             <thead>
@@ -694,7 +715,7 @@ class table extends React.Component {
                             )}  
 
                             {true && (
-                                  <button onClick={() => this.incomeDetail(accion.id)} className="dropdown-item">
+                                  <button onClick={() => this.toogleIndexInvoice("new", accion)} className="dropdown-item">
                                     Facturas
                                   </button>
                             )}
