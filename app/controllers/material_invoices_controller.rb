@@ -22,6 +22,7 @@ class MaterialInvoicesController < ApplicationController
         
         render :json => {
           message: "¡El Registro fue creado con exito!",
+          register: @material_invoice,
           type: "success"
         }
 
@@ -37,14 +38,15 @@ class MaterialInvoicesController < ApplicationController
   end
 
   def update
-    if material_invoice_params["value"].class.to_s != "Integer" && material_invoice_params["value"].class.to_s != "Float" && material_invoice_params["value"].present?
-      valor1 = material_invoice_params["value"].gsub('$','').gsub(',','')
+    if material_invoice_update_params["value"].class.to_s != "Integer" && material_invoice_update_params["value"].class.to_s != "Float" && material_invoice_update_params["value"].present?
+      valor1 = material_invoice_update_params["value"].gsub('$','').gsub(',','')
       params["value"] = valor1
     end
 
-    if @material_invoice.update(material_invoice_params) 
+    if @material_invoice.update(material_invoice_update_params) 
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
+        register: @material_invoice,
         type: "success"
         
       }
@@ -75,6 +77,11 @@ class MaterialInvoicesController < ApplicationController
   end
 
   def material_invoice_params
+    defaults = { user_id: current_user.id }
+    params.permit(:material_id, :user_id, :number, :value, :observation, :file).reverse_merge(defaults)
+  end
+
+  def material_invoice_update_params
     params.permit(:material_id, :user_id, :number, :value, :observation, :file)
   end
 end

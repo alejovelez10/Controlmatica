@@ -4,7 +4,7 @@ import Swal from 'sweetalert2/dist/sweetalert2.js'
 import FormCreate from "../PurchaseOrders/FormCreate"
 import Facturas from "../SalesOrders/FormCreate"
 import NumberFormat from 'react-number-format';
-
+import IndexInvoice from "../SalesOrders/IndexInvoice";
 
 class table extends React.Component {
   constructor(props){
@@ -14,12 +14,14 @@ class table extends React.Component {
 
         modal: false,
         modalIncome: false,
+        modalIndexInvoice: false,
         backdrop: "static",
         modeEdit: false,
         isLoading: false,
         data_incomes: [],
         id: "",
         action: {},
+        sales_order: {},
         title: "Nuevo convenio",
         id: "",
 
@@ -514,6 +516,14 @@ class table extends React.Component {
     }
   }
 
+  toogleIndexInvoice = (from, sales_order) => {
+    if (from == "new") {
+        this.setState({ modalIndexInvoice: true, sales_order: sales_order })
+    } else {
+        this.setState({ modalIndexInvoice: false, sales_order: {} })
+    }
+  }
+
   getDate = (date) => {
     var d = new Date(date),
     months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -614,6 +624,16 @@ class table extends React.Component {
               />
             )}
 
+            {this.state.modalIndexInvoice && (
+                <IndexInvoice
+                    toggle={this.toogleIndexInvoice}
+                    backdrop={"static"}
+                    modal={this.state.modalIndexInvoice}
+                    sales_order={this.state.sales_order}
+                    loadData={this.props.loadInfo}
+                />
+            )}
+
             {this.state.modalIncome && (
               <Facturas
                   toggle={this.showIncomeDetail}
@@ -695,7 +715,7 @@ class table extends React.Component {
                               <div className="dropdown-menu dropdown-menu-right">
 
                                 {true && (
-                                  <button onClick={() => this.showIncomeDetail("open",accion)} className="dropdown-item">
+                                  <button onClick={() => this.toogleIndexInvoice("new", accion)} className="dropdown-item">
                                     Facturas
                                   </button>     
                                 )}

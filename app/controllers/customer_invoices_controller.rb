@@ -41,6 +41,7 @@ class CustomerInvoicesController < ApplicationController
         recalculate_cost_center(@customer_invoice.sales_order.cost_center_id)
         render :json => {
           message: "¡El Registro fue creado con exito!",
+          register: @customer_invoice,
           type: "success"
         }
       else
@@ -67,6 +68,7 @@ class CustomerInvoicesController < ApplicationController
       recalculate_cost_center(@customer_invoice.sales_order.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
+        register: @customer_invoice,
         type: "success"
       }
     else 

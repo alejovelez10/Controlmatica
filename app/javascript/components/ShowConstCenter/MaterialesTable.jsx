@@ -4,6 +4,7 @@ import FormCreate from '../Materials/FormCreate';
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
+import IndexInvoice from '../incomeDetail/IndexInvoice';
 
 class MaterialesTable extends Component {
     constructor(props) {
@@ -13,8 +14,10 @@ class MaterialesTable extends Component {
             data: [],
             modal: false,
             modeEdit: false,
+            modalIndexInvoice: false,
             ErrorValues: true,
             material_id: "",
+            material: {},
 
             form: {
                 provider_id: "",
@@ -188,6 +191,32 @@ class MaterialesTable extends Component {
         })
     }
 
+    toogleIndexInvoice = (from, material) => {
+        if (from == "new") {
+            this.setState({ modalIndexInvoice: true, material: material })
+        } else {
+            this.setState({ modalIndexInvoice: false, material: {} })
+        }
+    }
+
+    loadData = () => {
+        fetch(`/get_materials`, {
+            method: 'GET', // or 'PUT'
+            headers: {
+                "X-CSRF-Token": this.token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            this.setState({
+                data: data.materials_paginate,
+                isLoaded: false
+            });
+        });
+    }
+
+
     render() {
         return (
             <React.Fragment>
@@ -206,6 +235,16 @@ class MaterialesTable extends Component {
                         modeEdit={this.state.material_id ? true : false}
                         providers={this.props.providers}
                         cost_center_id={this.props.cost_center.id}
+                    />
+                )}
+
+                {this.state.modalIndexInvoice && (
+                    <IndexInvoice
+                        toggle={this.toogleIndexInvoice}
+                        backdrop={"static"}
+                        modal={this.state.modalIndexInvoice}
+                        material={this.state.material}
+                        loadData={this.loadData}
                     />
                 )}
 
@@ -229,9 +268,10 @@ class MaterialesTable extends Component {
                             <th style={{width:"6%"}}># Orden</th>
                             <th style={{width:"5%"}}>Valor</th>
                             <th style={{width:"19%"}}>Descripción</th>
-                            <th style={{width:"5%"}}>Fecha de Orden</th>
-                            <th style={{width:"5%"}}>Fecha Entrega</th>
-                            <th style={{width:"5%"}}>Valor Facturas</th>
+                            <th style={{width:"8%"}}>Fecha de Orden</th>
+                            <th style={{width:"8%"}}>Fecha Entrega</th>
+                            <th style={{width:"450px"}}>Facturas</th>
+                            <th style={{width:"7%"}}>Valor Facturas</th>
                             <th style={{width:"11%"}}>Estado</th>
                         </tr>
                     </thead>
@@ -247,6 +287,15 @@ class MaterialesTable extends Component {
                                                     <i className="fas fa-bars"></i>
                                                 </DropdownToggle>
                                                 <DropdownMenu className="dropdown-menu dropdown-menu-right">
+                                                    {true && (
+                                                        <DropdownItem
+                                                            className="dropdown-item"
+                                                            onClick={() => this.toogleIndexInvoice("new", accion)}
+                                                        >
+                                                            Facturas
+                                                        </DropdownItem>
+                                                    )}
+
                                                     {true && (
                                                         <DropdownItem
                                                             className="dropdown-item"
@@ -275,6 +324,22 @@ class MaterialesTable extends Component {
                                     <td>{accion.description}</td>
                                     <td>{accion.sales_date}</td>
                                     <td>{accion.delivery_date}</td>
+                                    <td>  
+                                        <table style={{tableLayout: "fixed", width:"100%"}}>
+                                            <tr>
+                                                <td style={{padding:"0px", textAlign:"center"}}>Numero de factura</td>
+                                                <td style={{padding:"0px", textAlign:"center"}}>Valor</td>
+                                                <td style={{padding:"0px", textAlign:"center"}}>Descripcion</td>
+                                            </tr>
+                                            {accion.material_invoices.map(customer => (
+                                                <tr>
+                                                    <td style={{padding:"5px", textAlign:"center"}}>{customer.number}</td>
+                                                    <td style={{padding:"5px", textAlign:"center"}}><NumberFormat value={customer.value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                                                    <td style={{padding:"5px", textAlign:"center"}}>{customer.observation}</td>
+                                                </tr>
+                                            ))}
+                                        </table>
+                                    </td>
                                     <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                     <td>
                                         <p>{accion.sales_state}</p>
