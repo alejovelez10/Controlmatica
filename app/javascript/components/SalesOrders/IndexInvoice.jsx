@@ -260,7 +260,7 @@ class IndexInvoice extends Component {
                                     <div className="col-md-6 mt-3 mb-3">
                                         <label>Numero de factura</label>
                                         <input 
-                                            type="number" 
+                                            type="text" 
                                             name="number_invoice"
                                             className='form form-control'
                                             value={this.state.form.number_invoice}
