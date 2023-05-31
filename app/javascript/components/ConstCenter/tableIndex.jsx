@@ -1228,7 +1228,7 @@ class tableIndex extends React.Component {
 
                     <th>
                       <ul>
-                        <li>Ing Cotizada: <b><NumberFormat value={accion.ing_costo_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"} /></b> </li>
+                        <li>Ing Cotizada: <b><NumberFormat value={accion.engineering_value + (accion.displacement_hours * accion.value_displacement_hours)} displayType={"text"} thousandSeparator={true} prefix={"$"} /></b> </li>
                         <li>Ing costo: <b><NumberFormat value={accion.ing_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></b> </li>
                         <li>Margen: <b style={{ color: this.alertIngCosto(accion.ing_costo_porcentaje, this.props.alerts[0].ing_costo_min, this.props.alerts[0].ing_costo_med) }}>{accion.ing_costo_porcentaje}%</b> </li>
                       </ul>
@@ -1245,7 +1245,7 @@ class tableIndex extends React.Component {
 
                     <th>
                       <ul>
-                        <li>Tab Cotizada: <b><NumberFormat value={accion.cont_costo_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"} /></b> </li>
+                        <li>Tab Cotizada: <b><NumberFormat value={accion.work_force_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} /></b> </li>
                         <li>Tab costo: <b><NumberFormat value={accion.cont_costo_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></b> </li>
                         <li>Margen: <b style={{ color: this.alertIngCosto(accion.cont_costo_porcentaje, this.props.alerts[0].tab_costo_min, this.props.alerts[0].tab_costo_med) }}>{accion.cont_costo_porcentaje}%</b> </li>
 
