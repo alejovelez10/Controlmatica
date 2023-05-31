@@ -60,12 +60,12 @@ class Quotation < ApplicationRecord
         #cost_center.hour_cotizada = cost_center.quotations.sum(:hour_cotizada)
         #cost_center.hour_real = cost_center.quotations.sum(:hour_real)
         cost_center.hours_contractor = cost_center.quotations.sum(:hours_contractor)
-        cost_center.hours_contractor_invoices = cost_center.quotations.sum(:hours_contractor_invoices)
-        cost_center.hours_contractor_real = cost_center.quotations.sum(:hours_contractor_real)
+        cost_center.hours_contractor_invoices = cost_center.quotations.first.hours_contractor_invoices
+        cost_center.hours_contractor_real = cost_center.quotations.first.hours_contractor_real
         cost_center.ingenieria_total_costo = cost_center.quotations.sum(:ingenieria_total_costo)
         cost_center.materials_value = cost_center.quotations.sum(:materials_value)
         cost_center.quotation_value = cost_center.quotations.sum(:quotation_value)
-        cost_center.value_displacement_hours = cost_center.quotations.sum(:value_displacement_hours)
+        cost_center.value_displacement_hours = cost_center.quotations.first.value_displacement_hours
         cost_center.viatic_value = cost_center.quotations.sum(:viatic_value)
         cost_center.work_force_contractor = cost_center.quotations.sum(:work_force_contractor)
         cost_center.contractor_total_costo = cost_center.quotations.sum(:contractor_total_costo)
