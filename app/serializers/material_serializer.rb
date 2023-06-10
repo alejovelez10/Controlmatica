@@ -43,8 +43,8 @@ class MaterialSerializer < ActiveModel::Serializer
 
   def last_user_edited
     {
-      id: object.last_user_edited.id,
-      names: object.last_user_edited.names
+      id: object.last_user_edited ? object.last_user_edited.id : "",
+      names: object.last_user_edited  object.last_user_edited.names : "",
     }
   end
 
