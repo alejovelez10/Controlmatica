@@ -315,7 +315,7 @@ class CostCenter < ApplicationRecord
         cost_center_id: self.id,
         description: self.description,
         quotation_number: self.quotation_number,
-        eng_hours: self.displacement_hours,
+        eng_hours: self.eng_hours,
         engineering_value: self.engineering_value,
         hour_cotizada: self.hour_cotizada,
         hour_real: self.hour_real,
