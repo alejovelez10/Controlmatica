@@ -321,7 +321,7 @@ class MaterialesTable extends Component {
                                         <td>{accion.provider.name}</td>
                                         <td>{accion.sales_number}</td>
                                         <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                        <td>{accion.description}</td>
+                                        <td style={{ width: "370px", maxWidth: "370px" }}>{accion.description}</td>
                                         <td>{accion.sales_date}</td>
                                         <td>{accion.delivery_date}</td>
                                         <td>
