@@ -74,10 +74,10 @@ class MaterialesTable extends Component {
                 if (register.id === item.id) {
                     return {
                         ...item,
-                        provider: register.provider, 
-                        sales_number: register.sales_number, 
-                        amount: register.amount, 
-                        description: register.description, 
+                        provider: register.provider,
+                        sales_number: register.sales_number,
+                        amount: register.amount,
+                        description: register.description,
                         sales_date: register.sales_date,
                         delivery_date: register.delivery_date,
                         provider_invoice_value: register.provider_invoice_value,
@@ -126,12 +126,12 @@ class MaterialesTable extends Component {
                         "Content-Type": "application/json"
                     }
                 })
-                .then(response => response.json())
-                .then(response => {
-                    this.setState({
-                        data: this.state.data.filter((e) => e.id != id) 
-                    })
-                });
+                    .then(response => response.json())
+                    .then(response => {
+                        this.setState({
+                            data: this.state.data.filter((e) => e.id != id)
+                        })
+                    });
             }
         });
     };
@@ -207,13 +207,13 @@ class MaterialesTable extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            this.setState({
-                data: data.materials_paginate,
-                isLoaded: false
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    data: data.materials_paginate,
+                    isLoaded: false
+                });
             });
-        });
     }
 
 
@@ -261,99 +261,101 @@ class MaterialesTable extends Component {
                     </div>
 
                     <table className="table table-hover table-bordered" id="sampleTable">
-                    <thead>
-                        <tr className="tr-title">
-                            <th style={{width:"1%"}}>Acciones</th>
-                            <th style={{width:"8%"}}>Proveedor</th>
-                            <th style={{width:"6%"}}># Orden</th>
-                            <th style={{width:"5%"}}>Valor</th>
-                            <th style={{width:"19%"}}>Descripción</th>
-                            <th style={{width:"8%"}}>Fecha de Orden</th>
-                            <th style={{width:"8%"}}>Fecha Entrega</th>
-                            <th style={{width:"450px"}}>Facturas</th>
-                            <th style={{width:"7%"}}>Valor Facturas</th>
-                            <th style={{width:"11%"}}>Estado</th>
-                        </tr>
-                    </thead>
-        
-                    <tbody>
-                        {this.state.data.length >= 1 ? (
-                            this.state.data.map(accion => (
-                                <tr key={accion.id}>
-                                    <td className="text-left">
-                                        {true && (
-                                            <UncontrolledDropdown className='btn-group'>
-                                                <DropdownToggle className='btn-shadow btn btn-info'>
-                                                    <i className="fas fa-bars"></i>
-                                                </DropdownToggle>
-                                                <DropdownMenu className="dropdown-menu dropdown-menu-right">
-                                                    {true && (
-                                                        <DropdownItem
-                                                            className="dropdown-item"
-                                                            onClick={() => this.toogleIndexInvoice("new", accion)}
-                                                        >
-                                                            Facturas
-                                                        </DropdownItem>
-                                                    )}
+                        <thead>
+                            <tr className="tr-title">
+                                <th style={{ width: "1%" }}>Acciones</th>
+                                <th style={{ width: "8%" }}>Proveedor</th>
+                                <th style={{ width: "6%" }}># Orden</th>
+                                <th style={{ width: "5%" }}>Valor</th>
+                                <th style={{ width: "370px", maxWidth: "370px" }}>Descripción</th>
+                                <th style={{ width: "8%" }}>Fecha de Orden</th>
+                                <th style={{ width: "8%" }}>Fecha Entrega</th>
+                                <th style={{ width: "450px" }}>Facturas</th>
+                                <th style={{ width: "7%" }}>Valor Facturas</th>
+                                <th style={{ width: "11%" }}>Estado</th>
+                            </tr>
+                        </thead>
 
-                                                    {true && (
-                                                        <DropdownItem
-                                                            className="dropdown-item"
-                                                            onClick={() => this.edit(accion)}
-                                                        >
-                                                            Editar
-                                                        </DropdownItem>
-                                                    )}
+                        <tbody>
+                            {this.state.data.length >= 1 ? (
+                                this.state.data.map(accion => (
+                                    <tr key={accion.id}>
+                                        <td className="text-left">
+                                            {true && (
+                                                <UncontrolledDropdown className='btn-group'>
+                                                    <DropdownToggle className='btn-shadow btn btn-info'>
+                                                        <i className="fas fa-bars"></i>
+                                                    </DropdownToggle>
+                                                    <DropdownMenu className="dropdown-menu dropdown-menu-right">
+                                                        {true && (
+                                                            <DropdownItem
+                                                                className="dropdown-item"
+                                                                onClick={() => this.toogleIndexInvoice("new", accion)}
+                                                            >
+                                                                Facturas
+                                                            </DropdownItem>
+                                                        )}
 
-                                                    {true && (
-                                                        <DropdownItem
-                                                            onClick={() => this.delete(accion.id)}
-                                                            className="dropdown-item"
-                                                        >
-                                                            Eliminar
-                                                        </DropdownItem>
-                                                    )}
-                                                </DropdownMenu>
-                                            </UncontrolledDropdown>
-                                        )}
-                                    </td>
+                                                        {true && (
+                                                            <DropdownItem
+                                                                className="dropdown-item"
+                                                                onClick={() => this.edit(accion)}
+                                                            >
+                                                                Editar
+                                                            </DropdownItem>
+                                                        )}
 
-                                    <td>{accion.provider.name}</td>
-                                    <td>{accion.sales_number}</td>
-                                    <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                    <td>{accion.description}</td>
-                                    <td>{accion.sales_date}</td>
-                                    <td>{accion.delivery_date}</td>
-                                    <td>  
-                                        <table style={{tableLayout: "fixed", width:"100%"}}>
-                                            <tr>
-                                                <td style={{padding:"0px", textAlign:"center"}}>Numero de factura</td>
-                                                <td style={{padding:"0px", textAlign:"center"}}>Valor</td>
-                                                <td style={{padding:"0px", textAlign:"center"}}>Descripcion</td>
-                                            </tr>
-                                            {accion.material_invoices.map(customer => (
-                                                <tr>
-                                                    <td style={{padding:"5px", textAlign:"center"}}>{customer.number}</td>
-                                                    <td style={{padding:"5px", textAlign:"center"}}><NumberFormat value={customer.value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                                                    <td style={{padding:"5px", textAlign:"center"}}>{customer.observation}</td>
-                                                </tr>
-                                            ))}
-                                        </table>
-                                    </td>
-                                    <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                    <td>
-                                        <p>{accion.sales_state}</p>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <td colSpan="10" className="text-center">
-                                <div className="text-center mt-1 mb-1">
-                                    <h4>No hay materiales</h4>
-                                </div>
-                            </td>
-                        )}
-                    </tbody>
+                                                        {true && (
+                                                            <DropdownItem
+                                                                onClick={() => this.delete(accion.id)}
+                                                                className="dropdown-item"
+                                                            >
+                                                                Eliminar
+                                                            </DropdownItem>
+                                                        )}
+                                                    </DropdownMenu>
+                                                </UncontrolledDropdown>
+                                            )}
+                                        </td>
+
+                                        <td>{accion.provider.name}</td>
+                                        <td>{accion.sales_number}</td>
+                                        <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                        <td>{accion.description}</td>
+                                        <td>{accion.sales_date}</td>
+                                        <td>{accion.delivery_date}</td>
+                                        <td>
+                                            {accion.material_invoices && (
+                                                <table style={{ tableLayout: "fixed", width: "100%" }}>
+                                                    <tr>
+                                                        <td style={{ padding: "0px", textAlign: "center" }}>Numero de factura</td>
+                                                        <td style={{ padding: "0px", textAlign: "center" }}>Valor</td>
+                                                        <td style={{ padding: "0px", textAlign: "center" }}>Descripcion</td>
+                                                    </tr>
+                                                    {accion.material_invoices.map(customer => (
+                                                        <tr>
+                                                            <td style={{ padding: "5px", textAlign: "center" }}>{customer.number}</td>
+                                                            <td style={{ padding: "5px", textAlign: "center" }}><NumberFormat value={customer.value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                            <td style={{ padding: "5px", textAlign: "center" }}>{customer.observation}</td>
+                                                        </tr>
+                                                    ))}
+                                                </table>
+                                            )}
+                                        </td>
+                                        <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                        <td>
+                                            <p>{accion.sales_state}</p>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <td colSpan="10" className="text-center">
+                                    <div className="text-center mt-1 mb-1">
+                                        <h4>No hay materiales</h4>
+                                    </div>
+                                </td>
+                            )}
+                        </tbody>
                     </table>
                 </div>
             </React.Fragment>

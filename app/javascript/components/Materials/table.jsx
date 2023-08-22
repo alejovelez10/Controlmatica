@@ -69,12 +69,12 @@ class table extends React.Component {
 
   MessageSucces = (name_success, type, error_message) => {
     Swal.fire({
-    position: "center",
-    type: type,
-    html: '<p>'  + error_message !=  undefined ? error_message : "asdasdasd"  +  '</p>',
-    title: name_success,
-    showConfirmButton: false,
-    timer: 1500
+      position: "center",
+      type: type,
+      html: '<p>' + error_message != undefined ? error_message : "asdasdasd" + '</p>',
+      title: name_success,
+      showConfirmButton: false,
+      timer: 1500
     });
   }
 
@@ -88,11 +88,11 @@ class table extends React.Component {
     return ids
   }
 
-  componentDidMount(){
+  componentDidMount() {
     let array = []
 
     this.props.cost_center.map((item) => (
-      array.push({label: item.code, value: item.id})
+      array.push({ label: item.code, value: item.id })
     ))
 
     this.setState({
@@ -129,16 +129,16 @@ class table extends React.Component {
       this.state.form.cost_center_id != "" &&
       this.state.form.sales_date != "" &&
       this.state.form.sales_number != "" &&
-      this.state.form.amount.length != 0  &&
+      this.state.form.amount.length != 0 &&
       this.state.form.delivery_date != "" &&
-      this.state.form.description != "" 
+      this.state.form.description != ""
     ) {
-      
+
       console.log("los campos estan llenos");
       this.setState({ ErrorValues: true });
       return true;
     } else {
-     
+
       console.log("los campos no se han llenado");
       this.setState({ ErrorValues: false });
       return false;
@@ -150,7 +150,7 @@ class table extends React.Component {
       this.setState({ isLoading: true })
       if (this.state.modeEdit) {
         fetch("/materials/" + this.state.action.id, {
-          method: "PATCH", 
+          method: "PATCH",
           body: JSON.stringify(this.state.form), // data can be `string` or {object}!
           headers: {
             "Content-Type": "application/json"
@@ -346,7 +346,7 @@ class table extends React.Component {
     });
   };
 
-  HandleClickIncomes = e =>{
+  HandleClickIncomes = e => {
     if (this.validationFormIncomeDetail() == true) {
       fetch("/material_invoices", {
         method: 'POST', // or 'PUT'
@@ -354,12 +354,12 @@ class table extends React.Component {
         headers: {
           'Content-Type': 'application/json',
         }
-        
+
       })
         .then(res => res.json())
         .catch(error => console.error("Error:", error))
         .then(data => {
-          
+
           this.incomeDetail(this.state.id)
           this.props.loadInfo()
           this.MessageSucces(data.message, data.type, data.message_error)
@@ -376,41 +376,41 @@ class table extends React.Component {
     }
   }
 
-  incomeDetail = (accion) =>{
+  incomeDetail = (accion) => {
     fetch("/get_material_invoice/" + accion)
-    .then(response => response.json())
-    .then(data => {
-      this.setState({
-        data_incomes: data,
-        formCreateIncome: {
-          number: "",
-          value: "",
-          observation: "",
-          material_id: accion,
-          user_id: this.props.usuario.id,
-        },
-        id: accion,
-        modalIncomeDetail: true,
-        title: "Agregar Facturas"
+      .then(response => response.json())
+      .then(data => {
+        this.setState({
+          data_incomes: data,
+          formCreateIncome: {
+            number: "",
+            value: "",
+            observation: "",
+            material_id: accion,
+            user_id: this.props.usuario.id,
+          },
+          id: accion,
+          modalIncomeDetail: true,
+          title: "Agregar Facturas"
+        });
       });
-    });
   }
 
-  updateInfoIncome = (income) =>{
+  updateInfoIncome = (income) => {
     fetch("/update_load/" + income)
-    .then(response => response.json())
-    .then(data => {
-      this.setState({
-        data_incomes: data
-      })
-    });
+      .then(response => response.json())
+      .then(data => {
+        this.setState({
+          data_incomes: data
+        })
+      });
   }
 
 
-  showIncomeDetail = (estado) =>{
+  showIncomeDetail = (estado) => {
     if (estado == "open") {
       this.setState({ modalIncomeDetail: true, action: info })
-    }else if(estado == "close"){
+    } else if (estado == "close") {
       this.setState({ modalIncomeDetail: false, action: {}, ErrorValuesIncome: true })
     }
   }
@@ -428,18 +428,18 @@ class table extends React.Component {
       if (result.value) {
         fetch("/material_invoices/" + id, {
           method: 'delete'
-      }).then(response => response.json())
-      .then(response => {
+        }).then(response => response.json())
+          .then(response => {
 
-        this.incomeDetail(this.state.id)
-        this.props.loadInfo()
-      
-        Swal.fire(
-          'Borrado!',
-          '¡El registro fue eliminado con exito!',
-          'success'
-        )
-      });
+            this.incomeDetail(this.state.id)
+            this.props.loadInfo()
+
+            Swal.fire(
+              'Borrado!',
+              '¡El registro fue eliminado con exito!',
+              'success'
+            )
+          });
       }
     })
 
@@ -447,73 +447,73 @@ class table extends React.Component {
 
 
   validationFormIncomeDetail = () => {
-    if (this.state.formCreateIncome.number != "" &&  
-        this.state.formCreateIncome.value != "" && 
-        this.state.formCreateIncome.observation != "" 
-        ) {
-    console.log("los campos estan llenos " )
+    if (this.state.formCreateIncome.number != "" &&
+      this.state.formCreateIncome.value != "" &&
+      this.state.formCreateIncome.observation != ""
+    ) {
+      console.log("los campos estan llenos ")
       this.setState({ ErrorValuesIncome: true })
       return true
-    }else{
+    } else {
       console.log("los campos no se han llenado")
       this.setState({ ErrorValuesIncome: false })
       return false
-      
+
     }
   }
 
 
-  onChangeUpdateSelect = (e) =>{
+  onChangeUpdateSelect = (e) => {
     fetch("/update_state_materials/" + this.state.material_id + "/" + e.target.value, {
-        method: 'POST', // or 'PUT' 
+      method: 'POST', // or 'PUT' 
     })
-    .then(res => res.json())
-    .catch(error => console.error("Error:", error))
-    .then(data => {    
-      this.props.loadInfo();
-      this.MessageSucces(data.message, data.type, data.message_error);
-    
-      this.setState({
-        material_id: "",
-      })
+      .then(res => res.json())
+      .catch(error => console.error("Error:", error))
+      .then(data => {
+        this.props.loadInfo();
+        this.MessageSucces(data.message, data.type, data.message_error);
 
-    });
+        this.setState({
+          material_id: "",
+        })
+
+      });
   }
 
 
   HandleClickUpdate = (register, state) => {
-    this.setState({ 
-      material_id: (state == true ? register.id : "" ),
+    this.setState({
+      material_id: (state == true ? register.id : ""),
       formUpdate: {
-        sales_state: (state == true ? register.sales_state : "" )
+        sales_state: (state == true ? register.sales_state : "")
       },
     });
   }
 
   getState = (user) => {
-    if(this.props.estados.edit == true && this.props.usuario.id == user){
+    if (this.props.estados.edit == true && this.props.usuario.id == user) {
       return true
-    }else if(this.props.estados.edit == false && this.props.estados.edit_all){
+    } else if (this.props.estados.edit == false && this.props.estados.edit_all) {
       return true
 
-    }else if(this.props.estados.edit_all == true && this.props.usuario.id == user){
+    } else if (this.props.estados.edit_all == true && this.props.usuario.id == user) {
       return true
-    }else if(this.props.estados.edit_all){
+    } else if (this.props.estados.edit_all) {
       return true
-    }else if (this.props.estados.edit && this.props.estados.edit_all){
+    } else if (this.props.estados.edit && this.props.estados.edit_all) {
       return true
-    }else if(this.props.estados.edit == false && this.props.estados.edit_all == false){
+    } else if (this.props.estados.edit == false && this.props.estados.edit_all == false) {
       return false
     }
   }
 
   getDate = (date) => {
     var d = new Date(date),
-    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
 
     var time = hoursAndMinutes; // your input
-    
+
     time = time.split(':'); // convert to array
 
     // fetch
@@ -523,15 +523,15 @@ class table extends React.Component {
 
     // calculate
     var timeValue = hours;
-    
-       /*  if (hours > 0 && hours <= 12) {
-          timeValue= "" + hours;
-        } else if (hours > 12) {
-          timeValue= "" + (hours - 12);
-        } else if (hours == 0) {
-          timeValue= "12";
-        } */
-    
+
+    /*  if (hours > 0 && hours <= 12) {
+       timeValue= "" + hours;
+     } else if (hours > 12) {
+       timeValue= "" + (hours - 12);
+     } else if (hours == 0) {
+       timeValue= "12";
+     } */
+
     timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
     //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
 
@@ -540,9 +540,9 @@ class table extends React.Component {
 
   toogleIndexInvoice = (from, material) => {
     if (from == "new") {
-        this.setState({ modalIndexInvoice: true, material: material })
+      this.setState({ modalIndexInvoice: true, material: material })
     } else {
-        this.setState({ modalIndexInvoice: false, material: {} })
+      this.setState({ modalIndexInvoice: false, material: {} })
     }
   }
 
@@ -560,7 +560,7 @@ class table extends React.Component {
             </div>
 
             <div className="col-md-4 text-right mt-1 mb-1">
-              
+
               <button
                 className="btn btn-light mr-3"
                 onClick={this.props.show}
@@ -575,7 +575,7 @@ class table extends React.Component {
                   href={`/download_file/materials/${!this.props.filtering ? "todos.xls" : `filtro.xls?provider_id=${this.props.formFilter.provider_id}&sales_date=${this.props.formFilter.sales_date}&description=${this.props.formFilter.description}&cost_center_id=${this.props.formFilter.cost_center_id}&estado=${this.props.formFilter.estado}&date_desde=${this.props.formFilter.date_desde}&date_hasta=${this.props.formFilter.date_hasta}&sales_number=${this.props.formFilter.sales_number}`}`}
                   target="_blank"
                 >
-                  <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{height: "35px"}}/>
+                  <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/244/file_formats_4_csv-512.png" alt="" style={{ height: "35px" }} />
                 </a>
               )}
 
@@ -591,7 +591,7 @@ class table extends React.Component {
             </div>
           </div>
         </div>
-        
+
         {this.state.modal && (
           <FormCreate
             toggle={this.toggle}
@@ -652,34 +652,34 @@ class table extends React.Component {
 
         {this.state.modalIndexInvoice && (
           <IndexInvoice
-              toggle={this.toogleIndexInvoice}
-              backdrop={"static"}
-              modal={this.state.modalIndexInvoice}
-              material={this.state.material}
-              loadData={this.props.loadInfo}
+            toggle={this.toogleIndexInvoice}
+            backdrop={"static"}
+            modal={this.state.modalIndexInvoice}
+            material={this.state.material}
+            loadData={this.props.loadInfo}
           />
         )}
 
         <div className="content-table">
-          <table className="table table-hover table-bordered" style={{width:"2350px",maxWidth:"2350px"}} id="sampleTable">
+          <table className="table table-hover table-bordered" style={{ width: "2350px", maxWidth: "2350px" }} id="sampleTable">
             <thead>
               <tr className="tr-title">
                 <th style={{ width: "1%" }} className="text-center">
                   Acciones
                 </th>
-                <th style={{width:"253px"}}>Centro de costo</th>
-                <th style={{width:"184px"}}>Proveedor</th>
+                <th style={{ width: "253px" }}>Centro de costo</th>
+                <th style={{ width: "184px" }}>Proveedor</th>
 
-                <th style={{width:"184px"}}># Orden</th>
-                <th style={{width:"184px"}}>Valor</th>
-                <th style={{width:"370px"}}>Descripción</th>
-                <th style={{width:"217px"}}>Fecha de Orden</th>
-                <th style={{width:"217px"}}>Fecha Entrega</th>
-                <th style={{width:"854px"}}>Facturas</th>
-                <th style={{width:"150px"}}>Valor Facturas</th>
-                <th style={{width:"184px"}}>Estado</th>
-                <th style={{width: "250px"}}>Creación</th>
-                <th style={{width: "250px"}}>Ultima actualización</th>
+                <th style={{ width: "184px" }}># Orden</th>
+                <th style={{ width: "184px" }}>Valor</th>
+                <th style={{ width: "370px", maxWidth: "370px" }}>Descripción</th>
+                <th style={{ width: "217px" }}>Fecha de Orden</th>
+                <th style={{ width: "217px" }}>Fecha Entrega</th>
+                <th style={{ width: "854px" }}>Facturas</th>
+                <th style={{ width: "150px" }}>Valor Facturas</th>
+                <th style={{ width: "184px" }}>Estado</th>
+                <th style={{ width: "250px" }}>Creación</th>
+                <th style={{ width: "250px" }}>Ultima actualización</th>
               </tr>
             </thead>
 
@@ -712,12 +712,12 @@ class table extends React.Component {
                               >
                                 Ver informaciom
                               </button>
-                            )}  
+                            )}
 
                             {true && (
-                                  <button onClick={() => this.toogleIndexInvoice("new", accion)} className="dropdown-item">
-                                    Facturas
-                                  </button>
+                              <button onClick={() => this.toogleIndexInvoice("new", accion)} className="dropdown-item">
+                                Facturas
+                              </button>
                             )}
 
                             {(this.getState(accion.user_id) && accion.cost_center.sales_state != "CERRADO") && (
@@ -741,69 +741,69 @@ class table extends React.Component {
                         </div>
                       </div>
                     </td>
-                    <td>{accion.cost_center != undefined ? accion.cost_center.code : "" }</td>
-                    <td>{accion.provider != undefined ? accion.provider.name : "" }</td>
+                    <td>{accion.cost_center != undefined ? accion.cost_center.code : ""}</td>
+                    <td>{accion.provider != undefined ? accion.provider.name : ""}</td>
 
-        
+
                     <td>{accion.sales_number}</td>
                     <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                     <td>{accion.description}</td>
                     <td>{accion.sales_date}</td>
                     <td>{accion.delivery_date}</td>
-                    <td>  
-                      <table style={{tableLayout: "fixed", width:"100%"}}>
+                    <td>
+                      <table style={{ tableLayout: "fixed", width: "100%" }}>
+                        <tr>
+                          <td style={{ padding: "3px", textAlign: "left" }}>Numero de factura</td>
+                          <td style={{ padding: "3px", textAlign: "left" }}>Valor</td>
+                          <td style={{ padding: "3px", textAlign: "left" }}>Descripcion</td>
+                        </tr>
+                        {accion.material_invoices.map(material_invoice => (
                           <tr>
-                              <td style={{padding:"3px", textAlign:"left"}}>Numero de factura</td>
-                              <td style={{padding:"3px", textAlign:"left"}}>Valor</td>
-                              <td style={{padding:"3px", textAlign:"left"}}>Descripcion</td>
+                            <td style={{ padding: "5px", textAlign: "left" }}>{material_invoice.number}</td>
+                            <td style={{ padding: "5px", textAlign: "left" }} ><NumberFormat value={material_invoice.value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                            <td style={{ padding: "5px", textAlign: "left" }}>{material_invoice.observation}</td>
                           </tr>
-                          {accion.material_invoices.map(material_invoice => (
-                            <tr>
-                              <td style={{padding:"5px", textAlign:"left"}}>{material_invoice.number}</td>
-                              <td style={{padding:"5px", textAlign:"left"}} ><NumberFormat value={material_invoice.value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                              <td style={{padding:"5px", textAlign:"left"}}>{material_invoice.observation}</td>
-                            </tr>
-                          ))}
-                            
+                        ))}
+
                       </table>
                     </td>
-                   
+
                     <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
 
                     <td>
-                          {this.state.material_id == accion.id ? (
-                            <React.Fragment>
-                              <select 
-                                name="estado" 
-                                className="form form-control"
-                                onChange={this.onChangeUpdateSelect}
-                                value={this.state.formUpdate.sales_state}
-                                style={{ display: "inherit", width: "90%"}}
-                              >
-                                <option value="">Seleccione un estado</option>
-                                <option value="PROCESADO">PROCESADO</option>
-                                <option value="INGRESADO TOTAL">INGRESADO TOTAL</option>
-                                <option value="INGRESADO CON MAYOR VALOR EN FACTURA">INGRESADO CON MAYOR VALOR EN FACTURA</option>
-                                <option value="INGRESADO PARCIAL">INGRESADO PARCIAL</option>
+                      {this.state.material_id == accion.id ? (
+                        <React.Fragment>
+                          <select
+                            name="estado"
+                            className="form form-control"
+                            onChange={this.onChangeUpdateSelect}
+                            value={this.state.formUpdate.sales_state}
+                            style={{ display: "inherit", width: "90%" }}
+                          >
+                            <option value="">Seleccione un estado</option>
+                            <option value="PROCESADO">PROCESADO</option>
+                            <option value="INGRESADO TOTAL">INGRESADO TOTAL</option>
+                            <option value="INGRESADO CON MAYOR VALOR EN FACTURA">INGRESADO CON MAYOR VALOR EN FACTURA</option>
+                            <option value="INGRESADO PARCIAL">INGRESADO PARCIAL</option>
 
-                              </select> 
+                          </select>
 
-                              <i onClick={() => this.HandleClickUpdate(accion, false)} className="fas fa-times-circle float-right"></i>
-                            </React.Fragment>
-                          ) : (
-                            <p>{accion.sales_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true)} className="fas fa-pencil-alt float-right"></i> : ""} </p>
-                          )} 
+                          <i onClick={() => this.HandleClickUpdate(accion, false)} className="fas fa-times-circle float-right"></i>
+                        </React.Fragment>
+                      ) : (
+                        <p>{accion.sales_state} {this.props.estados.update_state == true ? <i onClick={() => this.HandleClickUpdate(accion, true)} className="fas fa-pencil-alt float-right"></i> : ""} </p>
+                      )}
                     </td>
 
                     <th>
-                                                        {this.getDate(accion.created_at)} <br />
-                                                        {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
-                                                    </th>
+                      {this.getDate(accion.created_at)} <br />
+                      {accion.user != undefined ? <React.Fragment> <b></b> {accion.user != undefined ? accion.user.names : ""} </React.Fragment> : null}
+                    </th>
 
-                                                    <th>
-                                                        {this.getDate(accion.updated_at)} <br />
-                                                        {accion.last_user_edited != undefined ? <React.Fragment> <b></b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null }
-                                                    </th>
+                    <th>
+                      {this.getDate(accion.updated_at)} <br />
+                      {accion.last_user_edited != undefined ? <React.Fragment> <b></b> {accion.last_user_edited != undefined ? accion.last_user_edited.names : ""} </React.Fragment> : null}
+                    </th>
                   </tr>
                 ))
               ) : (
