@@ -491,63 +491,63 @@ class tableIndex extends React.Component {
 
   delete = (cost_center) => {
     Swal.fire({
-        title: 'Escribe el codigo del centro de costo para poder eliminarlo',
-        input: 'text',
-        footer: `<p>El codigo del centro de costo es (${cost_center.code}) </p>`,
+      title: 'Escribe el codigo del centro de costo para poder eliminarlo',
+      input: 'text',
+      footer: `<p>El codigo del centro de costo es (${cost_center.code}) </p>`,
 
-        inputAttributes: {
-            autocapitalize: 'off'
-        },
+      inputAttributes: {
+        autocapitalize: 'off'
+      },
 
-        showCancelButton: true,
-        confirmButtonText: 'Eliminar',
-        confirmButtonColor: '#16aaff',
-        cancelButtonText: "Cancelar",
-        showLoaderOnConfirm: true,
-        preConfirm: (login) => {
-            if (login == cost_center.code.trim()) {
-                  fetch(`/cost_centers/${cost_center.id}`, {
-                    method: "delete", // or 'PUT'
-                    headers: {
-                      "Content-Type": "application/json"
-                    }
-                  })
-                  .then(res => res.json())
-                  .catch(error => console.error("Error:", error))
-                  .then(data => {
-                      if(data.type != "delete"){
-                        this.setState({
-                          modalError: true,
-                          messages: data.message
-                        })
-                      }else{
-                        this.setState({
-                          modalError: false,
-                          messages: []
-                        })
-                        this.props.loadInfo()
-                      }
-                      
-                  });
-            } else {
-              Swal.showValidationMessage("El codigo no concuerda")
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      confirmButtonColor: '#16aaff',
+      cancelButtonText: "Cancelar",
+      showLoaderOnConfirm: true,
+      preConfirm: (login) => {
+        if (login == cost_center.code.trim()) {
+          fetch(`/cost_centers/${cost_center.id}`, {
+            method: "delete", // or 'PUT'
+            headers: {
+              "Content-Type": "application/json"
             }
-        },
+          })
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+              if (data.type != "delete") {
+                this.setState({
+                  modalError: true,
+                  messages: data.message
+                })
+              } else {
+                this.setState({
+                  modalError: false,
+                  messages: []
+                })
+                this.props.loadInfo()
+              }
 
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.value) {
-
+            });
+        } else {
+          Swal.showValidationMessage("El codigo no concuerda")
         }
+      },
+
+      allowOutsideClick: () => !Swal.isLoading()
+    }).then((result) => {
+      if (result.value) {
+
+      }
     })
   }
 
 
   toogleModalError = (from) => {
     if (from == "new") {
-        this.setState({ modalError: true })
+      this.setState({ modalError: true })
     } else {
-        this.setState({ modalError: false, messages: [] })
+      this.setState({ modalError: false, messages: [] })
     }
   }
 
@@ -564,7 +564,7 @@ class tableIndex extends React.Component {
 
     let array = []
 
-    fetch(`/get_client/${modulo.contact_id}/centro`)
+    fetch(`/get_client/${modulo.customer_id}/centro`)
       .then(response => response.json())
       .then(data => {
 
@@ -597,7 +597,7 @@ class tableIndex extends React.Component {
 
       action: modulo,
       title: "Editar Centro de costo",
-      
+
       form: {
         customer_id: modulo.customer_id,
         contact_id: modulo.contact_id,
@@ -766,11 +766,11 @@ class tableIndex extends React.Component {
 
   getDate = (date) => {
     var d = new Date(date),
-    months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
 
     var time = hoursAndMinutes; // your input
-    
+
     time = time.split(':'); // convert to array
 
     // fetch
@@ -780,15 +780,15 @@ class tableIndex extends React.Component {
 
     // calculate
     var timeValue = hours;
-    
-       /*  if (hours > 0 && hours <= 12) {
-          timeValue= "" + hours;
-        } else if (hours > 12) {
-          timeValue= "" + (hours - 12);
-        } else if (hours == 0) {
-          timeValue= "12";
-        } */
-    
+
+    /*  if (hours > 0 && hours <= 12) {
+       timeValue= "" + hours;
+     } else if (hours > 12) {
+       timeValue= "" + (hours - 12);
+     } else if (hours == 0) {
+       timeValue= "12";
+     } */
+
     timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
     //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
 
@@ -876,9 +876,9 @@ class tableIndex extends React.Component {
 
   toogleModalQuotationIndex = (from) => {
     if (from == "new") {
-        this.setState({ quotation_cost_center_id: true })
+      this.setState({ quotation_cost_center_id: true })
     } else {
-        this.setState({ quotation_cost_center_id: "" })
+      this.setState({ quotation_cost_center_id: "" })
     }
   }
 
@@ -932,7 +932,7 @@ class tableIndex extends React.Component {
             backdrop={this.state.backdrop}
             modal={this.state.modalError}
             messages={this.state.messages}
-          /> 
+          />
         )}
 
         {this.state.quotation_cost_center_id && (
@@ -941,7 +941,7 @@ class tableIndex extends React.Component {
             backdrop={this.state.backdrop}
             modal={this.state.quotation_cost_center_id ? true : false}
             cost_center_id={this.state.quotation_cost_center_id}
-          /> 
+          />
         )}
 
         <div className="col-md-12 p-0 mb-4">
