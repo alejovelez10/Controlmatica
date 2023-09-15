@@ -39,7 +39,7 @@ class Quotation < ApplicationRecord
         self.hours_contractor_real = !self.hours_contractor_real.nil? ?  self.hours_contractor_real : 0
         self.value_displacement_hours = !self.value_displacement_hours.nil? ?  self.value_displacement_hours : 0
         self.hours_contractor_invoices = !self.hours_contractor_invoices.nil? ?  self.hours_contractor_invoices : 0
-
+        self.displacement_hours = !self.displacement_hours.nil? ?  self.displacement_hours : 0
 
         self.ingenieria_total_costo = self.eng_hours * self.hour_real
         self.engineering_value = self.eng_hours * self.hour_cotizada
