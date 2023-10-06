@@ -334,8 +334,10 @@ class ReportsController < ApplicationController
       params["viatic_value"] = valor1
     end
 
+    const_center_last = @report.cost_center_id
     if @report.update(report_params_update.merge!(update_user: current_user.id))
       recalculate_cost_center(@report.cost_center_id, "reportes")
+      recalculate_cost_center(const_center_last, "reportes")
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         register: get_report_item(@report),
