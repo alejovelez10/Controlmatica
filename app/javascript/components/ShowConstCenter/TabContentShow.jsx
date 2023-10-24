@@ -133,7 +133,7 @@ const TabContentShow = (props) => {
             {(props.cost_center.service_type == "VENTA" || props.cost_center.service_type == "PROYECTO") && (
 
               <TabPane tabId="5">
-                <MaterialesTable usuario={props.usuario} providers={props.providers} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
+                <MaterialesTable usuario={props.usuario} estados={props.estados} providers={props.providers} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
               </TabPane>
 
             )}
@@ -235,7 +235,7 @@ const TabContentShow = (props) => {
 
             {(props.cost_center.service_type == "PROYECTO" || props.cost_center.service_type == "VENTA") && (
               <TabPane tabId="4">
-                <MaterialesTable providers={props.providers} usuario={props.usuario} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
+                <MaterialesTable providers={props.providers} estados={props.estados} usuario={props.usuario} cost_center={props.cost_center} dataMateriales={props.dataMateriales} />
               </TabPane>
             )}
 

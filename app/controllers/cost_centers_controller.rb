@@ -149,9 +149,23 @@ class CostCentersController < ApplicationController
     update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
     show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
 
+    materials = ModuleControl.find_by_name("Materiales")
+    create_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Crear").exists?
+    edit_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar").exists?
+    delete_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
+    download_file_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Descargar excel").exists?
+    update_state_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Forzar estados").exists?
+    edit_all_materials= current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar todos").exists?
+
     @estados = {
       update_state: (current_user.rol.name == "Administrador" ? true : update_state),
       show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
+      create_materials: (current_user.rol.name == "Administrador" ? true : create_materials),
+      edit_materials: (current_user.rol.name == "Administrador" ? true : edit_materials),
+      edit_all_materials: (current_user.rol.name == "Administrador" ? true : edit_all_materials),
+      delete_materials: (current_user.rol.name == "Administrador" ? true : delete_materials),
+      update_state_materials: (current_user.rol.name == "Administrador" ? true : update_state_materials),
+      download_file_materials: (current_user.rol.name == "Administrador" ? true : download_file_materials),
     }
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)

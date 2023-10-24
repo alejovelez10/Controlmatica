@@ -423,29 +423,29 @@ class Show extends React.Component {
 
     getDate = (date) => {
         var d = new Date(date),
-        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
 
         var time = hoursAndMinutes; // your input
-        
+
         time = time.split(':'); // convert to array
-    
+
         // fetch
         var hours = Number(time[0]);
         var minutes = Number(time[1]);
         var seconds = Number(time[2]);
-    
+
         // calculate
         var timeValue = hours;
-    
-       /*  if (hours > 0 && hours <= 12) {
-          timeValue= "" + hours;
-        } else if (hours > 12) {
-          timeValue= "" + (hours - 12);
-        } else if (hours == 0) {
-          timeValue= "12";
-        } */
-        
+
+        /*  if (hours > 0 && hours <= 12) {
+           timeValue= "" + hours;
+         } else if (hours > 12) {
+           timeValue= "" + (hours - 12);
+         } else if (hours == 0) {
+           timeValue= "12";
+         } */
+
         timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
         //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
         return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear() + " / " + timeValue
@@ -461,10 +461,10 @@ class Show extends React.Component {
         });
     }
 
-    loadData = ()=>{
+    loadData = () => {
         this.props.loadData();
     }
-   
+
 
 
     getServices = () => {
@@ -905,9 +905,9 @@ class Show extends React.Component {
                         <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Información del centro de costo</a>
                     </li>
 
-                  <li className="nav-item">
+                    <li className="nav-item">
                         <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=calendar`}>Calendario</a>
-                    </li> 
+                    </li>
                 </ul>
 
                 <div className="tab-content" id="myTabContent">
@@ -954,14 +954,14 @@ class Show extends React.Component {
                                                             <option value="PENDIENTE">PENDIENTE</option>
                                                         </select>
                                                     ) : (
-                                                            <React.Fragment>
-                                                                {this.props.estados.update_state == true ? (
-                                                                    <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
-                                                                ) : (
-                                                                        <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."}</p>
-                                                                    )}
-                                                            </React.Fragment>
-                                                        )}
+                                                        <React.Fragment>
+                                                            {this.props.estados.update_state == true ? (
+                                                                <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
+                                                            ) : (
+                                                                <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."}</p>
+                                                            )}
+                                                        </React.Fragment>
+                                                    )}
                                                 </React.Fragment>
                                             )}
                                         </div>
@@ -982,14 +982,14 @@ class Show extends React.Component {
                                                             <option value="CERRADO">CERRADO</option>
                                                         </select>
                                                     ) : (
-                                                            <React.Fragment>
-                                                                {this.props.estados.update_state == true ? (
-                                                                    <p onClick={() => this.changeState("sales_state")} >{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."} </p>
-                                                                ) : (
-                                                                        <p>{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."}</p>
-                                                                    )}
-                                                            </React.Fragment>
-                                                        )}
+                                                        <React.Fragment>
+                                                            {this.props.estados.update_state == true ? (
+                                                                <p onClick={() => this.changeState("sales_state")} >{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."} </p>
+                                                            ) : (
+                                                                <p>{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."}</p>
+                                                            )}
+                                                        </React.Fragment>
+                                                    )}
                                                 </React.Fragment>
                                             )}
                                         </div>
@@ -1015,14 +1015,14 @@ class Show extends React.Component {
 
                                                 </select>
                                             ) : (
-                                                    <React.Fragment>
-                                                        {this.props.estados.update_state == true ? (
-                                                            <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
-                                                        ) : (
-                                                                <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
-                                                            )}
-                                                    </React.Fragment>
-                                                )}
+                                                <React.Fragment>
+                                                    {this.props.estados.update_state == true ? (
+                                                        <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
+                                                    ) : (
+                                                        <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
+                                                    )}
+                                                </React.Fragment>
+                                            )}
                                         </div>
 
                                         <div className="col-md-3 text-center">
@@ -1143,12 +1143,12 @@ class Show extends React.Component {
 
                         <Card className="mt-3">
                             <CardBody>
-                                <TabContentShow 
+                                <TabContentShow
                                     loadData={this.loadData}
-                                    dataMateriales={this.state.dataMateriales} 
-                                    dataContractors={this.state.dataContractors} 
-                                    dataSalesOrdes={this.state.dataSalesOrdes} 
-                                    dataReports={this.state.dataReports}  
+                                    dataMateriales={this.state.dataMateriales}
+                                    dataContractors={this.state.dataContractors}
+                                    dataSalesOrdes={this.state.dataSalesOrdes}
+                                    dataReports={this.state.dataReports}
                                     dataExpenses={this.state.dataExpenses}
                                     cost_center={this.props.cost_center}
                                     usuario={this.props.usuario}
@@ -1156,6 +1156,7 @@ class Show extends React.Component {
                                     users={this.state.users}
                                     report_expense_options={this.props.report_expense_options}
                                     clients={this.state.clients}
+                                    estados={this.props.estados}
                                 />
                             </CardBody>
                         </Card>
@@ -1164,7 +1165,7 @@ class Show extends React.Component {
                     <div className={`tab-pane fade ${this.props.current_tab == "calendar" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
                         <Calendar
                             url_calendar={`/get_shifts_const_center/${this.props.cost_center.id}`}
-                            cost_centers={[ { value: this.props.cost_center.id, label: this.props.cost_center.code } ]}
+                            cost_centers={[{ value: this.props.cost_center.id, label: this.props.cost_center.code }]}
                             users={this.props.users_select}
                             microsoft_auth={this.props.microsoft_auth}
                             current_user_name={this.props.current_user_name}

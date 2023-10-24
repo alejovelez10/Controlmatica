@@ -271,7 +271,7 @@ class MaterialesTable extends Component {
                                 <th style={{ width: "8%" }}>Fecha de Orden</th>
                                 <th style={{ width: "8%" }}>Fecha Entrega</th>
                                 <th style={{ width: "450px" }}>Facturas</th>
-                                <th style={{ width: "7%" }}>Valor Facturas</th>
+                                <th style={{ width: "7%" }}>Valor Facturasdddd</th>
                                 <th style={{ width: "11%" }}>Estado</th>
                             </tr>
                         </thead>
@@ -296,7 +296,7 @@ class MaterialesTable extends Component {
                                                             </DropdownItem>
                                                         )}
 
-                                                        {true && (
+                                                        {this.props.estados.edit_materials && (
                                                             <DropdownItem
                                                                 className="dropdown-item"
                                                                 onClick={() => this.edit(accion)}
@@ -305,7 +305,7 @@ class MaterialesTable extends Component {
                                                             </DropdownItem>
                                                         )}
 
-                                                        {true && (
+                                                        {this.props.estados.delete_materials && (
                                                             <DropdownItem
                                                                 onClick={() => this.delete(accion.id)}
                                                                 className="dropdown-item"
