@@ -3,16 +3,17 @@
 # Table name: register_edits
 #
 #  id               :bigint           not null, primary key
-#  user_id          :integer
-#  register_user_id :integer
-#  state            :string
 #  date_update      :date
+#  description      :text
 #  editValues       :json
+#  module           :string
 #  newValues        :json
+#  state            :string
+#  type_edit        :string           default("edito")
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
-#  module           :string
-#  description      :text
+#  register_user_id :integer
+#  user_id          :integer
 #
 
 require 'test_helper'
