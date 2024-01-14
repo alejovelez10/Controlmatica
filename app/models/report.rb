@@ -47,6 +47,8 @@ class Report < ApplicationRecord
   after_destroy :calculate_cost_destroy
   after_save :calculatate_update
   before_update :create_edit_register
+  after_create :create_create_register
+  before_destroy :create_destroy_register
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
     search1 != "" ? (scope :descripcion, -> { where("work_description like '%#{search1.downcase}%' or work_description like '%#{search1.upcase}%' or work_description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
@@ -125,7 +127,7 @@ class Report < ApplicationRecord
       customers.each do |customer|
         names << customer.name
       end
-      customer = "<p>El Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+      customer = "<p>Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else
       customer = ""
     end
@@ -136,7 +138,7 @@ class Report < ApplicationRecord
       contacts.each do |contact|
         names << contact.name
       end
-      contact = "<p>El Contacto: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+      contact = "<p>Contacto: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else
       contact = ""
     end
@@ -147,7 +149,7 @@ class Report < ApplicationRecord
       cost_center.each do |centro|
         names << centro.code
       end
-      centro = "<p>El Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+      centro = "<p>Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else
       centro = ""
     end
@@ -158,7 +160,7 @@ class Report < ApplicationRecord
       users.each do |user|
         names << user.names
       end
-      user = "<p>El Responsable de Ejecucion: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
+      user = "<p>Responsable de Ejecucion: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else
       user = ""
     end
@@ -173,7 +175,7 @@ class Report < ApplicationRecord
     str = "#{customer}#{contact}#{centro}#{date}#{user}#{working_time}#{work_description}#{displacement_hours}#{viatic_value}#{viatic_description}"
 
     if str.length > 5
-      str = "<p>Reporte: #{self.code_report}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      str = "<p>Reporte: #{self.code_report}</p>" + str
       RegisterEdit.create(
         user_id: User.current.id,
         register_user_id: self.id,
@@ -184,6 +186,114 @@ class Report < ApplicationRecord
       )
     end
   end
+
+
+
+  def create_create_register
+    self.last_user_edited_id = User.current.id
+     
+
+      if self.report_execute_id?
+       customer = Customer.where(id: self.customer_id).take
+      customer = "<p>Cliente: <b>#{customer.name}</b></p>"
+      else
+        user = ""
+      end
+
+      if self.contact_id?
+      contact = Contact.where(id: self.contact_id).take
+     
+      contact = "<p>Contacto: <b >#{contact.name}</b> </p>"
+      else
+        user = ""
+      end
+      
+    if self.report_execute_id?
+      user = User.where(id: self.report_execute_id).take
+      user = "<p>Responsable de Ejecucion: <b>#{user.names}</b></p>"
+    else
+      user = ""
+    end
+
+    date = "<p>La Fecha del reporte: <b >#{self.report_date}</b></p>"
+    working_time = "<p>EL Tiempo de Trabajo: <b >#{self.working_time}</b> </p>"
+    work_description = "<p>La Descripcion del trabajo: <b >#{self.work_description}</b> </p>"
+    displacement_hours = "<p>La Horas de desplazamiento: <b >#{self.displacement_hours}</b> </p>"
+    viatic_value = "<p>La Valor de viaticos: <b >#{self.viatic_value}</b> "
+    viatic_description = "<p>La Descripcion viaticos: <b >#{self.viatic_description}</b></p> "
+
+    str = "#{customer}#{contact}#{date}#{user}#{working_time}#{work_description}#{displacement_hours}#{viatic_value}#{viatic_description}"
+
+    if str.length > 5
+      str = "<p><p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p> <p>Reporte: #{self.code_report}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      RegisterEdit.create(
+        user_id: User.current.id,
+        register_user_id: self.id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Reportes de servicios",
+        description: str,
+        type_edit: "creo"
+      )
+    end
+  end
+
+
+
+  def create_destroy_register
+
+     
+
+     
+    if self.report_execute_id?
+      customer = Customer.where(id: self.customer_id).take
+     customer = "<p>Cliente: <b>#{customer.name}</b></p>"
+     else
+       user = ""
+     end
+
+     if self.contact_id?
+     contact = Contact.where(id: self.contact_id).take
+    
+     contact = "<p>Contacto: <b >#{contact.name}</b> </p>"
+     else
+       user = ""
+     end
+     
+   if self.report_execute_id?
+     user = User.where(id: self.report_execute_id).take
+     user = "<p>Responsable de Ejecucion: <b>#{user.names}</b></p>"
+   else
+     user = ""
+   end
+
+   date = "<p>La Fecha del reporte: <b >#{self.report_date}</b>"
+   working_time = "<p>EL Tiempo de Trabajo: <b >#{self.working_time}</b> "
+   work_description = "<p>La Descripcion del trabajo: <b >#{self.work_description}</b> "
+   displacement_hours = "<p>La Horas de desplazamiento: <b >#{self.displacement_hours}</b> "
+   viatic_value = "<p>La Valor de viaticos: <b >#{self.viatic_value}</b> "
+   viatic_description = "<p>La Descripcion viaticos: <b >#{self.viatic_description}</b> "
+
+   str = "#{customer}#{contact}#{date}#{user}#{working_time}#{work_description}#{displacement_hours}#{viatic_value}#{viatic_description}"
+
+   if str.length > 5
+     str = "<p><p><strong>(SE ELIMINO EL SIGUIENTE REGISTRO)</strong></p> <p>Reporte: #{self.code_report}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+     RegisterEdit.create(
+       user_id: User.current.id,
+       register_user_id: self.id,
+       state: "pending",
+       date_update: Time.now,
+       module: "Reportes de servicios",
+       description: str,
+       type_edit: "Elimino"
+     )
+   end
+  end
+
+
+
+
+
 
   def calculate_cost_destroy
     cost_center = CostCenter.find(self.cost_center_id_was)

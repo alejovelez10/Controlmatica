@@ -28,6 +28,8 @@ class Material < ApplicationRecord
   belongs_to :user, optional: :true
 
   after_destroy :calculate_cost_destroy
+  before_destroy :create_delete_register
+  after_create :create_create_register
   before_update :create_edit_register
   #before_create :set_state
 
@@ -109,7 +111,7 @@ class Material < ApplicationRecord
     str = "#{provider}#{centro}#{sales_date}#{sales_number}#{amount}#{delivery_date}#{description}"
 
     if str.length > 5
-      str = "<p>Numero de orden: #{self.sales_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      str = "<p><strong>(SE EDITO EL SIGUIENTE REGISTRO)</strong></p> <p>Numero de orden: #{self.sales_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
       RegisterEdit.create(
         user_id:  User.current.id,
         register_user_id: self.user_id,
@@ -117,6 +119,72 @@ class Material < ApplicationRecord
         date_update: Time.now,
         module: "Materiales",
         description: str,
+      )
+    end
+  end
+  
+  def create_create_register
+    self.last_user_edited_id = User.current.id
+
+    if self.provider_id != nil
+      
+      provider = Provider.find(self.provider_id)
+
+    else
+      provider = ""
+    end
+  
+    sales_date = "<p>Fecha de orden: #{self.sales_date}</p>"
+    provider_ = "<p>Proveedor: #{provider.name}</p> "
+    amount = "<p>Valor: #{self.amount}</p>"
+    delivery_date = "<p>Fecha estimada de entrega: #{self.delivery_date}</p>"
+    description = "<p>Descripcion: #{self.description}</p> "
+
+    str = "#{sales_date}#{provider_}#{amount}#{delivery_date}#{description}"
+
+    if str.length > 5
+      str = "<p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p> <p>Numero de orden: #{self.sales_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      RegisterEdit.create(
+        user_id:  User.current.id,
+        register_user_id: self.user_id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Materiales",
+        description: str,
+        type_edit: "creo"
+      )
+    end
+  end
+
+  def create_delete_register
+    self.last_user_edited_id = User.current.id
+
+    if self.provider_id != nil
+      
+      provider = Provider.find(self.provider_id)
+
+    else
+      provider = ""
+    end
+  
+    sales_date = "<p>Fecha de orden: #{self.sales_date}</p>"
+    provider_ = "<p>Proveedor: #{provider.name}</p> "
+    amount = "<p>Valor: #{self.amount}</p>"
+    delivery_date = "<p>Fecha estimada de entrega: #{self.delivery_date}</p>"
+    description = "<p>Descripcion: #{self.description}</p> "
+
+    str = "#{sales_date}#{provider_}#{amount}#{delivery_date}#{description}"
+
+    if str.length > 5
+      str = "<p><strong>(SE ELIMINO EL SIGUIENTE REGISTRO)</strong></p> <p>Numero de orden: #{self.sales_number}</p> <p>Centro de costos: #{self.cost_center.code}</p>" + str
+      RegisterEdit.create(
+        user_id:  User.current.id,
+        register_user_id: self.user_id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Materiales",
+        description: str,
+        type_edit: "elimino"
       )
     end
   end

@@ -27,6 +27,8 @@ class Contractor < ApplicationRecord
   after_save :calculate_cost
   after_destroy :calculate_cost_destroy
   before_update :create_edit_register
+  after_create :create_create_register
+  before_destroy :create_delete_register
 
   def self.search(search1, search2, search3, search4, search5, search6)
     search1 != "" ? (scope :execute_user, -> { where(user_execute_id: search1) }) : (scope :execute_user, -> { where.not(id: nil) })
@@ -87,7 +89,7 @@ class Contractor < ApplicationRecord
     str = "#{centro}#{user}#{sales_date}#{hours}#{description}"
 
     if str.length > 5
-      str = "<p>Centro de costos: #{self.cost_center.code}</p> " + str
+      str = "<p><strong>(SE EDITO EL SIGUIENTE REGISTRO)</strong></p>  <p>Centro de costos: #{self.cost_center.code}</p> " + str
     RegisterEdit.create(  
       user_id: self.update_user, 
       register_user_id: self.id, 
@@ -98,5 +100,58 @@ class Contractor < ApplicationRecord
     )
   end
   end
+
+  def create_create_register
+    puts "hola munodddasfadsfasfsdfafdafasfasdfadsfasfasasdadsffsa"
+    self.last_user_edited_id = User.current.id
+    puts "hola munodddasfadsfasfsdfafdafasfasdfadsfasfasasdadsffsa"
+    user = User.find(self.user_execute_id)
+    user = "<p>Horas trabajadas por: <b>#{user.names}</b>"
+    sales_date = "<p>Fecha de generación: <b>#{self.sales_date}</b>" 
+    hours = "<p>Horas trabajadas: <b>#{self.hours}</b>" 
+    description = "<p>Descripcion: <b>#{self.description}</b>"
+    
+    str = "#{user}#{sales_date}#{hours}#{description}"
+
+    puts "hola2 munodddasfadsfasfsdfafdafasfasdfadsfasfasasdadsffsa"
+      str = "<p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p>  <p>Centro de costos: #{self.cost_center.code}</p> " + str
+      RegisterEdit.create(  
+      user_id: User.current.id, 
+      register_user_id: self.id, 
+      state: "pending", 
+      date_update: Time.now,
+      module: "Tableristas",
+      description: str,
+      type_edit: "creo"
+    )
+
+  end
+
+  def create_delete_register
+
+    self.last_user_edited_id = User.current.id
+    user = User.find(self.user_execute_id)
+    user = "<p>Horas trabajadas por: <b>#{user.names}</b>"
+    sales_date = "<p>Fecha de generación: <b>#{self.sales_date}</b>" 
+    hours = "<p>Horas trabajadas: <b>#{self.hours}</b>" 
+    description = "<p>Descripcion: <b>#{self.description}</b>"
+    
+    str = "#{user}#{sales_date}#{hours}#{description}"
+
+      str = "<p><strong>(SE ELIMINO EL SIGUIENTE REGISTRO)</strong></p>  <p>Centro de costos: #{self.cost_center.code}</p> " + str
+      RegisterEdit.create(  
+      user_id: User.current.id, 
+      register_user_id: self.id, 
+      state: "pending", 
+      date_update: Time.now,
+      module: "Tableristas",
+      description: str,
+      type_edit: "elimino"
+    )
+
+  end
+
+
+  
   
 end

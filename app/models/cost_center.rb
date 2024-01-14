@@ -98,6 +98,8 @@ class CostCenter < ApplicationRecord
   before_update :change_state_cost_center
 
   before_save :calculate_costo
+  after_create :create_create_register
+  after_destroy :create_delete_register
 
   scope :filterCost, -> { where("service_type like 'PROYECTO' or service_type like 'SERVICIO'").where.not(execution_state: "FINALIZADO") }
   scope :tableristas, -> { where(service_type: "PROYECTO") }
@@ -266,7 +268,7 @@ class CostCenter < ApplicationRecord
     str = "#{customer}#{contact}#{descripcion}#{fecha_star}#{fecha_end}#{quotation_number}#{materials_value}#{eng_hours}#{hour_real}#{hour_cotizada}#{hours_contractor}#{hours_contractor_real}#{hours_contractor_invoices}#{displacement_hours}#{value_displacement_hours}#{viatic_value}#{quotation_value}#{invoiced_state}"
 
     if str.length > 5
-      str = "<p>Centro de costos: #{self.code}</p> " + str
+      str = "<p><strong>(SE EDITO EL SIGUIENTE REGISTRO)</strong></p> <p>Centro de costos: #{self.code}</p> " + str
 
       RegisterEdit.create(
         user_id: User.current.id,
@@ -278,6 +280,131 @@ class CostCenter < ApplicationRecord
       )
     end
   end
+
+
+
+
+  def create_create_register
+    self.last_user_edited_id = !User.current.nil? ? User.current.id : 1
+    if !self.has_many_quotes
+      puts "alejooooooooooooo"
+      self.engineering_value = self.hour_cotizada * self.eng_hours
+    end
+    if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil? && (self.quotation_number != "N/A")
+      self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
+    end
+
+
+      cliente= Customer.find(self.customer_id)
+      customer = "<p>El Cliente: <b>#{cliente.name}</b>"
+
+
+    puts "change_statechange_statechange_statechange_statechange_statechange_statechange_statechange_statechange_state"
+
+
+    contacto = Contact.where(id: self.contact_id)
+    contact = "<p>El Contacto: <b>#{contacto.name}</b>"
+
+
+    descripcion = "<p>La descripcion: <b>#{self.description}</b>"
+    fecha_star = "<p>La Fecha de inicio: <b>#{self.start_date}</b>"
+    fecha_end = "<p>La Fecha final: <b>#{self.end_date}</b>"
+    quotation_number = "<p>El Número de cotización: <b>#{self.quotation_number}</b>"
+    materials_value = "<p>El Valor de los materiales: <b>#{self.materials_value}</b>"
+    eng_hours = "<p>La Horas ingeniería: <b>#{self.eng_hours}</b>"
+    hour_real = "<p>El Valor hora costo: <b>#{self.hour_real}</b>"
+    hour_cotizada = "<p>La Hora de valor cotizada: <b>#{self.hour_cotizada}</b>"
+    hours_contractor = "<p>Las Horas tablerista: <b>#{self.hours_contractor}</b>"
+    hours_contractor_real = "<p>EL Valor hora Costo: <b>#{self.hours_contractor}</b> "
+    hours_contractor_invoices = "<p>El Valor hora cotizada: <b>#{self.hours_contractor_invoices}</b>"
+    displacement_hours = "<p>Las Horas de desplazamiento: <b>#{self.displacement_hours}</b>"
+    value_displacement_hours ="<p>El Valor de hora de desplazamiento: <b>#{self.value_displacement_hours}</b>"
+    viatic_value = "<p>El Valor Viaticos: <b>#{self.viatic_value}</b>"
+    quotation_value = "<p>El Total Cotizacion: <b>#{self.quotation_value}</b>"
+    invoiced_state = "<p>El Estado: <b>#{self.invoiced_state}</b>"
+
+    str = "#{customer}#{contact}#{descripcion}#{fecha_star}#{fecha_end}#{quotation_number}#{materials_value}#{eng_hours}#{hour_real}#{hour_cotizada}#{hours_contractor}#{hours_contractor_real}#{hours_contractor_invoices}#{displacement_hours}#{value_displacement_hours}#{viatic_value}#{quotation_value}#{invoiced_state}"
+
+    if str.length > 5
+      str = "<p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p> <p>Centro de costos: #{self.code}</p> " + str
+
+      RegisterEdit.create(
+        user_id: User.current.id,
+        register_user_id: self.user_id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Centro de costo",
+        description: str,
+        type_edit: "creo"
+      )
+    end
+  end
+
+
+  def create_delete_register
+    if !self.has_many_quotes
+      puts "alejooooooooooooo"
+      self.engineering_value = self.hour_cotizada * self.eng_hours
+    end
+    if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil? && (self.quotation_number != "N/A")
+      self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
+    end
+
+
+      cliente= Customer.find(self.customer_id)
+      customer = "<p>El Cliente: <b>#{cliente.name}</b>"
+
+
+    puts "change_statechange_statechange_statechange_statechange_statechange_statechange_statechange_statechange_state"
+
+
+    contacto = Contact.where(id: self.contact_id)
+    contact = "<p>El Contacto: <b>#{contacto.name}</b>"
+
+
+    descripcion = "<p>La descripcion: <b>#{self.description}</b>"
+    fecha_star = "<p>La Fecha de inicio: <b>#{self.start_date}</b>"
+    fecha_end = "<p>La Fecha final: <b>#{self.end_date}</b>"
+    quotation_number = "<p>El Número de cotización: <b>#{self.quotation_number}</b>"
+    materials_value = "<p>El Valor de los materiales: <b>#{self.materials_value}</b>"
+    eng_hours = "<p>La Horas ingeniería: <b>#{self.eng_hours}</b>"
+    hour_real = "<p>El Valor hora costo: <b>#{self.hour_real}</b>"
+    hour_cotizada = "<p>La Hora de valor cotizada: <b>#{self.hour_cotizada}</b>"
+    hours_contractor = "<p>Las Horas tablerista: <b>#{self.hours_contractor}</b>"
+    hours_contractor_real = "<p>EL Valor hora Costo: <b>#{self.hours_contractor}</b> "
+    hours_contractor_invoices = "<p>El Valor hora cotizada: <b>#{self.hours_contractor_invoices}</b>"
+    displacement_hours = "<p>Las Horas de desplazamiento: <b>#{self.displacement_hours}</b>"
+    value_displacement_hours ="<p>El Valor de hora de desplazamiento: <b>#{self.value_displacement_hours}</b>"
+    viatic_value = "<p>El Valor Viaticos: <b>#{self.viatic_value}</b>"
+    quotation_value = "<p>El Total Cotizacion: <b>#{self.quotation_value}</b>"
+    invoiced_state = "<p>El Estado: <b>#{self.invoiced_state}</b>"
+
+    str = "#{customer}#{contact}#{descripcion}#{fecha_star}#{fecha_end}#{quotation_number}#{materials_value}#{eng_hours}#{hour_real}#{hour_cotizada}#{hours_contractor}#{hours_contractor_real}#{hours_contractor_invoices}#{displacement_hours}#{value_displacement_hours}#{viatic_value}#{quotation_value}#{invoiced_state}"
+
+    if str.length > 5
+      str = "<p><strong>(SE ELIMINO EL REGISTRO)</strong></p> <p>Centro de costos: #{self.code}</p> " + str
+
+      RegisterEdit.create(
+        user_id: User.current.id,
+        register_user_id: self.user_id,
+        state: "pending",
+        date_update: Time.now,
+        module: "Centro de costo",
+        description: str,
+        type_edit: "elimino"
+      )
+    end
+  end
+
+
+
+
+
+
+
+
+
+
 
   def change_state_cost_center
     cost_center = CostCenter.find(self.id)
