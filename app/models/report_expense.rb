@@ -25,6 +25,7 @@
 #  is_acepted             :boolean          default(FALSE)
 #
 
+
 class ReportExpense < ApplicationRecord
   belongs_to :cost_center
   belongs_to :user_invoice, class_name: "User"
@@ -122,6 +123,7 @@ class ReportExpense < ApplicationRecord
 
 
 
+  
   def create_edit_register
     self.last_user_edited_id = User.current.id
     if self.cost_center_id_changed?
