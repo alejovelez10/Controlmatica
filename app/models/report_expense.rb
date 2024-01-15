@@ -123,6 +123,7 @@ class ReportExpense < ApplicationRecord
 
 
 
+
   
   def create_edit_register
     self.last_user_edited_id = User.current.id
