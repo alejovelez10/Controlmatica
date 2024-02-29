@@ -22,6 +22,7 @@ class index extends React.Component {
             notifications_total: 0, 
             countPage: 10,
             isLoaded: false,
+            
         }
     }
 
@@ -32,7 +33,7 @@ class index extends React.Component {
           console.log(data)
           this.setState({
             data: data.data,
-            notifications_total: data.data.length,
+            notifications_total: data.total,
             isLoaded: true,
           });
         });
@@ -78,7 +79,7 @@ class index extends React.Component {
         .then(data => {
           this.setState({
             data: data.data,
-            notifications_total: data.data.length,
+            notifications_total: data.total,
             activePage: 1
           });
         });
@@ -94,7 +95,7 @@ class index extends React.Component {
       .then(data => {
         this.setState({
           data: data.notifications,
-          notifications_total: data.notifications.length,
+          notifications_total: data.total,
           activePage: 1
         });
       });
@@ -102,12 +103,12 @@ class index extends React.Component {
     
     handlePageChange = pageNumber => {
       this.setState({ activePage: pageNumber });
-      fetch(`/get_sales_order?page=${pageNumber}&filter=${this.state.countPage}`) 
+      fetch(`/${this.props.urlLoadData}?page=${pageNumber}&filter=${this.state.countPage}`) 
         .then(response => response.json())
         .then(data => {
           this.setState({           
             data: data.data,
-            notifications_total: data.data.length,
+            notifications_total: data.total,
           });
         });
        
@@ -159,15 +160,27 @@ class index extends React.Component {
                         }
 
                       <div className="col-md-12" style={{ marginTop: "50px" }}>
-                        <div className="row">
+                          {true && (
+                                        <div className="row mt-3">
+                                            <div className="col-md-3 text-left">
+                                                <p>Mostrando {this.state.data.length} de {this.state.notifications_total}</p>
+                                            </div>
 
-                          <div className="col-md-9 text-left pl-0">
-                              <p>
-                                  Mostrando {this.state.data.length} de {this.state.notifications_total}
-                              </p>
-                          </div>
-
-                        </div>
+                                            <div className="col-md-9 pl-0">
+                                                <Pagination
+                                                    hideNavigation
+                                                    activePage={this.state.activePage}
+                                                    itemsCountPerPage={this.state.countPage}
+                                                    itemClass="page-item"
+                                                    innerClass="pagination"
+                                                    linkClass="page-link"
+                                                    totalItemsCount={this.state.notifications_total}
+                                                    pageRangeDisplayed={this.state.countPage}
+                                                    onChange={this.handlePageChange}
+                                                />
+                                            </div>
+                                        </div>
+                          )}
                       </div>   
                     
       

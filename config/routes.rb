@@ -75,8 +75,8 @@ Rails.application.routes.draw do
 
   get "get_expense_ratios", to: "expense_ratios#get_expense_ratios"
   get "expense_ratio_pdf/:id", to: "expense_ratios#pdf", as: "expense_ratio_pdf"
-  get "register_edit_update_all", to: "register_edits#update_all"
-  get "notification_alerts_update_all", to: "notification_alerts#update_all"
+  patch "register_edit_update_all", to: "register_edits#update_all"
+  patch "notification_alerts_update_all", to: "notification_alerts#update_all"
 
   get "get_alerts", to: "alerts#get_alerts"
   get "informes/controlmatica", to: "reports#controlmatica", as: "controlmatica"
@@ -131,7 +131,7 @@ Rails.application.routes.draw do
   get "get_material_invoice/:id", to: "material_invoices#get_material_invoice"
   get "get_sales_order_invoice/:id", to: "sales_orders#get_sales_order_invoice"
 
-  get "update_state/:id", to: "register_edits#update_state"
+  patch "update_state/:id", to: "register_edits#update_state"
 
   post "update_state_materials/:id/:state", to: "materials#update_state_materials"
 
@@ -159,10 +159,10 @@ Rails.application.routes.draw do
   get "update_load/:id", to: "material_invoices#update_load"
 
   get "notifications", to: "register_edits#notifications", as: "notifications"
-  get "get_notifications", to: "register_edits#get_notifications"
+  get "get_notifications/:state", to: "register_edits#get_notifications"
 
-  get "update_state_notification_alert/:id", to: "notification_alerts#update_state"
-  get "get_notifications_alerts", to: "notification_alerts#get_notifications_alerts"
+  patch "update_state_notification_alert/:id", to: "notification_alerts#update_state"
+  get "get_notifications_alerts/:state", to: "notification_alerts#get_notifications_alerts"
 
   root "home#dashboard"
   get "home/dashboard", to: "home#dashboard", as: "user_home"

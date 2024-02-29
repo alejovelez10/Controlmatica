@@ -1,11 +1,13 @@
 class RegisterEditsController < ApplicationController
     
     def get_notifications
-        notifications_pending = RegisterEdit.all.order(created_at: :desc).to_json( :include => { :user => { :only =>[:names] }})
+        notifications_pending = RegisterEdit.where(state: params[:state]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc).to_json( :include => { :user => { :only =>[:names] }})
+        total = RegisterEdit.where(state: params[:state]).count
         notifications_pending = JSON.parse(notifications_pending)
 
         render :json => {
             data: notifications_pending,
+            total: total
         }
     end
 
