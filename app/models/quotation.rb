@@ -65,7 +65,7 @@ class Quotation < ApplicationRecord
         cost_center.ingenieria_total_costo = cost_center.quotations.sum(:ingenieria_total_costo)
         cost_center.materials_value = cost_center.quotations.sum(:materials_value)
         cost_center.quotation_value = cost_center.quotations.sum(:quotation_value)
-        cost_center.value_displacement_hours = cost_center.quotations.first.value_displacement_hours
+        cost_center.value_displacement_hours = self.value_displacement_hours
         cost_center.viatic_value = cost_center.quotations.sum(:viatic_value)
         cost_center.work_force_contractor = cost_center.quotations.sum(:work_force_contractor)
         cost_center.contractor_total_costo = cost_center.quotations.sum(:contractor_total_costo)
