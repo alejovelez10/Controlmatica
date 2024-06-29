@@ -64,11 +64,13 @@ class ExpensesTable extends Component {
 
     componentDidMount = () => {
         this.configSelect();
+        console.log("dataExpenses", this.props.dataExpenses)
         setTimeout(() => {
+            console.log("entre aqui", this.props.dataExpenses)
             this.setState({
                 data: this.props.dataExpenses
             })
-        }, 1000)
+        }, 2000)
     }
 
     configSelect = () => {
@@ -76,11 +78,11 @@ class ExpensesTable extends Component {
         let arrayReportExpenseOptionPayment = [];
 
         this.props.report_expense_options.filter(item => item.category == "Tipo").map((item) => (
-            arrayReportExpenseOptionType.push({label: `${item.name}`, value: item.id})
+            arrayReportExpenseOptionType.push({ label: `${item.name}`, value: item.id })
         ))
 
         this.props.report_expense_options.filter(item => item.category == "Medio de pago").map((item) => (
-            arrayReportExpenseOptionPayment.push({label: `${item.name}`, value: item.id})
+            arrayReportExpenseOptionPayment.push({ label: `${item.name}`, value: item.id })
         ))
 
         this.setState({
@@ -291,12 +293,12 @@ class ExpensesTable extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            this.setState({
-                data: data.data,
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    data: data.data,
+                });
             });
-        });
     }
 
     HandleClick = () => {
@@ -374,21 +376,21 @@ class ExpensesTable extends Component {
 
     getDate = (date) => {
         var d = new Date(date),
-        months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
 
         var time = hoursAndMinutes; // your input
-        
+
         time = time.split(':'); // convert to array
-    
+
         // fetch
         var hours = Number(time[0]);
         var minutes = Number(time[1]);
         var seconds = Number(time[2]);
-    
+
         // calculate
         var timeValue = hours;
-    
+
         /*  if (hours > 0 && hours <= 12) {
            timeValue= "" + hours;
          } else if (hours > 12) {
@@ -396,7 +398,7 @@ class ExpensesTable extends Component {
          } else if (hours == 0) {
            timeValue= "12";
          } */
-        
+
         timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
         //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
 
@@ -428,12 +430,12 @@ class ExpensesTable extends Component {
             }
         })
 
-        .then(res => res.json())
-        .catch(error => console.error("Error:", error))
-        .then(data => {
-            this.setState({ report_expense_id: "" })
-            this.props.updateItem(data.register)
-        });
+            .then(res => res.json())
+            .catch(error => console.error("Error:", error))
+            .then(data => {
+                this.setState({ report_expense_id: "" })
+                this.props.updateItem(data.register)
+            });
     }
 
     toogle = (from) => {
