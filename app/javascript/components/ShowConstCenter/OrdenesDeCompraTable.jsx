@@ -37,7 +37,7 @@ class OrdenesDeCompraTable extends Component {
             this.setState({
                 data: this.props.dataSalesOrdes
             })
-        }, 1000)
+        }, 2000)
     }
 
     HandleChange = (e) => {
@@ -81,10 +81,10 @@ class OrdenesDeCompraTable extends Component {
                 if (register.id === item.id) {
                     return {
                         ...item,
-                        cost_center: register.cost_center, 
-                        cost_center_id: register.cost_center_id, 
-                        created_at: register.created_at, 
-                        created_date: register.created_date, 
+                        cost_center: register.cost_center,
+                        cost_center_id: register.cost_center_id,
+                        created_at: register.created_at,
+                        created_date: register.created_date,
                         customer_invoices: register.customer_invoices,
                         description: register.description,
                         last_user_edited_id: register.last_user_edited_id,
@@ -139,12 +139,12 @@ class OrdenesDeCompraTable extends Component {
                         "Content-Type": "application/json"
                     }
                 })
-                .then(response => response.json())
-                .then(response => {
-                    this.setState({
-                        data: this.state.data.filter((e) => e.id != id) 
-                    })
-                });
+                    .then(response => response.json())
+                    .then(response => {
+                        this.setState({
+                            data: this.state.data.filter((e) => e.id != id)
+                        })
+                    });
             }
         });
     };
@@ -212,18 +212,18 @@ class OrdenesDeCompraTable extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            this.setState({
-                data: data.sales_order,
-                isLoaded: false
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    data: data.sales_order,
+                    isLoaded: false
+                });
             });
-        });
     }
 
     date_short = (fecha) => {
         var d = new Date(fecha)
-        return (d.getDate() + 1 > 9 ? "" : "0") + (d.getDate() +  1)  + "/" + (d.getMonth() +1  > 9 ? "" : "0") + (d.getMonth()  +  1) + " " + '/' + d.getFullYear()
+        return (d.getDate() + 1 > 9 ? "" : "0") + (d.getDate() + 1) + "/" + (d.getMonth() + 1 > 9 ? "" : "0") + (d.getMonth() + 1) + " " + '/' + d.getFullYear()
     }
 
     handleFileOrderFile = e => {
@@ -243,16 +243,16 @@ class OrdenesDeCompraTable extends Component {
                         toggle={this.toogle}
                         backdrop={"static"}
                         modal={this.state.modal}
-    
+
                         onChangeForm={this.HandleChange}
                         formValues={this.state.form}
                         submit={this.HandleClick}
-    
+
                         titulo={this.state.purchase_order_id ? "Actualizar" : "Crear"}
                         nameSubmit={this.state.purchase_order_id ? "Actualizar" : "Crear"}
                         errorValues={this.state.ErrorValues}
                         modeEdit={this.state.purchase_order_id ? true : false}
-    
+
                         onChangehandleFileOrderFile={this.handleFileOrderFile}
                         cost_center_id={this.props.cost_center.id}
                     />
@@ -284,108 +284,108 @@ class OrdenesDeCompraTable extends Component {
                         className="table table-hover table-bordered"
                         id="sampleTable"
                     >
-                    <thead>
-                        <tr className="tr-title">
-                            <th style={{width: "10px"}}>Acciones</th>
-                            <th style={{width: "150px"}}>Cliente</th>
-                            <th style={{width: "150px"}}>Fecha de Orden</th>
-                            <th style={{width: "150px"}}>Numero</th>
-                            <th style={{width: "150px"}}>Valor</th>
-                            <th style={{width: "450px"}}>Facturas</th>
-                            <th style={{width: "200px"}}>Total Facturas</th>
-                            <th style={{width: "300px"}}>Descripción</th>
-                            <th style={{width: "250px"}}>Estado Centro de Costo</th>
-                            <th style={{width: "120px"}}>Archivo</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr className="tr-title">
+                                <th style={{ width: "10px" }}>Acciones</th>
+                                <th style={{ width: "150px" }}>Cliente</th>
+                                <th style={{ width: "150px" }}>Fecha de Orden</th>
+                                <th style={{ width: "150px" }}>Numero</th>
+                                <th style={{ width: "150px" }}>Valor</th>
+                                <th style={{ width: "450px" }}>Facturas</th>
+                                <th style={{ width: "200px" }}>Total Facturas</th>
+                                <th style={{ width: "300px" }}>Descripción</th>
+                                <th style={{ width: "250px" }}>Estado Centro de Costo</th>
+                                <th style={{ width: "120px" }}>Archivo</th>
+                            </tr>
+                        </thead>
 
-                    <tbody>
-                        {this.state.data.length >= 1 ? (
-                            this.state.data.map(sales_order => (
-                                <tr key={sales_order.id}>
-                                    <td className="text-left">
-                                        {true && (
-                                            <UncontrolledDropdown className='btn-group'>
-                                                <DropdownToggle className='btn-shadow btn btn-info'>
-                                                    <i className="fas fa-bars"></i>
-                                                </DropdownToggle>
-                                                <DropdownMenu className="dropdown-menu dropdown-menu-right">
-                                                    {true && (
-                                                        <DropdownItem
-                                                            className="dropdown-item"
-                                                            onClick={() => this.toogleIndexInvoice("new", sales_order)}
-                                                        >
-                                                            Facturas
-                                                        </DropdownItem>
-                                                    )}
+                        <tbody>
+                            {this.state.data.length >= 1 ? (
+                                this.state.data.map(sales_order => (
+                                    <tr key={sales_order.id}>
+                                        <td className="text-left">
+                                            {true && (
+                                                <UncontrolledDropdown className='btn-group'>
+                                                    <DropdownToggle className='btn-shadow btn btn-info'>
+                                                        <i className="fas fa-bars"></i>
+                                                    </DropdownToggle>
+                                                    <DropdownMenu className="dropdown-menu dropdown-menu-right">
+                                                        {true && (
+                                                            <DropdownItem
+                                                                className="dropdown-item"
+                                                                onClick={() => this.toogleIndexInvoice("new", sales_order)}
+                                                            >
+                                                                Facturas
+                                                            </DropdownItem>
+                                                        )}
 
-                                                    {true && (
-                                                        <DropdownItem
-                                                            className="dropdown-item"
-                                                            onClick={() => this.edit(sales_order)}
-                                                        >
-                                                            Editar
-                                                        </DropdownItem>
-                                                    )}
+                                                        {true && (
+                                                            <DropdownItem
+                                                                className="dropdown-item"
+                                                                onClick={() => this.edit(sales_order)}
+                                                            >
+                                                                Editar
+                                                            </DropdownItem>
+                                                        )}
 
-                                                    {true && (
-                                                        <DropdownItem
-                                                            onClick={() => this.delete(sales_order.id)}
-                                                            className="dropdown-item"
-                                                        >
-                                                            Eliminar
-                                                        </DropdownItem>
-                                                    )}
-                                                </DropdownMenu>
-                                            </UncontrolledDropdown>
-                                        )}
-                                    </td>
-                                    
-                                    <td>{sales_order.cost_center.customer.name}</td>
-                                    <td><p>{sales_order.created_date}</p></td>
-                                    <td><p>{sales_order.order_number}</p></td>
-                                    <td><NumberFormat value={sales_order.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                                    <td>  
-                                        <table style={{tableLayout: "fixed", width:"100%"}}>
-                                            <tr>
-                                                <td style={{padding:"0px", textAlign:"center"}}>Numero</td>
-                                                <td style={{padding:"0px", textAlign:"center"}}>Fecha</td>
-                                                <td style={{padding:"0px", textAlign:"center"}}>Valor</td>
-                                            </tr>
-                                            {sales_order.customer_invoices.map(customer => (
+                                                        {true && (
+                                                            <DropdownItem
+                                                                onClick={() => this.delete(sales_order.id)}
+                                                                className="dropdown-item"
+                                                            >
+                                                                Eliminar
+                                                            </DropdownItem>
+                                                        )}
+                                                    </DropdownMenu>
+                                                </UncontrolledDropdown>
+                                            )}
+                                        </td>
+
+                                        <td>{sales_order.cost_center.customer.name}</td>
+                                        <td><p>{sales_order.created_date}</p></td>
+                                        <td><p>{sales_order.order_number}</p></td>
+                                        <td><NumberFormat value={sales_order.order_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                        <td>
+                                            <table style={{ tableLayout: "fixed", width: "100%" }}>
                                                 <tr>
-                                                    <td style={{padding:"5px", textAlign:"center"}}>{customer.number_invoice}</td>
-                                                    <td style={{padding:"5px", textAlign:"center"}}>{this.date_short(customer.invoice_date)}</td>
-                                                    <td style={{padding:"5px", textAlign:"center"}} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                                                    <td style={{ padding: "0px", textAlign: "center" }}>Numero</td>
+                                                    <td style={{ padding: "0px", textAlign: "center" }}>Fecha</td>
+                                                    <td style={{ padding: "0px", textAlign: "center" }}>Valor</td>
                                                 </tr>
-                                            ))}
-                                        </table>
-                                    </td>
-                                    <td><NumberFormat value={sales_order.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
-                                    <th>{sales_order.description}</th>
-                                    <th>{sales_order.cost_center.invoiced_state}</th>
+                                                {sales_order.customer_invoices.map(customer => (
+                                                    <tr>
+                                                        <td style={{ padding: "5px", textAlign: "center" }}>{customer.number_invoice}</td>
+                                                        <td style={{ padding: "5px", textAlign: "center" }}>{this.date_short(customer.invoice_date)}</td>
+                                                        <td style={{ padding: "5px", textAlign: "center" }} ><NumberFormat value={customer.invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                                    </tr>
+                                                ))}
+                                            </table>
+                                        </td>
+                                        <td><NumberFormat value={sales_order.sum_invoices} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
+                                        <th>{sales_order.description}</th>
+                                        <th>{sales_order.cost_center.invoiced_state}</th>
 
-                                    <td>
-                                        {sales_order.order_file && sales_order.order_file.url != null ? (
-                                            <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={sales_order.order_file.url} data-original-title="Descargar Archivo" >
-                                                <i className="fas fa-download"></i>
-                                            </a>
-                                        ) : (
-                                            <i className="fas fa-times color-false"></i>
-                                        )}
-                                    </td>
+                                        <td>
+                                            {sales_order.order_file && sales_order.order_file.url != null ? (
+                                                <a data-toggle="tooltip" data-placement="bottom" title="" target="_blank" className="btn" href={sales_order.order_file.url} data-original-title="Descargar Archivo" >
+                                                    <i className="fas fa-download"></i>
+                                                </a>
+                                            ) : (
+                                                <i className="fas fa-times color-false"></i>
+                                            )}
+                                        </td>
 
-                                </tr>
-                            ))
-                        ) : (
-                            <td colSpan="10" className="text-center">
-                                <div className="text-center mt-1 mb-1">
-                                    <h4>Ordenes de Compra</h4>
-                                </div>
-                            </td>
-                        )}
-                        
-                    </tbody>
+                                    </tr>
+                                ))
+                            ) : (
+                                <td colSpan="10" className="text-center">
+                                    <div className="text-center mt-1 mb-1">
+                                        <h4>Ordenes de Compra</h4>
+                                    </div>
+                                </td>
+                            )}
+
+                        </tbody>
 
                     </table>
                 </div>

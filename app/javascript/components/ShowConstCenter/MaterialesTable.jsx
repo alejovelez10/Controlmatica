@@ -38,7 +38,7 @@ class MaterialesTable extends Component {
             this.setState({
                 data: this.props.dataMateriales
             })
-        }, 1000)
+        }, 2000)
     }
 
     HandleChange = (e) => {

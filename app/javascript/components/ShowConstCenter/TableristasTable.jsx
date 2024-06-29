@@ -48,7 +48,7 @@ class TableristasTable extends Component {
             this.setState({
                 data: this.props.dataContractors
             })
-        }, 1000)
+        }, 2000)
     }
 
     HandleChange = (e) => {
@@ -84,10 +84,10 @@ class TableristasTable extends Component {
                 if (register.id === item.id) {
                     return {
                         ...item,
-                        sales_date: register.sales_date, 
-                        hours: register.hours, 
-                        user_execute: register.user_execute, 
-                        description: register.description, 
+                        sales_date: register.sales_date,
+                        hours: register.hours,
+                        user_execute: register.user_execute,
+                        description: register.description,
                     }
                 }
                 return item;
@@ -131,12 +131,12 @@ class TableristasTable extends Component {
                         "Content-Type": "application/json"
                     }
                 })
-                .then(response => response.json())
-                .then(response => {
-                    this.setState({
-                        data: this.state.data.filter((e) => e.id != id) 
-                    })
-                });
+                    .then(response => response.json())
+                    .then(response => {
+                        this.setState({
+                            data: this.state.data.filter((e) => e.id != id)
+                        })
+                    });
             }
         });
     };
@@ -208,28 +208,28 @@ class TableristasTable extends Component {
                         toggle={this.toogle}
                         backdrop={this.state.backdrop}
                         modal={this.state.modal}
-    
+
                         onChangeForm={this.HandleChange}
                         formValues={this.state.form}
                         submit={this.HandleClick}
-    
+
                         titulo={this.state.contractor_id ? "Actualizar tablerista" : "Crear tablerista"}
                         nameSubmit={this.state.contractor_id ? "Actualizar" : "Crear"}
                         errorValues={this.state.ErrorValues}
                         modeEdit={this.state.contractor_id ? true : false}
-    
+
                         /* AUTOCOMPLETE CENTRO DE COSTO */
-    
+
                         centro={this.state.dataCostCenter}
                         onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
                         formAutocompleteCentro={this.state.selectedOptionCentro}
-    
+
                         /* AUTOCOMPLETE USERS */
-    
+
                         users={this.props.users}
                         onChangeAutocompleteUsers={this.handleChangeAutocompleteUsers}
                         formAutocompleteUsers={this.state.selectedOptionUsers}
-    
+
                         isLoading={this.state.isLoading}
                         cost_center_id={this.props.cost_center.id}
                     />
@@ -253,7 +253,7 @@ class TableristasTable extends Component {
                     >
                         <thead>
                             <tr className="tr-title">
-                                <th style={{ width: "1%" }}>Acciones</th>    
+                                <th style={{ width: "1%" }}>Acciones</th>
                                 <th style={{ width: "10%" }}>Fecha</th>
                                 <th style={{ width: "7%" }}>Horas</th>
                                 <th style={{ width: "16%" }}>Trabajo realizado por</th>
@@ -293,7 +293,7 @@ class TableristasTable extends Component {
                                                 </UncontrolledDropdown>
                                             )}
                                         </td>
-                                        <td>{accion.sales_date}</td>                     
+                                        <td>{accion.sales_date}</td>
                                         <td>{accion.hours}</td>
                                         <td>{accion.user_execute ? accion.user_execute.names : ""}</td>
                                         <td>{accion.description}</td>
@@ -306,7 +306,7 @@ class TableristasTable extends Component {
                                     </div>
                                 </td>
                             )}
-                            
+
                         </tbody>
                     </table>
                 </div>

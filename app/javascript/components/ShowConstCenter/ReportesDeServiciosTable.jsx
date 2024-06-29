@@ -70,12 +70,12 @@ class ReportesDeServiciosTable extends Component {
             this.setState({
                 data: this.props.dataReports
             })
-        }, 1000)
+        }, 2000)
     }
 
     configSelect = () => {
         let array = [];
-        
+
         this.props.users.map((item) => (
             array.push({ names: item.label, id: item.value })
         ))
@@ -221,12 +221,12 @@ class ReportesDeServiciosTable extends Component {
                         "Content-Type": "application/json"
                     }
                 })
-                .then(response => response.json())
-                .then(response => {
-                    this.setState({
-                        data: this.state.data.filter((e) => e.id != id) 
-                    })
-                });
+                    .then(response => response.json())
+                    .then(response => {
+                        this.setState({
+                            data: this.state.data.filter((e) => e.id != id)
+                        })
+                    });
             }
         });
     };
@@ -287,12 +287,12 @@ class ReportesDeServiciosTable extends Component {
                 displacement_hours: report.displacement_hours,
                 value_displacement_hours: report.value_displacement_hours,
             },
-      
+
             selectedOption: {
                 customer_id: report.customer_id,
                 label: `${report.customer.name}`
             },
-      
+
             selectedOptionContact: {
                 contact_id: report.contact_id,
                 label: `${report.contact.name}`
@@ -311,17 +311,17 @@ class ReportesDeServiciosTable extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-    
-            data.map((item) => (
-                array.push({ label: item.name, value: item.id })
-            ))
-      
-            this.setState({
-                dataContact: array
-            })
-        });
+            .then(response => response.json())
+            .then(data => {
+
+                data.map((item) => (
+                    array.push({ label: item.name, value: item.id })
+                ))
+
+                this.setState({
+                    dataContact: array
+                })
+            });
 
         fetch(`/customer_user/${selectedOption.value}`, {
             method: 'GET', // or 'PUT'
@@ -330,25 +330,25 @@ class ReportesDeServiciosTable extends Component {
                 "Content-Type": "application/json"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-    
-            data.map((item) => (
-                arrayCentro.push({ label: `${item.code} - (${item.description})`, value: item.id })
-            ))
-      
-            this.setState({
-                dataCostCenter: arrayCentro
-            })
-        });
-    
+            .then(response => response.json())
+            .then(data => {
+
+                data.map((item) => (
+                    arrayCentro.push({ label: `${item.code} - (${item.description})`, value: item.id })
+                ))
+
+                this.setState({
+                    dataCostCenter: arrayCentro
+                })
+            });
+
         this.setState({
             selectedOption,
             form: {
                 ...this.state.form,
                 customer_id: selectedOption.value
             },
-        
+
             formContact: {
                 ...this.state.formContact,
                 customer_id: selectedOption.value
@@ -384,7 +384,7 @@ class ReportesDeServiciosTable extends Component {
                         toggle={this.toogle}
                         backdrop={this.state.backdrop}
                         modal={this.state.modal}
-            
+
                         onChangeForm={this.HandleChange}
                         formValues={this.state.form}
                         submit={this.HandleClick}
@@ -393,33 +393,33 @@ class ReportesDeServiciosTable extends Component {
                         nameSubmit={this.state.report_id ? "Actualizar" : "Crear"}
                         errorValues={this.state.ErrorValues}
                         users={this.state.users}
-            
+
                         /* CONTACT FORM */
-            
+
                         formContactValues={this.state.formContact}
                         FormSubmitContact={this.HandleClickContact}
                         create_state={this.state.state_create}
                         errorValuesContact={this.state.ErrorValuesContact}
                         onChangeFormContact={this.handleChangeContact}
-            
+
                         /* AUTOCOMPLETE CLIENTE */
-            
+
                         clientes={this.props.clients}
                         onChangeAutocomplete={this.handleChangeAutocomplete}
                         formAutocomplete={this.state.selectedOption}
-            
+
                         /* AUTOCOMPLETE CONTACTO */
-            
+
                         contacto={this.state.dataContact}
                         onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
                         formAutocompleteContact={this.state.selectedOptionContact}
-            
+
                         /* AUTOCOMPLETE CENTRO DE COSTO */
-            
+
                         centro={this.state.dataCostCenter}
                         onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
                         formAutocompleteCentro={this.state.selectedOptionCentro}
-            
+
                         rol={this.props.rol}
                         estados={estados}
                         isLoading={this.state.isLoading}
@@ -440,21 +440,21 @@ class ReportesDeServiciosTable extends Component {
 
                 <div className="content-table">
                     <table className="table table-hover table-bordered table-width" id="sampleTable">
-                    <thead>
-                        <tr className="tr-title">
-                            <th style={{width: "1%"}}>Acciones</th>
-                            <th style={{width: "6%"}}>Codigo</th>
-                            <th style={{width: "6%"}}>Cliente</th>
-                            <th style={{width: "7%"}}>Fecha de Ejecucion</th>
-                            <th style={{width: "8%"}}>Responsable Ejecucion</th>
-                            <th style={{width: "6%"}}>Horas Laboradas</th>
-                            <th>Descripcion del Trabajo</th>
-                            <th style={{width: "7%"}}>Valor de los Viaticos</th>
-                            <th style={{width: "8%"}}>Descripcion de Viaticos</th>
-                            <th style={{width: "6%"}}>Valor del Reporte</th>
-                            <th style={{width: "5%"}}>Estado</th>
-                        </tr>
-                    </thead>
+                        <thead>
+                            <tr className="tr-title">
+                                <th style={{ width: "1%" }}>Acciones</th>
+                                <th style={{ width: "6%" }}>Codigo</th>
+                                <th style={{ width: "6%" }}>Cliente</th>
+                                <th style={{ width: "7%" }}>Fecha de Ejecucion</th>
+                                <th style={{ width: "8%" }}>Responsable Ejecucion</th>
+                                <th style={{ width: "6%" }}>Horas Laboradas</th>
+                                <th>Descripcion del Trabajo</th>
+                                <th style={{ width: "7%" }}>Valor de los Viaticos</th>
+                                <th style={{ width: "8%" }}>Descripcion de Viaticos</th>
+                                <th style={{ width: "6%" }}>Valor del Reporte</th>
+                                <th style={{ width: "5%" }}>Estado</th>
+                            </tr>
+                        </thead>
 
                         <tbody>
                             {this.state.data.length >= 1 ? (
@@ -493,12 +493,12 @@ class ReportesDeServiciosTable extends Component {
                                             {accion.cost_center.customer.name}
                                         </td>
                                         <td>{accion.report_date}</td>
-                                        <td>{accion.report_execute != undefined ? accion.report_execute.names : "" }</td>
+                                        <td>{accion.report_execute != undefined ? accion.report_execute.names : ""}</td>
                                         <td>{accion.working_time}</td>
                                         <td>{accion.work_description}</td>
-                                        <td><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                                        <td><NumberFormat value={accion.viatic_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                         <td>{accion.viatic_description}</td>
-                                        <td><NumberFormat value={accion.total_value} displayType={"text"} thousandSeparator={true} prefix={"$"}/></td>
+                                        <td><NumberFormat value={accion.total_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
                                         <td>{accion.report_sate ? "Aprobado" : "Sin Aprobar"}</td>
                                     </tr>
                                 ))
