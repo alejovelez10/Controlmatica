@@ -270,7 +270,7 @@ class OrdenesDeCompraTable extends Component {
 
                 <div className="content-table">
                     <div className="col-md-12 mb-3 text-right pr-0">
-                        {!this.state.modal && (
+                        {!this.state.modal && this.props.estados.cost_center_edit && (
                             <button
                                 className="btn-shadow btn btn-secondary"
                                 onClick={() => this.toogle("new")}
@@ -304,7 +304,7 @@ class OrdenesDeCompraTable extends Component {
                                 this.state.data.map(sales_order => (
                                     <tr key={sales_order.id}>
                                         <td className="text-left">
-                                            {true && (
+                                            {this.props.estados.cost_center_edit && (
                                                 <UncontrolledDropdown className='btn-group'>
                                                     <DropdownToggle className='btn-shadow btn btn-info'>
                                                         <i className="fas fa-bars"></i>

@@ -146,6 +146,7 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1.json
   def show
     cost_centers = ModuleControl.find_by_name("Centro de Costos")
+    cost_center_edit = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar").exists?
     update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
     show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
 
@@ -166,6 +167,7 @@ class CostCentersController < ApplicationController
       delete_materials: (current_user.rol.name == "Administrador" ? true : delete_materials),
       update_state_materials: (current_user.rol.name == "Administrador" ? true : update_state_materials),
       download_file_materials: (current_user.rol.name == "Administrador" ? true : download_file_materials),
+      cost_center_edit: (current_user.rol.name == "Administrador" ? true : cost_center_edit),
     }
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)

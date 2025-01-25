@@ -316,6 +316,14 @@ module ApplicationHelper
     end
   end
 
+  def authorization_sales_orders
+    sales_orders = ModuleControl.find_by_name("Ordenes de Compra")
+    if current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Ingreso al modulo").exists?
+      true
+    end
+  end
+
+
   def authorization_report
     report = ModuleControl.find_by_name("Reportes de servicios")
     if current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ingreso al modulo").exists?
