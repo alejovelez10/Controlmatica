@@ -1130,12 +1130,13 @@ class Show extends React.Component {
 
                                         />
                                     )}
-
-                                    <div className="col-md-12 text-center mt-5">
-                                        <button onClick={() => this.edit()} className="btn btn-secondary">
-                                            Editar información
-                                        </button>
-                                    </div>
+                                    {this.props.estados.cost_center_edit && (
+                                        <div className="col-md-12 text-center mt-5">
+                                            <button onClick={() => this.edit()} className="btn btn-secondary">
+                                                Editar información
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                             </CardBody>
