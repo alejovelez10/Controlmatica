@@ -219,6 +219,7 @@ const TabContentShow = (props) => {
                 cost_center={props.cost_center}
                 dataExpenses={props.dataExpenses}
                 users={props.users}
+                estados={props.estados}
                 report_expense_options={props.report_expense_options}
               />
             </TabPane>
