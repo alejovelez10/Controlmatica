@@ -10,14 +10,14 @@ class HourProjectMonth extends Component {
             data: [],
             form: {
                 year: new Date().getFullYear(),
-                month:  new Date().getMonth() + 1
+                month: new Date().getMonth() + 1
             }
         }
     }
 
 
     componentWillReceiveProps(nextProps) {
-        this.loadData(new Date().getFullYear(), new Date().getMonth() + 1,nextProps.user);
+        this.loadData(new Date().getFullYear(), new Date().getMonth() + 1, nextProps.user);
     }
 
 
@@ -50,18 +50,18 @@ class HourProjectMonth extends Component {
                 [e.target.name]: e.target.value
             }
         });
-       
+
     }
 
-    filter = () =>{
-        this.loadData(this.state.form.year, this.state.form.month ,this.props.user);
+    filter = () => {
+        this.loadData(this.state.form.year, this.state.form.month, this.props.user);
     }
 
     render() {
         return (
             <div className='row'>
                 <div className='col-md-6'>
-                    <div className='p-1' style={{display:"flex", gap:"10px"}}>
+                    <div className='p-1' style={{ display: "flex", gap: "10px" }}>
                         <select
                             name="year"
                             className={`form form-control`}
@@ -70,6 +70,8 @@ class HourProjectMonth extends Component {
                             style={{ width: "200px" }}
                         >
                             <option value="">Seleccione año</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
                             <option value="2023">2023</option>
                             <option value="2022">2022</option>
                             <option value="2021">2021</option>
@@ -103,14 +105,14 @@ class HourProjectMonth extends Component {
 
 
                         </select>
-                         <button className='btn btn-primary' onClick={()=>this.filter()}>Filtrar </button>
+                        <button className='btn btn-primary' onClick={() => this.filter()}>Filtrar </button>
                     </div>
                     <hr />
                     <BarReporterHours data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES"} leyend={false} height={this.props.height} />
                 </div>
-                <div className='col-md-6' style={{marginTop: "45px"}}>
-                <hr />
-                    <DonutDaysReport data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES %"} height={this.props.height}/>
+                <div className='col-md-6' style={{ marginTop: "45px" }}>
+                    <hr />
+                    <DonutDaysReport data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES %"} height={this.props.height} />
                 </div>
 
             </div>

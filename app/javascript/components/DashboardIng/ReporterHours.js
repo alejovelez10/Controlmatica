@@ -17,7 +17,7 @@ class ReporterHours extends Component {
 
 
     componentWillReceiveProps(nextProps) {
-        this.loadData(new Date().getFullYear(),nextProps.user);
+        this.loadData(new Date().getFullYear(), nextProps.user);
     }
 
     componentDidMount() {
@@ -49,7 +49,7 @@ class ReporterHours extends Component {
                 [e.target.name]: e.target.value
             }
         });
-        this.loadData(e.target.value,this.props.user);
+        this.loadData(e.target.value, this.props.user);
     }
 
 
@@ -65,6 +65,8 @@ class ReporterHours extends Component {
                         style={{ width: "200px" }}
                     >
                         <option value="">Seleccione año</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
                         <option value="2023">2023</option>
                         <option value="2022">2022</option>
                         <option value="2021">2021</option>
