@@ -3,7 +3,7 @@ import ItemNotification from "../components/Notifications/ItemNotification"
 import WebpackerReact from 'webpacker-react';
 
 class Notifications extends React.Component {
-    constructor(props){
+    constructor(props) {
         super(props)
         this.state = {
             currentTab: "pending"
@@ -34,7 +34,7 @@ class Notifications extends React.Component {
                     <div className="card-body">
                         <ul className="nav nav-tabs mb-3" id="myTab" role="tablist">
                             <li className="nav-item" onClick={() => this.handleChangeTab("pending")}>
-                                <a className={`nav-link ${this.state.currentTab == "pending" ? "active" : null}`}>Pendientes de revision</a>
+                                <a className={`nav-link ${this.state.currentTab == "pending" ? "active" : null}`}>Pendientes de revisión</a>
                             </li>
 
                             <li className="nav-item" onClick={() => this.handleChangeTab("revised")}>
