@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "2.7.2"
+ruby "3.2.1"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 6.1', '>= 6.1.4.6'
@@ -47,7 +47,10 @@ gem "chosen-rails"
 #documentar modelos
 gem "annotate"
 #Guardar en amazon
-gem "fog", "~> 1.38"
+# gem "fog", "~> 1.38"
+gem "fog-aws"  # If you're using AWS
+# Or specify an older version of fog that's compatible with Ruby 3.2.1
+# gem "fog", "~> 1.37.0"
 gem "figaro"
 #Sub Formularios
 gem "nested_form", :git => "https://github.com/ryanb/nested_form.git"
@@ -71,7 +74,7 @@ gem "jquery-rails"
 gem "ckeditor_rails", "~> 4.5", ">= 4.5.10"
 #bootstrap
 gem "bootstrap", "~> 4.3.1"
-
+gem "mini_racer", "~> 0.6.0"
 gem "spreadsheet", "~> 1.2", ">= 1.2.5"
 
 # Use CoffeeScript for .coffee assets and views
@@ -102,7 +105,6 @@ gem "bootsnap", ">= 1.1.0", require: false
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem "byebug", platforms: [:mri, :mingw, :x64_mingw]
-  gem "sqlite3", "~> 1.3.6  "
 end
 
 group :development do
