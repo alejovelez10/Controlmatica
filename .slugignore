@@ -3,7 +3,7 @@
 test/
 spec/
 features/ 
-
+node_modules/
 # Additional exclusions to reduce slug size
 *.log
 tmp/
