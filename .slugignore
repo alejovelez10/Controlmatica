@@ -3,3 +3,4 @@
 test/
 spec/
 features/ 
+node_modules/
