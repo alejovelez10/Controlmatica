@@ -528,6 +528,8 @@ GEM
     ssrf_filter (1.2.0)
     stringio (3.1.7)
     sweet-alert2-rails (0.1.0)
+    terser (1.2.5)
+      execjs (>= 0.3.0, < 3)
     thor (1.3.2)
     tilt (2.6.0)
     timeout (0.4.3)
@@ -539,8 +541,6 @@ GEM
     turbolinks-source (5.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
-    uglifier (4.2.1)
-      execjs (>= 0.3.0, < 3)
     unicode-display_width (3.1.4)
       unicode-emoji (~> 4.0, >= 4.0.4)
     unicode-emoji (4.0.4)
@@ -633,10 +633,10 @@ DEPENDENCIES
   spring
   spring-watcher-listen (~> 2.0.0)
   sweet-alert2-rails
+  terser
   toastr_rails
   turbolinks (~> 5)
   tzinfo-data
-  uglifier (>= 1.3.0)
   web-console (>= 3.3.0)
   webpacker (~> 5.0)
   webpacker-react (~> 0.3.2)

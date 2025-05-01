@@ -12,7 +12,8 @@ gem "puma", "~> 3.11"
 # Use SCSS for stylesheets
 gem "sass-rails", "~> 6.0"
 # Use Uglifier as compressor for JavaScript assets
-gem "uglifier", ">= 1.3.0"
+# gem "uglifier", ">= 1.3.0"
+gem 'terser'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
 gem "webpacker", "~> 5.0"
 gem "webpacker-react", "~> 0.3.2"
