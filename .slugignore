@@ -4,3 +4,24 @@ test/
 spec/
 features/ 
 node_modules/
+
+# Additional exclusions to reduce slug size
+*.log
+tmp/
+log/
+coverage/
+.git/
+.github/
+.env*
+.DS_Store
+README.md
+doc/
+docs/
+*.md
+*.sql
+*.sqlite3
+public/assets/
+public/system/
+public/uploads/
+vendor/bundle/
+.bundle/
