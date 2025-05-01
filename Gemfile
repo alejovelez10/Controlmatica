@@ -12,7 +12,7 @@ gem "puma", "~> 3.11"
 # Use SCSS for stylesheets
 gem "sass-rails", "~> 6.0"
 # Use Uglifier as compressor for JavaScript assets
-# gem "uglifier", ">= 1.3.0"
+# gem "uglifier", ">= 1.3.0
 gem 'terser'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
 gem "webpacker", "~> 5.0"
@@ -68,8 +68,8 @@ gem 'prawn-rails'
 gem 'prawn-table'
 
 #jquery
-gem "jquery-ui-rails"
-gem "jquery-validation-rails"
+# gem "jquery-ui-rails"  # Remove
+# gem "jquery-validation-rails"  # Remove unless specifically needed
 gem "jquery-rails"
 #Editor texto
 gem "ckeditor_rails", "~> 4.5", ">= 4.5.10"
@@ -79,9 +79,9 @@ gem "mini_racer", "~> 0.6.0"
 gem "spreadsheet", "~> 1.2", ">= 1.2.5"
 
 # Use CoffeeScript for .coffee assets and views
-gem "coffee-rails", "~> 4.2"
+# gem "coffee-rails", "~> 4.2"  # CoffeeScript is largely deprecated
 # Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks
-gem "turbolinks", "~> 5"
+gem "turbolinks", "~> 5"  # Uncomment this line if you want to use turbolinks
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem "jbuilder", "~> 2.5"
 # Use Redis adapter to run Action Cable in production
@@ -111,7 +111,7 @@ end
 group :development do
   # Access an interactive console on exception pages or by calling 'console' anywhere in the code.
   gem "web-console", ">= 3.3.0"
-  gem "listen", ">= 3.0.5", "< 3.2"
+  gem "listen", "~> 3.5"
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem "spring"
   gem "solargraph"

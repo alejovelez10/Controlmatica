@@ -1,0 +1,5 @@
+*.pdf
+*.psd
+test/
+spec/
+features/ 
