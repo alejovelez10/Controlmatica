@@ -566,6 +566,7 @@ DEPENDENCIES
   jbuilder (~> 2.5)
   jquery-rails
   listen (~> 3.5)
+  logger (~> 1.5)
   mini_magick (~> 4.8)
   mini_racer (~> 0.6.0)
   nested_form!
