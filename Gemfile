@@ -5,7 +5,6 @@ ruby '3.1.2'
 gem 'rails', '~> 6.1.4.7'
 gem 'ffi', '< 1.17'
 gem 'nokogiri', '< 1.18'
-gem 'logger', '~> 1.5', require: false
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 # Use sqlite3 as the database for Active Record
 

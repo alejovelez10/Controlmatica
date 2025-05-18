@@ -350,7 +350,7 @@ GEM
     public_suffix (6.0.2)
     puma (3.12.6)
     racc (1.8.1)
-    rack (2.2.14)
+    rack (2.2.15)
     rack-cors (2.0.2)
       rack (>= 2.0.0)
     rack-proxy (0.7.7)
@@ -566,7 +566,6 @@ DEPENDENCIES
   jbuilder (~> 2.5)
   jquery-rails
   listen (~> 3.5)
-  logger (~> 1.5)
   mini_magick (~> 4.8)
   mini_racer (~> 0.6.0)
   nested_form!
