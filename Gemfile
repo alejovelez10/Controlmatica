@@ -26,6 +26,7 @@ gem 'omniauth-oauth2'
 gem 'omniauth-rails_csrf_protection'
 # REST calls to Microsoft Graph
 gem 'httparty'
+gem 'nokogiri', '< 1.18'
 # Session storage in database
 gem 'activerecord-session_store'
 gem 'net-imap', require: false
