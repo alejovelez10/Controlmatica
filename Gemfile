@@ -1,10 +1,12 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.1.2"
+ruby '3.1.2'
+gem 'rails', '~> 6.1.4.7'
+gem 'ffi', '< 1.17'
+gem 'nokogiri', '< 1.18'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 6.1.4.6'
 # Use sqlite3 as the database for Active Record
 
 # Use Puma as the app server
@@ -21,13 +23,11 @@ gem "webpacker-react", "~> 0.3.2"
 # gem 'mini_racer', platforms: :ruby
 gem 'webrick', '~> 1.7'
 # OAuth
-gem 'ffi', '< 1.17'
 gem 'omniauth-oauth2'
 # OmniAuth CSRF protection
 gem 'omniauth-rails_csrf_protection'
 # REST calls to Microsoft Graph
 gem 'httparty'
-gem 'nokogiri', '< 1.18'
 # Session storage in database
 gem 'activerecord-session_store'
 gem 'net-imap', require: false
