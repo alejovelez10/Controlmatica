@@ -1,10 +1,10 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.2.1"
+ruby "3.1.2"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '~> 7.1.0'
+gem 'rails', '~> 6.1', '>= 6.1.4.6'
 # Use sqlite3 as the database for Active Record
 
 # Use Puma as the app server
@@ -19,7 +19,7 @@ gem "webpacker", "~> 5.0"
 gem "webpacker-react", "~> 0.3.2"
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'mini_racer', platforms: :ruby
-
+gem 'webrick', '~> 1.7'
 # OAuth
 gem 'omniauth-oauth2'
 # OmniAuth CSRF protection
@@ -28,7 +28,10 @@ gem 'omniauth-rails_csrf_protection'
 gem 'httparty'
 # Session storage in database
 gem 'activerecord-session_store'
-
+gem 'net-imap', require: false
+gem 'net-pop', require: false
+gem 'net-smtp', require: false
+gem 'date'    
 # control de usuario
 gem "devise"
 # Use ActiveStorage variant
