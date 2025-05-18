@@ -2,7 +2,7 @@ source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '3.1.2'
-gem 'rails', '~> 6.1.4.7'
+gem 'rails', '~> 6.1.7.6'
 gem 'ffi', '< 1.17'
 gem 'nokogiri', '< 1.18'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
@@ -105,7 +105,12 @@ gem 'axlsx_rails'
 # gem 'capistrano-rails', group: :development
 
 # Reduces boot times through caching; required in config/boot.rb
-gem "bootsnap", ">= 1.1.0", require: false
+gem "bootsnap", "~> 1.16.0", require: false
+
+# Agregar estas gemas explícitamente para compatibilidad
+gem 'logger', '~> 1.5'
+gem 'activesupport', '~> 6.1.7.6'
+gem 'concurrent-ruby', '~> 1.2.2'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
