@@ -8,11 +8,11 @@
     "@fullcalendar/react": "^5.11.3",
     "@fullcalendar/timegrid": "^5.11.3",
     "@rails/webpacker": "3.5",
-    "apexcharts": "^4.7.0",
+    "apexcharts": "^3.35.0",
     "babel-preset-react": "^6.24.1",
     "prop-types": "^15.6.2",
     "react": "^16.14.0",
-    "react-apexcharts": "^1.4.0",
+    "react-apexcharts": "1.4.0",
     "react-color": "^2.19.3",
     "react-dom": "^16.14.0",
     "react-dropzone": "^11.3.4",
@@ -24,14 +24,16 @@
     "reactstrap": "^8.9.0",
     "sass": "^1.89.0",
     "sweetalert2-react": "^0.8.3",
-    "webpacker-react": "^0.3.2",
-    "node-sass": "6.0.1"
+    "webpacker-react": "^0.3.2"
   },
   "devDependencies": {
     "webpack-dev-server": "2.11.2"
   },
   "version": "v1.19.0",
   "engines": {
-    "node": "16.x"
+    "node": ">=16.x"
+  },
+  "overrides": {
+    "node-sass": "npm:sass@^1.89.0"
   }
 }

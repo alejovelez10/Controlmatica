@@ -3,12 +3,21 @@ namespace :create_config do
     task create: :environment do
 
         ModuleControl.destroy_all
-        
-        user = User.last
+
+        # Crear usuario administrador si no existe
+        user = User.find_or_create_by(email: "alejovelez10@gmail.com") do |u|
+            u.names = "Alejandro"
+            u.last_names = "Velez"
+            u.password = "123456789"
+            u.password_confirmation = "123456789"
+        end
+
+        # Establecer usuario actual para evitar error en callback
+        User.current = user
 
         rol = Rol.create(name: "Administrador")
 
-        User.all.update(rol_id: rol.id)
+        User.all.update_all(rol_id: rol.id)
         
         providers = ModuleControl.create(name: "Proveedores", user_id: user.id)
 
