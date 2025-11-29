@@ -31,7 +31,8 @@
   },
   "version": "v1.19.0",
   "engines": {
-    "node": ">=16.x"
+    "node": "16.x",
+    "npm": "8.x"
   },
   "overrides": {
     "node-sass": "npm:sass@^1.89.0"
