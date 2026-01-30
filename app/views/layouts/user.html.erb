@@ -238,11 +238,11 @@
       <% end %>
 
      <%#  authorization_report_expenses || authorization_expense_ratios  %>
-      <% if authorization_report_expenses || authorization_expense_ratios  %>
+      <% if authorization_report_expenses || authorization_expense_ratios || current_user.rol.name == "Administrador"  %>
         <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Control de gastos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
           <ul class="treeview-menu">
 
-              <% if authorization_report_expenses %>
+              <% if authorization_report_expenses || current_user.rol.name == "Administrador" %>
                 <li>
                   <%= link_to report_expenses_path, class: "app-menu__item" do %>
                     <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Gastos</span>
@@ -252,7 +252,7 @@
 
 
 
-              <% if authorization_expense_ratios %>
+              <% if authorization_expense_ratios || current_user.rol.name == "Administrador" %>
                 <li>
                   <%= link_to expense_ratios_path, class: "app-menu__item" do %>
                     <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Relacion de gastos</span>

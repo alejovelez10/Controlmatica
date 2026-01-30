@@ -85,36 +85,33 @@ class ReportExpense < ApplicationRecord
     (2..spreadsheet.last_row).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
 
-      report_expense = find_by(id: row["id"]) || new
-      report_expense.attributes = row.to_hash
-
-      user_invoice = User.find_by_names(row["user_invoice_id"])
-   
-
-
       begin
+        report_expense = find_by(id: row["id"]) || new
+
+        user_invoice = User.find_by_names(row["user_invoice_id"].to_s.strip)
+        cost_center = CostCenter.find_by_code(row["cost_center_id"].to_s.strip)
+        type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"].to_s.strip)
+        payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"].to_s.strip)
+
         report_expense.invoice_date = row["invoice_date"]
+        report_expense.invoice_name = row["invoice_name"]
+        report_expense.identification = row["identification"]
+        report_expense.description = row["description"]
+        report_expense.invoice_number = row["invoice_number"]
+        report_expense.invoice_value = row["invoice_value"].to_f
+        report_expense.invoice_tax = row["invoice_tax"].to_f
         report_expense.invoice_total = row["invoice_tax"].to_f + row["invoice_value"].to_f
-        cost_center = CostCenter.find_by_code(row["cost_center_id"])
-        type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"])
-        payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"])
 
-        value_user_invoice = (user_invoice.present? ? user_invoice.id : "")
-        value_cost_center = (cost_center.present? ? cost_center.id : "")
-        value_type_identification = (type_identification.present? ? type_identification.id : "")
-        value_payment_type = (payment_type.present? ? payment_type.id : "")
-
-        report_expense.user_id = user_invoice.id
-
-        report_expense.user_invoice_id = user_invoice.id
-        report_expense.cost_center_id = value_cost_center
-        report_expense.type_identification_id = value_type_identification
-        report_expense.payment_type_id = value_payment_type
+        report_expense.user_id = user_invoice.present? ? user_invoice.id : nil
+        report_expense.user_invoice_id = user_invoice.present? ? user_invoice.id : nil
+        report_expense.cost_center_id = cost_center.present? ? cost_center.id : nil
+        report_expense.type_identification_id = type_identification.present? ? type_identification.id : nil
+        report_expense.payment_type_id = payment_type.present? ? payment_type.id : nil
 
         report_expense.save!
         success_records << 1
-      rescue
-        puts "error salio"
+      rescue => e
+        puts "Error en fila #{i}: #{e.message}"
         fail_records << i
       end
     end
