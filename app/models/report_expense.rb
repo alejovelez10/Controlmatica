@@ -88,10 +88,21 @@ class ReportExpense < ApplicationRecord
       begin
         report_expense = find_by(id: row["id"]) || new
 
+        puts "=== FILA #{i} ==="
+        puts "  Centro de costo (Excel): '#{row["cost_center_id"]}'"
+        puts "  Responsable (Excel): '#{row["user_invoice_id"]}'"
+        puts "  Tipo (Excel): '#{row["type_identification_id"]}'"
+        puts "  Medio de pago (Excel): '#{row["payment_type_id"]}'"
+
         user_invoice = User.find_by_names(row["user_invoice_id"].to_s.strip)
         cost_center = CostCenter.find_by_code(row["cost_center_id"].to_s.strip)
         type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"].to_s.strip)
         payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"].to_s.strip)
+
+        puts "  Usuario encontrado: #{user_invoice.present? ? "SI (id: #{user_invoice.id})" : "NO"}"
+        puts "  Centro encontrado: #{cost_center.present? ? "SI (id: #{cost_center.id})" : "NO"}"
+        puts "  Tipo encontrado: #{type_identification.present? ? "SI (id: #{type_identification.id}, name: #{type_identification.name})" : "NO"}"
+        puts "  Medio pago encontrado: #{payment_type.present? ? "SI (id: #{payment_type.id}, name: #{payment_type.name})" : "NO"}"
 
         report_expense.invoice_date = row["invoice_date"]
         report_expense.invoice_name = row["invoice_name"]
@@ -109,9 +120,10 @@ class ReportExpense < ApplicationRecord
         report_expense.payment_type_id = payment_type.present? ? payment_type.id : nil
 
         report_expense.save!
+        puts "  GUARDADO OK"
         success_records << 1
       rescue => e
-        puts "Error en fila #{i}: #{e.message}"
+        puts "  ERROR en fila #{i}: #{e.message}"
         fail_records << i
       end
     end
