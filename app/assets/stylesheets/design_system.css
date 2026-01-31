@@ -90,14 +90,16 @@
 }
 
 .cm-btn-outline {
-  background: transparent;
-  color: var(--cm-primary);
-  border: 1px solid var(--cm-primary);
+  background: #fff;
+  color: var(--cm-text-muted);
+  border: 1px solid var(--cm-border);
+  font-weight: 500;
 }
 
 .cm-btn-outline:hover {
-  background: var(--cm-primary);
-  color: #fff;
+  background: var(--cm-bg);
+  color: var(--cm-primary);
+  border-color: var(--cm-primary-light);
 }
 
 .cm-btn-danger {
@@ -394,4 +396,9 @@
   border: none;
   border-top: 1px solid var(--cm-border);
   margin: 16px 0;
+}
+
+/* Override fondo de la app */
+.app-content {
+  background-color: #f5f6fa !important;
 }

@@ -5,3 +5,4 @@ export { default as CmTable } from "./CmTable";
 export { default as CmModal } from "./CmModal";
 export { default as CmAlert } from "./CmAlert";
 export { default as CmBadge } from "./CmBadge";
+export { default as CmDataTable } from "./CmDataTable";
