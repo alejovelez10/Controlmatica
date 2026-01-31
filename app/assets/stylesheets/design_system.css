@@ -1,0 +1,397 @@
+/* ============================================
+   CONTROLMATICA - Design System
+   Variables + Componentes Base
+   ============================================ */
+
+:root {
+  /* Primarios */
+  --cm-primary: #2a3f53;
+  --cm-primary-dark: #1e2d3d;
+  --cm-primary-light: #3a5570;
+  --cm-accent: #f5a623;
+  --cm-accent-light: #f7c948;
+
+  /* Estado */
+  --cm-success: #28a745;
+  --cm-danger: #dc3545;
+  --cm-warning: #ffc107;
+  --cm-info: #17a2b8;
+
+  /* Neutros */
+  --cm-bg: #f5f6fa;
+  --cm-bg-card: #ffffff;
+  --cm-border: #e2e5ea;
+  --cm-text: #212529;
+  --cm-text-muted: #6c757d;
+  --cm-text-light: #9ca3af;
+
+  /* Sombras */
+  --cm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --cm-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --cm-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+  /* Radios */
+  --cm-radius-sm: 6px;
+  --cm-radius: 10px;
+  --cm-radius-lg: 12px;
+  --cm-radius-pill: 50px;
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+
+.cm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: var(--cm-radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  line-height: 1.5;
+}
+
+.cm-btn:hover {
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.cm-btn:active {
+  transform: scale(0.98);
+}
+
+/* Variantes */
+.cm-btn-primary {
+  background: var(--cm-primary);
+  color: #fff;
+}
+
+.cm-btn-primary:hover {
+  background: var(--cm-primary-dark);
+  color: #fff;
+  box-shadow: var(--cm-shadow);
+}
+
+.cm-btn-accent {
+  background: linear-gradient(135deg, var(--cm-accent), var(--cm-accent-light));
+  color: var(--cm-primary);
+}
+
+.cm-btn-accent:hover {
+  box-shadow: 0 4px 15px rgba(245, 166, 35, 0.35);
+  color: var(--cm-primary);
+}
+
+.cm-btn-outline {
+  background: transparent;
+  color: var(--cm-primary);
+  border: 1px solid var(--cm-primary);
+}
+
+.cm-btn-outline:hover {
+  background: var(--cm-primary);
+  color: #fff;
+}
+
+.cm-btn-danger {
+  background: var(--cm-danger);
+  color: #fff;
+}
+
+.cm-btn-danger:hover {
+  background: #c82333;
+  color: #fff;
+  box-shadow: var(--cm-shadow);
+}
+
+.cm-btn-success {
+  background: var(--cm-success);
+  color: #fff;
+}
+
+.cm-btn-success:hover {
+  background: #218838;
+  color: #fff;
+}
+
+/* Tamaños */
+.cm-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.cm-btn-lg {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+
+.cm-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: var(--cm-text);
+  background: #fff;
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius-sm);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.cm-input:focus {
+  border-color: var(--cm-primary);
+  box-shadow: 0 0 0 3px rgba(42, 63, 83, 0.1);
+}
+
+.cm-input::placeholder {
+  color: var(--cm-text-light);
+}
+
+.cm-input-error {
+  border-color: var(--cm-danger);
+}
+
+.cm-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+/* Label */
+.cm-label {
+  display: block;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cm-text);
+  margin-bottom: 4px;
+}
+
+/* Form group */
+.cm-form-group {
+  margin-bottom: 16px;
+}
+
+.cm-form-error {
+  font-size: 12px;
+  color: var(--cm-danger);
+  margin-top: 4px;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+
+.cm-card {
+  background: var(--cm-bg-card);
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius);
+  box-shadow: var(--cm-shadow);
+  padding: 20px;
+}
+
+.cm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--cm-border);
+}
+
+.cm-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cm-text);
+  margin: 0;
+}
+
+/* ============================================
+   TABLAS
+   ============================================ */
+
+.cm-table-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--cm-border);
+}
+
+.cm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.cm-table thead th {
+  background: var(--cm-primary);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 14px;
+  text-align: left;
+  border: none;
+  font-size: 13px;
+}
+
+.cm-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--cm-border);
+  color: var(--cm-text);
+  vertical-align: middle;
+}
+
+.cm-table tbody tr:hover {
+  background: var(--cm-bg);
+}
+
+.cm-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================
+   MODALES (override Reactstrap)
+   ============================================ */
+
+.cm-modal .modal-content {
+  border-radius: var(--cm-radius-lg);
+  border: none;
+  box-shadow: var(--cm-shadow-lg);
+  overflow: hidden;
+}
+
+.cm-modal .modal-header {
+  background: var(--cm-primary);
+  color: #fff;
+  border-bottom: none;
+  padding: 16px 24px;
+}
+
+.cm-modal .modal-header .modal-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.cm-modal .modal-header .close {
+  color: #fff;
+  opacity: 0.7;
+  text-shadow: none;
+}
+
+.cm-modal .modal-header .close:hover {
+  opacity: 1;
+}
+
+.cm-modal .modal-body {
+  padding: 24px;
+}
+
+.cm-modal .modal-footer {
+  border-top: 1px solid var(--cm-border);
+  padding: 16px 24px;
+}
+
+/* ============================================
+   ALERTAS
+   ============================================ */
+
+.cm-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.cm-alert-success {
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  color: #1e7e34;
+}
+
+.cm-alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #c82333;
+}
+
+.cm-alert-warning {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #d39e00;
+}
+
+.cm-alert-info {
+  background: rgba(23, 162, 184, 0.1);
+  border: 1px solid rgba(23, 162, 184, 0.3);
+  color: #117a8b;
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.cm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--cm-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cm-badge-success {
+  background: rgba(40, 167, 69, 0.12);
+  color: #1e7e34;
+}
+
+.cm-badge-danger {
+  background: rgba(220, 53, 69, 0.12);
+  color: #c82333;
+}
+
+.cm-badge-warning {
+  background: rgba(255, 193, 7, 0.12);
+  color: #d39e00;
+}
+
+.cm-badge-info {
+  background: rgba(23, 162, 184, 0.12);
+  color: #117a8b;
+}
+
+.cm-badge-primary {
+  background: rgba(42, 63, 83, 0.12);
+  color: var(--cm-primary);
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+.cm-text-muted {
+  color: var(--cm-text-muted) !important;
+}
+
+.cm-text-accent {
+  color: var(--cm-accent) !important;
+}
+
+.cm-bg-page {
+  background: var(--cm-bg);
+}
+
+.cm-divider {
+  border: none;
+  border-top: 1px solid var(--cm-border);
+  margin: 16px 0;
+}

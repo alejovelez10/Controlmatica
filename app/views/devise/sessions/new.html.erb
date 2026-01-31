@@ -1,41 +1,33 @@
 
-        <% if notice.present? %>
-          <div class="container" style="margin-bottom: 50px">
-              <div class="col-md-12" style="padding: 0;">
-                <div id="notice" class="alert alert-warning alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                  <%= notice %>
-                
-                </div>
-              
-              </div>
-            </div>
-        <% end%>
+<section class="login-fullscreen">
+  <div class="login-glass-card">
+    <% if notice.present? %>
+      <div class="login-alert login-alert-warning"><%= notice %></div>
+    <% end %>
+    <% if alert.present? %>
+      <div class="login-alert login-alert-danger"><%= alert %></div>
+    <% end %>
 
-    <section class="login-content">
-      <div class="logo">
-        <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png">
+    <div class="login-avatar">
+      <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png" alt="Controlmatica">
+    </div>
+    <h1 class="login-title">Iniciar Sesión</h1>
+
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "login-glass-form" }) do |f| %>
+      <div class="login-field">
+        <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "login-input", placeholder: "Email" %>
       </div>
-      <div class="login-box">
-        <%= form_for(resource, as: resource_name, url: session_path(resource_name), :html => {class: "login-form"}) do |f| %>
-          <div class="form-group">
-            <label class="control-label">Email</label>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", :placeholder => "Email" %>
-          </div>
-          <div class="form-group">
-            <label class="control-label">contraseña</label>
-            <%= f.password_field :password, autocomplete: "current-password", class: "form-control", :placeholder => "Contraseña" %>
-          </div>
-          <div class="col-md-12 text-center mb-4">
-              <p class="semibold-text mb-2">
-                <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
-                  <%= link_to "Olvidó su contraseña?", new_password_path(resource_name) %><br />
-                <% end %>
-              </p>
-          </div>
-          <div class="form-group btn-container">
-            <%= f.submit "Ingresar", class: "btn btn-secondary btn-block" %>
-          </div>
+      <div class="login-field">
+        <%= f.password_field :password, autocomplete: "current-password", class: "login-input", placeholder: "Contraseña" %>
+      </div>
+      <div class="login-actions">
+        <%= f.submit "Ingresar", class: "login-btn" %>
+      </div>
+      <div class="login-links">
+        <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+          <span>Olvidó su contraseña? <%= link_to "Click aquí", new_password_path(resource_name), class: "login-link" %></span>
         <% end %>
       </div>
-    </section>
+    <% end %>
+  </div>
+</section>

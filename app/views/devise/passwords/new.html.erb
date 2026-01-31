@@ -1,74 +1,32 @@
-    <div>
-      <div class="login_wrapper">
-        <div class="animate form login_form">
-          <section class="login_content">
-			<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-          <% if devise_error_messages!.present? %>
-            <div class="container" style="margin-bottom: 50px">
-                <div class="col-md-12" style="padding: 0;">
-                  <div id="notice" class="alert alert-danger alert-dismissible">
-                      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <%= devise_error_messages! %>
-                  
-                  </div>
-                
-                </div>
-              </div>
-          <% end %>
-			
 
-             <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png">
-				  <div class="col-md-12 p-0 text-left">
-				    <label>Ingresar email</label><br />
-				    <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form form-control" %>
-				  </div>
-              <div>
-                <%= f.submit "Enviar", class: "btn btn-dark" %>
-					<%- if controller_name != 'sessions' %>
-					  <%= link_to "Volver", new_session_path(resource_name) %><br />
-					<% end -%>
-              </div>
-
-              <div class="clearfix"></div>
-
-              <div class="separator" style="display: none;">
-                <p class="change_link">Eres Nuevo?
-                  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
-                    <%= link_to "Crear Tu Cuenta", new_registration_path(resource_name) %><br />
-                  <% end -%>
-                </p>
-
-                <div class="clearfix"></div>
-                <br />
-
-                <div>
-              
-                  <p>©2019 Controlmatica Todos Los Derechos Reservados.</p>
-                </div>
-              </div>
-           <% end %>
-          </section>
-        </div>
-      </div>
+<% if devise_error_messages!.present? %>
+  <div class="login-notice">
+    <div class="alert alert-danger alert-dismissible">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <%= devise_error_messages! %>
     </div>
-
-
-
-<!--
-<h2>Forgot your password?</h2>
-
-<%# form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%# devise_error_messages! %>
-
-  <div class="field">
-    <%# f.label :email %><br />
-    <%# f.email_field :email, autofocus: true, autocomplete: "email" %>
   </div>
+<% end %>
 
-  <div class="actions">
-    <%# f.submit "Send me reset password instructions" %>
+<section class="login-fullscreen">
+  <div class="login-glass-card">
+    <div class="login-avatar">
+      <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png" alt="Controlmatica">
+    </div>
+    <h1 class="login-title">Recuperar Contraseña</h1>
+
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "login-glass-form" }) do |f| %>
+      <div class="login-field">
+        <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "login-input", placeholder: "Email" %>
+      </div>
+      <div class="login-actions">
+        <%= f.submit "Enviar", class: "login-btn" %>
+      </div>
+      <div class="login-links">
+        <%- if controller_name != 'sessions' %>
+          <%= link_to "Volver al inicio", new_session_path(resource_name), class: "login-link" %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
-<%# end %>
-
-<%# render "devise/shared/links" %>
--->
+</section>

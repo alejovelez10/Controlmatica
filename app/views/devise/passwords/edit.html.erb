@@ -1,75 +1,29 @@
-    <div>
-      <div class="login_wrapper">
-        <div class="animate form login_form">
-          <section class="login_content">
-            <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-              <%= devise_error_messages! %>
-              <%= f.hidden_field :reset_password_token %>
 
-             <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png">
-                <div class="col-md-12 text-left">
-                  <label>Nueva contraseña</label><br />
-                  <%= f.password_field :password, autofocus: true, autocomplete: "new-password", class: "form form-control" %>
-                </div>
-
-                <div class="col-md-12 text-left">
-                  <label>Confirmar contraseña</label><br />
-                  <%= f.password_field :password_confirmation, autocomplete: "off", class: "form form-control" %>
-                </div>
-              <div>
-                <%= f.submit "Actualizar", class: "btn btn-dark" %>
-                <%- if controller_name != 'sessions' %>
-                  <%= link_to "Volver", new_session_path(resource_name) %><br />
-                <% end -%>
-              </div>
-
-              <div class="clearfix"></div>
-
-              <div class="separator" style="display: none;">
-                <p class="change_link">Eres Nuevo?
-                  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
-                    <%= link_to "Crear Tu Cuenta", new_registration_path(resource_name) %><br />
-                  <% end -%>
-                </p>
-
-                <div class="clearfix"></div>
-                <br />
-
-                <div>
-              
-                  <p>©2019 Controlmatica Todos Los Derechos Reservados.</p>
-                </div>
-              </div>
-           <% end %>
-          </section>
-        </div>
-      </div>
+<section class="login-fullscreen">
+  <div class="login-glass-card">
+    <div class="login-avatar">
+      <img src="http://controlmatica.com.co/images/controlmatica/controlmatica-logo-03.png" alt="Controlmatica">
     </div>
+    <h1 class="login-title">Nueva Contraseña</h1>
 
-<!--
-<h2>Change your password</h2>
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put, class: "login-glass-form" }) do |f| %>
+      <%= devise_error_messages! %>
+      <%= f.hidden_field :reset_password_token %>
 
-<%# form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-  <%# devise_error_messages! %>
-  <%# f.hidden_field :reset_password_token %>
-
-  <div class="field">
-    <%# f.label :password, "New password" %><br />
-    <%# if @minimum_password_length %>
-      <em>(<%# @minimum_password_length %> characters minimum)</em><br />
-    <%# end %>
-    <%# f.password_field :password, autofocus: true, autocomplete: "new-password" %>
+      <div class="login-field">
+        <%= f.password_field :password, autofocus: true, autocomplete: "new-password", class: "login-input", placeholder: "Nueva contraseña" %>
+      </div>
+      <div class="login-field">
+        <%= f.password_field :password_confirmation, autocomplete: "off", class: "login-input", placeholder: "Confirmar contraseña" %>
+      </div>
+      <div class="login-actions">
+        <%= f.submit "Actualizar", class: "login-btn" %>
+      </div>
+      <div class="login-links">
+        <%- if controller_name != 'sessions' %>
+          <%= link_to "Volver al inicio", new_session_path(resource_name), class: "login-link" %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
-
-  <div class="field">
-    <%# f.label :password_confirmation, "Confirm new password" %><br />
-    <%# f.password_field :password_confirmation, autocomplete: "off" %>
-  </div>
-
-  <div class="actions">
-    <%# f.submit "Change my password" %>
-  </div>
-<%# end %>
-
-<%# render "devise/shared/links" %>
--->
+</section>
