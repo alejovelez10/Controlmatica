@@ -3,22 +3,60 @@ import Swal from "sweetalert2/dist/sweetalert2.js";
 import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
 
 const EMPTY_FORM = {
-  names: "", email: "", document_type: "", number_document: "",
-  rol_id: "", password: "", password_confirmation: "",
+  name: "",
+  ing_ejecucion_min: "", ing_ejecucion_med: "",
+  ing_costo_min: "", ing_costo_med: "",
+  tab_ejecucion_min: "", tab_ejecucion_med: "",
+  tab_costo_min: "", tab_costo_med: "",
+  desp_min: "", desp_med: "",
+  mat_min: "", mat_med: "",
+  via_min: "", via_med: "",
+  total_min: "", total_med: "",
+  alert_min: 100, color_min: "#d26666",
+  alert_med: 150, color_mid: "#d4b21e",
+  alert_max: 151, color_max: "#24bc6b",
+  alert_hour_min: 100, alert_hour_med: 100, alert_hour_max: 100,
+  color_hour_min: "#d26666", color_hour_med: "#d4b21e", color_hour_max: "#24bc6b",
 };
-
-const DOC_TYPES = [
-  "Cédula de Ciudadanía", "Tarjeta de Identidad", "Registro Civil de Nacimiento",
-  "Cédula de Extranjería", "Pasaporte", "Menor sin Identificación",
-  "Adulto sin Identificación", "Carnet Diplomático",
-];
 
 function csrfToken() {
   const meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute("content") : "";
 }
 
-class index extends React.Component {
+// Helper: section with two fields (verde / naranja)
+function AlertSection({ label, fieldMin, fieldMed, form, onChange }) {
+  return (
+    <React.Fragment>
+      <div className="cm-form-section-title" style={{ marginTop: 12 }}>
+        <span>{label}</span>
+      </div>
+      <div className="cm-form-row">
+        <CmInput label="Máx. verde" type="number" placeholder="0" value={form[fieldMin]} onChange={(e) => onChange(fieldMin, e.target.value)} />
+        <CmInput label="Máx. naranja" type="number" placeholder="0" value={form[fieldMed]} onChange={(e) => onChange(fieldMed, e.target.value)} />
+      </div>
+    </React.Fragment>
+  );
+}
+
+// Helper: color config row
+function ColorRow({ label, valueField, colorField, form, onChange }) {
+  return (
+    <div className="cm-form-row" style={{ alignItems: "end" }}>
+      {valueField ? (
+        <CmInput label={label} type="number" placeholder="0" value={form[valueField]} onChange={(e) => onChange(valueField, e.target.value)} />
+      ) : (
+        <div className="cm-form-group"><label className="cm-label">{label}</label></div>
+      )}
+      <div className="cm-form-group">
+        <label className="cm-label">Color</label>
+        <input type="color" className="cm-input" value={form[colorField]} onChange={(e) => onChange(colorField, e.target.value)} style={{ height: 38, padding: 4, cursor: "pointer" }} />
+      </div>
+    </div>
+  );
+}
+
+class Index extends React.Component {
   constructor(props) {
     super(props);
 
@@ -26,24 +64,17 @@ class index extends React.Component {
       data: [],
       loading: true,
       searchTerm: "",
-      sortKey: null,
-      sortDir: "asc",
       meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
       modalOpen: false,
       modalMode: "new",
       editId: null,
       form: { ...EMPTY_FORM },
-      avatar: null,
       errors: [],
       saving: false,
     };
 
     this.columns = [
-      { key: "names", label: "Nombre" },
-      { key: "email", label: "Email" },
-      { key: "rol", label: "Rol", render: (row) => (row.rol ? row.rol.name : "Sin rol"), sortable: false },
-      { key: "document_type", label: "Tipo documento" },
-      { key: "number_document", label: "Documento" },
+      { key: "name", label: "Nombre" },
     ];
   }
 
@@ -51,18 +82,15 @@ class index extends React.Component {
     this.loadData();
   }
 
-  loadData = (page, perPage, searchTerm, sortKey, sortDir) => {
+  loadData = (page, perPage, searchTerm) => {
     const p = page || this.state.meta.page;
     const pp = perPage || this.state.meta.per_page;
     const term = searchTerm !== undefined ? searchTerm : this.state.searchTerm;
-    const sk = sortKey !== undefined ? sortKey : this.state.sortKey;
-    const sd = sortDir !== undefined ? sortDir : this.state.sortDir;
 
     this.setState({ loading: true });
 
-    let url = `/get_users?page=${p}&per_page=${pp}`;
+    let url = `/get_alerts?page=${p}&per_page=${pp}`;
     if (term) url += `&name=${encodeURIComponent(term)}`;
-    if (sk) url += `&sort=${encodeURIComponent(sk)}&dir=${sd}`;
 
     fetch(url)
       .then((r) => r.json())
@@ -76,29 +104,22 @@ class index extends React.Component {
   };
   handlePageChange = (page) => { this.loadData(page, this.state.meta.per_page); };
   handlePerPageChange = (perPage) => { this.loadData(1, perPage); };
-  handleSort = (key, dir) => {
-    this.setState({ sortKey: key, sortDir: dir }, () => {
-      this.loadData(1, this.state.meta.per_page, undefined, key, dir);
-    });
-  };
 
   // ─── Modal ───
 
   openNewModal = () => {
     this.setState({
-      modalOpen: true, modalMode: "new", editId: null, avatar: null,
+      modalOpen: true, modalMode: "new", editId: null,
       form: { ...EMPTY_FORM }, errors: [], saving: false,
     });
   };
 
   openEditModal = (row) => {
+    const form = {};
+    Object.keys(EMPTY_FORM).forEach((k) => { form[k] = row[k] !== null && row[k] !== undefined ? row[k] : EMPTY_FORM[k]; });
     this.setState({
-      modalOpen: true, modalMode: "edit", editId: row.id, avatar: null, errors: [], saving: false,
-      form: {
-        names: row.names || "", email: row.email || "",
-        document_type: row.document_type || "", number_document: row.number_document || "",
-        rol_id: row.rol_id || "", password: "", password_confirmation: "",
-      },
+      modalOpen: true, modalMode: "edit", editId: row.id,
+      form, errors: [], saving: false,
     });
   };
 
@@ -108,57 +129,30 @@ class index extends React.Component {
     this.setState((prev) => ({ form: { ...prev.form, [field]: value } }));
   };
 
-  handleAvatarChange = (e) => {
-    this.setState({ avatar: e.target.files[0] });
-  };
-
   handleSubmit = () => {
-    const { form, avatar, modalMode, editId } = this.state;
+    const { form, modalMode, editId } = this.state;
     const isNew = modalMode === "new";
 
-    // Validación básica
-    if (!form.names || !form.email || !form.rol_id) {
-      this.setState({ errors: ["Nombre, email y rol son obligatorios"] });
-      return;
-    }
-    if (isNew && (!form.password || form.password.length < 6)) {
-      this.setState({ errors: ["La contraseña debe tener mínimo 6 caracteres"] });
-      return;
-    }
-    if (form.password && form.password !== form.password_confirmation) {
-      this.setState({ errors: ["Las contraseñas no coinciden"] });
+    if (!form.name) {
+      this.setState({ errors: ["El nombre es obligatorio"] });
       return;
     }
 
-    const formData = new FormData();
-    formData.append("names", form.names);
-    formData.append("email", form.email);
-    formData.append("document_type", form.document_type);
-    formData.append("number_document", form.number_document);
-    formData.append("rol_id", form.rol_id);
-    if (form.password) {
-      formData.append("password", form.password);
-      formData.append("password_confirmation", form.password_confirmation);
-    }
-    if (avatar) {
-      formData.append("avatar", avatar);
-    }
-
-    const url = isNew ? "/create_user" : `/update_user/${editId}`;
+    const url = isNew ? "/alerts" : `/alerts/${editId}`;
     const method = isNew ? "POST" : "PATCH";
 
     this.setState({ saving: true, errors: [] });
 
     fetch(url, {
       method,
-      body: formData,
-      headers: { "X-CSRF-Token": csrfToken() },
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken() },
+      body: JSON.stringify(form),
     })
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {
         if (ok || data.success) {
           this.closeModal();
-          this.loadData();
+          this.loadData(isNew ? 1 : undefined);
           Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         } else {
           this.setState({ errors: data.errors || [data.message || "Error al guardar"], saving: false });
@@ -169,17 +163,17 @@ class index extends React.Component {
 
   delete = (id) => {
     Swal.fire({
-      title: "¿Estás seguro?", text: "El usuario será eliminado permanentemente",
+      title: "¿Estás seguro?", text: "La alerta será eliminada permanentemente",
       type: "warning", showCancelButton: true,
       confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
       confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.value) {
-        fetch("/user/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
+        fetch("/alerts/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
           .then((r) => r.json())
           .then(() => {
             this.loadData();
-            Swal.fire("Eliminado", "El usuario fue eliminado con éxito", "success");
+            Swal.fire("Eliminado", "La alerta fue eliminada con éxito", "success");
           });
       }
     });
@@ -223,24 +217,11 @@ class index extends React.Component {
     );
   };
 
-  renderHeaderActions = () => {
-    const { estados } = this.props;
-    return (
-      <React.Fragment>
-        {estados.download_file && (
-          <a href="/download_file/users.xls" target="_blank" className="cm-btn cm-btn-outline cm-btn-sm">
-            <i className="fas fa-file-excel" /> Exportar
-          </a>
-        )}
-      </React.Fragment>
-    );
-  };
-
   renderModal = () => {
     const { modalOpen, modalMode, form, errors, saving } = this.state;
-    const title = modalMode === "new" ? "Nuevo Usuario" : "Editar Usuario";
-    const icon = modalMode === "new" ? "fas fa-user-plus" : "fas fa-user-edit";
-    const roles = this.props.rols || [];
+    const title = modalMode === "new" ? "Nueva Alerta" : "Editar Alerta";
+    const icon = modalMode === "new" ? "fas fa-plus-circle" : "fas fa-edit";
+    const onChange = this.handleFormChange;
 
     return (
       <CmModal
@@ -260,41 +241,39 @@ class index extends React.Component {
         )}
 
         <div className="cm-form-row">
-          <CmInput label="Nombre completo" placeholder="Nombre y apellido" value={form.names} onChange={(e) => this.handleFormChange("names", e.target.value)} />
-          <CmInput label="Correo electrónico" type="email" placeholder="correo@ejemplo.com" value={form.email} onChange={(e) => this.handleFormChange("email", e.target.value)} />
-
-          <div className="cm-form-group">
-            <label className="cm-label">Tipo de documento</label>
-            <select className="cm-input" value={form.document_type} onChange={(e) => this.handleFormChange("document_type", e.target.value)}>
-              <option value="">Seleccione un tipo</option>
-              {DOC_TYPES.map((dt) => <option key={dt} value={dt}>{dt}</option>)}
-            </select>
-          </div>
-
-          <CmInput label="Número de documento" type="number" placeholder="Documento" value={form.number_document} onChange={(e) => this.handleFormChange("number_document", e.target.value)} />
-
-          <div className="cm-form-group">
-            <label className="cm-label">Rol</label>
-            <select className="cm-input" value={form.rol_id} onChange={(e) => this.handleFormChange("rol_id", e.target.value)}>
-              <option value="">Seleccione un rol</option>
-              {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-          </div>
-
-          <div className="cm-form-group">
-            <label className="cm-label">Avatar</label>
-            <input type="file" className="cm-input" accept="image/*" onChange={this.handleAvatarChange} style={{ padding: "8px" }} />
-          </div>
+          <CmInput label="Nombre" placeholder="Nombre de la alerta" value={form.name} onChange={(e) => onChange("name", e.target.value)} />
         </div>
 
         <div className="cm-form-section">
           <div className="cm-form-section-title">
-            <span><i className="fas fa-lock" style={{ marginRight: 6 }} /> Contraseña {modalMode === "edit" && "(dejar vacío para no cambiar)"}</span>
+            <span><i className="fas fa-percentage" style={{ marginRight: 6 }} /> Umbrales de porcentaje</span>
           </div>
-          <div className="cm-form-row">
-            <CmInput label="Contraseña" type="password" placeholder="Mínimo 6 caracteres" value={form.password} onChange={(e) => this.handleFormChange("password", e.target.value)} />
-            <CmInput label="Confirmar contraseña" type="password" placeholder="Confirmar" value={form.password_confirmation} onChange={(e) => this.handleFormChange("password_confirmation", e.target.value)} />
+          <AlertSection label="Ingeniería Ejecución" fieldMin="ing_ejecucion_min" fieldMed="ing_ejecucion_med" form={form} onChange={onChange} />
+          <AlertSection label="Ingeniería Costo" fieldMin="ing_costo_min" fieldMed="ing_costo_med" form={form} onChange={onChange} />
+          <AlertSection label="Tablerista Ejecución" fieldMin="tab_ejecucion_min" fieldMed="tab_ejecucion_med" form={form} onChange={onChange} />
+          <AlertSection label="Tablerista Costo" fieldMin="tab_costo_min" fieldMed="tab_costo_med" form={form} onChange={onChange} />
+          <AlertSection label="Desplazamiento" fieldMin="desp_min" fieldMed="desp_med" form={form} onChange={onChange} />
+          <AlertSection label="Materiales" fieldMin="mat_min" fieldMed="mat_med" form={form} onChange={onChange} />
+          <AlertSection label="Viáticos" fieldMin="via_min" fieldMed="via_med" form={form} onChange={onChange} />
+          <AlertSection label="Total" fieldMin="total_min" fieldMed="total_med" form={form} onChange={onChange} />
+        </div>
+
+        <div className="cm-form-section">
+          <div className="cm-form-section-title">
+            <span><i className="fas fa-clock" style={{ marginRight: 6 }} /> Configuración horas por mes</span>
           </div>
+          <ColorRow label="Menor o igual (valor)" valueField="alert_min" colorField="color_min" form={form} onChange={onChange} />
+          <ColorRow label="Mayor que anterior y menor que" valueField="alert_med" colorField="color_mid" form={form} onChange={onChange} />
+          <ColorRow label="Mayor o igual al anterior" valueField={null} colorField="color_max" form={form} onChange={onChange} />
+        </div>
+
+        <div className="cm-form-section">
+          <div className="cm-form-section-title">
+            <span><i className="fas fa-clock" style={{ marginRight: 6 }} /> Configuración horas por día</span>
+          </div>
+          <ColorRow label="Menor o igual (valor)" valueField="alert_hour_min" colorField="color_hour_min" form={form} onChange={onChange} />
+          <ColorRow label="Mayor que anterior y menor que" valueField="alert_hour_med" colorField="color_hour_med" form={form} onChange={onChange} />
+          <ColorRow label="Mayor o igual al anterior" valueField={null} colorField="color_hour_max" form={form} onChange={onChange} />
         </div>
       </CmModal>
     );
@@ -307,7 +286,7 @@ class index extends React.Component {
         {this.props.estados.create && (
           <CmPageActions>
             <button onClick={this.openNewModal} className="cm-btn cm-btn-accent cm-btn-sm">
-              <i className="fas fa-plus" /> Nuevo Usuario
+              <i className="fas fa-plus" /> Nueva Alerta
             </button>
           </CmPageActions>
         )}
@@ -316,20 +295,18 @@ class index extends React.Component {
           data={this.state.data}
           loading={this.state.loading}
           actions={this.renderActions}
-          headerActions={this.renderHeaderActions()}
           onSearch={this.handleSearch}
-          searchPlaceholder="Buscar usuario..."
-          emptyMessage="No hay usuarios registrados"
+          searchPlaceholder="Buscar alerta..."
+          emptyMessage="No hay alertas registradas"
           emptyAction={
             this.props.estados.create ? (
               <button onClick={this.openNewModal} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}>
-                <i className="fas fa-plus" /> Nuevo Usuario
+                <i className="fas fa-plus" /> Nueva Alerta
               </button>
             ) : null
           }
           serverPagination
           serverMeta={meta}
-          onSort={this.handleSort}
           onPageChange={this.handlePageChange}
           onPerPageChange={this.handlePerPageChange}
         />
@@ -339,4 +316,4 @@ class index extends React.Component {
   }
 }
 
-export default index;
+export default Index;

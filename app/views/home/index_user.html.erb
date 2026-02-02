@@ -1,5 +1,5 @@
 <%= javascript_pack_tag 'Users' %> 
-<%= react_component('Users', rol: get_rol, estados: @estados) %>
+<%= react_component('Users', rol: Rol.select(:id, :name).order(:name), estados: @estados) %>
 
 
 <!--

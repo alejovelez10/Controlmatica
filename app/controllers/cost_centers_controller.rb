@@ -2,7 +2,6 @@ class CostCentersController < ApplicationController
   before_action :set_cost_center, only: [:show, :edit, :update, :destroy, :cost_center_customer, :get_show_center]
   before_action :set_sales_order, only: [:show]
   before_action :authenticate_user!
-  skip_before_action :verify_authenticity_token
   include ApplicationHelper
   include CostCentersHelper
 
@@ -15,76 +14,73 @@ class CostCentersController < ApplicationController
       @cost_centers = CostCenter.all.paginate(:page => params[:page], :per_page => 10)
     end
 
-    cost_centers = ModuleControl.find_by_name("Centro de Costos")
-
-    create = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Eliminar").exists?
-    manage_module = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Gestionar modulo").exists?
-    ending = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar").exists?
-    download_file = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Descargar excel").exists?
-    update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
-    show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
-    state_update = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
-    edit_all = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar todos").exists?
-    sales_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Finalizar compras").exists?
-    edit_code = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar codigo").exists?
+    permissions = load_permissions("Centro de Costos",
+      "Crear", "Editar", "Eliminar", "Gestionar modulo", "Finalizar",
+      "Descargar excel", "Forzar estados", "Ver horas costo", "Editar todos",
+      "Finalizar compras", "Editar codigo"
+    )
 
     @hours_real = Parameterization.where(name: "HORA HOMBRE COSTO").first.money_value
     @hours_invoices = Parameterization.where(name: "HORA HOMBRE COTIZADA").first.money_value
-
     @hours_real_contractor = Parameterization.where(name: "HORA TABLERISTA COSTO").first.money_value
     @value_displacement_hours = Parameterization.where(name: "HORA DESPLAZAMIENTO").first.money_value
 
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      manage_module: (current_user.rol.name == "Administrador" ? true : manage_module),
-      ending: (current_user.rol.name == "Administrador" ? true : ending),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file),
-      update_state: (current_user.rol.name == "Administrador" ? true : update_state),
-      show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
-      state_update: (current_user.rol.name == "Administrador" ? true : state_update),
-      sales_state: (current_user.rol.name == "Administrador" ? true : sales_state),
-      edit_code: (current_user.rol.name == "Administrador" ? true : edit_code),
+      create: permissions["Crear"],
+      edit: permissions["Editar"],
+      edit_all: permissions["Editar todos"],
+      delete: permissions["Eliminar"],
+      manage_module: permissions["Gestionar modulo"],
+      ending: permissions["Finalizar"],
+      download_file: permissions["Descargar excel"],
+      update_state: permissions["Forzar estados"],
+      show_hours: permissions["Ver horas costo"],
+      state_update: permissions["Forzar estados"],
+      sales_state: permissions["Finalizar compras"],
+      edit_code: permissions["Editar codigo"],
     }
   end
 
   def get_cost_centers
-    centro = ModuleControl.find_by_name("Centro de Costos")
-    estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
-    validate = (current_user.rol.name == "Administrador" ? true : estado)
+    permissions = load_permissions("Centro de Costos", "Ver todos")
+    validate = permissions["Ver todos"]
 
-    if validate
-      if params[:filtering] == "true"
-        cost_centers = CostCenter.all.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
-      elsif params[:filtering] == "false"
-        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        cost_centers_total = CostCenter.all.count
-      else
-        cost_centers = CostCenter.all.paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        cost_centers_total = CostCenter.all.count
-      end
-    else
-      if params[:filtering] == "true"
-        cost_centers = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        cost_centers_total = CostCenter.search(params[:descripcion], params[:customer_id], params[:cost_center_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number]).count
-      elsif params[:filtering] == "false"
-        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        cost_centers_total = CostCenter.where(user_id: current_user.id).count
-      else
-        cost_centers = CostCenter.where(user_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        cost_centers_total = CostCenter.where(user_id: current_user.id).count
-      end
+    per_page = (params[:per_page] || 10).to_i
+    page = (params[:page] || 1).to_i
+    sort_column = params[:sort_column].presence || "created_at"
+    sort_direction = params[:sort_direction] == "asc" ? "asc" : "desc"
+
+    allowed_sort_columns = %w[code description service_type execution_state invoiced_state start_date created_at quotation_number customer_id sales_state]
+    sort_column = "created_at" unless allowed_sort_columns.include?(sort_column)
+
+    base_scope = validate ? CostCenter.all : CostCenter.where(user_id: current_user.id)
+
+    if params[:filtering] == "true"
+      base_scope = base_scope.search(
+        params[:descripcion], params[:customer_id], params[:execution_state],
+        params[:invoiced_state], params[:cost_center_id], params[:service_type],
+        params[:date_desde], params[:date_hasta], params[:quotation_number]
+      )
     end
 
-    #cost_centers = cost_centers.to_json( :include => {  :customer => { :only =>[:name] }, :contact => { :only =>[:name,:id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] }, :sales_orders => { :only =>[:order_value] } })
+    cost_centers_total = base_scope.count
+    cost_centers = base_scope
+      .includes(:customer, :contact, :user, :user_owner, :last_user_edited, :sales_orders)
+      .order(sort_column => sort_direction.to_sym)
+      .paginate(page: page, per_page: per_page)
 
-    #cost_centers = JSON.parse(cost_centers)
-    render :json => { cost_centers_paginate: get_cost_centers_items(cost_centers), cost_centers_total: cost_centers_total }
+    total_pages = (cost_centers_total.to_f / per_page).ceil
+
+    render json: {
+      cost_centers_paginate: get_cost_centers_items(cost_centers),
+      cost_centers_total: cost_centers_total,
+      meta: {
+        page: page,
+        per_page: per_page,
+        total: cost_centers_total,
+        total_pages: total_pages
+      }
+    }
   end
 
   def update_sales_state_cost_center
@@ -145,29 +141,19 @@ class CostCentersController < ApplicationController
   # GET /cost_centers/1
   # GET /cost_centers/1.json
   def show
-    cost_centers = ModuleControl.find_by_name("Centro de Costos")
-    cost_center_edit = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Editar").exists?
-    update_state = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Forzar estados").exists?
-    show_hours = current_user.rol.accion_modules.where(module_control_id: cost_centers.id).where(name: "Ver horas costo").exists?
-
-    materials = ModuleControl.find_by_name("Materiales")
-    create_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Crear").exists?
-    edit_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar").exists?
-    delete_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
-    download_file_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Descargar excel").exists?
-    update_state_materials = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Forzar estados").exists?
-    edit_all_materials= current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar todos").exists?
+    cc_perms = load_permissions("Centro de Costos", "Editar", "Forzar estados", "Ver horas costo")
+    mat_perms = load_permissions("Materiales", "Crear", "Editar", "Eliminar", "Descargar excel", "Forzar estados", "Editar todos")
 
     @estados = {
-      update_state: (current_user.rol.name == "Administrador" ? true : update_state),
-      show_hours: (current_user.rol.name == "Administrador" ? true : show_hours),
-      create_materials: (current_user.rol.name == "Administrador" ? true : create_materials),
-      edit_materials: (current_user.rol.name == "Administrador" ? true : edit_materials),
-      edit_all_materials: (current_user.rol.name == "Administrador" ? true : edit_all_materials),
-      delete_materials: (current_user.rol.name == "Administrador" ? true : delete_materials),
-      update_state_materials: (current_user.rol.name == "Administrador" ? true : update_state_materials),
-      download_file_materials: (current_user.rol.name == "Administrador" ? true : download_file_materials),
-      cost_center_edit: (current_user.rol.name == "Administrador" ? true : cost_center_edit),
+      update_state: cc_perms["Forzar estados"],
+      show_hours: cc_perms["Ver horas costo"],
+      create_materials: mat_perms["Crear"],
+      edit_materials: mat_perms["Editar"],
+      edit_all_materials: mat_perms["Editar todos"],
+      delete_materials: mat_perms["Eliminar"],
+      update_state_materials: mat_perms["Forzar estados"],
+      download_file_materials: mat_perms["Descargar excel"],
+      cost_center_edit: cc_perms["Editar"],
     }
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
@@ -186,39 +172,34 @@ class CostCentersController < ApplicationController
 
   def get_show_center
     ing_cotizado = @cost_center.engineering_value
-
     ing_real = @cost_center.reports.sum(:working_value)
-
     via_cotizado = @cost_center.viatic_value
 
-    via_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_value)
-    puts @cost_center.report_expenses.sum(:invoice_value)
-    puts "hola jaja"
+    report_sums = @cost_center.reports.pick(
+      Arel.sql("COALESCE(SUM(viatic_value), 0)"),
+      Arel.sql("COALESCE(SUM(working_time), 0)"),
+      Arel.sql("COALESCE(SUM(value_displacement_hours), 0)"),
+      Arel.sql("COALESCE(SUM(displacement_hours), 0)")
+    )
+    report_viatic_sum, horas_eje, ejecutado_desplazamiento, ejecutado_desplazamiento_horas = report_sums
 
-    #INGENIERIA EJECUCION
-    #Horas ejecutadas agregadas desde los reportes
-    horas_eje = @cost_center.reports.sum(:working_time)
+    expense_sum = @cost_center.report_expenses.sum(:invoice_value)
+    via_real = report_viatic_sum + expense_sum
+
     porc_eje = @cost_center.eng_hours > 0 ? (((horas_eje.to_f / @cost_center.eng_hours)) * 100).round(1) : "N/A"
-    #FIN INGENIERIA EJECUCUCION
 
-    #INGENIERIA COSTO
-    #costo de horeas ejecutadas en dinero
     cotizado_desplazamiento = @cost_center.value_displacement_hours * @cost_center.displacement_hours
-    ejecutado_desplazamiento = @cost_center.reports.sum(:value_displacement_hours)
-    ejecutado_desplazamiento_horas = @cost_center.reports.sum(:displacement_hours)
 
     porc_desplazamiento = @cost_center.displacement_hours > 0 ? (((ejecutado_desplazamiento_horas.to_f / @cost_center.displacement_hours)) * 100).round(1) : "N/A"
     if !@cost_center.has_many_quotes
       costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).round(1) + cotizado_desplazamiento
     else
-      costo_en_dinero =  @cost_center.quotations.sum(:engineering_value) + cotizado_desplazamiento
+      costo_en_dinero = @cost_center.quotations.sum(:engineering_value) + cotizado_desplazamiento
     end
     costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i + ejecutado_desplazamiento
     porc_eje_costo = costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f / costo_en_dinero)) * 100)).round(1) : "N/A"
-    #FIN INGENIERIA COSTO
 
     hours_eje_contractor = @cost_center.contractors.sum(:hours)
-
     facturacion = @cost_center.customer_invoices.sum(:invoice_value)
 
     porc_eje_contractor = @cost_center.hours_contractor > 0 ? (((hours_eje_contractor.to_f / @cost_center.hours_contractor)) * 100).round(1) : "N/A"
@@ -233,20 +214,15 @@ class CostCentersController < ApplicationController
     porc_fac = @cost_center.quotation_value > 0 ? ((facturacion.to_f / @cost_center.quotation_value) * 100).round(1) : "N/A"
 
     total_eje = @cost_center.hour_real * horas_eje
-
     total_cot = @cost_center.hour_cotizada * horas_eje
-
     total_margen = total_cot - total_eje
-
     porc_ejec = total_cot > 0 ? ((total_margen.to_f / total_cot) * 100).round(1) : "N/A"
 
     cost_center = @cost_center.to_json(:include => { :customer => { :only => [:name] }, :contact => { :only => [:name] }, :user_owner => { :only => [:names, :id] }, :last_user_edited => { :only => [:names, :id] }, :user => { :only => [:names, :id] } })
 
-    sum_materials = @cost_center.materials.sum(:amount)  #Material.where(cost_center_id: @cost_center.id).sum(:amount)
-
+    sum_materials = @cost_center.materials.sum(:amount)
     porc_mat = (@cost_center.materials_value != nil ? @cost_center.materials_value : 0) > 0 ? ((1 - (sum_materials.to_f / @cost_center.materials_value)) * 100).round(1) : "N/A"
-
-    sum_contractors = @cost_center.contractors.sum(:ammount)  #Contractor.where(cost_center_id: @cost_center.id).sum(:ammount)
+    sum_contractors = @cost_center.contractors.sum(:ammount)
 
     cost_center = JSON.parse(cost_center)
 
@@ -282,14 +258,11 @@ class CostCentersController < ApplicationController
       sum_contractors: sum_contractors,
 
       porc_mat: (porc_mat != nil ? porc_mat : 0),
-
     }
   end
 
   def getValues
-    puts params[:id]
-    puts "hola probando"
-    cost_center = CostCenter.find(params[:id])
+    cost_center = CostCenter.includes(:sales_orders, :reports, :contractors, :materials, :report_expenses).find(params[:id])
     sales_ordes = cost_center.sales_orders.to_json(:include => { :cost_center => { :include => :customer, :only => [:code, :invoiced_state] }, :customer_invoices => { :only => [:invoice_value, :invoice_date, :number_invoice] } })
     reportes = cost_center.reports.to_json(:include => { :cost_center => { :include => :customer, :only => [:code, :description] }, :customer => { :only => [:name] }, :contact => { :only => [:name] }, :report_execute => { :only => [:names] } })
     contractors = cost_center.contractors.to_json(:include => { :cost_center => { :only => [:code] }, :user_execute => { :only => [:names] } })
@@ -324,67 +297,13 @@ class CostCentersController < ApplicationController
   # POST /cost_centers.json
 
   def create
-    if params["viatic_value"] != "nil" || params["viatic_value"] != ""
-      valor1 = cost_center_params_create["viatic_value"].gsub("$", "").gsub(",", "")
-      params["viatic_value"] = valor1
-    end
+    cleaned = clean_money_params(cost_center_params_create,
+      :viatic_value, :quotation_value, :hour_real, :hour_cotizada,
+      :hours_contractor_real, :hours_contractor_invoices, :materials_value,
+      :displacement_hours, :value_displacement_hours
+    )
 
-    if params["quotation_value"] != "nil" || params["quotation_value"] != ""
-      valor2 = cost_center_params_create["quotation_value"].gsub("$", "").gsub(",", "")
-      params["quotation_value"] = valor2
-    end
-
-    if params["hour_real"] != "nil" || params["hour_real"] != ""
-      if cost_center_params_create["hour_real"].class.to_s != "Integer" && cost_center_params_create["hour_real"].class.to_s != "Float"
-        valor3 = cost_center_params_create["hour_real"].gsub("$", "").gsub(",", "")
-        params["hour_real"] = valor3
-      end
-    end
-
-    if params["hour_cotizada"] != "nil" || params["hour_cotizada"] != ""
-      if cost_center_params_create["hour_cotizada"].class.to_s != "Integer" && cost_center_params_create["hour_cotizada"].class.to_s != "Float"
-        valor4 = cost_center_params_create["hour_cotizada"].gsub("$", "").gsub(",", "")
-        params["hour_cotizada"] = valor4
-      end
-    end
-
-    if params["hours_contractor_real"] != "nil" || params["hours_contractor_real"] != ""
-      if cost_center_params_create["hours_contractor_real"].class.to_s != "Integer" && cost_center_params_create["hours_contractor_real"].class.to_s != "Float"
-        valor5 = cost_center_params_create["hours_contractor_real"].gsub("$", "").gsub(",", "")
-        params["hours_contractor_real"] = valor5
-      end
-    end
-
-    if params["hours_contractor_invoices"] != "nil" || params["hours_contractor_invoices"] != ""
-      if cost_center_params_create["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params_create["hours_contractor_invoices"].class.to_s != "Float"
-        valor6 = cost_center_params_create["hours_contractor_invoices"].gsub("$", "").gsub(",", "")
-        params["hours_contractor_invoices"] = valor6
-      end
-    end
-
-    if params["materials_value"] != "nil" || params["materials_value"] != ""
-      valor7 = cost_center_params_create["materials_value"].gsub("$", "").gsub(",", "")
-      params["materials_value"] = valor7
-    end
-
-    if params["quotation_value"] != "nil" || params["quotation_value"] != ""
-      valor8 = cost_center_params_create["quotation_value"].gsub("$", "").gsub(",", "")
-      params["quotation_value"] = valor8
-    end
-
-    if params["displacement_hours"] != "nil" || params["displacement_hours"] != ""
-      valor9 = cost_center_params_create["displacement_hours"].gsub("$", "").gsub(",", "")
-      params["displacement_hours"] = valor9
-    end
-
-    if params["value_displacement_hours"] != "nil" || params["value_displacement_hours"] != ""
-      if cost_center_params_create["value_displacement_hours"].class.to_s != "Integer" && cost_center_params_create["value_displacement_hours"].class.to_s != "Float"
-        valo10 = cost_center_params_create["value_displacement_hours"].gsub("$", "").gsub(",", "")
-        params["value_displacement_hours"] = valo10
-      end
-    end
-
-    cost_center = CostCenter.create(cost_center_params_create)
+    cost_center = CostCenter.create(cleaned)
 
     if cost_center.save
       render :json => {
@@ -409,17 +328,9 @@ class CostCentersController < ApplicationController
     hours_paid = cost_center.commissions.where(user_invoice_id: user.id).where.not(id: params[:id]).sum(:hours_worked)
 
     if params[:invoice_id]
-      puts params[:invoice_id]
-      puts "haha"
-      puts CustomerInvoice.find(params[:invoice_id]).engineering_value
-      engineering_value = CustomerInvoice.find(params[:invoice_id]).engineering_value > 0
-      puts  CustomerInvoice.find(params[:invoice_id]).number_invoice
-      puts  CustomerInvoice.find(params[:invoice_id]).invoice_value
+      invoice = CustomerInvoice.find(params[:invoice_id])
+      engineering_value = invoice.engineering_value > 0
     end
-
-    puts params[:invoice_id]
-
-    
 
     if params[:start_date] != "" && params[:end_date] != ""
       render :json => {
@@ -450,14 +361,11 @@ class CostCentersController < ApplicationController
     render :json => {
       engineering_value: invoice.engineering_value > 0,
     }
-
-
   end
 
   def download_file
-    centro = ModuleControl.find_by_name("Centro de Costos")
-    estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
-    validate = (current_user.rol.name == "Administrador" ? true : estado)
+    permissions = load_permissions("Centro de Costos", "Ver todos")
+    validate = permissions["Ver todos"]
 
     if validate
       if params[:ids] == "filtro"
@@ -467,7 +375,7 @@ class CostCentersController < ApplicationController
       end
     else
       if params[:ids] == "filtro"
-        centro_show = Contractor.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
+        centro_show = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
       else
         centro_show = CostCenter.where(user_id: current_user.id)
       end
@@ -530,27 +438,7 @@ class CostCentersController < ApplicationController
         position[11] = "Estado facturado"
 
         sheet.row(0).height = 20
-        sheet.column(0).width = 40
-
-        sheet.column(1).width = 40
-
-        sheet.column(2).width = 40
-
-        sheet.column(3).width = 40
-
-        sheet.column(4).width = 40
-
-        sheet.column(5).width = 40
-
-        sheet.column(6).width = 40
-
-        sheet.column(7).width = 40
-
-        sheet.column(8).width = 40
-
-        sheet.column(9).width = 40
-
-        sheet.column(10).width = 40
+        (0..11).each { |col| sheet.column(col).width = 40 }
         sheet.column(11).width = 45
 
         sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
@@ -567,54 +455,13 @@ class CostCentersController < ApplicationController
   # PATCH/PUT /cost_centers/1
   # PATCH/PUT /cost_centers/1.json
   def update
-    if params[:viatic_value] || params[:quotation_value] || params[:hour_real] || params[:hours_contractor_real] || params[:hours_contractor_invoices] || params[:materials_value] || params[:displacement_hours] || params[:value_displacement_hours]
-      if cost_center_params_update["viatic_value"].class.to_s != "Integer" && cost_center_params_update["viatic_value"].class.to_s != "Float" && cost_center_params_update["viatic_value"].present?
-        valor1 = cost_center_params_update["viatic_value"].gsub("$", "").gsub(",", "")
-        params["viatic_value"] = valor1
-      end
+    cleaned = clean_money_params(cost_center_params_update,
+      :viatic_value, :quotation_value, :hour_real, :hour_cotizada,
+      :hours_contractor_real, :hours_contractor_invoices, :materials_value,
+      :displacement_hours, :value_displacement_hours
+    )
 
-      if cost_center_params_update["quotation_value"].class.to_s != "Integer" && cost_center_params_update["quotation_value"].class.to_s != "Float" && cost_center_params_update["quotation_value"].present?
-        valor2 = cost_center_params_update["quotation_value"].gsub("$", "").gsub(",", "")
-        params["quotation_value"] = valor2
-      end
-
-      if cost_center_params_update["hour_real"].class.to_s != "Integer" && cost_center_params_update["hour_real"].class.to_s != "Float" && cost_center_params_update["hour_real"].present?
-        valor3 = cost_center_params_update["hour_real"].gsub("$", "").gsub(",", "")
-        params["hour_real"] = valor3
-      end
-
-      if cost_center_params_update["hour_cotizada"].class.to_s != "Integer" && cost_center_params_update["hour_cotizada"].class.to_s != "Float" && cost_center_params_update["hour_cotizada"].present?
-        valor7 = cost_center_params_update["hour_cotizada"].gsub("$", "").gsub(",", "")
-        params["hour_cotizada"] = valor7
-      end
-
-      if cost_center_params_update["hours_contractor_real"].class.to_s != "Integer" && cost_center_params_update["hours_contractor_real"].class.to_s != "Float" && cost_center_params_update["hours_contractor_real"].present?
-        valor4 = cost_center_params_update["hours_contractor_real"].gsub("$", "").gsub(",", "")
-        params["hours_contractor_real"] = valor4
-      end
-
-      if cost_center_params_update["hours_contractor_invoices"].class.to_s != "Integer" && cost_center_params_update["hours_contractor_invoices"].class.to_s != "Float" && cost_center_params_update["hours_contractor_invoices"].present?
-        valor5 = cost_center_params_update["hours_contractor_invoices"].gsub("$", "").gsub(",", "")
-        params["hours_contractor_invoices"] = valor5
-      end
-
-      if cost_center_params_update["materials_value"].class.to_s != "Integer" && cost_center_params_update["materials_value"].class.to_s != "Float" && cost_center_params_update["materials_value"].present?
-        valor6 = cost_center_params_update["materials_value"].gsub("$", "").gsub(",", "")
-        params["materials_value"] = valor6
-      end
-
-      if cost_center_params_update["displacement_hours"].class.to_s != "Integer" && cost_center_params_update["displacement_hours"].class.to_s != "Float" && cost_center_params_update["displacement_hours"].present?
-        valor7 = cost_center_params_update["displacement_hours"].gsub("$", "").gsub(",", "")
-        params["displacement_hours"] = valor7
-      end
-
-      if cost_center_params_update["value_displacement_hours"].class.to_s != "Integer" && cost_center_params_update["value_displacement_hours"].class.to_s != "Float" && cost_center_params_update["value_displacement_hours"].present?
-        valor8 = cost_center_params_update["value_displacement_hours"].gsub("$", "").gsub(",", "")
-        params["value_displacement_hours"] = valor8
-      end
-    end
-
-    if @cost_center.update(cost_center_params_update.merge!(update_user: current_user.id))
+    if @cost_center.update(cleaned.merge(update_user: current_user.id))
       recalculate_cost_center(@cost_center.id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
@@ -633,27 +480,14 @@ class CostCentersController < ApplicationController
   # DELETE /cost_centers/1
   # DELETE /cost_centers/1.json
   def destroy
-
     message = []
 
-    #materiales
     materials = @cost_center.materials.count
-
-    #ordenes de compra
     sales_orders = @cost_center.sales_orders.count
-
-    #tableristas
     contractors = @cost_center.contractors.count
-
-    #turnos
     shifts = @cost_center.shifts.count
-
-    #reports_expenses
     reports_expenses = @cost_center.report_expenses.count
-    
-    #reports servicios
     reports = @cost_center.reports.count
-
 
     if materials >= 1
       message << "#{materials} #{materials == 1 ? 'Material' : 'Materiales'}  </b> "
@@ -662,7 +496,7 @@ class CostCentersController < ApplicationController
     if sales_orders >= 1
       message << "#{sales_orders} #{sales_orders == 1 ? 'Orden de compra' : 'Ordenes de compra'} </b> "
     end
-    
+
     if contractors >= 1
       message << "#{contractors} #{shifts == 1 ? 'Tablerista' : 'Tableristas'} </b>  "
     end
@@ -679,12 +513,6 @@ class CostCentersController < ApplicationController
       message << "#{reports} #{reports == 1 ? 'Reporte de servicio' : 'Reportes de servicios'} </b>  "
     end
 
-    puts "materials #{materials}"
-    puts "sales_orders #{sales_orders}"
-    puts "contractors #{contractors}"
-    puts "shifts #{shifts}"
-
-
     if materials >= 1 || sales_orders >= 1 || contractors >= 1 || shifts >= 1 || reports_expenses >= 1 || reports >= 1
       render :json => {
         message: message,
@@ -697,7 +525,6 @@ class CostCentersController < ApplicationController
         }
       end
     end
-
   end
 
   def change_state_ended
@@ -724,6 +551,31 @@ class CostCentersController < ApplicationController
   end
 
   def set_sales_order
+  end
+
+  # Load permissions for a module in 1 query instead of N queries
+  def load_permissions(module_name, *action_names)
+    is_admin = current_user.rol.name == "Administrador"
+    return action_names.each_with_object({}) { |name, h| h[name] = true } if is_admin
+
+    mod = ModuleControl.find_by_name(module_name)
+    return action_names.each_with_object({}) { |name, h| h[name] = false } unless mod
+
+    existing = current_user.rol.accion_modules.where(module_control_id: mod.id, name: action_names).pluck(:name)
+    action_names.each_with_object({}) { |name, h| h[name] = existing.include?(name) }
+  end
+
+  # Clean money formatting from params
+  def clean_money_params(permitted_params, *fields)
+    result = permitted_params.to_h
+    fields.each do |field|
+      key = field.to_s
+      val = result[key]
+      next unless val.present?
+      next if val.is_a?(Numeric)
+      result[key] = val.to_s.gsub(/[$,]/, "")
+    end
+    result
   end
 
   # Never trust parameters from the scary internet, only allow the white list through.

@@ -7,6 +7,9 @@
   border-radius: 10px;
   border: 1px solid var(--cm-border, #e2e5ea);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - var(--cm-dt-offset, 170px));
 }
 
 /* ---------- Toolbar ---------- */
@@ -17,6 +20,7 @@
   padding: 16px 20px;
   gap: 12px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .cm-dt-toolbar-right {
@@ -182,7 +186,9 @@
 
 /* ---------- Table ---------- */
 .cm-dt-table-wrapper {
-  overflow-x: auto;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .cm-dt-table {
@@ -193,7 +199,7 @@
 
 .cm-dt-table thead th {
   padding: 12px 16px;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 13px;
   color: var(--cm-text-muted, #6c757d);
   text-transform: none;
@@ -204,6 +210,9 @@
   text-align: left;
   white-space: nowrap;
   user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .cm-dt-sortable {
@@ -217,13 +226,13 @@
 
 .cm-dt-sort-icon {
   margin-left: 6px;
-  font-size: 14px;
+  font-size: 11px;
   color: var(--cm-text-light, #9ca3af);
 }
 
 .cm-dt-sort-icon.active {
   color: var(--cm-primary, #2a3f53);
-  font-size: 15px;
+  font-size: 11px;
 }
 
 .cm-dt-table tbody td {
@@ -286,6 +295,107 @@
   background: rgba(220, 53, 69, 0.06);
 }
 
+/* ---------- Sticky Actions Column ---------- */
+.cm-dt-sticky-col {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background: #fff;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.04);
+  overflow: visible;
+}
+
+thead .cm-dt-sticky-col {
+  background: #f9fafb;
+  z-index: 4;
+}
+
+/* ---------- Actions Dropdown Menu ---------- */
+.cm-dt-menu {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.cm-dt-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--cm-border, #e2e5ea);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--cm-text-muted, #6c757d);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cm-dt-menu-trigger:hover {
+  background: var(--cm-bg, #f5f6fa);
+  color: var(--cm-primary, #2a3f53);
+  border-color: var(--cm-primary, #2a3f53);
+}
+
+.cm-dt-menu-dropdown {
+  display: none;
+  position: fixed;
+  background: #fff;
+  border: 1px solid var(--cm-border, #e2e5ea);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 6px 0;
+  min-width: 160px;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.cm-dt-menu-dropdown.open {
+  display: block;
+  pointer-events: auto;
+}
+
+/* Elevate the entire row when menu is open so it beats other sticky cells */
+.cm-dt-table tbody tr.cm-dt-menu-active td.cm-dt-sticky-col {
+  z-index: 10;
+}
+
+.cm-dt-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 16px;
+  border: none;
+  background: none;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  color: var(--cm-text, #212529);
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cm-dt-menu-item:hover {
+  background: var(--cm-bg, #f5f6fa);
+  text-decoration: none;
+  color: var(--cm-primary, #2a3f53);
+}
+
+.cm-dt-menu-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.cm-dt-menu-item--danger:hover {
+  color: var(--cm-danger, #dc3545);
+  background: rgba(220, 53, 69, 0.06);
+}
+
 /* ---------- Empty State ---------- */
 .cm-dt-empty {
   text-align: center;
@@ -320,6 +430,7 @@
   border-top: 1px solid #f0f1f3;
   flex-wrap: wrap;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .cm-dt-info {
@@ -342,12 +453,15 @@
 }
 
 .cm-dt-per-page select {
-  padding: 5px 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 5px 32px 5px 10px;
   font-family: "Poppins", sans-serif;
   font-size: 13px;
   border: 1px solid var(--cm-border, #e2e5ea);
   border-radius: 6px;
-  background: #fff;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
   color: var(--cm-text, #212529);
   cursor: pointer;
   outline: none;
@@ -390,6 +504,15 @@
   color: var(--cm-text-muted, #6c757d);
   padding: 0 8px;
   white-space: nowrap;
+}
+
+/* ---------- Skeleton: fill max height ---------- */
+.cm-dt--skeleton {
+  height: calc(100vh - var(--cm-dt-offset, 170px));
+}
+
+.cm-dt--skeleton .cm-dt-table {
+  table-layout: fixed;
 }
 
 /* ---------- Skeleton Loading ---------- */

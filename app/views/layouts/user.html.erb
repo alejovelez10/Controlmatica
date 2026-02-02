@@ -404,10 +404,10 @@
         <div>
             <%= controller_name_helper(controller_name, action_name).html_safe %>
         </div>
-        <ul class="app-breadcrumb breadcrumb">
-          <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
-           <%= breadcrumb_actions(controller_name, action_name).html_safe %>
-        </ul>
+        <div class="app-title-right">
+          <div id="page-actions-portal"></div>
+          <%= yield :page_actions if content_for?(:page_actions) %>
+        </div>
       </div>
       <div class="row <%= controller_name%>-<%= action_name%>-content">
         <div class="col-md-12 page">

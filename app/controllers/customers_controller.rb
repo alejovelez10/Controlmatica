@@ -16,9 +16,19 @@ class CustomersController < ApplicationController
     }
   end
 
+  SORTABLE_COLUMNS = %w[name code phone address nit web email].freeze
+
   def get_customers
     sleep(2) if Rails.env.development?
-    customers = Customer.search(params[:name]).ordered
+    customers = Customer.search(params[:name])
+
+    # Ordenamiento server-side
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      customers = customers.order(params[:sort] => direction)
+    else
+      customers = customers.ordered
+    end
 
     page = (params[:page] || 1).to_i
     per_page = (params[:per_page] || 10).to_i
@@ -85,6 +95,15 @@ class CustomersController < ApplicationController
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.json {
+        render json: @customer.as_json(
+          only: [:id, :name, :code, :phone, :address, :nit, :web, :email],
+          include: { contacts: { only: [:id, :name, :phone, :email, :position] } }
+        )
+      }
+    end
   end
 
   def customer_user
@@ -129,14 +148,15 @@ class CustomersController < ApplicationController
 
   def create
     @customer = Customer.new(customer_params)
+    @customer.user_id = current_user.id
 
     respond_to do |format|
       if @customer.save
         format.html { redirect_to customers_url, notice: 'Cliente creado exitosamente.' }
-        format.json { render :show, status: :created, location: @customer }
+        format.json { render json: { success: true, message: "Cliente creado exitosamente" }, status: :created }
       else
         format.html { render :new }
-        format.json { render json: @customer.errors, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @customer.errors.full_messages }, status: :unprocessable_entity }
       end
     end
   end
@@ -145,10 +165,10 @@ class CustomersController < ApplicationController
     respond_to do |format|
       if @customer.update(customer_params)
         format.html { redirect_to customers_url, notice: 'Cliente actualizado exitosamente.' }
-        format.json { render :show, status: :ok, location: @customer }
+        format.json { render json: { success: true, message: "Cliente actualizado exitosamente" }, status: :ok }
       else
         format.html { render :edit }
-        format.json { render json: @customer.errors, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @customer.errors.full_messages }, status: :unprocessable_entity }
       end
     end
   end

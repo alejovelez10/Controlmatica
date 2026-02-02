@@ -6,3 +6,4 @@ export { default as CmModal } from "./CmModal";
 export { default as CmAlert } from "./CmAlert";
 export { default as CmBadge } from "./CmBadge";
 export { default as CmDataTable } from "./CmDataTable";
+export { default as CmPageActions } from "./CmPageActions";

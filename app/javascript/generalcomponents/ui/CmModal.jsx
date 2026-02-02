@@ -19,7 +19,7 @@ class CmModal extends React.Component {
 CmModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.node.isRequired,
   size: PropTypes.string,
   footer: PropTypes.node,
   children: PropTypes.node.isRequired

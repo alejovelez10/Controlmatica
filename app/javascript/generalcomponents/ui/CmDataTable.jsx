@@ -50,11 +50,13 @@ class CmDataTable extends React.Component {
 
   // Ordenamiento
   handleSort = (key) => {
-    this.setState((prev) => ({
-      sortKey: key,
-      sortDir: prev.sortKey === key && prev.sortDir === "asc" ? "desc" : "asc",
-      page: 1,
-    }));
+    this.setState((prev) => {
+      const newDir = prev.sortKey === key && prev.sortDir === "asc" ? "desc" : "asc";
+      if (this.props.serverPagination && this.props.onSort) {
+        this.props.onSort(key, newDir);
+      }
+      return { sortKey: key, sortDir: newDir, page: 1 };
+    });
   };
 
   // Paginación
@@ -107,8 +109,8 @@ class CmDataTable extends React.Component {
       );
     }
 
-    // Ordenar (siempre client-side)
-    if (sortKey) {
+    // Ordenar (solo client-side cuando no hay server pagination con onSort)
+    if (sortKey && !(this.props.serverPagination && this.props.onSort)) {
       result = [...result].sort((a, b) => {
         const aVal = a[sortKey] != null ? a[sortKey] : "";
         const bVal = b[sortKey] != null ? b[sortKey] : "";
@@ -137,24 +139,25 @@ class CmDataTable extends React.Component {
   renderSortIcon = (key) => {
     const { sortKey, sortDir } = this.state;
     if (sortKey !== key) {
-      return <span className="cm-dt-sort-icon">⇅</span>;
+      return <span className="cm-dt-sort-icon"><i className="fas fa-sort" /></span>;
     }
     return (
       <span className="cm-dt-sort-icon active">
-        {sortDir === "asc" ? "↑" : "↓"}
+        <i className={sortDir === "asc" ? "fas fa-sort-up" : "fas fa-sort-down"} />
       </span>
     );
   };
 
   renderSkeleton = () => {
     const { columns } = this.props;
-    const visibleCols = columns.filter((c) =>
+    const allVisible = columns.filter((c) =>
       this.state.visibleColumns.includes(c.key)
     );
-    const rows = 6;
+    const visibleCols = allVisible.slice(0, 6);
+    const rows = 15;
 
     return (
-      <div className="cm-dt">
+      <div className="cm-dt cm-dt--skeleton">
         <div className="cm-dt-toolbar">
           <div className="cm-dt-search">
             <div className="cm-dt-skeleton-bar" style={{ width: "250px", height: "38px" }} />
@@ -170,8 +173,8 @@ class CmDataTable extends React.Component {
                   </th>
                 ))}
                 {this.props.actions && (
-                  <th>
-                    <div className="cm-dt-skeleton-bar" style={{ width: "60px", height: "14px" }} />
+                  <th className={this.props.stickyActions ? "cm-dt-sticky-col" : ""} style={{ textAlign: "center", width: "60px" }}>
+                    <div className="cm-dt-skeleton-bar" style={{ width: "28px", height: "14px", margin: "0 auto" }} />
                   </th>
                 )}
               </tr>
@@ -191,12 +194,8 @@ class CmDataTable extends React.Component {
                     </td>
                   ))}
                   {this.props.actions && (
-                    <td>
-                      <div className="cm-dt-skeleton-actions">
-                        <div className="cm-dt-skeleton-circle" />
-                        <div className="cm-dt-skeleton-circle" />
-                        <div className="cm-dt-skeleton-circle" />
-                      </div>
+                    <td className={this.props.stickyActions ? "cm-dt-sticky-col" : ""} style={{ textAlign: "center" }}>
+                      <div className="cm-dt-skeleton-circle" />
                     </td>
                   )}
                 </tr>
@@ -209,7 +208,7 @@ class CmDataTable extends React.Component {
   };
 
   render() {
-    const { columns, data, actions, loading, emptyMessage, emptyAction, headerActions, searchPlaceholder, serverPagination, serverMeta } = this.props;
+    const { columns, data, actions, loading, emptyMessage, emptyAction, headerActions, searchPlaceholder, serverPagination, serverMeta, stickyActions } = this.props;
     const { search, activeSearch, visibleColumns, showColumnPicker } = this.state;
 
     if (loading) {
@@ -306,13 +305,13 @@ class CmDataTable extends React.Component {
                     key={col.key}
                     onClick={() => col.sortable !== false && this.handleSort(col.key)}
                     className={col.sortable !== false ? "cm-dt-sortable" : ""}
-                    style={col.width ? { width: col.width } : {}}
+                    style={col.width ? { minWidth: col.width, width: col.width } : {}}
                   >
                     {col.label}
                     {col.sortable !== false && this.renderSortIcon(col.key)}
                   </th>
                 ))}
-                {actions && <th className="cm-dt-actions-header">Acciones</th>}
+                {actions && <th className={"cm-dt-actions-header" + (stickyActions ? " cm-dt-sticky-col" : "")}>Acciones</th>}
               </tr>
             </thead>
             <tbody>
@@ -325,7 +324,7 @@ class CmDataTable extends React.Component {
                       </td>
                     ))}
                     {actions && (
-                      <td className="cm-dt-actions-cell">{actions(row)}</td>
+                      <td className={"cm-dt-actions-cell" + (stickyActions ? " cm-dt-sticky-col" : "")}>{actions(row)}</td>
                     )}
                   </tr>
                 ))
@@ -432,6 +431,8 @@ CmDataTable.propTypes = {
     per_page: PropTypes.number,
     total_pages: PropTypes.number,
   }),
+  stickyActions: PropTypes.bool,
+  onSort: PropTypes.func,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func,
 };

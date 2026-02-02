@@ -113,6 +113,7 @@ Rails.application.routes.draw do
   get "get_sales_order", to: "sales_orders#get_sales_order"
   get "get_reports", to: "reports#get_reports"
   get "get_rols", to: "rols#get_rols"
+  get "get_modules_with_actions", to: "rols#get_modules_with_actions"
 
   get "get_report_value/:id", to: "customer_reports#get_report_value"
 

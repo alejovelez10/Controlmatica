@@ -103,66 +103,45 @@ class CostCenter < ApplicationRecord
 
   scope :filterCost, -> { where("service_type like 'PROYECTO' or service_type like 'SERVICIO'").where.not(execution_state: "FINALIZADO") }
   scope :tableristas, -> { where(service_type: "PROYECTO") }
-  #filtros para todo
-  def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
-    search1 != "" ? (scope :descripcion, -> { where("description like '%#{search1.downcase}%' or description like '%#{search1.upcase}%' or description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-    search2 != "" ? (scope :customer, -> { where(customer_id: search2) }) : (scope :customer, -> { where.not(id: nil) })
-    search3 != "" ? (scope :state_execution, -> { where(execution_state: search3) }) : (scope :state_execution, -> { where.not(id: nil) })
-    search4 != "" ? (scope :state_invoice, -> { where(invoiced_state: search4) }) : (scope :state_invoice, -> { where.not(id: nil) })
-    search5 != "" ? (scope :cost_center, -> { where(id: search5) }) : (scope :cost_center, -> { where.not(id: nil) })
-    search6 != "" ? (scope :service_type_scope, -> { where(service_type: search6) }) : (scope :service_type_scope, -> { where.not(id: nil) })
-    search7 != "" ? (scope :date_desde_type_scope, -> { where(["start_date >= ?", search7]) }) : (scope :date_desde_type_scope, -> { where.not(id: nil) })
-    search8 != "" ? (scope :date_hasta_type_scope, -> { where(["start_date <= ?", search8]) }) : (scope :date_hasta_type_scope, -> { where.not(id: nil) })
-    search9 != "" ? (scope :quotation_number_scope, -> { where("quotation_number like '%#{search9.downcase}%' or quotation_number like '%#{search9.upcase}%' or quotation_number like '%#{search9.capitalize}%' ") }) : (scope :quotation_number_scope, -> { where.not(id: nil) })
 
-    return descripcion.customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope.quotation_number_scope
+  def self.search(description, customer_id, execution_state, invoiced_state, cost_center_id, service_type, date_desde, date_hasta, quotation_number)
+    scope = all
+    scope = scope.where("LOWER(description) LIKE ?", "%#{description.downcase}%") if description.present?
+    scope = scope.where(customer_id: customer_id) if customer_id.present?
+    scope = scope.where(execution_state: execution_state) if execution_state.present?
+    scope = scope.where(invoiced_state: invoiced_state) if invoiced_state.present?
+    scope = scope.where(id: cost_center_id) if cost_center_id.present?
+    scope = scope.where(service_type: service_type) if service_type.present?
+    scope = scope.where("start_date >= ?", date_desde) if date_desde.present?
+    scope = scope.where("start_date <= ?", date_hasta) if date_hasta.present?
+    scope = scope.where("LOWER(quotation_number) LIKE ?", "%#{quotation_number.downcase}%") if quotation_number.present?
+    scope
   end
 
-  def self.searchInfo(search1, search2, search3, search4, search5, search6, search7, search8, search9)
-    puts "model"
-    puts search5
-    puts search1
-    search4 = search4 != "" ? search4.split(/,/) : ""
-    search1 = search1 != "" ? search1.split(/,/) : ""
-    search2 = search2 != "" ? search2.split(/,/) : ""
-    search3 = search3 != "" ? search3.split(/,/) : ""
-    search5 = search5 != "" ? search5.split(/,/) : ""
+  def self.searchInfo(customer_ids, execution_states, invoiced_states, cost_center_ids, service_types, date_desde, date_hasta, customer_mode, cost_center_mode)
+    customer_ids = customer_ids.present? ? customer_ids.split(/,/) : nil
+    execution_states = execution_states.present? ? execution_states.split(/,/) : nil
+    invoiced_states = invoiced_states.present? ? invoiced_states.split(/,/) : nil
+    cost_center_ids = cost_center_ids.present? ? cost_center_ids.split(/,/) : nil
+    service_types = service_types.present? ? service_types.split(/,/) : nil
 
-    puts search4
-    puts search1
-    puts search2
-    puts search3
-    puts search5
-    puts "---------"
-    puts search8
+    scope = all
 
-    if search8 == "Incluidos"
-      puts "incluidosssssssssssssssss customer"
-      search1 != "" ? (scope :customer, -> { where(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
-    else
-      puts "exosssssssssssssssss customer"
-
-      search1 != "" ? (scope :customer, -> { where.not(customer_id: search1) }) : (scope :customer, -> { where.not(id: nil) })
+    if customer_ids.present?
+      scope = customer_mode == "Incluidos" ? scope.where(customer_id: customer_ids) : scope.where.not(customer_id: customer_ids)
     end
 
-    search2 != "" ? (scope :state_execution, -> { where(execution_state: search2) }) : (scope :state_execution, -> { where.not(id: nil) })
-    search3 != "" ? (scope :state_invoice, -> { where(invoiced_state: search3) }) : (scope :state_invoice, -> { where.not(id: nil) })
+    scope = scope.where(execution_state: execution_states) if execution_states.present?
+    scope = scope.where(invoiced_state: invoiced_states) if invoiced_states.present?
 
-    if search9 == "Incluidos"
-      puts "incluidosssssssssssssssss cost"
-
-      search4 != "" ? (scope :cost_center, -> { where(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
-    else
-      puts "exosssssssssssssssss sotr"
-
-      search4 != "" ? (scope :cost_center, -> { where.not(id: search4) }) : (scope :cost_center, -> { where.not(id: nil) })
+    if cost_center_ids.present?
+      scope = cost_center_mode == "Incluidos" ? scope.where(id: cost_center_ids) : scope.where.not(id: cost_center_ids)
     end
 
-    search5 != "" ? (scope :service_type_scope, -> { where(service_type: search5) }) : (scope :service_type_scope, -> { where.not(id: nil) })
-    search6 != "" ? (scope :date_desde_type_scope, -> { where(["start_date >= ?", search6]) }) : (scope :date_desde_type_scope, -> { where.not(id: nil) })
-    search7 != "" ? (scope :date_hasta_type_scope, -> { where(["start_date <= ?", search7]) }) : (scope :date_hasta_type_scope, -> { where.not(id: nil) })
-
-    return customer.state_execution.state_invoice.cost_center.service_type_scope.date_desde_type_scope.date_hasta_type_scope
+    scope = scope.where(service_type: service_types) if service_types.present?
+    scope = scope.where("start_date >= ?", date_desde) if date_desde.present?
+    scope = scope.where("start_date <= ?", date_hasta) if date_hasta.present?
+    scope
   end
 
   def create_code
@@ -217,7 +196,6 @@ class CostCenter < ApplicationRecord
   def change_state
     self.last_user_edited_id = !User.current.nil? ? User.current.id : 1
     if !self.has_many_quotes
-      puts "alejooooooooooooo"
       self.engineering_value = self.hour_cotizada * self.eng_hours
     end
     if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil? && (self.quotation_number != "N/A")
@@ -230,12 +208,10 @@ class CostCenter < ApplicationRecord
       customers.each do |cliente|
         names << cliente.name
       end
-      customer = "<p>El Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>" #self.customer.name
+      customer = "<p>El Cliente: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
     else
       customer = ""
     end
-
-    puts "change_statechange_statechange_statechange_statechange_statechange_statechange_statechange_statechange_state"
 
     if self.contact_id_changed?
       namesClient = []
@@ -281,30 +257,20 @@ class CostCenter < ApplicationRecord
     end
   end
 
-
-
-
   def create_create_register
     self.last_user_edited_id = !User.current.nil? ? User.current.id : 1
     if !self.has_many_quotes
-      puts "alejooooooooooooo"
       self.engineering_value = self.hour_cotizada * self.eng_hours
     end
     if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil? && (self.quotation_number != "N/A")
       self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
     end
 
-
-      cliente= Customer.find(self.customer_id)
-      customer = "<p>El Cliente: <b>#{cliente.name}</b>"
-
-
-    puts "change_statechange_statechange_statechange_statechange_statechange_statechange_statechange_statechange_state"
-
+    cliente = Customer.find(self.customer_id)
+    customer = "<p>El Cliente: <b>#{cliente.name}</b>"
 
     contacto = Contact.where(id: self.contact_id)
-    contact = "<p>El Contacto: <b>#{contacto.name}</b>"
-
+    contact = "<p>El Contacto: <b>#{contacto.first&.name}</b>"
 
     descripcion = "<p>La descripcion: <b>#{self.description}</b>"
     fecha_star = "<p>La Fecha de inicio: <b>#{self.start_date}</b>"
@@ -340,27 +306,19 @@ class CostCenter < ApplicationRecord
     end
   end
 
-
   def create_delete_register
     if !self.has_many_quotes
-      puts "alejooooooooooooo"
       self.engineering_value = self.hour_cotizada * self.eng_hours
     end
     if self.invoiced_state == "PENDIENTE DE COTIZACION" && !self.quotation_number.blank? && !self.quotation_number.nil? && (self.quotation_number != "N/A")
       self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
     end
 
-
-      cliente= Customer.find(self.customer_id)
-      customer = "<p>El Cliente: <b>#{cliente.name}</b>"
-
-
-    puts "change_statechange_statechange_statechange_statechange_statechange_statechange_statechange_statechange_state"
-
+    cliente = Customer.find(self.customer_id)
+    customer = "<p>El Cliente: <b>#{cliente.name}</b>"
 
     contacto = Contact.where(id: self.contact_id)
-    contact = "<p>El Contacto: <b>#{contacto.name}</b>"
-
+    contact = "<p>El Contacto: <b>#{contacto.first&.name}</b>"
 
     descripcion = "<p>La descripcion: <b>#{self.description}</b>"
     fecha_star = "<p>La Fecha de inicio: <b>#{self.start_date}</b>"
@@ -396,37 +354,20 @@ class CostCenter < ApplicationRecord
     end
   end
 
-
-
-
-
-
-
-
-
-
-
   def change_state_cost_center
-    cost_center = CostCenter.find(self.id)
-    sum_invoices = CustomerInvoice.where(cost_center_id: self.id).sum(:invoice_value)
-    sales_order_sum = SalesOrder.where(cost_center_id: self.id).sum(:order_value)
-    customer_invoice = CustomerInvoice.where(cost_center_id: self.id).sum(:invoice_value)
-    CustomerInvoice.where(cost_center_id: self.id).each do |en|
-      puts en.invoice_value
-    end
-    puts "asfadsfdasfdafasfadsfadsfdsafdfdasfdasfsdfadsfdsafdd"
-    puts customer_invoice
-    puts sales_order_sum
-    puts cost_center.quotation_value
-    cost_center.quotation_value = cost_center.quotation_value.nil? ? 0 : cost_center.quotation_value
-    if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
+    sum_invoices = self.customer_invoices.sum(:invoice_value)
+    sales_order_sum = self.sales_orders.sum(:order_value)
+    customer_invoice = sum_invoices
+    qv = self.quotation_value || 0
+
+    if (qv <= customer_invoice && customer_invoice > 0)
       self.invoiced_state = "FACTURADO"
-    elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
+    elsif (customer_invoice > 0 && customer_invoice < qv)
       self.invoiced_state = "FACTURADO PARCIAL"
     elsif (customer_invoice <= 0 && !self.quotation_number.blank? && !self.quotation_number.nil?)
-      if (cost_center.quotation_value <= sales_order_sum + 1000 && customer_invoice == 0 && cost_center.quotation_value > 0)
+      if (qv <= sales_order_sum + 1000 && customer_invoice == 0 && qv > 0)
         self.invoiced_state = "LEGALIZADO"
-      elsif (sales_order_sum > 0 && sales_order_sum < cost_center.quotation_value && sum_invoices == 0 && customer_invoice == 0)
+      elsif (sales_order_sum > 0 && sales_order_sum < qv && sum_invoices == 0 && customer_invoice == 0)
         self.invoiced_state = "LEGALIZADO PARCIAL"
       elsif (sales_order_sum == 0 && customer_invoice == 0)
         self.invoiced_state = "PENDIENTE DE ORDEN DE COMPRA"
@@ -434,9 +375,7 @@ class CostCenter < ApplicationRecord
     end
   end
 
-
   def create_quotation
-
     if self.has_many_quotes
       quotation = Quotation.create(
         cost_center_id: self.id,
@@ -456,10 +395,7 @@ class CostCenter < ApplicationRecord
         displacement_hours: self.displacement_hours,
         viatic_value: self.viatic_value,
         work_force_contractor: self.work_force_contractor,
-
       )
+    end
   end
-  end
-
-
 end
