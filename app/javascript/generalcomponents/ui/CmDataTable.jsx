@@ -166,21 +166,26 @@ class CmDataTable extends React.Component {
           <table className="cm-dt-table">
             <thead>
               <tr>
+                {this.props.actions && (
+                  <th style={{ width: "50px" }}>
+                    <div className="cm-dt-skeleton-bar" style={{ width: "28px", height: "14px", margin: "0 auto" }} />
+                  </th>
+                )}
                 {visibleCols.map((col, i) => (
                   <th key={i}>
                     <div className="cm-dt-skeleton-bar" style={{ width: "70%", height: "14px" }} />
                   </th>
                 ))}
-                {this.props.actions && (
-                  <th className={this.props.stickyActions ? "cm-dt-sticky-col" : ""} style={{ textAlign: "center", width: "60px" }}>
-                    <div className="cm-dt-skeleton-bar" style={{ width: "28px", height: "14px", margin: "0 auto" }} />
-                  </th>
-                )}
               </tr>
             </thead>
             <tbody>
               {Array.from({ length: rows }).map((_, i) => (
                 <tr key={i}>
+                  {this.props.actions && (
+                    <td style={{ textAlign: "center" }}>
+                      <div className="cm-dt-skeleton-circle" />
+                    </td>
+                  )}
                   {visibleCols.map((col, j) => (
                     <td key={j}>
                       <div
@@ -192,11 +197,6 @@ class CmDataTable extends React.Component {
                       />
                     </td>
                   ))}
-                  {this.props.actions && (
-                    <td className={this.props.stickyActions ? "cm-dt-sticky-col" : ""} style={{ textAlign: "center" }}>
-                      <div className="cm-dt-skeleton-circle" />
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>
@@ -299,6 +299,7 @@ class CmDataTable extends React.Component {
           <table className="cm-dt-table">
             <thead>
               <tr>
+                {actions && <th className="cm-dt-actions-header" style={{ width: 50, padding: "8px 4px" }}></th>}
                 {visibleCols.map((col) => (
                   <th
                     key={col.key}
@@ -310,21 +311,20 @@ class CmDataTable extends React.Component {
                     {col.sortable !== false && this.renderSortIcon(col.key)}
                   </th>
                 ))}
-                {actions && <th className={"cm-dt-actions-header" + (stickyActions ? " cm-dt-sticky-col" : "")}>Acciones</th>}
               </tr>
             </thead>
             <tbody>
               {rows.length > 0 ? (
                 rows.map((row, i) => (
                   <tr key={row.id || i}>
+                    {actions && (
+                      <td className="cm-dt-actions-cell" style={{ padding: "8px 4px" }}>{actions(row)}</td>
+                    )}
                     {visibleCols.map((col) => (
                       <td key={col.key}>
                         {col.render ? col.render(row) : row[col.key]}
                       </td>
                     ))}
-                    {actions && (
-                      <td className={"cm-dt-actions-cell" + (stickyActions ? " cm-dt-sticky-col" : "")}>{actions(row)}</td>
-                    )}
                   </tr>
                 ))
               ) : (

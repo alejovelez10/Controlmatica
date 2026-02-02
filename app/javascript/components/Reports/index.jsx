@@ -570,7 +570,6 @@ class index extends React.Component {
         data: self.state.data,
         loading: self.state.loading,
         actions: self.renderActions,
-        stickyActions: true,
         headerActions: self.renderHeaderActions(),
         onSearch: self.handleSearch,
         searchPlaceholder: "Buscar por descripcion o codigo...",

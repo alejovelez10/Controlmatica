@@ -721,7 +721,6 @@ class index extends React.Component {
           data={this.props.data}
           loading={this.props.loading}
           actions={this.renderActions}
-          stickyActions
           headerActions={this.renderHeaderActions()}
           onSearch={this.props.onSearch}
           searchPlaceholder="Buscar orden..."
