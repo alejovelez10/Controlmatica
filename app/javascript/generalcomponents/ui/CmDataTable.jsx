@@ -7,6 +7,7 @@ class CmDataTable extends React.Component {
 
     this.state = {
       search: "",
+      appliedSearch: "",
       activeSearch: false,
       sortKey: null,
       sortDir: "asc",
@@ -34,15 +35,13 @@ class CmDataTable extends React.Component {
 
     if (onSearch) {
       onSearch(search.trim());
-      this.setState({ activeSearch: search.trim() !== "", page: 1 });
-    } else {
-      this.setState({ page: 1 });
     }
+    this.setState({ appliedSearch: search.trim(), activeSearch: search.trim() !== "", page: 1 });
   };
 
   cancelSearch = () => {
     const { onSearch } = this.props;
-    this.setState({ search: "", activeSearch: false, page: 1 });
+    this.setState({ search: "", appliedSearch: "", activeSearch: false, page: 1 });
     if (onSearch) {
       onSearch("");
     }
@@ -94,13 +93,13 @@ class CmDataTable extends React.Component {
   // Filtrar y ordenar datos (solo cuando NO hay onSearch, búsqueda local)
   getProcessedData = () => {
     const { data, columns, onSearch } = this.props;
-    const { search, sortKey, sortDir } = this.state;
+    const { appliedSearch, sortKey, sortDir } = this.state;
 
     let result = data || [];
 
     // Búsqueda local solo si no hay onSearch (backend)
-    if (!onSearch && search.trim()) {
-      const term = search.toLowerCase();
+    if (!onSearch && appliedSearch) {
+      const term = appliedSearch.toLowerCase();
       result = result.filter((row) =>
         columns.some((col) => {
           const val = row[col.key];

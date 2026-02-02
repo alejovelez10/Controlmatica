@@ -1,318 +1,149 @@
 import React, { Component } from 'react';
 import FormCreate from '../Contractors/FormCreate';
-import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
+import { CmDataTable } from '../../generalcomponents/ui';
+
+function csrfToken() {
+  var meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute("content") : "";
+}
 
 class TableristasTable extends Component {
-    constructor(props) {
-        super(props)
-        this.token = document.querySelector("[name='csrf-token']").content;
-        this.state = {
-            data: [],
-            modal: false,
-            modeEdit: false,
-            ErrorValues: true,
-            contractor_id: "",
-
-            form: {
-                sales_number: "",
-                sales_date: "",
-                ammount: "",
-                description: "",
-                hours: "",
-                user_id: this.props.usuario.id,
-                cost_center_id: this.props.cost_center.id,
-                user_execute_id: "",
-            },
-
-            selectedOptionUsers: {
-                user_execute_id: "",
-                label: "Horas trabajadas por"
-            },
-        }
-    }
-
-    handleChangeAutocompleteUsers = selectedOptionUsers => {
-        this.setState({
-            selectedOptionUsers,
-            form: {
-                ...this.state.form,
-                user_execute_id: selectedOptionUsers.value
-            }
-        });
+  constructor(props) {
+    super(props);
+    this.state = {
+      data: [],
+      loading: true,
+      modal: false,
+      modeEdit: false,
+      ErrorValues: true,
+      contractor_id: "",
+      form: {
+        sales_number: "", sales_date: "", ammount: "", description: "", hours: "",
+        user_id: this.props.usuario.id, cost_center_id: this.props.cost_center.id,
+        user_execute_id: "",
+      },
+      selectedOptionUsers: { user_execute_id: "", label: "Horas trabajadas por" },
     };
 
-    componentDidMount = () => {
-        setTimeout(() => {
-            this.setState({
-                data: this.props.dataContractors
-            })
-        }, 2000)
-    }
+    this.columns = [
+      { key: "sales_date", label: "Fecha" },
+      { key: "hours", label: "Horas" },
+      { key: "user_execute_name", label: "Trabajo realizado por", render: (r) => r.user_execute ? r.user_execute.names : "" },
+      { key: "description", label: "Descripción" },
+    ];
+  }
 
-    HandleChange = (e) => {
-        this.setState({
-            form: {
-                ...this.state.form,
-                [e.target.name]: e.target.value,
-            }
-        });
-    }
+  componentDidMount() { this.loadData(); }
 
-    toogle = (from) => {
-        if (from == "new") {
-            this.setState({ modal: true })
-            this.clearValues();
-        } else {
-            this.setState({ modal: false })
-            this.clearValues();
+  loadData = () => {
+    this.setState({ loading: true });
+    fetch("/getValues/" + this.props.cost_center.id)
+      .then((r) => r.json())
+      .then((data) => { this.setState({ data: data.dataContractors || [], loading: false }); });
+  };
+
+  HandleChange = (e) => { this.setState({ form: Object.assign({}, this.state.form, { [e.target.name]: e.target.value }) }); };
+
+  handleChangeAutocompleteUsers = (opt) => {
+    this.setState({ selectedOptionUsers: opt, form: Object.assign({}, this.state.form, { user_execute_id: opt.value }) });
+  };
+
+  toogle = (from) => {
+    if (from === "new") { this.setState({ modal: true }); this.clearValues(); }
+    else { this.setState({ modal: false }); this.clearValues(); }
+  };
+
+  clearValues = () => {
+    this.setState({
+      modeEdit: false, ErrorValues: true, contractor_id: "",
+      form: Object.assign({}, this.state.form, { sales_number: "", sales_date: "", ammount: "", description: "", hours: "", user_execute_id: "" }),
+      selectedOptionUsers: { user_execute_id: "", label: "Horas trabajadas por" },
+    });
+  };
+
+  edit = (contractor) => {
+    this.setState({
+      modal: true, contractor_id: contractor.id,
+      form: Object.assign({}, this.state.form, {
+        sales_number: contractor.sales_number, sales_date: contractor.sales_date,
+        ammount: contractor.ammount, description: contractor.description,
+        hours: contractor.hours, user_execute_id: contractor.user_execute ? contractor.user_execute.id : "",
+      }),
+      selectedOptionUsers: {
+        user_execute_id: contractor.user_execute_id,
+        label: contractor.user_execute ? contractor.user_execute.names : "Horas trabajadas por",
+      },
+    });
+  };
+
+  HandleClick = () => {
+    var self = this;
+    var url = this.state.contractor_id ? "/contractors/" + this.state.contractor_id : "/contractors";
+    var method = this.state.contractor_id ? "PATCH" : "POST";
+    fetch(url, { method: method, body: JSON.stringify(this.state.form), headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })
+      .then((r) => r.json())
+      .then(() => { self.setState({ modal: false }); self.loadData(); self.clearValues(); });
+  };
+
+  delete = (id) => {
+    Swal.fire({ title: "¿Estás seguro?", text: "El tablerista será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+      .then((result) => {
+        if (result.value) {
+          fetch("/contractors/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })
+            .then((r) => r.json())
+            .then(() => { this.loadData(); });
         }
-    }
+      });
+  };
 
-    //add items
-    updateData = (data) => {
-        this.setState({
-            data: [...this.state.data, data],
-        })
-    }
+  openMenu = (e) => {
+    e.stopPropagation();
+    var btn = e.currentTarget; var menu = btn.nextElementSibling;
+    document.querySelectorAll('.cm-dt-menu-dropdown.open').forEach(function(m) { m.classList.remove('open'); });
+    var rect = btn.getBoundingClientRect();
+    document.body.appendChild(menu);
+    menu.style.top = (rect.bottom + 4) + 'px'; menu.style.left = (rect.right - 160) + 'px';
+    menu.classList.add('open');
+    var close = function(ev) { if (!menu.contains(ev.target) && !btn.contains(ev.target)) { menu.classList.remove('open'); btn.parentNode.appendChild(menu); document.removeEventListener('click', close); } };
+    document.addEventListener('click', close);
+  };
 
-    //add update
-    updateItem = register => {
-        this.setState({
-            data: this.state.data.map(item => {
-                if (register.id === item.id) {
-                    return {
-                        ...item,
-                        sales_date: register.sales_date,
-                        hours: register.hours,
-                        user_execute: register.user_execute,
-                        description: register.description,
-                    }
-                }
-                return item;
-            })
-        });
-    }
+  renderActions = (row) => (
+    <div className="cm-dt-menu">
+      <button className="cm-dt-menu-trigger" onClick={this.openMenu}><i className="fas fa-ellipsis-v" /></button>
+      <div className="cm-dt-menu-dropdown">
+        {this.props.estados.cost_center_edit && <button onClick={() => this.edit(row)} className="cm-dt-menu-item"><i className="fas fa-pen" /> Editar</button>}
+        {this.props.estados.cost_center_edit && <button onClick={() => this.delete(row.id)} className="cm-dt-menu-item cm-dt-menu-item--danger"><i className="fas fa-trash" /> Eliminar</button>}
+      </div>
+    </div>
+  );
 
-    clearValues = () => {
-        this.setState({
-            modeEdit: false,
-            ErrorValues: true,
-
-            form: {
-                ...this.state.form,
-                sales_number: "",
-                sales_date: "",
-                ammount: "",
-                description: "",
-                hours: "",
-                user_execute_id: "",
-            },
-        })
-    }
-
-    delete = id => {
-        Swal.fire({
-            title: "¿Estás seguro?",
-            text: "¡El registro será eliminado para siempre!",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#009688",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Eliminar",
-            cancelButtonText: "Cancelar"
-        }).then(result => {
-            if (result.value) {
-                fetch(`/contractors/${id}`, {
-                    method: "delete",
-                    headers: {
-                        "X-CSRF-Token": this.token,
-                        "Content-Type": "application/json"
-                    }
-                })
-                    .then(response => response.json())
-                    .then(response => {
-                        this.setState({
-                            data: this.state.data.filter((e) => e.id != id)
-                        })
-                    });
-            }
-        });
-    };
-
-    HandleClick = () => {
-        if (true) {
-            if (this.state.contractor_id) {
-                fetch(`/contractors/${this.state.contractor_id}`, {
-                    method: 'PATCH', // or 'PUT'
-                    body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-                    headers: {
-                        "X-CSRF-Token": this.token,
-                        "Content-Type": "application/json"
-                    }
-                })
-
-                    .then(res => res.json())
-                    .catch(error => console.error("Error:", error))
-                    .then(data => {
-                        this.updateItem(data.register);
-                        this.setState({ contractor_id: "", modal: false });
-                    });
-            } else {
-                fetch(`/contractors`, {
-                    method: 'POST', // or 'PUT'
-                    body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-                    headers: {
-                        "X-CSRF-Token": this.token,
-                        "Content-Type": "application/json"
-                    }
-                })
-                    .then(res => res.json())
-                    .catch(error => console.error("Error:", error))
-                    .then(data => {
-                        this.updateData(data.register);
-                        this.setState({ contractor_id: "", modal: false });
-                    });
-            }
-        }
-    }
-
-    edit = (contractor) => {
-        this.setState({
-            modal: true,
-            contractor_id: contractor.id,
-
-            form: {
-                ...this.state.form,
-                sales_number: contractor.sales_number,
-                sales_date: contractor.sales_date,
-                ammount: contractor.ammount,
-                description: contractor.description,
-                hours: contractor.hours,
-                user_execute_id: contractor.user_execute ? contractor.user_execute.id : "",
-            },
-
-            selectedOptionUsers: {
-                user_execute_id: contractor.user_execute_id,
-                label: `${contractor.user_execute ? contractor.user_execute.names : "Horas trabajadas por"}`
-            },
-        })
-    }
-
-    render() {
-        return (
-            <React.Fragment>
-                {this.state.modal && (
-                    <FormCreate
-                        toggle={this.toogle}
-                        backdrop={this.state.backdrop}
-                        modal={this.state.modal}
-
-                        onChangeForm={this.HandleChange}
-                        formValues={this.state.form}
-                        submit={this.HandleClick}
-
-                        titulo={this.state.contractor_id ? "Actualizar tablerista" : "Crear tablerista"}
-                        nameSubmit={this.state.contractor_id ? "Actualizar" : "Crear"}
-                        errorValues={this.state.ErrorValues}
-                        modeEdit={this.state.contractor_id ? true : false}
-
-                        /* AUTOCOMPLETE CENTRO DE COSTO */
-
-                        centro={this.state.dataCostCenter}
-                        onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
-                        formAutocompleteCentro={this.state.selectedOptionCentro}
-
-                        /* AUTOCOMPLETE USERS */
-
-                        users={this.props.users}
-                        onChangeAutocompleteUsers={this.handleChangeAutocompleteUsers}
-                        formAutocompleteUsers={this.state.selectedOptionUsers}
-
-                        isLoading={this.state.isLoading}
-                        cost_center_id={this.props.cost_center.id}
-                    />
-                )}
-
-                <div className="content">
-                    <div className="col-md-12 mb-3 text-right pr-0">
-                        {!this.state.modal && this.props.estados.cost_center_edit && (
-                            <button
-                                className="btn-shadow btn btn-secondary"
-                                onClick={() => this.toogle("new")}
-                            >
-                                Crear
-                            </button>
-                        )}
-                    </div>
-
-                    <table
-                        className="table table-hover table-bordered"
-                        id="sampleTable"
-                    >
-                        <thead>
-                            <tr className="tr-title">
-                                <th style={{ width: "1%" }}>Acciones</th>
-                                <th style={{ width: "10%" }}>Fecha</th>
-                                <th style={{ width: "7%" }}>Horas</th>
-                                <th style={{ width: "16%" }}>Trabajo realizado por</th>
-                                <th style={{ width: "16%" }}>Descripcion</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {this.state.data.length >= 1 ? (
-                                this.state.data.map(accion => (
-                                    <tr key={accion.id}>
-                                        <td className="text-left">
-                                            {this.props.estados.cost_center_edit && (
-                                                <UncontrolledDropdown className='btn-group'>
-                                                    <DropdownToggle className='btn-shadow btn btn-info'>
-                                                        <i className="fas fa-bars"></i>
-                                                    </DropdownToggle>
-                                                    <DropdownMenu className="dropdown-menu dropdown-menu-right">
-                                                        {true && (
-                                                            <DropdownItem
-                                                                className="dropdown-item"
-                                                                onClick={() => this.edit(accion)}
-                                                            >
-                                                                Editar
-                                                            </DropdownItem>
-                                                        )}
-
-                                                        {true && (
-                                                            <DropdownItem
-                                                                onClick={() => this.delete(accion.id)}
-                                                                className="dropdown-item"
-                                                            >
-                                                                Eliminar
-                                                            </DropdownItem>
-                                                        )}
-                                                    </DropdownMenu>
-                                                </UncontrolledDropdown>
-                                            )}
-                                        </td>
-                                        <td>{accion.sales_date}</td>
-                                        <td>{accion.hours}</td>
-                                        <td>{accion.user_execute ? accion.user_execute.names : ""}</td>
-                                        <td>{accion.description}</td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <td colSpan="8" className="text-center">
-                                    <div className="text-center mt-1 mb-1">
-                                        <h4>No hay tableristas</h4>
-                                    </div>
-                                </td>
-                            )}
-
-                        </tbody>
-                    </table>
-                </div>
-            </React.Fragment>
-        );
-    }
+  render() {
+    return (
+      <React.Fragment>
+        {this.state.modal && (
+          <FormCreate
+            toggle={this.toogle} backdrop="static" modal={this.state.modal}
+            onChangeForm={this.HandleChange} formValues={this.state.form} submit={this.HandleClick}
+            titulo={this.state.contractor_id ? "Actualizar tablerista" : "Crear tablerista"}
+            nameSubmit={this.state.contractor_id ? "Actualizar" : "Crear"}
+            errorValues={this.state.ErrorValues} modeEdit={!!this.state.contractor_id}
+            users={this.props.users} onChangeAutocompleteUsers={this.handleChangeAutocompleteUsers}
+            formAutocompleteUsers={this.state.selectedOptionUsers}
+            cost_center_id={this.props.cost_center.id}
+          />
+        )}
+        <CmDataTable
+          columns={this.columns} data={this.state.data} loading={this.state.loading}
+          actions={this.renderActions} stickyActions
+          searchPlaceholder="Buscar tablerista..." emptyMessage="No hay tableristas registrados"
+          headerActions={this.props.estados.cost_center_edit ? <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={() => this.toogle("new")}><i className="fas fa-plus" /> Nuevo Tablerista</button> : null}
+          emptyAction={this.props.estados.cost_center_edit ? <button onClick={() => this.toogle("new")} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}><i className="fas fa-plus" /> Nuevo Tablerista</button> : null}
+        />
+      </React.Fragment>
+    );
+  }
 }
 
 export default TableristasTable;

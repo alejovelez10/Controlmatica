@@ -1,366 +1,156 @@
 import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
 import FormCreate from '../Materials/FormCreate';
-import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import IndexInvoice from '../incomeDetail/IndexInvoice';
+import { CmDataTable } from '../../generalcomponents/ui';
+
+function csrfToken() {
+  var meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute("content") : "";
+}
 
 class MaterialesTable extends Component {
-    constructor(props) {
-        super(props)
-        this.token = document.querySelector("[name='csrf-token']").content;
-        this.state = {
-            data: [],
-            modal: false,
-            modeEdit: false,
-            modalIndexInvoice: false,
-            ErrorValues: true,
-            material_id: "",
-            material: {},
-
-            form: {
-                provider_id: "",
-                sales_date: "",
-                sales_number: "",
-                amount: "",
-                delivery_date: "",
-                sales_state: "",
-                description: "",
-                user_id: this.props.usuario.id,
-                cost_center_id: this.props.cost_center.id
-            },
-        }
-    }
-
-    componentDidMount = () => {
-        setTimeout(() => {
-            this.setState({
-                data: this.props.dataMateriales
-            })
-        }, 2000)
-    }
-
-    HandleChange = (e) => {
-        this.setState({
-            form: {
-                ...this.state.form,
-                [e.target.name]: e.target.value,
-            }
-        });
-    }
-
-    toogle = (from) => {
-        if (from == "new") {
-            this.setState({ modal: true })
-            this.clearValues();
-        } else {
-            this.setState({ modal: false })
-            this.clearValues();
-        }
-    }
-
-    //add items
-    updateData = (data) => {
-        this.setState({
-            data: [...this.state.data, data],
-        })
-    }
-
-    //add update
-    updateItem = register => {
-        this.setState({
-            data: this.state.data.map(item => {
-                if (register.id === item.id) {
-                    return {
-                        ...item,
-                        provider: register.provider,
-                        sales_number: register.sales_number,
-                        amount: register.amount,
-                        description: register.description,
-                        sales_date: register.sales_date,
-                        delivery_date: register.delivery_date,
-                        provider_invoice_value: register.provider_invoice_value,
-                        sales_state: register.sales_state
-                    }
-                }
-                return item;
-            })
-        });
-    }
-
-    clearValues = () => {
-        this.setState({
-            modeEdit: false,
-            ErrorValues: true,
-
-            form: {
-                ...this.state.form,
-                provider_id: "",
-                sales_date: "",
-                sales_number: "",
-                amount: "",
-                delivery_date: "",
-                sales_state: "",
-                description: "",
-            },
-        })
-    }
-
-    delete = id => {
-        Swal.fire({
-            title: "¿Estás seguro?",
-            text: "¡El registro será eliminado para siempre!",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#009688",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Eliminar",
-            cancelButtonText: "Cancelar"
-        }).then(result => {
-            if (result.value) {
-                fetch(`/materials/${id}`, {
-                    method: "delete",
-                    headers: {
-                        "X-CSRF-Token": this.token,
-                        "Content-Type": "application/json"
-                    }
-                })
-                    .then(response => response.json())
-                    .then(response => {
-                        this.setState({
-                            data: this.state.data.filter((e) => e.id != id)
-                        })
-                    });
-            }
-        });
+  constructor(props) {
+    super(props);
+    this.state = {
+      data: [],
+      loading: true,
+      modal: false,
+      modeEdit: false,
+      modalIndexInvoice: false,
+      ErrorValues: true,
+      material_id: "",
+      material: {},
+      form: {
+        provider_id: "", sales_date: "", sales_number: "", amount: "",
+        delivery_date: "", sales_state: "", description: "",
+        user_id: this.props.usuario.id, cost_center_id: this.props.cost_center.id,
+      },
     };
 
-    HandleClick = () => {
-        if (true) {
-            if (this.state.material_id) {
-                fetch(`/materials/${this.state.material_id}`, {
-                    method: 'PATCH', // or 'PUT'
-                    body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-                    headers: {
-                        "X-CSRF-Token": this.token,
-                        "Content-Type": "application/json"
-                    }
-                })
+    this.columns = [
+      { key: "provider_name", label: "Proveedor", render: (r) => r.provider ? r.provider.name : "" },
+      { key: "sales_number", label: "# Orden" },
+      { key: "amount", label: "Valor", render: (r) => <NumberFormat value={r.amount} displayType="text" thousandSeparator={true} prefix="$" /> },
+      { key: "description", label: "Descripción" },
+      { key: "sales_date", label: "Fecha Orden" },
+      { key: "delivery_date", label: "Fecha Entrega" },
+      { key: "provider_invoice_value", label: "Valor Facturas", render: (r) => <NumberFormat value={r.provider_invoice_value} displayType="text" thousandSeparator={true} prefix="$" /> },
+      { key: "sales_state", label: "Estado" },
+    ];
+  }
 
-                    .then(res => res.json())
-                    .catch(error => console.error("Error:", error))
-                    .then(data => {
-                        this.updateItem(data.register);
-                        this.setState({ material_id: "", modal: false });
-                    });
-            } else {
-                fetch(`/materials`, {
-                    method: 'POST', // or 'PUT'
-                    body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-                    headers: {
-                        "X-CSRF-Token": this.token,
-                        "Content-Type": "application/json"
-                    }
-                })
-                    .then(res => res.json())
-                    .catch(error => console.error("Error:", error))
-                    .then(data => {
-                        this.updateData(data.register);
-                        this.setState({ material_id: "", modal: false });
-                    });
-            }
+  componentDidMount() { this.loadData(); }
+
+  loadData = () => {
+    this.setState({ loading: true });
+    fetch("/getValues/" + this.props.cost_center.id)
+      .then((r) => r.json())
+      .then((data) => { this.setState({ data: data.dataMateriales || [], loading: false }); });
+  };
+
+  HandleChange = (e) => { this.setState({ form: Object.assign({}, this.state.form, { [e.target.name]: e.target.value }) }); };
+
+  toogle = (from) => {
+    if (from === "new") { this.setState({ modal: true }); this.clearValues(); }
+    else { this.setState({ modal: false }); this.clearValues(); }
+  };
+
+  toogleIndexInvoice = (from, material) => {
+    if (from === "new") { this.setState({ modalIndexInvoice: true, material: material }); }
+    else { this.setState({ modalIndexInvoice: false, material: {} }); }
+  };
+
+  clearValues = () => {
+    this.setState({
+      modeEdit: false, ErrorValues: true, material_id: "",
+      form: Object.assign({}, this.state.form, { provider_id: "", sales_date: "", sales_number: "", amount: "", delivery_date: "", sales_state: "", description: "" }),
+    });
+  };
+
+  edit = (material) => {
+    this.setState({
+      modal: true, material_id: material.id,
+      form: Object.assign({}, this.state.form, {
+        provider_id: material.provider_id, sales_date: material.sales_date,
+        sales_number: material.sales_number, amount: material.amount,
+        delivery_date: material.delivery_date, sales_state: material.sales_state,
+        description: material.description,
+      }),
+    });
+  };
+
+  HandleClick = () => {
+    var self = this;
+    var url = this.state.material_id ? "/materials/" + this.state.material_id : "/materials";
+    var method = this.state.material_id ? "PATCH" : "POST";
+    fetch(url, { method: method, body: JSON.stringify(this.state.form), headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })
+      .then((r) => r.json())
+      .then(() => { self.setState({ modal: false }); self.loadData(); self.clearValues(); });
+  };
+
+  delete = (id) => {
+    Swal.fire({ title: "¿Estás seguro?", text: "El material será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+      .then((result) => {
+        if (result.value) {
+          fetch("/materials/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })
+            .then((r) => r.json())
+            .then(() => { this.loadData(); });
         }
-    }
+      });
+  };
 
-    edit = (material) => {
-        this.setState({
-            modal: true,
-            material_id: material.id,
+  openMenu = (e) => {
+    e.stopPropagation();
+    var btn = e.currentTarget; var menu = btn.nextElementSibling;
+    document.querySelectorAll('.cm-dt-menu-dropdown.open').forEach(function(m) { m.classList.remove('open'); });
+    var rect = btn.getBoundingClientRect();
+    document.body.appendChild(menu);
+    menu.style.top = (rect.bottom + 4) + 'px'; menu.style.left = (rect.right - 160) + 'px';
+    menu.classList.add('open');
+    var close = function(ev) { if (!menu.contains(ev.target) && !btn.contains(ev.target)) { menu.classList.remove('open'); btn.parentNode.appendChild(menu); document.removeEventListener('click', close); } };
+    document.addEventListener('click', close);
+  };
 
-            form: {
-                ...this.state.form,
-                provider_id: material.provider_id,
-                sales_date: material.sales_date,
-                sales_number: material.sales_number,
-                amount: material.amount,
-                delivery_date: material.delivery_date,
-                sales_state: material.sales_state,
-                description: material.description,
-            },
-        })
-    }
+  renderActions = (row) => (
+    <div className="cm-dt-menu">
+      <button className="cm-dt-menu-trigger" onClick={this.openMenu}><i className="fas fa-ellipsis-v" /></button>
+      <div className="cm-dt-menu-dropdown">
+        {this.props.estados.cost_center_edit && <button onClick={() => this.toogleIndexInvoice("new", row)} className="cm-dt-menu-item"><i className="fas fa-file-invoice" /> Facturas</button>}
+        {this.props.estados.edit_materials && <button onClick={() => this.edit(row)} className="cm-dt-menu-item"><i className="fas fa-pen" /> Editar</button>}
+        {this.props.estados.delete_materials && <button onClick={() => this.delete(row.id)} className="cm-dt-menu-item cm-dt-menu-item--danger"><i className="fas fa-trash" /> Eliminar</button>}
+      </div>
+    </div>
+  );
 
-    toogleIndexInvoice = (from, material) => {
-        if (from == "new") {
-            this.setState({ modalIndexInvoice: true, material: material })
-        } else {
-            this.setState({ modalIndexInvoice: false, material: {} })
-        }
-    }
-
-    loadData = () => {
-        fetch(`/get_materials`, {
-            method: 'GET', // or 'PUT'
-            headers: {
-                "X-CSRF-Token": this.token,
-                "Content-Type": "application/json"
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    data: data.materials_paginate,
-                    isLoaded: false
-                });
-            });
-    }
-
-
-    render() {
-        return (
-            <React.Fragment>
-                {this.state.modal && (
-                    <FormCreate
-                        toggle={this.toogle}
-                        backdrop={this.state.backdrop}
-                        modal={this.state.modal}
-                        onChangeForm={this.HandleChange}
-                        formValues={this.state.form}
-                        submit={this.HandleClick}
-                        FormSubmit={this.handleSubmit}
-                        titulo={this.state.material_id ? "Actualizar material" : "Crear material"}
-                        nameSubmit={this.state.material_id ? "Actualizar" : "Crear"}
-                        errorValues={this.state.ErrorValues}
-                        modeEdit={this.state.material_id ? true : false}
-                        providers={this.props.providers}
-                        cost_center_id={this.props.cost_center.id}
-                    />
-                )}
-
-                {this.state.modalIndexInvoice && (
-                    <IndexInvoice
-                        toggle={this.toogleIndexInvoice}
-                        backdrop={"static"}
-                        modal={this.state.modalIndexInvoice}
-                        material={this.state.material}
-                        loadData={this.loadData}
-                    />
-                )}
-
-                <div className="content-table">
-                    <div className="col-md-12 mb-3 text-right pr-0">
-                        {!this.state.modal && this.props.estados.cost_center_edit && (
-                            <button
-                                className="btn-shadow btn btn-secondary"
-                                onClick={() => this.toogle("new")}
-                            >
-                                Crear
-                            </button>
-                        )}
-                    </div>
-
-                    <table className="table table-hover table-bordered" id="sampleTable">
-                        <thead>
-                            <tr className="tr-title">
-                                <th style={{ width: "1%" }}>Acciones</th>
-                                <th style={{ width: "8%" }}>Proveedor</th>
-                                <th style={{ width: "6%" }}># Orden</th>
-                                <th style={{ width: "5%" }}>Valor</th>
-                                <th style={{ width: "370px", maxWidth: "370px" }}>Descripción</th>
-                                <th style={{ width: "8%" }}>Fecha de Orden</th>
-                                <th style={{ width: "8%" }}>Fecha Entrega</th>
-                                <th style={{ width: "450px" }}>Facturas</th>
-                                <th style={{ width: "7%" }}>Valor Facturasdddd</th>
-                                <th style={{ width: "11%" }}>Estado</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {this.state.data.length >= 1 ? (
-                                this.state.data.map(accion => (
-                                    <tr key={accion.id}>
-                                        <td className="text-left">
-                                            {this.props.estados.cost_center_edit && (
-                                                <UncontrolledDropdown className='btn-group'>
-                                                    <DropdownToggle className='btn-shadow btn btn-info'>
-                                                        <i className="fas fa-bars"></i>
-                                                    </DropdownToggle>
-                                                    <DropdownMenu className="dropdown-menu dropdown-menu-right">
-                                                        {true && (
-                                                            <DropdownItem
-                                                                className="dropdown-item"
-                                                                onClick={() => this.toogleIndexInvoice("new", accion)}
-                                                            >
-                                                                Facturas
-                                                            </DropdownItem>
-                                                        )}
-
-                                                        {this.props.estados.edit_materials && (
-                                                            <DropdownItem
-                                                                className="dropdown-item"
-                                                                onClick={() => this.edit(accion)}
-                                                            >
-                                                                Editar
-                                                            </DropdownItem>
-                                                        )}
-
-                                                        {this.props.estados.delete_materials && (
-                                                            <DropdownItem
-                                                                onClick={() => this.delete(accion.id)}
-                                                                className="dropdown-item"
-                                                            >
-                                                                Eliminar
-                                                            </DropdownItem>
-                                                        )}
-                                                    </DropdownMenu>
-                                                </UncontrolledDropdown>
-                                            )}
-                                        </td>
-
-                                        <td>{accion.provider.name}</td>
-                                        <td>{accion.sales_number}</td>
-                                        <td><NumberFormat value={accion.amount} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                        <td style={{ width: "370px", maxWidth: "370px" }}>{accion.description}</td>
-                                        <td>{accion.sales_date}</td>
-                                        <td>{accion.delivery_date}</td>
-                                        <td>
-                                            {accion.material_invoices && (
-                                                <table style={{ tableLayout: "fixed", width: "100%" }}>
-                                                    <tr>
-                                                        <td style={{ padding: "0px", textAlign: "center" }}>Numero de factura</td>
-                                                        <td style={{ padding: "0px", textAlign: "center" }}>Valor</td>
-                                                        <td style={{ padding: "0px", textAlign: "center" }}>Descripcion</td>
-                                                    </tr>
-                                                    {accion.material_invoices.map(customer => (
-                                                        <tr>
-                                                            <td style={{ padding: "5px", textAlign: "center" }}>{customer.number}</td>
-                                                            <td style={{ padding: "5px", textAlign: "center" }}><NumberFormat value={customer.value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                                            <td style={{ padding: "5px", textAlign: "center" }}>{customer.observation}</td>
-                                                        </tr>
-                                                    ))}
-                                                </table>
-                                            )}
-                                        </td>
-                                        <td><NumberFormat value={accion.provider_invoice_value} displayType={"text"} thousandSeparator={true} prefix={"$"} /></td>
-                                        <td>
-                                            <p>{accion.sales_state}</p>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <td colSpan="10" className="text-center">
-                                    <div className="text-center mt-1 mb-1">
-                                        <h4>No hay materiales</h4>
-                                    </div>
-                                </td>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </React.Fragment>
-        );
-    }
+  render() {
+    return (
+      <React.Fragment>
+        {this.state.modal && (
+          <FormCreate
+            toggle={this.toogle} backdrop="static" modal={this.state.modal}
+            onChangeForm={this.HandleChange} formValues={this.state.form} submit={this.HandleClick}
+            FormSubmit={(e) => e.preventDefault()}
+            titulo={this.state.material_id ? "Actualizar material" : "Crear material"}
+            nameSubmit={this.state.material_id ? "Actualizar" : "Crear"}
+            errorValues={this.state.ErrorValues} modeEdit={!!this.state.material_id}
+            providers={this.props.providers} cost_center_id={this.props.cost_center.id}
+          />
+        )}
+        {this.state.modalIndexInvoice && (
+          <IndexInvoice toggle={this.toogleIndexInvoice} backdrop="static" modal={this.state.modalIndexInvoice} material={this.state.material} loadData={this.loadData} />
+        )}
+        <CmDataTable
+          columns={this.columns} data={this.state.data} loading={this.state.loading}
+          actions={this.renderActions} stickyActions
+          searchPlaceholder="Buscar material..." emptyMessage="No hay materiales registrados"
+          headerActions={this.props.estados.cost_center_edit ? <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={() => this.toogle("new")}><i className="fas fa-plus" /> Nuevo Material</button> : null}
+          emptyAction={this.props.estados.cost_center_edit ? <button onClick={() => this.toogle("new")} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}><i className="fas fa-plus" /> Nuevo Material</button> : null}
+        />
+      </React.Fragment>
+    );
+  }
 }
 
 export default MaterialesTable;

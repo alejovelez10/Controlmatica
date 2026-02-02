@@ -413,10 +413,9 @@ module ApplicationHelper
   end
 
   def authorization_report_expense_options
+    return true if current_user.rol.name == "Administrador"
     modulo = ModuleControl.find_by_name("Tipos de Gastos")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    modulo && current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
   end
 
   def get_state_center(accion)

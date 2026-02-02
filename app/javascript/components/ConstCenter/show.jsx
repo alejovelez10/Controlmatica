@@ -1,1183 +1,627 @@
 import React from 'react';
-import { Card, CardImg, CardText, CardBody, CardTitle, CardSubtitle, Button } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import FormCreate from "./FormCreate";
-import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
-import TabContentShow from '../ShowConstCenter/TabContentShow'
+import TabContentShow from '../ShowConstCenter/TabContentShow';
 import Calendar from '../Shifts/Calendar';
-import QuotationIndex from './Quotation/Index';
+
+function csrfToken() {
+  var meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute("content") : "";
+}
+
+function formatDate(date) {
+  if (!date) return "—";
+  var d = new Date(date);
+  var months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  var h = d.getHours();
+  var m = d.getMinutes();
+  return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear() + " " + (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+}
+
+function statusBadgeClass(state) {
+  if (!state) return "cm-status-badge--gray";
+  var s = state.toUpperCase();
+  if (s === "FINALIZADO" || s === "CERRADO" || s === "FACTURADO" || s === "LEGALIZADO") return "cm-status-badge--green";
+  if (s === "EJECUCION" || s === "COMPRANDO" || s === "FACTURADO PARCIAL" || s === "LEGALIZADO PARCIAL") return "cm-status-badge--yellow";
+  if (s === "PENDIENTE" || s === "SIN COMPRAS" || s === "PENDIENTE DE COTIZACION" || s === "PENDIENTE DE ORDEN DE COMPRA" || s === "POR FACTURAR") return "cm-status-badge--blue";
+  return "cm-status-badge--gray";
+}
+
+// Metric card component
+function pctBadgeClass(pct, inverted) {
+  if (pct === "N/A" || pct === undefined) return "cm-pct-badge--gray";
+  var n = parseFloat(pct);
+  if (inverted) {
+    if (n >= 50) return "cm-pct-badge--green";
+    if (n >= 0) return "cm-pct-badge--orange";
+    return "cm-pct-badge--red";
+  }
+  if (n <= 80) return "cm-pct-badge--green";
+  if (n <= 100) return "cm-pct-badge--orange";
+  return "cm-pct-badge--red";
+}
+
+function MetricCard(props) {
+  var colorClass = "";
+  var pct = props.percent;
+  if (pct !== "N/A" && pct !== undefined) {
+    var n = parseFloat(pct);
+    if (props.inverted) {
+      colorClass = n >= 50 ? "cm-metric-card--green" : n >= 0 ? "cm-metric-card--orange" : "cm-metric-card--red";
+    } else {
+      colorClass = n <= 80 ? "cm-metric-card--green" : n <= 100 ? "cm-metric-card--orange" : "cm-metric-card--red";
+    }
+  }
+
+  return (
+    <div className={"cm-metric-card " + colorClass}>
+      <div className="cm-metric-card-title">
+        <i className={props.icon || "fas fa-chart-bar"} />
+        {props.title}
+      </div>
+      <div className="cm-metric-card-body">
+        <div className="cm-metric-item">
+          <span className="cm-metric-item-label">{props.col1Label || "Cotizado"}</span>
+          <span className={"cm-metric-item-value" + (props.isCurrency ? " cm-metric-item-value--currency" : "")}>
+            {props.isCurrency ? (
+              <NumberFormat value={props.col1} displayType="text" thousandSeparator={true} prefix="$" />
+            ) : (
+              props.col1 !== undefined ? props.col1 : "—"
+            )}
+          </span>
+        </div>
+        <div className="cm-metric-item">
+          <span className="cm-metric-item-label">{props.col2Label || "Ejecutado"}</span>
+          <span className={"cm-metric-item-value" + (props.isCurrency ? " cm-metric-item-value--currency" : "")}>
+            {props.isCurrency ? (
+              <NumberFormat value={props.col2} displayType="text" thousandSeparator={true} prefix="$" />
+            ) : (
+              props.col2 !== undefined ? props.col2 : "—"
+            )}
+          </span>
+        </div>
+        <div className="cm-metric-item">
+          <span className="cm-metric-item-label">{props.col3Label || "Avance"}</span>
+          <span className="cm-metric-item-value">
+            {pct !== undefined ? <span className={"cm-pct-badge " + pctBadgeClass(pct, props.inverted)}>{pct}%</span> : "—"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 class Show extends React.Component {
-    constructor(props) {
-        super(props)
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            show_btn_materiales: false,
-            show_btn_ordenes_compra: false,
-            state_ejecution: false,
-            state_compras: false,
-            invoiced_state: false,
-            show_btn_update: false,
+    this.state = {
+      state_ejecution: false,
+      state_compras: false,
+      invoiced_state: false,
+      show_btn_update: false,
 
+      formUpdate: {
+        execution_state: this.props.data_info.execution_state,
+        invoiced_state: this.props.data_info.invoiced_state,
+        sales_state: this.props.data_info.sales_state,
+        id: this.props.data_info.id,
+      },
+
+      dataMateriales: [],
+      dataContractors: [],
+      dataSalesOrdes: [],
+      dataReports: [],
+      dataExpenses: [],
+      current_tab: this.props.current_tab,
+
+      modal: false,
+      backdrop: "static",
+
+      form: {
+        customer_id: this.props.data_info.customer_id,
+        contact_id: this.props.data_info.contact_id,
+        service_type: this.props.data_info.service_type,
+        user_id: this.props.data_info.user_id,
+        description: this.props.data_info.description,
+        start_date: this.props.data_info.start_date,
+        end_date: this.props.data_info.end_date,
+        quotation_number: this.props.data_info.quotation_number,
+        execution_state: this.props.data_info.execution_state,
+        eng_hours: this.props.data_info.eng_hours,
+        hour_real: this.props.data_info.hour_real,
+        hour_cotizada: this.props.data_info.hour_cotizada,
+        hours_contractor: this.props.data_info.hours_contractor,
+        hours_contractor_real: this.props.data_info.hours_contractor_real,
+        hours_contractor_invoices: this.props.data_info.hours_contractor_invoices,
+        materials_value: this.props.data_info.materials_value,
+        viatic_value: this.props.data_info.viatic_value,
+        quotation_value: this.props.data_info.quotation_value,
+        displacement_hours: this.props.data_info.displacement_hours,
+        value_displacement_hours: this.props.data_info.value_displacement_hours,
+        user_owner_id: this.props.data_info.user_owner_id != null ? this.props.data_info.user_owner_id : "",
+      },
+
+      selectedOption: { customer_id: "", label: "Seleccionar cliente" },
+      selectedOptionUserOwner: {
+        user_owner_id: this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.id : "",
+        label: this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "",
+      },
+      selectedOptionContact: { contact_id: "", label: "Seleccionar Contacto" },
+      dataContact: [],
+      clients: [],
+      users: [],
+    };
+  }
+
+  componentDidMount() {
+    var arryUsers = [];
+    this.props.users.map(function(item) { arryUsers.push({ label: item.name, value: item.id }); });
+
+    var array = [];
+    this.props.clientes.map(function(item) { array.push({ label: item.name, value: item.id }); });
+
+    this.setState({ users: arryUsers, clients: array });
+    this.getValues();
+  }
+
+  getValues() {
+    fetch("/getValues/" + this.props.cost_center.id)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        this.setState({
+          dataMateriales: data.dataMateriales,
+          dataContractors: data.dataContractors,
+          dataSalesOrdes: data.dataSalesOrdes,
+          dataReports: data.dataReports,
+          dataExpenses: data.dataExpenses,
+        });
+      }.bind(this));
+  }
+
+  handleChangeForm = function(e) {
+    this.setState({ form: Object.assign({}, this.state.form, { [e.target.name]: e.target.value }) });
+  }.bind(this);
+
+  handleChange = function(e) {
+    this.setState({ formUpdate: Object.assign({}, this.state.formUpdate, { [e.target.name]: e.target.value }) });
+  }.bind(this);
+
+  handleChangeAutocomplete = function(opt) {
+    var self = this;
+    fetch("/get_client/" + opt.value + "/centro")
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var arr = [];
+        data.map(function(item) { arr.push({ label: item.name, value: item.id }); });
+        self.setState({ dataContact: arr });
+      });
+    this.setState({
+      selectedOption: opt,
+      form: Object.assign({}, this.state.form, { customer_id: opt.value }),
+    });
+  }.bind(this);
+
+  handleChangeAutocompleteContact = function(opt) {
+    this.setState({
+      selectedOptionContact: opt,
+      form: Object.assign({}, this.state.form, { contact_id: opt.value }),
+    });
+  }.bind(this);
+
+  handleChangeAutocompleteUserOwner = function(opt) {
+    this.setState({
+      selectedOptionUserOwner: opt,
+      form: Object.assign({}, this.state.form, { user_owner_id: opt.value }),
+    });
+  }.bind(this);
+
+  changeState = function(from) {
+    if (from === "invoiced_state") {
+      this.setState({ invoiced_state: true });
+    } else if (from === "sales_state") {
+      this.setState({ state_compras: true });
+    } else {
+      this.setState({ state_ejecution: true });
+    }
+    this.setState({ show_btn_update: true });
+  }.bind(this);
+
+  SubmitBnt = function(from) {
+    var self = this;
+    if (from === "save") {
+      fetch("/cost_centers/" + this.props.data_info.id, {
+        method: "PATCH",
+        body: JSON.stringify(this.state.formUpdate),
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken() },
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          self.props.loadData();
+          self.setState({
+            state_ejecution: false, invoiced_state: false, state_compras: false, show_btn_update: false,
             formUpdate: {
-                execution_state: this.props.data_info.execution_state,
-                invoiced_state: this.props.data_info.invoiced_state,
-                sales_state: this.props.data_info.sales_state,
-                id: this.props.data_info.id,
+              execution_state: data.register.execution_state,
+              invoiced_state: data.register.invoiced_state,
+              sales_state: data.register.sales_state,
+              id: data.register.id,
             },
-
-            dataMateriales: [],
-            dataContractors: [],
-            dataSalesOrdes: [],
-            dataReports: [],
-            dataExpenses: [],
-            current_tab: this.props.current_tab,
-
-            title: "Nuevo centro de costo",
-            ErrorValues: true,
-            modal: false,
-            backdrop: "static",
-
-            form: {
-                customer_id: this.props.data_info.customer_id,
-                contact_id: this.props.data_info.contact_id,
-                service_type: this.props.data_info.service_type,
-                user_id: this.props.data_info.user_id,
-                description: this.props.data_info.description,
-                start_date: this.props.data_info.start_date,
-                end_date: this.props.data_info.end_date,
-                quotation_number: this.props.data_info.quotation_number,
-                execution_state: this.props.data_info.execution_state,
-
-                eng_hours: this.props.data_info.eng_hours,
-                hour_real: this.props.data_info.hour_real,
-                hour_cotizada: this.props.data_info.hour_cotizada,
-
-
-                hours_contractor: this.props.data_info.hours_contractor,
-                hours_contractor_real: this.props.data_info.hours_contractor_real,
-                hours_contractor_invoices: this.props.data_info.hours_contractor_invoices,
-
-                materials_value: this.props.data_info.materials_value,
-                viatic_value: this.props.data_info.viatic_value,
-                quotation_value: this.props.data_info.quotation_value,
-
-                displacement_hours: this.props.data_info.displacement_hours,
-                value_displacement_hours: this.props.data_info.value_displacement_hours,
-
-                user_owner_id: this.props.data_info.user_owner_id != null ? this.props.data_info.user_owner_id : "",
-            },
-
-            selectedOption: {
-                customer_id: "",
-                label: "Seleccionar cliente"
-            },
-
-            selectedOptionUserOwner: {
-                user_owner_id: this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.id : "",
-                label: `${this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : ""}`
-            },
-
-
-            selectedOptionContact: {
-                contact_id: "",
-                label: "Seleccionar Contacto"
-            },
-
-            dataContact: [],
-            clients: [],
-            users: [],
-
-        }
-    }
-
-    MessageSucces = (name_success, type, error_message) => {
-        Swal.fire({
-            position: "center",
-            type: type,
-            html: '<p>' + error_message != undefined ? error_message : "asdasdasd" + '</p>',
-            title: name_success,
-            showConfirmButton: false,
-            timer: 1500
+          });
         });
+    } else {
+      this.setState({ state_ejecution: false, invoiced_state: false, show_btn_update: false, state_compras: false });
     }
+  }.bind(this);
 
-    handleChangeForm = e => {
-        this.setState({
-            form: {
-                ...this.state.form,
-                [e.target.name]: e.target.value
-            }
+  HandleClick = function() {
+    var self = this;
+    fetch("/cost_centers/" + this.state.action.id, {
+      method: "PATCH",
+      body: JSON.stringify(this.state.form),
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken() },
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        self.props.loadData();
+        Swal.fire({ position: "center", type: data.type, title: data.message, showConfirmButton: false, timer: 1500 });
+        self.setState({
+          modal: false,
+          selectedOption: { customer_id: "", label: "Buscar cliente" },
+          selectedOptionContact: { contact_id: "", label: "Seleccionar Contacto" },
         });
-    };
+      });
+  }.bind(this);
 
-    HandleClick = e => {
-        fetch("/cost_centers/" + this.state.action.id, {
-            method: "PATCH", // or 'PUT'
-            body: JSON.stringify(this.state.form), // data can be `string` or {object}!
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-            .then(res => res.json())
-            .catch(error => console.error("Error:", error))
-            .then(data => {
-                this.props.loadData()
-                this.MessageSucces(data.message, data.type, data.message_error);
+  toggle = function(from) {
+    if (from === "edit") {
+      this.setState({ modeEdit: true });
+    } else if (from === "new") {
+      this.setState({ modeEdit: false, selectedOption: { customer_id: "", label: "Buscar cliente" }, selectedOptionContact: { contact_id: "", label: "Seleccionar Contacto" } });
+    }
+    this.setState(function(prev) { return { modal: !prev.modal }; });
+  }.bind(this);
 
-                this.setState({
-                    modal: false,
-                    selectedOption: {
-                        customer_id: "",
-                        label: "Buscar cliente"
-                    },
+  edit = function() {
+    var info = this.props.data_info;
+    this.setState({
+      modal: true, modeEdit: true, action: info,
+      selectedOption: { value: info.customer_id, label: info.customer.name },
+      selectedOptionContact: { value: info.contact.customer_id, label: info.contact.name },
+      selectedOptionUserOwner: {
+        user_owner_id: info.contact.user_owner_id != null ? info.contact.user_owner_id : "",
+        label: info.user_owner != undefined ? info.user_owner.names : "",
+      },
+      form: {
+        customer_id: info.customer_id, contact_id: info.contact_id, service_type: info.service_type,
+        user_id: info.user_id, description: info.description, start_date: info.start_date, end_date: info.end_date,
+        quotation_number: info.quotation_number, viatic_value: info.viatic_value, execution_state: "PENDIENTE",
+        eng_hours: info.eng_hours || "0.0", hour_real: info.hour_real || "0.0", hour_cotizada: info.hour_cotizada || "0.0",
+        hours_contractor: info.hours_contractor || "0.0", hours_contractor_real: info.hours_contractor_real || "0.0",
+        hours_contractor_invoices: info.hours_contractor_invoices || "0.0",
+        displacement_hours: info.displacement_hours || "0.0", value_displacement_hours: info.value_displacement_hours || "0.0",
+        materials_value: info.materials_value || "0.0", viatic_value: info.viatic_value || "0.0",
+        quotation_value: info.quotation_value || "0.0", has_many_quotes: info.has_many_quotes,
+      },
+    });
+  }.bind(this);
 
-                    selectedOptionContact: {
-                        contact_id: "",
-                        label: "Seleccionar Contacto"
-                    },
-                });
+  loadData = function() { this.props.loadData(); }.bind(this);
 
-            });
+  alertColor = function(value, min, med, inverted) {
+    if (value === "N/A" || value === undefined) return "inherit";
+    var v = parseFloat(value);
+    if (inverted) {
+      if (v >= min) return "#28a745";
+      if (v >= med) return "#f5a623";
+      return "#dc3545";
+    }
+    if (v <= min) return "#28a745";
+    if (v <= med) return "#f5a623";
+    return "#dc3545";
+  };
 
-    };
+  alertBadgeClass = function(value, min, med, inverted) {
+    if (value === "N/A" || value === undefined) return "cm-pct-badge--gray";
+    var v = parseFloat(value);
+    if (inverted) {
+      if (v >= min) return "cm-pct-badge--green";
+      if (v >= med) return "cm-pct-badge--orange";
+      return "cm-pct-badge--red";
+    }
+    if (v <= min) return "cm-pct-badge--green";
+    if (v <= med) return "cm-pct-badge--orange";
+    return "cm-pct-badge--red";
+  };
 
-    componentDidMount() {
-        let arryUsers = [];
+  renderStateField = function(label, stateKey, formKey, isEditing, options) {
+    var info = this.props.data_info;
+    var value = info[formKey] || "SIN INFORMACIÓN";
 
-        this.props.users.map((item) => (
-            arryUsers.push({ label: item.name, value: item.id })
-        ))
-
-        fetch("/get_roles")
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    show_btn_materiales: data.materials,
-                    show_btn_ordenes_compra: data.sales_orders,
-                });
-            });
-
-        let array = []
-
-        this.props.clientes.map((item) => (
-            array.push({ label: item.name, value: item.id })
-        ))
-
-        this.setState({
-            users: arryUsers,
-            clients: array
-        })
-
-        this.getValues()
+    if (isEditing) {
+      return (
+        <div className="cm-show-info-item">
+          <span className="cm-show-info-label">{label}</span>
+          <select name={formKey} className="cm-state-select" value={this.state.formUpdate[formKey]} onChange={this.handleChange}>
+            <option value="">Seleccione</option>
+            {options.map(function(o) { return <option key={o} value={o}>{o}</option>; })}
+          </select>
+        </div>
+      );
     }
 
-    getValues() {
-        fetch(`/getValues/${this.props.cost_center.id}`)
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    dataMateriales: data.dataMateriales,
-                    dataContractors: data.dataContractors,
-                    dataSalesOrdes: data.dataSalesOrdes,
-                    dataReports: data.dataReports,
-                    dataExpenses: data.dataExpenses
-                });
-            });
+    var canEdit = this.props.estados.update_state;
+    return (
+      <div className="cm-show-info-item">
+        <span className="cm-show-info-label">{label}</span>
+        {canEdit ? (
+          <span className={"cm-status-badge " + statusBadgeClass(value) + " cm-show-info-value--clickable"} onClick={function() { this.changeState(stateKey === "execution_state" ? undefined : stateKey); }.bind(this)}>
+            {value}
+          </span>
+        ) : (
+          <span className={"cm-status-badge " + statusBadgeClass(value)}>{value}</span>
+        )}
+      </div>
+    );
+  }.bind(this);
+
+  getMetricCards = function() {
+    var info = this.props.data_info;
+    var type = info.service_type;
+    var alerts = this.props.alerts && this.props.alerts[0] ? this.props.alerts[0] : {};
+    var cards = [];
+
+    if (type === "SERVICIO" || type === "PROYECTO") {
+      cards.push(
+        <MetricCard key="ing_eje" title="Ingeniería (Ejecución)" icon="fas fa-cogs"
+          col1={info.eng_hours} col2={this.props.horas_eje} percent={this.props.porc_eje}
+          alertColor={this.alertColor(this.props.porc_eje, alerts.ing_ejecucion_min, alerts.ing_costo_med)}
+        />
+      );
+      cards.push(
+        <MetricCard key="ing_cost" title="Ingeniería (Costos)" icon="fas fa-dollar-sign"
+          col1Label="Cotizada" col2Label="Costo" col3Label="Margen"
+          col1={this.props.costo_en_dinero} col2={this.props.costo_real_en_dinero} percent={this.props.porc_eje_costo}
+          isCurrency inverted
+          alertColor={this.alertColor(this.props.porc_eje_costo, alerts.ing_costo_min, alerts.ing_costo_med, true)}
+        />
+      );
     }
 
-    handleChangeAutocomplete = selectedOption => {
-        let array = []
-
-        fetch(`/get_client/${selectedOption.value}/centro`)
-            .then(response => response.json())
-            .then(data => {
-
-                data.map((item) => (
-                    array.push({ label: item.name, value: item.id })
-                ))
-
-                this.setState({
-                    dataContact: array
-                })
-            });
-
-        this.setState({
-            selectedOption,
-            form: {
-                ...this.state.form,
-                customer_id: selectedOption.value
-            }
-        });
-    };
-
-    handleChangeAutocompleteContact = selectedOptionContact => {
-        this.setState({
-            selectedOptionContact,
-            form: {
-                ...this.state.form,
-                contact_id: selectedOptionContact.value
-            }
-        });
-    };
-
-    toggle = (from) => {
-        if (from == "edit") {
-            this.setState({ modeEdit: true });
-        } else if (from == "new") {
-            this.setState({
-                modeEdit: false,
-                selectedOption: {
-                    customer_id: "",
-                    label: "Buscar cliente"
-                },
-
-                selectedOptionContact: {
-                    contact_id: "",
-                    label: "Seleccionar Contacto"
-                },
-            });
-
-            this.removeValues(true)
-        } else {
-
-
-        }
-
-        this.setState(prevState => ({
-            modal: !prevState.modal
-        }));
+    if (type === "PROYECTO") {
+      cards.push(
+        <MetricCard key="tab_eje" title="Tableristas (Ejecución)" icon="fas fa-tools"
+          col1={this.props.hours_contractor} col2={this.props.hours_eje_contractor} percent={this.props.porc_eje_contractor}
+          alertColor={this.alertColor(this.props.porc_eje_contractor, alerts.tab_ejecucion_min, alerts.tab_ejecucion_med)}
+        />
+      );
+      cards.push(
+        <MetricCard key="tab_cost" title="Tableristas (Costos)" icon="fas fa-dollar-sign"
+          col1Label="Cotizada" col2Label="Costo" col3Label="Margen"
+          col1={this.props.costo_en_dinero_contractor} col2={this.props.costo_real_en_dinero_contractor} percent={this.props.porc_eje_costo_contractor}
+          isCurrency inverted
+          alertColor={this.alertColor(this.props.porc_eje_costo_contractor, alerts.tab_costo_min, alerts.tab_costo_med, true)}
+        />
+      );
     }
 
-    edit = () => {
-        this.setState({
-            modal: true,
-            modeEdit: true,
-
-            selectedOption: {
-                value: this.props.data_info.customer_id,
-                label: this.props.data_info.customer.name
-            },
-
-            selectedOptionContact: {
-                value: this.props.data_info.contact.customer_id,
-                label: this.props.data_info.contact.name
-            },
-
-            selectedOptionUserOwner: {
-                user_owner_id: this.props.data_info.contact.user_owner_id != null ? this.props.data_info.contact.user_owner_id : "",
-                label: this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "",
-            },
-
-            action: this.props.data_info,
-            title: "Editar Centro de costo",
-
-            form: {
-                customer_id: this.props.data_info.customer_id,
-                contact_id: this.props.data_info.contact_id,
-                service_type: this.props.data_info.service_type,
-                user_id: this.props.data_info.user_id,
-                description: this.props.data_info.description,
-                start_date: this.props.data_info.start_date,
-                end_date: this.props.data_info.end_date,
-                quotation_number: this.props.data_info.quotation_number,
-                viatic_value: this.props.data_info.viatic_value,
-                execution_state: "PENDIENTE",
-
-                eng_hours: this.props.data_info.eng_hours != "" ? this.props.data_info.eng_hours : "0.0",
-                hour_real: this.props.data_info.hour_real != "" ? this.props.data_info.hour_real : "0.0",
-                hour_cotizada: this.props.data_info.hour_cotizada != "" ? this.props.data_info.hour_cotizada : "0.0",
-
-
-                hours_contractor: this.props.data_info.hours_contractor != "" ? this.props.data_info.hours_contractor : "0.0",
-                hours_contractor_real: this.props.data_info.hours_contractor_real != "" ? this.props.data_info.hours_contractor_real : "0.0",
-                hours_contractor_invoices: this.props.data_info.hours_contractor_invoices != "" ? this.props.data_info.hours_contractor_invoices : "0.0",
-
-                displacement_hours: this.props.data_info.displacement_hours != "" ? this.props.data_info.displacement_hours : "0.0",
-                value_displacement_hours: this.props.data_info.value_displacement_hours != "" ? this.props.data_info.value_displacement_hours : "0.0",
-
-                materials_value: this.props.data_info.materials_value != "" ? this.props.data_info.materials_value : "0.0",
-                viatic_value: this.props.data_info.viatic_value != "" ? this.props.data_info.viatic_value : "0.0",
-                quotation_value: this.props.data_info.quotation_value != "" ? this.props.data_info.quotation_value : "0.0",
-                has_many_quotes: this.props.data_info.has_many_quotes
-            },
-        })
-    };
-
-    handleSubmit = e => {
-        e.preventDefault();
-    };
-
-    handleChange = e => {
-        this.setState({
-            formUpdate: {
-                ...this.state.formUpdate,
-                [e.target.name]: e.target.value
-            },
-        });
-    };
-
-
-    getCards() {
-        if (this.props.data_info.service_type == "SERVICIO") {
-            return this.getServices()
-        } else if (this.props.data_info.service_type == "VENTA") {
-            return this.getSale()
-        } else if (this.props.data_info.service_type == "PROYECTO") {
-            return this.getDraft()
-        }
+    if (type === "SERVICIO" || type === "PROYECTO") {
+      cards.push(
+        <MetricCard key="desp" title="Desplazamiento" icon="fas fa-route"
+          col1={info.displacement_hours} col2={this.props.ejecutado_desplazamiento_horas}
+          col3Label="Ejecución" percent={this.props.porc_desplazamiento}
+          alertColor={this.alertColor(this.props.porc_desplazamiento, alerts.desp_min, alerts.desp_med)}
+        />
+      );
+      cards.push(
+        <MetricCard key="via" title="Viáticos" icon="fas fa-money-bill-wave"
+          col1Label="Cotizado" col2Label="Gastado" col3Label="Avance"
+          col1={this.props.via_cotizado} col2={this.props.via_real} percent={this.props.porc_via}
+          isCurrency
+          alertColor={this.alertColor(this.props.porc_via, alerts.via_min, alerts.via_med)}
+        />
+      );
     }
 
-    changeState = (from) => {
-        console.log(from)
-        if (from == "invoiced_state") {
-            this.setState({
-                invoiced_state: true,
-            });
-        }
-        else if (from == "sales_state") {
-            console.log(from)
-            this.setState({
-                state_compras: true,
-            });
-
-        } else {
-            this.setState({
-                state_ejecution: true
-            });
-        }
-
-        this.setState({
-            show_btn_update: true
-        });
+    if (type === "VENTA" || type === "PROYECTO") {
+      cards.push(
+        <MetricCard key="mat" title="Materiales" icon="fas fa-boxes"
+          col1Label="Cotizados" col2Label="Comprados" col3Label="Margen"
+          col1={info.materials_value} col2={this.props.sum_materials} percent={this.props.porc_mat}
+          isCurrency inverted
+          alertColor={this.alertColor(this.props.porc_mat, alerts.mat_min, alerts.mat_med, true)}
+        />
+      );
     }
 
-    SubmitBnt = (from) => {
-        if (from == "save") {
+    cards.push(
+      <MetricCard key="fac" title="Facturación" icon="fas fa-file-invoice-dollar"
+        col1Label="Cotizado" col2Label="Facturado" col3Label="Avance"
+        col1={info.quotation_value} col2={this.props.facturacion} percent={this.props.porc_fac}
+        isCurrency
+        alertColor={this.alertColor(this.props.porc_fac, 0, 100)}
+      />
+    );
 
-            fetch("/cost_centers/" + this.props.data_info.id, {
-                method: "PATCH", // or 'PUT'
-                body: JSON.stringify(this.state.formUpdate), // data can be `string` or {object}!
-                headers: {
-                    "Content-Type": "application/json"
+    return cards;
+  }.bind(this);
+
+  render() {
+    var info = this.props.data_info;
+    var alerts = this.props.alerts && this.props.alerts[0] ? this.props.alerts[0] : {};
+    var isHome = this.props.current_tab === "home";
+
+    return (
+      <React.Fragment>
+        {/* Top navigation tabs */}
+        <div className="cm-show-top-tabs">
+          <a className={"cm-show-top-tab" + (isHome ? " cm-show-top-tab--active" : "")}
+            href={"/cost_centers/" + this.props.cost_center.id + "?tab=home"}>
+            <i className="fas fa-info-circle" /> Información
+          </a>
+          <a className={"cm-show-top-tab" + (!isHome ? " cm-show-top-tab--active" : "")}
+            href={"/cost_centers/" + this.props.cost_center.id + "?tab=calendar"}>
+            <i className="fas fa-calendar-alt" /> Calendario
+          </a>
+        </div>
+
+        {isHome ? (
+          <React.Fragment>
+            {/* Header card */}
+            <div className="cm-show-header">
+              <div className="cm-show-title-bar">
+                <h2 className="cm-show-title">
+                  {info.customer != undefined ? info.customer.name : "Cargando..."}
+                  {info.code && <span className="cm-show-code">{info.code}</span>}
+                  {info.service_type && <span className="cm-show-type-badge">{info.service_type}</span>}
+                </h2>
+                <div className="cm-show-actions">
+                  {this.state.show_btn_update && (
+                    <React.Fragment>
+                      <button className="cm-btn cm-btn-primary cm-btn-sm" onClick={function() { this.SubmitBnt("save"); }.bind(this)}>
+                        <i className="fas fa-check" /> Actualizar
+                      </button>
+                      <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={function() { this.SubmitBnt(); }.bind(this)}>
+                        <i className="fas fa-times" /> Cancelar
+                      </button>
+                    </React.Fragment>
+                  )}
+                  {this.props.estados.cost_center_edit && !this.state.show_btn_update && (
+                    <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={this.edit}>
+                      <i className="fas fa-pen" /> Editar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Info grid */}
+              <div className="cm-show-info-grid">
+                {(info.service_type === "PROYECTO" || info.service_type === "SERVICIO") &&
+                  this.renderStateField("Estado Ejecución", "execution_state", "execution_state", this.state.state_ejecution,
+                    ["EJECUCION", "FINALIZADO", "PENDIENTE"])
                 }
-            })
-                .then(res => res.json())
-                .catch(error => console.error("Error:", error))
-                .then(data => {
-                    console.log("data", data)
-                    this.props.loadData()
-                    this.setState({
-                        state_ejecution: false,
-                        invoiced_state: false,
-                        state_compras: false,
-                        show_btn_update: false,
-                        formUpdate: {
-                            execution_state: data.register.execution_state,
-                            invoiced_state: data.register.invoiced_state,
-                            sales_state: data.register.sales_state,
-                            id: data.register.id,
-                        }
-                    });
+                {(info.service_type === "PROYECTO" || info.service_type === "VENTA") &&
+                  this.renderStateField("Estado Compras", "sales_state", "sales_state", this.state.state_compras,
+                    ["SIN COMPRAS", "COMPRANDO", "CERRADO"])
+                }
+                {this.renderStateField("Estado Facturación", "invoiced_state", "invoiced_state", this.state.invoiced_state,
+                  ["PENDIENTE DE COTIZACION", "PENDIENTE DE ORDEN DE COMPRA", "LEGALIZADO", "LEGALIZADO PARCIAL", "FACTURADO", "FACTURADO PARCIAL", "POR FACTURAR"])
+                }
 
-                });
-
-
-        } else {
-            this.setState({
-                state_ejecution: false,
-                invoiced_state: false,
-                show_btn_update: false,
-                state_compras: false,
-            });
-        }
-    }
-
-
-    alertIng = (value, value2, value3) => {
-        if (value <= value2) {
-            return "green"
-        } else if (value > value2 && value <= value3) {
-
-            return "orange"
-        }
-        else {
-
-            return "red"
-        }
-    }
-
-    alertIngCosto = (value, value2, value3) => {
-        if (value >= value2) {
-            return "green"
-        } else if (value < value2 && value >= value3) {
-
-            return "orange"
-        }
-        else {
-
-            return "red"
-        }
-    }
-
-    getDate = (date) => {
-        var d = new Date(date),
-            months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'junio', 'julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-        const hoursAndMinutes = d.getHours() + ':' + d.getMinutes();
-
-        var time = hoursAndMinutes; // your input
-
-        time = time.split(':'); // convert to array
-
-        // fetch
-        var hours = Number(time[0]);
-        var minutes = Number(time[1]);
-        var seconds = Number(time[2]);
-
-        // calculate
-        var timeValue = hours;
-
-        /*  if (hours > 0 && hours <= 12) {
-           timeValue= "" + hours;
-         } else if (hours > 12) {
-           timeValue= "" + (hours - 12);
-         } else if (hours == 0) {
-           timeValue= "12";
-         } */
-
-        timeValue += (minutes < 10) ? ":0" + minutes : ":" + minutes;  // get minutes
-        //timeValue += (hours >= 12) ? " PM" : " AM";  // get AM/PM
-        return months[d.getMonth()] + " " + d.getDate() + " " + 'del' + " " + d.getFullYear() + " / " + timeValue
-    }
-
-    handleChangeAutocompleteUserOwner = (selectedOptionUserOwner) => {
-        this.setState({
-            selectedOptionUserOwner,
-            form: {
-                ...this.state.form,
-                user_owner_id: selectedOptionUserOwner.value
-            }
-        });
-    }
-
-    loadData = () => {
-        this.props.loadData();
-    }
-
-
-
-    getServices = () => {
-        return (
-            <React.Fragment>
-                <div className="col-md-6 mb-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Ingenieria(Ejecución)</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} </span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ejecutado</strong><br />
-                                <span>{this.props.horas_eje/*<%= horas_eje %> */} </span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_eje, this.props.alerts[0].ing_ejecucion_min, this.props.alerts[0].ing_costo_med) }}>{this.props.porc_eje}%</span>
-                            </div>
-                        </div>
-
-
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label">Contacto</span>
+                  <span className="cm-show-info-value">{info.contact != undefined ? info.contact.name : "—"}</span>
                 </div>
-
-                <div className="col-md-6">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Ingenieria(Costos)</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ing Cotizada</strong><br />
-                                <span><NumberFormat value={this.props.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ing costo</strong><br />
-                                <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Margen</strong><br />
-                                <span style={{ color: this.alertIngCosto(this.props.porc_eje_costo, this.props.alerts[0].ing_costo_min, this.props.alerts[0].ing_costo_med) }}>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
-                            </div>
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label">Fecha Inicio</span>
+                  <span className="cm-show-info-value">{info.start_date || "—"}</span>
                 </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Desplazamiento</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span>{this.props.data_info.displacement_hours}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ejecutado</strong><br />
-                                <span>{this.props.ejecutado_desplazamiento_horas}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ejecucion</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_desplazamiento, this.props.alerts[0].desp_min, this.props.alerts[0].desp_med) }}>{this.props.porc_desplazamiento/*<%= porc_eje_costo  %>*/}%</span>
-
-                            </div>
-
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label">Fecha Final</span>
+                  <span className="cm-show-info-value">{info.end_date || "—"}</span>
                 </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Viaticos</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center" >
-                                <strong>Cotizado</strong><br />
-                                <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"} /></span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Gastado</strong><br />
-                                <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_via, this.props.alerts[0].via_min, this.props.alerts[0].via_med) }}>{this.props.porc_via/*<%= porc_eje %> */}%</span>
-
-                            </div>
-
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label">N. Cotización</span>
+                  <span className="cm-show-info-value">{info.quotation_number || "—"}</span>
                 </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Facturacion</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Facturado</strong><br />
-                                <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
-                            </div>
-
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label">Descripción</span>
+                  <span className="cm-show-info-value">{info.description || "—"}</span>
                 </div>
-            </React.Fragment>
-        )
-    }
-
-    getSale = () => {
-        return (
-            <React.Fragment>
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Materiales</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizados</strong><br />
-                                <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Comprados</strong><br />
-                                <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Margen</strong><br />
-                                <span style={{ color: this.alertIngCosto(this.props.porc_mat, this.props.alerts[0].mat_min, this.props.alerts[0].mat_med) }}>{this.props.porc_mat/*<%= porc_eje_costo  %>*/}%</span>
-
-                            </div>
-
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label">Propietario</span>
+                  <span className="cm-show-info-value">{info.user_owner != undefined ? info.user_owner.names : "—"}</span>
                 </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Facturacion</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Facturado</strong><br />
-                                <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
-                            </div>
-
-                        </div>
-                    </div>
+                <div className="cm-show-info-item cm-show-info-item--highlight">
+                  <span className="cm-show-info-label">Margen Real</span>
+                  <span className="cm-show-info-value">
+                    <NumberFormat value={info.aiu} displayType="text" thousandSeparator={true} prefix="$" />
+                    <span className={"cm-pct-badge " + this.alertBadgeClass(info.aiu_percent, alerts.total_min, alerts.total_med, true)}>{info.aiu_percent}%</span>
+                  </span>
                 </div>
-
-
-            </React.Fragment>
-        )
-    }
-
-    getDraft = () => {
-        return (
-            <React.Fragment>
-
-                <div className="col-md-6 mb-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Ingenieria(Ejecución)</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span>{this.props.data_info.eng_hours}{/*<%= cost_center.eng_hours %>*/} </span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ejecutado</strong><br />
-                                <span>{this.props.horas_eje/*<%= horas_eje %> */} </span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_eje, this.props.alerts[0].ing_ejecucion_min, this.props.alerts[0].ing_costo_med) }}>{this.props.porc_eje/*<%= porc_eje %> */}%</span>
-                            </div>
-                        </div>
-
-
-                    </div>
+                <div className="cm-show-info-item cm-show-info-item--highlight">
+                  <span className="cm-show-info-label">Margen Cotizado</span>
+                  <span className="cm-show-info-value">
+                    <NumberFormat value={info.aiu_real} displayType="text" thousandSeparator={true} prefix="$" />
+                    <span className={"cm-pct-badge " + this.alertBadgeClass(info.aiu_percent_real, alerts.total_min, alerts.total_med, true)}>{info.aiu_percent_real}%</span>
+                  </span>
                 </div>
-
-                <div className="col-md-6">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Ingenieria(Costos)</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ing Cotizada</strong><br />
-                                <span><NumberFormat value={this.props.costo_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ing costo</strong><br />
-                                <span><NumberFormat value={this.props.costo_real_en_dinero} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Margen</strong><br />
-                                <span style={{ color: this.alertIngCosto(this.props.porc_eje_costo, this.props.alerts[0].ing_costo_min, this.props.alerts[0].ing_costo_med) }}>{this.props.porc_eje_costo/*<%= porc_eje_costo  %>*/}%</span>
-
-                            </div>
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label"><i className="fas fa-plus-circle" style={{ marginRight: "4px", opacity: 0.5 }} />Creación</span>
+                  <span className="cm-show-info-value">{formatDate(info.created_at)}{info.user != undefined ? " — " + info.user.names : ""}</span>
                 </div>
-
-                <div className="col-md-6">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Tableristas(Ejecución)</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span>{this.props.hours_contractor}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ejecutado</strong><br />
-                                <span>{this.props.hours_eje_contractor}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_eje_contractor, this.props.alerts[0].tab_ejecucion_min, this.props.alerts[0].tab_ejecucion_med) }}>{this.props.porc_eje_contractor/*<%= porc_eje_costo  %>*/}%</span>
-
-                            </div>
-
-                        </div>
-                    </div>
+                <div className="cm-show-info-item">
+                  <span className="cm-show-info-label"><i className="fas fa-edit" style={{ marginRight: "4px", opacity: 0.5 }} />Última edición</span>
+                  <span className="cm-show-info-value">{formatDate(info.updated_at)}{info.last_user_edited != undefined ? " — " + info.last_user_edited.names : ""}</span>
                 </div>
-
-                <div className="col-md-6">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Tableristas(Costos)</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Tab Cotizada</strong><br />
-                                <span><NumberFormat value={this.props.costo_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(costo_en_dinero , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Tab costo</strong><br />
-                                <span><NumberFormat value={this.props.costo_real_en_dinero_contractor} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(costo_real_en_dinero , precision: 0)%>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Margen</strong><br />
-                                <span style={{ color: this.alertIngCosto(this.props.porc_eje_costo_contractor, this.props.alerts[0].tab_costo_min, this.props.alerts[0].tab_costo_med) }}>{this.props.porc_eje_costo_contractor/*<%= porc_eje_costo  %>*/}%</span>
-
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Desplazamiento</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span>{this.props.data_info.displacement_hours}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Ejecutado</strong><br />
-                                <span>{this.props.ejecutado_desplazamiento_horas}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_desplazamiento, this.props.alerts[0].desp_min, this.props.alerts[0].desp_med) }}>{this.props.porc_desplazamiento/*<%= porc_eje_costo  %>*/}%</span>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Materiales</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizados</strong><br />
-                                <span><NumberFormat value={this.props.data_info.materials_value} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Comprados</strong><br />
-                                <span><NumberFormat value={this.props.sum_materials} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Margen</strong><br />
-                                <span style={{ color: this.alertIngCosto(this.props.porc_mat, this.props.alerts[0].mat_min, this.props.alerts[0].mat_med) }}>{this.props.porc_mat/*<%= porc_eje_costo  %>*/}%</span>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Viaticos</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center" >
-                                <strong>Cotizado</strong><br />
-                                <span><NumberFormat value={this.props.via_cotizado} displayType={"text"} thousandSeparator={true} prefix={"$"} /></span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Gastado</strong><br />
-                                <span><NumberFormat value={this.props.via_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /></span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span style={{ color: this.alertIng(this.props.porc_via, this.props.alerts[0].via_min, this.props.alerts[0].via_med) }}>{this.props.porc_via/*<%= porc_eje %> */}%</span>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-md-6 mt-4">
-                    <div className="col-md-12 title1 text-center">
-                        <strong>Facturacion</strong><br />
-                    </div>
-
-                    <div className="col-md-12 background-show">
-                        <div className="row">
-
-                            <div className="col-md-4 text-center">
-                                <strong>Cotizado</strong><br />
-                                <span><NumberFormat value={this.props.data_info.quotation_value} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(@cost_center.quotation_value, precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Facturado</strong><br />
-                                <span><NumberFormat value={this.props.facturacion} displayType={"text"} thousandSeparator={true} prefix={"$"} />{/*<%= number_to_currency(facturacion , precision: 0) %>*/}</span>
-                            </div>
-
-                            <div className="col-md-4 text-center">
-                                <strong>Avance</strong><br />
-                                <span>{this.props.porc_fac/*<%= porc_fac %>*/}%</span>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-            </React.Fragment>
-        )
-    }
-
-    render() {
-        return (
-            <React.Fragment>
-                <ul className="nav nav-tabs" id="myTab" role="tablist">
-                    <li className="nav-item">
-                        <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=home`}>Información del centro de costo</a>
-                    </li>
-
-                    <li className="nav-item">
-                        <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/cost_centers/${this.props.cost_center.id}?tab=calendar`}>Calendario</a>
-                    </li>
-                </ul>
-
-                <div className="tab-content" id="myTabContent">
-
-                    <div className={`tab-pane fade ${this.props.current_tab == "home" ? "show active" : ""}`} id="home" role="tabpanel" aria-labelledby="home-tab">
-                        <Card className="card-show">
-                            <CardBody className="mt-2">
-
-                                <div className="col-md-12">
-                                    <div className="row">
-                                        <div className="col-md-12 text-center">
-                                            <h5>
-                                                {this.props.data_info.customer != undefined ? this.props.data_info.customer.name : "CARGANDO.."} / {this.props.data_info.service_type != undefined ? this.props.data_info.service_type : "CARGANDO.."} ({this.props.data_info.code != undefined ? this.props.data_info.code : "CARGANDO.."})
-
-                                                {this.state.show_btn_update == true && (
-                                                    <React.Fragment>
-                                                        <button className="btn btn-danger float-right" onClick={() => this.SubmitBnt()}><i className="fas fa-window-close"></i></button>
-                                                        <button className="btn btn-secondary float-right mr-2" onClick={() => this.SubmitBnt("save")}>Actualizar</button>
-                                                    </React.Fragment>
-                                                )}
-
-                                            </h5>
-                                        </div>
-                                    </div>
-
-                                    <hr />
-                                    <div className="row">
-
-
-                                        <div className="col-md-3 text-center mb-3">
-                                            <strong> Estado Ejecucion</strong> <br />
-                                            {(this.props.data_info.service_type == "PROYECTO" || this.props.data_info.service_type == "SERVICIO") && (
-                                                <React.Fragment>
-                                                    {this.state.state_ejecution == true ? (
-                                                        <select
-                                                            name="execution_state"
-                                                            className={`form form-control`}
-                                                            value={this.state.formUpdate.execution_state}
-                                                            onChange={this.handleChange}
-                                                        >
-                                                            <option value="">Seleccione un tipo</option>
-                                                            <option value="EJECUCION">EJECUCION</option>
-                                                            <option value="FINALIZADO">FINALIZADO</option>
-                                                            <option value="PENDIENTE">PENDIENTE</option>
-                                                        </select>
-                                                    ) : (
-                                                        <React.Fragment>
-                                                            {this.props.estados.update_state == true ? (
-                                                                <p onClick={() => this.changeState()} >{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."} </p>
-                                                            ) : (
-                                                                <p>{this.props.data_info.execution_state != undefined ? this.props.data_info.execution_state : "CARGANDO.."}</p>
-                                                            )}
-                                                        </React.Fragment>
-                                                    )}
-                                                </React.Fragment>
-                                            )}
-                                        </div>
-                                        <div className="col-md-3 text-center mb-3">
-                                            <strong> Estado de compras</strong> <br />
-                                            {(this.props.data_info.service_type == "PROYECTO" || this.props.data_info.service_type == "VENTA") && (
-                                                <React.Fragment>
-                                                    {this.state.state_compras == true ? (
-                                                        <select
-                                                            name="sales_state"
-                                                            className={`form form-control`}
-                                                            value={this.state.formUpdate.sales_state}
-                                                            onChange={this.handleChange}
-                                                        >
-                                                            <option value="">Seleccione un estado</option>
-                                                            <option value="SIN COMPRAS">SIN COMPRAS</option>
-                                                            <option value="COMPRANDO">COMPRANDO</option>
-                                                            <option value="CERRADO">CERRADO</option>
-                                                        </select>
-                                                    ) : (
-                                                        <React.Fragment>
-                                                            {this.props.estados.update_state == true ? (
-                                                                <p onClick={() => this.changeState("sales_state")} >{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."} </p>
-                                                            ) : (
-                                                                <p>{this.props.data_info.sales_state != undefined ? this.props.data_info.sales_state : "CARGANDO.."}</p>
-                                                            )}
-                                                        </React.Fragment>
-                                                    )}
-                                                </React.Fragment>
-                                            )}
-                                        </div>
-
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Estado Facturacion</strong><br />
-                                            {this.state.invoiced_state == true ? (
-                                                <select
-                                                    name="invoiced_state"
-                                                    className={`form form-control`}
-                                                    value={this.state.formUpdate.invoiced_state}
-                                                    onChange={this.handleChange}
-                                                >
-                                                    <option value="">Seleccione un tipo</option>
-                                                    <option value="PENDIENTE DE COTIZACION">PENDIENTE DE COTIZACION</option>
-                                                    <option value="PENDIENTE DE ORDEN DE COMPRA">PENDIENTE DE ORDEN DE COMPRA</option>
-                                                    <option value="LEGALIZADO">LEGALIZADO</option>
-                                                    <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
-                                                    <option value="FACTURADO">FACTURADO</option>
-                                                    <option value="FACTURADO PARCIAL">FACTURADO PARCIAL</option>
-                                                    <option value="POR FACTURAR">POR FACTURAR</option>
-
-                                                </select>
-                                            ) : (
-                                                <React.Fragment>
-                                                    {this.props.estados.update_state == true ? (
-                                                        <p onClick={() => this.changeState("invoiced_state")} >{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
-                                                    ) : (
-                                                        <p>{this.props.data_info.invoiced_state != undefined ? this.props.data_info.invoiced_state : "SIN INFORMACIÓN"}</p>
-                                                    )}
-                                                </React.Fragment>
-                                            )}
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Contacto</strong><br />
-                                            <p>{this.props.data_info.contact != undefined ? this.props.data_info.contact.name : "SIN INFORMACIÓN"}</p>
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Fecha de Inicio</strong><br />
-                                            <p>{this.props.data_info.start_date != undefined ? this.props.data_info.start_date : "SIN INFORMACIÓN"}</p>
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Fecha Final</strong><br />
-                                            <p>{this.props.data_info.end_date != undefined ? this.props.data_info.end_date : "SIN INFORMACIÓN"}</p>
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Numero de Cotizacion</strong><br />
-                                            <p>{this.props.data_info.quotation_number != undefined ? this.props.data_info.quotation_number : "SIN INFORMACIÓN"}</p>
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Descripción</strong><br />
-                                            <p>{this.props.data_info.description != undefined ? this.props.data_info.description : "SIN INFORMACIÓN"}</p>
-                                        </div>
-
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Propietario</strong><br />
-                                            <p>{this.props.data_info.user_owner != undefined ? this.props.data_info.user_owner.names : "SIN INFORMACIÓN"}</p>
-                                        </div>
-                                        <div className="col-md-3 text-center">
-                                            <strong>MARGEN GLOBAL (REAL)</strong><br />
-
-                                            <p className="mr-4"><NumberFormat style={{ fontSize: "20px" }} value={this.props.data_info.aiu} displayType={"text"} thousandSeparator={true} prefix={"$"} />/ <span style={{ color: this.alertIngCosto(this.props.data_info.aiu_percent, this.props.alerts[0].total_min, this.props.alerts[0].total_med), fontSize: "20px" }}>{this.props.data_info.aiu_percent}%</span></p>
-
-                                        </div>
-                                        <div className="col-md-3 text-center">
-                                            <strong>MARGEN GLOBAL (COTIZADO)</strong><br />
-
-                                            <p><NumberFormat style={{ fontSize: "20px" }} value={this.props.data_info.aiu_real} displayType={"text"} thousandSeparator={true} prefix={"$"} /> / <span style={{ color: this.alertIngCosto(this.props.data_info.aiu_percent_real, this.props.alerts[0].total_min, this.props.alerts[0].total_med), fontSize: "20px" }}>{this.props.data_info.aiu_percent_real}%</span></p>
-
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Creación</strong><br />
-                                            {this.getDate(this.props.data_info.created_at)} <br />
-                                            {this.props.data_info.user != undefined ? <React.Fragment> <b> </b> {this.props.data_info.user != undefined ? this.props.data_info.user.names : ""} </React.Fragment> : null}
-                                        </div>
-
-                                        <div className="col-md-3 text-center">
-                                            <strong>Ultima actualización</strong><br />
-                                            {this.getDate(this.props.data_info.updated_at)} <br />
-                                            {this.props.data_info.last_user_edited != undefined ? <React.Fragment> <b> </b> {this.props.data_info.last_user_edited != undefined ? this.props.data_info.last_user_edited.names : ""} </React.Fragment> : null}
-                                        </div>
-
-
-
-                                    </div>
-                                </div>
-
-                                <div className="row valores">
-                                    {this.props.data_info.service_type != "" && (
-                                        <React.Fragment>
-                                            {this.getCards()}
-                                        </React.Fragment>
-                                    )}
-
-                                    {this.state.modal && (
-                                        <FormCreate
-                                            toggle={this.toggle}
-                                            backdrop={this.state.backdrop}
-                                            modal={this.state.modal}
-                                            onChangeForm={this.handleChangeForm}
-                                            formValues={this.state.form}
-                                            submit={this.HandleClick}
-                                            FormSubmit={this.handleSubmit}
-
-                                            titulo={"Actualizar centro de costo"}
-                                            nameSubmit={true ? "Actualizar" : "Crear"}
-                                            errorValues={this.state.ErrorValues}
-                                            modeEdit={true}
-
-
-                                            /* AUTOCOMPLETE CLIENTE */
-
-                                            clientes={this.state.clients}
-                                            onChangeAutocomplete={this.handleChangeAutocomplete}
-                                            formAutocomplete={this.state.selectedOption}
-
-                                            /* AUTOCOMPLETE CONTACTO */
-
-                                            contacto={this.state.dataContact}
-                                            onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
-                                            formAutocompleteContact={this.state.selectedOptionContact}
-
-                                            /* AUTOCOMPLETE USERS */
-
-                                            formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
-                                            onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
-                                            users={this.state.users}
-
-                                            estados={this.props.estados}
-
-                                        />
-                                    )}
-                                    {this.props.estados.cost_center_edit && (
-                                        <div className="col-md-12 text-center mt-5">
-                                            <button onClick={() => this.edit()} className="btn btn-secondary">
-                                                Editar información
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-
-                            </CardBody>
-                        </Card>
-
-                        <Card className="mt-3">
-                            <CardBody>
-                                <TabContentShow
-                                    loadData={this.loadData}
-                                    dataMateriales={this.state.dataMateriales}
-                                    dataContractors={this.state.dataContractors}
-                                    dataSalesOrdes={this.state.dataSalesOrdes}
-                                    dataReports={this.state.dataReports}
-                                    dataExpenses={this.state.dataExpenses}
-                                    cost_center={this.props.cost_center}
-                                    usuario={this.props.usuario}
-                                    providers={this.props.providers}
-                                    users={this.state.users}
-                                    report_expense_options={this.props.report_expense_options}
-                                    clients={this.state.clients}
-                                    estados={this.props.estados}
-                                />
-                            </CardBody>
-                        </Card>
-                    </div>
-
-                    <div className={`tab-pane fade ${this.props.current_tab == "calendar" ? "show active" : ""}`} id="profile" role="tabpanel" aria-labelledby="profile-tab" >
-                        <Calendar
-                            url_calendar={`/get_shifts_const_center/${this.props.cost_center.id}`}
-                            cost_centers={[{ value: this.props.cost_center.id, label: this.props.cost_center.code }]}
-                            users={this.props.users_select}
-                            microsoft_auth={this.props.microsoft_auth}
-                            current_user_name={this.props.current_user_name}
-                        />
-                    </div>
-                </div>
-
-
-            </React.Fragment>
-        );
-    }
+              </div>
+            </div>
+
+            {/* Metric cards */}
+            {info.service_type && (
+              <div className="cm-metrics-grid">
+                {this.getMetricCards()}
+              </div>
+            )}
+
+            {/* Edit modal */}
+            {this.state.modal && (
+              <FormCreate
+                toggle={this.toggle}
+                backdrop={this.state.backdrop}
+                modal={this.state.modal}
+                onChangeForm={this.handleChangeForm}
+                formValues={this.state.form}
+                submit={this.HandleClick}
+                FormSubmit={function(e) { e.preventDefault(); }}
+                titulo="Actualizar centro de costo"
+                nameSubmit="Actualizar"
+                errorValues={true}
+                modeEdit={true}
+                clientes={this.state.clients}
+                onChangeAutocomplete={this.handleChangeAutocomplete}
+                formAutocomplete={this.state.selectedOption}
+                contacto={this.state.dataContact}
+                onChangeAutocompleteContact={this.handleChangeAutocompleteContact}
+                formAutocompleteContact={this.state.selectedOptionContact}
+                formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
+                onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
+                users={this.state.users}
+                estados={this.props.estados}
+              />
+            )}
+
+            {/* Sub-tables */}
+            <div className="cm-tabs">
+              <TabContentShow
+                loadData={this.loadData}
+                dataMateriales={this.state.dataMateriales}
+                dataContractors={this.state.dataContractors}
+                dataSalesOrdes={this.state.dataSalesOrdes}
+                dataReports={this.state.dataReports}
+                dataExpenses={this.state.dataExpenses}
+                cost_center={this.props.cost_center}
+                usuario={this.props.usuario}
+                providers={this.props.providers}
+                users={this.state.users}
+                report_expense_options={this.props.report_expense_options}
+                clients={this.state.clients}
+                estados={this.props.estados}
+              />
+            </div>
+          </React.Fragment>
+        ) : (
+          <Calendar
+            url_calendar={"/get_shifts_const_center/" + this.props.cost_center.id}
+            cost_centers={[{ value: this.props.cost_center.id, label: this.props.cost_center.code }]}
+            users={this.props.users_select}
+            microsoft_auth={this.props.microsoft_auth}
+            current_user_name={this.props.current_user_name}
+          />
+        )}
+      </React.Fragment>
+    );
+  }
 }
 
 export default Show;
