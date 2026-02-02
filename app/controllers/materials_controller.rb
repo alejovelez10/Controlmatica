@@ -1,44 +1,51 @@
 class MaterialsController < ApplicationController
   before_action :set_material, only: [:destroy, :update]
   before_action :authenticate_user!
-  skip_before_action :verify_authenticity_token
   include ApplicationHelper
 
-  def index
-    materials = ModuleControl.find_by_name("Materiales")
+  SORTABLE_COLUMNS = %w[sales_date sales_number amount description delivery_date sales_state].freeze
 
-    create = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Eliminar").exists?
-    download_file = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Descargar excel").exists?
-    update_state = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Forzar estados").exists?
-    edit_all = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Editar todos").exists?
+  def index
+    mod = ModuleControl.find_by_name("Materiales")
+    is_admin = current_user.rol.name == "Administrador"
+    permisos = current_user.rol.accion_modules.where(module_control_id: mod.id).pluck(:name)
 
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      update_state: (current_user.rol.name == "Administrador" ? true : update_state),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file),
+      create: is_admin || permisos.include?("Crear"),
+      edit: is_admin || permisos.include?("Editar"),
+      edit_all: is_admin || permisos.include?("Editar todos"),
+      delete: is_admin || permisos.include?("Eliminar"),
+      update_state: is_admin || permisos.include?("Forzar estados"),
+      download_file: is_admin || permisos.include?("Descargar excel"),
     }
   end
 
   def get_materials
-    if params[:filtering] == "true"
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
-      materials_total = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).count
-    elsif params[:filtering] == "false"
-      materials = Material.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
-      materials_total = Material.all.count
-    else
-      materials = Material.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10)
-      materials_total = Material.all.count
+    materials = Material.all.includes(:cost_center, :provider)
+
+    if params[:search].present?
+      term = "%#{params[:search].downcase}%"
+      materials = materials.joins(:cost_center, :provider).where(
+        "LOWER(materials.description) LIKE ? OR LOWER(materials.sales_number) LIKE ? OR LOWER(providers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?",
+        term, term, term, term
+      )
     end
 
-    render :json => { 
-      materials_paginate: ActiveModelSerializers::SerializableResource.new(materials, each_serializer: MaterialSerializer),
-      materials_total: materials_total 
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      materials = materials.order(params[:sort] => direction)
+    else
+      materials = materials.order(created_at: :desc)
+    end
+
+    page = (params[:page] || 1).to_i
+    per_page = [(params[:per_page] || 10).to_i, 100].min
+    total = materials.except(:includes).count
+    paginated = materials.offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      data: ActiveModelSerializers::SerializableResource.new(paginated, each_serializer: MaterialSerializer),
+      meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
     }
   end
 
@@ -169,7 +176,6 @@ class MaterialsController < ApplicationController
 
   def update
     if material_params_update["amount"].class.to_s != "Integer" && material_params_update["amount"].class.to_s != "Float"
-      puts "asñljadñlfjadslfkñjasñjlkfdjskldsñlfal"
       valor1 = material_params_update["amount"].gsub("$", "").gsub(",", "")
       params["amount"] = valor1
     end
@@ -199,6 +205,8 @@ class MaterialsController < ApplicationController
       render :json => @material.errors.full_messages
     end
   end
+
+  private
 
   def set_material
     @material = Material.find(params[:id])

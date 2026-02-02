@@ -1,45 +1,59 @@
 class ContractorsController < ApplicationController
   before_action :set_contractor, only: [:destroy, :update]
   before_action :authenticate_user!
-  skip_before_action :verify_authenticity_token
+
   include ApplicationHelper
 
   def index
-    contractors = ModuleControl.find_by_name("Tableristas")
+    mod = ModuleControl.find_by_name("Tableristas")
+    is_admin = current_user.rol.name == "Administrador"
+    permisos = current_user.rol.accion_modules.where(module_control_id: mod.id).pluck(:name)
 
-    create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
-    download_file = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Descargar excel").exists?
-    edit_all = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar todos").exists?
-
-    @estados = {      
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
+    @estados = {
+      create: is_admin || permisos.include?("Crear"),
+      edit: is_admin || permisos.include?("Editar"),
+      edit_all: is_admin || permisos.include?("Editar todos"),
+      delete: is_admin || permisos.include?("Eliminar"),
+      download_file: is_admin || permisos.include?("Descargar excel")
     }
   end
 
+  SORTABLE_COLUMNS = %w[sales_date hours description ammount].freeze
+
   def get_contractors
-    if params[:filtering] == "true"
-      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :user => { :only =>[:names, :id] } })
-      contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).count
+    contractors = Contractor.all.includes(:cost_center, :user_execute, :user, :last_user_edited)
 
-    elsif params[:filtering] == "false"
-      contractor = Contractor.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-      contractor_total = Contractor.all.count
-    else
-    
-      contractor = Contractor.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-      contractor_total =  Contractor.all.count
-      
+    if params[:search].present?
+      term = "%#{params[:search].downcase}%"
+      contractors = contractors.joins(:cost_center).where(
+        "LOWER(contractors.description) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term
+      )
     end
-    
-    contractor = JSON.parse(contractor)
 
-    render :json => {contractors_paginate: contractor, contractors_total: contractor_total}
+    # sort
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      contractors = contractors.order(params[:sort] => direction)
+    else
+      contractors = contractors.order(created_at: :desc)
+    end
+
+    page = (params[:page] || 1).to_i
+    per_page = [(params[:per_page] || 10).to_i, 100].min
+    total = contractors.except(:includes).count
+    paginated = contractors.offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      data: paginated.map { |c| {
+        id: c.id, sales_date: c.sales_date, hours: c.hours, description: c.description,
+        ammount: c.ammount, cost_center_id: c.cost_center_id, user_execute_id: c.user_execute_id,
+        cost_center: c.cost_center.present? ? { code: c.cost_center.code, execution_state: c.cost_center.execution_state } : nil,
+        user_execute: c.user_execute.present? ? { names: c.user_execute.names, id: c.user_execute.id } : nil,
+        user: c.user.present? ? { names: c.user.names, id: c.user.id } : nil,
+        last_user_edited: c.last_user_edited.present? ? { names: c.last_user_edited.names, id: c.last_user_edited.id } : nil,
+      }},
+      meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
+    }
   end
 
   def download_file
@@ -53,93 +67,93 @@ class ContractorsController < ApplicationController
     respond_to do |format|
 
       format.xls do
-      
+
         task = Spreadsheet::Workbook.new
         sheet = task.create_worksheet
-        
+
         rows_format = Spreadsheet::Format.new color: :black,
         weight: :normal,
         size: 13,
         align: :left
 
         contractor.each.with_index(1) do |task, i|
-      
+
           position = sheet.row(i)
-          
-          sheet.row(1).default_format = rows_format    
+
+          sheet.row(1).default_format = rows_format
           position[0] = task.sales_date
           position[1] = task.cost_center.present? ? task.cost_center.code : ""
           position[2] = task.hours
           position[3] = task.user_execute.present? ? task.user_execute.names : ""
           position[4] = task.description
-          
-          
-          
+
+
+
           sheet.row(i).height = 25
           sheet.column(i).width = 40
           sheet.row(i).default_format = rows_format
-        
+
         end
-        
-        
-        
-        head_format = Spreadsheet::Format.new color: :white,      
+
+
+
+        head_format = Spreadsheet::Format.new color: :white,
         weight: :bold,
-        size: 12,      
-        pattern_bg_color: :xls_color_10,    
-        pattern: 2,      
-        vertical_align: :middle,      
+        size: 12,
+        pattern_bg_color: :xls_color_10,
+        pattern: 2,
+        vertical_align: :middle,
         align: :left
-        
-        
-        
+
+
+
         position = sheet.row(0)
-        
+
         position[0] = "Fecha"
         position[1] = "Centro de costo"
         position[2] = "Horas"
         position[3] = "Trabajo realizado por"
         position[4] = "Descripcion"
-        
-        
-        
-        
+
+
+
+
         sheet.row(0).height = 20
         sheet.column(0).width = 40
-        
-        
-        
+
+
+
         sheet.column(1).width = 40
-        
+
         sheet.column(2).width = 40
-        
+
         sheet.column(3).width = 40
-        
+
         sheet.column(4).width = 40
-        
+
         sheet.column(5).width = 40
-        
+
         sheet.column(6).width = 40
-        
+
         sheet.column(7).width = 40
-        
+
         sheet.column(8).width = 40
-        
+
         sheet.column(9).width = 40
-        
+
         sheet.column(10).width = 40
-        
+
         sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
-        
-        
-        
+
+
+
         temp_file = StringIO.new
-        
+
         task.write(temp_file)
-        
+
         send_data(temp_file.string, :filename => "Tableristas.xls", :disposition => 'inline')
-        
-        end  
+
+        end
     end
 
   end
@@ -163,7 +177,7 @@ class ContractorsController < ApplicationController
           message_error: @contractor.errors.full_messages
         }
     end
-  	
+
   end
 
   def update
@@ -174,14 +188,14 @@ class ContractorsController < ApplicationController
       end
     end
 
-    if @contractor.update(contractor_params_update.merge!(update_user: current_user.id)) 
+    if @contractor.update(contractor_params_update.merge!(update_user: current_user.id))
       recalculate_cost_center(@contractor.cost_center_id)
       render :json => {
         message: "¡El Registro fue actualizado con exito!",
         register: contractor_object(@contractor),
         type: "success"
       }
-    else 
+    else
       render :json => {
         message: "¡El Registro no fue actualizado!",
         type: "error",
@@ -193,7 +207,7 @@ class ContractorsController < ApplicationController
   def destroy
     if @contractor.destroy
       render :json => @contractor
-    else 
+    else
       render :json => @contractor.errors.full_messages
     end
   end
@@ -209,8 +223,12 @@ class ContractorsController < ApplicationController
         id: contractor.id,
         sales_date: contractor.sales_date,
         hours: contractor.hours,
-        user_execute: { names: contractor.user_execute.names, id: contractor.user_execute.id },
         description: contractor.description,
+        ammount: contractor.ammount,
+        cost_center_id: contractor.cost_center_id,
+        user_execute_id: contractor.user_execute_id,
+        cost_center: contractor.cost_center.present? ? { code: contractor.cost_center.code, execution_state: contractor.cost_center.execution_state } : nil,
+        user_execute: contractor.user_execute.present? ? { names: contractor.user_execute.names, id: contractor.user_execute.id } : nil,
       }
     end
 

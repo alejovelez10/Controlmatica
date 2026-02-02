@@ -1,31 +1,28 @@
 class ReportsController < ApplicationController
   before_action :set_report, only: [:show, :edit, :update, :destroy]
   before_action :authenticate_user!
-  skip_before_action :verify_authenticity_token
+
   include ApplicationHelper
   include ActionView::Helpers::NumberHelper
   include ReportsHelper
 
+  SORTABLE_COLUMNS = %w[code_report report_date working_time work_description viatic_value total_value].freeze
+
   # GET /reports
   # GET /reports.json
   def index
-    reports = ModuleControl.find_by_name("Reportes de servicios")
-    create = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Eliminar").exists?
-    responsible = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ver Responsables").exists?
-    download_file = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Descargar excel").exists?
-    edit_all = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Editar todos").exists?
-    viatics = current_user.rol.accion_modules.where(module_control_id: reports.id).where(name: "Ingresar viaticos").exists?
+    report_mod = ModuleControl.find_by_name("Reportes de servicios")
+    permissions = current_user.rol.accion_modules.where(module_control_id: report_mod.id).pluck(:name)
+    is_admin = current_user.rol.name == "Administrador"
 
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      responsible: (current_user.rol.name == "Administrador" ? true : responsible),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file),
-      viatics: (current_user.rol.name == "Administrador" ? true : viatics),
+      create: is_admin || permissions.include?("Crear"),
+      edit: is_admin || permissions.include?("Editar"),
+      edit_all: is_admin || permissions.include?("Editar todos"),
+      delete: is_admin || permissions.include?("Eliminar"),
+      responsible: is_admin || permissions.include?("Ver Responsables"),
+      download_file: is_admin || permissions.include?("Descargar excel"),
+      viatics: is_admin || permissions.include?("Ingresar viaticos"),
     }
   end
 
@@ -40,35 +37,36 @@ class ReportsController < ApplicationController
   end
 
   def get_reports
-    report = ModuleControl.find_by_name("Reportes de servicios")
-    estado = current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ver todos").exists?
-    validate = (current_user.rol.name == "Administrador" ? true : estado)
+    report_mod = ModuleControl.find_by_name("Reportes de servicios")
+    ver_todos = current_user.rol.accion_modules.where(module_control_id: report_mod.id).where(name: "Ver todos").exists?
+    can_see_all = current_user.rol.name == "Administrador" || ver_todos
 
-    if validate
-      if params[:filtering] == "true"
-        reports = Report.all.order(report_date: :desc).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).paginate(page: params[:page], :per_page => 10)
-        reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).count
-      elsif params[:filtering] == "false"
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.all.count
-      else
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.all.count
-      end
-    else
-      if params[:filtering] == "true"
-        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).paginate(page: params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).count
-      elsif params[:filtering] == "false"
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).count
-      else
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).count
-      end
+    reports = can_see_all ? Report.all : Report.where(report_execute_id: current_user.id)
+    reports = reports.includes(:cost_center => :customer, :report_execute => {}, :user => {}, :contact => {}, :customer => {}, :last_user_edited => {})
+
+    if params[:search].present?
+      term = "%#{params[:search].downcase}%"
+      reports = reports.joins(:cost_center).where(
+        "LOWER(reports.work_description) LIKE ? OR LOWER(reports.code_report) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term, term
+      )
     end
 
-    render :json => { reports_paginate: get_reports_items(reports), reports_total: reports_total }
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      reports = reports.order(params[:sort] => direction)
+    else
+      reports = reports.order(report_date: :desc)
+    end
+
+    page = (params[:page] || 1).to_i
+    per_page = [(params[:per_page] || 10).to_i, 100].min
+    total = reports.except(:includes).count
+    paginated = reports.offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      data: get_reports_items(paginated),
+      meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
+    }
   end
 
   def controlmatica
@@ -87,8 +85,6 @@ class ReportsController < ApplicationController
 
       cost_center = CostCenter.all.searchInfo(params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:cliente_incluido], params[:centro_incluido])
 
-      puts "entre aqui"
-      puts cost_center.count
       materials = Material.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
       contractors = Contractor.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
       reports = Report.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
@@ -107,9 +103,6 @@ class ReportsController < ApplicationController
     months_lleno = []
     months.each_with_index do |month, index|
       total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index + 1).where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
-      puts "jadlñfñdfkasdfl"
-      puts month
-
       months_lleno << total.to_f
     end
 
@@ -119,10 +112,6 @@ class ReportsController < ApplicationController
       total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
       months_lleno_mat << total.to_f
     end
-    puts "hola como estoyaaa"
-    puts months_lleno_mat
-    puts "hola como estoyaaa"
-
     #TABLERISTAS POR MES
     months_lleno_cont = []
     months.each_with_index do |month, index|
@@ -135,8 +124,6 @@ class ReportsController < ApplicationController
     months.each_with_index do |month, index|
       total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index + 1).where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
       total = total.sum(:viatic_value) + total.sum(:working_value) + total.sum(:value_displacement_hours)
-      puts total
-      puts "ingflskñflñsdlassñlñlj"
       months_lleno_rep << total.to_f
     end
 
@@ -347,7 +334,7 @@ class ReportsController < ApplicationController
       render :json => {
         message: "¡El Registro no fue actualizado!",
         type: "error",
-        message_error: @parameterization.errors.full_messages,
+        message_error: @report.errors.full_messages,
       }
     end
   end

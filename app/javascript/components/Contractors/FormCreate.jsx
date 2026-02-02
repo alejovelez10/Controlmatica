@@ -1,130 +1,123 @@
-import React from 'react';
-import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
-import NumberFormat from 'react-number-format';
+import React from "react";
 import Select from "react-select";
+import NumberFormat from "react-number-format";
+import { CmModal, CmButton } from "../../generalcomponents/ui";
 
 class FormCreate extends React.Component {
   constructor(props) {
     super(props);
   }
 
-  handleSubmit = e => {
-    e.preventDefault();
-  };
-
-
   render() {
-    return (
-      <React.Fragment>
-        <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered" backdrop={this.props.backdrop}>
-          <ModalHeader className="title-modal"  toggle={this.props.toggle}><i className="fas fa-money-check-alt mr-2"></i> {this.props.titulo}</ModalHeader>
-          <form onSubmit={this.handleSubmit}>
-            <ModalBody>
-              <div className="row">
+    var props = this.props;
 
-              <div className="col-md-6 mb-4">
-                <label>Fecha<small className="validate-label">*</small></label>
-                  <input
-                    type="date"
-                    name="sales_date"
-                    value={this.props.formValues.sales_date}
-                    onChange={this.props.onChangeForm}
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.sales_date == "" ? "error-class" : ""}`}
-                  />
-                </div>
+    var footer = React.createElement(React.Fragment, null,
+      React.createElement(CmButton, { variant: "outline", onClick: props.toggle }, "Cerrar"),
+      React.createElement(CmButton, {
+        variant: "accent",
+        onClick: props.submit,
+        disabled: props.isLoading
+      }, props.isLoading
+        ? React.createElement(React.Fragment, null, React.createElement("i", { className: "fas fa-spinner fa-spin" }), " Guardando...")
+        : React.createElement(React.Fragment, null, React.createElement("i", { className: "fas fa-save" }), " ", props.nameSubmit)
+      )
+    );
 
-                {this.props.cost_center_id == undefined && (
-                  <div className="col-md-6">
-                        <input
-                          type="hidden"
-                          name="cost_center_id"
-                          value={this.props.formAutocompleteCentro.cost_center_id}
-                        />
-                        <label>Centro de costo <small className="validate-label">*</small></label>
-                        <Select
-                          onChange={this.props.onChangeAutocompleteCentro}
-                          options={this.props.centro}
-                          autoFocus={false}
-                          className={`link-form ${this.props.errorValues == false && this.props.formValues.cost_center_id == "" ? "error-class" : ""}`}
-                          value={this.props.formAutocompleteCentro}
-                        />
-                    </div>
-                )}              
+    return React.createElement(CmModal, {
+      isOpen: props.modal,
+      toggle: props.toggle,
+      title: React.createElement("span", null, React.createElement("i", { className: "fas fa-hard-hat", style: { marginRight: 8 } }), props.titulo),
+      size: "lg",
+      footer: footer
+    },
+      props.errorValues === false ? React.createElement("div", { className: "cm-form-errors" },
+        React.createElement("ul", null,
+          React.createElement("li", null, "Debes completar todos los campos requeridos")
+        )
+      ) : null,
 
-                                
-                <div className={`col-md-6 mb-4`}>
-                <label>Horas trabajadas<small className="validate-label">*</small></label>
-                  <input
-                    type="text"
-                    name="hours"
-                    value={this.props.formValues.hours}
-                    onChange={this.props.onChangeForm}
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.hours == "" ? "error-class" : ""}`}
-                    placeholder="Horas trabajadas"
-                  />
-                </div>
+      React.createElement("div", { className: "cm-form-row" },
+        // Fecha
+        React.createElement("div", { className: "cm-input-group", style: { flex: "1 1 45%" } },
+          React.createElement("label", { className: "cm-input-label" }, "Fecha ", React.createElement("small", { className: "validate-label" }, "*")),
+          React.createElement("input", {
+            type: "date",
+            name: "sales_date",
+            value: props.formValues.sales_date,
+            onChange: props.onChangeForm,
+            className: "cm-input" + (props.errorValues === false && props.formValues.sales_date === "" ? " error-class" : "")
+          })
+        ),
 
-                <div className={`col-md-${this.props.cost_center_id == undefined ? "6" : "12" }`}>
-                      <input
-                        type="hidden"
-                        name="user_execute_id"
-                        value={this.props.formAutocompleteUsers.user_execute_id}
-                      />
-                      <label>Horas trabajadas por <small className="validate-label">*</small></label>
-                      <Select
-                        onChange={this.props.onChangeAutocompleteUsers}
-                        options={this.props.users}
-                        autoFocus={false}
-                        className={`link-form ${this.props.errorValues == false && this.props.formValues.user_execute_id == "" ? "error-class" : ""}`}
-                        value={this.props.formAutocompleteUsers}
-                      />
-                  </div>
+        // Horas
+        React.createElement("div", { className: "cm-input-group", style: { flex: "1 1 45%" } },
+          React.createElement("label", { className: "cm-input-label" }, "Horas trabajadas ", React.createElement("small", { className: "validate-label" }, "*")),
+          React.createElement("input", {
+            type: "text",
+            name: "hours",
+            value: props.formValues.hours,
+            onChange: props.onChangeForm,
+            className: "cm-input" + (props.errorValues === false && props.formValues.hours === "" ? " error-class" : ""),
+            placeholder: "Horas trabajadas"
+          })
+        ),
 
+        // Realizado por (Select)
+        React.createElement("div", { className: "cm-input-group", style: { flex: "1 1 45%" } },
+          React.createElement("label", { className: "cm-input-label" }, "Realizado por ", React.createElement("small", { className: "validate-label" }, "*")),
+          React.createElement(Select, {
+            onChange: props.onChangeAutocompleteUsers,
+            options: props.users,
+            autoFocus: false,
+            className: "link-form" + (props.errorValues === false && props.formValues.user_execute_id === "" ? " error-class" : ""),
+            value: props.formAutocompleteUsers
+          })
+        ),
 
-                <div className="col-md-12 mt-3">
-                <label>Descripcion</label>
-                  <textarea 
-                    name="description"
-                    className={`form form-control ${this.props.errorValues == false && this.props.formValues.description == "" ? "error-class" : ""}`}
-                    value={this.props.formValues.description}
-                    onChange={this.props.onChangeForm}
-                    placeholder="Descripcion.."
-                    rows="4"
-                  /> 
-                </div>
+        // Centro de costo (Select)
+        React.createElement("div", { className: "cm-input-group", style: { flex: "1 1 45%" } },
+          React.createElement("label", { className: "cm-input-label" }, "Centro de costo ", React.createElement("small", { className: "validate-label" }, "*")),
+          React.createElement(Select, {
+            onChange: props.onChangeAutocompleteCentro,
+            options: props.centro,
+            autoFocus: false,
+            className: "link-form" + (props.errorValues === false && props.formValues.cost_center_id === "" ? " error-class" : ""),
+            value: props.formAutocompleteCentro
+          })
+        ),
 
+        // Monto
+        React.createElement("div", { className: "cm-input-group", style: { flex: "1 1 45%" } },
+          React.createElement("label", { className: "cm-input-label" }, "Monto"),
+          React.createElement(NumberFormat, {
+            name: "ammount",
+            value: props.formValues.ammount,
+            thousandSeparator: true,
+            prefix: "$",
+            className: "cm-input",
+            placeholder: "$0",
+            onValueChange: function (values) {
+              var ev = { target: { name: "ammount", value: values.formattedValue } };
+              props.onChangeForm(ev);
+            }
+          })
+        ),
 
-                {this.props.errorValues == false && (
-                  <div className="col-md-12 mt-2">
-                    <div className="alert alert-danger" role="alert">
-                      <b>Debes de completar todos los campos requeridos</b>
-                    </div>
-                  </div>
-                )}
-  
-
-                
-
-
-              </div>
-
-              </ModalBody>
-
-
-         
-
-          <ModalFooter>
-                <button className="btn btn-light" onClick={this.props.toggle}>Cerrar</button>
-                <button className="btn btn-secondary" onClick={this.props.submit} disabled={this.props.isLoading}>{this.props.isLoading ? "Creando.." : this.props.nameSubmit}</button>
-          </ModalFooter>
-
-          </form>
-
-        </Modal>
-      </React.Fragment>
+        // Descripción
+        React.createElement("div", { className: "cm-input-group", style: { flex: "1 1 100%" } },
+          React.createElement("label", { className: "cm-input-label" }, "Descripción ", React.createElement("small", { className: "validate-label" }, "*")),
+          React.createElement("textarea", {
+            name: "description",
+            className: "cm-input" + (props.errorValues === false && props.formValues.description === "" ? " error-class" : ""),
+            value: props.formValues.description,
+            onChange: props.onChangeForm,
+            placeholder: "Descripción...",
+            rows: "4"
+          })
+        )
+      )
     );
   }
 }
 
 export default FormCreate;
-
