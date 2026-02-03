@@ -24,6 +24,10 @@
 #  user_id                :integer
 #  user_invoice_id        :integer
 #
+# Indexes
+#
+#  index_report_expenses_on_cost_center_id  (cost_center_id)
+#
 
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 

@@ -3,16 +3,20 @@
 # Table name: notification_alerts
 #
 #  id             :bigint           not null, primary key
-#  user_id        :integer
-#  state          :boolean          default(FALSE)
-#  module         :string
-#  cost_center_id :integer
+#  date_update    :date
 #  description    :text
 #  expected       :float            default(0.0)
+#  module         :string
 #  real           :float            default(0.0)
-#  date_update    :date
+#  state          :boolean          default(FALSE)
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
+#  cost_center_id :integer
+#  user_id        :integer
+#
+# Indexes
+#
+#  index_notification_alerts_on_cost_center_id  (cost_center_id)
 #
 
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html

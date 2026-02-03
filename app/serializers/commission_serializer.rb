@@ -19,6 +19,10 @@
 #  user_id             :integer
 #  user_invoice_id     :integer
 #
+# Indexes
+#
+#  index_commissions_on_cost_center_id  (cost_center_id)
+#
 class CommissionSerializer < ActiveModel::Serializer
   attributes :id, :created_at, :updated_at, :is_acepted, :last_user_edited, :user, :user_invoice, :total_value, :user_invoice_id, :start_date, :end_date, :customer_invoice_id, :observation, :hours_worked, :total_value, :customer_invoice, :customer_report, :cost_center, :value_hour
 

@@ -31,6 +31,17 @@
 #  report_execute_id        :integer
 #  user_id                  :integer
 #
+# Indexes
+#
+#  index_reports_on_contact_id           (contact_id)
+#  index_reports_on_cost_center_id       (cost_center_id)
+#  index_reports_on_customer_id          (customer_id)
+#  index_reports_on_last_user_edited_id  (last_user_edited_id)
+#  index_reports_on_report_date          (report_date)
+#  index_reports_on_report_execute_id    (report_execute_id)
+#  index_reports_on_report_sate          (report_sate)
+#  index_reports_on_user_id              (user_id)
+#
 
 class ReportSerializer < ActiveModel::Serializer
   attributes :id, :total_value, :working_value, :viatic_value, :value_displacement_hours, :report_date, :code_report

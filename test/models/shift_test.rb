@@ -16,6 +16,10 @@
 #  user_id             :integer
 #  user_responsible_id :integer
 #
+# Indexes
+#
+#  index_shifts_on_cost_center_id  (cost_center_id)
+#
 require "test_helper"
 
 class ShiftTest < ActiveSupport::TestCase

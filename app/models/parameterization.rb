@@ -3,12 +3,17 @@
 # Table name: parameterizations
 #
 #  id           :bigint           not null, primary key
-#  name         :string
-#  user_id      :integer
-#  number_value :integer
 #  money_value  :integer
+#  name         :string
+#  number_value :integer
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
+#  user_id      :integer
+#
+# Indexes
+#
+#  index_parameterizations_on_created_at  (created_at)
+#  index_parameterizations_on_name        (name)
 #
 
 class Parameterization < ApplicationRecord

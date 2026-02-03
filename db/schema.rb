@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_02_100000) do
+ActiveRecord::Schema.define(version: 2026_02_02_200002) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -473,7 +473,14 @@ ActiveRecord::Schema.define(version: 2026_02_02_100000) do
     t.float "value_displacement_hours"
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index ["contact_id"], name: "index_reports_on_contact_id"
     t.index ["cost_center_id"], name: "index_reports_on_cost_center_id"
+    t.index ["customer_id"], name: "index_reports_on_customer_id"
+    t.index ["last_user_edited_id"], name: "index_reports_on_last_user_edited_id"
+    t.index ["report_date"], name: "index_reports_on_report_date"
+    t.index ["report_execute_id"], name: "index_reports_on_report_execute_id"
+    t.index ["report_sate"], name: "index_reports_on_report_sate"
+    t.index ["user_id"], name: "index_reports_on_user_id"
   end
 
   create_table "rols", force: :cascade do |t|

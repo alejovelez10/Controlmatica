@@ -25,6 +25,10 @@
 #  updated_at                :datetime         not null
 #  cost_center_id            :integer
 #
+# Indexes
+#
+#  index_quotations_on_cost_center_id  (cost_center_id)
+#
 class QuotationSerializer < ActiveModel::Serializer
   attributes :id, :description, :quotation_number, :eng_hours, :hour_real, :hour_cotizada, :hours_contractor, :hours_contractor_real, :hours_contractor_invoices, :displacement_hours, :value_displacement_hours, :materials_value, :viatic_value, :quotation_value, :ingenieria_total_costo, :engineering_value, :contractor_total_costo,:work_force_contractor,:offset_value
 end

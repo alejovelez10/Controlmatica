@@ -72,6 +72,19 @@
 #  user_id                   :integer
 #  user_owner_id             :integer
 #
+# Indexes
+#
+#  index_cost_centers_on_contact_id           (contact_id)
+#  index_cost_centers_on_created_at           (created_at)
+#  index_cost_centers_on_customer_id          (customer_id)
+#  index_cost_centers_on_execution_state      (execution_state)
+#  index_cost_centers_on_invoiced_state       (invoiced_state)
+#  index_cost_centers_on_last_user_edited_id  (last_user_edited_id)
+#  index_cost_centers_on_service_type         (service_type)
+#  index_cost_centers_on_start_date           (start_date)
+#  index_cost_centers_on_user_id              (user_id)
+#  index_cost_centers_on_user_owner_id        (user_owner_id)
+#
 
 class CostCenterSerializer < ActiveModel::Serializer
   attributes :id, :code, :description, :aiu_percent_real, :start_date, :quotation_value, :execution_state

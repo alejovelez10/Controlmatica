@@ -42,7 +42,7 @@ class ReportsController < ApplicationController
     can_see_all = current_user.rol.name == "Administrador" || ver_todos
 
     reports = can_see_all ? Report.all : Report.where(report_execute_id: current_user.id)
-    reports = reports.includes(:cost_center => :customer, :report_execute => {}, :user => {}, :contact => {}, :customer => {}, :last_user_edited => {})
+    reports = reports.includes(:contact, :customer, :user, :report_execute, :last_user_edited, cost_center: :customer)
 
     if params[:search].present?
       term = "%#{params[:search].downcase}%"
@@ -74,15 +74,6 @@ class ReportsController < ApplicationController
 
   def get_informes
     if !params[:customer_id].blank? || !params[:execution_state].blank? || !params[:invoiced_state].blank? || !params[:cost_center_id].blank? || !params[:service_type].blank? || !params[:date_desde].blank? || !params[:date_hasta].blank?
-      puts params[:customer_id]
-      puts params[:execution_state]
-      puts params[:invoiced_state]
-      puts params[:cost_center_id]
-      puts params[:service_type]
-      puts params[:date_desde]
-      puts params[:centro_incluido]
-      puts params[:cliente_incluido]
-
       cost_center = CostCenter.all.searchInfo(params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:cliente_incluido], params[:centro_incluido])
 
       materials = Material.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
@@ -112,6 +103,7 @@ class ReportsController < ApplicationController
       total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
       months_lleno_mat << total.to_f
     end
+
     #TABLERISTAS POR MES
     months_lleno_cont = []
     months.each_with_index do |month, index|
@@ -365,6 +357,19 @@ class ReportsController < ApplicationController
   def report_params_create
     defaults = { user_id: current_user.id }
     params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id, :customer_name, :contact_name, :contact_email, :contact_phone, :contact_position, :customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user).reverse_merge(defaults)
+  end
+
+  def apply_report_filters(scope)
+    scope = scope.where("work_description ILIKE ?", "%#{params[:work_description]}%") if params[:work_description].present?
+    scope = scope.where(report_execute_id: params[:report_execute_id]) if params[:report_execute_id].present?
+    scope = scope.where("DATE(report_date) = ?", params[:date_ejecution]) if params[:date_ejecution].present?
+    scope = scope.where(report_sate: params[:report_sate]) if params[:report_sate].present?
+    scope = scope.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    scope = scope.where(customer_id: params[:customer_id]) if params[:customer_id].present?
+    scope = scope.where("report_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    scope = scope.where("report_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+    scope = scope.where("code_report ILIKE ?", "%#{params[:code_report]}%") if params[:code_report].present?
+    scope
   end
 
   def report_params_update

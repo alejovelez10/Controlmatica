@@ -3,15 +3,20 @@
 # Table name: contacts
 #
 #  id          :bigint           not null, primary key
-#  name        :string
 #  email       :string
+#  name        :string
 #  phone       :string
-#  provider_id :integer
 #  position    :string
-#  user_id     :integer
-#  customer_id :integer
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#  customer_id :integer
+#  provider_id :integer
+#  user_id     :integer
+#
+# Indexes
+#
+#  index_contacts_on_customer_id  (customer_id)
+#  index_contacts_on_provider_id  (provider_id)
 #
 
 class Contact < ApplicationRecord

@@ -16,6 +16,10 @@
 #  user_id             :integer
 #  user_responsible_id :integer
 #
+# Indexes
+#
+#  index_shifts_on_cost_center_id  (cost_center_id)
+#
 class Shift < ApplicationRecord
     belongs_to :user
     belongs_to :cost_center
