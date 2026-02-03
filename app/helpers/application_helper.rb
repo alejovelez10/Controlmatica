@@ -246,150 +246,108 @@ module ApplicationHelper
     end
   end
 
-  def authorization_report_contractors
-    providers = ModuleControl.find_by_name("Informe de rendimiento tableristas")
-    if current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Ingreso al modulo").exists?
-      true
+  # Carga todos los permisos del menú en 1 sola query (reemplaza ~50 queries individuales)
+  def menu_permissions
+    @_menu_permissions ||= begin
+      perms = current_user.rol.accion_modules
+        .joins(:module_control)
+        .pluck("module_controls.name", "accion_modules.name")
+      hash = {}
+      perms.each do |mod_name, action_name|
+        hash[mod_name] ||= []
+        hash[mod_name] << action_name
+      end
+      hash
     end
+  end
+
+  def has_menu_permission?(module_name, action_name = "Ingreso al modulo")
+    perms = menu_permissions[module_name]
+    perms && perms.include?(action_name)
+  end
+
+  def authorization_report_contractors
+    has_menu_permission?("Informe de rendimiento tableristas")
   end
 
   def authorization_providers
-    providers = ModuleControl.find_by_name("Proveedores")
-    if current_user.rol.accion_modules.where(module_control_id: providers.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Proveedores")
   end
 
   def authorization_customers
-    customers = ModuleControl.find_by_name("Clientes")
-    if current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Clientes")
   end
 
   def authorization_commissions
-    customers = ModuleControl.find_by_name("Comisiones")
-    if current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Comisiones")
   end
 
   def authorization_commission_relations
-    customers = ModuleControl.find_by_name("Relación de comisiones")
-    if current_user.rol.accion_modules.where(module_control_id: customers.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Relación de comisiones")
   end
 
   def authorization_parameterizations
-    parameterizations = ModuleControl.find_by_name("Parametrizaciones")
-    if current_user.rol.accion_modules.where(module_control_id: parameterizations.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Parametrizaciones")
   end
 
   def authorization_users
-    usuarios = ModuleControl.find_by_name("Usuarios")
-    if current_user.rol.accion_modules.where(module_control_id: usuarios.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Usuarios")
   end
 
   def authorization_rols
-    roles = ModuleControl.find_by_name("Roles")
-    if current_user.rol.accion_modules.where(module_control_id: roles.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Roles")
   end
 
   def authorization_modules
-    modules = ModuleControl.find_by_name("Modulos y Acciones")
-    if current_user.rol.accion_modules.where(module_control_id: modules.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Modulos y Acciones")
   end
 
   def authorization_cost_center
-    cost_center = ModuleControl.find_by_name("Centro de Costos")
-    if current_user.rol.accion_modules.where(module_control_id: cost_center.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Centro de Costos")
   end
 
   def authorization_sales_orders
-    sales_orders = ModuleControl.find_by_name("Ordenes de Compra")
-    if current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Ordenes de Compra")
   end
 
-
   def authorization_report
-    report = ModuleControl.find_by_name("Reportes de servicios")
-    if current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Reportes de servicios")
   end
 
   def authorization_customer_reports
-    customer_reports = ModuleControl.find_by_name("Reportes de clientes")
-    if current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Reportes de clientes")
   end
 
   def authorization_employed_performance
-    employed_performance = ModuleControl.find_by_name("Informe de rendimiento")
-    if current_user.rol.accion_modules.where(module_control_id: employed_performance.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Informe de rendimiento")
   end
 
   def authorization_contractors
-    contractors = ModuleControl.find_by_name("Tableristas")
-    if current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Tableristas")
   end
 
   def authorization_materials
-    materials = ModuleControl.find_by_name("Materiales")
-    if current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Materiales")
   end
 
   def authorization_alerts
-    modulo = ModuleControl.find_by_name("Notificación de alertas")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Notificación de alertas")
   end
 
   def authorization_notifications
-    modulo = ModuleControl.find_by_name("Registro de edicion")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Registro de edicion")
   end
 
   def authorization_tablero
-    modulo = ModuleControl.find_by_name("Tablero de Ingenieros")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver tablero").exists?
-      true
-    end
+    has_menu_permission?("Tablero de Ingenieros", "Ver tablero")
   end
+
   def authorization_turnos
-    modulo = ModuleControl.find_by_name("Turnos")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver todos").exists?
-      true
-    end
+    has_menu_permission?("Turnos", "Ver todos")
   end
+
   def authorization_tablero_user
-    modulo = ModuleControl.find_by_name("Tablero de Ingenieros")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ver todos").exists?
-      true
-    end
+    has_menu_permission?("Tablero de Ingenieros", "Ver todos")
   end
 
   def authorization_config
@@ -399,24 +357,15 @@ module ApplicationHelper
   end
 
   def authorization_report_expenses
-    modulo = ModuleControl.find_by_name("Gastos")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Gastos")
   end
 
   def authorization_expense_ratios
-    modulo = ModuleControl.find_by_name("Relación de gastos")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Relación de gastos")
   end
 
   def authorization_report_expense_options
-    modulo = ModuleControl.find_by_name("Tipos de Gastos")
-    if current_user.rol.accion_modules.where(module_control_id: modulo.id).where(name: "Ingreso al modulo").exists?
-      true
-    end
+    has_menu_permission?("Tipos de Gastos")
   end
 
   def get_state_center(accion)
