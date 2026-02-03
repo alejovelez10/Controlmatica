@@ -3,11 +3,15 @@
 # Table name: rols
 #
 #  id          :bigint           not null, primary key
-#  name        :string
 #  description :text
+#  name        :string
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  user_id     :integer
+#
+# Indexes
+#
+#  index_rols_on_name  (name)
 #
 
 class Rol < ApplicationRecord

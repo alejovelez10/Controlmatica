@@ -3,22 +3,26 @@
 # Table name: customer_reports
 #
 #  id                  :bigint           not null, primary key
-#  report_date         :date
+#  approve_date        :date
+#  count               :integer
 #  description         :text
-#  token               :string
-#  report_state        :string
+#  email               :string
 #  report_code         :string
-#  customer_id         :integer
+#  report_date         :date
+#  report_state        :string
+#  token               :string
+#  update_user         :integer
 #  created_at          :datetime         not null
 #  updated_at          :datetime         not null
-#  user_id             :integer
-#  cost_center_id      :integer
 #  contact_id          :integer
-#  count               :integer
-#  approve_date        :date
-#  email               :string
-#  update_user         :integer
+#  cost_center_id      :integer
+#  customer_id         :integer
 #  last_user_edited_id :integer
+#  user_id             :integer
+#
+# Indexes
+#
+#  index_customer_reports_on_cost_center_id  (cost_center_id)
 #
 
 class CustomerReport < ApplicationRecord

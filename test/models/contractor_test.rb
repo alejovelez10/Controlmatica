@@ -16,6 +16,10 @@
 #  user_execute_id     :integer
 #  user_id             :integer
 #
+# Indexes
+#
+#  index_contractors_on_cost_center_id  (cost_center_id)
+#
 
 require 'test_helper'
 

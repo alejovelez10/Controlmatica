@@ -3,12 +3,17 @@
 # Table name: accion_modules
 #
 #  id                :bigint           not null, primary key
-#  name              :string
 #  description       :text
-#  user_id           :integer
-#  module_control_id :integer
+#  name              :string
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
+#  module_control_id :integer
+#  user_id           :integer
+#
+# Indexes
+#
+#  index_accion_modules_on_module_control_id  (module_control_id)
+#  index_accion_modules_on_name               (name)
 #
 
 require 'test_helper'

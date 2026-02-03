@@ -19,6 +19,10 @@
 #  user_id             :integer
 #  user_invoice_id     :integer
 #
+# Indexes
+#
+#  index_commissions_on_cost_center_id  (cost_center_id)
+#
 
 one:
   user_id: 1

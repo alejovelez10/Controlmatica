@@ -18,6 +18,10 @@
 #  cost_center_id             :integer
 #  sales_order_id             :integer
 #
+# Indexes
+#
+#  index_customer_invoices_on_cost_center_id  (cost_center_id)
+#
 
 class CustomerInvoice < ApplicationRecord
   mount_uploader :delivery_certificate_file, CertificateUploader

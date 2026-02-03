@@ -3,15 +3,20 @@
 # Table name: providers
 #
 #  id         :bigint           not null, primary key
-#  name       :string
-#  phone      :string
 #  address    :string
-#  nit        :string
-#  web        :string
 #  email      :string
-#  user_id    :integer
+#  name       :string
+#  nit        :string
+#  phone      :string
+#  web        :string
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
+#  user_id    :integer
+#
+# Indexes
+#
+#  index_providers_on_created_at  (created_at)
+#  index_providers_on_name        (name)
 #
 
 class Provider < ApplicationRecord

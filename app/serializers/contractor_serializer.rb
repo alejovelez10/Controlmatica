@@ -3,18 +3,22 @@
 # Table name: contractors
 #
 #  id                  :bigint           not null, primary key
-#  sales_number        :string
-#  sales_date          :date
 #  ammount             :float
-#  cost_center_id      :integer
-#  user_id             :integer
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
 #  description         :text
 #  hours               :float
-#  user_execute_id     :integer
+#  sales_date          :date
+#  sales_number        :string
 #  update_user         :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  cost_center_id      :integer
 #  last_user_edited_id :integer
+#  user_execute_id     :integer
+#  user_id             :integer
+#
+# Indexes
+#
+#  index_contractors_on_cost_center_id  (cost_center_id)
 #
 
 class ContractorSerializer < ActiveModel::Serializer

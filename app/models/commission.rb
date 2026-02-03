@@ -19,6 +19,10 @@
 #  user_id             :integer
 #  user_invoice_id     :integer
 #
+# Indexes
+#
+#  index_commissions_on_cost_center_id  (cost_center_id)
+#
 class Commission < ApplicationRecord
   belongs_to :user_invoice, class_name: "User"
   belongs_to :last_user_edited, class_name: "User", optional: true

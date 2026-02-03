@@ -16,6 +16,10 @@
 #  user_id             :integer
 #  user_responsible_id :integer
 #
+# Indexes
+#
+#  index_shifts_on_cost_center_id  (cost_center_id)
+#
 class ShiftSerializer < ActiveModel::Serializer
   attributes :id, :end_date, :start_date, :subject, :description, :cost_center, :user_responsible, :users, :color, :force_save
 

@@ -25,6 +25,10 @@
 #  updated_at                :datetime         not null
 #  cost_center_id            :integer
 #
+# Indexes
+#
+#  index_quotations_on_cost_center_id  (cost_center_id)
+#
 require "test_helper"
 
 class QuotationTest < ActiveSupport::TestCase

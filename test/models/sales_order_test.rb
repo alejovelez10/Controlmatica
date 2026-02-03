@@ -17,6 +17,10 @@
 #  last_user_edited_id :integer
 #  user_id             :integer
 #
+# Indexes
+#
+#  index_sales_orders_on_cost_center_id  (cost_center_id)
+#
 
 require 'test_helper'
 
