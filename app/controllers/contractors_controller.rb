@@ -23,20 +23,18 @@ class ContractorsController < ApplicationController
   end
 
   def get_contractors
-    if params[:filtering] == "true"
-      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :user => { :only =>[:names, :id] } })
-      contractor_total = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc).count
+    base = Contractor.all
 
-    elsif params[:filtering] == "false"
-      contractor = Contractor.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-      contractor_total = Contractor.all.count
-    else
-    
-      contractor = Contractor.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code, :execution_state] }, :user_execute => { :only =>[:names] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-      contractor_total =  Contractor.all.count
-      
+    if params[:filtering] == "true"
+      base = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion])
     end
-    
+
+    contractor_total = base.count
+    contractor = base.includes(:cost_center, :user_execute, :last_user_edited, :user)
+                      .order(created_at: :desc)
+                      .paginate(page: params[:page], per_page: 10)
+                      .to_json(include: { cost_center: { only: [:code, :execution_state] }, user_execute: { only: [:names] }, last_user_edited: { only: [:names, :id] }, user: { only: [:names, :id] } })
+
     contractor = JSON.parse(contractor)
 
     render :json => {contractors_paginate: contractor, contractors_total: contractor_total}

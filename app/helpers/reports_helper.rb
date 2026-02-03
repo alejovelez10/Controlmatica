@@ -1,6 +1,7 @@
 module ReportsHelper
   def get_reports_items(reports)
     reports.collect do |report|
+      cc = report.cost_center
       {
         :id => report.id,
         :code_report => report.code_report,
@@ -10,19 +11,19 @@ module ReportsHelper
         :contact_name => report.contact_name,
         :contact_phone => report.contact_phone,
         :contact_position => report.contact_position,
-        :cost_center => {
-          id: report.cost_center.id,
-          code: report.cost_center.code,
-          invoiced_state: report.cost_center.invoiced_state,
-          quotation_number: report.cost_center.quotation_number,
-          customer: report.cost_center.customer,
-          execution_state: report.cost_center.execution_state,
-          description: report.cost_center.description,
-        },
+        :cost_center => cc.present? ? {
+          id: cc.id,
+          code: cc.code,
+          invoiced_state: cc.invoiced_state,
+          quotation_number: cc.quotation_number,
+          customer: cc.customer,
+          execution_state: cc.execution_state,
+          description: cc.description,
+        } : nil,
         :cost_center_id => report.cost_center_id,
         :count => report.count,
         :created_at => report.created_at,
-        :customer => report.customer.present? ? { id: report.contact.id, name: report.customer.name } : nil,
+        :customer => report.customer.present? ? { id: report.customer.id, name: report.customer.name } : nil,
         :customer_id => report.customer_id,
         :customer_name => report.customer_name,
         :displacement_hours => report.displacement_hours,
@@ -49,6 +50,7 @@ module ReportsHelper
   end
 
   def get_report_item(report)
+    cc = report.cost_center
     {
       :id => report.id,
       :code_report => report.code_report,
@@ -58,19 +60,19 @@ module ReportsHelper
       :contact_name => report.contact_name,
       :contact_phone => report.contact_phone,
       :contact_position => report.contact_position,
-      :cost_center => {
-        id: report.cost_center.id,
-        code: report.cost_center.code,
-        invoiced_state: report.cost_center.invoiced_state,
-        quotation_number: report.cost_center.quotation_number,
-        customer: report.cost_center.customer,
-        execution_state: report.cost_center.execution_state,
-        description: report.cost_center.description,
-      },
+      :cost_center => cc.present? ? {
+        id: cc.id,
+        code: cc.code,
+        invoiced_state: cc.invoiced_state,
+        quotation_number: cc.quotation_number,
+        customer: cc.customer,
+        execution_state: cc.execution_state,
+        description: cc.description,
+      } : nil,
       :cost_center_id => report.cost_center_id,
       :count => report.count,
       :created_at => report.created_at,
-      :customer => report.customer.present? ? { id: report.contact.id, name: report.customer.name } : nil,
+      :customer => report.customer.present? ? { id: report.customer.id, name: report.customer.name } : nil,
       :customer_id => report.customer_id,
       :customer_name => report.customer_name,
       :displacement_hours => report.displacement_hours,
