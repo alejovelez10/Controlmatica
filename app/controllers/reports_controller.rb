@@ -44,29 +44,16 @@ class ReportsController < ApplicationController
     estado = current_user.rol.accion_modules.where(module_control_id: report.id).where(name: "Ver todos").exists?
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
-    if validate
-      if params[:filtering] == "true"
-        reports = Report.all.order(report_date: :desc).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).paginate(page: params[:page], :per_page => 10)
-        reports_total = Report.search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).count
-      elsif params[:filtering] == "false"
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.all.count
-      else
-        reports = Report.all.order(report_date: :desc).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.all.count
-      end
-    else
-      if params[:filtering] == "true"
-        reports = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).paginate(page: params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).search(params[:work_description], params[:report_execute_id], params[:date_ejecution], params[:report_sate], params[:cost_center_id], params[:customer_id], params[:date_desde], params[:date_hasta], params[:code_report]).count
-      elsif params[:filtering] == "false"
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).count
-      else
-        reports = Report.where(report_execute_id: current_user.id).paginate(:page => params[:page], :per_page => 10)
-        reports_total = Report.where(report_execute_id: current_user.id).count
-      end
+    base = validate ? Report.all : Report.where(report_execute_id: current_user.id)
+
+    if params[:filtering] == "true"
+      base = apply_report_filters(base)
     end
+
+    reports_total = base.count
+    reports = base.includes(:contact, :customer, :user, :report_execute, :last_user_edited, cost_center: :customer)
+                   .order(report_date: :desc)
+                   .paginate(page: params[:page], per_page: 10)
 
     render :json => { reports_paginate: get_reports_items(reports), reports_total: reports_total }
   end
@@ -76,19 +63,8 @@ class ReportsController < ApplicationController
 
   def get_informes
     if !params[:customer_id].blank? || !params[:execution_state].blank? || !params[:invoiced_state].blank? || !params[:cost_center_id].blank? || !params[:service_type].blank? || !params[:date_desde].blank? || !params[:date_hasta].blank?
-      puts params[:customer_id]
-      puts params[:execution_state]
-      puts params[:invoiced_state]
-      puts params[:cost_center_id]
-      puts params[:service_type]
-      puts params[:date_desde]
-      puts params[:centro_incluido]
-      puts params[:cliente_incluido]
-
       cost_center = CostCenter.all.searchInfo(params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:cliente_incluido], params[:centro_incluido])
 
-      puts "entre aqui"
-      puts cost_center.count
       materials = Material.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
       contractors = Contractor.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
       reports = Report.joins(:cost_center).where("cost_centers.id" => cost_center.ids)
@@ -107,9 +83,6 @@ class ReportsController < ApplicationController
     months_lleno = []
     months.each_with_index do |month, index|
       total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index + 1).where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
-      puts "jadlñfñdfkasdfl"
-      puts month
-
       months_lleno << total.to_f
     end
 
@@ -119,9 +92,6 @@ class ReportsController < ApplicationController
       total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
       months_lleno_mat << total.to_f
     end
-    puts "hola como estoyaaa"
-    puts months_lleno_mat
-    puts "hola como estoyaaa"
 
     #TABLERISTAS POR MES
     months_lleno_cont = []
@@ -135,8 +105,6 @@ class ReportsController < ApplicationController
     months.each_with_index do |month, index|
       total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index + 1).where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
       total = total.sum(:viatic_value) + total.sum(:working_value) + total.sum(:value_displacement_hours)
-      puts total
-      puts "ingflskñflñsdlassñlñlj"
       months_lleno_rep << total.to_f
     end
 
@@ -347,7 +315,7 @@ class ReportsController < ApplicationController
       render :json => {
         message: "¡El Registro no fue actualizado!",
         type: "error",
-        message_error: @parameterization.errors.full_messages,
+        message_error: @report.errors.full_messages,
       }
     end
   end
@@ -378,6 +346,19 @@ class ReportsController < ApplicationController
   def report_params_create
     defaults = { user_id: current_user.id }
     params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id, :customer_name, :contact_name, :contact_email, :contact_phone, :contact_position, :customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user).reverse_merge(defaults)
+  end
+
+  def apply_report_filters(scope)
+    scope = scope.where("work_description ILIKE ?", "%#{params[:work_description]}%") if params[:work_description].present?
+    scope = scope.where(report_execute_id: params[:report_execute_id]) if params[:report_execute_id].present?
+    scope = scope.where("DATE(report_date) = ?", params[:date_ejecution]) if params[:date_ejecution].present?
+    scope = scope.where(report_sate: params[:report_sate]) if params[:report_sate].present?
+    scope = scope.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    scope = scope.where(customer_id: params[:customer_id]) if params[:customer_id].present?
+    scope = scope.where("report_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    scope = scope.where("report_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+    scope = scope.where("code_report ILIKE ?", "%#{params[:code_report]}%") if params[:code_report].present?
+    scope
   end
 
   def report_params_update

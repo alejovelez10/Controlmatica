@@ -51,28 +51,24 @@ class Report < ApplicationRecord
   before_destroy :create_destroy_register
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
-    search1 != "" ? (scope :descripcion, -> { where("work_description like '%#{search1.downcase}%' or work_description like '%#{search1.upcase}%' or work_description like '%#{search1.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-    search2 != "" ? (scope :responsible, -> { where(report_execute_id: search2) }) : (scope :responsible, -> { where.not(id: nil) })
-    search3 != " " && search3 != nil && search3 != "" ? (scope :date_ejecution, -> { where("DATE(report_date) = ?", search3) }) : (scope :date_ejecution, -> { where.not(id: nil) })
-    search4 != "" ? (scope :state_report, -> { where(report_sate: search4) }) : (scope :state_report, -> { where.not(id: nil) })
-    search5 != "" ? (scope :centro, -> { where(cost_center_id: search5) }) : (scope :centro, -> { where.not(id: nil) })
-    search6 != "" ? (scope :customer, -> { where(customer_id: search6) }) : (scope :customer, -> { where.not(id: nil) })
-    search7 != "" ? (scope :fdesdep, -> { where(["report_date > ?", search7]) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search8 != "" ? (scope :fhastap, -> { where(["report_date < ?", search8]) }) : (scope :fhastap, -> { where.not(id: nil) })
-    search9 != "" ? (scope :code_report, ->  { where("code_report like '%#{search9.downcase}%' or code_report like '%#{search9.upcase}%' or code_report like '%#{search9.capitalize}%' ") }) : (scope :code_report, -> { where.not(id: nil) })
-
-    descripcion.responsible.date_ejecution.state_report.centro.customer.fdesdep.fhastap.code_report
+    result = all
+    result = result.where("work_description ILIKE ?", "%#{search1}%") if search1.present?
+    result = result.where(report_execute_id: search2) if search2.present?
+    result = result.where("DATE(report_date) = ?", search3) if search3.present? && search3 != " "
+    result = result.where(report_sate: search4) if search4.present?
+    result = result.where(cost_center_id: search5) if search5.present?
+    result = result.where(customer_id: search6) if search6.present?
+    result = result.where("report_date >= ?", search7) if search7.present?
+    result = result.where("report_date <= ?", search8) if search8.present?
+    result = result.where("code_report ILIKE ?", "%#{search9}%") if search9.present?
+    result
   end
 
   def create_code
-    puts self.cost_center.nil?
     if self.viatic_value.nil? || self.viatic_value.blank?
       self.viatic_value = 0
     end
     if self.cost_center_id != nil && self.cost_center_id != "Centro de costos" && self.cost_center_id != 0
-      puts "hhahahahjahahahahahahahahah"
-      puts self.cost_center
-
       count = Report.where(customer_id: self.customer_id).maximum(:count)
       self.count = count == 0 || count.blank? || count.nil? ? 1 : count + 1
       customer_prefix = Customer.find(self.cost_center.customer.id).code
@@ -93,9 +89,6 @@ class Report < ApplicationRecord
   end
 
   def coste_center_verify
-    puts "3333333333333333"
-
-    puts self.customer_id
     if self.cost_center_id == nil || self.cost_center_id == 0
       costcenter = CostCenter.create(user_id: self.user_id, user_owner_id: self.user_id ,contact_id: self.contact_id, customer_id: self.customer_id, service_type: "SERVICIO", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, hour_real: 0.0, hour_cotizada: 0.0, quotation_value: 0, execution_state: "EJECUCION", work_force_contractor: 0.0, hours_contractor: 0.0, hours_contractor_invoices: 0.0, hours_contractor_real: 0.0, materials_value: 0.0, sum_materials: 0.0, sum_contractors: 0.0, sum_executed: 0.0, sum_viatic: self.viatic_value, sum_materials_costo: 0.0, sum_materials_cot: 0.0, contractor_total_costo: 0.0, sum_contractor_costo: 0.0, sum_contractor_cot: 0.0, sum_materials_value: 0.0, ingenieria_total_costo: 0.0, description: "SIN INFORMACIÓN")
       self.cost_center_id = costcenter.id
@@ -115,7 +108,6 @@ class Report < ApplicationRecord
       working_value = cost_center.reports.sum(:working_value)
       viatic_value = cost_center.reports.sum(:viatic_value)
       cost_center.update(sum_materials_costo: working_value, sum_viatic: viatic_value)
-      puts "ñaslkfjsakfjadsñlfjasñljfkoñsadjflkasdjflkasfjlksajflkasjfklsajfklsajfklasdjfklasjfklasjfasñfjals"
     end
   end
 

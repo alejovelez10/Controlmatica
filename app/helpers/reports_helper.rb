@@ -74,7 +74,7 @@ module ReportsHelper
       :customer_id => report.customer_id,
       :customer_name => report.customer_name,
       :displacement_hours => report.displacement_hours,
-      :last_user_edited => { id: report.last_user_edited.id, names: report.last_user_edited.names },
+      :last_user_edited => report.last_user_edited.present? ? { id: report.last_user_edited.id, names: report.last_user_edited.names } : nil,
       :last_user_edited_id => report.last_user_edited_id,
       :report_code => report.report_code,
       :report_date => report.report_date,
