@@ -361,11 +361,12 @@ select.cm-input {
 .cm-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0 20px;
+  gap: 16px 20px;
 }
 
-.cm-form-row .cm-form-group {
-  margin-bottom: 18px;
+.cm-form-row .cm-form-group,
+.cm-form-row .cm-input-group {
+  margin-bottom: 2px;
 }
 
 .cm-form-section {
@@ -1064,6 +1065,68 @@ select.cm-input {
   padding-right: 28px;
   cursor: pointer;
   min-width: 180px;
+}
+
+/* ============================================
+   FILTER PANEL
+   ============================================ */
+
+.cm-filter-panel {
+  background: var(--cm-bg-card);
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius);
+  box-shadow: var(--cm-shadow-sm);
+  padding: 24px 28px 12px;
+  margin-bottom: 16px;
+}
+
+.cm-filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0 20px;
+}
+
+.cm-filter-panel .cm-form-group {
+  margin-bottom: 16px;
+}
+
+.cm-filter-panel .css-26l3qy-menu,
+.cm-filter-panel [class*="-menu"] {
+  z-index: 9999 !important;
+}
+
+/* Match react-select size to cm-input */
+.cm-filter-panel [class*="-control"] {
+  min-height: 42px !important;
+  height: 42px !important;
+  border: 1px solid var(--cm-border) !important;
+  border-radius: var(--cm-radius-sm) !important;
+  box-shadow: none !important;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+}
+
+.cm-filter-panel [class*="-control"]:hover {
+  border-color: var(--cm-primary) !important;
+}
+
+.cm-filter-panel [class*="-valueContainer"] {
+  padding: 0 14px !important;
+  height: 40px !important;
+}
+
+.cm-filter-panel [class*="-indicatorsContainer"] {
+  height: 40px !important;
+}
+
+.cm-filter-panel [class*="-placeholder"],
+.cm-filter-panel [class*="-singleValue"] {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+}
+
+.cm-filter-panel [class*="-placeholder"] {
+  color: var(--cm-text-light) !important;
 }
 
 .cm-state-select:focus {

@@ -30,6 +30,16 @@ class ContractorsController < ApplicationController
       )
     end
 
+    # Advanced filters
+    contractors = contractors.where(user_execute_id: params[:user_execute_id]) if params[:user_execute_id].present?
+    contractors = contractors.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    contractors = contractors.where("contractors.sales_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    contractors = contractors.where("contractors.sales_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+    if params[:descripcion].present?
+      desc_term = "%#{params[:descripcion].downcase}%"
+      contractors = contractors.where("LOWER(contractors.description) LIKE ?", desc_term)
+    end
+
     # sort
     if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
       direction = params[:dir] == "desc" ? :desc : :asc

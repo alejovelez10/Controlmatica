@@ -8,12 +8,7 @@ class CostCentersController < ApplicationController
   # GET /cost_centers
   # GET /cost_centers.json
   def index
-    if params[:search1] || params[:search2] || params[:search3] || params[:search4]
-      @cost_centers = CostCenter.all.search(params[:search1], params[:search2], params[:search3], params[:search4]).paginate(:page => params[:page], :per_page => 10)
-    else
-      @cost_centers = CostCenter.all.paginate(:page => params[:page], :per_page => 10)
-    end
-
+    # Data is loaded via get_cost_centers API endpoint, not here
     permissions = load_permissions("Centro de Costos",
       "Crear", "Editar", "Eliminar", "Gestionar modulo", "Finalizar",
       "Descargar excel", "Forzar estados", "Ver horas costo", "Editar todos",
@@ -39,6 +34,20 @@ class CostCentersController < ApplicationController
       sales_state: permissions["Finalizar compras"],
       edit_code: permissions["Editar codigo"],
     }
+  end
+
+  def search_autocomplete
+    query = params[:q].to_s.strip
+    if query.length < 3
+      render json: [] and return
+    end
+
+    term = "%#{query}%"
+    results = CostCenter.where("code ILIKE ? OR description ILIKE ?", term, term)
+                        .select(:id, :code, :description)
+                        .limit(15)
+
+    render json: results.map { |cc| { id: cc.id, label: "#{cc.code} - (#{cc.description})" } }
   end
 
   def get_cost_centers

@@ -15,6 +15,17 @@ var EMPTY_FORM = {
   cost_center_id: ""
 };
 
+var EMPTY_FILTERS = {
+  provider_id: "",
+  description: "",
+  sales_date: "",
+  cost_center_id: "",
+  estado: "",
+  date_desde: "",
+  date_hasta: "",
+  sales_number: "",
+};
+
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute("content") : "";
@@ -28,6 +39,15 @@ function formatCurrency(value) {
     thousandSeparator: true,
     prefix: "$"
   });
+}
+
+function formatDate(fecha) {
+  if (!fecha) return "";
+  var d = new Date(fecha);
+  var months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var minutes = d.getMinutes();
+  var timeValue = d.getHours() + (minutes < 10 ? ":0" + minutes : ":" + minutes);
+  return months[d.getMonth()] + " " + d.getDate() + " del " + d.getFullYear() + " / " + timeValue;
 }
 
 class index extends React.Component {
@@ -53,9 +73,24 @@ class index extends React.Component {
       // ShowInfo
       showInfoOpen: false,
       showInfoData: null,
+      // Facturas modal
+      facturasOpen: false,
+      facturasData: [],
+      facturasMaterialId: null,
+      facturasFormOpen: false,
+      facturasEditId: null,
+      facturasForm: { number: "", value: "", observation: "" },
+      // Inline state edit
+      editingStateId: null,
       // Autocomplete
       selectedProvider: null,
-      selectedCostCenter: null
+      selectedCostCenter: null,
+      // Filters
+      showFilters: false,
+      filters: Object.assign({}, EMPTY_FILTERS),
+      filterCentro: null,
+      filterCostCenterOptions: [],
+      filterCostCenterLoading: false,
     };
 
     this.providerOptions = (props.providers || []).map(function(p) {
@@ -70,6 +105,7 @@ class index extends React.Component {
       {
         key: "provider_name",
         label: "Proveedor",
+        width: "180px",
         render: function(row) {
           return row.provider ? row.provider.name : "";
         }
@@ -77,29 +113,112 @@ class index extends React.Component {
       {
         key: "cost_center_code",
         label: "Centro de Costo",
+        width: "150px",
         render: function(row) {
           return row.cost_center ? row.cost_center.code : "";
         }
       },
-      { key: "sales_number", label: "# Orden" },
+      { key: "sales_number", label: "# Orden", width: "120px" },
       {
         key: "amount",
         label: "Valor",
+        width: "130px",
         render: function(row) {
           return formatCurrency(row.amount);
         }
       },
-      { key: "description", label: "Descripción" },
-      { key: "sales_date", label: "Fecha Orden" },
-      { key: "delivery_date", label: "Fecha Entrega" },
+      { key: "description", label: "Descripción", width: "250px" },
+      { key: "sales_date", label: "Fecha Orden", width: "120px" },
+      { key: "delivery_date", label: "Fecha Entrega", width: "120px" },
       {
-        key: "provider_invoice_value",
-        label: "Valor Facturas",
+        key: "material_invoices",
+        label: "Facturas",
+        width: "380px",
+        sortable: false,
         render: function(row) {
-          return formatCurrency(row.provider_invoice_value);
+          if (!row.material_invoices || row.material_invoices.length === 0) {
+            return React.createElement("span", { style: { color: "#999", fontSize: "12px" } }, "Sin facturas");
+          }
+          return React.createElement("table", { style: { tableLayout: "fixed", width: "100%", fontSize: "12px", borderCollapse: "collapse" } },
+            React.createElement("thead", null,
+              React.createElement("tr", null,
+                React.createElement("td", { style: { padding: "4px", textAlign: "center", fontWeight: "bold", border: "1px solid #e0e0e0" } }, "Numero de factura"),
+                React.createElement("td", { style: { padding: "4px", textAlign: "center", fontWeight: "bold", border: "1px solid #e0e0e0" } }, "Valor"),
+                React.createElement("td", { style: { padding: "4px", textAlign: "center", fontWeight: "bold", border: "1px solid #e0e0e0" } }, "Descripcion")
+              )
+            ),
+            React.createElement("tbody", null,
+              row.material_invoices.map(function(inv) {
+                return React.createElement("tr", { key: inv.id },
+                  React.createElement("td", { style: { padding: "5px", textAlign: "center", border: "1px solid #e0e0e0" } }, inv.number),
+                  React.createElement("td", { style: { padding: "5px", textAlign: "center", border: "1px solid #e0e0e0" } },
+                    React.createElement(NumberFormat, { value: inv.value, displayType: "text", thousandSeparator: true, prefix: "$" })
+                  ),
+                  React.createElement("td", { style: { padding: "5px", textAlign: "center", border: "1px solid #e0e0e0" } }, inv.observation)
+                );
+              })
+            )
+          );
         }
       },
-      { key: "sales_state", label: "Estado" }
+      {
+        key: "sum_material_invoices",
+        label: "Valor Facturas",
+        width: "130px",
+        render: function(row) {
+          return formatCurrency(row.sum_material_invoices);
+        }
+      },
+      {
+        key: "sales_state",
+        label: "Estado",
+        width: "200px",
+        render: function(row) {
+          if (self.state.editingStateId === row.id) {
+            return React.createElement(React.Fragment, null,
+              React.createElement("select", {
+                className: "cm-input",
+                defaultValue: row.sales_state || "",
+                onChange: function(e) { self.handleStateChange(row.id, e.target.value); },
+                style: { display: "inline", width: "85%" }
+              },
+                React.createElement("option", { value: "" }, "Seleccione"),
+                React.createElement("option", { value: "PROCESADO" }, "PROCESADO"),
+                React.createElement("option", { value: "INGRESADO TOTAL" }, "INGRESADO TOTAL"),
+                React.createElement("option", { value: "INGRESADO CON MAYOR VALOR EN FACTURA" }, "INGRESADO CON MAYOR VALOR EN FACTURA"),
+                React.createElement("option", { value: "INGRESADO PARCIAL" }, "INGRESADO PARCIAL")
+              ),
+              React.createElement("i", { className: "fas fa-times", style: { cursor: "pointer", marginLeft: "6px" }, onClick: function() { self.toggleStateEdit(null); } })
+            );
+          }
+          return React.createElement("span", null,
+            row.sales_state, " ",
+            self.props.estados.update_state ? React.createElement("i", { className: "fas fa-pencil-alt", style: { cursor: "pointer", marginLeft: "4px" }, onClick: function() { self.toggleStateEdit(row.id); } }) : null
+          );
+        }
+      },
+      {
+        key: "created_at",
+        label: "Creación",
+        width: "200px",
+        render: function(row) {
+          return React.createElement("span", null,
+            formatDate(row.created_at),
+            row.user ? React.createElement("span", null, React.createElement("br"), row.user.names) : null
+          );
+        }
+      },
+      {
+        key: "updated_at",
+        label: "Ultima actualización",
+        width: "200px",
+        render: function(row) {
+          return React.createElement("span", null,
+            formatDate(row.updated_at),
+            row.last_user_edited && row.last_user_edited.names ? React.createElement("span", null, React.createElement("br"), row.last_user_edited.names) : null
+          );
+        }
+      },
     ];
   }
 
@@ -122,6 +241,11 @@ class index extends React.Component {
     var url = "/get_materials?page=" + p + "&per_page=" + pp;
     if (term) url += "&search=" + encodeURIComponent(term);
     if (sk) url += "&sort=" + encodeURIComponent(sk) + "&dir=" + sd;
+
+    var filters = self.state.filters;
+    Object.keys(filters).forEach(function(key) {
+      if (filters[key]) url += "&" + key + "=" + encodeURIComponent(filters[key]);
+    });
 
     fetch(url, { headers: { "X-CSRF-Token": csrfToken() } })
       .then(function(response) { return response.json(); })
@@ -154,6 +278,83 @@ class index extends React.Component {
     this.setState({ sortKey: key, sortDir: dir }, function() {
       self.loadData(1, self.state.meta.per_page, undefined, key, dir);
     });
+  }.bind(this);
+
+  // ─── Filters ───
+
+  toggleFilters = function() {
+    if (this.state.showFilters) {
+      this.setState({ showFilters: false, filters: Object.assign({}, EMPTY_FILTERS), filterCentro: null, filterCostCenterOptions: [] }, function() {
+        this.loadData(1, this.state.meta.per_page);
+      }.bind(this));
+    } else {
+      this.setState({ showFilters: true });
+    }
+  }.bind(this);
+
+  handleFilterChange = function(e) {
+    var newFilters = Object.assign({}, this.state.filters);
+    newFilters[e.target.name] = e.target.value;
+    this.setState({ filters: newFilters });
+  }.bind(this);
+
+  handleFilterCentro = function(opt) {
+    var newFilters = Object.assign({}, this.state.filters, { cost_center_id: opt ? opt.value : "" });
+    this.setState({ filterCentro: opt, filters: newFilters });
+  }.bind(this);
+
+  handleFilterCostCenterSearch = function(inputValue) {
+    var self = this;
+    if (!inputValue || inputValue.length < 3) { self.setState({ filterCostCenterOptions: [] }); return; }
+    if (self._ccTimer) clearTimeout(self._ccTimer);
+    self._ccTimer = setTimeout(function() {
+      self.setState({ filterCostCenterLoading: true });
+      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue), { headers: { "X-CSRF-Token": csrfToken() } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          self.setState({
+            filterCostCenterOptions: data.map(function(d) { return { value: d.id, label: d.label }; }),
+            filterCostCenterLoading: false,
+          });
+        });
+    }, 300);
+  }.bind(this);
+
+  applyFilters = function() {
+    this.loadData(1, this.state.meta.per_page);
+  }.bind(this);
+
+  getExportUrl = function() {
+    var filters = this.state.filters;
+    var hasFilters = Object.keys(filters).some(function(k) { return filters[k]; });
+    if (!hasFilters) return "/download_file/materials/todos.xls";
+    var parts = [];
+    Object.keys(filters).forEach(function(key) {
+      if (filters[key]) parts.push(key + "=" + encodeURIComponent(filters[key]));
+    });
+    return "/download_file/materials/filtro.xls?" + parts.join("&");
+  }.bind(this);
+
+  // ─── Inline State Edit ───
+
+  toggleStateEdit = function(id) {
+    this.setState({ editingStateId: this.state.editingStateId === id ? null : id });
+  }.bind(this);
+
+  handleStateChange = function(materialId, newState) {
+    var self = this;
+    fetch("/update_state_materials/" + materialId + "/" + encodeURIComponent(newState), {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrfToken() }
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.type === "success") {
+          self.setState({ editingStateId: null });
+          self.loadData();
+          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+        }
+      });
   }.bind(this);
 
   // ─── Modal ───
@@ -245,6 +446,130 @@ class index extends React.Component {
 
   closeShowInfo = function() {
     this.setState({ showInfoOpen: false, showInfoData: null });
+  }.bind(this);
+
+  // ─── Facturas ───
+
+  openFacturas = function(row) {
+    var self = this;
+    self.setState({ facturasOpen: true, facturasMaterialId: row.id, facturasData: [], facturasFormOpen: false, facturasEditId: null, facturasForm: { number: "", value: "", observation: "" } });
+    fetch("/get_material_invoice/" + row.id, { headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { self.setState({ facturasData: data }); });
+  }.bind(this);
+
+  closeFacturas = function() {
+    this.setState({ facturasOpen: false, facturasData: [], facturasMaterialId: null, facturasFormOpen: false });
+  }.bind(this);
+
+  toggleFacturasForm = function() {
+    this.setState({ facturasFormOpen: !this.state.facturasFormOpen, facturasEditId: null, facturasForm: { number: "", value: "", observation: "" } });
+  }.bind(this);
+
+  handleFacturasFormChange = function(e) {
+    var f = Object.assign({}, this.state.facturasForm);
+    f[e.target.name] = e.target.value;
+    this.setState({ facturasForm: f });
+  }.bind(this);
+
+  submitFactura = function() {
+    var self = this;
+    var isEdit = !!self.state.facturasEditId;
+    var url = isEdit ? "/material_invoices/" + self.state.facturasEditId : "/material_invoices";
+    var method = isEdit ? "PATCH" : "POST";
+    var body = Object.assign({}, self.state.facturasForm, { material_id: self.state.facturasMaterialId });
+    fetch(url, { method: method, headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.register) {
+          if (isEdit) {
+            self.setState({ facturasData: self.state.facturasData.map(function(inv) { return inv.id === data.register.id ? data.register : inv; }) });
+          } else {
+            self.setState({ facturasData: self.state.facturasData.concat([data.register]) });
+          }
+          self.setState({ facturasFormOpen: false, facturasEditId: null, facturasForm: { number: "", value: "", observation: "" } });
+          self.loadData();
+        }
+      });
+  }.bind(this);
+
+  editFactura = function(inv) {
+    this.setState({ facturasFormOpen: true, facturasEditId: inv.id, facturasForm: { number: inv.number || "", value: inv.value || "", observation: inv.observation || "" } });
+  }.bind(this);
+
+  deleteFactura = function(id) {
+    var self = this;
+    Swal.fire({ title: "¿Estás seguro?", text: "El registro será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Eliminar", cancelButtonText: "Cancelar" })
+      .then(function(result) {
+        if (result.value) {
+          fetch("/material_invoices/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
+            .then(function(r) { return r.json(); })
+            .then(function() {
+              self.setState({ facturasData: self.state.facturasData.filter(function(inv) { return inv.id !== id; }) });
+              self.loadData();
+            });
+        }
+      });
+  }.bind(this);
+
+  renderFacturasModal = function() {
+    var self = this;
+    var state = this.state;
+    if (!state.facturasOpen) return null;
+
+    return React.createElement(CmModal, {
+      isOpen: true,
+      toggle: self.closeFacturas,
+      title: React.createElement("span", null, React.createElement("i", { className: "fas fa-file-invoice" }), " Facturas"),
+      size: "lg",
+      footer: React.createElement(CmButton, { variant: "outline", onClick: self.closeFacturas }, "Cerrar")
+    },
+      state.facturasFormOpen ? React.createElement("div", { className: "cm-form-row", style: { marginBottom: "12px" } },
+        React.createElement(CmInput, { label: "Numero de factura", name: "number", value: state.facturasForm.number, onChange: self.handleFacturasFormChange }),
+        React.createElement("div", { className: "cm-input-group" },
+          React.createElement("label", { className: "cm-input-label" }, "Valor"),
+          React.createElement(NumberFormat, { name: "value", thousandSeparator: true, prefix: "$", className: "cm-input", value: state.facturasForm.value, onChange: self.handleFacturasFormChange, placeholder: "Valor" })
+        ),
+        React.createElement(CmInput, { label: "Descripcion", name: "observation", value: state.facturasForm.observation, onChange: self.handleFacturasFormChange })
+      ) : null,
+
+      React.createElement("div", { style: { textAlign: "right", marginBottom: "12px" } },
+        state.facturasFormOpen ? React.createElement(React.Fragment, null,
+          React.createElement(CmButton, { variant: "outline", onClick: self.toggleFacturasForm, style: { marginRight: "8px" } }, "Cerrar"),
+          React.createElement(CmButton, { variant: "accent", onClick: self.submitFactura }, state.facturasEditId ? "Actualizar" : "Crear factura")
+        ) : React.createElement(CmButton, { variant: "accent", onClick: self.toggleFacturasForm }, "Crear factura")
+      ),
+
+      React.createElement("table", { className: "cm-table", style: { width: "100%", borderCollapse: "collapse" } },
+        React.createElement("thead", null,
+          React.createElement("tr", { style: { background: "#2a3f53", color: "#fff" } },
+            React.createElement("th", { style: { padding: "8px" } }, "Acciones"),
+            React.createElement("th", { style: { padding: "8px" } }, "Numero de factura"),
+            React.createElement("th", { style: { padding: "8px" } }, "Valor"),
+            React.createElement("th", { style: { padding: "8px" } }, "Descripcion")
+          )
+        ),
+        React.createElement("tbody", null,
+          state.facturasData.length > 0 ? state.facturasData.map(function(inv) {
+            return React.createElement("tr", { key: inv.id, style: { borderBottom: "1px solid #e0e0e0" } },
+              React.createElement("td", { style: { padding: "8px" } },
+                React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", onClick: function() { self.editFactura(inv); }, style: { marginRight: "4px" } },
+                  React.createElement("i", { className: "fas fa-pen" })
+                ),
+                React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", onClick: function() { self.deleteFactura(inv.id); }, style: { color: "#dc3545" } },
+                  React.createElement("i", { className: "fas fa-trash" })
+                )
+              ),
+              React.createElement("td", { style: { padding: "8px" } }, inv.number),
+              React.createElement("td", { style: { padding: "8px" } }, React.createElement(NumberFormat, { value: inv.value, displayType: "text", thousandSeparator: true, prefix: "$" })),
+              React.createElement("td", { style: { padding: "8px" } }, inv.observation)
+            );
+          }) : React.createElement("tr", null,
+            React.createElement("td", { colSpan: "4", style: { padding: "20px", textAlign: "center" } }, "Facturas")
+          )
+        )
+      )
+    );
   }.bind(this);
 
   // ─── Submit ───
@@ -357,6 +682,14 @@ class index extends React.Component {
           React.createElement("i", { className: "fas fa-ellipsis-v" })
         ),
         React.createElement("div", { className: "cm-dt-menu-dropdown" },
+          React.createElement("button", {
+            onClick: function() { self.openShowInfo(row); },
+            className: "cm-dt-menu-item"
+          }, React.createElement("i", { className: "fas fa-eye" }), " Ver informacion"),
+          React.createElement("button", {
+            onClick: function() { self.openFacturas(row); },
+            className: "cm-dt-menu-item"
+          }, React.createElement("i", { className: "fas fa-file-invoice" }), " Facturas"),
           estados.edit ? React.createElement("button", {
             onClick: function() { self.openEditModal(row); },
             className: "cm-dt-menu-item"
@@ -372,10 +705,15 @@ class index extends React.Component {
 
   renderHeaderActions = function() {
     var estados = this.props.estados;
+    var self = this;
     return (
       React.createElement(React.Fragment, null,
+        React.createElement("button", {
+          onClick: self.toggleFilters,
+          className: "cm-btn cm-btn-outline cm-btn-sm"
+        }, React.createElement("i", { className: "fas fa-filter" }), self.state.showFilters ? " Cerrar filtros" : " Filtros"),
         estados.download_file ? React.createElement("a", {
-          href: "/download_file/materials.xls",
+          href: self.getExportUrl(),
           target: "_blank",
           className: "cm-btn cm-btn-outline cm-btn-sm"
         }, React.createElement("i", { className: "fas fa-file-excel" }), " Exportar") : null
@@ -580,6 +918,86 @@ class index extends React.Component {
           }, React.createElement("i", { className: "fas fa-plus" }), " Nuevo Material")
         ) : null,
 
+        self.state.showFilters ? React.createElement("div", { className: "cm-filter-panel" },
+          React.createElement("div", { className: "cm-filter-row" },
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Proveedor"),
+              React.createElement(Select, {
+                options: self.providerOptions,
+                value: self.state.filters.provider_id ? self.providerOptions.find(function(o) { return o.value == self.state.filters.provider_id; }) || null : null,
+                onChange: function(opt) {
+                  var f = Object.assign({}, self.state.filters, { provider_id: opt ? opt.value : "" });
+                  self.setState({ filters: f });
+                },
+                isClearable: true,
+                placeholder: "Seleccione",
+                menuPortalTarget: document.body,
+                styles: { menuPortal: function(base) { return Object.assign({}, base, { zIndex: 9999 }); } }
+              })
+            ),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Descripcion"),
+              React.createElement("input", { className: "cm-input", name: "description", value: self.state.filters.description, onChange: self.handleFilterChange })
+            ),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Fecha de Orden"),
+              React.createElement("input", { className: "cm-input", type: "date", name: "sales_date", value: self.state.filters.sales_date, onChange: self.handleFilterChange })
+            ),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Centro de costo"),
+              React.createElement(Select, {
+                options: self.state.filterCostCenterOptions,
+                value: self.state.filterCentro,
+                onChange: self.handleFilterCentro,
+                onInputChange: self.handleFilterCostCenterSearch,
+                isClearable: true,
+                isLoading: self.state.filterCostCenterLoading,
+                placeholder: "Escriba 3+ letras...",
+                noOptionsMessage: function() { return "Escriba para buscar"; },
+                menuPortalTarget: document.body,
+                styles: { menuPortal: function(base) { return Object.assign({}, base, { zIndex: 9999 }); } }
+              })
+            )
+          ),
+          React.createElement("div", { className: "cm-filter-row" },
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Estado de compra"),
+              React.createElement("select", { className: "cm-input", name: "estado", value: self.state.filters.estado, onChange: self.handleFilterChange },
+                React.createElement("option", { value: "" }, "Todos"),
+                React.createElement("option", { value: "Pendiente" }, "Pendiente"),
+                React.createElement("option", { value: "Parcial" }, "Parcial"),
+                React.createElement("option", { value: "Entregado" }, "Entregado"),
+                React.createElement("option", { value: "Cancelado" }, "Cancelado")
+              )
+            ),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Fecha desde"),
+              React.createElement("input", { className: "cm-input", type: "date", name: "date_desde", value: self.state.filters.date_desde, onChange: self.handleFilterChange })
+            ),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "Fecha hasta"),
+              React.createElement("input", { className: "cm-input", type: "date", name: "date_hasta", value: self.state.filters.date_hasta, onChange: self.handleFilterChange })
+            ),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" }, "# Orden"),
+              React.createElement("input", { className: "cm-input", name: "sales_number", value: self.state.filters.sales_number, onChange: self.handleFilterChange })
+            )
+          ),
+          React.createElement("div", { className: "cm-filter-row" },
+            React.createElement("div", null),
+            React.createElement("div", null),
+            React.createElement("div", null),
+            React.createElement("div", { style: { display: "flex", gap: "8px", alignItems: "flex-end" } },
+              React.createElement("button", { className: "cm-btn cm-btn-accent cm-btn-sm", onClick: self.applyFilters },
+                React.createElement("i", { className: "fas fa-search" }), " Aplicar"
+              ),
+              React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", onClick: self.toggleFilters },
+                React.createElement("i", { className: "fas fa-times" }), " Cerrar filtros"
+              )
+            )
+          )
+        ) : null,
+
         React.createElement(CmDataTable, {
           columns: self.columns,
           data: self.state.data,
@@ -604,7 +1022,8 @@ class index extends React.Component {
         }),
 
         self.renderModal(),
-        self.renderShowInfo()
+        self.renderShowInfo(),
+        self.renderFacturasModal()
       )
     );
   }

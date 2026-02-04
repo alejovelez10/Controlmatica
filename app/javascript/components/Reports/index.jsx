@@ -1,6 +1,7 @@
 import React from "react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import NumberFormat from "react-number-format";
+import Select from "react-select";
 import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui";
 import FormCreate from "./FormCreate";
 
@@ -44,6 +45,21 @@ class index extends React.Component {
       sortKey: null,
       sortDir: "asc",
       meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
+      // Filters
+      showFilters: false,
+      filters: {
+        work_description: "",
+        report_execute_id: "",
+        date_ejecution: "",
+        report_sate: "",
+        cost_center_id: "",
+        customer_id: "",
+        date_desde: "",
+        date_hasta: "",
+        code_report: "",
+      },
+      costCenterOptions: [],
+      costCenterLoading: false,
       // Modal
       modalOpen: false,
       modeEdit: false,
@@ -162,6 +178,11 @@ class index extends React.Component {
     if (term) url += "&search=" + encodeURIComponent(term);
     if (sk) url += "&sort=" + encodeURIComponent(sk) + "&dir=" + sd;
 
+    var filters = self.state.filters;
+    Object.keys(filters).forEach(function (key) {
+      if (filters[key]) url += "&" + key + "=" + encodeURIComponent(filters[key]);
+    });
+
     fetch(url, { headers: { "X-CSRF-Token": csrfToken() } })
       .then(function (response) { return response.json(); })
       .then(function (result) {
@@ -192,6 +213,71 @@ class index extends React.Component {
     var self = this;
     self.setState({ sortKey: key, sortDir: dir }, function () {
       self.loadData(1, self.state.meta.per_page, undefined, key, dir);
+    });
+  }.bind(this);
+
+  // ─── Filters ───
+
+  toggleFilters = function () {
+    this.setState({ showFilters: !this.state.showFilters });
+  }.bind(this);
+
+  handleFilterChange = function (e) {
+    var newFilters = Object.assign({}, this.state.filters);
+    newFilters[e.target.name] = e.target.value;
+    this.setState({ filters: newFilters });
+  }.bind(this);
+
+  handleFilterSelectChange = function (name, option) {
+    var newFilters = Object.assign({}, this.state.filters);
+    newFilters[name] = option ? option.value : "";
+    this.setState({ filters: newFilters });
+  }.bind(this);
+
+  handleCostCenterSearch = function (inputValue) {
+    var self = this;
+    if (!inputValue || inputValue.length < 3) {
+      self.setState({ costCenterOptions: [] });
+      return;
+    }
+    if (self._ccSearchTimer) clearTimeout(self._ccSearchTimer);
+    self._ccSearchTimer = setTimeout(function () {
+      self.setState({ costCenterLoading: true });
+      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue), {
+        headers: { "X-CSRF-Token": csrfToken() },
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          self.setState({
+            costCenterOptions: data.map(function (d) { return { value: d.id, label: d.label }; }),
+            costCenterLoading: false,
+          });
+        });
+    }, 300);
+  }.bind(this);
+
+  applyFilters = function () {
+    this.loadData(1, this.state.meta.per_page);
+  }.bind(this);
+
+  clearFilters = function () {
+    var self = this;
+    self.setState({
+      showFilters: false,
+      filters: {
+        work_description: "",
+        report_execute_id: "",
+        date_ejecution: "",
+        report_sate: "",
+        cost_center_id: "",
+        customer_id: "",
+        date_desde: "",
+        date_hasta: "",
+        code_report: "",
+      },
+      costCenterOptions: [],
+    }, function () {
+      self.loadData(1, self.state.meta.per_page);
     });
   }.bind(this);
 
@@ -540,12 +626,28 @@ class index extends React.Component {
     );
   }.bind(this);
 
+  getExportUrl = function () {
+    var filters = this.state.filters;
+    var hasFilters = Object.keys(filters).some(function (k) { return filters[k]; });
+    if (!hasFilters) return "/download_file/reports/todos.xls";
+    var url = "/download_file/reports/filtro.xls?";
+    var parts = [];
+    Object.keys(filters).forEach(function (key) {
+      if (filters[key]) parts.push(key + "=" + encodeURIComponent(filters[key]));
+    });
+    return url + parts.join("&");
+  }.bind(this);
+
   renderHeaderActions = function () {
     var self = this;
     var estados = self.props.estados;
     return React.createElement(React.Fragment, null,
+      React.createElement("button", {
+        onClick: self.toggleFilters,
+        className: "cm-btn cm-btn-outline cm-btn-sm" + (self.state.showFilters ? " active" : "")
+      }, React.createElement("i", { className: "fas fa-filter" }), " Filtros"),
       estados.download_file ? React.createElement("a", {
-        href: "/download_file/reports/todos.xls",
+        href: self.getExportUrl(),
         target: "_blank",
         className: "cm-btn cm-btn-outline cm-btn-sm"
       }, React.createElement("i", { className: "fas fa-file-excel" }), " Exportar") : null
@@ -563,6 +665,116 @@ class index extends React.Component {
           onClick: self.openNewModal,
           className: "cm-btn cm-btn-accent cm-btn-sm"
         }, React.createElement("i", { className: "fas fa-plus" }), " Nuevo Reporte")
+      ) : null,
+
+      self.state.showFilters ? React.createElement("div", { className: "cm-filter-panel" },
+        // Row 1: Descripcion | Responsable Ejecucion | Fecha de inicio | Estado de reporte
+        React.createElement("div", { className: "cm-filter-row" },
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Descripcion del trabajo"),
+            React.createElement("input", {
+              type: "text", className: "cm-input", name: "work_description",
+              value: self.state.filters.work_description, onChange: self.handleFilterChange,
+              placeholder: "Descripcion del trabajo"
+            })
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Responsable Ejecucion"),
+            React.createElement("select", {
+              className: "cm-input", name: "report_execute_id",
+              value: self.state.filters.report_execute_id, onChange: self.handleFilterChange
+            },
+              React.createElement("option", { value: "" }, "Responsable Ejecucion"),
+              self.props.users.map(function (u) {
+                return React.createElement("option", { key: u.id, value: u.id }, u.names);
+              })
+            )
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Fecha de inicio"),
+            React.createElement("input", {
+              type: "date", className: "cm-input", name: "date_ejecution",
+              value: self.state.filters.date_ejecution, onChange: self.handleFilterChange
+            })
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Estado de reporte"),
+            React.createElement("select", {
+              className: "cm-input", name: "report_sate",
+              value: self.state.filters.report_sate, onChange: self.handleFilterChange
+            },
+              React.createElement("option", { value: "" }, "Seleccione un estado"),
+              React.createElement("option", { value: "true" }, "Aprobado"),
+              React.createElement("option", { value: "false" }, "Sin Aprobar")
+            )
+          )
+        ),
+        // Row 2: Centro de costo | Clientes | Fecha desde | Fecha hasta
+        React.createElement("div", { className: "cm-filter-row" },
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Centro de costo"),
+            React.createElement(Select, {
+              placeholder: "Centro de costo",
+              options: self.state.costCenterOptions,
+              isLoading: self.state.costCenterLoading,
+              onInputChange: self.handleCostCenterSearch,
+              onChange: function (opt) { self.handleFilterSelectChange("cost_center_id", opt); },
+              isClearable: true,
+              value: self.state.costCenterOptions.find(function (o) { return o.value == self.state.filters.cost_center_id; }) || null,
+              noOptionsMessage: function () { return "Escriba 3+ letras para buscar"; },
+              filterOption: null,
+              menuPortalTarget: document.body,
+              styles: { menuPortal: function (base) { return Object.assign({}, base, { zIndex: 9999 }); } }
+            })
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Clientes"),
+            React.createElement(Select, {
+              placeholder: "Buscar cliente",
+              options: self.state.clients,
+              onChange: function (opt) { self.handleFilterSelectChange("customer_id", opt); },
+              isClearable: true,
+              value: self.state.clients.find(function (o) { return o.value == self.state.filters.customer_id; }) || null,
+              menuPortalTarget: document.body,
+              styles: { menuPortal: function (base) { return Object.assign({}, base, { zIndex: 9999 }); } }
+            })
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Fecha desde"),
+            React.createElement("input", {
+              type: "date", className: "cm-input", name: "date_desde",
+              value: self.state.filters.date_desde, onChange: self.handleFilterChange
+            })
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Fecha hasta"),
+            React.createElement("input", {
+              type: "date", className: "cm-input", name: "date_hasta",
+              value: self.state.filters.date_hasta, onChange: self.handleFilterChange
+            })
+          )
+        ),
+        // Row 3: Busqueda por codigo | (empty) | (empty) | Aplicar + Cerrar filtros
+        React.createElement("div", { className: "cm-filter-row" },
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" }, "Busqueda por codigo"),
+            React.createElement("input", {
+              type: "text", className: "cm-input", name: "code_report",
+              value: self.state.filters.code_report, onChange: self.handleFilterChange,
+              placeholder: "Descripcion del trabajo"
+            })
+          ),
+          React.createElement("div", { className: "cm-form-group" }),
+          React.createElement("div", { className: "cm-form-group" }),
+          React.createElement("div", { className: "cm-form-group", style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: "8px" } },
+            React.createElement("button", {
+              onClick: self.applyFilters, className: "cm-btn cm-btn-primary cm-btn-sm"
+            }, "Aplicar"),
+            React.createElement("button", {
+              onClick: self.clearFilters, className: "cm-btn cm-btn-outline cm-btn-sm"
+            }, "Cerrar filtros")
+          )
+        )
       ) : null,
 
       React.createElement(CmDataTable, {

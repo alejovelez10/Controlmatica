@@ -77,8 +77,10 @@ class index extends React.Component {
         number_invoice: "",
         quotation_number: "",
       },
-      filterCentro: { value: "", label: "Centro de costo" },
-      filterCustomer: { value: "", label: "Cliente" },
+      filterCentro: null,
+      filterCustomer: null,
+      filterCostCenterOptions: [],
+      filterCostCenterLoading: false,
     };
 
     this.columns = [
@@ -391,15 +393,15 @@ class index extends React.Component {
 
   toggleFilter = () => {
     if (this.state.showFilter) {
-      // Closing: clear filters
       this.setState({
         showFilter: false,
         filterForm: {
           date_desde: "", date_hasta: "", number_order: "", cost_center_id: "",
           state: "", description: "", customer: "", number_invoice: "", quotation_number: "",
         },
-        filterCentro: { value: "", label: "Centro de costo" },
-        filterCustomer: { value: "", label: "Cliente" },
+        filterCentro: null,
+        filterCustomer: null,
+        filterCostCenterOptions: [],
       });
       if (this.props.onClearFilters) this.props.onClearFilters();
     } else {
@@ -414,12 +416,33 @@ class index extends React.Component {
   };
 
   handleFilterCentro = (opt) => {
-    var filterForm = Object.assign({}, this.state.filterForm, { cost_center_id: opt.value });
+    var filterForm = Object.assign({}, this.state.filterForm, { cost_center_id: opt ? opt.value : "" });
     this.setState({ filterCentro: opt, filterForm: filterForm });
   };
 
+  handleFilterCostCenterSearch = (inputValue) => {
+    if (!inputValue || inputValue.length < 3) {
+      this.setState({ filterCostCenterOptions: [] });
+      return;
+    }
+    if (this._ccTimer) clearTimeout(this._ccTimer);
+    this._ccTimer = setTimeout(() => {
+      this.setState({ filterCostCenterLoading: true });
+      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue), {
+        headers: { "X-CSRF-Token": csrfToken() },
+      })
+        .then(function(r) { return r.json(); })
+        .then((data) => {
+          this.setState({
+            filterCostCenterOptions: data.map(function(d) { return { value: d.id, label: d.label }; }),
+            filterCostCenterLoading: false,
+          });
+        });
+    }, 300);
+  };
+
   handleFilterCustomer = (opt) => {
-    var filterForm = Object.assign({}, this.state.filterForm, { customer: opt.value });
+    var filterForm = Object.assign({}, this.state.filterForm, { customer: opt ? opt.value : "" });
     this.setState({ filterCustomer: opt, filterForm: filterForm });
   };
 
@@ -628,37 +651,45 @@ class index extends React.Component {
   renderFilterPanel = () => {
     if (!this.state.showFilter) return null;
     var f = this.state.filterForm;
-    var labelStyle = { display: "block", fontSize: 12, fontWeight: 600, color: "#5a6a7e", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 };
 
     return (
-      <div style={{ background: "#f8f9fb", border: "1px solid #e8eaef", borderRadius: 10, padding: "16px 16px 8px", marginBottom: 16 }}>
-        <div className="row">
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Fecha desde</label>
-            <input type="date" name="date_desde" className="form form-control" value={f.date_desde} onChange={this.handleFilterChange} />
+      <div className="cm-filter-panel">
+        {/* Row 1: Fecha desde | Fecha hasta | Numero | Centro de costo */}
+        <div className="cm-filter-row">
+          <div className="cm-form-group">
+            <label className="cm-label">Fecha desde</label>
+            <input type="date" name="date_desde" className="cm-input" value={f.date_desde} onChange={this.handleFilterChange} />
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Fecha hasta</label>
-            <input type="date" name="date_hasta" className="form form-control" value={f.date_hasta} onChange={this.handleFilterChange} />
+          <div className="cm-form-group">
+            <label className="cm-label">Fecha hasta</label>
+            <input type="date" name="date_hasta" className="cm-input" value={f.date_hasta} onChange={this.handleFilterChange} />
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Numero de orden</label>
-            <input type="text" name="number_order" className="form form-control" value={f.number_order} onChange={this.handleFilterChange} placeholder="Numero de orden" />
+          <div className="cm-form-group">
+            <label className="cm-label">Numero</label>
+            <input type="text" name="number_order" className="cm-input" value={f.number_order} onChange={this.handleFilterChange} placeholder="Numero de orden" />
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Centro de costo</label>
+          <div className="cm-form-group">
+            <label className="cm-label">Centro de costo</label>
             <Select
-              onChange={this.handleFilterCentro}
-              options={this.state.dataCostCenter}
-              autoFocus={false}
-              className="link-form"
-              value={this.state.filterCentro}
               placeholder="Centro de costo"
+              options={this.state.filterCostCenterOptions}
+              isLoading={this.state.filterCostCenterLoading}
+              onInputChange={this.handleFilterCostCenterSearch}
+              onChange={this.handleFilterCentro}
+              isClearable={true}
+              value={this.state.filterCentro}
+              noOptionsMessage={() => "Escriba 3+ letras para buscar"}
+              filterOption={null}
+              menuPortalTarget={document.body}
+              styles={{ menuPortal: (base) => Object.assign({}, base, { zIndex: 9999 }) }}
             />
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Estado CC</label>
-            <select name="state" className="form form-control" value={f.state} onChange={this.handleFilterChange}>
+        </div>
+        {/* Row 2: Estado de centro de costo | Descripción | Clientes | Numero de factura */}
+        <div className="cm-filter-row">
+          <div className="cm-form-group">
+            <label className="cm-label">Estado de centro de costo</label>
+            <select name="state" className="cm-input" value={f.state} onChange={this.handleFilterChange}>
               <option value="">Seleccione un estado</option>
               <option value="LEGALIZADO">LEGALIZADO</option>
               <option value="FACTURADO">FACTURADO</option>
@@ -668,37 +699,39 @@ class index extends React.Component {
               <option value="LEGALIZADO PARCIAL">LEGALIZADO PARCIAL</option>
             </select>
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Descripción</label>
-            <input type="text" name="description" className="form form-control" value={f.description} onChange={this.handleFilterChange} placeholder="Descripción..." />
+          <div className="cm-form-group">
+            <label className="cm-label">Descripción</label>
+            <input type="text" name="description" className="cm-input" value={f.description} onChange={this.handleFilterChange} placeholder="Descripción..." />
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Cliente</label>
+          <div className="cm-form-group">
+            <label className="cm-label">Clientes</label>
             <Select
-              onChange={this.handleFilterCustomer}
-              options={this.state.dataClients}
-              autoFocus={false}
-              className="link-form"
-              value={this.state.filterCustomer}
               placeholder="Cliente"
+              options={this.state.dataClients}
+              onChange={this.handleFilterCustomer}
+              isClearable={true}
+              value={this.state.filterCustomer}
+              menuPortalTarget={document.body}
+              styles={{ menuPortal: (base) => Object.assign({}, base, { zIndex: 9999 }) }}
             />
           </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Numero de factura</label>
-            <input type="text" name="number_invoice" className="form form-control" value={f.number_invoice} onChange={this.handleFilterChange} placeholder="Numero de factura" />
-          </div>
-          <div className="col-md-3 mb-3">
-            <label style={labelStyle}>Numero de cotización</label>
-            <input type="text" name="quotation_number" className="form form-control" value={f.quotation_number} onChange={this.handleFilterChange} placeholder="Numero de cotización" />
+          <div className="cm-form-group">
+            <label className="cm-label">Numero de factura</label>
+            <input type="text" name="number_invoice" className="cm-input" value={f.number_invoice} onChange={this.handleFilterChange} placeholder="Numero de factura" />
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingBottom: 8 }}>
-          <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.toggleFilter}>
-            <i className="fas fa-times" /> Cerrar filtros
-          </button>
-          <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={this.applyFilters}>
-            <i className="fas fa-search" /> Aplicar
-          </button>
+        {/* Row 3: Numero de cotización | (empty) | (empty) | Aplicar + Cerrar filtros */}
+        <div className="cm-filter-row">
+          <div className="cm-form-group">
+            <label className="cm-label">Numero de cotización</label>
+            <input type="text" name="quotation_number" className="cm-input" value={f.quotation_number} onChange={this.handleFilterChange} placeholder="Numero de cotización" />
+          </div>
+          <div className="cm-form-group" />
+          <div className="cm-form-group" />
+          <div className="cm-form-group" style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 8 }}>
+            <button className="cm-btn cm-btn-primary cm-btn-sm" onClick={this.applyFilters}>Aplicar</button>
+            <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.toggleFilter}>Cerrar filtros</button>
+          </div>
         </div>
       </div>
     );

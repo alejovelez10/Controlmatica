@@ -59,12 +59,16 @@ class FormFilter extends Component {
                 <label className="cm-label">Centro de costo</label>
                 <Select
                   onChange={this.props.onChangeAutocompleteCentro}
+                  onInputChange={this.props.onCostCenterInputChange}
                   options={this.props.centro}
+                  isLoading={this.props.costCenterLoading}
+                  isClearable
                   autoFocus={false}
                   value={this.props.formAutocompleteCentro}
-                  styles={selectStyles}
-                  placeholder="Buscar..."
-                  noOptionsMessage={() => "Sin resultados"}
+                  styles={{ ...selectStyles, menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+                  placeholder="Escriba 3+ letras..."
+                  noOptionsMessage={() => "Escriba para buscar"}
+                  menuPortalTarget={document.body}
                 />
               </div>
 

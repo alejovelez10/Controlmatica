@@ -1,2 +1,2 @@
 <%= javascript_pack_tag 'Reports' %>
-<%= react_component('Reports', usuario: current_user, users: User.all, clientes: get_customer, estados: @estados, cost_centers: CostCenter.all, rol: current_user.rol) %>
+<%= react_component('Reports', usuario: current_user, users: User.select(:id, :names).map { |u| { id: u.id, names: u.names } }, clientes: Customer.select(:id, :name).map { |c| { id: c.id, name: c.name } }, estados: @estados, rol: current_user.rol) %>

@@ -31,6 +31,21 @@ class MaterialsController < ApplicationController
       )
     end
 
+    # Advanced filters
+    materials = materials.where(provider_id: params[:provider_id]) if params[:provider_id].present?
+    materials = materials.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    materials = materials.where(sales_state: params[:estado]) if params[:estado].present?
+    materials = materials.where(sales_number: params[:sales_number]) if params[:sales_number].present?
+    materials = materials.where("materials.sales_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    materials = materials.where("materials.sales_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+    if params[:description].present?
+      desc_term = "%#{params[:description].downcase}%"
+      materials = materials.where("LOWER(materials.description) LIKE ?", desc_term)
+    end
+    if params[:sales_date].present? && params[:date_desde].blank? && params[:date_hasta].blank?
+      materials = materials.where(sales_date: params[:sales_date])
+    end
+
     if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
       direction = params[:dir] == "desc" ? :desc : :asc
       materials = materials.order(params[:sort] => direction)

@@ -11,18 +11,18 @@ class ReportsController < ApplicationController
   # GET /reports
   # GET /reports.json
   def index
-    report_mod = ModuleControl.find_by_name("Reportes de servicios")
-    permissions = current_user.rol.accion_modules.where(module_control_id: report_mod.id).pluck(:name)
+    mod = ModuleControl.find_by_name("Reportes de servicios")
+    permisos = current_user.rol.accion_modules.where(module_control_id: mod.id).pluck(:name)
     is_admin = current_user.rol.name == "Administrador"
 
     @estados = {
-      create: is_admin || permissions.include?("Crear"),
-      edit: is_admin || permissions.include?("Editar"),
-      edit_all: is_admin || permissions.include?("Editar todos"),
-      delete: is_admin || permissions.include?("Eliminar"),
-      responsible: is_admin || permissions.include?("Ver Responsables"),
-      download_file: is_admin || permissions.include?("Descargar excel"),
-      viatics: is_admin || permissions.include?("Ingresar viaticos"),
+      create: is_admin || permisos.include?("Crear"),
+      edit: is_admin || permisos.include?("Editar"),
+      edit_all: is_admin || permisos.include?("Editar todos"),
+      delete: is_admin || permisos.include?("Eliminar"),
+      responsible: is_admin || permisos.include?("Ver Responsables"),
+      download_file: is_admin || permisos.include?("Descargar excel"),
+      viatics: is_admin || permisos.include?("Ingresar viaticos"),
     }
   end
 
@@ -50,6 +50,8 @@ class ReportsController < ApplicationController
         "LOWER(reports.work_description) LIKE ? OR LOWER(reports.code_report) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term, term
       )
     end
+
+    reports = apply_report_filters(reports)
 
     if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
       direction = params[:dir] == "desc" ? :desc : :asc

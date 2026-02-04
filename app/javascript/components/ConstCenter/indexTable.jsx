@@ -51,6 +51,7 @@ class indexTable extends React.Component {
       clients: [],
       users: [],
       dataCostCenter: [],
+      filterCostCenterLoading: false,
 
       // Modal state
       modal: false,
@@ -136,13 +137,7 @@ class indexTable extends React.Component {
       label: item.name,
       value: item.id,
     }));
-    const arrayCostCenter = this.props.cost_center.map((item) => ({
-      label: item.code,
-      value: item.id,
-    }));
-
     this.setState({
-      dataCostCenter: arrayCostCenter,
       clients: arrayClients,
       users: arryUsers,
     });
@@ -262,9 +257,30 @@ class indexTable extends React.Component {
       selectedOptionCentro,
       formFilter: {
         ...this.state.formFilter,
-        cost_center_id: selectedOptionCentro.value,
+        cost_center_id: selectedOptionCentro ? selectedOptionCentro.value : "",
       },
     });
+  };
+
+  handleFilterCostCenterSearch = (inputValue) => {
+    if (!inputValue || inputValue.length < 3) {
+      this.setState({ dataCostCenter: [] });
+      return;
+    }
+    if (this._ccTimer) clearTimeout(this._ccTimer);
+    this._ccTimer = setTimeout(() => {
+      this.setState({ filterCostCenterLoading: true });
+      fetch(`/search_cost_centers?q=${encodeURIComponent(inputValue)}`, {
+        headers: { "X-CSRF-Token": this.token },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          this.setState({
+            dataCostCenter: data.map((d) => ({ value: d.id, label: d.label })),
+            filterCostCenterLoading: false,
+          });
+        });
+    }, 300);
   };
 
   applyFilter = () => {
@@ -1271,6 +1287,8 @@ class indexTable extends React.Component {
             clientes={this.state.clients}
             centro={this.state.dataCostCenter}
             onChangeAutocompleteCentro={this.handleChangeAutocompleteCentro}
+            onCostCenterInputChange={this.handleFilterCostCenterSearch}
+            costCenterLoading={this.state.filterCostCenterLoading}
             formAutocompleteCentro={this.state.selectedOptionCentro}
           />
         )}
