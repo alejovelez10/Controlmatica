@@ -194,9 +194,28 @@ select.cm-input {
   display: block;
   font-family: "Poppins", sans-serif;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--cm-text-muted);
   margin-bottom: 4px;
+}
+
+.cm-label i {
+  color: #6c757d;
+  margin-right: 6px;
+  width: 14px;
+}
+
+.cm-label-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: #9ca3af;
+  margin-left: 4px;
+}
+
+.cm-required {
+  color: var(--cm-danger);
+  font-weight: 500;
+  margin-left: 2px;
 }
 
 /* Form group */
@@ -286,9 +305,10 @@ select.cm-input {
 .cm-modal .modal-dialog {
   display: flex;
   align-items: center;
-  min-height: calc(100vh - 1rem);
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0 auto !important;
+  padding: 5vh 0;
 }
 
 .cm-modal.modal {
@@ -302,13 +322,17 @@ select.cm-input {
   border: none;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .cm-modal .modal-header {
-  background: #f5f6fa;
+  background: #f8f9fa;
   color: var(--cm-text-muted);
   border-bottom: 1px solid var(--cm-border);
   padding: 18px 24px;
+  flex-shrink: 0;
 }
 
 .cm-modal .modal-header .modal-title {
@@ -342,8 +366,53 @@ select.cm-input {
 
 .cm-modal .modal-body {
   padding: 28px 24px;
-  max-height: 70vh;
+  flex: 1;
   overflow-y: auto;
+}
+
+/* When using custom layout (hideHeader), disable ModalBody scroll and padding */
+.cm-modal-custom-layout .modal-body {
+  overflow: visible !important;
+  padding: 20px 24px !important;
+  flex: 1;
+}
+
+/* Gray scrollbar for modal body */
+.cm-modal .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cm-modal .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.cm-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.cm-modal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Gray scrollbar for custom modal body scroll */
+.cm-modal-body-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cm-modal-body-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.cm-modal-body-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.cm-modal-body-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .cm-modal .modal-footer {
@@ -352,6 +421,8 @@ select.cm-input {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
+  background: #f8f9fa;
 }
 
 /* ============================================
@@ -1090,6 +1161,24 @@ select.cm-input {
   margin-bottom: 16px;
 }
 
+/* Inputs con acento naranja */
+.cm-filter-panel .cm-input {
+  background: #f8f9fa;
+  border: 1px solid #e2e5ea;
+  border-radius: 8px;
+}
+
+.cm-filter-panel .cm-input:focus {
+  outline: none;
+  background: #fff;
+  border-color: #f5a623;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+}
+
+.cm-filter-panel .cm-input:hover {
+  border-color: #f5a623;
+}
+
 .cm-filter-panel .css-26l3qy-menu,
 .cm-filter-panel [class*="-menu"] {
   z-index: 9999 !important;
@@ -1099,15 +1188,22 @@ select.cm-input {
 .cm-filter-panel [class*="-control"] {
   min-height: 42px !important;
   height: 42px !important;
-  border: 1px solid var(--cm-border) !important;
-  border-radius: var(--cm-radius-sm) !important;
+  background: #f8f9fa !important;
+  border: 1px solid #e2e5ea !important;
+  border-radius: 8px !important;
   box-shadow: none !important;
   font-family: "Poppins", sans-serif;
   font-size: 14px;
 }
 
 .cm-filter-panel [class*="-control"]:hover {
-  border-color: var(--cm-primary) !important;
+  border-color: #f5a623 !important;
+}
+
+.cm-filter-panel [class*="-control--is-focused"] {
+  border-color: #f5a623 !important;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15) !important;
+  background: #fff !important;
 }
 
 .cm-filter-panel [class*="-valueContainer"] {
@@ -1131,6 +1227,6 @@ select.cm-input {
 
 .cm-state-select:focus {
   outline: none;
-  border-color: var(--cm-primary);
-  box-shadow: 0 0 0 3px rgba(42, 63, 83, 0.1);
+  border-color: #f5a623;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
 }

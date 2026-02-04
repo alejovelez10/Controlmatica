@@ -34,6 +34,30 @@ var EMPTY_CONTACT = {
   customer_id: "",
 };
 
+var filterSelectStyles = {
+  control: function (base, state) {
+    return Object.assign({}, base, {
+      background: "#f8f9fa",
+      borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
+      boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
+      "&:hover": { borderColor: "#f5a623" },
+      borderRadius: "8px",
+      padding: "2px 4px",
+      fontSize: "14px",
+    });
+  },
+  option: function (base, state) {
+    return Object.assign({}, base, {
+      backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
+      color: state.isSelected ? "#fff" : "#333",
+      fontSize: "14px",
+    });
+  },
+  menuPortal: function (base) {
+    return Object.assign({}, base, { zIndex: 9999 });
+  },
+};
+
 class index extends React.Component {
   constructor(props) {
     super(props);
@@ -263,7 +287,6 @@ class index extends React.Component {
   clearFilters = function () {
     var self = this;
     self.setState({
-      showFilters: false,
       filters: {
         work_description: "",
         report_execute_id: "",
@@ -671,39 +694,47 @@ class index extends React.Component {
         // Row 1: Descripcion | Responsable Ejecucion | Fecha de inicio | Estado de reporte
         React.createElement("div", { className: "cm-filter-row" },
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Descripcion del trabajo"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-file-alt" }), " Descripción del trabajo"
+            ),
             React.createElement("input", {
               type: "text", className: "cm-input", name: "work_description",
               value: self.state.filters.work_description, onChange: self.handleFilterChange,
-              placeholder: "Descripcion del trabajo"
+              placeholder: "Buscar por descripción..."
             })
           ),
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Responsable Ejecucion"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-user" }), " Responsable"
+            ),
             React.createElement("select", {
               className: "cm-input", name: "report_execute_id",
               value: self.state.filters.report_execute_id, onChange: self.handleFilterChange
             },
-              React.createElement("option", { value: "" }, "Responsable Ejecucion"),
+              React.createElement("option", { value: "" }, "Seleccione responsable..."),
               self.props.users.map(function (u) {
                 return React.createElement("option", { key: u.id, value: u.id }, u.names);
               })
             )
           ),
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Fecha de inicio"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-calendar-check" }), " Fecha ejecución"
+            ),
             React.createElement("input", {
               type: "date", className: "cm-input", name: "date_ejecution",
               value: self.state.filters.date_ejecution, onChange: self.handleFilterChange
             })
           ),
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Estado de reporte"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-flag" }), " Estado"
+            ),
             React.createElement("select", {
               className: "cm-input", name: "report_sate",
               value: self.state.filters.report_sate, onChange: self.handleFilterChange
             },
-              React.createElement("option", { value: "" }, "Seleccione un estado"),
+              React.createElement("option", { value: "" }, "Seleccione estado..."),
               React.createElement("option", { value: "true" }, "Aprobado"),
               React.createElement("option", { value: "false" }, "Sin Aprobar")
             )
@@ -712,9 +743,12 @@ class index extends React.Component {
         // Row 2: Centro de costo | Clientes | Fecha desde | Fecha hasta
         React.createElement("div", { className: "cm-filter-row" },
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Centro de costo"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-map-marker-alt" }), " Centro de costo ",
+              React.createElement("small", { className: "cm-label-hint" }, "(escribe 3+ letras)")
+            ),
             React.createElement(Select, {
-              placeholder: "Centro de costo",
+              placeholder: "Buscar centro de costo...",
               options: self.state.costCenterOptions,
               isLoading: self.state.costCenterLoading,
               onInputChange: self.handleCostCenterSearch,
@@ -724,55 +758,61 @@ class index extends React.Component {
               noOptionsMessage: function () { return "Escriba 3+ letras para buscar"; },
               filterOption: null,
               menuPortalTarget: document.body,
-              styles: { menuPortal: function (base) { return Object.assign({}, base, { zIndex: 9999 }); } }
+              styles: filterSelectStyles
             })
           ),
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Clientes"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-building" }), " Cliente"
+            ),
             React.createElement(Select, {
-              placeholder: "Buscar cliente",
+              placeholder: "Seleccione cliente...",
               options: self.state.clients,
               onChange: function (opt) { self.handleFilterSelectChange("customer_id", opt); },
               isClearable: true,
               value: self.state.clients.find(function (o) { return o.value == self.state.filters.customer_id; }) || null,
               menuPortalTarget: document.body,
-              styles: { menuPortal: function (base) { return Object.assign({}, base, { zIndex: 9999 }); } }
+              styles: filterSelectStyles
             })
           ),
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Fecha desde"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha desde"
+            ),
             React.createElement("input", {
               type: "date", className: "cm-input", name: "date_desde",
               value: self.state.filters.date_desde, onChange: self.handleFilterChange
             })
           ),
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Fecha hasta"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha hasta"
+            ),
             React.createElement("input", {
               type: "date", className: "cm-input", name: "date_hasta",
               value: self.state.filters.date_hasta, onChange: self.handleFilterChange
             })
           )
         ),
-        // Row 3: Busqueda por codigo | (empty) | (empty) | Aplicar + Cerrar filtros
-        React.createElement("div", { className: "cm-filter-row" },
+        // Row 3: Busqueda por codigo | Buttons
+        React.createElement("div", { className: "cm-filter-row", style: { gridTemplateColumns: "1fr 1fr" } },
           React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" }, "Busqueda por codigo"),
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-barcode" }), " Código de reporte"
+            ),
             React.createElement("input", {
               type: "text", className: "cm-input", name: "code_report",
               value: self.state.filters.code_report, onChange: self.handleFilterChange,
-              placeholder: "Descripcion del trabajo"
+              placeholder: "Buscar por código..."
             })
           ),
-          React.createElement("div", { className: "cm-form-group" }),
-          React.createElement("div", { className: "cm-form-group" }),
           React.createElement("div", { className: "cm-form-group", style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: "8px" } },
             React.createElement("button", {
-              onClick: self.applyFilters, className: "cm-btn cm-btn-primary cm-btn-sm"
-            }, "Aplicar"),
+              type: "button", onClick: self.clearFilters, className: "cm-btn cm-btn-outline cm-btn-sm"
+            }, React.createElement("i", { className: "fas fa-eraser" }), " Limpiar"),
             React.createElement("button", {
-              onClick: self.clearFilters, className: "cm-btn cm-btn-outline cm-btn-sm"
-            }, "Cerrar filtros")
+              type: "button", onClick: self.applyFilters, className: "cm-btn cm-btn-accent cm-btn-sm"
+            }, React.createElement("i", { className: "fas fa-search" }), " Aplicar filtros")
           )
         )
       ) : null,

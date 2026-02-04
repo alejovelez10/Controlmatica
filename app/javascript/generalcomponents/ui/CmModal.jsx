@@ -4,11 +4,12 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 
 class CmModal extends React.Component {
   render() {
-    const { isOpen, toggle, title, size, footer, children } = this.props;
+    const { isOpen, toggle, title, size, footer, children, hideHeader } = this.props;
+    const modalClass = hideHeader ? "cm-modal cm-modal-custom-layout" : "cm-modal";
 
     return (
-      <Modal isOpen={isOpen} toggle={toggle} size={size || "md"} className="cm-modal">
-        <ModalHeader toggle={toggle}>{title}</ModalHeader>
+      <Modal isOpen={isOpen} toggle={toggle} size={size || "md"} className={modalClass}>
+        {!hideHeader && <ModalHeader toggle={toggle}>{title}</ModalHeader>}
         <ModalBody>{children}</ModalBody>
         {footer && <ModalFooter>{footer}</ModalFooter>}
       </Modal>
@@ -19,10 +20,11 @@ class CmModal extends React.Component {
 CmModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   toggle: PropTypes.func.isRequired,
-  title: PropTypes.node.isRequired,
+  title: PropTypes.node,
   size: PropTypes.string,
   footer: PropTypes.node,
-  children: PropTypes.node.isRequired
+  children: PropTypes.node.isRequired,
+  hideHeader: PropTypes.bool
 };
 
 export default CmModal;

@@ -28,67 +28,80 @@ class CustomerReportsController < ApplicationController
     }
   end
 
+  SORTABLE_COLUMNS = %w[report_date report_code description report_state approve_date created_at].freeze
+
   def get_customer_reports
     customer_reports_find = ModuleControl.find_by_name("Reportes de clientes")
     estado = current_user.rol.accion_modules.where(module_control_id: customer_reports_find.id).where(name: "Ver todos").exists?
     validate = (current_user.rol.name == "Administrador" ? true : estado)
-    
-    if validate
-      if params[:cost_center_id] || params[:customer_id] || params[:state]
-        customer_reports = CustomerReport.order(created_at: :desc).all.paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] } })
-      else
-        customer_reports = CustomerReport.order(created_at: :desc).all.paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] } })
-      end
-    else 
-      customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] } })
+
+    reports = validate ? CustomerReport.all : CustomerReport.where(user_id: current_user.id)
+    reports = reports.includes(:cost_center, :customer, :contact, :user, :last_user_edited, :reports)
+
+    # Search
+    if params[:search].present?
+      term = "%#{params[:search].downcase}%"
+      reports = reports.left_joins(:customer, :cost_center).where(
+        "LOWER(customer_reports.description) LIKE ? OR LOWER(customer_reports.report_code) LIKE ? OR LOWER(customers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?",
+        term, term, term, term
+      )
     end
-  
-    customer_reports = JSON.parse(customer_reports)
-    render :json => customer_reports
-  end
 
-  def get_customer_reports
-    customer_reports_find = ModuleControl.find_by_name("Reportes de clientes")
-    estado = current_user.rol.accion_modules.where(module_control_id: customer_reports_find.id).where(name: "Ver todos").exists?
-    validate = (current_user.rol.name == "Administrador" ? true : estado)
+    # Advanced filters
+    reports = reports.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    reports = reports.where(customer_id: params[:customer_id]) if params[:customer_id].present?
+    reports = reports.where(report_state: params[:state]) if params[:state].present?
+    reports = reports.where("customer_reports.report_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    reports = reports.where("customer_reports.report_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
 
-    if validate
-
-      if params[:cost_center_id] || params[:customer_id] || params[:state]
-        customer_reports = CustomerReport.all.order(created_at: :desc).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-        customer_reports_total = CustomerReport.all.order(created_at: :desc).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).count
-
-      elsif params[:filter]
-        customer_reports = CustomerReport.all.order(created_at: :desc).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-        customer_reports_total = CustomerReport.order(created_at: :desc).all.count
-
-      else
-        customer_reports = CustomerReport.all.order(created_at: :desc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-        customer_reports_total =  CustomerReport.all.count
-      end
-
+    # Sort
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      reports = reports.order(params[:sort] => direction)
     else
-
-      if params[:cost_center_id] || params[:customer_id] || params[:state]
-        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-        customer_reports_total = CustomerReport.where(user_id: current_user.id).search(params[:cost_center_id], params[:customer_id], params[:state], params[:date_desde], params[:date_hasta]).count
-
-      elsif params[:filter]
-        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(page: params[:page], :per_page => params[:filter]).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-        customer_reports_total = CustomerReport.where(user_id: current_user.id).count
-
-      else
-        customer_reports = CustomerReport.where(user_id: current_user.id).order(created_at: :asc).paginate(:page => params[:page], :per_page => 10).to_json( :include => { :cost_center => { :only =>[:code] }, :customer => { :only =>[:name] }, :contact => { :only =>[:name] }, :reports => { :only =>[:code_report, :id] }, :last_user_edited => { :only =>[:names, :id] }, :user => { :only =>[:names, :id] } })
-        customer_reports_total =  CustomerReport.where(user_id: current_user.id).count
-      end
-
+      reports = reports.order(created_at: :desc)
     end
-    
 
+    # Pagination
+    page = (params[:page] || 1).to_i
+    per_page = [(params[:per_page] || 10).to_i, 100].min
+    total = reports.except(:includes).count
+    paginated = reports.offset((page - 1) * per_page).limit(per_page)
 
-    customer_reports = JSON.parse(customer_reports)
-    render :json => {customer_reports_paginate: customer_reports, customer_reports_total: customer_reports_total}
+    render json: {
+      data: paginated.map { |cr| serialize_customer_report(cr) },
+      meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
+    }
   end
+
+  private
+
+  def serialize_customer_report(cr)
+    {
+      id: cr.id,
+      report_date: cr.report_date,
+      report_code: cr.report_code,
+      description: cr.description,
+      report_state: cr.report_state,
+      approve_date: cr.approve_date,
+      email: cr.email,
+      token: cr.token,
+      customer_id: cr.customer_id,
+      cost_center_id: cr.cost_center_id,
+      contact_id: cr.contact_id,
+      user_id: cr.user_id,
+      created_at: cr.created_at,
+      updated_at: cr.updated_at,
+      cost_center: cr.cost_center.present? ? { code: cr.cost_center.code, id: cr.cost_center.id } : nil,
+      customer: cr.customer.present? ? { name: cr.customer.name, id: cr.customer.id } : nil,
+      contact: cr.contact.present? ? { name: cr.contact.name, id: cr.contact.id } : nil,
+      user: cr.user.present? ? { names: cr.user.names, id: cr.user.id } : nil,
+      last_user_edited: cr.last_user_edited.present? ? { names: cr.last_user_edited.names, id: cr.last_user_edited.id } : nil,
+      reports: cr.reports.map { |r| { id: r.id, code_report: r.code_report } }
+    }
+  end
+
+  public
 
   # GET /customer_reports/1
   # GET /customer_reports/1.json
@@ -112,11 +125,26 @@ class CustomerReportsController < ApplicationController
     estado = current_user.rol.accion_modules.where(module_control_id: customer_reports_find.id).where(name: "Ver todos").exists?
     validate = (current_user.rol.name == "Administrador" ? true : estado)
 
-    if validate
-      customer_reports = CustomerReport.all
-    else
-      customer_reports = CustomerReport.where(user_id: current_user.id)
-    end 
+    customer_reports = validate ? CustomerReport.all : CustomerReport.where(user_id: current_user.id)
+    customer_reports = customer_reports.includes(:customer)
+
+    # Search
+    if params[:search].present?
+      term = "%#{params[:search].downcase}%"
+      customer_reports = customer_reports.left_joins(:customer, :cost_center).where(
+        "LOWER(customer_reports.description) LIKE ? OR LOWER(customer_reports.report_code) LIKE ? OR LOWER(customers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?",
+        term, term, term, term
+      )
+    end
+
+    # Filters
+    customer_reports = customer_reports.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    customer_reports = customer_reports.where(customer_id: params[:customer_id]) if params[:customer_id].present?
+    customer_reports = customer_reports.where(report_state: params[:state]) if params[:state].present?
+    customer_reports = customer_reports.where("customer_reports.report_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    customer_reports = customer_reports.where("customer_reports.report_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+
+    customer_reports = customer_reports.order(created_at: :desc)
 
     respond_to do |format|
 

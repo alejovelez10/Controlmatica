@@ -1,48 +1,266 @@
 <%
    if params[:view] == "tableristas"
       rol = Rol.find_by_name("TABLERISTA")
-      users = User.where(rol_id: rol.id)
-      title = "TABLERISTAS"
+      users = rol ? User.where(rol_id: rol.id) : User.none
+      title = "Tableristas"
+      icon = "fas fa-tools"
+      subtitle = "Genera informes de rendimiento del personal de tableristas"
    else
-      title = "INGENIEROS"
+      title = "Ingenieros"
+      icon = "fas fa-user-tie"
+      subtitle = "Genera informes de rendimiento del equipo de ingeniería"
       users = User.all
    end
 %>
 
-<div class="row">
-	<div class="col-md-12">
-     <h3 class="text-center mb-4">INFORME DE RENDIMIENTO <%=title%><!-- <%= current_user.names.upcase if current_user.rol_user == "Ingeniero"%> --></h3></div>
-
-      <div class="col-md-4 offset-md-4">
-         <div class="card card-table">
-            <div class="card-body">
-               <%= form_tag info_pdf_new_path(format: :pdf),  method: :get  do%>
-
-               <% if @validate %>
-                  <div class="form-group">   
-                     <label>Seleccione Empleado</label>
-                     <%= select_tag 'user_id', options_for_select(users.collect{ |u| [u.names, u.id] }),{:class => "form1 form form-control", :prompt => 'Selecciona un Empleado', id: "", :required => true}%>
-                  </div>
-               <% else %>
-                  <%= hidden_field_tag :user_id, current_user.id %>
-               <% end %>
-
-               <%= hidden_field_tag :view, params[:view] %>
-
-               <div class="form-group">
-                  <label>Seleccione Desde</label>
-                  <%= date_field_tag :fecha_desde,nil ,class: "form form-control", :required => true%>
-               </div>
-               
-               <div class="form-group">
-                  <label>Seleccione Fecha Hasta</label>
-                  <%= date_field_tag :fecha_hasta,nil, class: "form form-control", :required => true%>
-               </div>
-                  <%= button_tag "Generar", :formtarget => "_blank" , class: "btn btn-secondary btn-lg btn-block", disabled: false %>
-               <% end %>
-            </div>
-         </div>
+<div class="cm-performance-container">
+  <div class="cm-performance-card">
+    <div class="cm-performance-header">
+      <div class="cm-performance-icon">
+        <i class="<%= icon %>"></i>
       </div>
+      <h1 class="cm-performance-title">Informe de Rendimiento</h1>
+      <span class="cm-performance-badge"><%= title %></span>
+      <p class="cm-performance-subtitle"><%= subtitle %></p>
+    </div>
 
-   </div>
+    <div class="cm-performance-body">
+      <%= form_tag info_pdf_new_path(format: :pdf), method: :get, class: "cm-performance-form" do %>
+
+        <% if @validate %>
+          <div class="cm-form-group">
+            <label class="cm-label">
+              <i class="fas fa-user"></i> Empleado
+            </label>
+            <%= select_tag 'user_id',
+                options_for_select(users.collect{ |u| [u.names, u.id] }),
+                class: "cm-input cm-select",
+                prompt: 'Seleccione un empleado',
+                required: true %>
+          </div>
+        <% else %>
+          <%= hidden_field_tag :user_id, current_user.id %>
+        <% end %>
+
+        <%= hidden_field_tag :view, params[:view] %>
+
+        <div class="cm-form-row-2">
+          <div class="cm-form-group">
+            <label class="cm-label">
+              <i class="fas fa-calendar-alt"></i> Fecha desde
+            </label>
+            <%= date_field_tag :fecha_desde, nil, class: "cm-input", required: true %>
+          </div>
+
+          <div class="cm-form-group">
+            <label class="cm-label">
+              <i class="fas fa-calendar-alt"></i> Fecha hasta
+            </label>
+            <%= date_field_tag :fecha_hasta, nil, class: "cm-input", required: true %>
+          </div>
+        </div>
+
+        <div class="cm-form-actions">
+          <%= button_tag formtarget: "_blank", class: "cm-btn cm-btn-accent cm-btn-lg", disabled: false do %>
+            <i class="fas fa-file-pdf"></i> Generar Informe
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="cm-performance-footer">
+      <i class="fas fa-info-circle"></i>
+      El informe se generará en formato PDF en una nueva pestaña
+    </div>
+  </div>
 </div>
+
+<style>
+.cm-performance-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  min-height: calc(100vh - 200px);
+}
+
+.cm-performance-card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.cm-performance-header {
+  background: #f8f9fa;
+  padding: 20px 32px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.cm-performance-icon {
+  width: 48px;
+  height: 48px;
+  background: #e9ecef;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 18px;
+  color: #6c757d;
+}
+
+.cm-performance-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.3px;
+  color: #333;
+}
+
+.cm-performance-badge {
+  display: inline-block;
+  background: #f5a623;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cm-performance-subtitle {
+  font-size: 12px;
+  color: #6c757d;
+  margin: 10px 0 0 0;
+  line-height: 1.4;
+}
+
+.cm-performance-body {
+  padding: 28px 32px 32px;
+}
+
+.cm-performance-form .cm-form-group {
+  margin-bottom: 20px;
+}
+
+.cm-performance-form .cm-label {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.cm-performance-form .cm-label i {
+  color: #6c757d;
+  margin-right: 6px;
+  width: 16px;
+}
+
+.cm-performance-form .cm-input,
+.cm-performance-form .cm-select {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #333;
+  background: #f8f9fa;
+  border: 1px solid #e2e5ea;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.cm-performance-form .cm-input:focus,
+.cm-performance-form .cm-select:focus {
+  outline: none;
+  background: #fff;
+  border-color: #f5a623;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+}
+
+.cm-performance-form .cm-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.cm-form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cm-form-actions {
+  margin-top: 8px;
+}
+
+.cm-btn-lg {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cm-btn-accent {
+  background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cm-btn-accent:hover {
+  background: linear-gradient(135deg, #e09520 0%, #e5a82a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
+}
+
+.cm-btn-accent:active {
+  transform: translateY(0);
+}
+
+.cm-performance-footer {
+  background: #f8f9fa;
+  padding: 14px 32px;
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  border-top: 1px solid #eee;
+}
+
+.cm-performance-footer i {
+  margin-right: 6px;
+  color: #adb5bd;
+}
+
+@media (max-width: 540px) {
+  .cm-performance-container {
+    padding: 20px 16px;
+  }
+
+  .cm-performance-header,
+  .cm-performance-body {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .cm-form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

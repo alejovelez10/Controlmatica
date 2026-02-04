@@ -38,14 +38,14 @@ class CostCentersController < ApplicationController
 
   def search_autocomplete
     query = params[:q].to_s.strip
-    if query.length < 3
+    if query.length < 2
       render json: [] and return
     end
 
     term = "%#{query}%"
     results = CostCenter.where("code ILIKE ? OR description ILIKE ?", term, term)
-                        .select(:id, :code, :description)
-                        .limit(15)
+    results = results.where(customer_id: params[:customer_id]) if params[:customer_id].present?
+    results = results.select(:id, :code, :description).limit(15)
 
     render json: results.map { |cc| { id: cc.id, label: "#{cc.code} - (#{cc.description})" } }
   end

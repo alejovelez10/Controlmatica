@@ -1,261 +1,598 @@
 import React from "react";
-import { CmModal } from "../../generalcomponents/ui";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import NumberFormat from "react-number-format";
 import Select from "react-select";
 
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    fontFamily: "'Poppins', sans-serif",
+    background: "#f8f9fa",
+    borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
+    "&:hover": { borderColor: "#f5a623" },
+    borderRadius: "8px",
+    padding: "2px 4px",
     fontSize: "14px",
-    borderColor: state.isFocused ? "#2a3f53" : "#e2e5ea",
-    boxShadow: state.isFocused ? "0 0 0 3px rgba(42, 63, 83, 0.1)" : "none",
-    borderRadius: "6px",
-    minHeight: "42px",
-    "&:hover": { borderColor: "#2a3f53" },
   }),
-  placeholder: (base) => ({ ...base, color: "#9ca3af" }),
   option: (base, state) => ({
     ...base,
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: "13px",
-    backgroundColor: state.isSelected ? "#2a3f53" : state.isFocused ? "#f5f6fa" : "#fff",
-    color: state.isSelected ? "#fff" : "#212529",
+    backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
+    color: state.isSelected ? "#fff" : "#333",
+    fontSize: "14px",
   }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
 };
 
 class FormCreate extends React.Component {
-  renderField = (label, content, required) => (
-    <div className="cm-form-group">
-      <label className="cm-label">
-        {label} {required && <span style={{ color: "var(--cm-danger)" }}>*</span>}
-      </label>
-      {content}
-    </div>
-  );
-
-  renderInput = (name, label, opts = {}) => {
-    const { formValues, errorValues, onChangeForm, modeEdit } = this.props;
-    const hasError = errorValues === false && formValues[name] === "";
-    const isMoney = opts.money;
-    const disabled = opts.disabled || (formValues.has_many_quotes && modeEdit);
-
-    const inputClass = `cm-input${hasError ? " cm-input-error" : ""}`;
-
-    const input = isMoney ? (
-      <NumberFormat
-        name={name}
-        thousandSeparator={true}
-        prefix="$"
-        className={inputClass}
-        value={formValues[name]}
-        onChange={onChangeForm}
-        placeholder={opts.placeholder || label}
-        disabled={disabled}
-      />
-    ) : (
-      <input
-        name={name}
-        type={opts.type || "text"}
-        className={inputClass}
-        value={formValues[name]}
-        onChange={onChangeForm}
-        placeholder={opts.placeholder || label}
-        disabled={disabled}
-      />
-    );
-
-    return this.renderField(label, input, opts.required !== false);
-  };
-
-  renderSelect = (name, label, options, props) => {
-    const { formValues, errorValues, onChangeForm, modeEdit } = this.props;
-    const hasError = errorValues === false && formValues[name] === "";
-
-    return this.renderField(
-      label,
-      <select
-        name={name}
-        className={`cm-input${hasError ? " cm-input-error" : ""}`}
-        value={formValues[name]}
-        onChange={onChangeForm}
-        disabled={(props && props.disabled) || false}
-      >
-        <option value="">Seleccione...</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>,
-      true
-    );
-  };
-
-  renderAutocomplete = (label, value, onChange, options) => {
-    const hasError = this.props.errorValues === false && (!value || !value.value);
-    return this.renderField(
-      label,
-      <Select
-        onChange={onChange}
-        options={options}
-        value={value}
-        styles={selectStyles}
-        placeholder="Buscar..."
-        noOptionsMessage={() => "Sin resultados"}
-        className={hasError ? "cm-select-error" : ""}
-      />,
-      true
-    );
-  };
-
-  sectionDivider = (title) => (
-    <div style={{ gridColumn: "1 / -1", margin: "8px 0 4px" }}>
-      {title && (
-        <div style={{
-          fontSize: "12px",
-          fontWeight: 600,
-          color: "var(--cm-text-light)",
-          textTransform: "uppercase",
-          letterSpacing: "0.5px",
-          marginBottom: 8,
-        }}>
-          <i className="fas fa-chevron-right" style={{ fontSize: 9, marginRight: 6 }} />
-          {title}
-        </div>
-      )}
-      <hr style={{ margin: 0, borderColor: "var(--cm-border)" }} />
-    </div>
-  );
+  constructor(props) {
+    super(props);
+  }
 
   getServiceFields = () => {
-    const type = this.props.formValues.service_type;
+    const { formValues, estados, errorValues, onChangeForm } = this.props;
+    const type = formValues.service_type;
     if (!type) return null;
+
+    const hasError = (field) => errorValues === false && formValues[field] === "";
 
     return (
       <React.Fragment>
+        {/* Ingenieria */}
         {(type === "SERVICIO" || type === "PROYECTO") && (
           <React.Fragment>
-            {this.sectionDivider("Ingenieria")}
-            {this.renderInput("eng_hours", "Horas ingenieria")}
-            {this.props.estados.show_hours && this.renderInput("hour_real", "Valor hora costo", { money: true })}
-            {this.renderInput("hour_cotizada", "Hora valor cotizada", { money: true })}
+            <div className="cm-form-group">
+              <label className="cm-label">
+                <i className="fa fa-clock"></i> Horas ingenieria <span className="cm-required">*</span>
+              </label>
+              <input
+                type="text"
+                name="eng_hours"
+                value={formValues.eng_hours}
+                onChange={onChangeForm}
+                className={`cm-input ${hasError("eng_hours") ? "cm-input-error" : ""}`}
+                placeholder="Horas ingenieria"
+              />
+            </div>
+
+            {estados.show_hours && (
+              <div className="cm-form-group">
+                <label className="cm-label">
+                  <i className="fa fa-dollar-sign"></i> Valor hora costo <span className="cm-required">*</span>
+                </label>
+                <NumberFormat
+                  name="hour_real"
+                  thousandSeparator={true}
+                  prefix={"$"}
+                  className={`cm-input ${hasError("hour_real") ? "cm-input-error" : ""}`}
+                  value={formValues.hour_real}
+                  onChange={onChangeForm}
+                  placeholder="Valor hora costo"
+                />
+              </div>
+            )}
+
+            <div className="cm-form-group">
+              <label className="cm-label">
+                <i className="fa fa-dollar-sign"></i> Hora valor cotizada <span className="cm-required">*</span>
+              </label>
+              <NumberFormat
+                name="hour_cotizada"
+                thousandSeparator={true}
+                prefix={"$"}
+                className={`cm-input ${hasError("hour_cotizada") ? "cm-input-error" : ""}`}
+                value={formValues.hour_cotizada}
+                onChange={onChangeForm}
+                placeholder="Hora valor cotizada"
+              />
+            </div>
           </React.Fragment>
         )}
 
+        {/* Tableristas */}
         {type === "PROYECTO" && (
           <React.Fragment>
-            {this.sectionDivider("Tableristas")}
-            {this.renderInput("hours_contractor", "Horas tablerista")}
-            {this.props.estados.show_hours && this.renderInput("hours_contractor_real", "Valor hora costo", { money: true })}
-            {this.renderInput("hours_contractor_invoices", "Valor hora cotizada", { money: true })}
+            <div className="cm-form-group">
+              <label className="cm-label">
+                <i className="fa fa-clock"></i> Horas tablerista <span className="cm-required">*</span>
+              </label>
+              <input
+                type="text"
+                name="hours_contractor"
+                value={formValues.hours_contractor}
+                onChange={onChangeForm}
+                className={`cm-input ${hasError("hours_contractor") ? "cm-input-error" : ""}`}
+                placeholder="Horas tablerista"
+              />
+            </div>
+
+            {estados.show_hours && (
+              <div className="cm-form-group">
+                <label className="cm-label">
+                  <i className="fa fa-dollar-sign"></i> Valor hora costo <span className="cm-required">*</span>
+                </label>
+                <NumberFormat
+                  name="hours_contractor_real"
+                  thousandSeparator={true}
+                  prefix={"$"}
+                  className={`cm-input ${hasError("hours_contractor_real") ? "cm-input-error" : ""}`}
+                  value={formValues.hours_contractor_real}
+                  onChange={onChangeForm}
+                  placeholder="Valor hora costo"
+                />
+              </div>
+            )}
+
+            <div className="cm-form-group">
+              <label className="cm-label">
+                <i className="fa fa-dollar-sign"></i> Valor hora cotizada <span className="cm-required">*</span>
+              </label>
+              <NumberFormat
+                name="hours_contractor_invoices"
+                thousandSeparator={true}
+                prefix={"$"}
+                className={`cm-input ${hasError("hours_contractor_invoices") ? "cm-input-error" : ""}`}
+                value={formValues.hours_contractor_invoices}
+                onChange={onChangeForm}
+                placeholder="Valor hora cotizada"
+              />
+            </div>
           </React.Fragment>
+        )}
+
+        {/* Desplazamiento */}
+        {(type === "SERVICIO" || type === "PROYECTO") && (
+          <React.Fragment>
+            <div className="cm-form-group">
+              <label className="cm-label">
+                <i className="fa fa-car"></i> Horas de desplazamiento <span className="cm-required">*</span>
+              </label>
+              <input
+                type="number"
+                name="displacement_hours"
+                value={formValues.displacement_hours}
+                onChange={onChangeForm}
+                className={`cm-input ${hasError("displacement_hours") ? "cm-input-error" : ""}`}
+                placeholder="Horas de desplazamiento"
+              />
+            </div>
+
+            {(type === "SERVICIO" || estados.show_hours) && (
+              <div className="cm-form-group">
+                <label className="cm-label">
+                  <i className="fa fa-dollar-sign"></i> Valor hora desplazamiento <span className="cm-required">*</span>
+                </label>
+                <NumberFormat
+                  name="value_displacement_hours"
+                  thousandSeparator={true}
+                  prefix={"$"}
+                  className={`cm-input ${hasError("value_displacement_hours") ? "cm-input-error" : ""}`}
+                  value={formValues.value_displacement_hours}
+                  onChange={onChangeForm}
+                  placeholder="Valor hora desplazamiento"
+                />
+              </div>
+            )}
+          </React.Fragment>
+        )}
+
+        {/* Valores */}
+        {(type === "VENTA" || type === "PROYECTO") && (
+          <div className="cm-form-group">
+            <label className="cm-label">
+              <i className="fa fa-boxes"></i> Valor materiales <span className="cm-required">*</span>
+            </label>
+            <NumberFormat
+              name="materials_value"
+              thousandSeparator={true}
+              prefix={"$"}
+              className={`cm-input ${hasError("materials_value") ? "cm-input-error" : ""}`}
+              value={formValues.materials_value}
+              onChange={onChangeForm}
+              placeholder="Valor materiales"
+            />
+          </div>
         )}
 
         {(type === "SERVICIO" || type === "PROYECTO") && (
-          <React.Fragment>
-            {this.sectionDivider("Desplazamiento")}
-            {this.renderInput("displacement_hours", "Horas de desplazamiento", { type: "number" })}
-            {(type === "SERVICIO" || this.props.estados.show_hours) && this.renderInput("value_displacement_hours", "Valor hora desplazamiento", { money: true })}
-          </React.Fragment>
+          <div className="cm-form-group">
+            <label className="cm-label">
+              <i className="fa fa-utensils"></i> Valor viaticos <span className="cm-required">*</span>
+            </label>
+            <NumberFormat
+              name="viatic_value"
+              thousandSeparator={true}
+              prefix={"$"}
+              className={`cm-input ${hasError("viatic_value") ? "cm-input-error" : ""}`}
+              value={formValues.viatic_value}
+              onChange={onChangeForm}
+              placeholder="Valor viaticos"
+            />
+          </div>
         )}
 
-        {this.sectionDivider("Valores")}
-
-        {(type === "VENTA" || type === "PROYECTO") && this.renderInput("materials_value", "Valor materiales", { money: true })}
-        {(type === "SERVICIO" || type === "PROYECTO") && this.renderInput("viatic_value", "Valor viaticos", { money: true })}
-        {this.renderInput("quotation_value", "Total cotizacion", { money: true })}
+        <div className="cm-form-group">
+          <label className="cm-label">
+            <i className="fa fa-calculator"></i> Total cotizacion <span className="cm-required">*</span>
+          </label>
+          <NumberFormat
+            name="quotation_value"
+            thousandSeparator={true}
+            prefix={"$"}
+            className={`cm-input ${hasError("quotation_value") ? "cm-input-error" : ""}`}
+            value={formValues.quotation_value}
+            onChange={onChangeForm}
+            placeholder="Total cotizacion"
+          />
+        </div>
       </React.Fragment>
     );
   };
 
   render() {
-    const { modal, toggle, titulo, submit, FormSubmit, isLoading, nameSubmit, errorValues } = this.props;
-    const isEdit = this.props.modeEdit;
-    const icon = isEdit ? "fas fa-edit" : "fas fa-folder-plus";
+    const {
+      modal,
+      toggle,
+      titulo,
+      submit,
+      FormSubmit,
+      isLoading,
+      nameSubmit,
+      errorValues,
+      formValues,
+      formAutocomplete,
+      formAutocompleteContact,
+      formAutocompleteUserOwner,
+      onChangeAutocomplete,
+      onChangeAutocompleteContact,
+      onChangeAutocompleteUserOwner,
+      onChangeForm,
+      clientes,
+      contacto,
+      users,
+      modeEdit,
+    } = this.props;
 
-    const footer = (
-      <React.Fragment>
-        <button className="cm-btn cm-btn-outline" onClick={() => toggle()}>
-          Cancelar
-        </button>
-        <button className="cm-btn cm-btn-accent" onClick={submit} disabled={isLoading}>
-          {isLoading ? (
-            <React.Fragment><i className="fas fa-spinner fa-spin" /> Procesando...</React.Fragment>
-          ) : (
-            <React.Fragment><i className="fas fa-save" /> {nameSubmit}</React.Fragment>
-          )}
-        </button>
-      </React.Fragment>
-    );
+    const hasError = (field) => errorValues === false && formValues[field] === "";
+    const hasErrorAutocomplete = (value) => errorValues === false && (!value || !value.value);
 
     return (
-      <CmModal
-        isOpen={modal}
-        toggle={() => toggle()}
-        title={<span><i className={icon} style={{ marginRight: 8 }} />{titulo}</span>}
-        size="lg"
-        footer={footer}
-      >
-        <form onSubmit={FormSubmit}>
-          <div className="cm-form-row" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
-            {this.renderAutocomplete(
-              "Cliente",
-              this.props.formAutocomplete,
-              this.props.onChangeAutocomplete,
-              this.props.clientes
-            )}
-            {this.renderAutocomplete(
-              "Contacto",
-              this.props.formAutocompleteContact,
-              this.props.onChangeAutocompleteContact,
-              this.props.contacto
-            )}
-            {this.renderSelect(
-              "service_type",
-              "Tipo de Servicio",
-              [
-                { value: "SERVICIO", label: "SERVICIO" },
-                { value: "VENTA", label: "VENTA" },
-                { value: "PROYECTO", label: "PROYECTO" },
-              ],
-              { disabled: isEdit }
-            )}
+      <React.Fragment>
+        <Modal
+          returnFocusAfterClose={true}
+          isOpen={modal}
+          className="modal-dialog-centered modal-lg"
+          toggle={toggle}
+          backdrop="static"
+        >
+          <ModalHeader className="cm-modal-header" toggle={toggle}>
+            <i className="fa fa-building cm-header-icon"></i>
+            {titulo}
+          </ModalHeader>
 
-            <div className="cm-form-group" style={{ gridColumn: "1 / -1" }}>
-              <label className="cm-label">Descripcion</label>
-              <textarea
-                name="description"
-                className="cm-input"
-                value={this.props.formValues.description}
-                onChange={this.props.onChangeForm}
-                rows="3"
-                placeholder="Descripcion del centro de costo"
-                style={{ resize: "vertical" }}
-              />
-            </div>
+          <form onSubmit={FormSubmit}>
+            <ModalBody className="cm-modal-body">
+              <div className="cm-form-grid-2">
+                {/* Cliente */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-user-tie"></i> Cliente <span className="cm-required">*</span>
+                  </label>
+                  <Select
+                    onChange={onChangeAutocomplete}
+                    options={clientes}
+                    value={formAutocomplete}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    placeholder="Buscar cliente..."
+                    noOptionsMessage={() => "Sin resultados"}
+                    className={hasErrorAutocomplete(formAutocomplete) ? "cm-select-error" : ""}
+                  />
+                </div>
 
-            {this.renderInput("start_date", "Fecha de inicio", { type: "date" })}
-            {this.renderInput("end_date", "Fecha final", { type: "date" })}
-            {this.renderInput("quotation_number", "Numero de cotizacion")}
+                {/* Contacto */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-address-book"></i> Contacto <span className="cm-required">*</span>
+                  </label>
+                  <Select
+                    onChange={onChangeAutocompleteContact}
+                    options={contacto}
+                    value={formAutocompleteContact}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    placeholder="Buscar contacto..."
+                    noOptionsMessage={() => "Sin resultados"}
+                    className={hasErrorAutocomplete(formAutocompleteContact) ? "cm-select-error" : ""}
+                  />
+                </div>
 
-            {this.renderAutocomplete(
-              "Propietario",
-              this.props.formAutocompleteUserOwner,
-              this.props.onChangeAutocompleteUserOwner,
-              this.props.users
-            )}
+                {/* Tipo de Servicio */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-cogs"></i> Tipo de Servicio <span className="cm-required">*</span>
+                  </label>
+                  <select
+                    name="service_type"
+                    value={formValues.service_type}
+                    onChange={onChangeForm}
+                    className={`cm-input ${hasError("service_type") ? "cm-input-error" : ""}`}
+                    disabled={modeEdit}
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="SERVICIO">SERVICIO</option>
+                    <option value="VENTA">VENTA</option>
+                    <option value="PROYECTO">PROYECTO</option>
+                  </select>
+                </div>
 
-            {this.getServiceFields()}
-          </div>
+                {/* Propietario */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-user"></i> Propietario <span className="cm-required">*</span>
+                  </label>
+                  <Select
+                    onChange={onChangeAutocompleteUserOwner}
+                    options={users}
+                    value={formAutocompleteUserOwner}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    placeholder="Buscar propietario..."
+                    noOptionsMessage={() => "Sin resultados"}
+                    className={hasErrorAutocomplete(formAutocompleteUserOwner) ? "cm-select-error" : ""}
+                  />
+                </div>
 
-          {errorValues === false && (
-            <div className="cm-form-errors" style={{ marginTop: 16 }}>
-              <ul>
-                <li>Debes completar todos los campos requeridos</li>
-              </ul>
-            </div>
-          )}
-        </form>
-      </CmModal>
+                {/* Descripcion - full width */}
+                <div className="cm-form-group cm-full-width">
+                  <label className="cm-label">
+                    <i className="fa fa-align-left"></i> Descripcion
+                  </label>
+                  <textarea
+                    name="description"
+                    className="cm-input"
+                    value={formValues.description}
+                    onChange={onChangeForm}
+                    rows="3"
+                    placeholder="Descripcion del centro de costo"
+                  />
+                </div>
+
+                {/* Fecha de inicio */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-calendar"></i> Fecha de inicio <span className="cm-required">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="start_date"
+                    value={formValues.start_date}
+                    onChange={onChangeForm}
+                    className={`cm-input ${hasError("start_date") ? "cm-input-error" : ""}`}
+                  />
+                </div>
+
+                {/* Fecha final */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-calendar-check"></i> Fecha final <span className="cm-required">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="end_date"
+                    value={formValues.end_date}
+                    onChange={onChangeForm}
+                    className={`cm-input ${hasError("end_date") ? "cm-input-error" : ""}`}
+                  />
+                </div>
+
+                {/* Numero de cotizacion */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-hashtag"></i> Numero de cotizacion <span className="cm-required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="quotation_number"
+                    value={formValues.quotation_number}
+                    onChange={onChangeForm}
+                    className={`cm-input ${hasError("quotation_number") ? "cm-input-error" : ""}`}
+                    placeholder="Numero de cotizacion"
+                  />
+                </div>
+
+                {/* Service-specific fields */}
+                {this.getServiceFields()}
+              </div>
+
+              {errorValues === false && (
+                <div className="cm-alert cm-alert-error">
+                  <i className="fa fa-exclamation-circle"></i>
+                  <span>Debes de completar todos los campos requeridos</span>
+                </div>
+              )}
+            </ModalBody>
+
+            <ModalFooter className="cm-modal-footer">
+              <button type="button" className="cm-btn cm-btn-cancel" onClick={() => toggle()}>
+                <i className="fa fa-times"></i> Cancelar
+              </button>
+              <button type="submit" className="cm-btn cm-btn-submit" onClick={submit} disabled={isLoading}>
+                {isLoading ? (
+                  <React.Fragment>
+                    <i className="fas fa-spinner fa-spin"></i> Procesando...
+                  </React.Fragment>
+                ) : (
+                  <React.Fragment>
+                    <i className="fas fa-save"></i> {nameSubmit}
+                  </React.Fragment>
+                )}
+              </button>
+            </ModalFooter>
+          </form>
+        </Modal>
+
+        <style>{`
+          .cm-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-radius: 8px 8px 0 0;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: none;
+          }
+          .cm-modal-header .close {
+            color: #fff;
+            opacity: 0.8;
+            text-shadow: none;
+          }
+          .cm-modal-header .close:hover {
+            opacity: 1;
+          }
+          .cm-header-icon {
+            margin-right: 10px;
+            font-size: 18px;
+          }
+          .cm-modal-body {
+            padding: 24px;
+            background: #fff;
+            max-height: 70vh;
+            overflow-y: auto;
+          }
+          .cm-form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+          }
+          @media (max-width: 576px) {
+            .cm-form-grid-2 {
+              grid-template-columns: 1fr;
+            }
+          }
+          .cm-form-group {
+            display: flex;
+            flex-direction: column;
+          }
+          .cm-form-group.cm-full-width {
+            grid-column: 1 / -1;
+          }
+          .cm-label {
+            font-size: 13px;
+            font-weight: 400;
+            color: #495057;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+          .cm-label i {
+            color: #667eea;
+            font-size: 12px;
+          }
+          .cm-required {
+            color: #dc3545;
+            font-weight: bold;
+          }
+          .cm-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 1px solid #e2e5ea;
+            border-radius: 8px;
+            background: #f8f9fa;
+            transition: all 0.2s ease;
+          }
+          .cm-input:focus {
+            outline: none;
+            border-color: #f5a623;
+            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+            background: #fff;
+          }
+          .cm-input::placeholder {
+            color: #adb5bd;
+          }
+          .cm-input:disabled {
+            background: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.7;
+          }
+          .cm-input-error {
+            border-color: #dc3545;
+            background: #fff5f5;
+          }
+          .cm-input-error:focus {
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+          }
+          .cm-select-error .css-13cymwt-control,
+          .cm-select-error .css-t3ipsp-control {
+            border-color: #dc3545;
+            background: #fff5f5;
+          }
+          textarea.cm-input {
+            resize: vertical;
+            min-height: 80px;
+          }
+          .cm-alert {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 14px;
+          }
+          .cm-alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+          }
+          .cm-alert-error i {
+            font-size: 16px;
+          }
+          .cm-modal-footer {
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-radius: 0 0 8px 8px;
+          }
+          .cm-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          .cm-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+          .cm-btn-cancel {
+            background: #fff;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+          }
+          .cm-btn-cancel:hover:not(:disabled) {
+            background: #f8f9fa;
+            border-color: #c6ccd2;
+          }
+          .cm-btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+          }
+          .cm-btn-submit:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+          }
+        `}</style>
+      </React.Fragment>
     );
   }
 }
