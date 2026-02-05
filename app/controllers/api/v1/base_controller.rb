@@ -6,7 +6,7 @@ module Api
       private
 
       def authenticate_api_key!
-        api_key = ENV["API_KEY"]
+        api_key = ENV["CONTROLMATICA_API_KEY"]
         provided_key = request.headers["X-Api-Key"]
 
         unless api_key.present? && provided_key.present? && ActiveSupport::SecurityUtils.secure_compare(api_key, provided_key)
