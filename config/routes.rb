@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  namespace :api do
+    namespace :v1 do
+      resources :cost_centers, only: [:index]
+    end
+  end
+
   get "commissions/index"
   get "commission_relations/index"
   get "get_show_center/:id", to: "cost_centers#get_show_center"
