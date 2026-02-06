@@ -2,6 +2,9 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :cost_centers, only: [:index]
+      resources :contractors, only: [:index]
+      resources :materials, only: [:index]
+      resources :reports, only: [:index]
     end
   end
 
