@@ -175,7 +175,7 @@ class CostCentersController < ApplicationController
 
   def customer_cost_center
     customer = Customer.find(params[:id])
-    centro = CostCenter.where(customer_id: customer.id).where("start_date >= ?", Date.new(2025, 1, 1))
+    centro = CostCenter.where(customer_id: customer.id).where("start_date >= ?", Date.new(2023, 1, 1))
     report = Report.where(customer_id: customer.id)
 
     render :json => {

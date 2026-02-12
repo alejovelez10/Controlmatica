@@ -161,7 +161,7 @@ module ApplicationHelper
   end
 
   def get_cost_center
-    CostCenter.where("start_date >= ?", Date.new(2025, 1, 1))
+    CostCenter.where("start_date >= ?", Date.new(2023, 1, 1))
   end
 
   def get_provider
@@ -194,7 +194,7 @@ module ApplicationHelper
   end
 
   def get_cost_center_select
-    cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO").where("start_date >= ?", Date.new(2025, 1, 1))
+    cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO").where("start_date >= ?", Date.new(2023, 1, 1))
     cost_centers.collect do |cost_center|
       {
         :value => cost_center.id,
@@ -214,15 +214,15 @@ module ApplicationHelper
   end
 
   def get_center_expenses
-    CostCenter.where.not(execution_state: "FINALIZADO").where.not(service_type: "VENTA").where("start_date >= ?", Date.new(2025, 1, 1))
+    CostCenter.where.not(execution_state: "FINALIZADO").where.not(service_type: "VENTA").where("start_date >= ?", Date.new(2023, 1, 1))
   end
 
   def get_center_materials
-    CostCenter.where.not(sales_state: "CERRADO").where.not(service_type: "SERVICIO").where("start_date >= ?", Date.new(2025, 1, 1))
+    CostCenter.where.not(sales_state: "CERRADO").where.not(service_type: "SERVICIO").where("start_date >= ?", Date.new(2023, 1, 1))
   end
 
   def get_center_tableristas
-    CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO").where("start_date >= ?", Date.new(2025, 1, 1))
+    CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO").where("start_date >= ?", Date.new(2023, 1, 1))
   end
 
   def get_register_edit

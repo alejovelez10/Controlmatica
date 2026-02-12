@@ -222,7 +222,7 @@ class CustomerReportsController < ApplicationController
 
   # GET /customer_reports/1/edit
   def edit
-    @centro = CostCenter.where(customer_id: @customer_report.customer.id).where("start_date >= ?", Date.new(2025, 1, 1))
+    @centro = CostCenter.where(customer_id: @customer_report.customer.id).where("start_date >= ?", Date.new(2023, 1, 1))
     @contacts_user = @customer_report.customer.contacts
     #@reportes = @customer_repore.Report.
   end

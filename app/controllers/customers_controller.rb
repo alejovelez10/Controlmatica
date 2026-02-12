@@ -148,7 +148,7 @@ class CustomersController < ApplicationController
 
 
   def customer_user
-    render :json => @centro = CostCenter.where(customer_id: @customer.id).where("start_date >= ?", Date.new(2025, 1, 1)).filter
+    render :json => @centro = CostCenter.where(customer_id: @customer.id).where("start_date >= ?", Date.new(2023, 1, 1)).filter
   end
 
   def get_client
