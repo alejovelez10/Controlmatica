@@ -1,3 +1,3 @@
 <%= javascript_pack_tag 'Reports' %> 
-<%= react_component('Reports', usuario: current_user, users: User.all, reports: get_reports ,clientes: get_customer, estados: @estados, cost_centers: CostCenter.all, rol: current_user.rol) %>
+<%= react_component('Reports', usuario: current_user, users: User.all, reports: get_reports ,clientes: get_customer, estados: @estados, cost_centers: CostCenter.where("start_date >= ?", Date.new(2025, 1, 1)), rol: current_user.rol) %>
 

@@ -161,7 +161,7 @@ module ApplicationHelper
   end
 
   def get_cost_center
-    CostCenter.all
+    CostCenter.where("start_date >= ?", Date.new(2025, 1, 1))
   end
 
   def get_provider
@@ -194,7 +194,7 @@ module ApplicationHelper
   end
 
   def get_cost_center_select
-    cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO")
+    cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO").where("start_date >= ?", Date.new(2025, 1, 1))
     cost_centers.collect do |cost_center|
       {
         :value => cost_center.id,
@@ -214,23 +214,23 @@ module ApplicationHelper
   end
 
   def get_center_expenses
-    CostCenter.where.not(execution_state: "FINALIZADO").where.not(service_type: "VENTA")
+    CostCenter.where.not(execution_state: "FINALIZADO").where.not(service_type: "VENTA").where("start_date >= ?", Date.new(2025, 1, 1))
   end
 
   def get_center_materials
-    CostCenter.where.not(sales_state: "CERRADO").where.not(service_type: "SERVICIO")
+    CostCenter.where.not(sales_state: "CERRADO").where.not(service_type: "SERVICIO").where("start_date >= ?", Date.new(2025, 1, 1))
   end
 
   def get_center_tableristas
-    CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO")
+    CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO").where("start_date >= ?", Date.new(2025, 1, 1))
   end
 
   def get_register_edit
-    RegisterEdit.where(state: "pending").order(created_at: :desc)
+    RegisterEdit.where(state: "pending").order(created_at: :desc).limit(100)
   end
 
   def get_notification_alert
-    NotificationAlert.where(state: false).order(date_update: :desc)
+    NotificationAlert.includes(:cost_center).where(state: false).order(date_update: :desc).limit(100)
   end
 
   def get_date(fecha)
