@@ -1,7 +1,7 @@
 import React from 'react';
 import NumberFormat from 'react-number-format';
 import FormCreate from "./FormCreate";
-import Swal from 'sweetalert2/dist/sweetalert2.js';
+import Swal from 'sweetalert2';
 import TabContentShow from '../ShowConstCenter/TabContentShow';
 import Calendar from '../Shifts/Calendar';
 

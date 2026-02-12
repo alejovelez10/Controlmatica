@@ -513,45 +513,45 @@ module ApplicationHelper
   def recalculate_cost_center(cost, module_is = "nt")
     @cost_center = CostCenter.find(cost)
     ing_horas_eje = @cost_center.reports.sum(:working_time)
-    ing_horas_porcentaje = @cost_center.eng_hours > 0 ? (((ing_horas_eje.to_f / @cost_center.eng_hours)) * 100).round(1) : 0
+    ing_horas_porcentaje = @cost_center.eng_hours.to_f > 0 ? (((ing_horas_eje.to_f / @cost_center.eng_hours.to_f)) * 100).round(1) : 0
 
     #desplazamiento
-    cotizado_desplazamiento = @cost_center.value_displacement_hours * @cost_center.displacement_hours
+    cotizado_desplazamiento = @cost_center.value_displacement_hours.to_f * @cost_center.displacement_hours.to_f
     ejecutado_desplazamiento = @cost_center.reports.sum(:value_displacement_hours)
     desp_horas_eje = @cost_center.reports.sum(:displacement_hours)
-    desp_horas_porcentaje = @cost_center.displacement_hours > 0 ? (((desp_horas_eje.to_f / @cost_center.displacement_hours)) * 100).round(1) : "N/A"
+    desp_horas_porcentaje = @cost_center.displacement_hours.to_f > 0 ? (((desp_horas_eje.to_f / @cost_center.displacement_hours.to_f)) * 100).round(1) : "N/A"
 
     #ingenieria costos
-    ing_costo_cotizado = (@cost_center.hour_cotizada * @cost_center.eng_hours).round(1) + cotizado_desplazamiento
-    ing_costo_real = (@cost_center.hour_real * ing_horas_eje).round(1) + ejecutado_desplazamiento
-    ing_costo_porcentaje = ing_costo_cotizado > 0 ? (((1 - (ing_costo_real.to_f / ing_costo_cotizado)) * 100)).round(1) : 0
+    ing_costo_cotizado = (@cost_center.hour_cotizada.to_f * @cost_center.eng_hours.to_f).round(1) + cotizado_desplazamiento
+    ing_costo_real = (@cost_center.hour_real.to_f * ing_horas_eje.to_f).round(1) + ejecutado_desplazamiento
+    ing_costo_porcentaje = ing_costo_cotizado.to_f > 0 ? (((1 - (ing_costo_real.to_f / ing_costo_cotizado.to_f)) * 100)).round(1) : 0
 
     #contractor
     cont_horas_eje = @cost_center.contractors.sum(:hours)
     puts cont_horas_eje
     puts "holaaaaaa"
-    cont_horas_porcentaje = @cost_center.hours_contractor > 0 ? (((cont_horas_eje.to_f / @cost_center.hours_contractor)) * 100).round(1) : 0
-    puts cont_horas_eje.to_f / @cost_center.hours_contractor
+    cont_horas_porcentaje = @cost_center.hours_contractor.to_f > 0 ? (((cont_horas_eje.to_f / @cost_center.hours_contractor.to_f)) * 100).round(1) : 0
+    puts cont_horas_eje.to_f / @cost_center.hours_contractor.to_f
     puts cont_horas_porcentaje
-    cont_costo_cotizado = (@cost_center.hours_contractor_invoices * @cost_center.hours_contractor).round(1)
-    cont_costo_real = (@cost_center.hours_contractor_real * cont_horas_eje).round(1)
-    cont_costo_porcentaje = cont_costo_cotizado > 0 ? (((1 - (cont_costo_real.to_f / cont_costo_cotizado)) * 100)).round(1) : 0
+    cont_costo_cotizado = (@cost_center.hours_contractor_invoices.to_f * @cost_center.hours_contractor.to_f).round(1)
+    cont_costo_real = (@cost_center.hours_contractor_real.to_f * cont_horas_eje.to_f).round(1)
+    cont_costo_porcentaje = cont_costo_cotizado.to_f > 0 ? (((1 - (cont_costo_real.to_f / cont_costo_cotizado.to_f)) * 100)).round(1) : 0
 
     mat_costo_real = @cost_center.materials.sum(:amount)
-    mat_costo_porcentaje = (@cost_center.materials_value != nil ? @cost_center.materials_value : 0) > 0 ? ((1 - (mat_costo_real.to_f / @cost_center.materials_value)) * 100).round(1) : 0
+    mat_costo_porcentaje = @cost_center.materials_value.to_f > 0 ? ((1 - (mat_costo_real.to_f / @cost_center.materials_value.to_f)) * 100).round(1) : 0
 
     viat_costo_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_value)
-    viat_costo_porcentaje = @cost_center.viatic_value > 0 ? ((viat_costo_real.to_f / @cost_center.viatic_value) * 100).round(1) : 0
+    viat_costo_porcentaje = @cost_center.viatic_value.to_f > 0 ? ((viat_costo_real.to_f / @cost_center.viatic_value.to_f) * 100).round(1) : 0
 
     fact_real = @cost_center.customer_invoices.sum(:invoice_value)
-    fact_porcentaje = @cost_center.quotation_value > 0 ? ((fact_real.to_f / @cost_center.quotation_value) * 100).round(1) : 0
+    fact_porcentaje = @cost_center.quotation_value.to_f > 0 ? ((fact_real.to_f / @cost_center.quotation_value.to_f) * 100).round(1) : 0
 
     gastos = ing_costo_real + cont_costo_real + mat_costo_real + viat_costo_real
     aiu = fact_real - gastos
-    aiu_percent = fact_real > 0 ? (((aiu.to_f / fact_real.to_f)) * 100).round(1) : 0
+    aiu_percent = fact_real.to_f > 0 ? (((aiu.to_f / fact_real.to_f)) * 100).round(1) : 0
 
-    aiu_real = @cost_center.quotation_value - gastos
-    aiu_percent_real = @cost_center.quotation_value > 0 ? (((aiu_real.to_f / @cost_center.quotation_value.to_f)) * 100).round(1) : 0
+    aiu_real = @cost_center.quotation_value.to_f - gastos
+    aiu_percent_real = @cost_center.quotation_value.to_f > 0 ? (((aiu_real.to_f / @cost_center.quotation_value.to_f)) * 100).round(1) : 0
 
     @cost_center.update(
       ing_horas_eje: ing_horas_eje,

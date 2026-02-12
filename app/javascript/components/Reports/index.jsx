@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import NumberFormat from "react-number-format";
 import Select from "react-select";
 import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui";
@@ -8,6 +8,16 @@ import FormCreate from "./FormCreate";
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute("content") : "";
+}
+
+function formatDate(date) {
+  if (!date) return "";
+  var d = new Date(date);
+  var months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  var hours = d.getHours();
+  var minutes = d.getMinutes();
+  var timeValue = hours + (minutes < 10 ? ":0" + minutes : ":" + minutes);
+  return months[d.getMonth()] + " " + d.getDate() + " del " + d.getFullYear() + " / " + timeValue;
 }
 
 var EMPTY_FORM = {
@@ -37,7 +47,7 @@ var EMPTY_CONTACT = {
 var filterSelectStyles = {
   control: function (base, state) {
     return Object.assign({}, base, {
-      background: "#f8f9fa",
+      background: "#fcfcfd",
       borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
       boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
       "&:hover": { borderColor: "#f5a623" },
@@ -173,6 +183,30 @@ class index extends React.Component {
           return r.report_sate ? "Aprobado" : "Sin Aprobar";
         },
       },
+      {
+        key: "created_at",
+        label: "Fecha de creación",
+        width: "180px",
+        sortable: false,
+        render: function (r) {
+          return React.createElement("div", null,
+            React.createElement("div", null, formatDate(r.created_at)),
+            React.createElement("div", { style: { fontSize: "12px", color: "#6b7280" } }, r.user ? r.user.names : "")
+          );
+        },
+      },
+      {
+        key: "updated_at",
+        label: "Ultima actualización",
+        width: "180px",
+        sortable: false,
+        render: function (r) {
+          return React.createElement("div", null,
+            React.createElement("div", null, formatDate(r.updated_at)),
+            React.createElement("div", { style: { fontSize: "12px", color: "#6b7280" } }, r.last_user_edited ? r.last_user_edited.names : (r.user ? r.user.names : ""))
+          );
+        },
+      },
     ];
   }
 
@@ -275,6 +309,27 @@ class index extends React.Component {
           self.setState({
             costCenterOptions: data.map(function (d) { return { value: d.id, label: d.label }; }),
             costCenterLoading: false,
+          });
+        });
+    }, 300);
+  }.bind(this);
+
+  // Búsqueda de centro de costo para el formulario de creación
+  handleFormCostCenterSearch = function (inputValue) {
+    var self = this;
+    if (!inputValue || inputValue.length < 3) {
+      self.setState({ dataCostCenter: [] });
+      return;
+    }
+    if (self._formCcSearchTimer) clearTimeout(self._formCcSearchTimer);
+    self._formCcSearchTimer = setTimeout(function () {
+      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue), {
+        headers: { "X-CSRF-Token": csrfToken() },
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          self.setState({
+            dataCostCenter: data.map(function (d) { return { value: d.id, label: d.label }; }),
           });
         });
     }, 300);
@@ -490,11 +545,61 @@ class index extends React.Component {
   }.bind(this);
 
   handleChangeAutocompleteCentro = function (selectedOptionCentro) {
-    var newForm = Object.assign({}, this.state.form, { cost_center_id: selectedOptionCentro.value });
-    this.setState({
-      selectedOptionCentro: selectedOptionCentro,
-      form: newForm,
-    });
+    var self = this;
+    if (!selectedOptionCentro) {
+      self.setState({
+        selectedOptionCentro: { value: "", label: "Centro de costo" },
+        selectedOption: { value: "", label: "Buscar cliente" },
+        selectedOptionContact: { value: "", label: "Seleccionar Contacto" },
+        dataContact: [],
+        form: Object.assign({}, self.state.form, { cost_center_id: "", customer_id: "", contact_id: "" }),
+      });
+      return;
+    }
+
+    // Cargar datos del centro de costo para auto-llenar cliente, contacto y responsable
+    fetch("/get_cost_center_details/" + selectedOptionCentro.value)
+      .then(function (response) { return response.json(); })
+      .then(function (costCenter) {
+        var newForm = Object.assign({}, self.state.form, {
+          cost_center_id: selectedOptionCentro.value,
+          customer_id: costCenter.customer_id || "",
+          contact_id: costCenter.contact_id || "",
+          report_execute_id: costCenter.user_owner_id || self.state.form.report_execute_id,
+        });
+
+        // Actualizar cliente seleccionado
+        var customerOption = { value: "", label: "Buscar cliente" };
+        if (costCenter.customer) {
+          customerOption = { value: costCenter.customer.id, label: costCenter.customer.name };
+        }
+
+        // Actualizar contacto seleccionado
+        var contactOption = { value: "", label: "Seleccionar Contacto" };
+        if (costCenter.contact) {
+          contactOption = { value: costCenter.contact.id, label: costCenter.contact.name };
+        }
+
+        // Cargar lista de contactos del cliente
+        if (costCenter.customer_id) {
+          fetch("/get_client/" + costCenter.customer_id)
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+              var contacts = data.map(function (item) {
+                return { label: item.name, value: item.id };
+              });
+              self.setState({ dataContact: contacts });
+            });
+        }
+
+        self.setState({
+          selectedOptionCentro: selectedOptionCentro,
+          selectedOption: customerOption,
+          selectedOptionContact: contactOption,
+          form: newForm,
+          formContact: Object.assign({}, self.state.formContact, { customer_id: costCenter.customer_id || "" }),
+        });
+      });
   }.bind(this);
 
   // ─── Submit ───
@@ -525,7 +630,7 @@ class index extends React.Component {
         self.setState({ modalOpen: false, saving: false });
         Swal.fire({
           position: "center",
-          type: data.type,
+          icon: data.type,
           title: data.message,
           showConfirmButton: false,
           timer: 1500,
@@ -551,7 +656,7 @@ class index extends React.Component {
       .then(function (data) {
         Swal.fire({
           position: "center",
-          type: data.type,
+          icon: data.type,
           title: data.message,
           showConfirmButton: false,
           timer: 1500,
@@ -867,6 +972,7 @@ class index extends React.Component {
         // Autocomplete centro de costo
         centro: self.state.dataCostCenter,
         onChangeAutocompleteCentro: self.handleChangeAutocompleteCentro,
+        onSearchCentro: self.handleFormCostCenterSearch,
         formAutocompleteCentro: self.state.selectedOptionCentro,
         rol: self.props.rol,
       }) : null

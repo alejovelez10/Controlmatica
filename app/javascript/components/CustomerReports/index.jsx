@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import Select from "react-select";
 import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
 import FormCreate from "../CustomerReports/FormCreate";
@@ -68,8 +68,6 @@ class index extends React.Component {
       selectedOptionReports: { report_ids: "", label: "Reportes" },
       clients: [],
       dataCostCenter: [],
-      formCostCenterOptions: [],
-      formCostCenterLoading: false,
       dataReports: [],
       dataContact: [],
       dataReportEdit: [],
@@ -223,7 +221,7 @@ class index extends React.Component {
 
   handleFilterCostCenterSearch = function(inputValue) {
     var self = this;
-    if (!inputValue || inputValue.length < 2) { self.setState({ filterCostCenterOptions: [] }); return; }
+    if (!inputValue || inputValue.length < 3) { self.setState({ filterCostCenterOptions: [] }); return; }
     if (self._ccTimer) clearTimeout(self._ccTimer);
     self._ccTimer = setTimeout(function() {
       self.setState({ filterCostCenterLoading: true });
@@ -259,7 +257,7 @@ class index extends React.Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "Al aceptar se enviará el correo al cliente",
-      type: "info",
+      icon: "info",
       showCancelButton: true,
       confirmButtonColor: "#28a745",
       cancelButtonColor: "#dc3545",
@@ -289,15 +287,20 @@ class index extends React.Component {
     var self = this;
     var arrayReports = (row.reports || []).map(function(r) { return { label: r.code_report, value: r.id }; });
 
-    // Load contacts for the customer
-    var arrayContact = [];
-
+    // Load contacts and cost centers for the customer
     if (row.customer_id) {
       fetch("/customer_cost_center/" + row.customer_id + "/customer_r")
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          data.data_contact.forEach(function(item) { arrayContact.push({ label: item.name, value: item.id }); });
-          self.setState({ dataContact: arrayContact });
+          var arrayContact = [];
+          var arrayCentro = [];
+          if (data.data_contact) {
+            data.data_contact.forEach(function(item) { arrayContact.push({ label: item.name, value: item.id }); });
+          }
+          if (data.data_cost_center) {
+            data.data_cost_center.forEach(function(item) { arrayCentro.push({ label: item.code, value: item.id }); });
+          }
+          self.setState({ dataContact: arrayContact, dataCostCenter: arrayCentro });
         });
     }
 
@@ -321,7 +324,6 @@ class index extends React.Component {
       title: "Editar Reporte",
       ErrorValues: true,
       dataReportEdit: arrayReports,
-      formCostCenterOptions: costCenterOption ? [costCenterOption] : [],
       form: {
         customer_id: row.customer_id || "",
         cost_center_id: row.cost_center_id || "",
@@ -359,60 +361,56 @@ class index extends React.Component {
       selectedOptionCentro: null,
       selectedOptionReports: null,
       dataReportEdit: [],
-      formCostCenterOptions: [],
+      dataCostCenter: [],
       dataContact: [],
       dataReports: [],
     });
   }.bind(this);
 
   handleChange = function(e) {
-    var self = this;
-    this.setState(function(prev) {
-      var newForm = Object.assign({}, prev.form);
-      newForm[e.target.name] = e.target.value;
-      return { form: newForm };
+    var name = e.target.name;
+    var value = e.target.value;
+    this.setState({
+      form: Object.assign({}, this.state.form, { [name]: value })
     });
   }.bind(this);
 
   handleChangeAutocomplete = function(selectedOption) {
     var self = this;
+    var arrayCentro = [];
     var arrayContact = [];
 
     if (selectedOption) {
       fetch("/customer_cost_center/" + selectedOption.value + "/customer_r")
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          data.data_contact.forEach(function(item) { arrayContact.push({ label: item.name, value: item.id }); });
-          self.setState({ dataContact: arrayContact, formCostCenterOptions: [], selectedOptionCentro: null });
+          // Cargar centros de costo del cliente
+          if (data.data_cost_center) {
+            data.data_cost_center.forEach(function(item) {
+              arrayCentro.push({ label: item.code, value: item.id });
+            });
+          }
+          // Cargar contactos del cliente
+          if (data.data_contact) {
+            data.data_contact.forEach(function(item) {
+              arrayContact.push({ label: item.name, value: item.id });
+            });
+          }
+          self.setState({
+            dataCostCenter: arrayCentro,
+            dataContact: arrayContact,
+            selectedOptionCentro: null
+          });
         });
     }
 
     this.setState({
       selectedOption: selectedOption,
       selectedOptionCentro: null,
-      formCostCenterOptions: [],
+      dataCostCenter: [],
       dataReports: [],
       form: Object.assign({}, this.state.form, { customer_id: selectedOption ? selectedOption.value : "", cost_center_id: "", report_ids: [] })
     });
-  }.bind(this);
-
-  handleFormCostCenterSearch = function(inputValue) {
-    var self = this;
-    var customerId = this.state.form.customer_id;
-    if (!inputValue || inputValue.length < 2) { self.setState({ formCostCenterOptions: [] }); return; }
-    if (!customerId) { self.setState({ formCostCenterOptions: [] }); return; }
-    if (self._formCcTimer) clearTimeout(self._formCcTimer);
-    self._formCcTimer = setTimeout(function() {
-      self.setState({ formCostCenterLoading: true });
-      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue) + "&customer_id=" + customerId, { headers: { "X-CSRF-Token": csrfToken() } })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          self.setState({
-            formCostCenterOptions: data.map(function(d) { return { value: d.id, label: d.label }; }),
-            formCostCenterLoading: false,
-          });
-        });
-    }, 300);
   }.bind(this);
 
   handleChangeAutocompleteCentro = function(selectedOptionCentro) {
@@ -465,9 +463,9 @@ class index extends React.Component {
         if (data.type === "success") {
           self.closeModal();
           self.loadData(isEdit ? undefined : 1);
-          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         } else {
-          Swal.fire({ position: "center", type: "error", title: data.message, html: (data.message_error || []).join("<br>") });
+          Swal.fire({ position: "center", icon: "error", title: data.message, html: (data.message_error || []).join("<br>") });
         }
       });
   }.bind(this);
@@ -479,7 +477,7 @@ class index extends React.Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "El registro será eliminado permanentemente",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
@@ -491,7 +489,7 @@ class index extends React.Component {
           .then(function(r) { return r.json(); })
           .then(function() {
             self.loadData();
-            Swal.fire("Eliminado", "El registro fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -595,7 +593,7 @@ class index extends React.Component {
               React.createElement("label", { className: "cm-label" },
                 React.createElement("i", { className: "fas fa-map-marker-alt" }),
                 " Centro de costo ",
-                React.createElement("small", { className: "cm-label-hint" }, "(escribe al menos 2 letras)")
+                React.createElement("small", { className: "cm-label-hint" }, "(escribe al menos 3 letras)")
               ),
               React.createElement(Select, {
                 options: self.state.filterCostCenterOptions,
@@ -709,9 +707,7 @@ class index extends React.Component {
           clientes: self.state.clients,
           onChangeAutocomplete: self.handleChangeAutocomplete,
           formAutocomplete: self.state.selectedOption,
-          costCenterOptions: self.state.formCostCenterOptions,
-          costCenterLoading: self.state.formCostCenterLoading,
-          onCostCenterSearch: self.handleFormCostCenterSearch,
+          costCenterOptions: self.state.dataCostCenter,
           onChangeAutocompleteCentro: self.handleChangeAutocompleteCentro,
           formAutocompleteCentro: self.state.selectedOptionCentro,
           reports: self.state.dataReports,

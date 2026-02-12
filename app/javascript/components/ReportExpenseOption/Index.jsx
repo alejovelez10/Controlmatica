@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import FormCreate from './FormCreate';
 import { CmDataTable, CmPageActions } from '../../generalcomponents/ui';
 
@@ -78,7 +78,7 @@ class Index extends Component {
         self.setState({ modal: false });
         self.clearValues();
         self.props.loadData();
-        Swal.fire({ position: "center", type: data.type, title: data.success, showConfirmButton: false, timer: 1500 });
+        Swal.fire({ position: "center", icon: data.type, title: data.success, showConfirmButton: false, timer: 1500 });
       });
   };
 
@@ -96,7 +96,7 @@ class Index extends Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "El registro será eliminado permanentemente",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",

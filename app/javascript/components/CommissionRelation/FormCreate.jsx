@@ -5,7 +5,7 @@ import Select from "react-select";
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -260,7 +260,7 @@ class FormCreate extends Component {
             font-size: 14px;
             border: 1px solid #e2e5ea;
             border-radius: 8px;
-            background: #f8f9fa;
+            background: #fcfcfd;
             transition: all 0.2s ease;
             box-sizing: border-box;
           }
@@ -317,7 +317,7 @@ class FormCreate extends Component {
             justify-content: flex-end;
             gap: 12px;
             padding: 16px 24px;
-            background: #f8f9fa;
+            background: #fcfcfd;
             border-top: 1px solid #e2e5ea;
             border-radius: 0 0 8px 8px;
           }
@@ -342,7 +342,7 @@ class FormCreate extends Component {
           }
 
           .cm-btn-cancel:hover {
-            background: #f8f9fa;
+            background: #fcfcfd;
             border-color: #ccc;
           }
 

@@ -40,10 +40,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
     paginated = users.offset((page - 1) * per_page).limit(per_page)
 
     render json: {
-      data: paginated.as_json(
-        only: [:id, :names, :email, :document_type, :number_document, :rol_id, :avatar],
-        include: { rol: { only: [:id, :name] } }
-      ),
+      data: paginated.map do |user|
+        user.as_json(
+          only: [:id, :names, :email, :document_type, :number_document, :rol_id],
+          include: { rol: { only: [:id, :name] } }
+        ).merge(
+          avatar: user.avatar.present? ? { url: user.avatar.url } : nil
+        )
+      end,
       meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
     }
   end

@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import { CmDataTable, CmPageActions, CmModal, CmButton } from "../../generalcomponents/ui";
 
 const EMPTY_FORM = { name: "", email: "", nit: "", phone: "", address: "", code: "", web: "" };
@@ -9,7 +9,7 @@ const EMPTY_CONTACT = { name: "", phone: "", email: "", position: "" };
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -77,7 +77,7 @@ const modalStyles = {
     border: "1px solid #e2e5ea",
     borderRadius: "8px",
     fontSize: "14px",
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     transition: "all 0.2s ease",
     outline: "none",
     boxSizing: "border-box",
@@ -108,7 +108,7 @@ const modalStyles = {
   },
   contactCard: {
     position: "relative",
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderRadius: "10px",
     padding: "16px",
     marginBottom: "12px",
@@ -224,16 +224,17 @@ class index extends React.Component {
       contacts: [],
       errors: [],
       saving: false,
+      importDropdownOpen: false,
     };
 
     this.columns = [
       { key: "name", label: "Nombre" },
       { key: "code", label: "Prefijo" },
-      { key: "phone", label: "Teléfono" },
-      { key: "address", label: "Dirección" },
       { key: "nit", label: "Nit" },
-      { key: "web", label: "Web" },
+      { key: "phone", label: "Teléfono" },
       { key: "email", label: "Email" },
+      { key: "address", label: "Dirección" },
+      { key: "web", label: "Web" },
     ];
   }
 
@@ -403,7 +404,7 @@ class index extends React.Component {
           this.loadData(isNew ? 1 : undefined);
           Swal.fire({
             position: "center",
-            type: "success",
+            icon: "success",
             title: data.message,
             showConfirmButton: false,
             timer: 1500,
@@ -423,7 +424,7 @@ class index extends React.Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "El registro será eliminado permanentemente",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
@@ -438,7 +439,7 @@ class index extends React.Component {
           .then((response) => response.json())
           .then(() => {
             this.loadData();
-            Swal.fire("Eliminado", "El registro fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -449,7 +450,7 @@ class index extends React.Component {
   messageSuccess = (response) => {
     Swal.fire({
       position: "center",
-      type: "success",
+      icon: "success",
       title: `${response.success}`,
       showConfirmButton: false,
       timer: 1500,
@@ -517,8 +518,30 @@ class index extends React.Component {
     );
   };
 
+  toggleImportDropdown = (e) => {
+    if (e) e.stopPropagation();
+    this.setState((prev) => ({ importDropdownOpen: !prev.importDropdownOpen }));
+  };
+
+  closeImportDropdown = () => {
+    this.setState({ importDropdownOpen: false });
+  };
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.importDropdownOpen && !prevState.importDropdownOpen) {
+      document.addEventListener("click", this.closeImportDropdown);
+    } else if (!this.state.importDropdownOpen && prevState.importDropdownOpen) {
+      document.removeEventListener("click", this.closeImportDropdown);
+    }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("click", this.closeImportDropdown);
+  }
+
   renderHeaderActions = () => {
     const { estados } = this.props;
+    const { importDropdownOpen } = this.state;
     return (
       <React.Fragment>
         {estados.download_file && (
@@ -527,23 +550,29 @@ class index extends React.Component {
           </a>
         )}
 
-        <div className="dropdown">
+        <div className={`cm-dropdown ${importDropdownOpen ? "open" : ""}`}>
           <button
-            className="cm-btn cm-btn-outline cm-btn-sm dropdown-toggle"
+            className="cm-btn cm-btn-outline cm-btn-sm"
             type="button"
-            data-toggle="dropdown"
+            onClick={this.toggleImportDropdown}
           >
-            <i className="fas fa-upload" /> Importar
+            <i className="fas fa-upload" /> Importar <i className="fas fa-chevron-down" style={{ fontSize: 10, marginLeft: 4 }} />
           </button>
-          <div className="dropdown-menu dropdown-menu-right">
+          <div className="cm-dropdown-menu">
             <a
-              className="dropdown-item"
+              className="cm-dropdown-item"
               href="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/700/FORMATO_SUBIR_CLIENTES.xlsx"
+              onClick={this.closeImportDropdown}
             >
-              Descargar formato
+              <i className="fas fa-file-download" /> Descargar formato
             </a>
-            <label className="dropdown-item" htmlFor="customerFile" style={{ cursor: "pointer", marginBottom: 0 }}>
-              Cargar archivo
+            <div className="cm-dropdown-divider" />
+            <label
+              className="cm-dropdown-item"
+              htmlFor="customerFile"
+              onClick={this.closeImportDropdown}
+            >
+              <i className="fas fa-file-upload" /> Cargar archivo
             </label>
           </div>
         </div>
@@ -588,7 +617,7 @@ class index extends React.Component {
         }}>
           {/* Header - Same style as CustomerReports */}
           <div className="cm-modal-header" style={{
-            background: "#f8f9fa",
+            background: "#fcfcfd",
             padding: "20px 32px",
             borderBottom: "1px solid #e9ecef",
             display: "flex",
@@ -762,93 +791,226 @@ class index extends React.Component {
           </div>
         </div>
 
-        {/* Contacts section */}
-        <div style={modalStyles.sectionTitle}>
-          <span>
-            <span style={modalStyles.sectionIcon}>
-              <i className="fas fa-address-book" />
-            </span>
-            Contactos ({visibleContacts.length})
-          </span>
-        </div>
+        {/* Contacts Section */}
+        <div style={{
+          background: "#fcfcfd",
+          borderRadius: "12px",
+          padding: "20px",
+          marginTop: "8px"
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "16px"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "8px",
+                background: "rgba(245, 166, 35, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <i className="fas fa-address-book" style={{ color: "#f5a623", fontSize: "16px" }} />
+              </div>
+              <span style={{ fontWeight: 600, color: "#374151", fontSize: "16px" }}>
+                Contactos ({visibleContacts.length})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={this.addContact}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 14px",
+                background: "#fff",
+                border: "1px solid #e2e5ea",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "#374151",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              <i className="fas fa-plus" style={{ fontSize: "11px" }} /> Agregar
+            </button>
+          </div>
 
-        {contacts.map((contact, index) => {
-          if (contact._destroy) return null;
-          return (
-            <div key={index} style={modalStyles.contactCard}>
-              <button
-                type="button"
-                style={modalStyles.removeBtn}
-                onClick={() => this.removeContact(index)}
-                title="Eliminar contacto"
-              >
-                <i className="fas fa-times" />
-              </button>
-              <div style={modalStyles.formGrid} className="cm-form-grid-2">
-                <div style={modalStyles.formGroup}>
-                  <label style={modalStyles.label} className="cm-label">
-                    <i className="fas fa-user" style={modalStyles.labelIcon} />
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    style={modalStyles.input}
-                    className="cm-input"
-                    placeholder="Nombre"
-                    value={contact.name}
-                    onChange={(e) => this.handleContactChange(index, "name", e.target.value)}
-                  />
-                </div>
-                <div style={modalStyles.formGroup}>
-                  <label style={modalStyles.label} className="cm-label">
-                    <i className="fas fa-mobile-alt" style={modalStyles.labelIcon} />
-                    Celular
-                  </label>
-                  <input
-                    type="text"
-                    style={modalStyles.input}
-                    className="cm-input"
-                    placeholder="Celular"
-                    value={contact.phone}
-                    onChange={(e) => this.handleContactChange(index, "phone", e.target.value)}
-                  />
-                </div>
-                <div style={modalStyles.formGroup}>
-                  <label style={modalStyles.label} className="cm-label">
-                    <i className="fas fa-envelope" style={modalStyles.labelIcon} />
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    style={modalStyles.input}
-                    className="cm-input"
-                    placeholder="Email"
-                    value={contact.email}
-                    onChange={(e) => this.handleContactChange(index, "email", e.target.value)}
-                  />
-                </div>
-                <div style={modalStyles.formGroup}>
-                  <label style={modalStyles.label} className="cm-label">
-                    <i className="fas fa-briefcase" style={modalStyles.labelIcon} />
-                    Cargo
-                  </label>
-                  <input
-                    type="text"
-                    style={modalStyles.input}
-                    className="cm-input"
-                    placeholder="Cargo"
-                    value={contact.position}
-                    onChange={(e) => this.handleContactChange(index, "position", e.target.value)}
-                  />
+          {contacts.map((contact, index) => {
+            if (contact._destroy) return null;
+            return (
+              <div key={index} style={{
+                background: "#fff",
+                borderRadius: "10px",
+                padding: "16px 50px 16px 16px",
+                marginBottom: "12px",
+                border: "1px solid #e2e5ea",
+                position: "relative"
+              }}>
+                <button
+                  type="button"
+                  onClick={() => this.removeContact(index)}
+                  title="Eliminar contacto"
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    border: "1px solid #fecaca",
+                    background: "#fef2f2",
+                    color: "#dc2626",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s",
+                    fontSize: "14px"
+                  }}
+                >
+                  <i className="fas fa-trash-alt" />
+                </button>
+                <div className="cm-form-grid-2" style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "12px"
+                }}>
+                  <div>
+                    <label className="cm-label" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "#6b7280"
+                    }}>
+                      <i className="fas fa-user" style={{ fontSize: "11px" }} /> Nombre
+                    </label>
+                    <input
+                      type="text"
+                      className="cm-input"
+                      placeholder="Nombre"
+                      value={contact.name}
+                      onChange={(e) => this.handleContactChange(index, "name", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        border: "1px solid #e2e5ea",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        background: "#fcfcfd"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="cm-label" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "#6b7280"
+                    }}>
+                      <i className="fas fa-mobile-alt" style={{ fontSize: "11px" }} /> Celular
+                    </label>
+                    <input
+                      type="text"
+                      className="cm-input"
+                      placeholder="Celular"
+                      value={contact.phone}
+                      onChange={(e) => this.handleContactChange(index, "phone", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        border: "1px solid #e2e5ea",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        background: "#fcfcfd"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="cm-label" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "#6b7280"
+                    }}>
+                      <i className="fas fa-envelope" style={{ fontSize: "11px" }} /> Email
+                    </label>
+                    <input
+                      type="email"
+                      className="cm-input"
+                      placeholder="Email"
+                      value={contact.email}
+                      onChange={(e) => this.handleContactChange(index, "email", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        border: "1px solid #e2e5ea",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        background: "#fcfcfd"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className="cm-label" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      marginBottom: "4px",
+                      fontSize: "13px",
+                      fontWeight: 500,
+                      color: "#6b7280"
+                    }}>
+                      <i className="fas fa-briefcase" style={{ fontSize: "11px" }} /> Cargo
+                    </label>
+                    <input
+                      type="text"
+                      className="cm-input"
+                      placeholder="Cargo"
+                      value={contact.position}
+                      onChange={(e) => this.handleContactChange(index, "position", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        border: "1px solid #e2e5ea",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        background: "#fcfcfd"
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-        <button type="button" style={modalStyles.addBtn} onClick={this.addContact}>
-          <i className="fas fa-plus" /> Agregar contacto
-        </button>
+          {visibleContacts.length === 0 && (
+            <div style={{
+              textAlign: "center",
+              padding: "24px",
+              color: "#9ca3af",
+              fontSize: "14px"
+            }}>
+              <i className="fas fa-users" style={{ fontSize: "24px", marginBottom: "8px", display: "block", opacity: 0.5 }} />
+              No hay contactos agregados
+            </div>
+          )}
+        </div>
           </div>
 
           {/* Footer - Same style as CustomerReports */}
@@ -857,7 +1019,7 @@ class index extends React.Component {
             justifyContent: "flex-end",
             gap: "12px",
             padding: "16px 32px",
-            background: "#f8f9fa",
+            background: "#fcfcfd",
             borderTop: "1px solid #e9ecef",
             flexShrink: 0
           }}>

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable } from '../../generalcomponents/ui';
 
@@ -136,17 +136,17 @@ class ExpensesTable extends Component {
         self.setState({ modal: false });
         self.loadData();
         self.clearValues();
-        Swal.fire({ position: "center", type: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
+        Swal.fire({ position: "center", icon: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
       });
   };
 
   delete = (id) => {
-    Swal.fire({ title: "¿Estás seguro?", text: "El gasto será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "El gasto será eliminado permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
       .then((result) => {
         if (result.value) {
           fetch("/report_expenses/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })
             .then((r) => r.json())
-            .then(() => { this.loadData(); Swal.fire("Eliminado", "El gasto fue eliminado", "success"); });
+            .then(() => { this.loadData(); Swal.fire({ title: "Eliminado", text: "El gasto fue eliminado", icon: "success", confirmButtonColor: "#2a3f53" }); });
         }
       });
   };

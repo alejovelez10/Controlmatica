@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
 import FormCreate from '../PurchaseOrders/FormCreate';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import IndexInvoice from '../SalesOrders/IndexInvoice';
 import { CmDataTable } from '../../generalcomponents/ui';
 
@@ -93,7 +93,7 @@ class OrdenesDeCompraTable extends Component {
   };
 
   delete = (id) => {
-    Swal.fire({ title: "¿Estás seguro?", text: "La orden será eliminada permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "La orden será eliminada permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
       .then((result) => {
         if (result.value) {
           fetch("/sales_orders/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })

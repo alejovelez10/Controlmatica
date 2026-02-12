@@ -12,6 +12,7 @@ class AccionModulesController < ApplicationController
 
   def create
     @accion_module = AccionModule.new(action_module_params)
+    @accion_module.user_id = current_user.id
     if @accion_module.save
       render json: { success: true, message: "Acción creada exitosamente" }, status: :created
     else

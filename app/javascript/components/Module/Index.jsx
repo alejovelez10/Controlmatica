@@ -1,6 +1,6 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
-import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
+import Swal from "sweetalert2";
+import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui";
 
 const EMPTY_MODULE = { name: "", description: "" };
 const EMPTY_ACTION = { name: "", description: "" };
@@ -141,7 +141,7 @@ class Index extends React.Component {
         if (ok || data.success) {
           this.closeModuleModal();
           this.loadData(isNew ? 1 : undefined);
-          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         } else {
           this.setState({ moduleErrors: data.errors || [data.message || "Error al guardar"], moduleSaving: false });
         }
@@ -152,7 +152,7 @@ class Index extends React.Component {
   deleteModule = (id) => {
     Swal.fire({
       title: "¿Estás seguro?", text: "El módulo y sus acciones serán eliminados permanentemente",
-      type: "warning", showCancelButton: true,
+      icon: "warning", showCancelButton: true,
       confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
       confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
     }).then((result) => {
@@ -161,7 +161,7 @@ class Index extends React.Component {
           .then((r) => r.json())
           .then(() => {
             this.loadData();
-            Swal.fire("Eliminado", "El módulo fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El módulo fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -244,7 +244,7 @@ class Index extends React.Component {
   deleteAction = (id) => {
     Swal.fire({
       title: "¿Estás seguro?", text: "La acción será eliminada permanentemente",
-      type: "warning", showCancelButton: true,
+      icon: "warning", showCancelButton: true,
       confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
       confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
     }).then((result) => {
@@ -253,7 +253,7 @@ class Index extends React.Component {
           .then((r) => r.json())
           .then(() => {
             this.loadActions(this.state.actionsModule.id);
-            Swal.fire("Eliminado", "La acción fue eliminada con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "La acción fue eliminada con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -307,27 +307,218 @@ class Index extends React.Component {
   renderModuleModal = () => {
     const { moduleModalOpen, moduleMode, moduleForm, moduleErrors, moduleSaving } = this.state;
     const title = moduleMode === "new" ? "Nuevo Módulo" : "Editar Módulo";
-    const icon = moduleMode === "new" ? "fas fa-plus-circle" : "fas fa-edit";
+    const subtitle = moduleMode === "new" ? "Complete los datos del nuevo módulo" : "Modifique los datos del módulo";
+    const icon = moduleMode === "new" ? "fa-cubes" : "fa-cube";
 
     return (
       <CmModal
-        isOpen={moduleModalOpen} toggle={this.closeModuleModal}
-        title={<span><i className={icon} /> {title}</span>} size="md"
-        footer={
-          <React.Fragment>
-            <CmButton variant="outline" onClick={this.closeModuleModal}>Cancelar</CmButton>
-            <CmButton variant="accent" onClick={this.handleModuleSubmit} disabled={moduleSaving}>
-              {moduleSaving ? <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment> : <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>}
-            </CmButton>
-          </React.Fragment>
-        }
+        isOpen={moduleModalOpen}
+        toggle={this.closeModuleModal}
+        size="md"
+        footer={null}
+        hideHeader={true}
       >
-        {moduleErrors.length > 0 && (
-          <div className="cm-form-errors"><ul>{moduleErrors.map((e, i) => <li key={i}>{e}</li>)}</ul></div>
-        )}
-        <div className="cm-form-row">
-          <CmInput label="Nombre" placeholder="Nombre del módulo" value={moduleForm.name} onChange={(e) => this.handleModuleFormChange("name", e.target.value)} />
-          <CmInput label="Descripción" placeholder="Descripción" value={moduleForm.description} onChange={(e) => this.handleModuleFormChange("description", e.target.value)} />
+        <div style={{
+          margin: "-20px -24px -24px -24px",
+          display: "flex",
+          flexDirection: "column"
+        }}>
+          {/* Header */}
+          <div style={{
+            background: "#fcfcfd",
+            padding: "20px 32px",
+            borderBottom: "1px solid #e9ecef",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
+              }}>
+                <i className={`fas ${icon}`} style={{ color: "#fff", fontSize: "20px" }} />
+              </div>
+              <div>
+                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>{title}</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>{subtitle}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={this.closeModuleModal}
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "#e9ecef",
+                borderRadius: "50%",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6c757d",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+            >
+              <i className="fas fa-times" />
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div style={{ padding: "24px 32px" }}>
+            {moduleErrors.length > 0 && (
+              <div style={{
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                marginBottom: "20px"
+              }}>
+                <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+                  {moduleErrors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px"
+            }}>
+              <div>
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#374151"
+                }}>
+                  <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nombre del módulo"
+                  value={moduleForm.name}
+                  onChange={(e) => this.handleModuleFormChange("name", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "1px solid #e2e5ea",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fcfcfd",
+                    transition: "all 0.2s",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#374151"
+                }}>
+                  <i className="fa fa-align-left" style={{ color: "#6b7280", fontSize: "12px" }} />
+                  Descripción
+                </label>
+                <input
+                  type="text"
+                  placeholder="Descripción"
+                  value={moduleForm.description}
+                  onChange={(e) => this.handleModuleFormChange("description", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "1px solid #e2e5ea",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fcfcfd",
+                    transition: "all 0.2s",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            padding: "16px 32px",
+            background: "#fcfcfd",
+            borderTop: "1px solid #e9ecef"
+          }}>
+            <button
+              type="button"
+              onClick={this.closeModuleModal}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                border: "1px solid #dee2e6",
+                background: "#fff",
+                color: "#6c757d"
+              }}
+            >
+              <i className="fas fa-times" /> Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={this.handleModuleSubmit}
+              disabled={moduleSaving}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: moduleSaving ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease",
+                border: "none",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                color: "#fff",
+                opacity: moduleSaving ? 0.7 : 1
+              }}
+            >
+              {moduleSaving ? (
+                <React.Fragment>
+                  <i className="fas fa-spinner fa-spin" /> Guardando...
+                </React.Fragment>
+              ) : (
+                <React.Fragment>
+                  <i className="fas fa-save" /> Guardar
+                </React.Fragment>
+              )}
+            </button>
+          </div>
         </div>
       </CmModal>
     );
@@ -339,74 +530,351 @@ class Index extends React.Component {
 
     return (
       <CmModal
-        isOpen={actionsModalOpen} toggle={this.closeActionsModal}
-        title={<span><i className="fas fa-cogs" /> Acciones de {actionsModule.name}</span>} size="lg"
-        footer={
-          <CmButton variant="outline" onClick={this.closeActionsModal}>Cerrar</CmButton>
-        }
+        isOpen={actionsModalOpen}
+        toggle={this.closeActionsModal}
+        size="lg"
+        footer={null}
+        hideHeader={true}
       >
-        {/* Action form */}
-        {actionMode && (
-          <div className="cm-form-section" style={{ marginBottom: 16 }}>
-            <div className="cm-form-section-title">
-              <span>{actionMode === "new" ? "Nueva Acción" : "Editar Acción"}</span>
+        <div style={{
+          margin: "-20px -24px -24px -24px",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh"
+        }}>
+          {/* Header */}
+          <div style={{
+            background: "#fcfcfd",
+            padding: "20px 32px",
+            borderBottom: "1px solid #e9ecef",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
+              }}>
+                <i className="fas fa-cogs" style={{ color: "#fff", fontSize: "20px" }} />
+              </div>
+              <div>
+                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>
+                  Acciones de {actionsModule.name}
+                </h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>
+                  Gestione las acciones del módulo
+                </p>
+              </div>
             </div>
-            {actionErrors.length > 0 && (
-              <div className="cm-form-errors"><ul>{actionErrors.map((e, i) => <li key={i}>{e}</li>)}</ul></div>
-            )}
-            <div className="cm-form-row">
-              <CmInput label="Nombre" placeholder="Nombre de la acción" value={actionForm.name} onChange={(e) => this.handleActionFormChange("name", e.target.value)} />
-              <CmInput label="Descripción" placeholder="Descripción" value={actionForm.description} onChange={(e) => this.handleActionFormChange("description", e.target.value)} />
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-              <CmButton variant="accent" onClick={this.handleActionSubmit} disabled={actionSaving}>
-                {actionSaving ? "Guardando..." : "Guardar"}
-              </CmButton>
-              <CmButton variant="outline" onClick={this.cancelActionForm}>Cancelar</CmButton>
-            </div>
-          </div>
-        )}
-
-        {!actionMode && (
-          <div style={{ marginBottom: 12 }}>
-            <button onClick={this.startNewAction} className="cm-btn cm-btn-accent cm-btn-sm">
-              <i className="fas fa-plus" /> Nueva Acción
+            <button
+              type="button"
+              onClick={this.closeActionsModal}
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "#e9ecef",
+                borderRadius: "50%",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6c757d",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+            >
+              <i className="fas fa-times" />
             </button>
           </div>
-        )}
 
-        {/* Actions list */}
-        {actionsLoading ? (
-          <div style={{ textAlign: "center", padding: 20, color: "#999" }}>Cargando...</div>
-        ) : actions.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 20, color: "#999" }}>No hay acciones en este módulo</div>
-        ) : (
-          <table className="cm-dt-table" style={{ width: "100%" }}>
-            <thead>
-              <tr>
-                <th className="cm-dt-th">Nombre</th>
-                <th className="cm-dt-th">Descripción</th>
-                <th className="cm-dt-th" style={{ width: 90, textAlign: "center" }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {actions.map((action) => (
-                <tr key={action.id} className="cm-dt-row">
-                  <td className="cm-dt-td">{action.name}</td>
-                  <td className="cm-dt-td">{action.description}</td>
-                  <td className="cm-dt-td" style={{ textAlign: "center" }}>
-                    <button onClick={() => this.startEditAction(action)} className="cm-dt-action-btn edit" title="Editar">
-                      <i className="fas fa-pen" />
-                    </button>
-                    <button onClick={() => this.deleteAction(action.id)} className="cm-dt-action-btn delete" title="Eliminar">
-                      <i className="fas fa-trash" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+          {/* Content - Scrollable */}
+          <div style={{
+            padding: "24px 32px",
+            flex: 1,
+            overflowY: "auto"
+          }}>
+            {/* Action form */}
+            {actionMode && (
+              <div style={{
+                background: "#fcfcfd",
+                borderRadius: "12px",
+                padding: "20px",
+                marginBottom: "20px"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "16px"
+                }}>
+                  <div style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    background: "rgba(245, 166, 35, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <i className={`fa ${actionMode === "new" ? "fa-plus" : "fa-edit"}`} style={{ color: "#f5a623", fontSize: "16px" }} />
+                  </div>
+                  <span style={{ fontWeight: 600, color: "#374151", fontSize: "16px" }}>
+                    {actionMode === "new" ? "Nueva Acción" : "Editar Acción"}
+                  </span>
+                </div>
+
+                {actionErrors.length > 0 && (
+                  <div style={{
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    marginBottom: "16px"
+                  }}>
+                    <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+                      {actionErrors.map((e, i) => <li key={i}>{e}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                  marginBottom: "16px"
+                }}>
+                  <div>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "6px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#374151"
+                    }}>
+                      <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
+                      Nombre
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nombre de la acción"
+                      value={actionForm.name}
+                      onChange={(e) => this.handleActionFormChange("name", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        border: "1px solid #e2e5ea",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        background: "#fff",
+                        transition: "all 0.2s",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "6px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#374151"
+                    }}>
+                      <i className="fa fa-align-left" style={{ color: "#6b7280", fontSize: "12px" }} />
+                      Descripción
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Descripción"
+                      value={actionForm.description}
+                      onChange={(e) => this.handleActionFormChange("description", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "10px 14px",
+                        border: "1px solid #e2e5ea",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        background: "#fff",
+                        transition: "all 0.2s",
+                        outline: "none",
+                        boxSizing: "border-box"
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button
+                    type="button"
+                    onClick={this.handleActionSubmit}
+                    disabled={actionSaving}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      borderRadius: "8px",
+                      cursor: actionSaving ? "not-allowed" : "pointer",
+                      transition: "all 0.2s ease",
+                      border: "none",
+                      background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                      color: "#fff",
+                      opacity: actionSaving ? 0.7 : 1
+                    }}
+                  >
+                    {actionSaving ? (
+                      <React.Fragment>
+                        <i className="fas fa-spinner fa-spin" /> Guardando...
+                      </React.Fragment>
+                    ) : (
+                      <React.Fragment>
+                        <i className="fas fa-save" /> Guardar
+                      </React.Fragment>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={this.cancelActionForm}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      border: "1px solid #dee2e6",
+                      background: "#fff",
+                      color: "#6c757d"
+                    }}
+                  >
+                    <i className="fas fa-times" /> Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!actionMode && (
+              <div style={{ marginBottom: "20px" }}>
+                <button
+                  onClick={this.startNewAction}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 20px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    border: "none",
+                    background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                    color: "#fff"
+                  }}
+                >
+                  <i className="fas fa-plus" /> Nueva Acción
+                </button>
+              </div>
+            )}
+
+            {/* Actions list */}
+            {actionsLoading ? (
+              <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af" }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: "24px", marginBottom: "12px", display: "block" }} />
+                Cargando...
+              </div>
+            ) : actions.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af" }}>
+                <i className="fas fa-cog" style={{ fontSize: "32px", marginBottom: "12px", display: "block", opacity: 0.5 }} />
+                No hay acciones en este módulo
+              </div>
+            ) : (
+              <table className="cm-dt-table" style={{ width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th className="cm-dt-th">Nombre</th>
+                    <th className="cm-dt-th">Descripción</th>
+                    <th className="cm-dt-th" style={{ width: 90, textAlign: "center" }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {actions.map((action) => (
+                    <tr key={action.id} className="cm-dt-row">
+                      <td className="cm-dt-td">{action.name}</td>
+                      <td className="cm-dt-td">{action.description}</td>
+                      <td className="cm-dt-td" style={{ textAlign: "center" }}>
+                        <div className="cm-dt-menu">
+                          <button className="cm-dt-menu-trigger" onClick={this.openMenu}>
+                            <i className="fas fa-ellipsis-v" />
+                          </button>
+                          <div className="cm-dt-menu-dropdown">
+                            <button onClick={() => this.startEditAction(action)} className="cm-dt-menu-item">
+                              <i className="fas fa-pen" /> Editar
+                            </button>
+                            <button onClick={() => this.deleteAction(action.id)} className="cm-dt-menu-item cm-dt-menu-item--danger">
+                              <i className="fas fa-trash" /> Eliminar
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            padding: "16px 32px",
+            background: "#fcfcfd",
+            borderTop: "1px solid #e9ecef",
+            flexShrink: 0
+          }}>
+            <button
+              type="button"
+              onClick={this.closeActionsModal}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                border: "1px solid #dee2e6",
+                background: "#fff",
+                color: "#6c757d"
+              }}
+            >
+              <i className="fas fa-times" /> Cerrar
+            </button>
+          </div>
+        </div>
       </CmModal>
     );
   };

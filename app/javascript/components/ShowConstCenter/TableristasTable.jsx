@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import FormCreate from '../Contractors/FormCreate';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import { CmDataTable } from '../../generalcomponents/ui';
 
 function csrfToken() {
@@ -87,7 +87,7 @@ class TableristasTable extends Component {
   };
 
   delete = (id) => {
-    Swal.fire({ title: "¿Estás seguro?", text: "El tablerista será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "El tablerista será eliminado permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
       .then((result) => {
         if (result.value) {
           fetch("/contractors/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })

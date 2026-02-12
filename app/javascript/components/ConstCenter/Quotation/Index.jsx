@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import FormCreate from './FormCreate';
-import Swal from 'sweetalert2/dist/sweetalert2.js';
+import Swal from 'sweetalert2';
 import NumberFormat from 'react-number-format';
 import { CmDataTable } from '../../../generalcomponents/ui';
 
@@ -120,12 +120,12 @@ class Index extends Component {
   };
 
   delete = (id) => {
-    Swal.fire({ title: "¿Estás seguro?", text: "La cotización será eliminada permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "La cotización será eliminada permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
       .then((result) => {
         if (result.value) {
           fetch("/quotations/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
             .then((r) => r.json())
-            .then(() => { this.loadData(); Swal.fire("Eliminado", "La cotización fue eliminada", "success"); });
+            .then(() => { this.loadData(); Swal.fire({ title: "Eliminado", text: "La cotización fue eliminada", icon: "success", confirmButtonColor: "#2a3f53" }); });
         }
       });
   };

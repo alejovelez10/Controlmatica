@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui";
 
 const EMPTY_FORM = { name: "", email: "", nit: "", phone: "", address: "", web: "" };
@@ -8,7 +8,7 @@ const EMPTY_CONTACT = { name: "", phone: "", email: "", position: "" };
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -51,15 +51,16 @@ class index extends React.Component {
       contacts: [],
       errors: [],
       saving: false,
+      importDropdownOpen: false,
     };
 
     this.columns = [
       { key: "name", label: "Nombre" },
-      { key: "phone", label: "Teléfono" },
-      { key: "address", label: "Dirección" },
       { key: "nit", label: "Nit" },
-      { key: "web", label: "Web" },
+      { key: "phone", label: "Teléfono" },
       { key: "email", label: "Email" },
+      { key: "address", label: "Dirección" },
+      { key: "web", label: "Web" },
     ];
   }
 
@@ -184,7 +185,7 @@ class index extends React.Component {
         if (ok) {
           this.closeModal();
           this.loadData(isNew ? 1 : undefined);
-          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         } else {
           this.setState({ errors: data.errors || ["Error al guardar"], saving: false });
         }
@@ -195,7 +196,7 @@ class index extends React.Component {
   delete = (id) => {
     Swal.fire({
       title: "¿Estás seguro?", text: "El registro será eliminado permanentemente",
-      type: "warning", showCancelButton: true,
+      icon: "warning", showCancelButton: true,
       confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
       confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
     }).then((result) => {
@@ -204,14 +205,14 @@ class index extends React.Component {
           .then((response) => response.json())
           .then(() => {
             this.loadData();
-            Swal.fire("Eliminado", "El registro fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
   };
 
   messageSuccess = (response) => {
-    Swal.fire({ position: "center", type: "success", title: `${response.success}`, showConfirmButton: false, timer: 1500 });
+    Swal.fire({ position: "center", icon: "success", title: `${response.success}`, showConfirmButton: false, timer: 1500 });
   };
 
   uploadExel = (e) => { this.setState({ file: e.target.files[0], submitBtnFile: true }); };
@@ -267,8 +268,30 @@ class index extends React.Component {
     );
   };
 
+  toggleImportDropdown = (e) => {
+    if (e) e.stopPropagation();
+    this.setState((prev) => ({ importDropdownOpen: !prev.importDropdownOpen }));
+  };
+
+  closeImportDropdown = () => {
+    this.setState({ importDropdownOpen: false });
+  };
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.importDropdownOpen && !prevState.importDropdownOpen) {
+      document.addEventListener("click", this.closeImportDropdown);
+    } else if (!this.state.importDropdownOpen && prevState.importDropdownOpen) {
+      document.removeEventListener("click", this.closeImportDropdown);
+    }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener("click", this.closeImportDropdown);
+  }
+
   renderHeaderActions = () => {
     const { estados } = this.props;
+    const { importDropdownOpen } = this.state;
     return (
       <React.Fragment>
         {estados.download_file && (
@@ -276,16 +299,29 @@ class index extends React.Component {
             <i className="fas fa-file-excel" /> Exportar
           </a>
         )}
-        <div className="dropdown">
-          <button className="cm-btn cm-btn-outline cm-btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
-            <i className="fas fa-upload" /> Importar
+        <div className={`cm-dropdown ${importDropdownOpen ? "open" : ""}`}>
+          <button
+            className="cm-btn cm-btn-outline cm-btn-sm"
+            type="button"
+            onClick={this.toggleImportDropdown}
+          >
+            <i className="fas fa-upload" /> Importar <i className="fas fa-chevron-down" style={{ fontSize: 10, marginLeft: 4 }} />
           </button>
-          <div className="dropdown-menu dropdown-menu-right">
-            <a className="dropdown-item" href="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/701/FORMATO_SUBIR_PROVEEDORES.xlsx">
-              Descargar formato
+          <div className="cm-dropdown-menu">
+            <a
+              className="cm-dropdown-item"
+              href="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/701/FORMATO_SUBIR_PROVEEDORES.xlsx"
+              onClick={this.closeImportDropdown}
+            >
+              <i className="fas fa-file-download" /> Descargar formato
             </a>
-            <label className="dropdown-item" htmlFor="providerFile" style={{ cursor: "pointer", marginBottom: 0 }}>
-              Cargar archivo
+            <div className="cm-dropdown-divider" />
+            <label
+              className="cm-dropdown-item"
+              htmlFor="providerFile"
+              onClick={this.closeImportDropdown}
+            >
+              <i className="fas fa-file-upload" /> Cargar archivo
             </label>
           </div>
         </div>
@@ -320,7 +356,7 @@ class index extends React.Component {
         }}>
           {/* Header - Same style as CustomerReports */}
           <div className="cm-modal-header" style={{
-            background: "#f8f9fa",
+            background: "#fcfcfd",
             padding: "20px 32px",
             borderBottom: "1px solid #e9ecef",
             display: "flex",
@@ -424,7 +460,7 @@ class index extends React.Component {
                     border: "1px solid #e2e5ea",
                     borderRadius: "8px",
                     fontSize: "14px",
-                    background: "#f8f9fa",
+                    background: "#fcfcfd",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
@@ -455,7 +491,7 @@ class index extends React.Component {
                     border: "1px solid #e2e5ea",
                     borderRadius: "8px",
                     fontSize: "14px",
-                    background: "#f8f9fa",
+                    background: "#fcfcfd",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
@@ -486,7 +522,7 @@ class index extends React.Component {
                     border: "1px solid #e2e5ea",
                     borderRadius: "8px",
                     fontSize: "14px",
-                    background: "#f8f9fa",
+                    background: "#fcfcfd",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
@@ -517,7 +553,7 @@ class index extends React.Component {
                     border: "1px solid #e2e5ea",
                     borderRadius: "8px",
                     fontSize: "14px",
-                    background: "#f8f9fa",
+                    background: "#fcfcfd",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
@@ -548,7 +584,7 @@ class index extends React.Component {
                     border: "1px solid #e2e5ea",
                     borderRadius: "8px",
                     fontSize: "14px",
-                    background: "#f8f9fa",
+                    background: "#fcfcfd",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
@@ -579,7 +615,7 @@ class index extends React.Component {
                     border: "1px solid #e2e5ea",
                     borderRadius: "8px",
                     fontSize: "14px",
-                    background: "#f8f9fa",
+                    background: "#fcfcfd",
                     transition: "all 0.2s",
                     outline: "none"
                   }}
@@ -589,7 +625,7 @@ class index extends React.Component {
 
             {/* Contacts Section */}
             <div style={{
-              background: "#f8f9fa",
+              background: "#fcfcfd",
               borderRadius: "12px",
               padding: "20px",
               marginTop: "8px"
@@ -644,7 +680,7 @@ class index extends React.Component {
                   <div key={index} style={{
                     background: "#fff",
                     borderRadius: "10px",
-                    padding: "16px",
+                    padding: "16px 50px 16px 16px",
                     marginBottom: "12px",
                     border: "1px solid #e2e5ea",
                     position: "relative"
@@ -655,22 +691,25 @@ class index extends React.Component {
                       title="Eliminar contacto"
                       style={{
                         position: "absolute",
-                        top: "12px",
-                        right: "12px",
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "6px",
-                        border: "none",
+                        top: "10px",
+                        right: "10px",
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "8px",
+                        border: "1px solid #fecaca",
                         background: "#fef2f2",
                         color: "#dc2626",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        transition: "all 0.2s"
+                        transition: "all 0.2s",
+                        fontSize: "14px"
                       }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#f87171"; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.borderColor = "#fecaca"; }}
                     >
-                      <i className="fa fa-times" style={{ fontSize: "12px" }} />
+                      <i className="fa fa-trash-alt" />
                     </button>
                     <div className="cm-form-grid-2" style={{
                       display: "grid",
@@ -701,7 +740,7 @@ class index extends React.Component {
                             border: "1px solid #e2e5ea",
                             borderRadius: "6px",
                             fontSize: "13px",
-                            background: "#f8f9fa"
+                            background: "#fcfcfd"
                           }}
                         />
                       </div>
@@ -729,7 +768,7 @@ class index extends React.Component {
                             border: "1px solid #e2e5ea",
                             borderRadius: "6px",
                             fontSize: "13px",
-                            background: "#f8f9fa"
+                            background: "#fcfcfd"
                           }}
                         />
                       </div>
@@ -757,7 +796,7 @@ class index extends React.Component {
                             border: "1px solid #e2e5ea",
                             borderRadius: "6px",
                             fontSize: "13px",
-                            background: "#f8f9fa"
+                            background: "#fcfcfd"
                           }}
                         />
                       </div>
@@ -785,7 +824,7 @@ class index extends React.Component {
                             border: "1px solid #e2e5ea",
                             borderRadius: "6px",
                             fontSize: "13px",
-                            background: "#f8f9fa"
+                            background: "#fcfcfd"
                           }}
                         />
                       </div>
@@ -814,7 +853,7 @@ class index extends React.Component {
             justifyContent: "flex-end",
             gap: "12px",
             padding: "16px 32px",
-            background: "#f8f9fa",
+            background: "#fcfcfd",
             borderTop: "1px solid #e9ecef",
             flexShrink: 0
           }}>

@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
 
 const EMPTY_FORM = { name: "", description: "" };
@@ -154,7 +154,7 @@ class index extends React.Component {
         if (ok || data.success) {
           this.closeModal();
           this.loadData(isNew ? 1 : undefined);
-          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         } else {
           this.setState({ errors: data.errors || [data.message || "Error al guardar"], saving: false });
         }
@@ -165,7 +165,7 @@ class index extends React.Component {
   delete = (id) => {
     Swal.fire({
       title: "¿Estás seguro?", text: "El rol será eliminado permanentemente",
-      type: "warning", showCancelButton: true,
+      icon: "warning", showCancelButton: true,
       confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
       confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
     }).then((result) => {
@@ -174,7 +174,7 @@ class index extends React.Component {
           .then((r) => r.json())
           .then(() => {
             this.loadData();
-            Swal.fire("Eliminado", "El rol fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El rol fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -221,51 +221,236 @@ class index extends React.Component {
   renderModal = () => {
     const { modalOpen, modalMode, form, errors, saving, modules, checkedIds } = this.state;
     const title = modalMode === "new" ? "Nuevo Rol" : "Editar Rol";
-    const icon = modalMode === "new" ? "fas fa-plus-circle" : "fas fa-edit";
+    const subtitle = modalMode === "new" ? "Configure los permisos del nuevo rol" : "Modifique los permisos del rol";
 
     return (
       <CmModal
-        isOpen={modalOpen} toggle={this.closeModal}
-        title={<span><i className={icon} /> {title}</span>} size="lg"
-        footer={
-          <React.Fragment>
-            <CmButton variant="outline" onClick={this.closeModal}>Cancelar</CmButton>
-            <CmButton variant="accent" onClick={this.handleSubmit} disabled={saving}>
-              {saving ? <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment> : <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>}
-            </CmButton>
-          </React.Fragment>
-        }
+        isOpen={modalOpen}
+        toggle={this.closeModal}
+        size="lg"
+        footer={null}
+        hideHeader={true}
       >
-        {errors.length > 0 && (
-          <div className="cm-form-errors"><ul>{errors.map((e, i) => <li key={i}>{e}</li>)}</ul></div>
-        )}
-
-        <div className="cm-form-row">
-          <CmInput label="Nombre" placeholder="Nombre del rol" value={form.name} onChange={(e) => this.handleFormChange("name", e.target.value)} />
-          <CmInput label="Descripción" placeholder="Descripción" value={form.description} onChange={(e) => this.handleFormChange("description", e.target.value)} />
-        </div>
-
-        <div className="cm-form-section">
-          <div className="cm-form-section-title">
-            <span><i className="fas fa-shield-alt" style={{ marginRight: 6 }} /> Permisos</span>
+        <div style={{
+          margin: "-20px -24px -24px -24px",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "90vh"
+        }}>
+          {/* Header */}
+          <div style={{
+            background: "#fcfcfd",
+            padding: "20px 32px",
+            borderBottom: "1px solid #e9ecef",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
+              }}>
+                <i className="fas fa-user-tag" style={{ color: "#fff", fontSize: "20px" }} />
+              </div>
+              <div>
+                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>{title}</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>{subtitle}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={this.closeModal}
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "#e9ecef",
+                borderRadius: "50%",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6c757d",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+            >
+              <i className="fas fa-times" />
+            </button>
           </div>
-          <div className="cm-permissions-grid">
-            {modules.map((mod) => (
-              <div key={mod.id} className="cm-permissions-module">
-                <div className="cm-permissions-module-title">{mod.name}</div>
-                {(mod.accion_modules || []).map((action) => (
-                  <label key={action.id} className="cm-permissions-checkbox">
-                    <input
-                      type="checkbox"
-                      value={String(action.id)}
-                      checked={checkedIds.has(String(action.id))}
-                      onChange={this.handleCheckboxChange}
-                    />
-                    <span>{action.name}</span>
-                  </label>
+
+          {/* Form Content - Scrollable */}
+          <div style={{ padding: "24px 32px", flex: 1, overflowY: "auto" }}>
+            {errors.length > 0 && (
+              <div style={{
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                marginBottom: "20px"
+              }}>
+                <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+                  {errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+              marginBottom: "24px"
+            }}>
+              <div>
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#374151"
+                }}>
+                  <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nombre del rol"
+                  value={form.name}
+                  onChange={(e) => this.handleFormChange("name", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "1px solid #e2e5ea",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fcfcfd",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#374151"
+                }}>
+                  <i className="fa fa-align-left" style={{ color: "#6b7280", fontSize: "12px" }} />
+                  Descripción
+                </label>
+                <input
+                  type="text"
+                  placeholder="Descripción"
+                  value={form.description}
+                  onChange={(e) => this.handleFormChange("description", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "1px solid #e2e5ea",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fcfcfd",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="cm-form-section">
+              <div className="cm-form-section-title">
+                <span><i className="fas fa-shield-alt" style={{ marginRight: 6 }} /> Permisos</span>
+              </div>
+              <div className="cm-permissions-grid">
+                {modules.map((mod) => (
+                  <div key={mod.id} className="cm-permissions-module">
+                    <div className="cm-permissions-module-title">{mod.name}</div>
+                    {(mod.accion_modules || []).map((action) => (
+                      <label key={action.id} className="cm-permissions-checkbox">
+                        <input
+                          type="checkbox"
+                          value={String(action.id)}
+                          checked={checkedIds.has(String(action.id))}
+                          onChange={this.handleCheckboxChange}
+                        />
+                        <span>{action.name}</span>
+                      </label>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            padding: "16px 32px",
+            background: "#fcfcfd",
+            borderTop: "1px solid #e9ecef",
+            flexShrink: 0
+          }}>
+            <button
+              type="button"
+              onClick={this.closeModal}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: "pointer",
+                border: "1px solid #dee2e6",
+                background: "#fff",
+                color: "#6c757d"
+              }}
+            >
+              <i className="fas fa-times" /> Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={this.handleSubmit}
+              disabled={saving}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: saving ? "not-allowed" : "pointer",
+                border: "none",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                color: "#fff",
+                opacity: saving ? 0.7 : 1
+              }}
+            >
+              {saving ? (
+                <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>
+              ) : (
+                <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>
+              )}
+            </button>
           </div>
         </div>
       </CmModal>

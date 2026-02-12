@@ -60,7 +60,9 @@ class ContractorsController < ApplicationController
         cost_center: c.cost_center.present? ? { code: c.cost_center.code, execution_state: c.cost_center.execution_state } : nil,
         user_execute: c.user_execute.present? ? { names: c.user_execute.names, id: c.user_execute.id } : nil,
         user: c.user.present? ? { names: c.user.names, id: c.user.id } : nil,
-        last_user_edited: c.last_user_edited.present? ? { names: c.last_user_edited.names, id: c.last_user_edited.id } : nil,
+        user_update: c.last_user_edited.present? ? { names: c.last_user_edited.names, id: c.last_user_edited.id } : nil,
+        created_at: c.created_at,
+        updated_at: c.updated_at,
       }},
       meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
     }

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import FormCreate from '../Reports/FormCreate';
 import { CmDataTable } from '../../generalcomponents/ui';
 
@@ -135,7 +135,7 @@ class ReportesDeServiciosTable extends Component {
   handleChangeAutocompleteContact = (opt) => { this.setState({ selectedOptionContact: opt, form: Object.assign({}, this.state.form, { contact_id: opt.value }) }); };
 
   delete = (id) => {
-    Swal.fire({ title: "¿Estás seguro?", text: "El reporte será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "El reporte será eliminado permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
       .then((result) => {
         if (result.value) {
           fetch("/reports/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })

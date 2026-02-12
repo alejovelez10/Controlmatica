@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
 import FormCreate from '../Materials/FormCreate';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import IndexInvoice from '../incomeDetail/IndexInvoice';
 import { CmDataTable } from '../../generalcomponents/ui';
 
@@ -91,7 +91,7 @@ class MaterialesTable extends Component {
   };
 
   delete = (id) => {
-    Swal.fire({ title: "¿Estás seguro?", text: "El material será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "El material será eliminado permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar" })
       .then((result) => {
         if (result.value) {
           fetch("/materials/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" } })

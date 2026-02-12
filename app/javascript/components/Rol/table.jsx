@@ -1,6 +1,6 @@
 import React from "react";
 import SweetAlert from "sweetalert2-react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import FormCreate from "../Rol/formCreate";
 
 class table extends React.Component {
@@ -73,7 +73,7 @@ class table extends React.Component {
   MessageSucces = name_success => {
     Swal.fire({
       position: "center",
-      type: "success",
+      icon: "success",
       title: name_success,
       showConfirmButton: false,
       timer: 1500
@@ -284,7 +284,7 @@ class table extends React.Component {
     Swal.fire({
       title: "Estas seguro?",
       text: "El registro sera eliminado para siempre!",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#009688",
       cancelButtonColor: "#d33",

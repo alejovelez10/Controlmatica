@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
 
 const EMPTY_FORM = { name: "", money_value: "" };
@@ -114,7 +114,7 @@ class index extends React.Component {
         if (ok) {
           this.closeModal();
           this.loadData(isNew ? 1 : undefined);
-          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         } else {
           this.setState({ errors: data.errors || ["Error al guardar"], saving: false });
         }
@@ -125,7 +125,7 @@ class index extends React.Component {
   delete = (id) => {
     Swal.fire({
       title: "¿Estás seguro?", text: "El registro será eliminado permanentemente",
-      type: "warning", showCancelButton: true,
+      icon: "warning", showCancelButton: true,
       confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
       confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
     }).then((result) => {
@@ -134,7 +134,7 @@ class index extends React.Component {
           .then((r) => r.json())
           .then(() => {
             this.loadData();
-            Swal.fire("Eliminado", "El registro fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -181,27 +181,213 @@ class index extends React.Component {
   renderModal = () => {
     const { modalOpen, modalMode, form, errors, saving } = this.state;
     const title = modalMode === "new" ? "Nueva Parametrización" : "Editar Parametrización";
-    const icon = modalMode === "new" ? "fas fa-plus-circle" : "fas fa-edit";
+    const subtitle = modalMode === "new" ? "Complete los datos de la nueva parametrización" : "Modifique los datos de la parametrización";
 
     return (
       <CmModal
-        isOpen={modalOpen} toggle={this.closeModal}
-        title={<span><i className={icon} /> {title}</span>} size="md"
-        footer={
-          <React.Fragment>
-            <CmButton variant="outline" onClick={this.closeModal}>Cancelar</CmButton>
-            <CmButton variant="accent" onClick={this.handleSubmit} disabled={saving}>
-              {saving ? <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment> : <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>}
-            </CmButton>
-          </React.Fragment>
-        }
+        isOpen={modalOpen}
+        toggle={this.closeModal}
+        size="md"
+        footer={null}
+        hideHeader={true}
       >
-        {errors.length > 0 && (
-          <div className="cm-form-errors"><ul>{errors.map((e, i) => <li key={i}>{e}</li>)}</ul></div>
-        )}
-        <div className="cm-form-row">
-          <CmInput label="Nombre" placeholder="Nombre" value={form.name} onChange={(e) => this.handleFormChange("name", e.target.value)} />
-          <CmInput label="Valor monetario" type="number" placeholder="0" value={form.money_value} onChange={(e) => this.handleFormChange("money_value", e.target.value)} />
+        <div style={{
+          margin: "-20px -24px -24px -24px",
+          display: "flex",
+          flexDirection: "column"
+        }}>
+          {/* Header */}
+          <div style={{
+            background: "#fcfcfd",
+            padding: "20px 32px",
+            borderBottom: "1px solid #e9ecef",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
+              }}>
+                <i className="fas fa-sliders-h" style={{ color: "#fff", fontSize: "20px" }} />
+              </div>
+              <div>
+                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>{title}</h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>{subtitle}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={this.closeModal}
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "#e9ecef",
+                borderRadius: "50%",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6c757d",
+                transition: "all 0.2s"
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+            >
+              <i className="fas fa-times" />
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div style={{ padding: "24px 32px" }}>
+            {errors.length > 0 && (
+              <div style={{
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "8px",
+                padding: "12px 16px",
+                marginBottom: "20px"
+              }}>
+                <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+                  {errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px"
+            }}>
+              <div>
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#374151"
+                }}>
+                  <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
+                  Nombre
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nombre"
+                  value={form.name}
+                  onChange={(e) => this.handleFormChange("name", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "1px solid #e2e5ea",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fcfcfd",
+                    transition: "all 0.2s",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "6px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "#374151"
+                }}>
+                  <i className="fa fa-dollar-sign" style={{ color: "#6b7280", fontSize: "12px" }} />
+                  Valor monetario
+                </label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={form.money_value}
+                  onChange={(e) => this.handleFormChange("money_value", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    border: "1px solid #e2e5ea",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    background: "#fcfcfd",
+                    transition: "all 0.2s",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            padding: "16px 32px",
+            background: "#fcfcfd",
+            borderTop: "1px solid #e9ecef"
+          }}>
+            <button
+              type="button"
+              onClick={this.closeModal}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                border: "1px solid #dee2e6",
+                background: "#fff",
+                color: "#6c757d"
+              }}
+            >
+              <i className="fas fa-times" /> Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={this.handleSubmit}
+              disabled={saving}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: saving ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease",
+                border: "none",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                color: "#fff",
+                opacity: saving ? 0.7 : 1
+              }}
+            >
+              {saving ? (
+                <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>
+              ) : (
+                <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>
+              )}
+            </button>
+          </div>
         </div>
       </CmModal>
     );

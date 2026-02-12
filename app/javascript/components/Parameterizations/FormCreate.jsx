@@ -1,26 +1,6 @@
 import React from "react";
-import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
+import { Modal, ModalBody } from "reactstrap";
 import NumberFormat from "react-number-format";
-
-const selectStyles = {
-  control: (base, state) => ({
-    ...base,
-    background: "#f8f9fa",
-    borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
-    boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
-    "&:hover": { borderColor: "#f5a623" },
-    borderRadius: "8px",
-    padding: "2px 4px",
-    fontSize: "14px",
-  }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
-    color: state.isSelected ? "#fff" : "#333",
-    fontSize: "14px",
-  }),
-  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-};
 
 class FormCreate extends React.Component {
   constructor(props) {
@@ -37,202 +17,230 @@ class FormCreate extends React.Component {
           toggle={this.props.toggle}
           backdrop={this.props.backdrop}
         >
-          <ModalHeader className="cm-modal-header" toggle={this.props.toggle}>
-            <i className="fa fa-cogs cm-header-icon"></i>
-            {this.props.titulo}
-          </ModalHeader>
-
-          <form onSubmit={this.props.FormSubmit}>
-            <ModalBody className="cm-modal-body">
-              <div className="cm-form-grid-2">
-                <div className="cm-form-group">
-                  <label className="cm-label">
-                    <i className="fa fa-tag"></i> Nombre <span className="cm-required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={this.props.formValues.name}
-                    onChange={this.props.onChangeForm}
-                    className={`cm-input ${this.props.errorValues === false && this.props.formValues.name === "" ? "cm-input-error" : ""}`}
-                    autoComplete="off"
-                    placeholder="Nombre"
-                  />
+          <ModalBody style={{ padding: 0 }}>
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              maxHeight: "90vh"
+            }}>
+              {/* Header - Provider style with yellow gradient icon */}
+              <div style={{
+                background: "#fcfcfd",
+                padding: "20px 32px",
+                borderBottom: "1px solid #e9ecef",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexShrink: 0,
+                borderRadius: "4px 4px 0 0"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div style={{
+                    width: "48px",
+                    height: "48px",
+                    background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
+                  }}>
+                    <i className="fas fa-sliders-h" style={{ color: "#fff", fontSize: "20px" }} />
+                  </div>
+                  <div>
+                    <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>
+                      {this.props.titulo}
+                    </h2>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>
+                      Complete los datos de la parametrizacion
+                    </p>
+                  </div>
                 </div>
-
-                <div className="cm-form-group">
-                  <label className="cm-label">
-                    <i className="fa fa-dollar-sign"></i> Valor monetario <span className="cm-required">*</span>
-                  </label>
-                  <NumberFormat
-                    name="money_value"
-                    thousandSeparator={true}
-                    prefix={"$"}
-                    className={`cm-input ${this.props.errorValues === false && this.props.formValues.money_value === "" ? "cm-input-error" : ""}`}
-                    value={this.props.formValues.money_value}
-                    onChange={this.props.onChangeForm}
-                    placeholder="Valor monetario"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={this.props.toggle}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    border: "none",
+                    background: "#e9ecef",
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#6c757d",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+                >
+                  <i className="fas fa-times" />
+                </button>
               </div>
 
-              {this.props.errorValues === false && (
-                <div className="cm-alert cm-alert-error">
-                  <i className="fa fa-exclamation-circle"></i>
-                  <span>Debes de completar todos los campos requeridos</span>
+              {/* Form Content */}
+              <form onSubmit={this.props.FormSubmit}>
+                <div style={{
+                  padding: "24px 32px",
+                  flex: 1,
+                  overflowY: "auto"
+                }}>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "16px"
+                  }}>
+                    <div>
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginBottom: "6px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#6b7280"
+                      }}>
+                        <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
+                        Nombre <span style={{ color: "#dc3545", fontWeight: "bold" }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={this.props.formValues.name}
+                        onChange={this.props.onChangeForm}
+                        autoComplete="off"
+                        placeholder="Nombre"
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          border: this.props.errorValues === false && this.props.formValues.name === ""
+                            ? "1px solid #dc3545"
+                            : "1px solid #e2e5ea",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          background: this.props.errorValues === false && this.props.formValues.name === ""
+                            ? "#fff5f5"
+                            : "#fcfcfd",
+                          transition: "all 0.2s",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginBottom: "6px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#6b7280"
+                      }}>
+                        <i className="fa fa-dollar-sign" style={{ color: "#6b7280", fontSize: "12px" }} />
+                        Valor monetario <span style={{ color: "#dc3545", fontWeight: "bold" }}>*</span>
+                      </label>
+                      <NumberFormat
+                        name="money_value"
+                        thousandSeparator={true}
+                        prefix={"$"}
+                        value={this.props.formValues.money_value}
+                        onChange={this.props.onChangeForm}
+                        placeholder="Valor monetario"
+                        style={{
+                          width: "100%",
+                          padding: "10px 14px",
+                          border: this.props.errorValues === false && this.props.formValues.money_value === ""
+                            ? "1px solid #dc3545"
+                            : "1px solid #e2e5ea",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          background: this.props.errorValues === false && this.props.formValues.money_value === ""
+                            ? "#fff5f5"
+                            : "#fcfcfd",
+                          transition: "all 0.2s",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {this.props.errorValues === false && (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "12px 16px",
+                      borderRadius: "8px",
+                      marginTop: "20px",
+                      background: "#fef2f2",
+                      border: "1px solid #fecaca",
+                      color: "#dc2626",
+                      fontSize: "14px"
+                    }}>
+                      <i className="fa fa-exclamation-circle" style={{ fontSize: "16px" }} />
+                      <span>Debes de completar todos los campos requeridos</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </ModalBody>
 
-            <ModalFooter className="cm-modal-footer">
-              <button type="button" className="cm-btn cm-btn-cancel" onClick={this.props.toggle}>
-                <i className="fa fa-times"></i> Cerrar
-              </button>
-              <button type="submit" className="cm-btn cm-btn-submit" onClick={this.props.submit}>
-                <i className="fa fa-check"></i> {this.props.nameSubmit}
-              </button>
-            </ModalFooter>
-          </form>
+                {/* Footer - Provider style */}
+                <div style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "12px",
+                  padding: "16px 32px",
+                  background: "#fcfcfd",
+                  borderTop: "1px solid #e9ecef",
+                  flexShrink: 0,
+                  borderRadius: "0 0 4px 4px"
+                }}>
+                  <button
+                    type="button"
+                    onClick={this.props.toggle}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      border: "1px solid #dee2e6",
+                      background: "#fff",
+                      color: "#6c757d"
+                    }}
+                  >
+                    <i className="fa fa-times" /> Cerrar
+                  </button>
+                  <button
+                    type="submit"
+                    onClick={this.props.submit}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      border: "none",
+                      background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                      color: "#fff"
+                    }}
+                  >
+                    <i className="fa fa-check" /> {this.props.nameSubmit}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </ModalBody>
         </Modal>
-
-        <style>{`
-          .cm-modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            border-radius: 8px 8px 0 0;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            border-bottom: none;
-          }
-          .cm-modal-header .close {
-            color: #fff;
-            opacity: 0.8;
-            text-shadow: none;
-          }
-          .cm-modal-header .close:hover {
-            opacity: 1;
-          }
-          .cm-header-icon {
-            margin-right: 10px;
-            font-size: 18px;
-          }
-          .cm-modal-body {
-            padding: 24px;
-            background: #fff;
-          }
-          .cm-form-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-          }
-          @media (max-width: 576px) {
-            .cm-form-grid-2 {
-              grid-template-columns: 1fr;
-            }
-          }
-          .cm-form-group {
-            display: flex;
-            flex-direction: column;
-          }
-          .cm-label {
-            font-size: 13px;
-            font-weight: 400;
-            color: #495057;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-          }
-          .cm-label i {
-            color: #667eea;
-            font-size: 12px;
-          }
-          .cm-required {
-            color: #dc3545;
-            font-weight: bold;
-          }
-          .cm-input {
-            width: 100%;
-            padding: 10px 14px;
-            font-size: 14px;
-            border: 1px solid #e2e5ea;
-            border-radius: 8px;
-            background: #f8f9fa;
-            transition: all 0.2s ease;
-          }
-          .cm-input:focus {
-            outline: none;
-            border-color: #f5a623;
-            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
-            background: #fff;
-          }
-          .cm-input::placeholder {
-            color: #adb5bd;
-          }
-          .cm-input-error {
-            border-color: #dc3545;
-            background: #fff5f5;
-          }
-          .cm-input-error:focus {
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
-          }
-          .cm-alert {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 14px;
-          }
-          .cm-alert-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-          }
-          .cm-alert-error i {
-            font-size: 16px;
-          }
-          .cm-modal-footer {
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            border-radius: 0 0 8px 8px;
-          }
-          .cm-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          .cm-btn-cancel {
-            background: #fff;
-            color: #6c757d;
-            border: 1px solid #dee2e6;
-          }
-          .cm-btn-cancel:hover {
-            background: #f8f9fa;
-            border-color: #c6ccd2;
-          }
-          .cm-btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-          }
-          .cm-btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-          }
-        `}</style>
       </React.Fragment>
     );
   }

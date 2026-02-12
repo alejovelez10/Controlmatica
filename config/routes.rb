@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   get "commissions/index"
   get "commission_relations/index"
   get "get_show_center/:id", to: "cost_centers#get_show_center"
+  get "get_cost_center_details/:id", to: "cost_centers#get_cost_center_details"
   get "employed_performance/show", to: "employed_performance#show", as: "employed_performance_show"
   get "employed_performance/info_pdf", to: "employed_performance#info_pdf", as: "info_pdf"
   get "employed_performance/info_pdf_new", to: "employed_performance#info_pdf_new", as: "info_pdf_new"

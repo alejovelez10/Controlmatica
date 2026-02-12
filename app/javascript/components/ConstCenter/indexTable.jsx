@@ -5,7 +5,7 @@ import FormFilter from "../ConstCenter/FormFilter";
 import FormCreate from "../ConstCenter/FormCreate";
 import ModalError from "./ModalError";
 import QuotationIndex from "./Quotation/Index";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import Select from "react-select";
 
 class indexTable extends React.Component {
@@ -673,7 +673,7 @@ class indexTable extends React.Component {
     Swal.fire({
       title: "Estas seguro?",
       text: "El registro sera actualizado!",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#009688",
       cancelButtonColor: "#d33",

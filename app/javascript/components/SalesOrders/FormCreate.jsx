@@ -6,7 +6,7 @@ import { Button, CardBody, Card, Collapse } from 'reactstrap';
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -513,7 +513,7 @@ class FormCreate extends React.Component {
 
           .cm-modal-body {
             padding: 24px;
-            background: #f8f9fa;
+            background: #fcfcfd;
           }
 
           .cm-form-container {
@@ -569,7 +569,7 @@ class FormCreate extends React.Component {
             border: 1px solid #e2e5ea;
             border-radius: 8px;
             font-size: 14px;
-            background: #f8f9fa;
+            background: #fcfcfd;
             transition: all 0.2s ease;
           }
 
@@ -637,7 +637,7 @@ class FormCreate extends React.Component {
           }
 
           .cm-btn-secondary:hover {
-            background: #f8f9fa;
+            background: #fcfcfd;
             border-color: #dee2e6;
           }
 
@@ -744,7 +744,7 @@ class FormCreate extends React.Component {
           }
 
           .cm-table tbody tr:hover {
-            background: #f8f9fa;
+            background: #fcfcfd;
           }
 
           .cm-table tbody tr:last-child td {
@@ -778,7 +778,7 @@ class FormCreate extends React.Component {
           }
 
           .cm-dropdown-item:hover {
-            background: #f8f9fa;
+            background: #fcfcfd;
           }
 
           .cm-dropdown-item-danger {

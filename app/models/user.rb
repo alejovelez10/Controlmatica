@@ -59,7 +59,7 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  #mount_uploader :avatar, AvatarUploader  
+  mount_uploader :avatar, AvatarUploader
   belongs_to :rol, optional: true
   has_and_belongs_to_many :shifts
 

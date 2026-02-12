@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import NumberFormat from "react-number-format";
 import Select from "react-select";
 import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
@@ -85,6 +85,8 @@ class index extends React.Component {
       // Autocomplete
       selectedProvider: null,
       selectedCostCenter: null,
+      formCostCenterOptions: [],
+      formCostCenterLoading: false,
       // Filters
       showFilters: false,
       filters: Object.assign({}, EMPTY_FILTERS),
@@ -97,9 +99,7 @@ class index extends React.Component {
       return { label: p.name, value: p.id };
     });
 
-    this.costCenterOptions = (props.cost_center || []).map(function(cc) {
-      return { label: cc.code, value: cc.id };
-    });
+    this.costCenterOptions = [];
 
     this.columns = [
       {
@@ -352,7 +352,7 @@ class index extends React.Component {
         if (data.type === "success") {
           self.setState({ editingStateId: null });
           self.loadData();
-          Swal.fire({ position: "center", type: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
         }
       });
   }.bind(this);
@@ -368,7 +368,9 @@ class index extends React.Component {
       errors: [],
       saving: false,
       selectedProvider: null,
-      selectedCostCenter: null
+      selectedCostCenter: null,
+      formCostCenterOptions: [],
+      formCostCenterLoading: false
     });
   }.bind(this);
 
@@ -385,13 +387,9 @@ class index extends React.Component {
       }
     }
 
-    if (row.cost_center_id) {
-      for (var j = 0; j < this.costCenterOptions.length; j++) {
-        if (this.costCenterOptions[j].value === row.cost_center_id) {
-          costCenterOption = this.costCenterOptions[j];
-          break;
-        }
-      }
+    // Get cost center from row data
+    if (row.cost_center_id && row.cost_center) {
+      costCenterOption = { value: row.cost_center_id, label: row.cost_center.code };
     }
 
     this.setState({
@@ -411,7 +409,9 @@ class index extends React.Component {
       errors: [],
       saving: false,
       selectedProvider: providerOption,
-      selectedCostCenter: costCenterOption
+      selectedCostCenter: costCenterOption,
+      formCostCenterOptions: costCenterOption ? [costCenterOption] : [],
+      formCostCenterLoading: false
     });
   }.bind(this);
 
@@ -436,6 +436,28 @@ class index extends React.Component {
   handleCostCenterChange = function(option) {
     this.setState({ selectedCostCenter: option });
     this.handleFormChange("cost_center_id", option ? option.value : "");
+  }.bind(this);
+
+  handleFormCostCenterSearch = function(inputValue) {
+    var self = this;
+    if (!inputValue || inputValue.length < 3) {
+      self.setState({ formCostCenterOptions: [] });
+      return;
+    }
+    if (self._formCcTimer) clearTimeout(self._formCcTimer);
+    self._formCcTimer = setTimeout(function() {
+      self.setState({ formCostCenterLoading: true });
+      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue), {
+        headers: { "X-CSRF-Token": csrfToken() }
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          self.setState({
+            formCostCenterOptions: data.map(function(d) { return { value: d.id, label: d.label }; }),
+            formCostCenterLoading: false,
+          });
+        });
+    }, 300);
   }.bind(this);
 
   // ─── ShowInfo ───
@@ -499,7 +521,7 @@ class index extends React.Component {
 
   deleteFactura = function(id) {
     var self = this;
-    Swal.fire({ title: "¿Estás seguro?", text: "El registro será eliminado permanentemente", type: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Eliminar", cancelButtonText: "Cancelar" })
+    Swal.fire({ title: "¿Estás seguro?", text: "El registro será eliminado permanentemente", icon: "warning", showCancelButton: true, confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545", confirmButtonText: "Eliminar", cancelButtonText: "Cancelar" })
       .then(function(result) {
         if (result.value) {
           fetch("/material_invoices/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
@@ -517,56 +539,181 @@ class index extends React.Component {
     var state = this.state;
     if (!state.facturasOpen) return null;
 
+    var isEdit = !!state.facturasEditId;
+
+    var tableStyles = {
+      tableWrap: { overflowX: "auto", borderRadius: 10, border: "1px solid #e2e5ea" },
+      table: { width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: "'Poppins', sans-serif" },
+      th: { padding: "10px 14px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#5a6a7e", background: "#f4f5f8", borderBottom: "2px solid #e2e5ea", whiteSpace: "nowrap", textAlign: "left" },
+      thCenter: { padding: "10px 14px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.4, color: "#5a6a7e", background: "#f4f5f8", borderBottom: "2px solid #e2e5ea", whiteSpace: "nowrap", textAlign: "center" },
+      td: { padding: "10px 14px", borderBottom: "1px solid #f0f1f3", color: "#333", verticalAlign: "middle" },
+      tdCenter: { padding: "10px 14px", borderBottom: "1px solid #f0f1f3", color: "#333", verticalAlign: "middle", textAlign: "center" },
+      actionBtn: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, border: "none", borderRadius: 6, background: "#eef0f4", color: "#5a6a7e", fontSize: 12, cursor: "pointer", marginRight: 4 },
+      actionBtnDanger: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, border: "none", borderRadius: 6, background: "rgba(220,53,69,0.08)", color: "#dc3545", fontSize: 12, cursor: "pointer" }
+    };
+
+    var inputStyle = { width: "100%", padding: "10px 14px", border: "1px solid #e2e5ea", borderRadius: "8px", fontSize: "14px", background: "#fcfcfd", outline: "none", boxSizing: "border-box" };
+    var labelStyle = { display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px", fontSize: "14px", fontWeight: 500, color: "#374151" };
+    var labelIconStyle = { color: "#6b7280", fontSize: "12px" };
+
+    // Form component
+    var renderForm = function() {
+      return React.createElement("div", { style: { background: "#fff", border: "1px solid #e2e5ea", borderRadius: "12px", marginBottom: "20px", overflow: "hidden" }},
+        // Form Header
+        React.createElement("div", { style: { background: "#fcfcfd", padding: "16px 20px", borderBottom: "1px solid #e9ecef", display: "flex", alignItems: "center", justifyContent: "space-between" }},
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "12px" }},
+            React.createElement("div", { style: { width: "36px", height: "36px", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(245, 166, 35, 0.3)" }},
+              React.createElement("i", { className: isEdit ? "fas fa-pen" : "fas fa-plus", style: { color: "#fff", fontSize: "14px" }})
+            ),
+            React.createElement("div", null,
+              React.createElement("h3", { style: { margin: 0, fontSize: "15px", fontWeight: 600, color: "#333" }}, isEdit ? "Editar Factura" : "Nueva Factura"),
+              React.createElement("p", { style: { margin: 0, fontSize: "11px", color: "#6c757d" }}, isEdit ? "Modifique los datos de la factura" : "Complete los datos de la nueva factura")
+            )
+          ),
+          React.createElement("button", { type: "button", onClick: self.toggleFacturasForm, style: { width: "28px", height: "28px", border: "none", background: "#e9ecef", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6c757d" }},
+            React.createElement("i", { className: "fas fa-times", style: { fontSize: "12px" }})
+          )
+        ),
+        // Form Content
+        React.createElement("div", { style: { padding: "20px" }},
+          React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }},
+            React.createElement("div", null,
+              React.createElement("label", { style: labelStyle },
+                React.createElement("i", { className: "fa fa-hashtag", style: labelIconStyle }),
+                "Numero de factura"
+              ),
+              React.createElement("input", { type: "text", name: "number", value: state.facturasForm.number, onChange: self.handleFacturasFormChange, placeholder: "Ej: FAC-001", style: inputStyle })
+            ),
+            React.createElement("div", null,
+              React.createElement("label", { style: labelStyle },
+                React.createElement("i", { className: "fa fa-dollar-sign", style: labelIconStyle }),
+                "Valor"
+              ),
+              React.createElement(NumberFormat, { name: "value", thousandSeparator: true, prefix: "$", value: state.facturasForm.value, onChange: self.handleFacturasFormChange, placeholder: "$0", style: inputStyle })
+            ),
+            React.createElement("div", null,
+              React.createElement("label", { style: labelStyle },
+                React.createElement("i", { className: "fa fa-align-left", style: labelIconStyle }),
+                "Descripción"
+              ),
+              React.createElement("input", { type: "text", name: "observation", value: state.facturasForm.observation, onChange: self.handleFacturasFormChange, placeholder: "Descripción", style: inputStyle })
+            )
+          )
+        ),
+        // Form Footer
+        React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: "12px", padding: "16px 20px", background: "#fcfcfd", borderTop: "1px solid #e9ecef" }},
+          React.createElement("button", { type: "button", onClick: self.toggleFacturasForm, style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", fontSize: "13px", fontWeight: 500, borderRadius: "8px", cursor: "pointer", border: "1px solid #dee2e6", background: "#fff", color: "#6c757d" }},
+            React.createElement("i", { className: "fas fa-times" }), " Cancelar"
+          ),
+          React.createElement("button", { type: "button", onClick: self.submitFactura, style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", fontSize: "13px", fontWeight: 500, borderRadius: "8px", cursor: "pointer", border: "none", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", color: "#fff" }},
+            React.createElement("i", { className: "fas fa-save" }), isEdit ? " Actualizar" : " Crear"
+          )
+        )
+      );
+    };
+
+    // Open menu handler
+    var openMenu = function(e) {
+      e.stopPropagation();
+      var btn = e.currentTarget;
+      var menu = btn.nextElementSibling;
+      var all = document.querySelectorAll('.cm-dt-menu-dropdown.open');
+      all.forEach(function(m) { m.classList.remove('open'); });
+      var rect = btn.getBoundingClientRect();
+      document.body.appendChild(menu);
+      menu.style.top = (rect.bottom + 4) + 'px';
+      menu.style.left = (rect.right - 160) + 'px';
+      menu.classList.add('open');
+      var close = function(ev) {
+        if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
+          menu.classList.remove('open');
+          btn.parentNode.appendChild(menu);
+          document.removeEventListener('click', close);
+        }
+      };
+      document.addEventListener('click', close);
+    };
+
+    // Table component
+    var renderTable = function() {
+      if (state.facturasData.length === 0) {
+        return React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 20px", textAlign: "center" }},
+          React.createElement("i", { className: "fas fa-file-invoice", style: { fontSize: 36, color: "#d0d4db", marginBottom: 10 }}),
+          React.createElement("p", { style: { color: "#999", margin: 0, fontSize: 14 }}, "No hay facturas registradas")
+        );
+      }
+      return React.createElement("div", { style: tableStyles.tableWrap },
+        React.createElement("table", { style: tableStyles.table },
+          React.createElement("thead", null,
+            React.createElement("tr", null,
+              React.createElement("th", { style: Object.assign({}, tableStyles.thCenter, { width: 80 }) }),
+              React.createElement("th", { style: tableStyles.th }, "Numero de factura"),
+              React.createElement("th", { style: tableStyles.th }, "Valor"),
+              React.createElement("th", { style: tableStyles.th }, "Descripcion")
+            )
+          ),
+          React.createElement("tbody", null,
+            state.facturasData.map(function(inv) {
+              return React.createElement("tr", { key: inv.id },
+                React.createElement("td", { style: tableStyles.tdCenter },
+                  React.createElement("div", { className: "cm-dt-menu" },
+                    React.createElement("button", { className: "cm-dt-menu-trigger", onClick: openMenu },
+                      React.createElement("i", { className: "fas fa-ellipsis-v" })
+                    ),
+                    React.createElement("div", { className: "cm-dt-menu-dropdown" },
+                      React.createElement("button", { onClick: function() { self.editFactura(inv); }, className: "cm-dt-menu-item" },
+                        React.createElement("i", { className: "fas fa-pen" }), " Editar"
+                      ),
+                      React.createElement("button", { onClick: function() { self.deleteFactura(inv.id); }, className: "cm-dt-menu-item cm-dt-menu-item--danger" },
+                        React.createElement("i", { className: "fas fa-trash" }), " Eliminar"
+                      )
+                    )
+                  )
+                ),
+                React.createElement("td", { style: tableStyles.td }, inv.number),
+                React.createElement("td", { style: tableStyles.td }, React.createElement(NumberFormat, { value: inv.value, displayType: "text", thousandSeparator: true, prefix: "$" })),
+                React.createElement("td", { style: tableStyles.td }, inv.observation)
+              );
+            })
+          )
+        )
+      );
+    };
+
     return React.createElement(CmModal, {
       isOpen: true,
       toggle: self.closeFacturas,
-      title: React.createElement("span", null, React.createElement("i", { className: "fas fa-file-invoice" }), " Facturas"),
       size: "lg",
-      footer: React.createElement(CmButton, { variant: "outline", onClick: self.closeFacturas }, "Cerrar")
+      footer: null,
+      hideHeader: true
     },
-      state.facturasFormOpen ? React.createElement("div", { className: "cm-form-row", style: { marginBottom: "12px" } },
-        React.createElement(CmInput, { label: "Numero de factura", name: "number", value: state.facturasForm.number, onChange: self.handleFacturasFormChange }),
-        React.createElement("div", { className: "cm-input-group" },
-          React.createElement("label", { className: "cm-input-label" }, "Valor"),
-          React.createElement(NumberFormat, { name: "value", thousandSeparator: true, prefix: "$", className: "cm-input", value: state.facturasForm.value, onChange: self.handleFacturasFormChange, placeholder: "Valor" })
-        ),
-        React.createElement(CmInput, { label: "Descripcion", name: "observation", value: state.facturasForm.observation, onChange: self.handleFacturasFormChange })
-      ) : null,
-
-      React.createElement("div", { style: { textAlign: "right", marginBottom: "12px" } },
-        state.facturasFormOpen ? React.createElement(React.Fragment, null,
-          React.createElement(CmButton, { variant: "outline", onClick: self.toggleFacturasForm, style: { marginRight: "8px" } }, "Cerrar"),
-          React.createElement(CmButton, { variant: "accent", onClick: self.submitFactura }, state.facturasEditId ? "Actualizar" : "Crear factura")
-        ) : React.createElement(CmButton, { variant: "accent", onClick: self.toggleFacturasForm }, "Crear factura")
-      ),
-
-      React.createElement("table", { className: "cm-table", style: { width: "100%", borderCollapse: "collapse" } },
-        React.createElement("thead", null,
-          React.createElement("tr", { style: { background: "#2a3f53", color: "#fff" } },
-            React.createElement("th", { style: { padding: "8px" } }, "Acciones"),
-            React.createElement("th", { style: { padding: "8px" } }, "Numero de factura"),
-            React.createElement("th", { style: { padding: "8px" } }, "Valor"),
-            React.createElement("th", { style: { padding: "8px" } }, "Descripcion")
+      React.createElement("div", { style: { margin: "-20px -24px -24px -24px", display: "flex", flexDirection: "column", maxHeight: "85vh" }},
+        // Header
+        React.createElement("div", { style: { background: "#fcfcfd", padding: "20px 32px", borderBottom: "1px solid #e9ecef", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }},
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "16px" }},
+            React.createElement("div", { style: { width: "48px", height: "48px", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)" }},
+              React.createElement("i", { className: "fas fa-file-invoice-dollar", style: { color: "#fff", fontSize: "20px" }})
+            ),
+            React.createElement("div", null,
+              React.createElement("h2", { style: { margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}, "Facturas"),
+              React.createElement("p", { style: { margin: 0, fontSize: "12px", color: "#6c757d" }}, "Gestión de facturas del material")
+            )
+          ),
+          React.createElement("button", { type: "button", onClick: self.closeFacturas, style: { width: "32px", height: "32px", border: "none", background: "#e9ecef", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6c757d", transition: "all 0.2s" }},
+            React.createElement("i", { className: "fas fa-times" })
           )
         ),
-        React.createElement("tbody", null,
-          state.facturasData.length > 0 ? state.facturasData.map(function(inv) {
-            return React.createElement("tr", { key: inv.id, style: { borderBottom: "1px solid #e0e0e0" } },
-              React.createElement("td", { style: { padding: "8px" } },
-                React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", onClick: function() { self.editFactura(inv); }, style: { marginRight: "4px" } },
-                  React.createElement("i", { className: "fas fa-pen" })
-                ),
-                React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", onClick: function() { self.deleteFactura(inv.id); }, style: { color: "#dc3545" } },
-                  React.createElement("i", { className: "fas fa-trash" })
-                )
-              ),
-              React.createElement("td", { style: { padding: "8px" } }, inv.number),
-              React.createElement("td", { style: { padding: "8px" } }, React.createElement(NumberFormat, { value: inv.value, displayType: "text", thousandSeparator: true, prefix: "$" })),
-              React.createElement("td", { style: { padding: "8px" } }, inv.observation)
-            );
-          }) : React.createElement("tr", null,
-            React.createElement("td", { colSpan: "4", style: { padding: "20px", textAlign: "center" } }, "Facturas")
-          )
+        // Content
+        React.createElement("div", { style: { padding: "24px 32px", flex: 1, overflowY: "auto" }},
+          state.facturasFormOpen ? renderForm() : null,
+          renderTable()
+        ),
+        // Footer
+        React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: "12px", padding: "16px 32px", background: "#fcfcfd", borderTop: "1px solid #e9ecef", flexShrink: 0 }},
+          !state.facturasFormOpen ? React.createElement("button", { type: "button", onClick: self.toggleFacturasForm, style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "10px 20px", fontSize: "14px", fontWeight: 500, borderRadius: "8px", cursor: "pointer", border: "none", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", color: "#fff" }},
+            React.createElement("i", { className: "fas fa-plus" }), " Nueva Factura"
+          ) : null,
+          React.createElement("button", { type: "button", onClick: self.closeFacturas, style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "10px 20px", fontSize: "14px", fontWeight: 500, borderRadius: "8px", cursor: "pointer", border: "1px solid #dee2e6", background: "#fff", color: "#6c757d" }}, "Cerrar")
         )
       )
     );
@@ -605,7 +752,7 @@ class index extends React.Component {
           self.loadData(isNew ? 1 : undefined);
           Swal.fire({
             position: "center",
-            type: "success",
+            icon: "success",
             title: result.data.message,
             showConfirmButton: false,
             timer: 1500
@@ -629,7 +776,7 @@ class index extends React.Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "El registro será eliminado permanentemente",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
@@ -644,7 +791,7 @@ class index extends React.Component {
           .then(function(response) { return response.json(); })
           .then(function() {
             self.loadData();
-            Swal.fire("Eliminado", "El registro fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -730,119 +877,412 @@ class index extends React.Component {
     var modalMode = state.modalMode;
     var isNew = modalMode === "new";
     var title = isNew ? "Nuevo Material" : "Editar Material";
-    var icon = isNew ? "fas fa-plus" : "fas fa-pen";
     var usuario = this.props.usuario;
     var hasCostCenter = usuario && usuario.cost_center_id;
+
+    var selectStyles = {
+      control: function(base, s) {
+        return Object.assign({}, base, {
+          background: "#fcfcfd",
+          borderColor: s.isFocused ? "#f5a623" : "#e2e5ea",
+          boxShadow: s.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
+          borderRadius: "8px",
+          padding: "2px 4px",
+          fontSize: "14px"
+        });
+      },
+      option: function(base, s) {
+        return Object.assign({}, base, {
+          backgroundColor: s.isSelected ? "#f5a623" : s.isFocused ? "#fff3e0" : "#fff",
+          color: s.isSelected ? "#fff" : "#333",
+          fontSize: "14px"
+        });
+      },
+      menuPortal: function(base) { return Object.assign({}, base, { zIndex: 9999 }); }
+    };
 
     return React.createElement(CmModal, {
       isOpen: state.modalOpen,
       toggle: self.closeModal,
-      title: React.createElement("span", null,
-        React.createElement("i", { className: icon }),
-        " ",
-        title
+      hideHeader: true,
+      footer: null,
+      size: "lg"
+    },
+      // Custom Header
+      React.createElement("div", { style: {
+        background: "#fcfcfd",
+        padding: "20px 32px",
+        borderBottom: "1px solid #e9ecef",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }},
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "16px" }},
+          React.createElement("div", { style: {
+            width: "48px",
+            height: "48px",
+            background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "20px",
+            color: "#fff",
+            boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
+          }},
+            React.createElement("i", { className: "fas fa-boxes" })
+          ),
+          React.createElement("div", null,
+            React.createElement("h2", { style: {
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "18px",
+              fontWeight: "600",
+              color: "#333",
+              margin: "0 0 2px 0"
+            }}, title),
+            React.createElement("p", { style: {
+              fontSize: "12px",
+              color: "#6c757d",
+              margin: "0"
+            }}, "Complete los campos para gestionar el material")
+          )
+        ),
+        React.createElement("button", {
+          onClick: self.closeModal,
+          style: {
+            width: "32px",
+            height: "32px",
+            border: "none",
+            background: "#e9ecef",
+            borderRadius: "50%",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#6c757d",
+            transition: "all 0.2s"
+          }
+        },
+          React.createElement("i", { className: "fas fa-times" })
+        )
       ),
-      size: "lg",
-      footer: React.createElement(React.Fragment, null,
-        React.createElement(CmButton, { variant: "outline", onClick: self.closeModal }, "Cancelar"),
-        React.createElement(CmButton, { variant: "accent", onClick: self.handleSubmit, disabled: saving },
+
+      // Body
+      React.createElement("div", { style: { padding: "24px 32px" }},
+        errors.length > 0 ? React.createElement("div", { style: {
+          background: "#fff5f5",
+          border: "1px solid #ffcdd2",
+          borderRadius: "8px",
+          padding: "12px 16px",
+          marginBottom: "16px",
+          color: "#c62828",
+          fontSize: "14px"
+        }},
+          React.createElement("ul", { style: { margin: "0", paddingLeft: "20px" }},
+            errors.map(function(e, i) {
+              return React.createElement("li", { key: i, style: { margin: "4px 0" } }, e);
+            })
+          )
+        ) : null,
+
+        React.createElement("div", { style: {
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "16px"
+        }},
+          // Proveedor
+          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-truck", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Proveedor"
+            ),
+            React.createElement(Select, {
+              options: self.providerOptions,
+              value: state.selectedProvider,
+              onChange: self.handleProviderChange,
+              placeholder: "Seleccione proveedor",
+              styles: selectStyles,
+              menuPortalTarget: document.body
+            })
+          ),
+
+          // Centro de Costo
+          !hasCostCenter ? React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-building", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Centro de Costo ",
+              React.createElement("small", { style: { fontSize: "11px", color: "#9ca3af", marginLeft: "6px" }}, "(escribe al menos 3 letras)")
+            ),
+            React.createElement(Select, {
+              options: state.formCostCenterOptions,
+              value: state.selectedCostCenter,
+              onChange: self.handleCostCenterChange,
+              onInputChange: self.handleFormCostCenterSearch,
+              isLoading: state.formCostCenterLoading,
+              placeholder: "Buscar centro de costo...",
+              noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
+              styles: selectStyles,
+              menuPortalTarget: document.body
+            })
+          ) : null,
+
+          // Fecha de Orden
+          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-calendar-alt", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Fecha de Orden"
+            ),
+            React.createElement("input", {
+              type: "date",
+              value: form.sales_date || "",
+              onChange: function(e) { self.handleFormChange("sales_date", e.target.value); },
+              style: {
+                width: "100%",
+                padding: "10px 14px",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "14px",
+                color: "#333",
+                background: "#fcfcfd",
+                border: "1px solid #e2e5ea",
+                borderRadius: "8px",
+                boxSizing: "border-box"
+              }
+            })
+          ),
+
+          // Número de Orden
+          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-hashtag", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Número de Orden"
+            ),
+            React.createElement("input", {
+              type: "text",
+              placeholder: "Número de orden",
+              value: form.sales_number || "",
+              onChange: function(e) { self.handleFormChange("sales_number", e.target.value); },
+              style: {
+                width: "100%",
+                padding: "10px 14px",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "14px",
+                color: "#333",
+                background: "#fcfcfd",
+                border: "1px solid #e2e5ea",
+                borderRadius: "8px",
+                boxSizing: "border-box"
+              }
+            })
+          ),
+
+          // Valor
+          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-dollar-sign", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Valor"
+            ),
+            React.createElement(NumberFormat, {
+              name: "amount",
+              thousandSeparator: true,
+              prefix: "$",
+              value: form.amount || "",
+              onChange: function(e) { self.handleFormChange("amount", e.target.value); },
+              placeholder: "Valor",
+              style: {
+                width: "100%",
+                padding: "10px 14px",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "14px",
+                color: "#333",
+                background: "#fcfcfd",
+                border: "1px solid #e2e5ea",
+                borderRadius: "8px",
+                boxSizing: "border-box"
+              }
+            })
+          ),
+
+          // Fecha Entrega
+          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-calendar-check", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Fecha Entrega"
+            ),
+            React.createElement("input", {
+              type: "date",
+              value: form.delivery_date || "",
+              onChange: function(e) { self.handleFormChange("delivery_date", e.target.value); },
+              style: {
+                width: "100%",
+                padding: "10px 14px",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "14px",
+                color: "#333",
+                background: "#fcfcfd",
+                border: "1px solid #e2e5ea",
+                borderRadius: "8px",
+                boxSizing: "border-box"
+              }
+            })
+          ),
+
+          // Estado
+          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
+            React.createElement("label", { style: {
+              fontSize: "13px",
+              fontWeight: "400",
+              color: "#495057",
+              marginBottom: "6px"
+            }},
+              React.createElement("i", { className: "fas fa-flag", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+              "Estado"
+            ),
+            React.createElement("select", {
+              value: form.sales_state || "",
+              onChange: function(e) { self.handleFormChange("sales_state", e.target.value); },
+              style: {
+                width: "100%",
+                padding: "10px 14px",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "14px",
+                color: "#333",
+                background: "#fcfcfd",
+                border: "1px solid #e2e5ea",
+                borderRadius: "8px",
+                boxSizing: "border-box",
+                cursor: "pointer",
+                appearance: "none",
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 12px center",
+                paddingRight: "32px"
+              }
+            },
+              React.createElement("option", { value: "" }, "Seleccione estado"),
+              React.createElement("option", { value: "Pendiente" }, "Pendiente"),
+              React.createElement("option", { value: "Parcial" }, "Parcial"),
+              React.createElement("option", { value: "Entregado" }, "Entregado"),
+              React.createElement("option", { value: "Cancelado" }, "Cancelado")
+            )
+          )
+        ),
+
+        // Descripción - full width
+        React.createElement("div", { style: { display: "flex", flexDirection: "column", marginTop: "16px" }},
+          React.createElement("label", { style: {
+            fontSize: "13px",
+            fontWeight: "400",
+            color: "#495057",
+            marginBottom: "6px"
+          }},
+            React.createElement("i", { className: "fas fa-align-left", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
+            "Descripción"
+          ),
+          React.createElement("textarea", {
+            rows: "4",
+            value: form.description || "",
+            onChange: function(e) { self.handleFormChange("description", e.target.value); },
+            placeholder: "Descripción del material",
+            style: {
+              width: "100%",
+              padding: "10px 14px",
+              fontFamily: "'Poppins', sans-serif",
+              fontSize: "14px",
+              color: "#333",
+              background: "#fcfcfd",
+              border: "1px solid #e2e5ea",
+              borderRadius: "8px",
+              boxSizing: "border-box",
+              resize: "vertical",
+              minHeight: "80px"
+            }
+          })
+        )
+      ),
+
+      // Custom Footer
+      React.createElement("div", { style: {
+        display: "flex",
+        justifyContent: "flex-end",
+        gap: "12px",
+        padding: "16px 32px",
+        background: "#fcfcfd",
+        borderTop: "1px solid #e9ecef"
+      }},
+        React.createElement("button", {
+          onClick: self.closeModal,
+          style: {
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 20px",
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            background: "#fff",
+            color: "#6c757d",
+            border: "1px solid #dee2e6"
+          }
+        },
+          React.createElement("i", { className: "fas fa-times" }),
+          " Cancelar"
+        ),
+        React.createElement("button", {
+          onClick: self.handleSubmit,
+          disabled: saving,
+          style: {
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 20px",
+            fontFamily: "'Poppins', sans-serif",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "8px",
+            cursor: saving ? "not-allowed" : "pointer",
+            transition: "all 0.2s ease",
+            background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+            color: "#fff",
+            border: "none",
+            opacity: saving ? 0.6 : 1
+          }
+        },
           saving
             ? React.createElement(React.Fragment, null, React.createElement("i", { className: "fas fa-spinner fa-spin" }), " Guardando...")
             : React.createElement(React.Fragment, null, React.createElement("i", { className: "fas fa-save" }), " Guardar")
-        )
-      )
-    },
-      errors.length > 0 ? React.createElement("div", { className: "cm-form-errors" },
-        React.createElement("ul", null,
-          errors.map(function(e, i) {
-            return React.createElement("li", { key: i }, e);
-          })
-        )
-      ) : null,
-
-      React.createElement("div", { className: "cm-form-row" },
-        React.createElement("div", { className: "cm-input-group", style: { minWidth: "250px" } },
-          React.createElement("label", { className: "cm-input-label" }, "Proveedor"),
-          React.createElement(Select, {
-            options: self.providerOptions,
-            value: state.selectedProvider,
-            onChange: self.handleProviderChange,
-            placeholder: "Seleccione proveedor",
-            className: "link-form"
-          })
-        ),
-
-        !hasCostCenter ? React.createElement("div", { className: "cm-input-group", style: { minWidth: "250px" } },
-          React.createElement("label", { className: "cm-input-label" }, "Centro de Costo"),
-          React.createElement(Select, {
-            options: self.costCenterOptions,
-            value: state.selectedCostCenter,
-            onChange: self.handleCostCenterChange,
-            placeholder: "Seleccione centro de costo",
-            className: "link-form"
-          })
-        ) : null,
-
-        React.createElement(CmInput, {
-          label: "Fecha de Orden",
-          type: "date",
-          value: form.sales_date,
-          onChange: function(e) { self.handleFormChange("sales_date", e.target.value); }
-        }),
-
-        React.createElement(CmInput, {
-          label: "Número de Orden",
-          placeholder: "Número de orden",
-          value: form.sales_number,
-          onChange: function(e) { self.handleFormChange("sales_number", e.target.value); }
-        }),
-
-        React.createElement("div", { className: "cm-input-group" },
-          React.createElement("label", { className: "cm-input-label" }, "Valor"),
-          React.createElement(NumberFormat, {
-            name: "amount",
-            thousandSeparator: true,
-            prefix: "$",
-            className: "cm-input",
-            value: form.amount,
-            onChange: function(e) { self.handleFormChange("amount", e.target.value); },
-            placeholder: "Valor"
-          })
-        ),
-
-        React.createElement(CmInput, {
-          label: "Fecha Entrega",
-          type: "date",
-          value: form.delivery_date,
-          onChange: function(e) { self.handleFormChange("delivery_date", e.target.value); }
-        }),
-
-        React.createElement("div", { className: "cm-input-group" },
-          React.createElement("label", { className: "cm-input-label" }, "Estado"),
-          React.createElement("select", {
-            className: "cm-input",
-            value: form.sales_state,
-            onChange: function(e) { self.handleFormChange("sales_state", e.target.value); }
-          },
-            React.createElement("option", { value: "" }, "Seleccione estado"),
-            React.createElement("option", { value: "Pendiente" }, "Pendiente"),
-            React.createElement("option", { value: "Parcial" }, "Parcial"),
-            React.createElement("option", { value: "Entregado" }, "Entregado"),
-            React.createElement("option", { value: "Cancelado" }, "Cancelado")
-          )
-        )
-      ),
-
-      React.createElement("div", { className: "cm-form-row", style: { marginTop: "12px" } },
-        React.createElement("div", { className: "cm-input-group", style: { width: "100%" } },
-          React.createElement("label", { className: "cm-input-label" }, "Descripción"),
-          React.createElement("textarea", {
-            className: "cm-input",
-            rows: "4",
-            value: form.description,
-            onChange: function(e) { self.handleFormChange("description", e.target.value); },
-            placeholder: "Descripción del material"
-          })
         )
       )
     );

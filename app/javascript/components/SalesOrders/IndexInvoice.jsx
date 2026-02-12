@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import NumberFormat from "react-number-format";
-import Swal from "sweetalert2/dist/sweetalert2.js";
-import { CmModal, CmButton } from "../../generalcomponents/ui";
+import Swal from "sweetalert2";
+import { CmModal } from "../../generalcomponents/ui";
 
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
@@ -17,7 +17,7 @@ var EMPTY_INVOICE = {
   engineering_value: "",
 };
 
-var styles = {
+var tableStyles = {
   tableWrap: {
     overflowX: "auto",
     borderRadius: 10,
@@ -107,30 +107,6 @@ var styles = {
     borderRadius: 6,
     color: "#2a9d8f",
     fontSize: 14,
-  },
-  formPanel: {
-    background: "#f8f9fb",
-    border: "1px solid #e8eaef",
-    borderRadius: 10,
-    padding: "16px 16px 12px",
-    marginBottom: 20,
-  },
-  formHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
-    paddingBottom: 10,
-    borderBottom: "1px solid #e8eaef",
-  },
-  formLabel: {
-    display: "block",
-    fontSize: 12,
-    fontWeight: 600,
-    color: "#5a6a7e",
-    marginBottom: 4,
-    textTransform: "uppercase",
-    letterSpacing: 0.3,
   },
 };
 
@@ -223,7 +199,7 @@ class IndexInvoice extends Component {
         this.clearForm();
         Swal.fire({
           position: "center",
-          type: "success",
+          icon: "success",
           title: isEdit ? "Factura actualizada" : "Factura creada",
           showConfirmButton: false,
           timer: 1500,
@@ -254,7 +230,7 @@ class IndexInvoice extends Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "La factura será eliminada permanentemente",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
@@ -270,63 +246,261 @@ class IndexInvoice extends Component {
           .then(function() {
             this.props.loadData();
             this.setState({ data: this.state.data.filter(function(e) { return e.id !== id; }) });
-            Swal.fire("Eliminado", "La factura fue eliminada", "success");
+            Swal.fire({ title: "Eliminado", text: "La factura fue eliminada", icon: "success", confirmButtonColor: "#2a3f53" });
           }.bind(this));
       }
     }.bind(this));
+  };
+
+  openMenu = (e) => {
+    e.stopPropagation();
+    var btn = e.currentTarget;
+    var menu = btn.nextElementSibling;
+    var all = document.querySelectorAll('.cm-dt-menu-dropdown.open');
+    all.forEach(function(m) { m.classList.remove('open'); });
+    var rect = btn.getBoundingClientRect();
+    document.body.appendChild(menu);
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.left = (rect.right - 160) + 'px';
+    menu.classList.add('open');
+    var close = function(ev) {
+      if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
+        menu.classList.remove('open');
+        btn.parentNode.appendChild(menu);
+        document.removeEventListener('click', close);
+      }
+    };
+    document.addEventListener('click', close);
   };
 
   renderForm = () => {
     var f = this.state.form;
     var isEdit = !!this.state.customer_invoice_id;
 
+    var inputStyle = {
+      width: "100%",
+      padding: "10px 14px",
+      border: "1px solid #e2e5ea",
+      borderRadius: "8px",
+      fontSize: "14px",
+      background: "#fcfcfd",
+      outline: "none",
+      boxSizing: "border-box",
+    };
+
+    var labelStyle = {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      marginBottom: "6px",
+      fontSize: "14px",
+      fontWeight: 500,
+      color: "#374151",
+    };
+
+    var labelIconStyle = { color: "#6b7280", fontSize: "12px" };
+
     return (
-      <div style={styles.formPanel}>
-        <div style={styles.formHeader}>
-          <h6 style={{ margin: 0, fontWeight: 600, color: "#2a3f54" }}>
-            <i className={isEdit ? "fas fa-pen" : "fas fa-plus"} style={{ marginRight: 8 }} />
-            {isEdit ? "Editar Factura" : "Nueva Factura"}
-          </h6>
-          <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.toggleForm} style={{ padding: "4px 12px" }}>
-            <i className="fas fa-times" />
+      <div style={{
+        background: "#fff",
+        border: "1px solid #e2e5ea",
+        borderRadius: "12px",
+        marginBottom: "20px",
+        overflow: "hidden",
+      }}>
+        {/* Form Header */}
+        <div style={{
+          background: "#fcfcfd",
+          padding: "16px 20px",
+          borderBottom: "1px solid #e9ecef",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{
+              width: "36px",
+              height: "36px",
+              background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(245, 166, 35, 0.3)",
+            }}>
+              <i className={isEdit ? "fas fa-pen" : "fas fa-plus"} style={{ color: "#fff", fontSize: "14px" }} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 600, color: "#333" }}>
+                {isEdit ? "Editar Factura" : "Nueva Factura"}
+              </h3>
+              <p style={{ margin: 0, fontSize: "11px", color: "#6c757d" }}>
+                {isEdit ? "Modifique los datos de la factura" : "Complete los datos de la nueva factura"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={this.toggleForm}
+            style={{
+              width: "28px",
+              height: "28px",
+              border: "none",
+              background: "#e9ecef",
+              borderRadius: "50%",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#6c757d",
+              transition: "all 0.2s",
+            }}
+            onMouseOver={function(e) { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+            onMouseOut={function(e) { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+          >
+            <i className="fas fa-times" style={{ fontSize: "12px" }} />
           </button>
         </div>
 
-        <div className="row" style={{ padding: "0 4px" }}>
-          <div className="col-md-6 mb-3">
-            <label style={styles.formLabel}>Fecha de Factura</label>
-            <input type="date" name="invoice_date" className="form form-control" value={f.invoice_date} onChange={this.handleChange} />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label style={styles.formLabel}>Valor</label>
-            <NumberFormat name="invoice_value" thousandSeparator={true} prefix={"$"} className="form form-control" value={f.invoice_value} onChange={this.handleChange} placeholder="$0" />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label style={styles.formLabel}>Valor de ingeniería</label>
-            <NumberFormat name="engineering_value" thousandSeparator={true} prefix={"$"} className="form form-control" value={f.engineering_value} onChange={this.handleChange} placeholder="$0" />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label style={styles.formLabel}>Numero de factura</label>
-            <input type="text" name="number_invoice" className="form form-control" value={f.number_invoice} onChange={this.handleChange} placeholder="Ej: FAC-001" />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label style={styles.formLabel}>Certificado de entrega</label>
-            <input type="file" name="delivery_certificate_file" className="form form-control" onChange={this.handleChangeFile} />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label style={styles.formLabel}>Informe de recepción</label>
-            <input type="file" name="reception_report_file" className="form form-control" onChange={this.handleChangeFile} />
+        {/* Form Content */}
+        <div style={{ padding: "20px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div>
+              <label style={labelStyle}>
+                <i className="fa fa-calendar-alt" style={labelIconStyle} />
+                Fecha de Factura
+              </label>
+              <input
+                type="date"
+                name="invoice_date"
+                value={f.invoice_date}
+                onChange={this.handleChange}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                <i className="fa fa-dollar-sign" style={labelIconStyle} />
+                Valor
+              </label>
+              <NumberFormat
+                name="invoice_value"
+                thousandSeparator={true}
+                prefix={"$"}
+                value={f.invoice_value}
+                onChange={this.handleChange}
+                placeholder="$0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                <i className="fa fa-calculator" style={labelIconStyle} />
+                Valor de Ingeniería
+              </label>
+              <NumberFormat
+                name="engineering_value"
+                thousandSeparator={true}
+                prefix={"$"}
+                value={f.engineering_value}
+                onChange={this.handleChange}
+                placeholder="$0"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                <i className="fa fa-hashtag" style={labelIconStyle} />
+                Número de Factura
+              </label>
+              <input
+                type="text"
+                name="number_invoice"
+                value={f.number_invoice}
+                onChange={this.handleChange}
+                placeholder="Ej: FAC-001"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                <i className="fa fa-file-certificate" style={labelIconStyle} />
+                Certificado de Entrega
+              </label>
+              <input
+                type="file"
+                name="delivery_certificate_file"
+                onChange={this.handleChangeFile}
+                style={Object.assign({}, inputStyle, { padding: "8px 14px", cursor: "pointer" })}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                <i className="fa fa-file-alt" style={labelIconStyle} />
+                Informe de Recepción
+              </label>
+              <input
+                type="file"
+                name="reception_report_file"
+                onChange={this.handleChangeFile}
+                style={Object.assign({}, inputStyle, { padding: "8px 14px", cursor: "pointer" })}
+              />
+            </div>
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, padding: "0 4px", marginTop: 4 }}>
-          <CmButton variant="outline" onClick={this.toggleForm}>Cancelar</CmButton>
-          <CmButton variant="accent" onClick={this.handleSubmit} disabled={this.state.saving}>
+        {/* Form Footer */}
+        <div style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "12px",
+          padding: "16px 20px",
+          background: "#fcfcfd",
+          borderTop: "1px solid #e9ecef",
+        }}>
+          <button
+            type="button"
+            onClick={this.toggleForm}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              borderRadius: "8px",
+              cursor: "pointer",
+              border: "1px solid #dee2e6",
+              background: "#fff",
+              color: "#6c757d",
+            }}
+          >
+            <i className="fas fa-times" /> Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={this.handleSubmit}
+            disabled={this.state.saving}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              borderRadius: "8px",
+              cursor: this.state.saving ? "not-allowed" : "pointer",
+              border: "none",
+              background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+              color: "#fff",
+              opacity: this.state.saving ? 0.7 : 1,
+            }}
+          >
             {this.state.saving
               ? <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>
               : <React.Fragment><i className="fas fa-save" /> {isEdit ? "Actualizar" : "Crear"}</React.Fragment>
             }
-          </CmButton>
+          </button>
         </div>
       </div>
     );
@@ -345,53 +519,58 @@ class IndexInvoice extends Component {
     }
 
     return (
-      <div style={styles.tableWrap}>
-        <table style={styles.table}>
+      <div style={tableStyles.tableWrap}>
+        <table style={tableStyles.table}>
           <thead>
             <tr>
-              <th style={Object.assign({}, styles.thCenter, { width: 80 })}></th>
-              <th style={styles.th}>Fecha</th>
-              <th style={styles.th}>Valor</th>
-              <th style={styles.th}>Ingeniería</th>
-              <th style={styles.th}># Factura</th>
-              <th style={Object.assign({}, styles.thCenter, { width: 100 })}>Cert. Entrega</th>
-              <th style={Object.assign({}, styles.thCenter, { width: 100 })}>Inf. Recepción</th>
+              <th style={Object.assign({}, tableStyles.thCenter, { width: 80 })}></th>
+              <th style={tableStyles.th}>Fecha</th>
+              <th style={tableStyles.th}>Valor</th>
+              <th style={tableStyles.th}>Ingeniería</th>
+              <th style={tableStyles.th}># Factura</th>
+              <th style={Object.assign({}, tableStyles.thCenter, { width: 100 })}>Cert. Entrega</th>
+              <th style={Object.assign({}, tableStyles.thCenter, { width: 100 })}>Inf. Recepción</th>
             </tr>
           </thead>
           <tbody>
             {data.map(function(inv) {
               return (
                 <tr key={inv.id} style={{ transition: "background 0.15s" }} onMouseEnter={function(e) { e.currentTarget.style.background = "#f9fafb"; }} onMouseLeave={function(e) { e.currentTarget.style.background = ""; }}>
-                  <td style={styles.tdCenter}>
-                    <div style={styles.actionBtns}>
-                      <button style={styles.actionBtn} onClick={this.handleEdit.bind(this, inv)} title="Editar">
-                        <i className="fas fa-pen" />
+                  <td style={tableStyles.tdCenter}>
+                    <div className="cm-dt-menu">
+                      <button className="cm-dt-menu-trigger" onClick={this.openMenu}>
+                        <i className="fas fa-ellipsis-v" />
                       </button>
-                      <button style={styles.actionBtnDanger} onClick={this.handleDelete.bind(this, inv.id)} title="Eliminar">
-                        <i className="fas fa-trash" />
-                      </button>
+                      <div className="cm-dt-menu-dropdown">
+                        <button onClick={this.handleEdit.bind(this, inv)} className="cm-dt-menu-item">
+                          <i className="fas fa-pen" /> Editar
+                        </button>
+                        <button onClick={this.handleDelete.bind(this, inv.id)} className="cm-dt-menu-item cm-dt-menu-item--danger">
+                          <i className="fas fa-trash" /> Eliminar
+                        </button>
+                      </div>
                     </div>
                   </td>
-                  <td style={styles.td}>{inv.invoice_date}</td>
-                  <td style={styles.td}>
+                  <td style={tableStyles.td}>{inv.invoice_date}</td>
+                  <td style={tableStyles.td}>
                     <NumberFormat value={inv.invoice_value} displayType="text" thousandSeparator={true} prefix="$" />
                   </td>
-                  <td style={styles.td}>
+                  <td style={tableStyles.td}>
                     <NumberFormat value={inv.engineering_value} displayType="text" thousandSeparator={true} prefix="$" />
                   </td>
-                  <td style={styles.td}>{inv.number_invoice}</td>
-                  <td style={styles.tdCenter}>
+                  <td style={tableStyles.td}>{inv.number_invoice}</td>
+                  <td style={tableStyles.tdCenter}>
                     {inv.delivery_certificate_file && inv.delivery_certificate_file.url ? (
-                      <a href={inv.delivery_certificate_file.url} target="_blank" style={styles.downloadLink}>
+                      <a href={inv.delivery_certificate_file.url} target="_blank" style={tableStyles.downloadLink}>
                         <i className="fas fa-download" />
                       </a>
                     ) : (
                       <i className="fas fa-times" style={{ color: "#d0d4db" }} />
                     )}
                   </td>
-                  <td style={styles.tdCenter}>
+                  <td style={tableStyles.tdCenter}>
                     {inv.reception_report_file && inv.reception_report_file.url ? (
-                      <a href={inv.reception_report_file.url} target="_blank" style={styles.downloadLink}>
+                      <a href={inv.reception_report_file.url} target="_blank" style={tableStyles.downloadLink}>
                         <i className="fas fa-download" />
                       </a>
                     ) : (
@@ -414,34 +593,136 @@ class IndexInvoice extends Component {
       <CmModal
         isOpen={this.props.modal}
         toggle={this.props.toggle}
-        title={
-          <span>
-            <i className="fas fa-file-invoice" style={{ marginRight: 8 }} />
-            Facturas
-            {orderNum ? <span style={{ fontWeight: 400, fontSize: 14, marginLeft: 8, opacity: 0.7 }}>— OC {orderNum}</span> : null}
-          </span>
-        }
         size="lg"
-        footer={
-          <React.Fragment>
-            {!this.state.showForm && (
-              <CmButton variant="accent" onClick={this.toggleForm}>
-                <i className="fas fa-plus" /> Nueva Factura
-              </CmButton>
-            )}
-            <CmButton variant="outline" onClick={this.props.toggle}>Cerrar</CmButton>
-          </React.Fragment>
-        }
+        footer={null}
+        hideHeader={true}
       >
-        {this.state.showForm && this.renderForm()}
-        {this.state.isLoaded ? (
-          <div style={{ textAlign: "center", padding: 40, color: "#999" }}>
-            <i className="fas fa-spinner fa-spin" style={{ fontSize: 24 }} />
-            <p style={{ marginTop: 8 }}>Cargando facturas...</p>
+        <div style={{
+          margin: "-20px -24px -24px -24px",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "85vh",
+        }}>
+          {/* Header */}
+          <div style={{
+            background: "#fcfcfd",
+            padding: "20px 32px",
+            borderBottom: "1px solid #e9ecef",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{
+                width: "48px",
+                height: "48px",
+                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)",
+              }}>
+                <i className="fas fa-file-invoice-dollar" style={{ color: "#fff", fontSize: "20px" }} />
+              </div>
+              <div>
+                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>
+                  Facturas
+                </h2>
+                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>
+                  {orderNum ? "OC " + orderNum : "Gestión de facturas de la orden"}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={this.props.toggle}
+              style={{
+                width: "32px",
+                height: "32px",
+                border: "none",
+                background: "#e9ecef",
+                borderRadius: "50%",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#6c757d",
+                transition: "all 0.2s",
+              }}
+              onMouseOver={function(e) { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
+              onMouseOut={function(e) { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
+            >
+              <i className="fas fa-times" />
+            </button>
           </div>
-        ) : (
-          this.renderTable()
-        )}
+
+          {/* Content */}
+          <div style={{ padding: "24px 32px", flex: 1, overflowY: "auto" }}>
+            {this.state.showForm && this.renderForm()}
+            {this.state.isLoaded ? (
+              <div style={{ textAlign: "center", padding: 40, color: "#999" }}>
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: 24 }} />
+                <p style={{ marginTop: 8 }}>Cargando facturas...</p>
+              </div>
+            ) : (
+              this.renderTable()
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+            padding: "16px 32px",
+            background: "#fcfcfd",
+            borderTop: "1px solid #e9ecef",
+            flexShrink: 0,
+          }}>
+            {!this.state.showForm && (
+              <button
+                type="button"
+                onClick={this.toggleForm}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 20px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  border: "none",
+                  background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+                  color: "#fff",
+                }}
+              >
+                <i className="fas fa-plus" /> Nueva Factura
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={this.props.toggle}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 20px",
+                fontSize: "14px",
+                fontWeight: 500,
+                borderRadius: "8px",
+                cursor: "pointer",
+                border: "1px solid #dee2e6",
+                background: "#fff",
+                color: "#6c757d",
+              }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
       </CmModal>
     );
   }

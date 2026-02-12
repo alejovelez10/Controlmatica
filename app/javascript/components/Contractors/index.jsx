@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import Select from "react-select";
 import { CmDataTable, CmPageActions, CmModal, CmInput, CmButton } from "../../generalcomponents/ui";
 import FormCreate from "./FormCreate";
@@ -7,6 +7,16 @@ import FormCreate from "./FormCreate";
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute("content") : "";
+}
+
+function formatDate(date) {
+  if (!date) return "";
+  var d = new Date(date);
+  var months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  var hours = d.getHours();
+  var minutes = d.getMinutes();
+  var timeValue = hours + (minutes < 10 ? ":0" + minutes : ":" + minutes);
+  return months[d.getMonth()] + " " + d.getDate() + " del " + d.getFullYear() + " / " + timeValue;
 }
 
 var EMPTY_FORM = {
@@ -21,13 +31,6 @@ var EMPTY_FORM = {
 class index extends React.Component {
   constructor(props) {
     super(props);
-
-    var dataCostCenter = [];
-    if (props.cost_center) {
-      props.cost_center.forEach(function (item) {
-        dataCostCenter.push({ label: item.code, value: item.id });
-      });
-    }
 
     var dataUsers = [];
     if (props.users) {
@@ -51,9 +54,8 @@ class index extends React.Component {
       errorValues: true,
       saving: false,
       // Selects
-      dataCostCenter: dataCostCenter,
       dataUsers: dataUsers,
-      selectedOptionCentro: { value: "", label: "Centro de costo" },
+      selectedOptionCentro: null,
       selectedOptionUsers: { value: "", label: "Realizado por" },
       // Filters
       showFilters: false,
@@ -89,6 +91,30 @@ class index extends React.Component {
         },
       },
       { key: "description", label: "Descripción", width: "300px" },
+      {
+        key: "created_at",
+        label: "Fecha de creación",
+        width: "180px",
+        sortable: false,
+        render: function (r) {
+          return React.createElement("div", null,
+            React.createElement("div", null, formatDate(r.created_at)),
+            React.createElement("div", { style: { fontSize: "12px", color: "#6b7280" } }, r.user ? r.user.names : "")
+          );
+        },
+      },
+      {
+        key: "updated_at",
+        label: "Ultima actualización",
+        width: "180px",
+        sortable: false,
+        render: function (r) {
+          return React.createElement("div", null,
+            React.createElement("div", null, formatDate(r.updated_at)),
+            React.createElement("div", { style: { fontSize: "12px", color: "#6b7280" } }, r.user_update ? r.user_update.names : (r.user ? r.user.names : ""))
+          );
+        },
+      },
     ];
   }
 
@@ -221,7 +247,7 @@ class index extends React.Component {
       modalMode: "new",
       editId: null,
       form: Object.assign({}, EMPTY_FORM),
-      selectedOptionCentro: { value: "", label: "Centro de costo" },
+      selectedOptionCentro: null,
       selectedOptionUsers: { value: "", label: "Realizado por" },
       errorValues: true,
       saving: false,
@@ -331,7 +357,7 @@ class index extends React.Component {
           self.loadData(isNew ? 1 : undefined);
           Swal.fire({
             position: "center",
-            type: "success",
+            icon: "success",
             title: data.message,
             showConfirmButton: false,
             timer: 1500,
@@ -339,7 +365,7 @@ class index extends React.Component {
         } else {
           Swal.fire({
             position: "center",
-            type: "error",
+            icon: "error",
             title: data.message,
             html: data.message_error ? "<p>" + data.message_error.join(", ") + "</p>" : "",
             showConfirmButton: true,
@@ -356,7 +382,7 @@ class index extends React.Component {
     Swal.fire({
       title: "¿Estás seguro?",
       text: "El registro será eliminado permanentemente",
-      type: "warning",
+      icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
@@ -368,7 +394,7 @@ class index extends React.Component {
           .then(function (response) { return response.json(); })
           .then(function () {
             self.loadData();
-            Swal.fire("Eliminado", "El registro fue eliminado con éxito", "success");
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
       }
     });
@@ -566,7 +592,6 @@ class index extends React.Component {
           submit: self.handleSubmit,
           errorValues: self.state.errorValues,
           isLoading: self.state.saving,
-          centro: self.state.dataCostCenter,
           onChangeAutocompleteCentro: self.handleChangeAutocompleteCentro,
           formAutocompleteCentro: self.state.selectedOptionCentro,
           users: self.state.dataUsers,

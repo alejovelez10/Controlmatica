@@ -1,7 +1,7 @@
 import React from 'react';
 import FormCreateControlModule from "../Module/formCreateControlModule"
 import SweetAlert from "sweetalert2-react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 
 
 class TableModuleActions extends React.Component {

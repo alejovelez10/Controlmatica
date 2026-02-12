@@ -5,7 +5,7 @@ import Select from "react-select";
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -45,7 +45,8 @@ class FormCreate extends React.Component {
 
   render() {
     const { props } = this;
-    const hasError = (field) => props.errorValues === false && !props.formValues[field];
+    const formValues = props.formValues || {};
+    const hasError = (field) => props.errorValues === false && !formValues[field];
 
     return (
       <Modal
@@ -93,17 +94,14 @@ class FormCreate extends React.Component {
                   <div className="cm-form-group">
                     <label className="cm-label">
                       <i className="fas fa-map-marker-alt"></i> Centro de costo <span className="cm-required">*</span>
-                      <small className="cm-label-hint">(escribe al menos 2 letras)</small>
                     </label>
                     <Select
                       onChange={props.onChangeAutocompleteCentro}
                       options={props.costCenterOptions}
                       value={props.formAutocompleteCentro}
-                      onInputChange={props.onCostCenterSearch}
-                      isLoading={props.costCenterLoading}
-                      placeholder="Centro de costos"
-                      isDisabled={!props.formValues.customer_id}
-                      noOptionsMessage={() => "Escriba para buscar"}
+                      placeholder="Seleccione centro de costo"
+                      isDisabled={!formValues.customer_id}
+                      noOptionsMessage={() => "Seleccione primero un cliente"}
                       styles={selectStyles}
                       menuPortalTarget={document.body}
                       className={hasError("cost_center_id") ? "cm-select-error" : ""}
@@ -135,7 +133,7 @@ class FormCreate extends React.Component {
                       name="report_date"
                       type="date"
                       className={`cm-input ${hasError("report_date") ? "cm-input-error" : ""}`}
-                      value={props.formValues.report_date}
+                      value={formValues.report_date || ""}
                       onChange={props.onChangeForm}
                     />
                   </div>
@@ -171,7 +169,7 @@ class FormCreate extends React.Component {
                     name="description"
                     rows="4"
                     className={`cm-textarea ${hasError("description") ? "cm-input-error" : ""}`}
-                    value={props.formValues.description}
+                    value={formValues.description || ""}
                     onChange={props.onChangeForm}
                     placeholder="Escriba las observaciones del reporte..."
                   />
@@ -208,7 +206,7 @@ class FormCreate extends React.Component {
           }
 
           .cm-modal-header {
-            background: #f8f9fa;
+            background: #fcfcfd;
             padding: 20px 32px;
             border-bottom: 1px solid #e9ecef;
             position: relative;
@@ -352,7 +350,7 @@ class FormCreate extends React.Component {
             font-family: 'Poppins', sans-serif;
             font-size: 14px;
             color: #333;
-            background: #f8f9fa;
+            background: #fcfcfd;
             border: 1px solid #e2e5ea;
             border-radius: 8px;
             transition: all 0.2s ease;
@@ -409,7 +407,7 @@ class FormCreate extends React.Component {
             justify-content: flex-end;
             gap: 12px;
             padding: 16px 32px;
-            background: #f8f9fa;
+            background: #fcfcfd;
             border-top: 1px solid #e9ecef;
             flex-shrink: 0;
           }
@@ -435,7 +433,7 @@ class FormCreate extends React.Component {
           }
 
           .cm-btn-outline:hover {
-            background: #f8f9fa;
+            background: #fcfcfd;
             border-color: #adb5bd;
           }
 

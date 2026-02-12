@@ -416,6 +416,70 @@ thead .cm-dt-sticky-col {
   background: rgba(220, 53, 69, 0.06);
 }
 
+/* ---------- Header Dropdown (Import/Export) ---------- */
+.cm-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.cm-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--cm-border, #e2e5ea);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 6px 0;
+  min-width: 180px;
+  z-index: 1000;
+}
+
+.cm-dropdown.open .cm-dropdown-menu {
+  display: block;
+}
+
+.cm-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  color: var(--cm-text, #212529);
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cm-dropdown-item:hover {
+  background: var(--cm-bg, #f5f6fa);
+  text-decoration: none;
+  color: var(--cm-primary, #2a3f53);
+}
+
+.cm-dropdown-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--cm-text-muted, #6c757d);
+}
+
+.cm-dropdown-item:hover i {
+  color: var(--cm-primary, #2a3f53);
+}
+
+.cm-dropdown-divider {
+  height: 1px;
+  background: var(--cm-border, #e2e5ea);
+  margin: 6px 0;
+}
+
 /* ---------- Empty State ---------- */
 .cm-dt-empty {
   text-align: center;

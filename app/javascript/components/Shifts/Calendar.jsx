@@ -6,7 +6,7 @@ import FormCreate from './FormCreate'
 import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
 import FormFilter from './FormFilter';
 import SweetAlert from "sweetalert2-react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import esLocale from '@fullcalendar/core/locales/es';
 import { array } from 'prop-types';
 

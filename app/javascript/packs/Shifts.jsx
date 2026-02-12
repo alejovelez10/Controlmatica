@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import FormCreate from '../components/Shifts/FormCreate';
 import FormFilter from '../components/Shifts/FormFilter';
 import SweetAlert from "sweetalert2-react";
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 
 const Shifts = (props) => {
     const date = new Date()

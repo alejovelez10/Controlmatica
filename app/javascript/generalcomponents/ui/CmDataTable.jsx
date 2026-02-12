@@ -268,7 +268,7 @@ class CmDataTable extends React.Component {
           <div className="cm-dt-toolbar-right">
             {headerActions && <div className="cm-dt-header-actions">{headerActions}</div>}
 
-            {/* Column Picker */}
+            {/* Column Picker - Comentado temporalmente
             <div className="cm-dt-col-picker">
               <button
                 className="cm-dt-col-picker-btn"
@@ -291,6 +291,7 @@ class CmDataTable extends React.Component {
                 </div>
               )}
             </div>
+            */}
           </div>
         </div>
 

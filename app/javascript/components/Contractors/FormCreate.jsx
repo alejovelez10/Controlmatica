@@ -6,7 +6,7 @@ import { CmModal, CmButton } from "../../generalcomponents/ui";
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -23,21 +23,137 @@ const selectStyles = {
   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
 };
 
+const styles = {
+  modalBody: {
+    padding: "0",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "16px 20px",
+    borderBottom: "1px solid #e5e7eb",
+    background: "#f8f9fa",
+  },
+  headerLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  iconCircle: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 2px 8px rgba(245, 166, 35, 0.3)",
+  },
+  iconCircleIcon: {
+    color: "#fff",
+    fontSize: "18px",
+  },
+  title: {
+    fontSize: "1.25rem",
+    fontWeight: "600",
+    color: "#1a1a2e",
+    margin: "0",
+  },
+  closeBtn: {
+    background: "none",
+    border: "none",
+    fontSize: "20px",
+    color: "#6b7280",
+    cursor: "pointer",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    transition: "all 0.2s",
+  },
+  content: {
+    padding: "20px",
+    maxHeight: "calc(80vh - 140px)",
+    overflowY: "auto",
+  },
+  formGrid2: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "16px",
+  },
+  formGroup: {
+    marginBottom: "16px",
+  },
+  label: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontSize: "14px",
+    fontWeight: "400",
+    color: "#374151",
+    marginBottom: "6px",
+  },
+  labelIcon: {
+    color: "#6b7280",
+    fontSize: "13px",
+  },
+  required: {
+    color: "#dc3545",
+    fontWeight: "600",
+  },
+  hint: {
+    fontSize: "11px",
+    color: "#9ca3af",
+    fontWeight: "400",
+  },
+  input: {
+    width: "100%",
+    padding: "10px 14px",
+    fontSize: "14px",
+    border: "1px solid #e2e5ea",
+    borderRadius: "8px",
+    background: "#fcfcfd",
+    transition: "all 0.2s ease",
+    boxSizing: "border-box",
+  },
+  inputError: {
+    borderColor: "#dc3545",
+    boxShadow: "0 0 0 3px rgba(220, 53, 69, 0.15)",
+  },
+  textarea: {
+    resize: "vertical",
+    minHeight: "100px",
+  },
+  alert: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px 16px",
+    borderRadius: "8px",
+    fontSize: "14px",
+    marginBottom: "16px",
+    background: "#fef2f2",
+    border: "1px solid #fecaca",
+    color: "#dc2626",
+  },
+  footer: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "12px",
+    padding: "16px 20px",
+    borderTop: "1px solid #e5e7eb",
+    background: "#f8f9fa",
+  },
+};
+
 class FormCreate extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       costCenterInputValue: "",
-      costCenterOptions: props.centro || [],
+      costCenterOptions: [],
       isLoadingCostCenter: false,
     };
     this.debounceTimer = null;
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.centro !== this.props.centro && this.state.costCenterInputValue === "") {
-      this.setState({ costCenterOptions: this.props.centro || [] });
-    }
   }
 
   handleCostCenterInputChange = (inputValue, { action }) => {
@@ -48,16 +164,20 @@ class FormCreate extends React.Component {
         clearTimeout(this.debounceTimer);
       }
 
-      if (inputValue.length >= 2) {
+      if (inputValue.length >= 3) {
         this.setState({ isLoadingCostCenter: true });
         this.debounceTimer = setTimeout(() => {
-          const filtered = (this.props.centro || []).filter((option) =>
-            option.label.toLowerCase().includes(inputValue.toLowerCase())
-          );
-          this.setState({
-            costCenterOptions: filtered,
-            isLoadingCostCenter: false,
-          });
+          fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue))
+            .then((response) => response.json())
+            .then((data) => {
+              this.setState({
+                costCenterOptions: data,
+                isLoadingCostCenter: false,
+              });
+            })
+            .catch(() => {
+              this.setState({ costCenterOptions: [], isLoadingCostCenter: false });
+            });
         }, 300);
       } else {
         this.setState({
@@ -72,256 +192,191 @@ class FormCreate extends React.Component {
   render() {
     const p = this.props;
 
+    const inputStyle = (hasError) => ({
+      ...styles.input,
+      ...(hasError ? styles.inputError : {}),
+    });
+
     return (
       <CmModal
         isOpen={p.modal}
         toggle={p.toggle}
-        title={
-          <div className="cm-form-header">
-            <i className="fas fa-hard-hat cm-form-header-icon" />
-            <span>{p.titulo}</span>
-          </div>
-        }
+        hideHeader={true}
+        footer={null}
         size="lg"
-        footer={
-          <div className="cm-form-footer">
-            <CmButton variant="outline" onClick={p.toggle}>
-              <i className="fas fa-times" /> Cancelar
-            </CmButton>
-            <CmButton variant="accent" onClick={p.submit} disabled={p.isLoading}>
-              {p.isLoading ? (
-                <span>
-                  <i className="fas fa-spinner fa-spin" /> Guardando...
-                </span>
-              ) : (
-                <span>
-                  <i className="fas fa-save" /> {p.nameSubmit}
-                </span>
-              )}
-            </CmButton>
-          </div>
-        }
       >
-        {p.errorValues === false && (
-          <div className="cm-alert cm-alert-error">
-            <i className="fas fa-exclamation-circle" />
-            <span>Debes completar todos los campos requeridos</span>
+        {/* Custom Header */}
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.iconCircle}>
+              <i className="fas fa-tools" style={styles.iconCircleIcon} />
+            </div>
+            <h5 style={styles.title}>{p.titulo}</h5>
           </div>
-        )}
+          <button style={styles.closeBtn} onClick={p.toggle}>
+            <i className="fas fa-times" />
+          </button>
+        </div>
 
-        <div className="cm-form-grid-2">
-          <div className="cm-form-group">
-            <label className="cm-label">
-              <i className="fas fa-calendar-alt" /> Fecha <span className="cm-required">*</span>
+        {/* Content */}
+        <div style={styles.content} className="cm-modal-scroll">
+          {p.errorValues === false && (
+            <div style={styles.alert}>
+              <i className="fas fa-exclamation-circle" />
+              <span>Debes completar todos los campos requeridos</span>
+            </div>
+          )}
+
+          <div style={styles.formGrid2}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                <i className="fas fa-calendar-alt" style={styles.labelIcon} /> Fecha{" "}
+                <span style={styles.required}>*</span>
+              </label>
+              <input
+                type="date"
+                name="sales_date"
+                value={p.formValues.sales_date}
+                onChange={p.onChangeForm}
+                style={inputStyle(p.errorValues === false && p.formValues.sales_date === "")}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                <i className="fas fa-clock" style={styles.labelIcon} /> Horas trabajadas{" "}
+                <span style={styles.required}>*</span>
+              </label>
+              <input
+                type="text"
+                name="hours"
+                value={p.formValues.hours}
+                onChange={p.onChangeForm}
+                style={inputStyle(p.errorValues === false && p.formValues.hours === "")}
+                placeholder="Horas trabajadas"
+              />
+            </div>
+          </div>
+
+          <div style={styles.formGrid2}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                <i className="fas fa-user" style={styles.labelIcon} /> Realizado por{" "}
+                <span style={styles.required}>*</span>
+              </label>
+              <Select
+                onChange={p.onChangeAutocompleteUsers}
+                options={p.users}
+                autoFocus={false}
+                value={p.formAutocompleteUsers}
+                placeholder="Seleccionar usuario"
+                styles={{
+                  ...selectStyles,
+                  control: (base, state) => ({
+                    ...selectStyles.control(base, state),
+                    ...(p.errorValues === false && p.formValues.user_execute_id === ""
+                      ? { borderColor: "#dc3545", boxShadow: "0 0 0 3px rgba(220, 53, 69, 0.15)" }
+                      : {}),
+                  }),
+                }}
+                menuPortalTarget={document.body}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <input
+                type="hidden"
+                name="cost_center_id"
+                value={p.formAutocompleteCentro ? p.formAutocompleteCentro.value : ""}
+              />
+              <label style={styles.label}>
+                <i className="fas fa-building" style={styles.labelIcon} /> Centro de costo{" "}
+                <span style={styles.hint}>(escribe al menos 3 letras)</span>{" "}
+                <span style={styles.required}>*</span>
+              </label>
+              <Select
+                onChange={p.onChangeAutocompleteCentro}
+                onInputChange={this.handleCostCenterInputChange}
+                options={this.state.costCenterOptions}
+                isLoading={this.state.isLoadingCostCenter}
+                autoFocus={false}
+                value={p.formAutocompleteCentro}
+                placeholder="Centro de costos"
+                styles={{
+                  ...selectStyles,
+                  control: (base, state) => ({
+                    ...selectStyles.control(base, state),
+                    ...(p.errorValues === false && p.formValues.cost_center_id === ""
+                      ? { borderColor: "#dc3545", boxShadow: "0 0 0 3px rgba(220, 53, 69, 0.15)" }
+                      : {}),
+                  }),
+                }}
+                menuPortalTarget={document.body}
+                noOptionsMessage={() =>
+                  this.state.costCenterInputValue.length < 3
+                    ? "Escribe al menos 3 letras para buscar"
+                    : "No se encontraron resultados"
+                }
+              />
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              <i className="fas fa-dollar-sign" style={styles.labelIcon} /> Monto
             </label>
-            <input
-              type="date"
-              name="sales_date"
-              value={p.formValues.sales_date}
+            <NumberFormat
+              name="ammount"
+              value={p.formValues.ammount}
+              thousandSeparator={true}
+              prefix="$"
+              style={styles.input}
+              placeholder="$0"
+              onValueChange={(values) => {
+                const ev = { target: { name: "ammount", value: values.formattedValue } };
+                p.onChangeForm(ev);
+              }}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              <i className="fas fa-align-left" style={styles.labelIcon} /> Descripcion{" "}
+              <span style={styles.required}>*</span>
+            </label>
+            <textarea
+              name="description"
+              style={{
+                ...styles.input,
+                ...styles.textarea,
+                ...(p.errorValues === false && p.formValues.description === "" ? styles.inputError : {}),
+              }}
+              value={p.formValues.description}
               onChange={p.onChangeForm}
-              className={"cm-input" + (p.errorValues === false && p.formValues.sales_date === "" ? " cm-input-error" : "")}
+              placeholder="Descripcion..."
+              rows="4"
             />
           </div>
 
-          <div className="cm-form-group">
-            <label className="cm-label">
-              <i className="fas fa-clock" /> Horas trabajadas <span className="cm-required">*</span>
-            </label>
-            <input
-              type="text"
-              name="hours"
-              value={p.formValues.hours}
-              onChange={p.onChangeForm}
-              className={"cm-input" + (p.errorValues === false && p.formValues.hours === "" ? " cm-input-error" : "")}
-              placeholder="Horas trabajadas"
-            />
-          </div>
         </div>
 
-        <div className="cm-form-grid-2">
-          <div className="cm-form-group">
-            <label className="cm-label">
-              <i className="fas fa-user" /> Realizado por <span className="cm-required">*</span>
-            </label>
-            <Select
-              onChange={p.onChangeAutocompleteUsers}
-              options={p.users}
-              autoFocus={false}
-              className={p.errorValues === false && p.formValues.user_execute_id === "" ? "cm-select-error" : ""}
-              value={p.formAutocompleteUsers}
-              placeholder="Seleccionar usuario"
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-            />
-          </div>
-
-          <div className="cm-form-group">
-            <input
-              type="hidden"
-              name="cost_center_id"
-              value={p.formAutocompleteCentro ? p.formAutocompleteCentro.value : ""}
-            />
-            <label className="cm-label">
-              <i className="fas fa-building" /> Centro de costo{" "}
-              <span className="cm-hint">(escribe al menos 2 letras)</span>{" "}
-              <span className="cm-required">*</span>
-            </label>
-            <Select
-              onChange={p.onChangeAutocompleteCentro}
-              onInputChange={this.handleCostCenterInputChange}
-              options={this.state.costCenterOptions}
-              isLoading={this.state.isLoadingCostCenter}
-              autoFocus={false}
-              className={p.errorValues === false && p.formValues.cost_center_id === "" ? "cm-select-error" : ""}
-              value={p.formAutocompleteCentro}
-              placeholder="Centro de costos"
-              styles={selectStyles}
-              menuPortalTarget={document.body}
-              noOptionsMessage={() =>
-                this.state.costCenterInputValue.length < 2
-                  ? "Escribe al menos 2 letras para buscar"
-                  : "No se encontraron resultados"
-              }
-            />
-          </div>
+        {/* Custom Footer */}
+        <div style={styles.footer}>
+          <CmButton variant="outline" onClick={p.toggle}>
+            <i className="fas fa-times" /> Cancelar
+          </CmButton>
+          <CmButton variant="accent" onClick={p.submit} disabled={p.isLoading}>
+            {p.isLoading ? (
+              <span>
+                <i className="fas fa-spinner fa-spin" /> Guardando...
+              </span>
+            ) : (
+              <span>
+                <i className="fas fa-save" /> {p.nameSubmit}
+              </span>
+            )}
+          </CmButton>
         </div>
-
-        <div className="cm-form-group">
-          <label className="cm-label">
-            <i className="fas fa-dollar-sign" /> Monto
-          </label>
-          <NumberFormat
-            name="ammount"
-            value={p.formValues.ammount}
-            thousandSeparator={true}
-            prefix="$"
-            className="cm-input"
-            placeholder="$0"
-            onValueChange={(values) => {
-              const ev = { target: { name: "ammount", value: values.formattedValue } };
-              p.onChangeForm(ev);
-            }}
-          />
-        </div>
-
-        <div className="cm-form-group">
-          <label className="cm-label">
-            <i className="fas fa-align-left" /> Descripcion <span className="cm-required">*</span>
-          </label>
-          <textarea
-            name="description"
-            className={"cm-input cm-textarea" + (p.errorValues === false && p.formValues.description === "" ? " cm-input-error" : "")}
-            value={p.formValues.description}
-            onChange={p.onChangeForm}
-            placeholder="Descripcion..."
-            rows="4"
-          />
-        </div>
-
-        <style>{`
-          .cm-form-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #1a1a2e;
-          }
-          .cm-form-header-icon {
-            color: #f5a623;
-            font-size: 1.3rem;
-          }
-          .cm-form-grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-          }
-          @media (max-width: 768px) {
-            .cm-form-grid-2 {
-              grid-template-columns: 1fr;
-            }
-          }
-          .cm-form-group {
-            margin-bottom: 16px;
-          }
-          .cm-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 400;
-            color: #374151;
-            margin-bottom: 6px;
-          }
-          .cm-label i {
-            color: #6b7280;
-            font-size: 13px;
-          }
-          .cm-required {
-            color: #dc3545;
-            font-weight: 600;
-          }
-          .cm-hint {
-            font-size: 11px;
-            color: #9ca3af;
-            font-weight: 400;
-          }
-          .cm-input {
-            width: 100%;
-            padding: 10px 14px;
-            font-size: 14px;
-            border: 1px solid #e2e5ea;
-            border-radius: 8px;
-            background: #f8f9fa;
-            transition: all 0.2s ease;
-            box-sizing: border-box;
-          }
-          .cm-input:focus {
-            outline: none;
-            border-color: #f5a623;
-            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
-            background: #fff;
-          }
-          .cm-input::placeholder {
-            color: #9ca3af;
-          }
-          .cm-input-error {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
-          }
-          .cm-select-error .css-yk16xz-control,
-          .cm-select-error .css-1pahdxg-control {
-            border-color: #dc3545 !important;
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
-          }
-          .cm-textarea {
-            resize: vertical;
-            min-height: 100px;
-          }
-          .cm-alert {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 16px;
-          }
-          .cm-alert-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-          }
-          .cm-alert-error i {
-            font-size: 16px;
-          }
-          .cm-form-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            padding-top: 8px;
-          }
-        `}</style>
       </CmModal>
     );
   }

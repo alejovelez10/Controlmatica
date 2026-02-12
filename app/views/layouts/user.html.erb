@@ -13,6 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">    
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   </head>
 
   <body class="app <%= current_user.menu %>">
@@ -200,10 +201,10 @@
             <% end %>
 
 
-              <% if authorization_report_expense_options %>
+              <% if authorization_report_expense_options || Rails.env.development? %>
                 <li>
                   <%= link_to report_expense_options_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Tipos de Gastos</span>
+                    <i class="app-menu__icon fas fa-coins"></i><span class="app-menu__label pl-0">Tipos de Gastos</span>
                   <% end -%>
                 </li>
               <% end %>

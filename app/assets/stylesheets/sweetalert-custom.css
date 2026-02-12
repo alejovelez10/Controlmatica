@@ -1,0 +1,244 @@
+/* ========================================
+   SweetAlert2 Custom Styles - Controlmatica
+   ======================================== */
+
+/* Container - usar grid para forzar orden */
+.swal2-popup {
+  display: grid !important;
+  grid-template-areas:
+    "icon"
+    "title"
+    "content"
+    "actions" !important;
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  border-radius: 16px !important;
+  padding: 32px 24px 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  max-width: 400px !important;
+  gap: 0 !important;
+}
+
+/* Icon */
+.swal2-icon {
+  grid-area: icon !important;
+  margin: 0 auto 20px auto !important;
+  width: 72px !important;
+  max-width: 72px !important;
+  min-width: 72px !important;
+  height: 72px !important;
+  max-height: 72px !important;
+  min-height: 72px !important;
+  border-width: 4px !important;
+  font-size: 1em !important;
+  transform: scale(1) !important;
+}
+
+.swal2-icon .swal2-icon-content {
+  font-size: 2.5rem !important;
+}
+
+/* Success icon específico */
+.swal2-icon.swal2-success {
+  border-color: #10b981 !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-line-tip {
+  background-color: #10b981 !important;
+  width: 25px !important;
+  left: 14px !important;
+  top: 46px !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-line-long {
+  background-color: #10b981 !important;
+  width: 47px !important;
+  right: 8px !important;
+  top: 38px !important;
+}
+
+.swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+.swal2-icon.swal2-warning .swal2-icon-content {
+  color: #f59e0b !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+}
+
+.swal2-icon.swal2-success {
+  border-color: #10b981 !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+  background-color: #10b981 !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Title */
+.swal2-title {
+  grid-area: title !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  padding: 0 !important;
+  margin: 0 0 8px 0 !important;
+  text-align: center !important;
+}
+
+/* Content text */
+.swal2-html-container {
+  grid-area: content !important;
+  font-size: 14px !important;
+  color: #6b7280 !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+/* Actions/Buttons */
+.swal2-actions {
+  grid-area: actions !important;
+  margin-top: 20px !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* All buttons base */
+.swal2-styled {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 10px 24px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+
+/* Confirm button */
+.swal2-confirm {
+  background: linear-gradient(135deg, #2a3f53 0%, #3d5a73 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  order: 1 !important;
+}
+
+.swal2-confirm:hover {
+  background: linear-gradient(135deg, #1e2d3d 0%, #2a3f53 100%) !important;
+  transform: translateY(-1px) !important;
+}
+
+.swal2-confirm:focus {
+  box-shadow: 0 0 0 3px rgba(42, 63, 83, 0.3) !important;
+}
+
+/* Cancel button */
+.swal2-cancel {
+  background: #fff !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  order: 2 !important;
+}
+
+.swal2-cancel:hover {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+}
+
+.swal2-cancel:focus {
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2) !important;
+}
+
+/* Deny button (for danger actions) */
+.swal2-deny {
+  background: #ef4444 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.swal2-deny:hover {
+  background: #dc2626 !important;
+}
+
+/* Timer progress bar */
+.swal2-timer-progress-bar {
+  background: #f5a623 !important;
+}
+
+/* Close button */
+.swal2-close {
+  color: #9ca3af !important;
+  font-size: 28px !important;
+}
+
+.swal2-close:hover {
+  color: #374151 !important;
+}
+
+/* Input fields */
+.swal2-input,
+.swal2-textarea,
+.swal2-select {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 14px !important;
+  border: 1px solid #e2e5ea !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+}
+
+.swal2-input:focus,
+.swal2-textarea:focus,
+.swal2-select:focus {
+  border-color: #f5a623 !important;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15) !important;
+}
+
+/* Backdrop */
+.swal2-backdrop-show {
+  background: rgba(15, 23, 42, 0.5) !important;
+}
+
+/* Animation */
+.swal2-show {
+  animation: swal2-show 0.25s ease !important;
+}
+
+.swal2-hide {
+  animation: swal2-hide 0.2s ease !important;
+}
+
+@keyframes swal2-show {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes swal2-hide {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}

@@ -5,7 +5,7 @@ import Select from "react-select";
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -23,7 +23,7 @@ const selectStyles = {
 };
 
 const FormCreate = (props) => {
-  const [costCenterOptions, setCostCenterOptions] = useState(props.centro || []);
+  const [costCenterOptions, setCostCenterOptions] = useState([]);
   const [isLoadingCostCenter, setIsLoadingCostCenter] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState(null);
 
@@ -41,25 +41,23 @@ const FormCreate = (props) => {
       clearTimeout(searchTimeout);
     }
 
-    if (inputValue.length >= 2) {
+    if (inputValue.length >= 3) {
       setIsLoadingCostCenter(true);
       const timeout = setTimeout(() => {
-        if (props.onSearchCostCenter) {
-          props.onSearchCostCenter(inputValue, (results) => {
-            setCostCenterOptions(results || []);
+        fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue))
+          .then((response) => response.json())
+          .then((data) => {
+            setCostCenterOptions(data || []);
+            setIsLoadingCostCenter(false);
+          })
+          .catch(() => {
+            setCostCenterOptions([]);
             setIsLoadingCostCenter(false);
           });
-        } else {
-          const filtered = (props.centro || []).filter((opt) =>
-            opt.label.toLowerCase().includes(inputValue.toLowerCase())
-          );
-          setCostCenterOptions(filtered);
-          setIsLoadingCostCenter(false);
-        }
       }, 300);
       setSearchTimeout(timeout);
     } else {
-      setCostCenterOptions(props.centro || []);
+      setCostCenterOptions([]);
       setIsLoadingCostCenter(false);
     }
   }, [props.centro, props.onSearchCostCenter, searchTimeout]);
@@ -121,7 +119,7 @@ const FormCreate = (props) => {
                 <label className="cm-label">
                   <i className="fas fa-building" /> Centro de Costo{" "}
                   <span style={{ fontSize: "11px", color: "#888", fontWeight: "normal" }}>
-                    (escribe al menos 2 letras)
+                    (escribe al menos 3 letras)
                   </span>
                 </label>
                 <Select
@@ -133,7 +131,7 @@ const FormCreate = (props) => {
                   placeholder="Centro de costos"
                   styles={selectStyles}
                   menuPortalTarget={document.body}
-                  noOptionsMessage={() => "Escribe para buscar..."}
+                  noOptionsMessage={() => "Escribe al menos 3 letras para buscar"}
                 />
               </div>
             )}
@@ -332,7 +330,7 @@ const FormCreate = (props) => {
           gap: 12px;
           padding: 16px 24px;
           border-top: 1px solid #e2e5ea;
-          background: #f8f9fa;
+          background: #fcfcfd;
         }
 
         .cm-form-grid-2 {
@@ -374,7 +372,7 @@ const FormCreate = (props) => {
           font-size: 14px;
           border: 1px solid #e2e5ea;
           border-radius: 8px;
-          background: #f8f9fa;
+          background: #fcfcfd;
           transition: all 0.2s;
           box-sizing: border-box;
         }

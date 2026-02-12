@@ -422,17 +422,173 @@ end
 Report.insert_all(reportes)
 puts "✓ #{Report.count} reportes creados."
 
+# ============================================
+# Seed: Facturas de Cliente (CustomerInvoice)
+# ============================================
+
+puts "Creando 200 facturas de cliente..."
+
+sales_order_ids = SalesOrder.pluck(:id)
+customer_invoice_states = ["Pagada", "Pendiente", "Parcial"]
+
+customer_invoices = []
+200.times do |i|
+  so = SalesOrder.find(sales_order_ids.sample)
+  valor = rand(5_000_000..50_000_000).to_f
+  eng_value = (valor * rand(0.2..0.4)).round(0)
+
+  customer_invoices << {
+    number_invoice: "FAC-CLI-#{rand(10000..99999)}",
+    invoice_date: Date.today - rand(0..365),
+    invoice_value: valor,
+    engineering_value: eng_value,
+    others_value: valor - eng_value,
+    invoice_state: customer_invoice_states.sample,
+    delivery_certificate_state: ["Pendiente", "Entregado"].sample,
+    reception_report_state: ["Pendiente", "Recibido"].sample,
+    cost_center_id: so.cost_center_id,
+    sales_order_id: so.id,
+    created_at: Time.now - rand(0..365).days,
+    updated_at: Time.now
+  }
+end
+
+CustomerInvoice.insert_all(customer_invoices)
+puts "✓ #{CustomerInvoice.count} facturas de cliente creadas."
+
+# ============================================
+# Seed: Reportes de Cliente (CustomerReport)
+# ============================================
+
+puts "Creando 300 reportes de cliente..."
+
+customer_report_states = ["Pendiente", "Aprobado", "Rechazado", "En revisión"]
+
+customer_reports_data = []
+300.times do |i|
+  cc = CostCenter.find(cost_center_ids.sample)
+  cust_id = cc.customer_id
+  cont = Contact.where(customer_id: cust_id).first
+
+  customer_reports_data << {
+    report_code: "RC-#{cc.code}-#{i + 1}",
+    report_date: Date.today - rand(0..365),
+    description: ["Reporte de avance de proyecto", "Informe de actividades", "Reporte de horas trabajadas",
+                  "Informe de finalización de etapa", "Reporte de mantenimiento preventivo",
+                  "Informe de comisionamiento", "Reporte de pruebas FAT", "Informe técnico mensual"].sample,
+    report_state: customer_report_states.sample,
+    email: cont ? cont.email : "cliente@empresa.com",
+    count: i + 1,
+    token: SecureRandom.hex(15),
+    cost_center_id: cc.id,
+    customer_id: cust_id,
+    contact_id: cont ? cont.id : nil,
+    user_id: user_id,
+    created_at: Time.now - rand(0..365).days,
+    updated_at: Time.now
+  }
+end
+
+CustomerReport.insert_all(customer_reports_data)
+puts "✓ #{CustomerReport.count} reportes de cliente creados."
+
+# ============================================
+# Seed: Comisiones (Commission)
+# ============================================
+
+puts "Creando 150 comisiones..."
+
+customer_invoice_ids = CustomerInvoice.pluck(:id)
+customer_report_ids = CustomerReport.pluck(:id)
+
+commissions = []
+150.times do |i|
+  ci = CustomerInvoice.find(customer_invoice_ids.sample)
+  cc_id = ci.cost_center_id
+  cr = CustomerReport.where(cost_center_id: cc_id).first
+
+  start_dt = Date.today - rand(30..365)
+  end_dt = start_dt + rand(5..30)
+  hours = rand(10..80).to_f
+  value_hour = rand(40_000..120_000).to_f
+  total = hours * value_hour * 0.10 # 10% de comisión
+
+  commissions << {
+    user_invoice_id: user_ids.sample,
+    start_date: start_dt,
+    end_date: end_dt,
+    customer_invoice_id: ci.id,
+    observation: ["Comisión por ventas del mes", "Comisión por proyecto completado",
+                  "Comisión por horas de ingeniería", "Comisión por servicio técnico",
+                  "Comisión por gestión comercial", "Comisión por cierre de contrato"].sample,
+    hours_worked: hours,
+    value_hour: value_hour,
+    total_value: total,
+    is_acepted: [true, false, false].sample,
+    cost_center_id: cc_id,
+    customer_report_id: cr ? cr.id : nil,
+    user_id: user_id,
+    created_at: Time.now - rand(0..180).days,
+    updated_at: Time.now
+  }
+end
+
+Commission.insert_all(commissions)
+puts "✓ #{Commission.count} comisiones creadas."
+
+# ============================================
+# Seed: Relaciones de Comisiones (CommissionRelation)
+# ============================================
+
+puts "Creando 50 relaciones de comisiones..."
+
+areas = ["Ingeniería", "Comercial", "Operaciones", "Proyectos", "Servicio Técnico", "Automatización", "Instrumentación"]
+
+commission_relations = []
+50.times do |i|
+  director_id = user_ids.sample
+  empleado_id = user_ids.reject { |u| u == director_id }.sample || user_ids.first
+
+  start_dt = Date.today - rand(30..365)
+  end_dt = start_dt + rand(30..90)
+  creation_dt = start_dt - rand(1..15)
+
+  commission_relations << {
+    user_direction_id: director_id,
+    user_report_id: empleado_id,
+    area: areas.sample,
+    creation_date: creation_dt,
+    start_date: start_dt,
+    end_date: end_dt,
+    observations: ["Relación de comisiones del período #{start_dt.strftime('%B %Y')}",
+                   "Consolidado de comisiones por proyecto",
+                   "Informe de comisiones del equipo técnico",
+                   "Resumen de comisiones comerciales",
+                   "Liquidación de comisiones del trimestre"].sample,
+    user_id: user_id,
+    created_at: Time.now - rand(0..180).days,
+    updated_at: Time.now
+  }
+end
+
+CommissionRelation.insert_all(commission_relations)
+puts "✓ #{CommissionRelation.count} relaciones de comisiones creadas."
+
 puts ""
 puts "========================================"
 puts " Seed completado"
 puts "========================================"
-puts " Clientes:       #{Customer.count}"
-puts " Proveedores:    #{Provider.count}"
-puts " Contactos:      #{Contact.count}"
-puts " Centros Costo:  #{CostCenter.count}"
-puts " Tipos Gastos:   #{ReportExpenseOption.count}"
-puts " Ordenes Compra: #{SalesOrder.count}"
-puts " Tableristas:    #{Contractor.count}"
-puts " Materiales:     #{Material.count}"
-puts " Reportes:       #{Report.count}"
+puts " Clientes:            #{Customer.count}"
+puts " Proveedores:         #{Provider.count}"
+puts " Contactos:           #{Contact.count}"
+puts " Centros Costo:       #{CostCenter.count}"
+puts " Tipos Gastos:        #{ReportExpenseOption.count}"
+puts " Ordenes Compra:      #{SalesOrder.count}"
+puts " Tableristas:         #{Contractor.count}"
+puts " Materiales:          #{Material.count}"
+puts " Reportes:            #{Report.count}"
+puts " Facturas Cliente:    #{CustomerInvoice.count}"
+puts " Reportes Cliente:    #{CustomerReport.count}"
+puts " Comisiones:          #{Commission.count}"
+puts " Rel. Comisiones:     #{CommissionRelation.count}"
 puts "========================================"

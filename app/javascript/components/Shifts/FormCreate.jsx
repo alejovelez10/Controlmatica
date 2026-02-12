@@ -6,7 +6,7 @@ import { CirclePicker } from "react-color";
 const selectStyles = {
   control: (base, state) => ({
     ...base,
-    background: "#f8f9fa",
+    background: "#fcfcfd",
     borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
     boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
     "&:hover": { borderColor: "#f5a623" },
@@ -294,7 +294,7 @@ const FormCreate = (props) => {
         }
 
         .cm-modal-header {
-          background: #f8f9fa;
+          background: #fcfcfd;
           padding: 20px 32px;
           border-bottom: 1px solid #e9ecef;
           position: relative;
@@ -413,7 +413,7 @@ const FormCreate = (props) => {
           font-family: 'Poppins', sans-serif;
           font-size: 14px;
           color: #333;
-          background: #f8f9fa;
+          background: #fcfcfd;
           border: 1px solid #e2e5ea;
           border-radius: 8px;
           transition: all 0.2s ease;
@@ -521,7 +521,7 @@ const FormCreate = (props) => {
           display: flex;
           align-items: center;
           gap: 16px;
-          background: #f8f9fa;
+          background: #fcfcfd;
           border: 1px solid #e9ecef;
           border-radius: 12px;
           padding: 16px;
@@ -550,7 +550,7 @@ const FormCreate = (props) => {
           justify-content: flex-end;
           gap: 12px;
           padding: 16px 32px;
-          background: #f8f9fa;
+          background: #fcfcfd;
           border-top: 1px solid #e9ecef;
         }
 
@@ -575,7 +575,7 @@ const FormCreate = (props) => {
         }
 
         .cm-btn-outline:hover {
-          background: #f8f9fa;
+          background: #fcfcfd;
           border-color: #adb5bd;
         }
 

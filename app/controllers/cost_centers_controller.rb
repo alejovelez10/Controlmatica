@@ -50,6 +50,21 @@ class CostCentersController < ApplicationController
     render json: results.map { |cc| { id: cc.id, label: "#{cc.code} - (#{cc.description})" } }
   end
 
+  def get_cost_center_details
+    cc = CostCenter.includes(:customer, :contact, :user_owner).find(params[:id])
+    render json: {
+      id: cc.id,
+      code: cc.code,
+      description: cc.description,
+      customer_id: cc.customer_id,
+      contact_id: cc.contact_id,
+      user_owner_id: cc.user_owner_id,
+      customer: cc.customer ? { id: cc.customer.id, name: cc.customer.name } : nil,
+      contact: cc.contact ? { id: cc.contact.id, name: cc.contact.name } : nil,
+      user_owner: cc.user_owner ? { id: cc.user_owner.id, names: cc.user_owner.names } : nil
+    }
+  end
+
   def get_cost_centers
     permissions = load_permissions("Centro de Costos", "Ver todos")
     validate = permissions["Ver todos"]
