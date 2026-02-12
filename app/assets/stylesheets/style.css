@@ -11167,8 +11167,8 @@ body.stop-scrolling {
     left: 0;
     padding-top: 70px;
     width: 230px;
-    overflow: auto;
-    z-index: 10;
+    overflow: visible;
+    z-index: 1100;
     background-color: #222d32;
     -webkit-box-shadow: 0px 8px 17px rgba(0, 0, 0, 0.2);
     box-shadow: 0px 8px 17px rgba(0, 0, 0, 0.2);
@@ -11479,6 +11479,8 @@ body.stop-scrolling {
     padding: 20px 30px;
     -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1000;
 }
 
 @media print {
@@ -12690,4 +12692,377 @@ body.stop-scrolling {
 .add-table{
     width: 160%;
     max-width: 160%;
+}
+
+/* ========================================
+   MODERN LAYOUT STYLES - 2024 Update
+   ======================================== */
+
+/* Base font size reduction for modern feel */
+.modern-layout {
+    font-size: 13px;
+}
+
+.modern-layout body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Hide header in no-header mode */
+.modern-layout.no-header .app-header {
+    display: none !important;
+}
+
+/* App content - no header margin */
+.modern-layout.no-header .app-content {
+    margin-top: 0 !important;
+    min-height: 100vh;
+    padding: 0 30px 30px 30px !important;
+    --cm-dt-offset: 120px;
+}
+
+/* App title - flush to top */
+.modern-layout.no-header .app-title {
+    margin: 0 -30px 30px -30px !important;
+    padding: 20px 30px;
+    position: relative;
+    z-index: 1000;
+    background: #fff;
+}
+
+
+.modern-layout .app-header__logo {
+    background: transparent;
+    line-height: 54px;
+}
+
+/* Sidebar styling - full height with logo at top */
+.modern-layout .app-sidebar {
+    padding-top: 0;
+    top: 0;
+    z-index: 1100;
+    background: linear-gradient(180deg, #1a252f 0%, #222d32 100%);
+    width: 230px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+/* Sidebar Logo */
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 15px;
+    height: 54px;
+    background: linear-gradient(180deg, #1e2a33 0%, #222d32 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+.sidebar-logo a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+.sidebar-logo__icon {
+    height: 30px;
+    width: auto;
+}
+.sidebar-logo__text {
+    height: 18px;
+    width: auto;
+}
+.sidenav-toggled .sidebar-logo__text {
+    display: none;
+}
+.sidenav-toggled .sidebar-logo {
+    padding: 12px 10px;
+}
+
+/* App menu scrollable */
+.modern-layout .app-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 10px;
+}
+
+/* Sidebar Footer - Notifications + User */
+.sidebar-footer {
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.15);
+    padding: 10px 12px;
+}
+
+/* Notifications section */
+.sidebar-footer__notifications {
+    margin-bottom: 10px;
+}
+.sidebar-footer__notif-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.8);
+    transition: all 0.2s;
+    margin-bottom: 4px;
+}
+.sidebar-footer__notif-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+}
+.sidebar-footer__notif-item i {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+}
+.sidebar-footer__notif-text {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 400;
+}
+.sidebar-footer__notif-badge {
+    background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+.sidebar-footer__notif-badge--warning {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+.sidebar-footer__notif-item--warning i {
+    color: #e74c3c;
+}
+
+/* User section */
+.sidebar-footer__user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+}
+.sidebar-footer__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.sidebar-footer__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.sidebar-footer__user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.sidebar-footer__user-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-footer__user-role {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+}
+.sidebar-footer__chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.5);
+    transition: all 0.2s;
+}
+.sidebar-footer__chevron:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+}
+.sidebar-footer__chevron i {
+    font-size: 10px;
+}
+
+/* Collapsed sidebar footer */
+.sidenav-toggled .sidebar-footer__notif-text {
+    display: none;
+}
+.sidenav-toggled .sidebar-footer__notif-item {
+    justify-content: center;
+    padding: 8px;
+    position: relative;
+}
+.sidenav-toggled .sidebar-footer__notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+    padding: 0 4px;
+}
+.sidenav-toggled .sidebar-footer__user {
+    justify-content: center;
+    padding: 8px;
+}
+.sidenav-toggled .sidebar-footer__user-info,
+.sidenav-toggled .sidebar-footer__chevron {
+    display: none;
+}
+
+/* Hide user info from sidebar (moved to header) */
+.modern-layout .app-sidebar__user {
+    display: none !important;
+}
+
+/* Menu items - compact and modern */
+.modern-layout .app-menu__item {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
+}
+
+.modern-layout .app-menu__icon {
+    width: 22px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+    transition: all 0.2s ease;
+}
+
+.modern-layout .app-menu__label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    overflow: visible;
+}
+
+/* Active state with orange accent */
+.modern-layout .app-menu__item.active,
+.modern-layout .treeview-menu .app-menu__item.active {
+    background: rgba(245,166,35,0.15);
+    border-left-color: #f5a623;
+}
+
+.modern-layout .app-menu__item.active .app-menu__icon,
+.modern-layout .treeview-menu .app-menu__item.active .app-menu__icon,
+.modern-layout .app-menu__item:hover .app-menu__icon {
+    color: #f5a623;
+}
+
+.modern-layout .app-menu__item.active .app-menu__label,
+.modern-layout .app-menu__item:hover .app-menu__label {
+    color: #fff;
+}
+
+/* Treeview improvements */
+.modern-layout .treeview-indicator {
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.modern-layout .treeview.is-expanded .treeview-indicator {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+.modern-layout .treeview.is-expanded > [data-toggle='treeview'] {
+    background: linear-gradient(90deg, rgba(245,166,35,0.1) 0%, transparent 100%);
+    border-left-color: #f5a623;
+}
+
+.modern-layout .treeview-menu {
+    background: rgba(0,0,0,0.15);
+}
+
+.modern-layout .treeview-menu .app-menu__item {
+    padding-left: 42px;
+    font-size: 11.5px;
+}
+
+.modern-layout .treeview-menu .app-menu__icon {
+    font-size: 11px;
+    width: 20px;
+}
+
+/* App content adjustments */
+.modern-layout .app-content {
+    padding-top: 54px;
+}
+
+/* App title bar */
+.modern-layout .app-title {
+    padding: 16px 24px;
+    margin: -24px -24px 24px;
+    position: relative;
+    z-index: 1000;
+    background: #fff;
+}
+
+.modern-layout .app-title h1 {
+    font-size: 18px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar toggle button */
+.modern-layout .app-sidebar__toggle {
+    line-height: 2.6;
+    font-size: 18px;
+}
+
+.modern-layout .app-sidebar__toggle:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+/* Scrollbar styling for sidebar */
+.modern-layout .app-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.modern-layout .app-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+.modern-layout .app-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Responsive adjustments for sidenav-toggled */
+@media (min-width: 768px) {
+    .modern-layout.sidebar-mini.sidenav-toggled .app-menu__item:hover .app-menu__label {
+        font-size: 12px;
+        padding: 10px 5px 10px 16px;
+    }
+
+    .modern-layout.sidebar-mini.sidenav-toggled .treeview-menu {
+        padding: 8px 0;
+    }
+
+    .modern-layout.sidebar-mini.sidenav-toggled .treeview-menu .app-menu__item {
+        padding-left: 16px;
+    }
 }

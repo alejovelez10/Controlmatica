@@ -5,375 +5,271 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
     <%= favicon_link_tag "https://controlmatica.com.co/templates/controlmatica_template_01_03/favicon.ico" %>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">    
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   </head>
 
-  <body class="app <%= current_user.menu %>">
-      <!-- Navbar-->
-    <header class="app-header">
-      <a class="app-header__logo" href="/">
-        <!-- <img src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/576/masbosques_horizontalv3.png" alt="" class="img-logo">-->
-        <h5 class="mt-2 logo-text" > <img class="image-logo" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png" alt=""> <img style="width:155px;" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/593/controlmaticatexto.png" alt=""></h5>
-      </a>
-      <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
-      <!-- Navbar Right Menu-->
-      <ul class="app-nav">
-        <li class="dropdown">
-          <% if get_register_edit.any? && current_user.rol.name == "Administrador" %>
-
-            <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-              <span class="badge badge-light notification-badge"><%= get_register_edit.count %></span>
-                <i class="fas fa-edit" style="font-size: 17px;"></i>
-            </a>
-
-            <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <%= get_register_edit.count %> nuevas notificaciones.</li>
-                <div class="app-notification__content">
-                  <% get_register_edit.first(4).each do |notification|  %>
-                    <% link = "/notifications" + "?from=" + notification.id.to_s %>
-                    <li>
-                          <a class="app-notification__item" href="<%= link %>">
-                            <span class="app-notification__icon">
-                              <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                                <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
-                              </span>
-                            </span>
-
-                            <div>
-                              <p class="app-notification__message">Se <%= notification.type_edit %> un valor en <%= notification.module %> <br>  <br> <%== notification.description %></p>
-                              <p class="app-notification__meta"><%= notification.date_update %></p>
-                            </div>
-                          </a>  
-                    </li> 
-                  <% end %>
-            
-              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notifications_path, style: "color: #ffff !important;" %></li>
-            </ul>
-
-          <% end %>
-        </li>
-
-        <li class="dropdown">
-          <% if get_notification_alert.any? && current_user.rol.name == "Administrador" %>
-
-            <a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
-              <span class="badge badge-light notification-badge"><%= get_notification_alert.count %></span>
-                <i class="fas fa-bell" style="font-size: 17px;"></i>
-            </a>
-
-            <ul class="app-notification dropdown-menu dropdown-menu-right">
-              <li class="app-notification__title">Tienes <% get_notification_alert.count %> nuevas notificaciones.</li>
-                <div class="app-notification__content">
-                  <% get_notification_alert.first(4).each do |notification|  %>
-                    <% link = "/notification_alerts" + "?from=" + notification.id.to_s %>
-                    <li>
-                          <a class="app-notification__item" href="<%= link %>">
-                            <span class="app-notification__icon">
-                              <span class="fa-stack fa-lg">
-                                <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                                <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
-                              </span>
-                            </span>
-
-                            <div>
-                              <p class="app-notification__message">Alerta de sobrecosto en <%= notification.module %> <br> C.C (<%= notification.cost_center.code if notification.cost_center%>)   </p>
-                              <p class="app-notification__meta"><%= notification.date_update %></p>
-                            </div>
-                          </a>  
-                    </li> 
-                  <% end %>
-            
-              <li class="app-notification__footer"><%= link_to "Ver todas las notificaciones.", notification_alerts_path, style: "color: #ffff !important;" %></li>
-            </ul>
-            
-          <% end %>
-
-        </li>
-
-        <!-- User Menu-->
-        <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Open Profile Menu"><i class="fa fa-user fa-lg"></i></a>
-          <ul class="dropdown-menu settings-menu dropdown-menu-right">
-            
-          
-            <li>
-              <%= link_to destroy_user_session_path, method: :delete, class: "dropdown-item" do %>
-                  <i class="fas fa-sign-out-alt mr-2 fa-lg"></i> Salir</a>
-              <% end -%>
-            </li>
-
-            <% if @user_name %>
-              <li>
-                <%= link_to "Salir de microsoft", {:controller => :auth, :action => :signout}, class: "dropdown-item" %>
-              </li>
-            <% else %>
-              <li>
-                <%= link_to "Ingresar Microsoft", "/auth/microsoft_graph_auth", method: :post, class: "dropdown-item pr-1" %>
-              </li>
-            <% end %>
-            
-
-          </ul>
-        </li>
-      </ul>
-    </header>
+  <body class="app <%= current_user.menu %> modern-layout no-header">
     <!-- Sidebar menu-->
 
-        <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
+    <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
     <aside class="app-sidebar">
-      <div class="app-sidebar__user">
-        <%= image_tag("https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg", class: "app-sidebar__user-avatar")%>
-
-        <div>
-          <p class="app-sidebar__user-name"><%= current_user.names ? current_user.names : "Usuario" %></p>
-          <p class="app-sidebar__user-designation" style="color:#a09e9e"><%= current_user.rol.name ? current_user.rol.name : "No hay rol" %></p>
-        </div>
+      <!-- Logo in Sidebar -->
+      <div class="sidebar-logo">
+        <a href="/" class="sidebar-logo__link">
+          <img class="sidebar-logo__icon" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png" alt="Controlmatica">
+          <img class="sidebar-logo__text" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/593/controlmaticatexto.png" alt="Controlmatica">
+        </a>
+        <a class="sidebar-toggle" href="#" data-toggle="sidebar" aria-label="Toggle Sidebar">
+          <i class="fas fa-bars"></i>
+        </a>
       </div>
-
       <ul class="app-menu">
 
-      <% if authorization_config %>
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Configuración</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-            <ul class="treeview-menu">
+      <%# Helper para detectar si un item del menu está activo %>
+      <% config_controllers = %w[providers customers parameterizations users rols module_controls alerts report_expense_options] %>
+      <% commission_controllers = %w[commissions commission_relations] %>
+      <% expense_controllers = %w[report_expenses expense_ratios] %>
 
+      <% if authorization_config %>
+        <li class="treeview <%= 'is-expanded' if config_controllers.include?(controller_name) %>">
+          <a class="app-menu__item" href="#" data-toggle="treeview">
+            <i class="app-menu__icon fas fa-cogs"></i>
+            <span class="app-menu__label">Configuración</span>
+            <i class="treeview-indicator fas fa-chevron-right"></i>
+          </a>
+          <ul class="treeview-menu">
             <% if authorization_providers || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to providers_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-user"></i><span class="app-menu__label">Proveedores</span>
+                <%= link_to providers_path, class: "app-menu__item #{'active' if controller_name == 'providers'}" do %>
+                  <i class="app-menu__icon fas fa-truck"></i><span class="app-menu__label">Proveedores</span>
                 <% end -%>
               </li>
             <% end %>
 
             <% if authorization_customers || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to customers_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-street-view"></i><span class="app-menu__label">Clientes</span>
+                <%= link_to customers_path, class: "app-menu__item #{'active' if controller_name == 'customers'}" do %>
+                  <i class="app-menu__icon fas fa-building"></i><span class="app-menu__label">Clientes</span>
                 <% end -%>
               </li>
             <% end %>
 
             <% if authorization_parameterizations || current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to parameterizations_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Parametrizacion</span>
-                  <% end -%>
-                </li>
+              <li>
+                <%= link_to parameterizations_path, class: "app-menu__item #{'active' if controller_name == 'parameterizations'}" do %>
+                  <i class="app-menu__icon fas fa-sliders-h"></i><span class="app-menu__label">Parametrización</span>
+                <% end -%>
+              </li>
             <% end %>
 
             <% if authorization_users || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to users_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-users"></i><span class="app-menu__label">Usuarios</span>
+                <%= link_to users_path, class: "app-menu__item #{'active' if controller_name == 'users'}" do %>
+                  <i class="app-menu__icon fas fa-users"></i><span class="app-menu__label">Usuarios</span>
                 <% end -%>
               </li>
             <% end %>
 
             <% if authorization_rols || current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to rols_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fas fa-user-edit"></i><span class="app-menu__label">Roles</span>
-                  <% end -%>
-                </li>
-            <% end %>
-            
-            <% if authorization_modules || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to module_controls_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Modulos y Acciones</span>
+                <%= link_to rols_path, class: "app-menu__item #{'active' if controller_name == 'rols'}" do %>
+                  <i class="app-menu__icon fas fa-user-shield"></i><span class="app-menu__label">Roles</span>
                 <% end -%>
               </li>
             <% end %>
 
             <% if authorization_modules || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to alerts_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Alertas</span>
+                <%= link_to module_controls_path, class: "app-menu__item #{'active' if controller_name == 'module_controls'}" do %>
+                  <i class="app-menu__icon fas fa-puzzle-piece"></i><span class="app-menu__label">Módulos y Acciones</span>
                 <% end -%>
               </li>
             <% end %>
 
+            <% if authorization_modules || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to alerts_path, class: "app-menu__item #{'active' if controller_name == 'alerts'}" do %>
+                  <i class="app-menu__icon fas fa-bell"></i><span class="app-menu__label">Alertas</span>
+                <% end -%>
+              </li>
+            <% end %>
 
-              <% if authorization_report_expense_options || Rails.env.development? %>
-                <li>
-                  <%= link_to report_expense_options_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fas fa-coins"></i><span class="app-menu__label pl-0">Tipos de Gastos</span>
-                  <% end -%>
-                </li>
-              <% end %>
-
-            </ul>
-          </li>
+            <% if authorization_report_expense_options || Rails.env.development? %>
+              <li>
+                <%= link_to report_expense_options_path, class: "app-menu__item #{'active' if controller_name == 'report_expense_options'}" do %>
+                  <i class="app-menu__icon fas fa-tags"></i><span class="app-menu__label">Tipos de Gastos</span>
+                <% end -%>
+              </li>
+            <% end %>
+          </ul>
+        </li>
       <% end %>
 
-      <% if  authorization_commission_relations || authorization_commissions %>
-        <li class="treeview">
+      <% if authorization_commission_relations || authorization_commissions %>
+        <li class="treeview <%= 'is-expanded' if commission_controllers.include?(controller_name) %>">
           <a class="app-menu__item" href="#" data-toggle="treeview">
-            <i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Comisiones</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-            <ul class="treeview-menu">
-
+            <i class="app-menu__icon fas fa-percentage"></i>
+            <span class="app-menu__label">Comisiones</span>
+            <i class="treeview-indicator fas fa-chevron-right"></i>
+          </a>
+          <ul class="treeview-menu">
             <% if authorization_commissions || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to commissions_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-user"></i><span class="app-menu__label">Comisiones</span>
+                <%= link_to commissions_path, class: "app-menu__item #{'active' if controller_name == 'commissions'}" do %>
+                  <i class="app-menu__icon fas fa-coins"></i><span class="app-menu__label">Comisiones</span>
                 <% end -%>
               </li>
             <% end %>
 
             <% if authorization_commission_relations || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to commission_relations_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-street-view"></i><span class="app-menu__label">Relacion de comisiones</span>
+                <%= link_to commission_relations_path, class: "app-menu__item #{'active' if controller_name == 'commission_relations'}" do %>
+                  <i class="app-menu__icon fas fa-link"></i><span class="app-menu__label">Relación de comisiones</span>
+                <% end -%>
+              </li>
+            <% end %>
+          </ul>
+        </li>
+      <% end %>
+
+      <% if authorization_report_expenses || authorization_expense_ratios || current_user.rol.name == "Administrador" %>
+        <li class="treeview <%= 'is-expanded' if expense_controllers.include?(controller_name) %>">
+          <a class="app-menu__item" href="#" data-toggle="treeview">
+            <i class="app-menu__icon fas fa-wallet"></i>
+            <span class="app-menu__label">Control de gastos</span>
+            <i class="treeview-indicator fas fa-chevron-right"></i>
+          </a>
+          <ul class="treeview-menu">
+            <% if authorization_report_expenses || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to report_expenses_path, class: "app-menu__item #{'active' if controller_name == 'report_expenses'}" do %>
+                  <i class="app-menu__icon fas fa-receipt"></i><span class="app-menu__label">Gastos</span>
                 <% end -%>
               </li>
             <% end %>
 
-            </ul>
-          </li>
+            <% if authorization_expense_ratios || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to expense_ratios_path, class: "app-menu__item #{'active' if controller_name == 'expense_ratios'}" do %>
+                  <i class="app-menu__icon fas fa-calculator"></i><span class="app-menu__label">Relación de gastos</span>
+                <% end -%>
+              </li>
+            <% end %>
+          </ul>
+        </li>
       <% end %>
 
-     <%#  authorization_report_expenses || authorization_expense_ratios  %>
-      <% if authorization_report_expenses || authorization_expense_ratios || current_user.rol.name == "Administrador"  %>
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-cog"></i><span class="app-menu__label">Control de gastos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-          <ul class="treeview-menu">
-
-              <% if authorization_report_expenses || current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to report_expenses_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Gastos</span>
-                  <% end -%>
-                </li>
-              <% end %>
-
-
-
-              <% if authorization_expense_ratios || current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to expense_ratios_path, class: "app-menu__item" do %>
-                    <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Relacion de gastos</span>
-                  <% end -%>
-                </li>
-              <% end %>
-
-            </ul>
-          </li>
-      <% end %>
-
-  
-
-        <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to cost_centers_path, class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Centros de costos</span>
-            <% end -%>
-          </li>
-        <% end %>
-
-        <% if (authorization_turnos || current_user.rol.name == "Administrador") %>
-          <li>
-            <%= link_to shift_calendar_path("All"), class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Turnos</span>
-            <% end -%>
-          </li>
-        <% end %>
-
-        <% if authorization_sales_orders || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to sales_orders_path, class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-donate"></i><span class="app-menu__label pl-0">Ordenes de Compra</span>
-            <% end -%>
-          </li>
-        <% end %>
-
-        <% if authorization_report || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to reports_path, class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-user-clock"></i><span class="app-menu__label">Reportes de Servicio</span>
-            <% end -%>
-          </li>
-        <% end %>
-
-        <% if authorization_contractors || current_user.rol.name == "Administrador" %>
+      <% if authorization_cost_center || current_user.rol.name == "Administrador" %>
         <li>
-          <%= link_to contractors_path, class: "app-menu__item" do %>
-            <i class="app-menu__icon fa fa-th"></i><span class="app-menu__label pl-0">Registro Tablerista</span>
+          <%= link_to cost_centers_path, class: "app-menu__item #{'active' if controller_name == 'cost_centers'}" do %>
+            <i class="app-menu__icon fas fa-sitemap"></i><span class="app-menu__label">Centros de costos</span>
+          <% end -%>
+        </li>
+      <% end %>
+
+      <% if authorization_turnos || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to shift_calendar_path("All"), class: "app-menu__item #{'active' if controller_name == 'shifts'}" do %>
+            <i class="app-menu__icon fas fa-calendar-alt"></i><span class="app-menu__label">Turnos</span>
+          <% end -%>
+        </li>
+      <% end %>
+
+      <% if authorization_sales_orders || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to sales_orders_path, class: "app-menu__item #{'active' if controller_name == 'sales_orders'}" do %>
+            <i class="app-menu__icon fas fa-shopping-cart"></i><span class="app-menu__label">Ordenes de Compra</span>
+          <% end -%>
+        </li>
+      <% end %>
+
+      <% if authorization_report || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to reports_path, class: "app-menu__item #{'active' if controller_name == 'reports'}" do %>
+            <i class="app-menu__icon fas fa-clipboard-list"></i><span class="app-menu__label">Reportes de Servicio</span>
+          <% end -%>
+        </li>
+      <% end %>
+
+      <% if authorization_contractors || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to contractors_path, class: "app-menu__item #{'active' if controller_name == 'contractors'}" do %>
+            <i class="app-menu__icon fas fa-hard-hat"></i><span class="app-menu__label">Registro Tablerista</span>
           <% end -%>
         </li>
       <% end %>
 
       <% if authorization_materials || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to materials_path, class: "app-menu__item" do %>
-              <i class="app-menu__icon fas fa-dolly"></i><span class="app-menu__label pl-0">Registro Materiales</span>
-            <% end -%>
-          </li>
+        <li>
+          <%= link_to materials_path, class: "app-menu__item #{'active' if controller_name == 'materials'}" do %>
+            <i class="app-menu__icon fas fa-boxes"></i><span class="app-menu__label">Registro Materiales</span>
+          <% end -%>
+        </li>
       <% end %>
 
-        
-        <% if authorization_customer_reports || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to customer_reports_path, class: "app-menu__item" do %>
-            <i class="app-menu__icon fas fa-handshake"></i><span class="app-menu__label">Reportes de Cliente</span>
-            <% end -%>
-          </li>
-        <% end %>
+      <% if authorization_customer_reports || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to customer_reports_path, class: "app-menu__item #{'active' if controller_name == 'customer_reports'}" do %>
+            <i class="app-menu__icon fas fa-file-contract"></i><span class="app-menu__label">Reportes de Cliente</span>
+          <% end -%>
+        </li>
+      <% end %>
 
-        <% if authorization_employed_performance || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to employed_performance_show_path, class: "app-menu__item" do %>
-            <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Rendimiento Ingenieros</span>
-            <% end -%>
-          </li>
-        <% end %>
+      <% if authorization_employed_performance || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to employed_performance_show_path, class: "app-menu__item #{'active' if controller_name == 'employed_performance' && !request.query_string.include?('tableristas')}" do %>
+            <i class="app-menu__icon fas fa-user-tie"></i><span class="app-menu__label">Rendimiento Ingenieros</span>
+          <% end -%>
+        </li>
+      <% end %>
 
-        <% if authorization_report_contractors || current_user.rol.name == "Administrador" %>
-          <li>
-            <%= link_to employed_performance_show_path + "?view=tableristas", class: "app-menu__item" do %>
-            <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label"> Rendimineto tableristas</span>
-            <% end -%>
-          </li>
-        <% end %>
+      <% if authorization_report_contractors || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to employed_performance_show_path + "?view=tableristas", class: "app-menu__item #{'active' if request.query_string.include?('tableristas')}" do %>
+            <i class="app-menu__icon fas fa-user-cog"></i><span class="app-menu__label">Rendimiento Tableristas</span>
+          <% end -%>
+        </li>
+      <% end %>
 
-            <% if current_user.rol.name == "Administrador" %>
-              <li>
-                <%= link_to controlmatica_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fa fa-layer-group"></i><span class="app-menu__label">Informes</span>
-                <% end -%>
-              </li>
-            <% end %>
+      <% if current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to controlmatica_path, class: "app-menu__item #{'active' if controller_name == 'controlmatica'}" do %>
+            <i class="app-menu__icon fas fa-chart-pie"></i><span class="app-menu__label">Informes</span>
+          <% end -%>
+        </li>
+      <% end %>
 
+      <% if authorization_alerts || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to notification_alerts_path, class: "app-menu__item #{'active' if controller_name == 'notification_alerts'}" do %>
+            <i class="app-menu__icon fas fa-exclamation-triangle"></i><span class="app-menu__label">Notificación de alertas</span>
+          <% end -%>
+        </li>
+      <% end %>
 
-            <% if authorization_alerts || current_user.rol.name == "Administrador"%>
-                <li>
-                  <%= link_to notification_alerts_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-chart-line"></i> <span class="app-menu__label">Notificación de alertas</span>
-                  <% end -%>
-                </li>
-              <% end %>
+      <% if authorization_notifications || current_user.rol.name == "Administrador" %>
+        <li>
+          <%= link_to notifications_path, class: "app-menu__item #{'active' if controller_name == 'notifications'}" do %>
+            <i class="app-menu__icon fas fa-history"></i><span class="app-menu__label">Registro de edición</span>
+          <% end -%>
+        </li>
+      <% end %>
 
-              <% if authorization_notifications || current_user.rol.name == "Administrador" %>
-                <li>
-                  <%= link_to notifications_path, class: "app-menu__item" do %>
-                  <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Registro de edición</span>
-                  <% end -%>
-                </li>
-              <% end %>
-                
-               
-                  <% if authorization_tablero%>
-                  <li>
-                    <%= link_to dashboard_ing_path + "?tab=home", class: "app-menu__item" , data: { turbolinks: false } do %>
-                    <i class="app-menu__icon fas fa-chart-line"></i><span class="app-menu__label">Mi tablero</span>
-                    <% end -%>
-                  </li>
-                 <% end -%>
+      <% if authorization_tablero %>
+        <li>
+          <%= link_to dashboard_ing_path + "?tab=home", class: "app-menu__item #{'active' if controller_name == 'dashboard_ings'}", data: { turbolinks: false } do %>
+            <i class="app-menu__icon fas fa-tachometer-alt"></i><span class="app-menu__label">Mi tablero</span>
+          <% end -%>
+        </li>
+      <% end %>
 
 
 
@@ -399,6 +295,114 @@
           </ul>
         </li>-->
       </ul>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <!-- Notifications as menu items -->
+        <% if current_user.rol.name == "Administrador" %>
+          <div class="sidebar-footer__notifications">
+            <% if get_register_edit.any? %>
+              <div class="dropdown">
+                <a class="sidebar-footer__notif-item dropdown-toggle" href="#" data-toggle="dropdown">
+                  <i class="fas fa-edit"></i>
+                  <span class="sidebar-footer__notif-text">Ediciones</span>
+                  <span class="sidebar-footer__notif-badge"><%= get_register_edit.count %></span>
+                </a>
+                <ul class="notification-panel dropdown-menu dropdown-menu-right">
+                  <li class="notification-panel__header">
+                    <i class="fas fa-edit"></i>
+                    <span>Ediciones Recientes</span>
+                  </li>
+                  <div class="notification-panel__content">
+                    <% get_register_edit.first(4).each do |notification| %>
+                      <li>
+                        <a class="notification-panel__item" href="/notifications?from=<%= notification.id %>">
+                          <div class="notification-panel__icon notification-panel__icon--edit">
+                            <i class="fas fa-pen"></i>
+                          </div>
+                          <div class="notification-panel__body">
+                            <p class="notification-panel__message">Se <%= notification.type_edit %> en <strong><%= notification.module %></strong></p>
+                            <p class="notification-panel__time"><i class="far fa-clock"></i> <%= notification.date_update %></p>
+                          </div>
+                        </a>
+                      </li>
+                    <% end %>
+                  </div>
+                  <li class="notification-panel__footer">
+                    <%= link_to notifications_path do %><i class="fas fa-list"></i> Ver todas<% end %>
+                  </li>
+                </ul>
+              </div>
+            <% end %>
+
+            <% if get_notification_alert.any? %>
+              <div class="dropdown">
+                <a class="sidebar-footer__notif-item sidebar-footer__notif-item--warning dropdown-toggle" href="#" data-toggle="dropdown">
+                  <i class="fas fa-bell"></i>
+                  <span class="sidebar-footer__notif-text">Alertas</span>
+                  <span class="sidebar-footer__notif-badge sidebar-footer__notif-badge--warning"><%= get_notification_alert.count %></span>
+                </a>
+                <ul class="notification-panel dropdown-menu dropdown-menu-right">
+                  <li class="notification-panel__header notification-panel__header--warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Alertas</span>
+                  </li>
+                  <div class="notification-panel__content">
+                    <% get_notification_alert.first(4).each do |notification| %>
+                      <li>
+                        <a class="notification-panel__item" href="/notification_alerts?from=<%= notification.id %>">
+                          <div class="notification-panel__icon notification-panel__icon--warning">
+                            <i class="fas fa-exclamation"></i>
+                          </div>
+                          <div class="notification-panel__body">
+                            <p class="notification-panel__message">Alerta en <strong><%= notification.module %></strong></p>
+                            <p class="notification-panel__time"><i class="far fa-clock"></i> <%= notification.date_update %></p>
+                          </div>
+                        </a>
+                      </li>
+                    <% end %>
+                  </div>
+                  <li class="notification-panel__footer">
+                    <%= link_to notification_alerts_path do %><i class="fas fa-list"></i> Ver todas<% end %>
+                  </li>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- User section -->
+        <div class="sidebar-footer__user">
+          <div class="sidebar-footer__avatar">
+            <%= image_tag("https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg") %>
+          </div>
+          <div class="sidebar-footer__user-info">
+            <span class="sidebar-footer__user-name"><%= current_user.names ? current_user.names : "Usuario" %></span>
+            <span class="sidebar-footer__user-role"><%= current_user.rol.name ? current_user.rol.name : "Sin rol" %></span>
+          </div>
+          <div class="dropdown">
+            <a href="#" class="sidebar-footer__chevron dropdown-toggle" data-toggle="dropdown">
+              <i class="fas fa-chevron-up"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right sidebar-user-menu">
+              <li>
+                <%= link_to destroy_user_session_path, method: :delete, class: "dropdown-item" do %>
+                  <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                <% end %>
+              </li>
+              <% if @user_name %>
+                <li><%= link_to "Salir de Microsoft", {:controller => :auth, :action => :signout}, class: "dropdown-item" %></li>
+              <% else %>
+                <li>
+                  <%= link_to "/auth/microsoft_graph_auth", method: :post, class: "dropdown-item" do %>
+                    <i class="fab fa-microsoft"></i> Conectar Microsoft
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
     </aside>
     <main class="app-content">
       <div class="app-title <%= controller_name%>-<%= action_name%>">
@@ -531,10 +535,558 @@
     position: relative;
     top: -8px;
   }
-  .img-container
-  {
+  .img-container {
     position: absolute;
     bottom:50px;
+  }
+
+  /* ========================================
+     MODERN LAYOUT STYLES - NO HEADER
+     ======================================== */
+
+  /* Hide header completely */
+  .modern-layout.no-header .app-header {
+    display: none !important;
+  }
+
+  /* Sidebar - full height with logo */
+  .modern-layout .app-sidebar {
+    padding-top: 0;
+    top: 0;
+    z-index: 1040;
+    background: linear-gradient(180deg, #1a252f 0%, #222d32 100%);
+    width: 230px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Sidebar Logo */
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    height: 54px;
+    background: linear-gradient(180deg, #1e2a33 0%, #222d32 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+  .sidebar-logo__link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+  .sidebar-logo__icon {
+    height: 30px;
+    width: auto;
+  }
+  .sidebar-logo__text {
+    height: 18px;
+    width: auto;
+  }
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.6);
+    transition: all 0.2s;
+  }
+  .sidebar-toggle:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+  }
+  .sidebar-toggle i {
+    font-size: 14px;
+  }
+
+  /* Hide text logo when sidebar is collapsed */
+  .sidenav-toggled .sidebar-logo__text {
+    display: none;
+  }
+  .sidenav-toggled .sidebar-logo {
+    padding: 12px 10px;
+    justify-content: center;
+  }
+  .sidenav-toggled .sidebar-toggle {
+    margin: 0 auto;
+  }
+
+  /* App menu scrollable */
+  .modern-layout .app-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  /* ========================================
+     SIDEBAR FOOTER - Notifications + User
+     ======================================== */
+  .sidebar-footer {
+    flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.15);
+    padding: 10px 12px;
+  }
+
+  /* Notifications section */
+  .sidebar-footer__notifications {
+    margin-bottom: 10px;
+  }
+
+  .sidebar-footer__notif-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.8);
+    transition: all 0.2s;
+    margin-bottom: 4px;
+  }
+  .sidebar-footer__notif-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+  }
+  .sidebar-footer__notif-item i {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+  }
+  .sidebar-footer__notif-text {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .sidebar-footer__notif-badge {
+    background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+  }
+  .sidebar-footer__notif-badge--warning {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  }
+  .sidebar-footer__notif-item--warning i {
+    color: #e74c3c;
+  }
+
+  /* User section */
+  .sidebar-footer__user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .sidebar-footer__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .sidebar-footer__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sidebar-footer__user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-footer__user-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-footer__user-role {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .sidebar-footer__chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: rgba(255,255,255,0.5);
+    transition: all 0.2s;
+  }
+  .sidebar-footer__chevron:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+  }
+  .sidebar-footer__chevron i {
+    font-size: 10px;
+  }
+
+  /* User dropdown menu */
+  .sidebar-user-menu {
+    min-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    padding: 6px 0;
+    bottom: 100%;
+    top: auto !important;
+    margin-bottom: 5px;
+    z-index: 2000 !important;
+  }
+  .sidebar-user-menu .dropdown-item {
+    font-size: 12px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-user-menu .dropdown-item i {
+    width: 16px;
+    color: #666;
+  }
+  .sidebar-user-menu .dropdown-item:hover {
+    background: #f5f5f5;
+  }
+
+  /* Collapsed sidebar footer */
+  .sidenav-toggled .sidebar-footer__notif-text {
+    display: none;
+  }
+  .sidenav-toggled .sidebar-footer__notif-item {
+    justify-content: center;
+    padding: 8px;
+  }
+  .sidenav-toggled .sidebar-footer__notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+    padding: 0 4px;
+  }
+  .sidenav-toggled .sidebar-footer__notif-item {
+    position: relative;
+  }
+  .sidenav-toggled .sidebar-footer__user {
+    justify-content: center;
+    padding: 8px;
+  }
+  .sidenav-toggled .sidebar-footer__user-info,
+  .sidenav-toggled .sidebar-footer__chevron {
+    display: none;
+  }
+
+  /* App content - no header margin */
+  .modern-layout.no-header .app-content {
+    margin-top: 0 !important;
+    min-height: 100vh;
+    padding: 0 30px 30px 30px !important;
+    --cm-dt-offset: 120px;
+  }
+
+  /* App title - flush to top */
+  .modern-layout.no-header .app-title {
+    margin: 0 -30px 30px -30px !important;
+    padding: 20px 30px;
+    position: relative;
+    z-index: 100;
+    background: #fff;
+  }
+
+  /* Notification styles - modern */
+  .notification-dropdown .app-nav__item.notification-trigger {
+    position: relative;
+    padding: 15px 12px;
+  }
+  .notification-dropdown .notification-trigger i {
+    font-size: 16px;
+  }
+  .notification-count {
+    position: absolute;
+    top: 8px;
+    right: 6px;
+    background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    font-family: 'Poppins', sans-serif;
+  }
+  .notification-count--warning {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  }
+
+  /* Notification Panel */
+  .notification-panel {
+    min-width: 320px;
+    max-width: 360px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+    z-index: 2000 !important;
+  }
+
+  /* Sidebar footer dropdowns need high z-index */
+  .sidebar-footer .dropdown-menu {
+    z-index: 2000 !important;
+  }
+
+  /* Position notification panel to the right of sidebar */
+  .sidebar-footer .notification-panel {
+    left: 100% !important;
+    right: auto !important;
+    bottom: 0 !important;
+    top: auto !important;
+    margin-left: 10px;
+  }
+  .notification-panel__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #5a6b7d 0%, #6b7c8e 100%);
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .notification-panel__header--warning {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  }
+  .notification-panel__header i {
+    font-size: 14px;
+  }
+  .notification-panel__count {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+  .notification-panel__content {
+    max-height: 280px;
+    overflow-y: auto;
+    background: #fff;
+  }
+  .notification-panel__item {
+    display: flex;
+    padding: 12px 16px;
+    gap: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .notification-panel__item:hover {
+    background: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+  }
+  .notification-panel__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .notification-panel__icon--edit {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: #fff;
+  }
+  .notification-panel__icon--warning {
+    background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+    color: #fff;
+  }
+  .notification-panel__icon i {
+    font-size: 14px;
+  }
+  .notification-panel__body {
+    flex: 1;
+    min-width: 0;
+  }
+  .notification-panel__message {
+    font-size: 12px;
+    color: #333;
+    margin: 0 0 4px;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.4;
+  }
+  .notification-panel__description {
+    font-size: 11px;
+    color: #777;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .notification-panel__time {
+    font-size: 10px;
+    color: #999;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .notification-panel__footer {
+    padding: 12px 16px;
+    text-align: center;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+  }
+  .notification-panel__footer a {
+    color: #5a6b7d;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: 'Poppins', sans-serif;
+  }
+  .notification-panel__footer a:hover {
+    color: #f5a623;
+  }
+
+  /* Sidebar styles - merged with logo section above */
+
+  /* Menu items - smaller font */
+  .modern-layout .app-menu__item {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+  }
+  .modern-layout .app-menu__icon {
+    width: 22px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8);
+  }
+  .modern-layout .app-menu__label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    overflow: visible;
+  }
+
+  /* Active menu item */
+  .modern-layout .app-menu__item.active {
+    background: rgba(245,166,35,0.15);
+    border-left-color: #f5a623;
+  }
+  .modern-layout .app-menu__item.active .app-menu__icon,
+  .modern-layout .app-menu__item:hover .app-menu__icon {
+    color: #f5a623;
+  }
+  .modern-layout .app-menu__item.active .app-menu__label,
+  .modern-layout .app-menu__item:hover .app-menu__label {
+    color: #fff;
+  }
+
+  /* Treeview - submenu */
+  .modern-layout .treeview-indicator {
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .modern-layout .treeview.is-expanded .treeview-indicator {
+    opacity: 1;
+  }
+  .modern-layout .treeview-menu {
+    background: rgba(0,0,0,0.15);
+  }
+  .modern-layout .treeview-menu .app-menu__item {
+    padding-left: 42px;
+    font-size: 11.5px;
+  }
+  .modern-layout .treeview-menu .app-menu__icon {
+    font-size: 11px;
+    width: 20px;
+  }
+
+  /* Dropdown menu styles */
+  .modern-layout .dropdown-menu.settings-menu {
+    border-radius: 6px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 6px 0;
+    min-width: 180px;
+  }
+  .modern-layout .dropdown-menu.settings-menu .dropdown-item {
+    font-size: 12px;
+    padding: 8px 16px;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modern-layout .dropdown-menu.settings-menu .dropdown-item i {
+    width: 16px;
+    font-size: 13px;
+    color: #666;
+  }
+  .modern-layout .dropdown-menu.settings-menu .dropdown-item:hover {
+    background: #f8f9fa;
+    color: #f5a623;
+  }
+  .modern-layout .dropdown-menu.settings-menu .dropdown-item:hover i {
+    color: #f5a623;
+  }
+
+  /* App content adjustments */
+  .modern-layout .app-content {
+    padding-top: 54px;
+  }
+
+  /* Hide user section from sidebar since it's now in header */
+  .modern-layout .app-sidebar__user {
+    display: none;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 767px) {
+    .header-user-info {
+      display: none;
+    }
+    .notification-panel {
+      min-width: 280px;
+      max-width: 300px;
+    }
   }
 </style>
 
