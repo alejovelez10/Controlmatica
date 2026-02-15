@@ -31,9 +31,13 @@ class DonutDaysReport extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     console.log('componentWillReceiveProps', nextProps);
+    const data = nextProps.data || {};
+    const series = data.series || [];
+    const categories = data.categories || [];
+
     if (this.props !== nextProps) {
       this.setState({
-        series: nextProps.data.series,
+        series: series,
         options: {
           chart: {
             type: 'donut',
@@ -51,7 +55,7 @@ class DonutDaysReport extends React.Component {
               marging: 10
             },
           },
-          labels: nextProps.data.categories,
+          labels: categories,
           responsive: [{
             breakpoint: 480,
             options: {

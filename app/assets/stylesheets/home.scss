@@ -264,9 +264,11 @@ input[type="file"] label{
 
 .no-chart
 {
-  font-family: Helvetica, Arial, sans-serif;
-    opacity: 1;
-    font-weight: bold;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #9ca3af;
+  margin-bottom: 8px;
 }
 
 .no-chart-container{
@@ -274,80 +276,180 @@ input[type="file"] label{
   justify-content: center;
   align-items: center;
   height: 300px;
-  color: #999999;
+  color: #d1d5db;
+  font-size: 14px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #e5e7eb;
 }
 
 .home-dashboard_ing{
   display: none !important;
-  
 }
 
 .home-dashboard_ing-content{
-  margin-top: -20px;
+  margin-top: 0;
 }
 
 .title-board-ing{
   background: #ffffff;
-    margin-bottom: 13px;
-    padding: 10px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+
+  .dashboard-header-content {
     display: flex;
-    justify-content: space-between;
-    border-radius: 9px;
-    div{
-      margin: 0px;
-      font-size: 22px;
-      font-weight: bold;
-      font-family: system-ui;
-      color: #009fc8;
+    align-items: center;
+    gap: 12px;
   }
-  
+
+  .dashboard-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f5a623 0%, #e09100 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+
+    i {
+      color: white;
+      font-size: 20px;
+    }
+  }
+
+  .dashboard-header-text {
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2937;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #6b7280;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+  }
 }
 
 .title-chart-item{
-  color: gray;
-  font-size: 19px;
-  font-weight: bold;
-  font-family: system-ui;
-  margin-bottom: 20px;
- 
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.chart-subtitle{
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 400;
+  margin-bottom: 16px;
 }
 
 .chart-leyend{
   display: flex;
-  gap: 30px;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
   .chart-leyend-item{
     display: flex;
-
+    align-items: center;
     font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+    background: #f3f4f6;
+    padding: 6px 12px;
+    border-radius: 20px;
+
     span{
-      width: 23px;
-      height: 15px;
+      width: 10px;
+      height: 10px;
       display: block;
-      margin-left: 10px;
+      margin-left: 8px;
+      border-radius: 50%;
     }
   }
-  .chart-max{
 
-    span{
+  .chart-max span { background: #10b981; }
+  .chart-med span { background: #f59e0b; }
+  .chart-min span { background: #ef4444; }
+}
 
-      background: #24bc6b;
+// Dashboard card moderno
+.dashboard-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  margin-bottom: 20px;
+}
 
-    }
+// Selectores modernos para el dashboard
+.dashboard-select {
+  appearance: none;
+  background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") right 12px center/16px no-repeat;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 40px 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  &:hover {
+    border-color: #d1d5db;
   }
-  .chart-med{
 
-    span{
-
-      background: #d4b21e;
-
-    }
+  &:focus {
+    outline: none;
+    border-color: #f5a623;
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
   }
-  .chart-min{
+}
 
-    span{
+// Botón de filtrar moderno
+.dashboard-btn-filter {
+  background: #f5a623;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
 
-      background: #d26666;
-
-    }
+  &:hover {
+    background: #e09000;
   }
+}
+
+// Contenedor de filtros
+.dashboard-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-bottom: 20px;
 }

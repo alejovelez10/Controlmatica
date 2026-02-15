@@ -69,40 +69,118 @@ class InformeIng extends Component {
         return (
             <div className={`${this.props.current_tab != "home" ? "" : "row"}`}>
 
-                <div className="col-md-12 pl-0">
-                    <ul className="nav nav-tabs" id="myTab" role="tablist">
-                        <li className="nav-item">
-                            <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>Informacion</a>
-                        </li>
-
-                        <li className="nav-item">
-                            <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>Calendario</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div className='col-md-12 title-board-ing' >
-
-                    <div style={{ fontSize: "25px", margin: "0px" }}> 
-                        ¡HOLA! <span> {this.state.form.name ? this.state.form.name.toUpperCase() : ""} A CONTINUACION VAS A VER TU TABLERO</span> 
+                {/* Header personalizado del dashboard */}
+                <div className="col-md-12 dashboard-custom-header">
+                    <div className="dashboard-header-left">
+                        <div className="dashboard-header-icon">
+                            <i className="fas fa-chart-line"></i>
+                        </div>
+                        <div className="dashboard-header-text">
+                            <h1>Hola, {this.state.form.name || 'Usuario'}</h1>
+                            <p>Bienvenido a tu tablero de control</p>
+                        </div>
                     </div>
-
-                    {/*<a href={`/shifts/calendar/MY`} data-turbolinks="false" className="btn btn-secondary float-right mr-2">Vista calendario</a>*/}
-
                     {this.props.ver_todos && (
                         <select
                             name="value"
-                            className={`form form-control`}
+                            className="dashboard-select"
                             value={[this.state.form.value, this.state.form.name]}
                             onChange={this.handleChange}
-                            style={{ width: "200px", marginLeft: "10px" }}
-                        >  <option value="">Seleccione Usuario</option>
+                        >
+                            <option value="">Seleccione Usuario</option>
                             {this.props.users.map(user => (
-                                <option value={[user.id, user.names, user.rol]}>{user.names}</option>
+                                <option key={user.id} value={[user.id, user.names, user.rol]}>{user.names}</option>
                             ))}
-
                         </select>
-                    )}                           
+                    )}
+                </div>
+
+                <div className="col-md-12 pl-0">
+                    <style>{`
+                        .dashboard-custom-header {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            padding: 16px 0;
+                            margin-bottom: 16px;
+                            background: #ffffff;
+                        }
+                        .dashboard-header-left {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                        }
+                        .dashboard-header-icon {
+                            width: 40px;
+                            height: 40px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .dashboard-header-icon i {
+                            color: #f5a623;
+                            font-size: 24px;
+                        }
+                        .dashboard-header-text h1 {
+                            margin: 0;
+                            font-size: 18px;
+                            font-weight: 600;
+                            color: #1f2937;
+                            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+                        }
+                        .dashboard-header-text p {
+                            margin: 2px 0 0 0;
+                            font-size: 13px;
+                            color: #6b7280;
+                            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+                        }
+                        .dashboard-tabs {
+                            display: flex;
+                            gap: 8px;
+                            padding: 0;
+                            margin: 0;
+                            list-style: none;
+                            border-bottom: 2px solid #e5e7eb;
+                        }
+                        .dashboard-tabs .nav-item {
+                            margin-bottom: -2px;
+                        }
+                        .dashboard-tabs .nav-link {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 12px 20px;
+                            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+                            font-size: 14px;
+                            font-weight: 500;
+                            color: #6b7280;
+                            text-decoration: none;
+                            border: none;
+                            border-bottom: 2px solid transparent;
+                            background: transparent;
+                            transition: all 0.2s ease;
+                        }
+                        .dashboard-tabs .nav-link:hover {
+                            color: #f5a623;
+                        }
+                        .dashboard-tabs .nav-link.active {
+                            color: #f5a623;
+                            border-bottom: 2px solid #f5a623;
+                        }
+                    `}</style>
+                    <ul className="nav dashboard-tabs" id="myTab" role="tablist">
+                        <li className="nav-item">
+                            <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>
+                                <i className="fas fa-chart-bar"></i> Informacion
+                            </a>
+                        </li>
+
+                        <li className="nav-item">
+                            <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>
+                                <i className="fas fa-calendar-alt"></i> Calendario
+                            </a>
+                        </li>
+                    </ul>
                 </div>
 
                 <div className="tab-content" id="myTabContent">
@@ -111,46 +189,38 @@ class InformeIng extends Component {
 
                             {this.state.is_tablerista == "TABLERISTA" ? (
                                 <div className='row pl-3' style={{width:"100%"}}>
-                                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                                    <div className='col-md-6' style={{ padding: "10px" }}>
                                         <HourDay user={this.state.form.value} ref="child" height="400" />
                                     </div>
 
-                                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                                    <div className='col-md-6' style={{ padding: "10px" }}>
                                         <ReporterHours user={this.state.form.value} ref="child"  height="350" />
                                     </div>
                                 </div>
                             ): (
                                 <div className='col-md-12'>
                                     <div className="row pl-3" style={{width:"100%"}}>
-                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                        <div className='col-md-4' style={{ padding: "10px" }}>
                                             <HourDay user={this.state.form.value} ref="child" height="400" />
                                         </div>
 
-                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                        <div className='col-md-4' style={{ padding: "10px" }}>
                                             <ReporterHours user={this.state.form.value} ref="child"  height="350" />
                                         </div>
-                                        
-                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+
+                                        <div className='col-md-4' style={{ padding: "10px" }}>
                                             <Commisions user={this.state.form.value} ref="child" height="350" />
                                         </div>
                                     </div>
                                 </div>
                             )}
-                    
 
+                            <div className="col-md-12" style={{ marginTop: "20px" }}>
+                                <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
+                            </div>
 
-
-                            <div className="col-md-12">
-                                <div className='col-md-12'> <hr /></div>
-
-                                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                                    <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
-                                </div>
-                                <div className='col-md-12'> <hr /></div>
-
-                                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                                    <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
-                                </div>
+                            <div className="col-md-12" style={{ marginTop: "20px" }}>
+                                <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
                             </div>
                         </div>
                     </div>

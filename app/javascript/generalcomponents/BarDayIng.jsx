@@ -96,9 +96,13 @@ class BarDayIng extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     console.log('componentWillReceiveProps', nextProps);
+    const data = nextProps.data || {};
+    const series = data.series || [];
+    const categories = data.categories || [];
+
     if (this.props !== nextProps) {
       this.setState({
-        series: nextProps.data.series.length > 0 ? nextProps.data.series : [],
+        series: series.length > 0 ? series : [],
         options: {
           chart: {
             type: 'bar',
@@ -117,7 +121,7 @@ class BarDayIng extends React.Component {
             colors: ['#fff']
           },
           xaxis: {
-            categories: nextProps.data.series.length > 0 ? nextProps.data.categories : [],
+            categories: series.length > 0 ? categories : [],
             labels: {
               formatter: (val) => {
                 return val

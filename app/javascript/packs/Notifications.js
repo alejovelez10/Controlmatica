@@ -2,11 +2,60 @@ import React from 'react';
 import ItemNotification from "../components/Notifications/ItemNotification"
 import WebpackerReact from 'webpacker-react';
 
+const styles = {
+    container: {
+        fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif"
+    },
+    card: {
+        background: '#fff',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: '1px solid #e2e8f0',
+        overflow: 'hidden'
+    },
+    cardBody: {
+        padding: '24px'
+    },
+    tabsContainer: {
+        display: 'flex',
+        gap: '8px',
+        marginBottom: '24px',
+        borderBottom: '2px solid #f0f0f0',
+        paddingBottom: '0'
+    },
+    tab: {
+        padding: '12px 24px',
+        border: 'none',
+        background: 'transparent',
+        fontSize: '14px',
+        fontWeight: '500',
+        color: '#6c757d',
+        cursor: 'pointer',
+        borderBottom: '3px solid transparent',
+        marginBottom: '-2px',
+        transition: 'all 0.2s ease'
+    },
+    tabActive: {
+        color: '#f5a623',
+        borderBottomColor: '#f5a623'
+    },
+    badge: {
+        background: '#f5a623',
+        color: '#fff',
+        padding: '2px 8px',
+        borderRadius: '12px',
+        fontSize: '12px',
+        marginLeft: '8px'
+    }
+};
+
 class Notifications extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            currentTab: "pending"
+            currentTab: "pending",
+            pendingCount: 0,
+            revisedCount: 0
         }
     }
 
@@ -16,31 +65,42 @@ class Notifications extends React.Component {
         })
     }
 
+    updateCounts = (count, type) => {
+        if (type === "pending") {
+            this.setState({ pendingCount: count });
+        } else {
+            this.setState({ revisedCount: count });
+        }
+    }
+
     render() {
         return (
-            <React.Fragment>
-                {/*<Index 
-                    usuario={this.props.usuario} 
-                    url={"update_state"}
-                    urlLoadData={"get_notifications"}
-                    urlUpdateAll={"register_edit_update_all"}
-                    pending={"pending"}
-                    review={"revised"}
-                    from={this.props.from} 
-                    estados={this.props.estados}
-                />*/}
+            <div style={styles.container}>
+                <div style={styles.card}>
+                    <div style={styles.cardBody}>
+                        <div style={styles.tabsContainer}>
+                            <button
+                                style={{...styles.tab, ...(this.state.currentTab === "pending" ? styles.tabActive : {})}}
+                                onClick={() => this.handleChangeTab("pending")}
+                            >
+                                <i className="fas fa-clock" style={{ marginRight: '8px' }}></i>
+                                Pendientes de revisión
+                                {this.state.pendingCount > 0 && (
+                                    <span style={styles.badge}>{this.state.pendingCount}</span>
+                                )}
+                            </button>
 
-                <div className="card card-table">
-                    <div className="card-body">
-                        <ul className="nav nav-tabs mb-3" id="myTab" role="tablist">
-                            <li className="nav-item" onClick={() => this.handleChangeTab("pending")}>
-                                <a className={`nav-link ${this.state.currentTab == "pending" ? "active" : null}`}>Pendientes de revisión</a>
-                            </li>
-
-                            <li className="nav-item" onClick={() => this.handleChangeTab("revised")}>
-                                <a className={`nav-link ${this.state.currentTab == "revised" ? "active" : null}`}>Revisadas</a>
-                            </li>
-                        </ul>
+                            <button
+                                style={{...styles.tab, ...(this.state.currentTab === "revised" ? styles.tabActive : {})}}
+                                onClick={() => this.handleChangeTab("revised")}
+                            >
+                                <i className="fas fa-check-circle" style={{ marginRight: '8px' }}></i>
+                                Revisadas
+                                {this.state.revisedCount > 0 && (
+                                    <span style={{...styles.badge, background: '#48bb78'}}>{this.state.revisedCount}</span>
+                                )}
+                            </button>
+                        </div>
 
                         {this.state.currentTab == "pending" && (
                             <ItemNotification
@@ -50,6 +110,7 @@ class Notifications extends React.Component {
                                 state={"pending"}
                                 from={this.props.from}
                                 estados={this.props.estados}
+                                onCountUpdate={(count) => this.updateCounts(count, "pending")}
                             />
                         )}
 
@@ -61,17 +122,16 @@ class Notifications extends React.Component {
                                 state={"revised"}
                                 from={this.props.from}
                                 estados={this.props.estados}
+                                onCountUpdate={(count) => this.updateCounts(count, "revised")}
                             />
                         )}
 
                     </div>
                 </div>
-            </React.Fragment>
+            </div>
         );
     }
 }
-
-
 
 export default Notifications;
 WebpackerReact.setup({ Notifications });

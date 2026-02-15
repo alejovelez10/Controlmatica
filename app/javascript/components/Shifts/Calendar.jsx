@@ -601,16 +601,277 @@ class Calendar extends Component {
     }
 
     renderEventContent(eventInfo) {
-        console.log("eventInfo", eventInfo);
+        const eventStyle = {
+            backgroundColor: eventInfo.event.backgroundColor || '#f5a623',
+            width: "100%",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            textAlign: "left",
+            color: "#fff",
+            fontSize: "12px",
+            fontWeight: "500",
+            lineHeight: "1.3",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
+        };
+
         return (
-          <div style={{ backgroundColor: eventInfo.backgroundColor, width: "100%", padding: "3px", border: "1px", textAlign: "center" }}>
-            <b>{eventInfo.event.title}</b>
-          </div>
+            <div style={eventStyle} title={eventInfo.event.title}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="fas fa-circle" style={{ fontSize: '6px', opacity: 0.7 }}></i>
+                    {eventInfo.event.title}
+                </span>
+            </div>
         )
     }
 
 
     render() {
+        const calendarStyles = `
+            /* Contenedor principal del calendario */
+            .fc {
+                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+
+            /* Toolbar header */
+            .fc .fc-toolbar.fc-header-toolbar {
+                margin-bottom: 1.5em;
+                padding: 0 4px;
+            }
+
+            .fc .fc-toolbar-title {
+                font-size: 1.4em;
+                font-weight: 600;
+                color: #2d3748;
+            }
+
+            /* Botones del calendario - naranja Controlmatica */
+            .fc .fc-button {
+                background: #f5a623;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: 500;
+                text-transform: capitalize;
+                transition: all 0.2s ease;
+            }
+
+            .fc .fc-button:hover {
+                background: #e09000;
+            }
+
+            .fc .fc-button:focus {
+                box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.3);
+            }
+
+            .fc .fc-button-primary:disabled {
+                background: #cbd5e0;
+            }
+
+            /* Botón activo - mismo estilo que los otros */
+            .fc .fc-button-primary:not(:disabled).fc-button-active,
+            .fc .fc-button-primary:not(:disabled):active {
+                background: #f5a623 !important;
+            }
+
+            /* Grupo de botones */
+            .fc .fc-button-group {
+                gap: 4px;
+            }
+
+            .fc .fc-button-group > .fc-button {
+                border-radius: 8px !important;
+                margin-left: 4px;
+                background: #f5a623 !important;
+            }
+
+            .fc .fc-button-group > .fc-button:first-child {
+                margin-left: 0;
+            }
+
+            .fc .fc-button-group > .fc-button:hover {
+                background: #e09000 !important;
+            }
+
+            /* Botones de navegación (prev, next) */
+            .fc .fc-prev-button,
+            .fc .fc-next-button {
+                padding: 8px 12px;
+            }
+
+            .fc .fc-prev-button .fc-icon,
+            .fc .fc-next-button .fc-icon {
+                font-size: 1.2em;
+            }
+
+            /* Botón Today */
+            .fc .fc-today-button {
+                background: #fff;
+                color: #f5a623;
+                border: 2px solid #f5a623;
+                box-shadow: none;
+            }
+
+            .fc .fc-today-button:hover:not(:disabled) {
+                background: #f5a623;
+                color: #fff;
+            }
+
+            .fc .fc-today-button:disabled {
+                background: #f7fafc;
+                color: #a0aec0;
+                border-color: #e2e8f0;
+            }
+
+            /* Grid del calendario */
+            .fc .fc-scrollgrid {
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+
+            .fc .fc-scrollgrid td,
+            .fc .fc-scrollgrid th {
+                border-color: #e2e8f0;
+            }
+
+            /* Encabezado días de la semana */
+            .fc .fc-col-header-cell {
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                padding: 12px 0;
+            }
+
+            .fc .fc-col-header-cell-cushion {
+                color: #4a5568;
+                font-weight: 600;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            /* Celdas de días */
+            .fc .fc-daygrid-day {
+                transition: background 0.2s ease;
+            }
+
+            .fc .fc-daygrid-day:hover {
+                background: #f8fafc;
+            }
+
+            .fc .fc-daygrid-day-number {
+                color: #4a5568;
+                font-weight: 500;
+                padding: 8px 10px;
+            }
+
+            /* Día de hoy */
+            .fc .fc-day-today {
+                background: rgba(245, 166, 35, 0.08) !important;
+            }
+
+            .fc .fc-day-today .fc-daygrid-day-number {
+                background: #f5a623;
+                color: #fff;
+                border-radius: 50%;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 4px;
+            }
+
+            /* Time grid */
+            .fc .fc-timegrid-slot {
+                height: 48px;
+            }
+
+            .fc .fc-timegrid-slot-label-cushion {
+                color: #718096;
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            /* Eventos */
+            .fc-event {
+                border-radius: 6px;
+                border: none;
+                padding: 4px 8px;
+                font-size: 12px;
+                font-weight: 500;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .fc-event:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+
+            .fc-event-title {
+                font-weight: 500;
+            }
+
+            /* Popover */
+            .fc .fc-popover {
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+
+            .fc .fc-popover-header {
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-radius: 12px 12px 0 0;
+                padding: 10px 12px;
+            }
+
+            /* Card container moderno */
+            .calendar-modern-card {
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                border: 1px solid #e2e8f0;
+            }
+
+            .calendar-modern-header {
+                padding: 16px 20px;
+                border-bottom: 1px solid #f0f0f0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .calendar-modern-body {
+                padding: 20px;
+            }
+
+            /* Botón de filtros - gris claro */
+            .btn-filter-modern {
+                background: #adb5bd;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #fff;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+
+            .btn-filter-modern:hover {
+                background: #6c757d;
+            }
+
+            .btn-filter-modern i {
+                font-size: 14px;
+            }
+        `;
+
         if (this.state.isLoaded) {
             return (
                 <div className="card">
@@ -623,6 +884,7 @@ class Calendar extends Component {
 
         return (
             <React.Fragment>
+                <style>{calendarStyles}</style>
                 {this.state.modal && (
                     <FormCreate
                         errors={this.state.errors_create}
@@ -670,22 +932,21 @@ class Calendar extends Component {
                 )}
 
 
-                <div className="content main-card mb-3 card">
+                <div className="calendar-modern-card">
 
                     {!this.state.modalFilter && (
-                        <div className="card-header">
-                            {true && (
-                                <button
-                                    className="btn btn-primary ml-3"
-                                    onClick={() => this.toogleFilter("new")}
-                                >
-                                    Filtros
-                                </button>
-                            )}
+                        <div className="calendar-modern-header">
+                            <button
+                                className="btn-filter-modern"
+                                onClick={() => this.toogleFilter("new")}
+                            >
+                                <i className="fas fa-filter"></i>
+                                Filtros
+                            </button>
                         </div>
                     )}
 
-                    <div className="card-body">
+                    <div className="calendar-modern-body">
 
                         <FullCalendar
                             editable={true}

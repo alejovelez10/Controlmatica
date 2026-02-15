@@ -55,32 +55,27 @@ class Commisions extends Component {
 
     render() {
         return (
-            <div >
-                <div className='p-1'>
+            <div>
+                <div className='dashboard-filters'>
                     <select
                         name="value"
-                        className={`form form-control`}
+                        className="dashboard-select"
                         value={this.state.form.value}
                         onChange={this.handleChange}
-                        style={{ width: "200px" }}
                     >
                         <option value="">Seleccione año</option>
+                        <option value="2026">2026</option>
                         <option value="2025">2025</option>
                         <option value="2024">2024</option>
                         <option value="2023">2023</option>
                         <option value="2022">2022</option>
                         <option value="2021">2021</option>
                         <option value="2020">2020</option>
-                        <option value="2019">2019</option>
-                        <option value="2018">2018</option>
-                        <option value="2017">2017</option>
-
                     </select>
-                    {/* <button className='btn btn-primary' onClick={()=>this.loadData("6")}> 6 </button>
-                        <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
-                <hr />
-                <BarDayIng data={this.state.data} title={"ESTE ES TU ESTIMADO DE COMISIONES ACUMULADAS POR TRIMESTRE"} type="currency" height={this.props.height} />
+                <div className="dashboard-card">
+                    <BarDayIng data={this.state.data} title={"Comisiones Acumuladas por Trimestre"} type="currency" height={this.props.height} />
+                </div>
             </div>
         )
 

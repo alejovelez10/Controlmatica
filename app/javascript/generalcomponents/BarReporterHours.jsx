@@ -63,11 +63,17 @@ class BarReporterHours extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     console.log('componentWillReceiveProps', nextProps);
+    const data = nextProps.data || {};
+    const series = data.series || [];
+    const categories = data.categories || [];
+    const colors = data.colors || [];
+    const colors_lables = data.colors_lables || [];
+
     if (this.props !== nextProps) {
       this.setState({
         leyend: nextProps.leyend,
         series: [{
-          data: nextProps.data.series
+          data: series
         }],
         options: {
           chart: {
@@ -91,7 +97,7 @@ class BarReporterHours extends React.Component {
               color: '#a0a0a0'
             },
           },
-          colors: nextProps.data.colors,
+          colors: colors,
           plotOptions: {
             bar: {
               columnWidth: '45%',
@@ -105,10 +111,10 @@ class BarReporterHours extends React.Component {
             show: false
           },
           xaxis: {
-            categories: nextProps.data.categories,
+            categories: categories,
             labels: {
               style: {
-                colors: nextProps.data.colors_lables,
+                colors: colors_lables,
                 fontSize: '12px'
               }
             }
