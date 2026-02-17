@@ -14,8 +14,9 @@ class ApplicationController < ActionController::Base
       session[:user_name] = display_name.present? ? display_name : email
       # Save the user's email address
       session[:user_email] = email
-      # Save the user's time zone
-      session[:user_timezone] = auth_hash.dig(:extra, :raw_info, :mailboxSettings, :timeZone)
+      # Save the user's time zone (default to Colombia timezone if empty)
+      timezone = auth_hash.dig(:extra, :raw_info, :mailboxSettings, :timeZone)
+      session[:user_timezone] = timezone.present? ? timezone : 'SA Pacific Standard Time'
   end
 
   def refresh_tokens(token_hash)
