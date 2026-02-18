@@ -6,21 +6,20 @@ class ReportExpensesController < ApplicationController
 
   def index
     report_expense = ModuleControl.find_by_name("Gastos")
+    is_admin = current_user.rol.name == "Administrador"
 
-    create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
-    closed = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Aceptar gasto").exists?
-    export = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
-    show_user = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
+    # Una sola query para obtener todos los permisos
+    permission_names = current_user.rol.accion_modules
+      .where(module_control_id: report_expense.id)
+      .pluck(:name)
 
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      closed: (current_user.rol.name == "Administrador" ? true : closed),
-      export: (current_user.rol.name == "Administrador" ? true : export),
-      show_user: (current_user.rol.name == "Administrador" ? true : show_user),
+      create: is_admin || permission_names.include?("Crear"),
+      edit: is_admin || permission_names.include?("Editar"),
+      delete: is_admin || permission_names.include?("Eliminar"),
+      closed: is_admin || permission_names.include?("Aceptar gasto"),
+      export: is_admin || permission_names.include?("Exportar a excel"),
+      show_user: is_admin || permission_names.include?("Cambiar responsable"),
     }
   end
 
@@ -30,24 +29,33 @@ class ReportExpensesController < ApplicationController
 
   def get_report_expenses
     report_expense = ModuleControl.find_by_name("Gastos")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
-    if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:type_identification_id] || params[:payment_type_id] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_tax] || params[:invoice_total] || params[:start_date] || params[:end_date] || params[:is_acepted]
-      if show_all
-        report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        total = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).count
-      else
-        report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        total = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).count
-      end
-    else
-      if show_all
-        report_expenses = ReportExpense.all.paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        total = ReportExpense.all.count
-      else
-        report_expenses = ReportExpense.where(user_invoice_id: current_user.id).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        total = ReportExpense.where(user_invoice_id: current_user.id).count
-      end
+    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id, name: "Ver todos").exists?
+
+    # Base query con includes para evitar N+1
+    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user)
+
+    # Filtrar por usuario si no tiene permiso de ver todos
+    base_query = base_query.where(user_invoice_id: current_user.id) unless show_all
+
+    # Aplicar filtros de búsqueda si hay parámetros
+    has_filters = params[:cost_center_id].present? || params[:user_invoice_id].present? || params[:invoice_name].present? ||
+                  params[:invoice_date].present? || params[:identification].present? || params[:description].present? ||
+                  params[:invoice_number].present? || params[:type_identification_id].present? || params[:payment_type_id].present? ||
+                  params[:invoice_value].present? || params[:invoice_tax].present? || params[:invoice_total].present? ||
+                  params[:start_date].present? || params[:end_date].present? || params[:is_acepted].present?
+
+    if has_filters
+      base_query = base_query.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date],
+                                      params[:identification], params[:description], params[:invoice_number], params[:type_identification_id],
+                                      params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total],
+                                      params[:start_date], params[:end_date], params[:is_acepted])
     end
+
+    # Obtener total antes de paginar (una sola query con count)
+    total = base_query.count
+
+    # Paginar y ordenar
+    report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
 
     render json: {
              data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),
@@ -56,13 +64,29 @@ class ReportExpensesController < ApplicationController
   end
 
   def get_cost_center_report_expenses
-    if params[:cost_center_id] || params[:user_invoice_id] || params[:invoice_name] || params[:invoice_date] || params[:identification] || params[:description] || params[:invoice_number] || params[:type_identification_id] || params[:payment_type_id] || params[:invoice_value] || params[:invoice_tax] || params[:invoice_tax] || params[:invoice_total] || params[:start_date] || params[:end_date] || params[:is_acepted]
-        report_expenses = ReportExpense.where(cost_center_id: params[:id]).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        total = ReportExpense.where(cost_center_id: params[:id]).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).count
-    else
-        report_expenses = ReportExpense.where(cost_center_id: params[:id]).paginate(page: params[:page], :per_page => 10).order(created_at: :desc)
-        total = ReportExpense.where(cost_center_id: params[:id]).count
+    # Base query con includes para evitar N+1
+    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user)
+                              .where(cost_center_id: params[:id])
+
+    # Aplicar filtros de búsqueda si hay parámetros
+    has_filters = params[:cost_center_id].present? || params[:user_invoice_id].present? || params[:invoice_name].present? ||
+                  params[:invoice_date].present? || params[:identification].present? || params[:description].present? ||
+                  params[:invoice_number].present? || params[:type_identification_id].present? || params[:payment_type_id].present? ||
+                  params[:invoice_value].present? || params[:invoice_tax].present? || params[:invoice_total].present? ||
+                  params[:start_date].present? || params[:end_date].present? || params[:is_acepted].present?
+
+    if has_filters
+      base_query = base_query.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date],
+                                      params[:identification], params[:description], params[:invoice_number], params[:type_identification_id],
+                                      params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total],
+                                      params[:start_date], params[:end_date], params[:is_acepted])
     end
+
+    # Obtener total antes de paginar
+    total = base_query.count
+
+    # Paginar y ordenar
+    report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),
