@@ -127,25 +127,35 @@ const FormCreate = (props) => {
               <div className="cm-form-group">
                 <label className="cm-label">
                   <i className="fas fa-map-marker-alt"></i> Centro de costo <span className="cm-required">*</span>
-                  <small className="cm-label-hint">(escribe al menos 2 letras)</small>
+                  {!props.fixedCostCenter && <small className="cm-label-hint">(escribe al menos 2 letras)</small>}
                 </label>
                 <input
                   type="hidden"
                   name="cost_center_id"
-                  value={props.selectedOptionCostCenter.cost_center_id}
+                  value={props.selectedOptionCostCenter.value || props.selectedOptionCostCenter.cost_center_id}
                 />
-                <Select
-                  onChange={props.handleChangeAutocompleteCostCenter}
-                  options={props.cost_centers}
-                  value={props.selectedOptionCostCenter}
-                  onInputChange={props.onCostCenterSearch}
-                  isLoading={props.costCenterLoading}
-                  placeholder="Centro de costos"
-                  noOptionsMessage={() => "Escriba para buscar"}
-                  styles={selectStyles}
-                  menuPortalTarget={document.body}
-                  className={hasError("cost_center_id") ? "cm-select-error" : ""}
-                />
+                {props.fixedCostCenter ? (
+                  <input
+                    type="text"
+                    className="cm-input"
+                    value={props.fixedCostCenter.label}
+                    disabled
+                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                  />
+                ) : (
+                  <Select
+                    onChange={props.handleChangeAutocompleteCostCenter}
+                    options={props.cost_centers}
+                    value={props.selectedOptionCostCenter}
+                    onInputChange={props.onCostCenterSearch}
+                    isLoading={props.costCenterLoading}
+                    placeholder="Centro de costos"
+                    noOptionsMessage={() => "Escriba para buscar"}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    className={hasError("cost_center_id") ? "cm-select-error" : ""}
+                  />
+                )}
               </div>
 
               <div className="cm-form-group">

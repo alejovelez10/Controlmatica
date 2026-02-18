@@ -272,7 +272,29 @@ class Calendar extends Component {
         const start_date = `${arg.dateStr}`
         const end_date = `${arg.dateStr}`
 
-        if (true) {
+        // Si hay un centro de costo fijo (desde gestionar centro de costo)
+        if (this.props.fixedCostCenter) {
+            this.getDescriptionCostCenter(this.props.fixedCostCenter.value);
+            this.setState({
+                modal: true,
+                shift_id: "",
+                errors_create: [],
+                arg: arg,
+                str_label: `${this.props.fixedCostCenter.label} - ${this.props.current_user_name}`,
+
+                form: {
+                    ...this.state.form,
+                    start_date: this.getDateOpenModal(start_date, "08:00"),
+                    end_date: this.getDateOpenModal(end_date, "17:00"),
+                    cost_center_id: this.props.fixedCostCenter.value,
+                },
+
+                selectedOptionCostCenter: {
+                    value: this.props.fixedCostCenter.value,
+                    label: this.props.fixedCostCenter.label,
+                },
+            });
+        } else {
             this.setState({
                 modal: true,
                 shift_id: "",
@@ -979,6 +1001,7 @@ class Calendar extends Component {
                         cost_centers={this.state.costCenterOptions}
                         onCostCenterSearch={this.handleCostCenterSearch}
                         costCenterLoading={this.state.costCenterLoading}
+                        fixedCostCenter={this.props.fixedCostCenter}
 
                         selectedOptionUser={this.state.selectedOptionUser}
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
