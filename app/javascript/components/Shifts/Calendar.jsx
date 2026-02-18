@@ -15,7 +15,6 @@ class Calendar extends Component {
         super(props)
         this.token = document.querySelector("[name='csrf-token']").content;
         this.searchCostCenterTimeout = null;
-        this.searchUserTimeout = null;
         this.state = {
             data: [],
             isLoaded: false,
@@ -29,11 +28,9 @@ class Calendar extends Component {
             str_label: "",
             errors_create: [],
 
-            // Opciones de autocomplete
+            // Opciones de autocomplete para centros de costo
             costCenterOptions: [],
-            userOptions: [],
             costCenterLoading: false,
-            userLoading: false,
 
             form: {
                 start_date: "",
@@ -103,40 +100,6 @@ class Calendar extends Component {
             })
             .catch(() => {
                 this.setState({ costCenterLoading: false });
-            });
-        }, 300);
-    }
-
-    // Búsqueda de usuarios con debounce
-    handleUserSearch = (inputValue) => {
-        if (this.searchUserTimeout) {
-            clearTimeout(this.searchUserTimeout);
-        }
-
-        if (inputValue.length < 2) {
-            this.setState({ userOptions: [] });
-            return;
-        }
-
-        this.setState({ userLoading: true });
-
-        this.searchUserTimeout = setTimeout(() => {
-            fetch(`/shifts/search_users?q=${encodeURIComponent(inputValue)}`, {
-                method: 'GET',
-                headers: {
-                    "X-CSRF-Token": this.token,
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    userOptions: data,
-                    userLoading: false
-                });
-            })
-            .catch(() => {
-                this.setState({ userLoading: false });
             });
         }, 300);
     }
@@ -1019,9 +982,7 @@ class Calendar extends Component {
 
                         selectedOptionUser={this.state.selectedOptionUser}
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
-                        users={this.state.userOptions}
-                        onUserSearch={this.handleUserSearch}
-                        userLoading={this.state.userLoading}
+                        users={this.props.users}
 
                         handleChangeAutocompleteMulti={this.handleChangeAutocompleteMulti}
                         selectedOptionMulti={this.state.selectedOptionMulti}
@@ -1038,6 +999,7 @@ class Calendar extends Component {
                         handleChangeFilter={this.handleChangeFilter}
                         handleClickFilter={this.handleClickFilter}
                         closeFilter={this.closeFilter}
+                        users={this.props.users}
                     />
                 )}
 

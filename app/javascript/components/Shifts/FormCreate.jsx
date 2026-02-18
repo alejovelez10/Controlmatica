@@ -166,7 +166,6 @@ const FormCreate = (props) => {
                 <div className="cm-form-group cm-form-full-width">
                   <label className="cm-label">
                     <i className="fas fa-users"></i> Usuarios que se les va a crear este turno
-                    <small className="cm-label-hint">(escribe al menos 2 letras)</small>
                   </label>
                   <input
                     type="hidden"
@@ -176,16 +175,13 @@ const FormCreate = (props) => {
                   <Select
                     onChange={props.handleChangeAutocompleteMulti}
                     options={props.users}
-                    onInputChange={props.onUserSearch}
-                    isLoading={props.userLoading}
                     isMulti
                     closeMenuOnSelect={false}
-                    placeholder="Buscar usuarios..."
+                    placeholder="Seleccione usuarios..."
                     name="user_ids"
                     defaultValue={props.defaultValues}
                     styles={selectStyles}
                     menuPortalTarget={document.body}
-                    noOptionsMessage={() => "Escriba para buscar"}
                   />
                 </div>
               )}
@@ -194,7 +190,6 @@ const FormCreate = (props) => {
                 <div className="cm-form-group">
                   <label className="cm-label">
                     <i className="fas fa-user-tie"></i> Usuario responsable <span className="cm-required">*</span>
-                    <small className="cm-label-hint">(escribe al menos 2 letras)</small>
                   </label>
                   <input
                     type="hidden"
@@ -204,14 +199,11 @@ const FormCreate = (props) => {
                   <Select
                     onChange={props.handleChangeAutocompleteUser}
                     options={props.users}
-                    onInputChange={props.onUserSearch}
-                    isLoading={props.userLoading}
                     value={props.selectedOptionUser}
-                    placeholder="Buscar responsable..."
+                    placeholder="Seleccione responsable..."
                     styles={selectStyles}
                     menuPortalTarget={document.body}
                     className={hasError("user_responsible_id") ? "cm-select-error" : ""}
-                    noOptionsMessage={() => "Escriba para buscar"}
                   />
                 </div>
               )}

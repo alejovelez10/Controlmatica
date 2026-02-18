@@ -5,13 +5,10 @@ class FormFilter extends Component {
     constructor(props){
         super(props)
         this.searchCostCenterTimeout = null;
-        this.searchUserTimeout = null;
         this.token = document.querySelector("[name='csrf-token']").content;
         this.state = {
             costCenterOptions: [],
-            userOptions: [],
             costCenterLoading: false,
-            userLoading: false,
             selectedOptionCostCenter: {
                 cost_center_ids: [],
                 label: "Seleccione el centro de costo",
@@ -53,39 +50,6 @@ class FormFilter extends Component {
             })
             .catch(() => {
                 this.setState({ costCenterLoading: false });
-            });
-        }, 300);
-    }
-
-    // Búsqueda de usuarios con debounce
-    handleUserSearch = (inputValue) => {
-        if (this.searchUserTimeout) {
-            clearTimeout(this.searchUserTimeout);
-        }
-
-        if (inputValue.length < 2) {
-            return;
-        }
-
-        this.setState({ userLoading: true });
-
-        this.searchUserTimeout = setTimeout(() => {
-            fetch(`/shifts/search_users?q=${encodeURIComponent(inputValue)}`, {
-                method: 'GET',
-                headers: {
-                    "X-CSRF-Token": this.token,
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    userOptions: data,
-                    userLoading: false
-                });
-            })
-            .catch(() => {
-                this.setState({ userLoading: false });
             });
         }, 300);
     }
@@ -329,20 +293,16 @@ class FormFilter extends Component {
                                 <label style={filterStyles.label}>
                                     <i className="fas fa-users" style={{ marginRight: '6px', color: '#f5a623' }}></i>
                                     Usuarios responsables
-                                    <small style={{ marginLeft: '6px', fontWeight: '400', color: '#9ca3af' }}>(escribe 2+ letras)</small>
                                 </label>
                                 <Select
                                     onChange={this.handleChangeAutocompleteUser}
-                                    options={this.state.userOptions}
-                                    onInputChange={this.handleUserSearch}
-                                    isLoading={this.state.userLoading}
+                                    options={this.props.users}
                                     isMulti
                                     closeMenuOnSelect={false}
                                     autoFocus={false}
                                     styles={selectStyles}
-                                    placeholder="Buscar usuarios..."
+                                    placeholder="Seleccione usuarios..."
                                     name="user_responsible_ids"
-                                    noOptionsMessage={() => "Escriba para buscar"}
                                 />
                             </div>
                         </div>
