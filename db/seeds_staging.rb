@@ -642,11 +642,8 @@ puts "✓ #{Shift.count} turnos"
 
 puts "Creando 5,000 reportes de gastos..."
 
-expense_option_ids = ReportExpenseOption.where(category: "Tipo").pluck(:id)
-payment_option_ids = ReportExpenseOption.where(category: "Medio de pago").pluck(:id)
-
 existing_expenses = ReportExpense.count
-if existing_expenses < 5000 && expense_option_ids.any?
+if existing_expenses < 5000
   batch_size = 1000
   total_to_create = 5000 - existing_expenses
   batches = (total_to_create / batch_size.to_f).ceil
@@ -658,19 +655,24 @@ if existing_expenses < 5000 && expense_option_ids.any?
     current_batch_size.times do |i|
       fecha = Date.today - rand(0..365)
       valor = rand(10_000..2_000_000).to_f
+      tax = (valor * 0.19).round(2)
 
       expenses << {
-        expense_date: fecha,
+        invoice_date: fecha,
         invoice_number: "GAS-#{rand(100000..999999)}",
+        invoice_name: ["Transportes S.A.", "Hotel Central", "Restaurante El Buen Sabor",
+                       "Estación de Servicio", "Ferretería Industrial", "Papelería Moderna"].sample,
         invoice_value: valor,
+        invoice_tax: tax,
+        invoice_total: valor + tax,
+        invoice_type: ["Factura", "Cuenta de cobro", "Recibo"].sample,
+        payment_type: ["Efectivo", "Tarjeta", "Transferencia"].sample,
         description: ["Transporte a obra", "Hospedaje en proyecto", "Alimentación equipo",
                       "Peajes autopista", "Combustible vehículo", "Parqueadero",
                       "Papelería oficina", "EPP personal", "Herramientas"].sample,
-        report_expense_option_id: expense_option_ids.sample,
         cost_center_id: cost_center_ids.sample,
         user_id: user_id,
-        user_execute_id: user_ids.sample,
-        state: ["Pendiente", "Aprobado", "Rechazado"].sample,
+        is_acepted: [true, false].sample,
         created_at: fecha,
         updated_at: Time.now
       }
@@ -700,8 +702,10 @@ if existing_ratios < 1000
       user_report_id: user_ids.sample,
       start_date: start_dt,
       end_date: end_dt,
+      creation_date: start_dt - rand(1..7).days,
+      area: ["Operaciones", "Administración", "Proyectos", "Ventas", "Mantenimiento"].sample,
       observations: "Relación de gastos período #{start_dt.strftime('%B %Y')}",
-      state: ["Pendiente", "Aprobado", "Rechazado"].sample,
+      anticipo: [0, rand(100_000..1_000_000).to_f].sample,
       user_id: user_id,
       created_at: Time.now - rand(0..365).days,
       updated_at: Time.now
@@ -712,39 +716,35 @@ end
 puts "✓ #{ExpenseRatio.count} relaciones de gastos"
 
 # ============================================
-# 16. ALERTAS - 500
+# 16. CONFIGURACIÓN DE ALERTAS
 # ============================================
 
-puts "Creando 500 alertas..."
-
-alert_types = ["Vencimiento de proyecto", "Factura pendiente", "Material sin entregar",
-               "Reporte sin aprobar", "Orden de compra vencida", "Mantenimiento programado"]
+puts "Creando configuración de alertas..."
 
 existing_alerts = Alert.count rescue 0
-if existing_alerts < 500
+if existing_alerts == 0
   begin
-    alerts = []
-    (500 - existing_alerts).times do |i|
-      fecha = Date.today - rand(0..180)
-
-      alerts << {
-        name: alert_types.sample,
-        description: "Alerta automática generada para seguimiento",
-        alert_date: fecha,
-        state: ["Pendiente", "Atendida", "Ignorada"].sample,
-        cost_center_id: cost_center_ids.sample,
-        user_id: user_id,
-        user_alert_id: user_ids.sample,
-        created_at: fecha,
-        updated_at: Time.now
-      }
-    end
-    Alert.insert_all(alerts) if alerts.any?
+    Alert.create!(
+      name: "Configuración General",
+      ing_ejecucion_min: 80, ing_ejecucion_med: 100, ing_ejecucion_max: 120,
+      ing_costo_min: 80, ing_costo_med: 100, ing_costo_max: 120,
+      tab_ejecucion_min: 80, tab_ejecucion_med: 100, tab_ejecucion_max: 120,
+      tab_costo_min: 80, tab_costo_med: 100, tab_costo_max: 120,
+      desp_min: 80, desp_med: 100, desp_max: 120,
+      mat_min: 80, mat_med: 100, mat_max: 120,
+      via_min: 80, via_med: 100, via_max: 120,
+      total_min: 80, total_med: 100, tatal_max: 120,
+      alert_min: 100, alert_med: 150, alert_max: 151,
+      color_min: "#d26666", color_mid: "#d4b21e", color_max: "#24bc6b",
+      alert_hour_min: 100, alert_hour_med: 100, alert_hour_max: 100,
+      color_hour_min: "#d26666", color_hour_med: "#d4b21e", color_hour_max: "#24bc6b",
+      user_id: user_id
+    )
   rescue => e
     puts "  (Alertas omitidas: #{e.message})"
   end
 end
-puts "✓ #{Alert.count rescue 0} alertas"
+puts "✓ #{Alert.count rescue 0} configuración de alertas"
 
 # ============================================
 # RESUMEN FINAL
