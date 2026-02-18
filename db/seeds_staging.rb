@@ -555,6 +555,55 @@ end
 puts "✓ #{Report.count} reportes"
 
 # ============================================
+# 11.5 REPORTES DE CLIENTE (CustomerReport) - 2,000
+# ============================================
+
+puts "Creando 2,000 reportes de cliente..."
+
+report_states = ["Pendiente", "Enviado al Cliente", "Aprobado"]
+contact_ids = Contact.pluck(:id)
+
+existing_customer_reports = CustomerReport.count
+if existing_customer_reports < 2000
+  (2000 - existing_customer_reports).times do |i|
+    cc = CostCenter.where.not(customer_id: nil).order("RANDOM()").first
+    next unless cc && cc.customer_id
+
+    customer_contacts = Contact.where(customer_id: cc.customer_id).pluck(:id)
+    contact_id = customer_contacts.any? ? customer_contacts.sample : nil
+
+    report_date = Date.today - rand(0..365)
+    state = report_states.sample
+    approve_date = state == "Aprobado" ? report_date + rand(1..30) : nil
+
+    cr = CustomerReport.new(
+      report_date: report_date,
+      description: "Informe de servicio realizado para #{cc.description.to_s[0..50]}",
+      email: "cliente#{rand(1..100)}@ejemplo.com",
+      report_state: state,
+      approve_date: approve_date,
+      customer_id: cc.customer_id,
+      contact_id: contact_id,
+      cost_center_id: cc.id,
+      user_id: user_ids.sample
+    )
+    cr.save(validate: false)
+
+    # Asociar algunos reportes al customer_report
+    cc_reports = Report.where(cost_center_id: cc.id).limit(rand(1..5)).pluck(:id)
+    cc_reports.each do |report_id|
+      ActiveRecord::Base.connection.execute(
+        "INSERT INTO customer_reports_reports (customer_report_id, report_id) VALUES (#{cr.id}, #{report_id}) ON CONFLICT DO NOTHING"
+      ) rescue nil
+    end
+
+    print "." if (i + 1) % 200 == 0
+  end
+  puts ""
+end
+puts "✓ #{CustomerReport.count} reportes de cliente"
+
+# ============================================
 # 12. FACTURAS DE CLIENTE - 5,000
 # ============================================
 
@@ -765,6 +814,7 @@ puts " Ordenes Compra:      #{SalesOrder.count}"
 puts " Tableristas:         #{Contractor.count}"
 puts " Materiales:          #{Material.count}"
 puts " Reportes:            #{Report.count}"
+puts " Reportes Cliente:    #{CustomerReport.count}"
 puts " Facturas Cliente:    #{CustomerInvoice.count}"
 puts " Turnos:              #{Shift.count}"
 puts " Reportes Gastos:     #{ReportExpense.count}"
