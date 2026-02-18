@@ -39,6 +39,7 @@ class ReportExpenseSerializer < ActiveModel::Serializer
   belongs_to :user, serializer: UserSerializer
   
   def user_invoice
+    return nil unless object.user_invoice.present?
     {
       id: object.user_invoice.id,
       name: object.user_invoice.names
