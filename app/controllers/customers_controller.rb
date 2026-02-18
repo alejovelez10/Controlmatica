@@ -18,6 +18,20 @@ class CustomersController < ApplicationController
 
   SORTABLE_COLUMNS = %w[name code phone address nit web email].freeze
 
+  def search_autocomplete
+    query = params[:q].to_s.strip
+    if query.length < 2
+      render json: [] and return
+    end
+
+    term = "%#{query}%"
+    results = Customer.where("name ILIKE ? OR nit ILIKE ?", term, term)
+                      .select(:id, :name)
+                      .limit(20)
+
+    render json: results.map { |c| { value: c.id, label: c.name } }
+  end
+
   def get_customers
     sleep(2) if Rails.env.development?
     customers = Customer.search(params[:name])

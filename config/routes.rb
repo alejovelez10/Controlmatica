@@ -120,6 +120,7 @@ Rails.application.routes.draw do
   get "get_parameterizations", to: "parameterizations#get_parameterizations"
   get "get_providers", to: "providers#get_providers"
   get "get_customers", to: "customers#get_customers"
+  get "search_customers", to: "customers#search_autocomplete"
   get "get_customer_reports", to: "customer_reports#get_customer_reports"
   get "search_cost_centers", to: "cost_centers#search_autocomplete"
   get "get_cost_centers", to: "cost_centers#get_cost_centers"

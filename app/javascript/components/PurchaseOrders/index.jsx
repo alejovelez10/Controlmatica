@@ -31,20 +31,6 @@ class index extends React.Component {
   constructor(props) {
     super(props);
 
-    var costCenterOptions = [];
-    if (props.cost_centers) {
-      props.cost_centers.forEach(function(item) {
-        costCenterOptions.push({ label: item.code, value: item.id });
-      });
-    }
-
-    var clientOptions = [];
-    if (props.clientes) {
-      props.clientes.forEach(function(item) {
-        clientOptions.push({ label: item.name, value: item.id });
-      });
-    }
-
     this.state = {
       // Modal create/edit
       modalOpen: false,
@@ -59,10 +45,6 @@ class index extends React.Component {
       // Modal invoices
       modalInvoiceOpen: false,
       invoiceSalesOrder: {},
-
-      // Options
-      dataCostCenter: costCenterOptions,
-      dataClients: clientOptions,
 
       // Form cost center autocomplete
       formCostCenterOptions: [],
@@ -85,6 +67,8 @@ class index extends React.Component {
       filterCustomer: null,
       filterCostCenterOptions: [],
       filterCostCenterLoading: false,
+      filterCustomerOptions: [],
+      filterCustomerLoading: false,
     };
 
     this.columns = [
@@ -478,6 +462,27 @@ class index extends React.Component {
   handleFilterCustomer = (opt) => {
     var filterForm = Object.assign({}, this.state.filterForm, { customer: opt ? opt.value : "" });
     this.setState({ filterCustomer: opt, filterForm: filterForm });
+  };
+
+  handleFilterCustomerSearch = (inputValue) => {
+    if (!inputValue || inputValue.length < 2) {
+      this.setState({ filterCustomerOptions: [] });
+      return;
+    }
+    if (this._customerTimer) clearTimeout(this._customerTimer);
+    this._customerTimer = setTimeout(() => {
+      this.setState({ filterCustomerLoading: true });
+      fetch("/search_customers?q=" + encodeURIComponent(inputValue), {
+        headers: { "X-CSRF-Token": csrfToken() },
+      })
+        .then(function(r) { return r.json(); })
+        .then((data) => {
+          this.setState({
+            filterCustomerOptions: data.map(function(d) { return { value: d.value, label: d.label }; }),
+            filterCustomerLoading: false,
+          });
+        });
+    }, 300);
   };
 
   applyFilters = () => {
@@ -926,11 +931,15 @@ class index extends React.Component {
           <div className="cm-form-group">
             <label className="cm-label">Clientes</label>
             <Select
-              placeholder="Cliente"
-              options={this.state.dataClients}
+              placeholder="Escriba 2+ letras para buscar..."
+              options={this.state.filterCustomerOptions}
+              isLoading={this.state.filterCustomerLoading}
+              onInputChange={this.handleFilterCustomerSearch}
               onChange={this.handleFilterCustomer}
               isClearable={true}
               value={this.state.filterCustomer}
+              noOptionsMessage={() => "Escriba 2+ letras para buscar"}
+              filterOption={null}
               menuPortalTarget={document.body}
               styles={{ menuPortal: (base) => Object.assign({}, base, { zIndex: 9999 }) }}
             />

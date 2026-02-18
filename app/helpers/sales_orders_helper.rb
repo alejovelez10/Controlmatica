@@ -17,7 +17,7 @@ module SalesOrdersHelper
                 :description => sales_order.description,
                 :last_user_edited => sales_order.last_user_edited.present? ? { id: sales_order.last_user_edited.id, name: sales_order.last_user_edited.names } : nil,
                 :last_user_edited_id => sales_order.last_user_edited_id,
-                :total_engineering_values => sales_order.customer_invoices.sum(:engineering_value),
+                :total_engineering_values => sales_order.customer_invoices.sum(&:engineering_value).to_f,
                 :order_file => sales_order.order_file,
                 :order_number => sales_order.order_number,
                 :order_value => sales_order.order_value,

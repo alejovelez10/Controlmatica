@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_17_000001) do
+ActiveRecord::Schema.define(version: 2026_02_18_000002) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -237,6 +237,7 @@ ActiveRecord::Schema.define(version: 2026_02_17_000001) do
     t.float "engineering_value", default: 0.0
     t.float "others_value", default: 0.0
     t.index ["cost_center_id"], name: "index_customer_invoices_on_cost_center_id"
+    t.index ["sales_order_id"], name: "index_customer_invoices_on_sales_order_id"
   end
 
   create_table "customer_reports", force: :cascade do |t|
@@ -443,6 +444,12 @@ ActiveRecord::Schema.define(version: 2026_02_17_000001) do
     t.integer "last_user_edited_id"
     t.boolean "is_acepted", default: false
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
+    t.index ["created_at"], name: "index_report_expenses_on_created_at"
+    t.index ["invoice_date"], name: "index_report_expenses_on_invoice_date"
+    t.index ["is_acepted"], name: "index_report_expenses_on_is_acepted"
+    t.index ["payment_type_id"], name: "index_report_expenses_on_payment_type_id"
+    t.index ["type_identification_id"], name: "index_report_expenses_on_type_identification_id"
+    t.index ["user_invoice_id"], name: "index_report_expenses_on_user_invoice_id"
   end
 
   create_table "reports", force: :cascade do |t|
@@ -507,6 +514,10 @@ ActiveRecord::Schema.define(version: 2026_02_17_000001) do
     t.integer "update_user"
     t.integer "last_user_edited_id"
     t.index ["cost_center_id"], name: "index_sales_orders_on_cost_center_id"
+    t.index ["created_date"], name: "index_sales_orders_on_created_date"
+    t.index ["last_user_edited_id"], name: "index_sales_orders_on_last_user_edited_id"
+    t.index ["order_number"], name: "index_sales_orders_on_order_number"
+    t.index ["user_id"], name: "index_sales_orders_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
