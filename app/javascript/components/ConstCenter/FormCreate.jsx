@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
+import { Modal, ModalBody } from "reactstrap";
 import NumberFormat from "react-number-format";
 import Select from "react-select";
 
@@ -264,13 +264,24 @@ class FormCreate extends React.Component {
           toggle={toggle}
           backdrop="static"
         >
-          <ModalHeader className="cm-modal-header" toggle={toggle}>
-            <i className="fa fa-building cm-header-icon"></i>
-            {titulo}
-          </ModalHeader>
+          <div className="cm-modal-container">
+            <div className="cm-modal-header">
+              <div className="cm-modal-header-content">
+                <div className="cm-modal-icon">
+                  <i className="fa fa-building"></i>
+                </div>
+                <div>
+                  <h2 className="cm-modal-title">{titulo}</h2>
+                  <p className="cm-modal-subtitle">Complete los campos para gestionar el centro de costo</p>
+                </div>
+              </div>
+              <button type="button" className="cm-modal-close" onClick={toggle}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
 
-          <form onSubmit={FormSubmit}>
-            <ModalBody className="cm-modal-body">
+            <form onSubmit={FormSubmit}>
+              <ModalBody className="cm-modal-body">
               <div className="cm-form-grid-2">
                 {/* Cliente */}
                 <div className="cm-form-group">
@@ -412,49 +423,96 @@ class FormCreate extends React.Component {
               )}
             </ModalBody>
 
-            <ModalFooter className="cm-modal-footer">
-              <button type="button" className="cm-btn cm-btn-cancel" onClick={() => toggle()}>
-                <i className="fa fa-times"></i> Cancelar
-              </button>
-              <button type="submit" className="cm-btn cm-btn-submit" onClick={submit} disabled={isLoading}>
-                {isLoading ? (
-                  <React.Fragment>
-                    <i className="fas fa-spinner fa-spin"></i> Procesando...
-                  </React.Fragment>
-                ) : (
-                  <React.Fragment>
-                    <i className="fas fa-save"></i> {nameSubmit}
-                  </React.Fragment>
-                )}
-              </button>
-            </ModalFooter>
-          </form>
+              <div className="cm-modal-footer">
+                <button type="button" className="cm-btn cm-btn-cancel" onClick={() => toggle()}>
+                  <i className="fa fa-times"></i> Cancelar
+                </button>
+                <button type="submit" className="cm-btn cm-btn-submit" onClick={submit} disabled={isLoading}>
+                  {isLoading ? (
+                    <React.Fragment>
+                      <i className="fas fa-spinner fa-spin"></i> Procesando...
+                    </React.Fragment>
+                  ) : (
+                    <React.Fragment>
+                      <i className="fas fa-save"></i> {nameSubmit}
+                    </React.Fragment>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </Modal>
 
         <style>{`
+          .cm-modal-container {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+          }
           .cm-modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            border-radius: 8px 8px 0 0;
-            padding: 16px 20px;
+            background: #fcfcfd;
+            padding: 20px 32px;
+            border-bottom: 1px solid #e9ecef;
+            position: relative;
             display: flex;
             align-items: center;
-            border-bottom: none;
+            justify-content: space-between;
+            flex-shrink: 0;
           }
-          .cm-modal-header .close {
+          .cm-modal-header .close { display: none; }
+          .cm-modal-header-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+          }
+          .cm-modal-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
             color: #fff;
-            opacity: 0.8;
-            text-shadow: none;
+            box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+            flex-shrink: 0;
           }
-          .cm-modal-header .close:hover {
-            opacity: 1;
-          }
-          .cm-header-icon {
-            margin-right: 10px;
+          .cm-modal-title {
+            font-family: 'Poppins', sans-serif;
             font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+          }
+          .cm-modal-subtitle {
+            font-size: 12px;
+            color: #6c757d;
+            margin: 2px 0 0 0;
+          }
+          .cm-modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #e9ecef;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            transition: all 0.2s;
+            flex-shrink: 0;
+          }
+          .cm-modal-close:hover {
+            background: #dc3545;
+            color: #fff;
           }
           .cm-modal-body {
-            padding: 24px;
+            padding: 24px 32px !important;
             background: #fff;
             max-height: 70vh;
             overflow-y: auto;
@@ -462,7 +520,7 @@ class FormCreate extends React.Component {
           .cm-form-grid-2 {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            gap: 16px;
           }
           @media (max-width: 576px) {
             .cm-form-grid-2 {
@@ -472,41 +530,45 @@ class FormCreate extends React.Component {
           .cm-form-group {
             display: flex;
             flex-direction: column;
+            margin-bottom: 0;
           }
           .cm-form-group.cm-full-width {
             grid-column: 1 / -1;
           }
           .cm-label {
+            display: block;
+            font-family: 'Poppins', sans-serif;
             font-size: 13px;
             font-weight: 400;
             color: #495057;
             margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
           }
           .cm-label i {
-            color: #667eea;
-            font-size: 12px;
+            color: #6c757d;
+            margin-right: 6px;
+            width: 14px;
           }
           .cm-required {
             color: #dc3545;
-            font-weight: bold;
+            font-weight: 600;
           }
           .cm-input {
             width: 100%;
             padding: 10px 14px;
+            font-family: 'Poppins', sans-serif;
             font-size: 14px;
+            color: #333;
+            background: #fcfcfd;
             border: 1px solid #e2e5ea;
             border-radius: 8px;
-            background: #fcfcfd;
             transition: all 0.2s ease;
+            box-sizing: border-box;
           }
           .cm-input:focus {
             outline: none;
+            background: #fff;
             border-color: #f5a623;
             box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
-            background: #fff;
           }
           .cm-input::placeholder {
             color: #adb5bd;
@@ -517,16 +579,13 @@ class FormCreate extends React.Component {
             opacity: 0.7;
           }
           .cm-input-error {
-            border-color: #dc3545;
-            background: #fff5f5;
-          }
-          .cm-input-error:focus {
-            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+            border-color: #dc3545 !important;
+            background: #fff5f5 !important;
           }
           .cm-select-error .css-13cymwt-control,
           .cm-select-error .css-t3ipsp-control {
-            border-color: #dc3545;
-            background: #fff5f5;
+            border-color: #dc3545 !important;
+            background: #fff5f5 !important;
           }
           textarea.cm-input {
             resize: vertical;
@@ -538,37 +597,36 @@ class FormCreate extends React.Component {
             gap: 10px;
             padding: 12px 16px;
             border-radius: 8px;
-            margin-top: 20px;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 16px;
           }
           .cm-alert-error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
+            background: #fee2e2;
             color: #dc2626;
-          }
-          .cm-alert-error i {
-            font-size: 16px;
+            border: 1px solid #fecaca;
           }
           .cm-modal-footer {
-            background: #fcfcfd;
-            border-top: 1px solid #e9ecef;
-            padding: 16px 20px;
             display: flex;
             justify-content: flex-end;
             gap: 12px;
-            border-radius: 0 0 8px 8px;
+            padding: 16px 32px;
+            background: #fcfcfd;
+            border-top: 1px solid #e9ecef;
+            flex-shrink: 0;
           }
           .cm-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 10px 20px;
+            font-family: 'Poppins', sans-serif;
             font-size: 14px;
             font-weight: 500;
             border-radius: 8px;
-            border: none;
             cursor: pointer;
             transition: all 0.2s ease;
+            border: none;
           }
           .cm-btn:disabled {
             opacity: 0.6;
@@ -581,15 +639,24 @@ class FormCreate extends React.Component {
           }
           .cm-btn-cancel:hover:not(:disabled) {
             background: #fcfcfd;
-            border-color: #c6ccd2;
+            border-color: #adb5bd;
           }
           .cm-btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
             color: #fff;
           }
           .cm-btn-submit:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e09520 0%, #e5a82a 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
+          }
+          @media (max-width: 768px) {
+            .cm-modal-header,
+            .cm-modal-body,
+            .cm-modal-footer {
+              padding-left: 20px !important;
+              padding-right: 20px !important;
+            }
           }
         `}</style>
       </React.Fragment>

@@ -54,6 +54,11 @@ function MetricCard(props) {
     }
   }
 
+  var formatPct = function(val) {
+    if (val === undefined || val === null || val === "N/A") return "N/A";
+    return parseFloat(val).toFixed(1);
+  };
+
   return (
     <div className={"cm-metric-card " + colorClass}>
       <div className="cm-metric-card-title">
@@ -65,7 +70,7 @@ function MetricCard(props) {
           <span className="cm-metric-item-label">{props.col1Label || "Cotizado"}</span>
           <span className={"cm-metric-item-value" + (props.isCurrency ? " cm-metric-item-value--currency" : "")}>
             {props.isCurrency ? (
-              <NumberFormat value={props.col1} displayType="text" thousandSeparator={true} prefix="$" />
+              <NumberFormat value={props.col1} displayType="text" thousandSeparator={true} prefix="$" decimalScale={0} />
             ) : (
               props.col1 !== undefined ? props.col1 : "—"
             )}
@@ -75,7 +80,7 @@ function MetricCard(props) {
           <span className="cm-metric-item-label">{props.col2Label || "Ejecutado"}</span>
           <span className={"cm-metric-item-value" + (props.isCurrency ? " cm-metric-item-value--currency" : "")}>
             {props.isCurrency ? (
-              <NumberFormat value={props.col2} displayType="text" thousandSeparator={true} prefix="$" />
+              <NumberFormat value={props.col2} displayType="text" thousandSeparator={true} prefix="$" decimalScale={0} />
             ) : (
               props.col2 !== undefined ? props.col2 : "—"
             )}
@@ -84,7 +89,7 @@ function MetricCard(props) {
         <div className="cm-metric-item">
           <span className="cm-metric-item-label">{props.col3Label || "Avance"}</span>
           <span className="cm-metric-item-value">
-            {pct !== undefined ? <span className={"cm-pct-badge " + pctBadgeClass(pct, props.inverted)}>{pct}%</span> : "—"}
+            {pct !== undefined ? <span className={"cm-pct-badge " + pctBadgeClass(pct, props.inverted)}>{formatPct(pct)}%</span> : "—"}
           </span>
         </div>
       </div>
@@ -524,9 +529,9 @@ class Show extends React.Component {
                   <span className="cm-show-info-label">N. Cotización</span>
                   <span className="cm-show-info-value">{info.quotation_number || "—"}</span>
                 </div>
-                <div className="cm-show-info-item">
+                <div className="cm-show-info-item cm-show-info-item--description">
                   <span className="cm-show-info-label">Descripción</span>
-                  <span className="cm-show-info-value">{info.description || "—"}</span>
+                  <span className="cm-show-info-value cm-description-text" title={info.description || ""}>{info.description || "—"}</span>
                 </div>
                 <div className="cm-show-info-item">
                   <span className="cm-show-info-label">Propietario</span>
@@ -535,24 +540,27 @@ class Show extends React.Component {
                 <div className="cm-show-info-item cm-show-info-item--highlight">
                   <span className="cm-show-info-label">Margen Real</span>
                   <span className="cm-show-info-value">
-                    <NumberFormat value={info.aiu} displayType="text" thousandSeparator={true} prefix="$" />
-                    <span className={"cm-pct-badge " + this.alertBadgeClass(info.aiu_percent, alerts.total_min, alerts.total_med, true)}>{info.aiu_percent}%</span>
+                    <NumberFormat value={info.aiu} displayType="text" thousandSeparator={true} prefix="$" decimalScale={0} />
+                    <span className={"cm-pct-badge " + this.alertBadgeClass(info.aiu_percent, alerts.total_min, alerts.total_med, true)}>{parseFloat(info.aiu_percent || 0).toFixed(1)}%</span>
                   </span>
                 </div>
                 <div className="cm-show-info-item cm-show-info-item--highlight">
                   <span className="cm-show-info-label">Margen Cotizado</span>
                   <span className="cm-show-info-value">
-                    <NumberFormat value={info.aiu_real} displayType="text" thousandSeparator={true} prefix="$" />
-                    <span className={"cm-pct-badge " + this.alertBadgeClass(info.aiu_percent_real, alerts.total_min, alerts.total_med, true)}>{info.aiu_percent_real}%</span>
+                    <NumberFormat value={info.aiu_real} displayType="text" thousandSeparator={true} prefix="$" decimalScale={0} />
+                    <span className={"cm-pct-badge " + this.alertBadgeClass(info.aiu_percent_real, alerts.total_min, alerts.total_med, true)}>{parseFloat(info.aiu_percent_real || 0).toFixed(1)}%</span>
                   </span>
                 </div>
-                <div className="cm-show-info-item">
-                  <span className="cm-show-info-label"><i className="fas fa-plus-circle" style={{ marginRight: "4px", opacity: 0.5 }} />Creación</span>
-                  <span className="cm-show-info-value">{formatDate(info.created_at)}{info.user != undefined ? " — " + info.user.names : ""}</span>
-                </div>
-                <div className="cm-show-info-item">
-                  <span className="cm-show-info-label"><i className="fas fa-edit" style={{ marginRight: "4px", opacity: 0.5 }} />Última edición</span>
-                  <span className="cm-show-info-value">{formatDate(info.updated_at)}{info.last_user_edited != undefined ? " — " + info.last_user_edited.names : ""}</span>
+                <div className="cm-show-info-item cm-show-info-item--audit">
+                  <span className="cm-audit-row">
+                    <span className="cm-audit-item">
+                      <i className="fas fa-plus-circle" /> {formatDate(info.created_at)}{info.user != undefined ? " — " + info.user.names : ""}
+                    </span>
+                    <span className="cm-audit-separator">|</span>
+                    <span className="cm-audit-item">
+                      <i className="fas fa-edit" /> {formatDate(info.updated_at)}{info.last_user_edited != undefined ? " — " + info.last_user_edited.names : ""}
+                    </span>
+                  </span>
                 </div>
               </div>
             </div>

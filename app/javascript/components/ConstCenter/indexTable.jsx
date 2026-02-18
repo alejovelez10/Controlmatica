@@ -877,7 +877,18 @@ class indexTable extends React.Component {
         render: (row) => (row.customer ? row.customer.name : ""),
       },
       { key: "service_type", label: "Tipo", width: "200px" },
-      { key: "description", label: "Descripcion", width: "400px" },
+      {
+        key: "description",
+        label: "Descripcion",
+        width: "300px",
+        render: (row) => (
+          <div className="cm-cell-truncate" data-tooltip={row.description || ""}>
+            <span className="cm-cell-truncate-text">
+              {row.description || "—"}
+            </span>
+          </div>
+        ),
+      },
     ];
 
     if (estados.sales_state) {
@@ -889,7 +900,7 @@ class indexTable extends React.Component {
         render: (row) => {
           if ((row.service_type === "PROYECTO" || row.service_type === "VENTA") && row.sales_state !== "CERRADO") {
             return (
-              <button className="btn btn-primary btn-sm" onClick={() => this.update_sales_state("CERRADO", row.id)}>
+              <button className="cm-btn-pastel cm-btn-pastel--green" onClick={() => this.update_sales_state("CERRADO", row.id)}>
                 Cerrar compra
               </button>
             );
@@ -1021,8 +1032,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizado: <b>{row.eng_hours}</b></li>
-          <li>Ejecutado: <b>{row.ing_horas_eje}</b></li>
+          <li>Cotizado: {row.eng_hours}</li>
+          <li>Ejecutado: {row.ing_horas_eje}</li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIng(row.ing_horas_porcentaje, alerts[0].ing_ejecucion_min, alerts[0].ing_costo_med), "Avance", `${row.ing_horas_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1035,8 +1046,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizada: <b><NumberFormat value={row.engineering_value + (row.displacement_hours * row.value_displacement_hours)} displayType="text" thousandSeparator prefix="$" /></b></li>
-          <li>Costo: <b><NumberFormat value={row.ing_costo_real} displayType="text" thousandSeparator prefix="$" /></b></li>
+          <li>Cotizada: <NumberFormat value={row.engineering_value + (row.displacement_hours * row.value_displacement_hours)} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
+          <li>Costo: <NumberFormat value={row.ing_costo_real} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIngCosto(row.ing_costo_porcentaje, alerts[0].ing_costo_min, alerts[0].ing_costo_med), "Margen", `${row.ing_costo_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1049,8 +1060,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizado: <b>{row.hours_contractor}</b></li>
-          <li>Ejecutado: <b>{row.cont_horas_eje}</b></li>
+          <li>Cotizado: {row.hours_contractor}</li>
+          <li>Ejecutado: {row.cont_horas_eje}</li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIng(row.cont_horas_porcentaje, alerts[0].tab_ejecucion_min, alerts[0].tab_ejecucion_med), "Avance", `${row.cont_horas_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1063,8 +1074,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizada: <b><NumberFormat value={row.work_force_contractor} displayType="text" thousandSeparator prefix="$" /></b></li>
-          <li>Costo: <b><NumberFormat value={row.cont_costo_real} displayType="text" thousandSeparator prefix="$" /></b></li>
+          <li>Cotizada: <NumberFormat value={row.work_force_contractor} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
+          <li>Costo: <NumberFormat value={row.cont_costo_real} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIngCosto(row.cont_costo_porcentaje, alerts[0].tab_costo_min, alerts[0].tab_costo_med), "Margen", `${row.cont_costo_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1077,8 +1088,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizado: <b>{row.displacement_hours}</b></li>
-          <li>Ejecutado: <b>{row.desp_horas_eje}</b></li>
+          <li>Cotizado: {row.displacement_hours}</li>
+          <li>Ejecutado: {row.desp_horas_eje}</li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIng(row.desp_horas_porcentaje, alerts[0].desp_min, alerts[0].desp_med), "Ejecucion", `${row.desp_horas_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1091,8 +1102,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizados: <b><NumberFormat value={row.materials_value} displayType="text" thousandSeparator prefix="$" /></b></li>
-          <li>Comprados: <b><NumberFormat value={row.mat_costo_real} displayType="text" thousandSeparator prefix="$" /></b></li>
+          <li>Cotizados: <NumberFormat value={row.materials_value} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
+          <li>Comprados: <NumberFormat value={row.mat_costo_real} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIngCosto(row.mat_costo_porcentaje, alerts[0].mat_min, alerts[0].mat_med), "Margen", `${row.mat_costo_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1105,8 +1116,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizado: <b><NumberFormat value={row.viatic_value} displayType="text" thousandSeparator prefix="$" /></b></li>
-          <li>Gastado: <b><NumberFormat value={row.viat_costo_real} displayType="text" thousandSeparator prefix="$" /></b></li>
+          <li>Cotizado: <NumberFormat value={row.viatic_value} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
+          <li>Gastado: <NumberFormat value={row.viat_costo_real} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIng(row.viat_costo_porcentaje, alerts[0].via_min, alerts[0].via_med), "Avance", `${row.viat_costo_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1119,8 +1130,8 @@ class indexTable extends React.Component {
       sortable: false,
       render: (row) => (
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          <li>Cotizado: <b><NumberFormat value={row.quotation_value} displayType="text" thousandSeparator prefix="$" /></b></li>
-          <li>Facturado: <b><NumberFormat value={row.fact_real} displayType="text" thousandSeparator prefix="$" /></b></li>
+          <li>Cotizado: <NumberFormat value={row.quotation_value} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
+          <li>Facturado: <NumberFormat value={row.fact_real} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></li>
           <li style={{ marginTop: 4 }}>{this.pastelBadge("green", "Avance", `${row.fact_porcentaje}%`)}</li>
         </ul>
       ),
@@ -1132,8 +1143,8 @@ class indexTable extends React.Component {
       width: "250px",
       sortable: false,
       render: (row) => (
-        <div style={{ textAlign: "center" }}>
-          <div><NumberFormat value={row.aiu} displayType="text" thousandSeparator prefix="$" /></div>
+        <div>
+          <div><NumberFormat value={row.aiu} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></div>
           <div style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIngCosto(row.aiu_percent, alerts[0].total_min, alerts[0].total_med), "AIU", `${row.aiu_percent}%`)}</div>
         </div>
       ),
@@ -1145,8 +1156,8 @@ class indexTable extends React.Component {
       width: "250px",
       sortable: false,
       render: (row) => (
-        <div style={{ textAlign: "center" }}>
-          <div><NumberFormat value={row.aiu_real} displayType="text" thousandSeparator prefix="$" /></div>
+        <div>
+          <div><NumberFormat value={row.aiu_real} displayType="text" thousandSeparator prefix="$" decimalScale={0} /></div>
           <div style={{ marginTop: 4 }}>{this.pastelBadge(this.alertIngCosto(row.aiu_percent_real, alerts[0].total_min, alerts[0].total_med), "AIU", `${row.aiu_percent_real}%`)}</div>
         </div>
       ),
