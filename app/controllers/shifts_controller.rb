@@ -17,7 +17,7 @@ class ShiftsController < ApplicationController
     end
 
     def get_shift_info
-        shift = Shift.find(params[:shift_id])
+        shift = Shift.includes(:cost_center, :user_responsible, :users).find(params[:shift_id])
 
         render :json => {
             register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
@@ -26,30 +26,31 @@ class ShiftsController < ApplicationController
     end
 
     def create
-      
+        user_ids = shift_create_params["user_ids"]
+        users = User.where(id: user_ids)
+        errors = []
 
-       users = User.where(id: shift_create_params["user_ids"])
-       errors = []
-       users.each do |user|
-        create_row = true
-        Shift.where(user_responsible_id: user.id).each do |s|
-            if  shift_create_params["start_date"] >= s.start_date && shift_create_params["start_date"] <= s.end_date
-                create_row = false
-                errors << user.email
-            end
+        start_date = shift_create_params["start_date"].to_datetime
+        end_date = shift_create_params["end_date"].to_datetime
 
-            if  shift_create_params["start_date"] < s.start_date && shift_create_params["end_date"] >= s.start_date
-                create_row = false
-                errors << user.email
-            end
-        end
+        # Cargar todos los turnos conflictivos en una sola query
+        conflicting_shifts = Shift.where(user_responsible_id: user_ids)
+                                  .where("(start_date <= ? AND end_date >= ?) OR (start_date <= ? AND end_date >= ?) OR (start_date >= ? AND end_date <= ?)",
+                                         start_date, start_date, end_date, end_date, start_date, end_date)
+                                  .pluck(:user_responsible_id)
+                                  .uniq
 
-        force_save = (shift_create_params["force_save"] ? true : (errors.length == 0 ? true : false) )
+        # Encontrar usuarios con conflictos
+        users_with_conflicts = User.where(id: conflicting_shifts).pluck(:email)
+        errors = users_with_conflicts
+
+        force_save = shift_create_params["force_save"] || errors.empty?
 
         if force_save
-            shift =  Shift.create(
-                    start_date: shift_create_params["start_date"],
-                    end_date: shift_create_params["end_date"],
+            users.each do |user|
+                shift = Shift.create(
+                    start_date: start_date,
+                    end_date: end_date,
                     cost_center_id: shift_create_params["cost_center_id"],
                     description: shift_create_params["description"],
                     subject: shift_create_params["subject"],
@@ -59,25 +60,18 @@ class ShiftsController < ApplicationController
                     user_responsible_id: user.id,
                 )
 
-                if shift.save
-                    if @user_name 
-                        CreateEvenInMicrosoftJob.set(wait: 2.seconds).perform_later(shift, access_token, user_timezone)
-                    end
+                if shift.persisted? && @user_name
+                    CreateEvenInMicrosoftJob.set(wait: 2.seconds).perform_later(shift, access_token, user_timezone)
                 end
+            end
         end
 
-
-       end
-
-       force_save = (shift_create_params["force_save"] ? true : (errors.length == 0 ? true : false) )
-
-            render :json => {
-                success: "¡El Registro fue creado con éxito!",
-                errors: errors,
-                force_save: force_save,
-                #register: ActiveModelSerializers::SerializableResource.new(shift, each_serializer: ShiftSerializer),
-                type: "success"
-            }
+        render :json => {
+            success: "¡El Registro fue creado con éxito!",
+            errors: errors,
+            force_save: force_save,
+            type: "success"
+        }
     end
 
     def get_cost_center_description
@@ -88,52 +82,29 @@ class ShiftsController < ApplicationController
     end
 
     def get_shifts
-        module_control = ModuleControl.find_by_name("Turnos")
-        show = current_user.rol.accion_modules.where(module_control_id: module_control.id).where(name: "Ver todos").exists?
+        # Base query con eager loading para evitar N+1
+        base_query = Shift.includes(:cost_center, :user_responsible, :users)
 
-        if params[:from] == "ALL"
-            if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
-                const_center_ids = params[:cost_center_ids].split(",")
-                user_responsible_ids = params[:user_responsible_ids].split(",")
-
-                shifts = Shift.search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
-            else
-                puts "ALLALLALLALLALLALLALLALLALLALLALLALLALLALLALLALLALL"
-                shifts = Shift.all.order(created_at: :asc)
-            end
-
-        elsif params[:from] == "MY"
-            if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
-                const_center_ids = params[:cost_center_ids].split(",")
-                user_responsible_ids = params[:user_responsible_ids].split(",")
-
-                shifts = Shift.where(user_responsible_id: current_user.id).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
-            else
-                shifts = Shift.where(user_responsible_id: current_user.id).order(created_at: :asc)
-            end
-        else
-            if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
-                const_center_ids = params[:cost_center_ids].split(",")
-                user_responsible_ids = params[:user_responsible_ids].split(",")
-
-                if true
-                    puts "filtrando todos"
-                    shifts = Shift.search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
-                else
-                    puts "filtrando los que soy responsable mas los filtros"
-                    shifts = Shift.where(user_responsible_id: current_user.id).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
-                end
-            else
-                if true
-                    shifts = Shift.all.order(created_at: :asc)
-                else
-                    shifts = Shift.where(user_responsible_id: current_user.id).order(created_at: :asc)
-                end
-            end
+        # Filtrar por usuario si es "MY"
+        if params[:from] == "MY"
+            base_query = base_query.where(user_responsible_id: current_user.id)
         end
 
-        puts shifts
-        puts "jajaajjaajajajajaj"
+        # Aplicar filtros de búsqueda
+        if params[:start_date].present? || params[:end_date].present? || params[:cost_center_ids].present? || params[:user_responsible_ids].present?
+            cost_center_ids = params[:cost_center_ids].present? ? params[:cost_center_ids].split(",") : []
+            user_responsible_ids = params[:user_responsible_ids].present? ? params[:user_responsible_ids].split(",") : []
+
+            shifts = base_query.search(params[:start_date], params[:end_date], cost_center_ids, user_responsible_ids)
+                               .order(start_date: :asc)
+        else
+            # Sin filtros: mostrar turnos de los últimos 6 meses y próximos 6 meses
+            date_from = 6.months.ago.beginning_of_day
+            date_to = 6.months.from_now.end_of_day
+            shifts = base_query.where(start_date: date_from..date_to)
+                               .or(base_query.where(end_date: date_from..date_to))
+                               .order(start_date: :asc)
+        end
 
         render json: {
             data: ActiveModelSerializers::SerializableResource.new(shifts, each_serializer: ShiftSerializer),
@@ -141,15 +112,19 @@ class ShiftsController < ApplicationController
     end
 
     def get_shifts_const_center
-        if params[:start_date] || params[:end_date] || params[:cost_center_ids] || params[:user_responsible_ids]
-            const_center_ids = [] << params[:const_center_id]
-            user_responsible_ids = params[:user_responsible_ids].split(",")
+        base_query = Shift.includes(:cost_center, :user_responsible, :users)
+                          .where(cost_center_id: params[:const_center_id])
 
-            shifts = Shift.where(cost_center_id: params[:const_center_id]).search(params[:start_date], params[:end_date], const_center_ids, user_responsible_ids).order(created_at: :asc)
+        if params[:start_date].present? || params[:end_date].present? || params[:user_responsible_ids].present?
+            cost_center_ids = [params[:const_center_id]]
+            user_responsible_ids = params[:user_responsible_ids].present? ? params[:user_responsible_ids].split(",") : []
+
+            shifts = base_query.search(params[:start_date], params[:end_date], cost_center_ids, user_responsible_ids)
+                               .order(start_date: :asc)
         else
-            shifts = Shift.where(cost_center_id: params[:const_center_id])
+            shifts = base_query.order(start_date: :asc)
         end
-        
+
         render json: {
             data: ActiveModelSerializers::SerializableResource.new(shifts, each_serializer: ShiftSerializer),
         }

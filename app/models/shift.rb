@@ -47,14 +47,13 @@ class Shift < ApplicationRecord
     end
 
     def self.search(start_date, end_date, cost_center_ids, user_responsible_ids)
-        puts "cost_center_idscost_center_idscost_center_ids #{cost_center_ids}"
-        puts "user_responsible_ids #{user_responsible_ids}"
-        puts end_date
-        start_date != "" ? (scope :fecha_comienzo, -> { where(["start_date >= ?", start_date]) }) : (scope :fecha_comienzo, -> { where.not(id: nil) })
-        end_date != "" ? (scope :fecha_final, -> { where(["end_date <= ?", end_date]) }) : (scope :fecha_final, -> { where.not(id: nil) })
-        cost_center_ids != [] ? (scope :centro_de_costo, -> { where(cost_center_id: cost_center_ids) }) : (scope :centro_de_costo, -> { where.not(id: nil) })
-        user_responsible_ids != [] ? (scope :usuario_responsable, -> { where(user_responsible_id: user_responsible_ids) }) : (scope :usuario_responsable, -> { where.not(id: nil) })
+        relation = self.all
 
-        fecha_comienzo.fecha_final.centro_de_costo.usuario_responsable
+        relation = relation.where("start_date >= ?", start_date) if start_date.present?
+        relation = relation.where("end_date <= ?", end_date) if end_date.present?
+        relation = relation.where(cost_center_id: cost_center_ids) if cost_center_ids.present? && cost_center_ids.reject(&:blank?).any?
+        relation = relation.where(user_responsible_id: user_responsible_ids) if user_responsible_ids.present? && user_responsible_ids.reject(&:blank?).any?
+
+        relation
     end
 end
