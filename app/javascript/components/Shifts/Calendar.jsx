@@ -14,6 +14,8 @@ class Calendar extends Component {
     constructor(props) {
         super(props)
         this.token = document.querySelector("[name='csrf-token']").content;
+        this.searchCostCenterTimeout = null;
+        this.searchUserTimeout = null;
         this.state = {
             data: [],
             isLoaded: false,
@@ -26,6 +28,12 @@ class Calendar extends Component {
             arg: "",
             str_label: "",
             errors_create: [],
+
+            // Opciones de autocomplete
+            costCenterOptions: [],
+            userOptions: [],
+            costCenterLoading: false,
+            userLoading: false,
 
             form: {
                 start_date: "",
@@ -65,6 +73,74 @@ class Calendar extends Component {
         }
     }
 
+    // Búsqueda de centros de costo con debounce
+    handleCostCenterSearch = (inputValue) => {
+        if (this.searchCostCenterTimeout) {
+            clearTimeout(this.searchCostCenterTimeout);
+        }
+
+        if (inputValue.length < 2) {
+            this.setState({ costCenterOptions: [] });
+            return;
+        }
+
+        this.setState({ costCenterLoading: true });
+
+        this.searchCostCenterTimeout = setTimeout(() => {
+            fetch(`/shifts/search_cost_centers?q=${encodeURIComponent(inputValue)}`, {
+                method: 'GET',
+                headers: {
+                    "X-CSRF-Token": this.token,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    costCenterOptions: data,
+                    costCenterLoading: false
+                });
+            })
+            .catch(() => {
+                this.setState({ costCenterLoading: false });
+            });
+        }, 300);
+    }
+
+    // Búsqueda de usuarios con debounce
+    handleUserSearch = (inputValue) => {
+        if (this.searchUserTimeout) {
+            clearTimeout(this.searchUserTimeout);
+        }
+
+        if (inputValue.length < 2) {
+            this.setState({ userOptions: [] });
+            return;
+        }
+
+        this.setState({ userLoading: true });
+
+        this.searchUserTimeout = setTimeout(() => {
+            fetch(`/shifts/search_users?q=${encodeURIComponent(inputValue)}`, {
+                method: 'GET',
+                headers: {
+                    "X-CSRF-Token": this.token,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    userOptions: data,
+                    userLoading: false
+                });
+            })
+            .catch(() => {
+                this.setState({ userLoading: false });
+            });
+        }, 300);
+    }
+
     clearValues = () => {
         this.setState({
             form: {
@@ -92,12 +168,26 @@ class Calendar extends Component {
     }
 
     componentDidMount = () => {
-        this.loadData();
+        // La carga inicial se hace en handleDatesSet cuando FullCalendar se monta
     }
 
-    loadData = () => {
-        fetch(this.props.url_calendar, {
-            method: 'GET', // or 'PUT'
+    // Callback cuando cambia el rango visible del calendario
+    handleDatesSet = (dateInfo) => {
+        const startDate = dateInfo.startStr.split('T')[0];
+        const endDate = dateInfo.endStr.split('T')[0];
+        this.loadData(startDate, endDate);
+    }
+
+    loadData = (startDate = null, endDate = null) => {
+        let url = this.props.url_calendar;
+
+        // Agregar parámetros de fecha si están disponibles
+        if (startDate && endDate) {
+            url += `?start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        fetch(url, {
+            method: 'GET',
             headers: {
                 "X-CSRF-Token": this.token,
                 "Content-Type": "application/json"
@@ -107,9 +197,14 @@ class Calendar extends Component {
             .then(data => {
                 const array = []
 
-                //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: this.getDate(item.start_date), end: this.getDate(item.end_date), id: item.id, backgroundColor: item.color })
+                    array.push({
+                        title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`,
+                        start: this.getDate(item.start_date),
+                        end: this.getDate(item.end_date),
+                        id: item.id,
+                        backgroundColor: item.color
+                    })
                 ))
 
                 this.setState({
@@ -163,7 +258,7 @@ class Calendar extends Component {
                 .then(response => response.json())
                 .then(response => {
                     this.messageSuccess(response);
-                    this.loadData();
+                    this.reloadCurrentView();
                     this.clearValues();
                     this.setState({ modal: false, modeEdit: false, shift_id: "", str_label: "" })
                 });
@@ -360,7 +455,7 @@ class Calendar extends Component {
     }
 
     cancelFilter = () => {
-        this.loadData()
+        this.reloadCurrentView()
         this.setState({
             isFiltering: false,
             isLoaded: false,
@@ -475,7 +570,7 @@ class Calendar extends Component {
                     .then(res => res.json())
                     .catch(error => console.error("Error:", error))
                     .then(data => {
-                        this.loadData();
+                        this.reloadCurrentView();
                         this.clearValues();
                         this.setState({
                             modal: false,
@@ -508,7 +603,7 @@ class Calendar extends Component {
                                 errors_create: [],
                             })
                             this.clearValues();
-                            this.loadData();
+                            this.reloadCurrentView();
                         }
                     });
             }
@@ -597,7 +692,20 @@ class Calendar extends Component {
     closeFilter = () => {
         this.setState({ modalFilter: false })
         this.clearValuesFilter();
-        this.loadData();
+        // Recargar con el rango actual del calendario
+        this.reloadCurrentView();
+    }
+
+    reloadCurrentView = () => {
+        if (this.calendarComponentRef.current) {
+            const calendarApi = this.calendarComponentRef.current.getApi();
+            const view = calendarApi.view;
+            const startDate = view.activeStart.toISOString().split('T')[0];
+            const endDate = view.activeEnd.toISOString().split('T')[0];
+            this.loadData(startDate, endDate);
+        } else {
+            this.loadData();
+        }
     }
 
     renderEventContent(eventInfo) {
@@ -905,11 +1013,15 @@ class Calendar extends Component {
 
                         selectedOptionCostCenter={this.state.selectedOptionCostCenter}
                         handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
-                        cost_centers={this.props.cost_centers}
+                        cost_centers={this.state.costCenterOptions}
+                        onCostCenterSearch={this.handleCostCenterSearch}
+                        costCenterLoading={this.state.costCenterLoading}
 
                         selectedOptionUser={this.state.selectedOptionUser}
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
-                        users={this.props.users}
+                        users={this.state.userOptions}
+                        onUserSearch={this.handleUserSearch}
+                        userLoading={this.state.userLoading}
 
                         handleChangeAutocompleteMulti={this.handleChangeAutocompleteMulti}
                         selectedOptionMulti={this.state.selectedOptionMulti}
@@ -926,8 +1038,6 @@ class Calendar extends Component {
                         handleChangeFilter={this.handleChangeFilter}
                         handleClickFilter={this.handleClickFilter}
                         closeFilter={this.closeFilter}
-                        users={this.props.users}
-                        cost_centers={this.props.cost_centers}
                     />
                 )}
 
@@ -957,6 +1067,7 @@ class Calendar extends Component {
                             weekends={this.state.calendarWeekends}
                             events={this.state.data}
                             dateClick={this.handleDateClick}
+                            datesSet={this.handleDatesSet}
                             headerToolbar={{
                                 left: 'prev,next today',
                                 center: 'title',

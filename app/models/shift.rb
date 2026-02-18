@@ -46,11 +46,20 @@ class Shift < ApplicationRecord
        # end
     end
 
+    # Busca turnos que se superponen con el rango de fechas dado
+    # Un turno se superpone si: start_date <= range_end AND end_date >= range_start
     def self.search(start_date, end_date, cost_center_ids, user_responsible_ids)
         relation = self.all
 
-        relation = relation.where("start_date >= ?", start_date) if start_date.present?
-        relation = relation.where("end_date <= ?", end_date) if end_date.present?
+        # Filtrar por superposición de rango (para calendario)
+        if start_date.present? && end_date.present?
+            relation = relation.where("start_date <= ? AND end_date >= ?", end_date, start_date)
+        elsif start_date.present?
+            relation = relation.where("end_date >= ?", start_date)
+        elsif end_date.present?
+            relation = relation.where("start_date <= ?", end_date)
+        end
+
         relation = relation.where(cost_center_id: cost_center_ids) if cost_center_ids.present? && cost_center_ids.reject(&:blank?).any?
         relation = relation.where(user_responsible_id: user_responsible_ids) if user_responsible_ids.present? && user_responsible_ids.reject(&:blank?).any?
 

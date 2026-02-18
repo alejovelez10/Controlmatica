@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_02_200002) do
+ActiveRecord::Schema.define(version: 2026_02_17_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -532,6 +532,11 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.boolean "force_save", default: false
     t.string "microsoft_id"
     t.index ["cost_center_id"], name: "index_shifts_on_cost_center_id"
+    t.index ["end_date"], name: "index_shifts_on_end_date"
+    t.index ["start_date"], name: "index_shifts_on_start_date"
+    t.index ["user_id"], name: "index_shifts_on_user_id"
+    t.index ["user_responsible_id", "start_date", "end_date"], name: "index_shifts_on_user_dates"
+    t.index ["user_responsible_id"], name: "index_shifts_on_user_responsible_id"
   end
 
   create_table "shifts_users", id: false, force: :cascade do |t|

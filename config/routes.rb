@@ -49,6 +49,8 @@ Rails.application.routes.draw do
   get "get_shifts/(:from)", to: "shifts#get_shifts"
   get "shifts/calendar/:from", to: "shifts#calendar" , as: "shift_calendar"
   get "get_shifts_const_center/:const_center_id", to: "shifts#get_shifts_const_center"
+  get "shifts/search_cost_centers", to: "shifts#search_cost_centers"
+  get "shifts/search_users", to: "shifts#search_users"
 
   ## commissions routes
   get "download_file/commissions/:type", to: "commissions#download_file"

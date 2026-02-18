@@ -141,7 +141,7 @@ class ShiftsController < ApplicationController
         end
     end
 
-    def destroy 
+    def destroy
 
         if true
             if @user_name && @shift.microsoft_id.present?
@@ -163,7 +163,42 @@ class ShiftsController < ApplicationController
         end
     end
 
-    
+    # Búsqueda de centros de costo con autocomplete
+    def search_cost_centers
+        query = params[:q].to_s.strip
+
+        if query.length >= 2
+            cost_centers = CostCenter.where("service_type IN (?)", ["SERVICIO", "PROYECTO"])
+                                     .where("LOWER(code) LIKE ? OR LOWER(description) LIKE ?",
+                                            "%#{query.downcase}%", "%#{query.downcase}%")
+                                     .limit(20)
+                                     .pluck(:id, :code)
+                                     .map { |id, code| { value: id, label: code } }
+        else
+            cost_centers = []
+        end
+
+        render json: cost_centers
+    end
+
+    # Búsqueda de usuarios con autocomplete
+    def search_users
+        query = params[:q].to_s.strip
+
+        if query.length >= 2
+            users = User.where("LOWER(names) LIKE ? OR LOWER(email) LIKE ?",
+                              "%#{query.downcase}%", "%#{query.downcase}%")
+                       .limit(20)
+                       .pluck(:id, :names)
+                       .map { |id, names| { value: id, label: names } }
+        else
+            users = []
+        end
+
+        render json: users
+    end
+
+
     private 
 
         def shift_find

@@ -4,17 +4,90 @@ import Select from "react-select";
 class FormFilter extends Component {
     constructor(props){
         super(props)
+        this.searchCostCenterTimeout = null;
+        this.searchUserTimeout = null;
+        this.token = document.querySelector("[name='csrf-token']").content;
         this.state = {
+            costCenterOptions: [],
+            userOptions: [],
+            costCenterLoading: false,
+            userLoading: false,
             selectedOptionCostCenter: {
                 cost_center_ids: [],
                 label: "Seleccione el centro de costo",
             },
 
             selectedOptionUser: {
-                user_responsible_ids: [], 
+                user_responsible_ids: [],
                 label: "Seleccione el usuario responsable"
             }
         }
+    }
+
+    // Búsqueda de centros de costo con debounce
+    handleCostCenterSearch = (inputValue) => {
+        if (this.searchCostCenterTimeout) {
+            clearTimeout(this.searchCostCenterTimeout);
+        }
+
+        if (inputValue.length < 2) {
+            return;
+        }
+
+        this.setState({ costCenterLoading: true });
+
+        this.searchCostCenterTimeout = setTimeout(() => {
+            fetch(`/shifts/search_cost_centers?q=${encodeURIComponent(inputValue)}`, {
+                method: 'GET',
+                headers: {
+                    "X-CSRF-Token": this.token,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    costCenterOptions: data,
+                    costCenterLoading: false
+                });
+            })
+            .catch(() => {
+                this.setState({ costCenterLoading: false });
+            });
+        }, 300);
+    }
+
+    // Búsqueda de usuarios con debounce
+    handleUserSearch = (inputValue) => {
+        if (this.searchUserTimeout) {
+            clearTimeout(this.searchUserTimeout);
+        }
+
+        if (inputValue.length < 2) {
+            return;
+        }
+
+        this.setState({ userLoading: true });
+
+        this.searchUserTimeout = setTimeout(() => {
+            fetch(`/shifts/search_users?q=${encodeURIComponent(inputValue)}`, {
+                method: 'GET',
+                headers: {
+                    "X-CSRF-Token": this.token,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    userOptions: data,
+                    userLoading: false
+                });
+            })
+            .catch(() => {
+                this.setState({ userLoading: false });
+            });
+        }, 300);
     }
 
     handleChangeAutocompleteCostCenter = selectedOptionCostCenter => {
@@ -27,7 +100,7 @@ class FormFilter extends Component {
         }
 
         this.props.handleChangeFilter({ target: { name: "cost_center_ids", value: selectedOptionCostCenter ? array : [] } } )
-        this.setState({ 
+        this.setState({
             selectedOptionCostCenter: {
                 cost_center_ids: array,
                 label: "Seleccione el centro de costo",
@@ -46,9 +119,9 @@ class FormFilter extends Component {
         }
 
         this.props.handleChangeFilter({ target: { name: "user_responsible_ids", value: selectedOptionUser ? array : [] } } )
-        this.setState({ 
+        this.setState({
             selectedOptionUser: {
-                user_responsible_ids: array, 
+                user_responsible_ids: array,
                 label: "Seleccione el usuario responsable"
             }
         });
@@ -221,55 +294,57 @@ class FormFilter extends Component {
                                 />
                             </div>
 
-                            {this.props.cost_centers.length >= 2 && (
-                                <div className="col-md-4 mb-3">
-                                    <input
-                                        type="hidden"
-                                        name="cost_center_ids"
-                                        value={this.state.selectedOptionCostCenter.cost_center_ids}
-                                    />
-                                    <label style={filterStyles.label}>
-                                        <i className="fas fa-building" style={{ marginRight: '6px', color: '#f5a623' }}></i>
-                                        Centros de costo
-                                    </label>
-                                    <Select
-                                        onChange={this.handleChangeAutocompleteCostCenter}
-                                        options={this.props.cost_centers}
-                                        isMulti
-                                        closeMenuOnSelect={false}
-                                        autoFocus={false}
-                                        styles={selectStyles}
-                                        placeholder="Seleccione centros..."
-                                        name="cost_center_ids"
-                                        noOptionsMessage={() => "Sin opciones"}
-                                    />
-                                </div>
-                            )}
+                            <div className="col-md-4 mb-3">
+                                <input
+                                    type="hidden"
+                                    name="cost_center_ids"
+                                    value={this.state.selectedOptionCostCenter.cost_center_ids}
+                                />
+                                <label style={filterStyles.label}>
+                                    <i className="fas fa-building" style={{ marginRight: '6px', color: '#f5a623' }}></i>
+                                    Centros de costo
+                                    <small style={{ marginLeft: '6px', fontWeight: '400', color: '#9ca3af' }}>(escribe 2+ letras)</small>
+                                </label>
+                                <Select
+                                    onChange={this.handleChangeAutocompleteCostCenter}
+                                    options={this.state.costCenterOptions}
+                                    onInputChange={this.handleCostCenterSearch}
+                                    isLoading={this.state.costCenterLoading}
+                                    isMulti
+                                    closeMenuOnSelect={false}
+                                    autoFocus={false}
+                                    styles={selectStyles}
+                                    placeholder="Buscar centros..."
+                                    name="cost_center_ids"
+                                    noOptionsMessage={() => "Escriba para buscar"}
+                                />
+                            </div>
 
-                            {true && (
-                                <div className="col-md-4 mb-3">
-                                    <input
-                                        type="hidden"
-                                        name="user_responsible_ids"
-                                        value={this.state.selectedOptionUser.user_responsible_ids}
-                                    />
-                                    <label style={filterStyles.label}>
-                                        <i className="fas fa-users" style={{ marginRight: '6px', color: '#f5a623' }}></i>
-                                        Usuarios responsables
-                                    </label>
-                                    <Select
-                                        onChange={this.handleChangeAutocompleteUser}
-                                        options={this.props.users}
-                                        isMulti
-                                        closeMenuOnSelect={false}
-                                        autoFocus={false}
-                                        styles={selectStyles}
-                                        placeholder="Seleccione usuarios..."
-                                        name="user_responsible_ids"
-                                        noOptionsMessage={() => "Sin opciones"}
-                                    />
-                                </div>
-                            )}
+                            <div className="col-md-4 mb-3">
+                                <input
+                                    type="hidden"
+                                    name="user_responsible_ids"
+                                    value={this.state.selectedOptionUser.user_responsible_ids}
+                                />
+                                <label style={filterStyles.label}>
+                                    <i className="fas fa-users" style={{ marginRight: '6px', color: '#f5a623' }}></i>
+                                    Usuarios responsables
+                                    <small style={{ marginLeft: '6px', fontWeight: '400', color: '#9ca3af' }}>(escribe 2+ letras)</small>
+                                </label>
+                                <Select
+                                    onChange={this.handleChangeAutocompleteUser}
+                                    options={this.state.userOptions}
+                                    onInputChange={this.handleUserSearch}
+                                    isLoading={this.state.userLoading}
+                                    isMulti
+                                    closeMenuOnSelect={false}
+                                    autoFocus={false}
+                                    styles={selectStyles}
+                                    placeholder="Buscar usuarios..."
+                                    name="user_responsible_ids"
+                                    noOptionsMessage={() => "Escriba para buscar"}
+                                />
+                            </div>
                         </div>
                     </div>
 
