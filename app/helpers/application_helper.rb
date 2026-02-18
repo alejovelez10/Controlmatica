@@ -163,7 +163,8 @@ module ApplicationHelper
   end
 
   def get_cost_center
-    CostCenter.all
+    # Solo devolver id y code para dropdowns (evita cargar 26MB de datos)
+    CostCenter.select(:id, :code).order(:code).map { |cc| { id: cc.id, code: cc.code } }
   end
 
   def get_provider
