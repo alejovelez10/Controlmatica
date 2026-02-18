@@ -79,12 +79,16 @@ class FormCreate extends React.Component {
                   <div className="cm-form-group">
                     <label className="cm-label">
                       <i className="fas fa-building"></i> Cliente <span className="cm-required">*</span>
+                      <small className="cm-label-hint">(escribe 2+ letras)</small>
                     </label>
                     <Select
                       onChange={props.onChangeAutocomplete}
+                      onInputChange={props.onCustomerSearch}
                       options={props.clientes}
                       value={props.formAutocomplete}
-                      placeholder="Seleccione un cliente..."
+                      placeholder="Buscar cliente..."
+                      noOptionsMessage={() => "Escribe para buscar"}
+                      filterOption={null}
                       styles={selectStyles}
                       menuPortalTarget={document.body}
                       className={hasError("customer_id") ? "cm-select-error" : ""}

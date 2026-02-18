@@ -6,25 +6,22 @@ class CustomerReportsController < ApplicationController
   # GET /customer_reports.json
   def index
     customer_reports = ModuleControl.find_by_name("Reportes de clientes")
+    is_admin = current_user.rol.name == "Administrador"
 
-    create = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Eliminar").exists?
-    generate_pdf = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Generar pdf").exists?
-    send_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Enviar para aprobaciòn").exists?
-    edit_email = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar email").exists?
-    download_file = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Descargar excel").exists?
-    edit_all = current_user.rol.accion_modules.where(module_control_id: customer_reports.id).where(name: "Editar todos").exists?
+    # Una sola query para obtener todos los permisos
+    permisos = current_user.rol.accion_modules
+      .where(module_control_id: customer_reports.id)
+      .pluck(:name)
 
-    @estados = {      
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      edit_all: (current_user.rol.name == "Administrador" ? true : edit_all),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      generate_pdf: (current_user.rol.name == "Administrador" ? true : generate_pdf),
-      send_email: (current_user.rol.name == "Administrador" ? true : send_email),
-      edit_email: (current_user.rol.name == "Administrador" ? true : edit_email),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file)
+    @estados = {
+      create: is_admin || permisos.include?("Crear"),
+      edit: is_admin || permisos.include?("Editar"),
+      edit_all: is_admin || permisos.include?("Editar todos"),
+      delete: is_admin || permisos.include?("Eliminar"),
+      generate_pdf: is_admin || permisos.include?("Generar pdf"),
+      send_email: is_admin || permisos.include?("Enviar para aprobaciòn"),
+      edit_email: is_admin || permisos.include?("Editar email"),
+      download_file: is_admin || permisos.include?("Descargar excel")
     }
   end
 

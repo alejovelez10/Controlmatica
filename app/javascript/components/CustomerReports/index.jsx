@@ -46,6 +46,8 @@ class index extends React.Component {
       filterCustomer: null,
       filterCostCenterOptions: [],
       filterCostCenterLoading: false,
+      filterCustomerOptions: [],
+      filterCustomerLoading: false,
       // Modal
       modal: false,
       modeEdit: false,
@@ -72,10 +74,6 @@ class index extends React.Component {
       dataContact: [],
       dataReportEdit: [],
     };
-
-    this.customerOptions = (props.clientes || []).map(function(c) {
-      return { label: c.name, value: c.id };
-    });
 
     this.columns = [
       { key: "report_date", label: "Creado", width: "120px" },
@@ -134,7 +132,6 @@ class index extends React.Component {
 
   componentDidMount() {
     this.loadData();
-    this.setState({ clients: this.customerOptions });
   }
 
   // ─── Data Loading ───
@@ -231,6 +228,38 @@ class index extends React.Component {
           self.setState({
             filterCostCenterOptions: data.map(function(d) { return { value: d.id, label: d.label }; }),
             filterCostCenterLoading: false,
+          });
+        });
+    }, 300);
+  }.bind(this);
+
+  handleFilterCustomerSearch = function(inputValue) {
+    var self = this;
+    if (!inputValue || inputValue.length < 2) { self.setState({ filterCustomerOptions: [] }); return; }
+    if (self._customerTimer) clearTimeout(self._customerTimer);
+    self._customerTimer = setTimeout(function() {
+      self.setState({ filterCustomerLoading: true });
+      fetch("/search_customers?q=" + encodeURIComponent(inputValue), { headers: { "X-CSRF-Token": csrfToken() } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          self.setState({
+            filterCustomerOptions: data.map(function(d) { return { value: d.value, label: d.label }; }),
+            filterCustomerLoading: false,
+          });
+        });
+    }, 300);
+  }.bind(this);
+
+  handleFormCustomerSearch = function(inputValue) {
+    var self = this;
+    if (!inputValue || inputValue.length < 2) { self.setState({ clients: [] }); return; }
+    if (self._formCustomerTimer) clearTimeout(self._formCustomerTimer);
+    self._formCustomerTimer = setTimeout(function() {
+      fetch("/search_customers?q=" + encodeURIComponent(inputValue), { headers: { "X-CSRF-Token": csrfToken() } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          self.setState({
+            clients: data.map(function(d) { return { value: d.value, label: d.label }; }),
           });
         });
     }, 300);
@@ -611,14 +640,19 @@ class index extends React.Component {
             React.createElement("div", { className: "cm-form-group" },
               React.createElement("label", { className: "cm-label" },
                 React.createElement("i", { className: "fas fa-building" }),
-                " Cliente"
+                " Cliente ",
+                React.createElement("small", { className: "cm-label-hint" }, "(escribe al menos 2 letras)")
               ),
               React.createElement(Select, {
-                options: self.customerOptions,
+                options: self.state.filterCustomerOptions,
                 value: self.state.filterCustomer,
                 onChange: self.handleFilterCustomer,
+                onInputChange: self.handleFilterCustomerSearch,
                 isClearable: true,
-                placeholder: "Seleccione un cliente...",
+                isLoading: self.state.filterCustomerLoading,
+                placeholder: "Buscar cliente...",
+                noOptionsMessage: function() { return "Escriba para buscar"; },
+                filterOption: null,
                 menuPortalTarget: document.body,
                 styles: { menuPortal: function(base) { return Object.assign({}, base, { zIndex: 9999 }); } }
               })
@@ -705,6 +739,7 @@ class index extends React.Component {
           nameSubmit: self.state.modeEdit ? "Actualizar" : "Crear",
           errorValues: self.state.ErrorValues,
           clientes: self.state.clients,
+          onCustomerSearch: self.handleFormCustomerSearch,
           onChangeAutocomplete: self.handleChangeAutocomplete,
           formAutocomplete: self.state.selectedOption,
           costCenterOptions: self.state.dataCostCenter,

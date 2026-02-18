@@ -1,3 +1,3 @@
 <%= javascript_pack_tag 'CustomerReports' %>
-<%= react_component('CustomerReports', usuario: current_user, estados: @estados, clientes: get_customer, contacts: Contact.where.not(customer_id: nil)) %>
+<%= react_component('CustomerReports', usuario: current_user, estados: @estados) %>
 
