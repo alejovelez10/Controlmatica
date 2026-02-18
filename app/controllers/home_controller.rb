@@ -12,286 +12,238 @@ class HomeController < ApplicationController
 
   def get_dashboard_ing
     user = User.find(params[:user_id])
-    real_year = params[:id].to_s
-    count = params[:count].to_s
+    real_year = params[:id].to_i
+    count = params[:count].to_i
 
     year = Date.today.year
     month = Date.today.month
-    day = Date.today.day
+    max_month = (real_year == year) ? month : 12
+    tablerista = user.rol.name == "TABLERISTA"
 
-    get_months = []
-    if real_year == year.to_s
-      date_month = month
-      (1..date_month).each do |mh|
-        get_months << mh
-      end
-    else
-      get_months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    end
-
-    month_convert = []
-
-    if user.rol.name == "TABLERISTA"
-      tablerista = true
-    else
-      tablerista = false
-    end
-
+    # Obtener los top cost_centers
     if !tablerista
-      cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+      cc_counts = Report
+        .where(report_execute_id: user.id)
+        .where("extract(year from report_date) = ?", real_year)
+        .group(:cost_center_id)
+        .count
     else
-      cost_center = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+      cc_counts = Contractor
+        .where(user_execute_id: user.id)
+        .where("extract(year from sales_date) = ?", real_year)
+        .group(:cost_center_id)
+        .count
     end
 
-    cost_center_last = cost_center.sort_by { |_key, value| value }.reverse.to_h.first(count.to_i)
+    top_cc_ids = cc_counts.sort_by { |_k, v| -v }.first(count).map(&:first)
+    return render json: { categories: [], series: [] } if top_cc_ids.empty?
 
-    series = []
-    cost_center_last.each do |value|
-      cc = CostCenter.find(value[0])
+    # Cargar todos los cost_centers de una vez
+    cost_centers = CostCenter.where(id: top_cc_ids).index_by(&:id)
 
-      if !tablerista
-        data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
-      else
-        data = Contractor.where(user_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from sales_date) = ?", real_year.to_i)
-      end
-
-      months = []
-      get_months.each do |val|
-        month_convert << get_month(val)
-        if !tablerista
-          months << data.where("extract(month from report_date) = ?", val).sum(:working_time)
-        else
-          months << data.where("extract(month from sales_date) = ?", val).sum(:hours)
-        end
-      end
-
-      series << { name: cc.code, data: months }
+    # Obtener datos mensuales agrupados por cost_center y mes en UNA query
+    if !tablerista
+      monthly_data = Report
+        .where(report_execute_id: user.id, cost_center_id: top_cc_ids)
+        .where("extract(year from report_date) = ?", real_year)
+        .group(:cost_center_id, "extract(month from report_date)")
+        .sum(:working_time)
+    else
+      monthly_data = Contractor
+        .where(user_execute_id: user.id, cost_center_id: top_cc_ids)
+        .where("extract(year from sales_date) = ?", real_year)
+        .group(:cost_center_id, "extract(month from sales_date)")
+        .sum(:hours)
     end
 
-    render :json => {
-      categories: month_convert,
-      series: series,
-    }
+    month_convert = (1..max_month).map { |m| get_month(m) }
+    series = top_cc_ids.map do |cc_id|
+      cc = cost_centers[cc_id]
+      months = (1..max_month).map { |m| monthly_data[[cc_id, m.to_f]] || 0 }
+      { name: cc&.code || "N/A", data: months }
+    end
+
+    render json: { categories: month_convert, series: series }
   end
 
   def get_dashboard_two_ing
     user = User.find(params[:user_id])
-    real_year = params[:id].to_s
+    real_year = params[:id].to_i
     alert = Alert.first
     year = Date.today.year
     month = Date.today.month
-    day = Date.today.day
 
-    get_months = []
-    if real_year == year.to_s
-      date_month = month
-      (1..date_month).each do |mh|
-        get_months << mh
-      end
+    max_month = (real_year == year) ? month : 12
+    tablerista = user.rol.name == "TABLERISTA"
+
+    # Una sola query con GROUP BY en lugar de 12 queries
+    if !tablerista
+      monthly_data = Report
+        .where(report_execute_id: user.id)
+        .where("extract(year from report_date) = ?", real_year)
+        .group("extract(month from report_date)")
+        .sum(:working_time)
     else
-      get_months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      monthly_data = Contractor
+        .where(user_execute_id: user.id)
+        .where("extract(year from sales_date) = ?", real_year)
+        .group("extract(month from sales_date)")
+        .sum(:hours)
     end
 
     series = []
     colors = []
     colors_lables = []
-
-    if user.rol.name == "TABLERISTA"
-      tablerista = true
-    else
-      tablerista = false
-    end
-
-    if !tablerista
-      data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i)
-    else
-      data = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", real_year.to_i)
-    end
-
     month_convert = []
-    months = 0
-    get_months.each do |val|
-      if !tablerista
-        months = data.where("extract(month from report_date) = ?", val).sum(:working_time)
-      else
-        months = data.where("extract(month from sales_date) = ?", val).sum(:hours)
-      end
+
+    (1..max_month).each do |val|
+      hours = monthly_data[val.to_f] || 0
       month_convert << get_month(val)
-      if months <= alert.alert_min
-        colors << "#d26666"
-      elsif months > alert.alert_min && months < alert.alert_med
-        colors << "#d4b21e"
-      else
-        colors << "#24bc6b"
-      end
+      colors << if hours <= alert.alert_min
+                  "#d26666"
+                elsif hours < alert.alert_med
+                  "#d4b21e"
+                else
+                  "#24bc6b"
+                end
       colors_lables << "gray"
-      series << months
+      series << hours
     end
 
-    render :json => {
-             categories: month_convert,
-             series: series,
-             colors: colors,
-             colors_lables: colors_lables,
-           }
+    render json: {
+      categories: month_convert,
+      series: series,
+      colors: colors,
+      colors_lables: colors_lables,
+    }
   end
 
   def get_dashboard_three_ing
     user = User.find(params[:user_id])
-    real_year = params[:ye].to_s
-    real_month = params[:mo].to_s
+    real_year = params[:ye].to_i
+    real_month = params[:mo].to_i
+    tablerista = user.rol.name == "TABLERISTA"
 
-    year = Date.today.year
-    month = Date.today.month
-    day = Date.today.day
-
-    if user.rol.name == "TABLERISTA"
-      tablerista = true
-    else
-      tablerista = false
-    end
-
+    # Una sola query para obtener horas por cost_center del mes específico
     if !tablerista
-      cost_center = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+      cc_hours = Report
+        .where(report_execute_id: user.id)
+        .where("extract(year from report_date) = ? AND extract(month from report_date) = ?", real_year, real_month)
+        .group(:cost_center_id)
+        .sum(:working_time)
     else
-      cost_center = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", real_year.to_i).select(:cost_center_id).group(:cost_center_id).count
+      cc_hours = Contractor
+        .where(user_execute_id: user.id)
+        .where("extract(year from sales_date) = ? AND extract(month from sales_date) = ?", real_year, real_month)
+        .group(:cost_center_id)
+        .sum(:hours)
     end
+
+    # Filtrar solo los que tienen horas > 0 y cargar cost_centers de una vez
+    cc_hours_filtered = cc_hours.select { |_k, v| v > 0 }
+    cost_centers = CostCenter.where(id: cc_hours_filtered.keys).index_by(&:id)
 
     series = []
     cost_centers_array = []
-    colors_lables = []
-    months = 0
     colors = []
-    cost_center.each do |key, value|
-      cc = CostCenter.find(key)
+    colors_lables = []
 
-      if !tablerista
-        data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
-        if data.where("extract(month from report_date) = ?", real_month).sum(:working_time) > 0
-          series << data.where("extract(month from report_date) = ?", real_month).sum(:working_time)
-          cost_centers_array << cc.code
-          colors << "#3fb0f0"
-          colors_lables << "gray"
-        end
-      else
-        data = Contractor.where(user_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from sales_date) = ?", real_year.to_i)
-        if data.where("extract(month from sales_date) = ?", real_month).sum(:hours) > 0
-          series << data.where("extract(month from sales_date) = ?", real_month).sum(:hours)
-          cost_centers_array << cc.code
-          colors << "#3fb0f0"
-          colors_lables << "gray"
-        end
-      end
+    cc_hours_filtered.each do |cc_id, hours|
+      cc = cost_centers[cc_id]
+      next unless cc
+      series << hours
+      cost_centers_array << cc.code
+      colors << "#3fb0f0"
+      colors_lables << "gray"
     end
 
-    render :json => {
-             categories: cost_centers_array,
-             series: series,
-             colors: colors,
-             colors_lables: colors_lables,
-           }
+    render json: {
+      categories: cost_centers_array,
+      series: series,
+      colors: colors,
+      colors_lables: colors_lables,
+    }
   end
 
   def get_dashboard_four_ing
     user = User.find(params[:user_id])
     count = params[:id].to_i
     alert = Alert.first
-    year = Date.today.year
-    month = Date.today.month
-    day = Date.today.day
+    tablerista = user.rol.name == "TABLERISTA"
+
+    # Calcular el rango de fechas
+    start_date = Date.today - count + 1
+    end_date = Date.today
+
+    # Una sola query con GROUP BY en lugar de N queries
+    if !tablerista
+      daily_data = Report
+        .where(report_execute_id: user.id)
+        .where(report_date: start_date..end_date)
+        .group(:report_date)
+        .sum(:working_time)
+    else
+      daily_data = Contractor
+        .where(user_execute_id: user.id)
+        .where(sales_date: start_date..end_date)
+        .group(:sales_date)
+        .sum(:hours)
+    end
 
     series = []
     colors = []
     colors_lables = []
     categories = []
 
-    if user.rol.name == "TABLERISTA"
-      tablerista = true
-    else
-      tablerista = false
-    end
-
-    if !tablerista
-      data = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", year.to_i)
-    else
-      data = Contractor.where(user_execute_id: user.id).where("extract(year  from sales_date) = ?", year.to_i)
-    end
-
-    months = 0
-
-    (1..count).each do |val|
-      if !tablerista
-        months = data.where(report_date: Date.today - count + val.day).sum(:working_time)
-      else
-        months = data.where(sales_date: Date.today - count + val.day).sum(:hours)
-      end
-
-      categories << Date.today - count + val.day
-      if months <= alert.alert_hour_min
-        colors << "#d26666"
-      elsif months > alert.alert_hour_min && months < alert.alert_hour_med
-        colors << "#d4b21e"
-      else
-        colors << "#24bc6b"
-      end
+    (start_date..end_date).each do |date|
+      hours = daily_data[date] || 0
+      categories << date
+      colors << if hours <= alert.alert_hour_min
+                  "#d26666"
+                elsif hours < alert.alert_hour_med
+                  "#d4b21e"
+                else
+                  "#24bc6b"
+                end
       colors_lables << "gray"
-      series << months
-      categories
+      series << hours
     end
 
-    render :json => {
-             categories: categories,
-             series: series,
-             colors: colors,
-             colors_lables: colors_lables,
-           }
+    render json: {
+      categories: categories,
+      series: series,
+      colors: colors,
+      colors_lables: colors_lables,
+    }
   end
 
   def get_dashboard_five_ing
     user = User.find(params[:user_id])
-    real_year = params[:id].to_s
-
-    year = Date.today.year
-    month = Date.today.month
-    day = Date.today.day
-
-    month_convert = []
-    alert = Alert.first
+    real_year = params[:id].to_i
 
     value_hour = Parameterization.find_by_name("HORA PROMEDIO COTIZADA").money_value
     p_alert = Parameterization.find_by_name("PORCENTAJE DE COMISION").money_value.to_f / 100
+    multiplier = value_hour * p_alert
 
     cost_center_ids = CostCenter.where(customer_id: [4, 1, 15]).ids
-    reports = Report.where(report_execute_id: user.id).where("extract(year  from report_date) = ?", real_year.to_i).where.not(cost_center_id: [cost_center_ids])
 
-    reports_1 = reports.where("report_date >= ?", "#{real_year}-01-01").where("report_date <= ?", "#{real_year}-03-30").sum(:working_time) * value_hour * p_alert
-    reports_2 = reports.where("report_date >= ?", "#{real_year}-04-01").where("report_date <= ?", "#{real_year}-06-30").sum(:working_time) * value_hour * p_alert
-    reports_3 = reports.where("report_date >= ?", "#{real_year}-07-01").where("report_date <= ?", "#{real_year}-09-30").sum(:working_time) * value_hour * p_alert
-    reports_4 = reports.where("report_date >= ?", "#{real_year}-10-01").where("report_date <= ?", "#{real_year}-12-31").sum(:working_time) * value_hour * p_alert
-
-    # series = []
-    # cost_center.each do |key, value|
-    #   cc = CostCenter.find(key)
-    #   data = Report.where(report_execute_id: user.id, cost_center_id: cc.id).where("extract(year  from report_date) = ?", real_year.to_i)
-    #
-    #   months = []
-    #   get_months.each do |val|
-    #     month_convert << get_month(val)
-    #     months << data.where("extract(month from report_date) = ?", val).sum(:working_time)
-    #   end
-    #
-    #   series << { name: cc.code, data: months }
-    # end
+    # Una sola query con GROUP BY trimestre en lugar de 4 queries
+    quarterly_data = Report
+      .where(report_execute_id: user.id)
+      .where("extract(year from report_date) = ?", real_year)
+      .where.not(cost_center_id: cost_center_ids)
+      .group("EXTRACT(QUARTER FROM report_date)")
+      .sum(:working_time)
 
     series = [
-      { name: "T1", data: [reports_1] },
-      { name: "T2", data: [reports_2] },
-      { name: "T3", data: [reports_3] },
-      { name: "T4", data: [reports_4] },
+      { name: "T1", data: [(quarterly_data[1.0] || 0) * multiplier] },
+      { name: "T2", data: [(quarterly_data[2.0] || 0) * multiplier] },
+      { name: "T3", data: [(quarterly_data[3.0] || 0) * multiplier] },
+      { name: "T4", data: [(quarterly_data[4.0] || 0) * multiplier] },
     ]
 
-    render :json => {
-      categories: [real_year],
+    render json: {
+      categories: [real_year.to_s],
       series: series,
     }
   end
@@ -300,38 +252,49 @@ class HomeController < ApplicationController
   end
 
   def get_roles
-    materials = ModuleControl.find_by_name("Materiales")
-    sales_orders = ModuleControl.find_by_name("Ordenes de Compra")
+    is_admin = current_user.rol.name == "Administrador"
+    return render json: { materials: true, sales_orders: true } if is_admin
 
-    ordenes = current_user.rol.accion_modules.where(module_control_id: sales_orders.id).where(name: "Ingreso al modulo").exists?
-    materiales = current_user.rol.accion_modules.where(module_control_id: materials.id).where(name: "Ingreso al modulo").exists?
+    # Una sola query para obtener los módulos y permisos
+    module_ids = ModuleControl.where(name: ["Materiales", "Ordenes de Compra"]).pluck(:name, :id).to_h
+    permissions = current_user.rol.accion_modules
+      .where(module_control_id: module_ids.values, name: "Ingreso al modulo")
+      .pluck(:module_control_id)
+      .to_set
 
-    render :json => {
-      materials: (current_user.rol.name == "Administrador" ? true : materiales),
-      sales_orders: (current_user.rol.name == "Administrador" ? true : ordenes),
+    render json: {
+      materials: permissions.include?(module_ids["Materiales"]),
+      sales_orders: permissions.include?(module_ids["Ordenes de Compra"]),
     }
   end
 
   def index_user
-    users = ModuleControl.find_by_name("Usuarios")
+    is_admin = current_user.rol.name == "Administrador"
 
-    create = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Eliminar").exists?
-    download_file = current_user.rol.accion_modules.where(module_control_id: users.id).where(name: "Descargar excel").exists?
+    if is_admin
+      @estados = { create: true, edit: true, delete: true, download_file: true }
+    else
+      users_module = ModuleControl.find_by_name("Usuarios")
+      # Una sola query para obtener todos los permisos del módulo
+      permissions = current_user.rol.accion_modules
+        .where(module_control_id: users_module.id)
+        .where(name: ["Crear", "Editar", "Eliminar", "Descargar excel"])
+        .pluck(:name)
+        .to_set
 
-    @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      download_file: (current_user.rol.name == "Administrador" ? true : download_file),
-    }
+      @estados = {
+        create: permissions.include?("Crear"),
+        edit: permissions.include?("Editar"),
+        delete: permissions.include?("Eliminar"),
+        download_file: permissions.include?("Descargar excel"),
+      }
+    end
 
     @user = User.all
   end
 
   def download_file
-    users = User.all
+    users = User.includes(:rol).all
     respond_to do |format|
       format.xls do
         task = Spreadsheet::Workbook.new

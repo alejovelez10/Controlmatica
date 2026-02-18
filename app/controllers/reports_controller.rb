@@ -90,48 +90,47 @@ class ReportsController < ApplicationController
       facturas = CustomerInvoice.all
     end
 
-    months = ["Ene", "Feb", "Mar", "Abr", "May", "jun", "jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    current_year = Date.today.year
 
-    #COST CENTER POR MES
-    months_lleno = []
-    months.each_with_index do |month, index|
-      total = cost_center.where("EXTRACT(MONTH FROM start_date) = ?", index + 1).where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
-      months_lleno << total.to_f
-    end
+    # COST CENTER POR MES - una sola query con GROUP BY
+    cc_monthly = cost_center
+      .where("EXTRACT(YEAR FROM start_date) = ?", current_year)
+      .group("EXTRACT(MONTH FROM start_date)")
+      .sum(:quotation_value)
+    months_lleno = (1..12).map { |m| cc_monthly[m.to_f]&.to_f || 0.0 }
 
-    #MATERIALES POR MES
-    months_lleno_mat = []
-    months.each_with_index do |month, index|
-      total = materials.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
-      months_lleno_mat << total.to_f
-    end
+    # MATERIALES POR MES - una sola query con GROUP BY
+    mat_monthly = materials
+      .where("EXTRACT(YEAR FROM sales_date) = ?", current_year)
+      .group("EXTRACT(MONTH FROM sales_date)")
+      .sum(:amount)
+    months_lleno_mat = (1..12).map { |m| mat_monthly[m.to_f]&.to_f || 0.0 }
 
-    #TABLERISTAS POR MES
-    months_lleno_cont = []
-    months.each_with_index do |month, index|
-      total = contractors.where("EXTRACT(MONTH FROM sales_date) = ?", index + 1).where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
-      months_lleno_cont << total.to_f
-    end
+    # TABLERISTAS POR MES - una sola query con GROUP BY
+    cont_monthly = contractors
+      .where("EXTRACT(YEAR FROM sales_date) = ?", current_year)
+      .group("EXTRACT(MONTH FROM sales_date)")
+      .sum(:ammount)
+    months_lleno_cont = (1..12).map { |m| cont_monthly[m.to_f]&.to_f || 0.0 }
 
-    #REPORTE POR MES
-    months_lleno_rep = []
-    months.each_with_index do |month, index|
-      total = reports.where("EXTRACT(MONTH FROM report_date) = ?", index + 1).where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
-      total = total.sum(:viatic_value) + total.sum(:working_value) + total.sum(:value_displacement_hours)
-      months_lleno_rep << total.to_f
-    end
+    # REPORTES POR MES - una sola query con GROUP BY y múltiples SUM
+    rep_monthly = reports
+      .where("EXTRACT(YEAR FROM report_date) = ?", current_year)
+      .group("EXTRACT(MONTH FROM report_date)")
+      .select("EXTRACT(MONTH FROM report_date) as month, SUM(COALESCE(viatic_value, 0) + COALESCE(working_value, 0) + COALESCE(value_displacement_hours, 0)) as total")
+    rep_monthly_hash = rep_monthly.each_with_object({}) { |r, h| h[r.month.to_i] = r.total.to_f }
+    months_lleno_rep = (1..12).map { |m| rep_monthly_hash[m] || 0.0 }
 
-    #VALORES POR AÑO
-    cont_total = contractors.where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:ammount)
-    mat_total = materials.where("EXTRACT(YEAR FROM sales_date) = ?", Date.today.year).sum(:amount)
-    rep_total = reports.where("EXTRACT(YEAR FROM report_date) = ?", Date.today.year)
-    report_total = rep_total.sum(:viatic_value) + rep_total.sum(:working_value) + rep_total.sum(:value_displacement_hours)
+    # VALORES POR AÑO - reutilizar los datos ya obtenidos
+    cont_total = months_lleno_cont.sum
+    mat_total = months_lleno_mat.sum
+    report_total = months_lleno_rep.sum
 
     totals_all = [["x", "datos"], ["Ingenieria", report_total.round(0)], ["Tablerista", cont_total.round(0)], ["Equipos", mat_total.round(0)]]
 
-    facturas_total = facturas.where("EXTRACT(YEAR FROM invoice_date) = ?", Date.today.year).sum(:invoice_value)
+    facturas_total = facturas.where("EXTRACT(YEAR FROM invoice_date) = ?", current_year).sum(:invoice_value)
     gastos_totales = cont_total + mat_total + report_total
-    ventas_totales = cost_center.where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year).sum(:quotation_value)
+    ventas_totales = months_lleno.sum  # Reutilizar datos ya calculados
 
     factura_gastos = [["", "x", { role: "annotation", type: "string" }, "datos", { role: "annotation", type: "string" }], ["FACTURACION VS GASTOS", facturas_total, number_to_currency(facturas_total, precision: 0), gastos_totales, number_to_currency(gastos_totales, precision: 0)]]
 
@@ -139,11 +138,14 @@ class ReportsController < ApplicationController
 
     venta_gastos = [["", "x", { role: "annotation", type: "string" }, "datos", { role: "annotation", type: "string" }], ["VENTAS VS GASTOS", ventas_totales, number_to_currency(ventas_totales, precision: 0), gastos_totales, number_to_currency(gastos_totales, precision: 0)]]
 
-    #ENTRADAS POR CENTRO DE COSTOS
-    cost_center_entradas = cost_center.where("EXTRACT(YEAR FROM start_date) = ?", Date.today.year)
-    ingenieria_entradas = cost_center_entradas.sum(:engineering_value) + cost_center_entradas.sum(:viatic_value) + cost_center_entradas.sum(:offset_value)
-    contratista_entradas = cost_center_entradas.sum(:work_force_contractor)
-    materials_entradas = cost_center_entradas.sum(:materials_value)
+    # ENTRADAS POR CENTRO DE COSTOS - una sola query con múltiples SUM
+    cc_entradas = cost_center
+      .where("EXTRACT(YEAR FROM start_date) = ?", current_year)
+      .select("SUM(COALESCE(engineering_value, 0) + COALESCE(viatic_value, 0) + COALESCE(offset_value, 0)) as ingenieria, SUM(COALESCE(work_force_contractor, 0)) as contratista, SUM(COALESCE(materials_value, 0)) as materiales")
+      .take
+    ingenieria_entradas = cc_entradas&.ingenieria.to_f || 0.0
+    contratista_entradas = cc_entradas&.contratista.to_f || 0.0
+    materials_entradas = cc_entradas&.materiales.to_f || 0.0
 
     totals_all_entradas = [["x", "datos"], ["Ingenieria", ingenieria_entradas.round(0)], ["Tablerista", contratista_entradas.round(0)], ["Equipos", materials_entradas.round(0)]]
 
