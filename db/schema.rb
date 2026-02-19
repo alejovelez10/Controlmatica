@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_18_000002) do
+ActiveRecord::Schema.define(version: 2026_02_18_000003) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -137,6 +137,8 @@ ActiveRecord::Schema.define(version: 2026_02_18_000002) do
     t.integer "user_execute_id"
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index "EXTRACT(year FROM sales_date)", name: "index_contractors_on_sales_date_year"
+    t.index "EXTRACT(year FROM sales_date), EXTRACT(month FROM sales_date)", name: "index_contractors_on_sales_date_year_month"
     t.index ["cost_center_id"], name: "index_contractors_on_cost_center_id"
   end
 
@@ -209,6 +211,7 @@ ActiveRecord::Schema.define(version: 2026_02_18_000002) do
     t.integer "user_owner_id"
     t.string "sales_state", default: "SIN COMPRAS"
     t.boolean "has_many_quotes", default: false
+    t.index "EXTRACT(year FROM start_date)", name: "index_cost_centers_on_start_date_year"
     t.index ["contact_id"], name: "index_cost_centers_on_contact_id"
     t.index ["created_at"], name: "index_cost_centers_on_created_at"
     t.index ["customer_id"], name: "index_cost_centers_on_customer_id"
@@ -236,6 +239,7 @@ ActiveRecord::Schema.define(version: 2026_02_18_000002) do
     t.string "number_invoice"
     t.float "engineering_value", default: 0.0
     t.float "others_value", default: 0.0
+    t.index "EXTRACT(year FROM invoice_date)", name: "index_customer_invoices_on_invoice_date_year"
     t.index ["cost_center_id"], name: "index_customer_invoices_on_cost_center_id"
     t.index ["sales_order_id"], name: "index_customer_invoices_on_sales_order_id"
   end
@@ -324,6 +328,8 @@ ActiveRecord::Schema.define(version: 2026_02_18_000002) do
     t.datetime "updated_at", null: false
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index "EXTRACT(year FROM sales_date)", name: "index_materials_on_sales_date_year"
+    t.index "EXTRACT(year FROM sales_date), EXTRACT(month FROM sales_date)", name: "index_materials_on_sales_date_year_month"
     t.index ["cost_center_id"], name: "index_materials_on_cost_center_id"
   end
 
@@ -480,6 +486,8 @@ ActiveRecord::Schema.define(version: 2026_02_18_000002) do
     t.float "value_displacement_hours"
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index "EXTRACT(year FROM report_date)", name: "index_reports_on_report_date_year"
+    t.index "EXTRACT(year FROM report_date), EXTRACT(month FROM report_date)", name: "index_reports_on_report_date_year_month"
     t.index ["contact_id"], name: "index_reports_on_contact_id"
     t.index ["cost_center_id"], name: "index_reports_on_cost_center_id"
     t.index ["customer_id"], name: "index_reports_on_customer_id"
