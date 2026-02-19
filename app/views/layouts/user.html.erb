@@ -301,12 +301,12 @@
         <!-- Notifications as menu items -->
         <% if current_user.rol.name == "Administrador" %>
           <div class="sidebar-footer__notifications">
-            <% if get_register_edit.any? %>
+            <% if get_register_edit_any? %>
               <div class="dropdown">
                 <a class="sidebar-footer__notif-item dropdown-toggle" href="#" data-toggle="dropdown">
                   <i class="fas fa-edit"></i>
                   <span class="sidebar-footer__notif-text">Ediciones</span>
-                  <span class="sidebar-footer__notif-badge"><%= get_register_edit.count %></span>
+                  <span class="sidebar-footer__notif-badge"><%= get_register_edit_count %></span>
                 </a>
                 <ul class="notification-panel dropdown-menu dropdown-menu-right">
                   <li class="notification-panel__header">
@@ -314,7 +314,7 @@
                     <span>Ediciones Recientes</span>
                   </li>
                   <div class="notification-panel__content">
-                    <% get_register_edit.first(4).each do |notification| %>
+                    <% get_register_edit.each do |notification| %>
                       <li>
                         <a class="notification-panel__item" href="/notifications?from=<%= notification.id %>">
                           <div class="notification-panel__icon notification-panel__icon--edit">
@@ -335,12 +335,12 @@
               </div>
             <% end %>
 
-            <% if get_notification_alert.any? %>
+            <% if get_notification_alert_any? %>
               <div class="dropdown">
                 <a class="sidebar-footer__notif-item sidebar-footer__notif-item--warning dropdown-toggle" href="#" data-toggle="dropdown">
                   <i class="fas fa-bell"></i>
                   <span class="sidebar-footer__notif-text">Alertas</span>
-                  <span class="sidebar-footer__notif-badge sidebar-footer__notif-badge--warning"><%= get_notification_alert.count %></span>
+                  <span class="sidebar-footer__notif-badge sidebar-footer__notif-badge--warning"><%= get_notification_alert_count %></span>
                 </a>
                 <ul class="notification-panel dropdown-menu dropdown-menu-right">
                   <li class="notification-panel__header notification-panel__header--warning">
@@ -348,7 +348,7 @@
                     <span>Alertas</span>
                   </li>
                   <div class="notification-panel__content">
-                    <% get_notification_alert.first(4).each do |notification| %>
+                    <% get_notification_alert.each do |notification| %>
                       <li>
                         <a class="notification-panel__item" href="/notification_alerts?from=<%= notification.id %>">
                           <div class="notification-panel__icon notification-panel__icon--warning">

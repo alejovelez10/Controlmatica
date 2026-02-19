@@ -20,6 +20,7 @@
 | `add_indexes_to_report_expenses` | report_expenses | `cost_center_id`, `invoice_date`, `invoice_id` |
 | `add_indexes_to_sales_orders` | sales_orders | `cost_center_id`, `user_id`, `start_date`, `state` |
 | **`add_year_expression_indexes`** | **Múltiples** | **Índices de expresión para EXTRACT(YEAR/MONTH)** |
+| `add_indexes_to_notifications` | register_edits, notification_alerts | `state`, compuestos `[state, created_at]`, `[state, date_update]` |
 
 ### 1.2 Índices de Expresión (Críticos para Performance)
 
@@ -49,6 +50,7 @@ index_customer_invoices_on_invoice_date_year
 | `home_controller` | `index_user` | 5 queries | 2 queries |
 | `reports_controller` | `get_informes` | 72+ queries | ~6 queries |
 | `application_controller` | Menú permisos | ~50 queries/request | 1 query |
+| `layout (user.html.erb)` | Notificaciones | 6 queries/page | 2 queries |
 
 ### 1.4 Fix de Memory Bloat
 

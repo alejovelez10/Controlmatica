@@ -228,12 +228,52 @@ module ApplicationHelper
     CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO")
   end
 
+  # Memoizado para evitar múltiples queries en el layout
+  # Retorna hash con :records (max 4) y :count
+  def get_register_edit_data
+    @_register_edit_data ||= begin
+      relation = RegisterEdit.where(state: "pending")
+      {
+        records: relation.order(created_at: :desc).limit(4).load,
+        count: relation.count
+      }
+    end
+  end
+
   def get_register_edit
-    RegisterEdit.where(state: "pending").order(created_at: :desc)
+    get_register_edit_data[:records]
+  end
+
+  def get_register_edit_count
+    get_register_edit_data[:count]
+  end
+
+  def get_register_edit_any?
+    get_register_edit_data[:count] > 0
+  end
+
+  # Memoizado para evitar múltiples queries en el layout
+  # Retorna hash con :records (max 4) y :count
+  def get_notification_alert_data
+    @_notification_alert_data ||= begin
+      relation = NotificationAlert.where(state: false)
+      {
+        records: relation.order(date_update: :desc).limit(4).load,
+        count: relation.count
+      }
+    end
   end
 
   def get_notification_alert
-    NotificationAlert.where(state: false).order(date_update: :desc)
+    get_notification_alert_data[:records]
+  end
+
+  def get_notification_alert_count
+    get_notification_alert_data[:count]
+  end
+
+  def get_notification_alert_any?
+    get_notification_alert_data[:count] > 0
   end
 
   def get_date(fecha)
