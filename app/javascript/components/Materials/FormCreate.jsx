@@ -30,9 +30,14 @@ const FormCreate = (props) => {
   const form = props.formValues;
   const errors = props.errors || [];
   const saving = props.isLoading;
-  const isNew = props.modalMode === "new";
-  const title = isNew ? "Nuevo Material" : "Editar Material";
+  const isNew = !props.modeEdit;
+  const title = props.titulo || (isNew ? "Nuevo Material" : "Editar Material");
   const hasCostCenter = props.cost_center_id != null && props.cost_center_id !== undefined;
+
+  // Convertir providers a formato de react-select si es necesario
+  const providerOptions = (props.providerOptions || props.providers || []).map((p) =>
+    p.label ? p : { label: p.name, value: p.id }
+  );
 
   const handleCostCenterInputChange = useCallback((inputValue, { action }) => {
     if (action !== "input-change") return;
@@ -69,10 +74,15 @@ const FormCreate = (props) => {
       <div className="cm-modal cm-modal-lg">
         {/* Header */}
         <div className="cm-modal-header">
-          <h2 className="cm-modal-title">
-            <i className="fas fa-boxes" style={{ marginRight: "10px", color: "#f5a623" }} />
-            {title}
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(245, 166, 35, 0.3)" }}>
+              <i className="fas fa-boxes" style={{ color: "#fff", fontSize: 18 }} />
+            </div>
+            <div>
+              <h2 className="cm-modal-title">{title}</h2>
+              <p style={{ margin: 0, fontSize: 12, color: "#6b7280" }}>Complete los datos del material</p>
+            </div>
+          </div>
           <button className="cm-modal-close" onClick={props.toggle}>
             <i className="fas fa-times" />
           </button>
@@ -101,15 +111,19 @@ const FormCreate = (props) => {
             {/* Proveedor */}
             <div className="cm-form-group">
               <label className="cm-label">
-                <i className="fas fa-truck" /> Proveedor
+                <i className="fas fa-truck" style={{ marginRight: 6, color: "#6b7280" }} /> Proveedor
               </label>
               <Select
-                options={props.providerOptions}
-                value={props.selectedProvider}
-                onChange={props.onChangeAutocompleteProvider}
+                options={providerOptions}
+                value={providerOptions.find((p) => p.value === form.provider_id) || null}
+                onChange={(opt) => {
+                  const e = { target: { name: "provider_id", value: opt ? opt.value : "" } };
+                  props.onChangeForm(e);
+                }}
                 placeholder="Seleccione proveedor"
                 styles={selectStyles}
                 menuPortalTarget={document.body}
+                isClearable
               />
             </div>
 
@@ -117,7 +131,7 @@ const FormCreate = (props) => {
             {!hasCostCenter && (
               <div className="cm-form-group">
                 <label className="cm-label">
-                  <i className="fas fa-building" /> Centro de Costo{" "}
+                  <i className="fas fa-building" style={{ marginRight: 6, color: "#6b7280" }} /> Centro de Costo{" "}
                   <span style={{ fontSize: "11px", color: "#888", fontWeight: "normal" }}>
                     (escribe al menos 3 letras)
                   </span>
@@ -139,7 +153,7 @@ const FormCreate = (props) => {
             {/* Fecha de Orden */}
             <div className="cm-form-group">
               <label className="cm-label">
-                <i className="fas fa-calendar-alt" /> Fecha de Orden
+                <i className="fas fa-calendar-alt" style={{ marginRight: 6, color: "#6b7280" }} /> Fecha de Orden
               </label>
               <input
                 type="date"
@@ -153,7 +167,7 @@ const FormCreate = (props) => {
             {/* Numero de Orden */}
             <div className="cm-form-group">
               <label className="cm-label">
-                <i className="fas fa-hashtag" /> Numero de Orden
+                <i className="fas fa-hashtag" style={{ marginRight: 6, color: "#6b7280" }} /> Numero de Orden
               </label>
               <input
                 type="text"
@@ -168,7 +182,7 @@ const FormCreate = (props) => {
             {/* Valor */}
             <div className="cm-form-group">
               <label className="cm-label">
-                <i className="fas fa-dollar-sign" /> Valor
+                <i className="fas fa-dollar-sign" style={{ marginRight: 6, color: "#6b7280" }} /> Valor
               </label>
               <NumberFormat
                 name="amount"
@@ -184,7 +198,7 @@ const FormCreate = (props) => {
             {/* Fecha Entrega */}
             <div className="cm-form-group">
               <label className="cm-label">
-                <i className="fas fa-calendar-check" /> Fecha Entrega
+                <i className="fas fa-calendar-check" style={{ marginRight: 6, color: "#6b7280" }} /> Fecha Entrega
               </label>
               <input
                 type="date"
@@ -198,7 +212,7 @@ const FormCreate = (props) => {
             {/* Estado */}
             <div className="cm-form-group">
               <label className="cm-label">
-                <i className="fas fa-flag" /> Estado
+                <i className="fas fa-flag" style={{ marginRight: 6, color: "#6b7280" }} /> Estado
               </label>
               <select
                 className="cm-input"
@@ -218,7 +232,7 @@ const FormCreate = (props) => {
           {/* Descripcion - full width */}
           <div className="cm-form-group" style={{ marginTop: "16px" }}>
             <label className="cm-label">
-              <i className="fas fa-align-left" /> Descripcion
+              <i className="fas fa-align-left" style={{ marginRight: 6, color: "#6b7280" }} /> Descripcion
             </label>
             <textarea
               className="cm-input"
@@ -295,11 +309,9 @@ const FormCreate = (props) => {
 
         .cm-modal-title {
           margin: 0;
-          font-size: 20px;
+          font-size: 18px;
           font-weight: 600;
-          color: #333;
-          display: flex;
-          align-items: center;
+          color: #1a1a2e;
         }
 
         .cm-modal-close {
@@ -353,17 +365,15 @@ const FormCreate = (props) => {
         .cm-label {
           font-size: 13px;
           font-weight: 400;
-          color: #555;
+          color: #374151;
           margin-bottom: 6px;
           display: flex;
           align-items: center;
-          gap: 6px;
         }
 
         .cm-label i {
-          color: #f5a623;
-          width: 16px;
-          text-align: center;
+          color: #6b7280;
+          font-size: 12px;
         }
 
         .cm-input {

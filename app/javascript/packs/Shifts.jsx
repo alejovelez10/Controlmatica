@@ -8,7 +8,7 @@ import Swal from "sweetalert2";
 const Shifts = (props) => {
     const date = new Date()
     const start_date = `${date.getFullYear()}-${date.getUTCMonth() + 1}-${date.getUTCDate()}T${date.getHours()}:${date.getMinutes()}`
-    
+
     const [data, setData] = useState([]);
     const [isLoaded, setIsLoaded] = useState(true);
     const token = document.querySelector("[name='csrf-token']").content;
@@ -16,6 +16,10 @@ const Shifts = (props) => {
 
     const [str_label, setStrLabel] = useState("");
     const [errors_create, setErrorsCreate] = useState([]);
+
+    // AJAX cost center search state
+    const [costCenterOptions, setCostCenterOptions] = useState([]);
+    const [costCenterLoading, setCostCenterLoading] = useState(false);
 
 
     const [defaultValues, setDefaultValues] = useState([]);
@@ -269,6 +273,30 @@ const Shifts = (props) => {
         setSelectedOptionUser(selectedOptionUser);
     }
 
+    // AJAX search for cost centers
+    const handleCostCenterSearch = (inputValue) => {
+        if (inputValue.length < 2) {
+            setCostCenterOptions([]);
+            return;
+        }
+        setCostCenterLoading(true);
+        fetch(`/shifts/search_cost_centers?q=${encodeURIComponent(inputValue)}`, {
+            method: 'GET',
+            headers: {
+                "X-CSRF-Token": token,
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            setCostCenterOptions(data);
+            setCostCenterLoading(false);
+        })
+        .catch(() => {
+            setCostCenterLoading(false);
+        });
+    };
+
     const handleChangeAutocompleteMulti = selectedOptionMulti => {
         let array = []
 
@@ -346,7 +374,9 @@ const Shifts = (props) => {
 
                     selectedOptionCostCenter={selectedOptionCostCenter}
                     handleChangeAutocompleteCostCenter={handleChangeAutocompleteCostCenter}
-                    cost_centers={props.cost_centers}
+                    cost_centers={costCenterOptions}
+                    onCostCenterSearch={handleCostCenterSearch}
+                    costCenterLoading={costCenterLoading}
 
                     selectedOptionUser={selectedOptionUser}
                     handleChangeAutocompleteUser={handleChangeAutocompleteUser}
@@ -368,7 +398,6 @@ const Shifts = (props) => {
                     handleClickFilter={handleClickFilter}
                     closeFilter={closeFilter}
                     users={props.users}
-                    cost_centers={props.cost_centers}
                 />
             )}
 

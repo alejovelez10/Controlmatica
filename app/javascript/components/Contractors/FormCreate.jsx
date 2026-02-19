@@ -54,11 +54,20 @@ const styles = {
     color: "#fff",
     fontSize: "18px",
   },
+  titleContainer: {
+    display: "flex",
+    flexDirection: "column",
+  },
   title: {
-    fontSize: "1.25rem",
+    fontSize: "1.125rem",
     fontWeight: "600",
     color: "#1a1a2e",
     margin: "0",
+  },
+  subtitle: {
+    fontSize: "12px",
+    color: "#6b7280",
+    margin: "2px 0 0 0",
   },
   closeBtn: {
     background: "none",
@@ -211,7 +220,10 @@ class FormCreate extends React.Component {
             <div style={styles.iconCircle}>
               <i className="fas fa-tools" style={styles.iconCircleIcon} />
             </div>
-            <h5 style={styles.title}>{p.titulo}</h5>
+            <div style={styles.titleContainer}>
+              <h5 style={styles.title}>{p.titulo}</h5>
+              <p style={styles.subtitle}>Complete los datos del registro tablerista</p>
+            </div>
           </div>
           <button style={styles.closeBtn} onClick={p.toggle}>
             <i className="fas fa-times" />
@@ -269,7 +281,7 @@ class FormCreate extends React.Component {
                 options={p.users}
                 autoFocus={false}
                 value={p.formAutocompleteUsers}
-                placeholder="Seleccionar usuario"
+                placeholder="Realizado por"
                 styles={{
                   ...selectStyles,
                   control: (base, state) => ({
@@ -283,42 +295,45 @@ class FormCreate extends React.Component {
               />
             </div>
 
-            <div style={styles.formGroup}>
-              <input
-                type="hidden"
-                name="cost_center_id"
-                value={p.formAutocompleteCentro ? p.formAutocompleteCentro.value : ""}
-              />
-              <label style={styles.label}>
-                <i className="fas fa-building" style={styles.labelIcon} /> Centro de costo{" "}
-                <span style={styles.hint}>(escribe al menos 3 letras)</span>{" "}
-                <span style={styles.required}>*</span>
-              </label>
-              <Select
-                onChange={p.onChangeAutocompleteCentro}
-                onInputChange={this.handleCostCenterInputChange}
-                options={this.state.costCenterOptions}
-                isLoading={this.state.isLoadingCostCenter}
-                autoFocus={false}
-                value={p.formAutocompleteCentro}
-                placeholder="Centro de costos"
-                styles={{
-                  ...selectStyles,
-                  control: (base, state) => ({
-                    ...selectStyles.control(base, state),
-                    ...(p.errorValues === false && p.formValues.cost_center_id === ""
-                      ? { borderColor: "#dc3545", boxShadow: "0 0 0 3px rgba(220, 53, 69, 0.15)" }
-                      : {}),
-                  }),
-                }}
-                menuPortalTarget={document.body}
-                noOptionsMessage={() =>
-                  this.state.costCenterInputValue.length < 3
-                    ? "Escribe al menos 3 letras para buscar"
-                    : "No se encontraron resultados"
-                }
-              />
-            </div>
+            {/* Centro de costo - Solo mostrar si NO viene con cost_center_id predefinido */}
+            {!p.cost_center_id && (
+              <div style={styles.formGroup}>
+                <input
+                  type="hidden"
+                  name="cost_center_id"
+                  value={p.formAutocompleteCentro ? p.formAutocompleteCentro.value : ""}
+                />
+                <label style={styles.label}>
+                  <i className="fas fa-building" style={styles.labelIcon} /> Centro de costo{" "}
+                  <span style={styles.hint}>(escribe al menos 3 letras)</span>{" "}
+                  <span style={styles.required}>*</span>
+                </label>
+                <Select
+                  onChange={p.onChangeAutocompleteCentro}
+                  onInputChange={this.handleCostCenterInputChange}
+                  options={this.state.costCenterOptions}
+                  isLoading={this.state.isLoadingCostCenter}
+                  autoFocus={false}
+                  value={p.formAutocompleteCentro}
+                  placeholder="Centro de costos"
+                  styles={{
+                    ...selectStyles,
+                    control: (base, state) => ({
+                      ...selectStyles.control(base, state),
+                      ...(p.errorValues === false && p.formValues.cost_center_id === ""
+                        ? { borderColor: "#dc3545", boxShadow: "0 0 0 3px rgba(220, 53, 69, 0.15)" }
+                        : {}),
+                    }),
+                  }}
+                  menuPortalTarget={document.body}
+                  noOptionsMessage={() =>
+                    this.state.costCenterInputValue.length < 3
+                      ? "Escribe al menos 3 letras para buscar"
+                      : "No se encontraron resultados"
+                  }
+                />
+              </div>
+            )}
           </div>
 
           <div style={styles.formGroup}>

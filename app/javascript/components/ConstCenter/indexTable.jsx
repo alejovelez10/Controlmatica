@@ -35,7 +35,7 @@ class indexTable extends React.Component {
       // Server pagination state
       serverMeta: {
         page: 1,
-        per_page: 50,
+        per_page: 30,
         total: 0,
         total_pages: 1,
       },

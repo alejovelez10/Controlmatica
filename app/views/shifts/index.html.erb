@@ -7,4 +7,4 @@
 %>
  
 <%= javascript_pack_tag 'Shifts' %> 
-<%= react_component('Shifts', cost_centers: get_cost_center_select, users: get_users_select, microsoft_auth: microsoft_auth, current_user_name: current_user.names) %>
+<%= react_component('Shifts', users: get_users_select, microsoft_auth: microsoft_auth, current_user_name: current_user.names) %>

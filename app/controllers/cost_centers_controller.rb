@@ -69,7 +69,7 @@ class CostCentersController < ApplicationController
     permissions = load_permissions("Centro de Costos", "Ver todos")
     validate = permissions["Ver todos"]
 
-    per_page = [(params[:per_page] || 50).to_i, 100].min
+    per_page = [(params[:per_page] || 30).to_i, 100].min
     page = (params[:page] || 1).to_i
     sort_column = params[:sort_column].presence || "created_at"
     sort_direction = params[:sort_direction] == "asc" ? "asc" : "desc"
@@ -210,35 +210,35 @@ class CostCentersController < ApplicationController
     expense_sum = @cost_center.report_expenses.sum(:invoice_value)
     via_real = report_viatic_sum + expense_sum
 
-    porc_eje = @cost_center.eng_hours > 0 ? (((horas_eje.to_f / @cost_center.eng_hours)) * 100).round(1) : "N/A"
+    porc_eje = (@cost_center.eng_hours || 0) > 0 ? (((horas_eje.to_f / @cost_center.eng_hours)) * 100).round(1) : "N/A"
 
-    cotizado_desplazamiento = @cost_center.value_displacement_hours * @cost_center.displacement_hours
+    cotizado_desplazamiento = (@cost_center.value_displacement_hours || 0) * (@cost_center.displacement_hours || 0)
 
-    porc_desplazamiento = @cost_center.displacement_hours > 0 ? (((ejecutado_desplazamiento_horas.to_f / @cost_center.displacement_hours)) * 100).round(1) : "N/A"
+    porc_desplazamiento = (@cost_center.displacement_hours || 0) > 0 ? (((ejecutado_desplazamiento_horas.to_f / @cost_center.displacement_hours)) * 100).round(1) : "N/A"
     if !@cost_center.has_many_quotes
-      costo_en_dinero = (@cost_center.hour_cotizada * @cost_center.eng_hours).round(1) + cotizado_desplazamiento
+      costo_en_dinero = ((@cost_center.hour_cotizada || 0) * (@cost_center.eng_hours || 0)).round(1) + cotizado_desplazamiento
     else
       costo_en_dinero = @cost_center.quotations.sum(:engineering_value) + cotizado_desplazamiento
     end
-    costo_real_en_dinero = (@cost_center.hour_real * horas_eje).to_i + ejecutado_desplazamiento
+    costo_real_en_dinero = ((@cost_center.hour_real || 0) * horas_eje).to_i + ejecutado_desplazamiento
     porc_eje_costo = costo_en_dinero > 0 ? (((1 - (costo_real_en_dinero.to_f / costo_en_dinero)) * 100)).round(1) : "N/A"
 
     hours_eje_contractor = @cost_center.contractors.sum(:hours)
     facturacion = @cost_center.customer_invoices.sum(:invoice_value)
 
-    porc_eje_contractor = @cost_center.hours_contractor > 0 ? (((hours_eje_contractor.to_f / @cost_center.hours_contractor)) * 100).round(1) : "N/A"
+    porc_eje_contractor = (@cost_center.hours_contractor || 0) > 0 ? (((hours_eje_contractor.to_f / @cost_center.hours_contractor)) * 100).round(1) : "N/A"
 
-    costo_real_en_dinero_contractor = (@cost_center.hours_contractor_real * hours_eje_contractor).round(1)
-    costo_en_dinero_contractor = (@cost_center.hours_contractor_invoices * @cost_center.hours_contractor).round(1)
+    costo_real_en_dinero_contractor = ((@cost_center.hours_contractor_real || 0) * hours_eje_contractor).round(1)
+    costo_en_dinero_contractor = ((@cost_center.hours_contractor_invoices || 0) * (@cost_center.hours_contractor || 0)).round(1)
 
     porc_eje_costo_contractor = costo_en_dinero_contractor > 0 ? (((1 - (costo_real_en_dinero_contractor.to_f / costo_en_dinero_contractor)) * 100)).round(1) : "N/A"
 
-    porc_via = via_cotizado > 0 ? ((via_real.to_f / via_cotizado) * 100).round(1) : "N/A"
+    porc_via = (via_cotizado || 0) > 0 ? ((via_real.to_f / via_cotizado) * 100).round(1) : "N/A"
 
-    porc_fac = @cost_center.quotation_value > 0 ? ((facturacion.to_f / @cost_center.quotation_value) * 100).round(1) : "N/A"
+    porc_fac = (@cost_center.quotation_value || 0) > 0 ? ((facturacion.to_f / @cost_center.quotation_value) * 100).round(1) : "N/A"
 
-    total_eje = @cost_center.hour_real * horas_eje
-    total_cot = @cost_center.hour_cotizada * horas_eje
+    total_eje = (@cost_center.hour_real || 0) * horas_eje
+    total_cot = (@cost_center.hour_cotizada || 0) * horas_eje
     total_margen = total_cot - total_eje
     porc_ejec = total_cot > 0 ? ((total_margen.to_f / total_cot) * 100).round(1) : "N/A"
 

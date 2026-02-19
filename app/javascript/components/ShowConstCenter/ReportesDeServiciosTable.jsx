@@ -70,8 +70,55 @@ class ReportesDeServiciosTable extends Component {
   HandleChange = (e) => { this.setState({ form: Object.assign({}, this.state.form, { [e.target.name]: e.target.value }) }); };
 
   toogle = (from) => {
-    if (from === "new") { this.setState({ modal: true }); this.clearValues(); }
-    else { this.setState({ modal: false }); this.clearValues(); }
+    if (from === "new") {
+      this.clearValues();
+      this.loadClienteContactoFromCostCenter();
+      this.setState({ modal: true });
+    } else {
+      this.setState({ modal: false });
+      this.clearValues();
+    }
+  };
+
+  loadClienteContactoFromCostCenter = () => {
+    var cc = this.props.cost_center;
+    var customerId = cc.customer_id || (cc.customer && cc.customer.id);
+    var contactId = cc.contact_id || (cc.contact && cc.contact.id);
+
+    if (customerId) {
+      // Buscar el nombre del cliente en props.clients
+      var clientOption = this.props.clients.find((c) => c.value === customerId || c.value === String(customerId));
+      var clientLabel = clientOption ? clientOption.label : "Cliente";
+
+      // Cargar contactos del cliente
+      fetch("/get_client/" + customerId)
+        .then((r) => r.json())
+        .then((data) => {
+          var arr = [];
+          data.forEach((item) => { arr.push({ label: item.name, value: item.id }); });
+
+          // Pre-llenar contacto si existe
+          var contactOption = contactId ? arr.find((c) => c.value === contactId || c.value === String(contactId)) : null;
+
+          this.setState({
+            dataContact: arr,
+            selectedOptionContact: contactOption
+              ? { contact_id: contactId, label: contactOption.label, value: contactId }
+              : { contact_id: "", label: "Seleccionar Contacto" },
+            form: Object.assign({}, this.state.form, {
+              contact_id: contactId || "",
+            }),
+          });
+        });
+
+      // Pre-llenar cliente
+      this.setState({
+        form: Object.assign({}, this.state.form, {
+          customer_id: customerId,
+        }),
+        selectedOption: { customer_id: customerId, label: clientLabel, value: customerId },
+      });
+    }
   };
 
   clearValues = () => {
@@ -85,6 +132,7 @@ class ReportesDeServiciosTable extends Component {
       selectedOption: { customer_id: "", label: "Buscar cliente" },
       selectedOptionContact: { contact_id: "", label: "Seleccionar Contacto" },
       selectedOptionCentro: { cost_center_id: "", label: "Centro de costo" },
+      dataContact: [],
     });
   };
 

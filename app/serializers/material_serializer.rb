@@ -67,6 +67,7 @@ class MaterialSerializer < ActiveModel::Serializer
   end
 
   def sum_material_invoices
-    object.material_invoices.sum(:value)
+    # Usar la asociación precargada en vez de hacer query SUM separada
+    object.material_invoices.map(&:value).compact.sum
   end
 end

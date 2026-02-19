@@ -182,32 +182,34 @@ class FormCreate extends React.Component {
               </div>
             )}
 
-            {/* Centro de costo - PRIMERO */}
-            <div style={{ marginBottom: "16px" }}>
-              <input type="hidden" name="cost_center_id" value={props.formAutocompleteCentro.value} />
-              <label style={labelStyle}>
-                <i className="fa fa-sitemap" style={labelIconStyle} />
-                Centro de costo <span style={{ color: "#888", fontWeight: "normal", fontSize: "12px" }}>(escribe al menos 3 letras)</span> <span style={{ color: "#dc3545" }}>*</span>
-              </label>
-              <Select
-                onChange={props.onChangeAutocompleteCentro}
-                onInputChange={this.handleCentroInputChange}
-                options={props.centro}
-                autoFocus={false}
-                styles={selectStyles}
-                menuPortalTarget={document.body}
-                isLoading={this.state.isCentroLoading}
-                value={props.formAutocompleteCentro}
-                placeholder="Buscar centro de costo..."
-                noOptionsMessage={() => this.state.centroSearchTerm.length < 3 ? "Escribe al menos 3 letras para buscar" : "No se encontraron resultados"}
-              />
-              {props.formValues.cost_center_id && (
-                <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "#28a745" }}>
-                  <i className="fa fa-check-circle" style={{ marginRight: "6px" }} />
-                  Cliente y contacto cargados automáticamente del centro de costo
-                </p>
-              )}
-            </div>
+            {/* Centro de costo - Solo mostrar si NO viene con cost_center_id predefinido */}
+            {!props.cost_center_id && (
+              <div style={{ marginBottom: "16px" }}>
+                <input type="hidden" name="cost_center_id" value={props.formAutocompleteCentro.value} />
+                <label style={labelStyle}>
+                  <i className="fa fa-sitemap" style={labelIconStyle} />
+                  Centro de costo <span style={{ color: "#888", fontWeight: "normal", fontSize: "12px" }}>(escribe al menos 3 letras)</span> <span style={{ color: "#dc3545" }}>*</span>
+                </label>
+                <Select
+                  onChange={props.onChangeAutocompleteCentro}
+                  onInputChange={this.handleCentroInputChange}
+                  options={props.centro}
+                  autoFocus={false}
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  isLoading={this.state.isCentroLoading}
+                  value={props.formAutocompleteCentro}
+                  placeholder="Buscar centro de costo..."
+                  noOptionsMessage={() => this.state.centroSearchTerm.length < 3 ? "Escribe al menos 3 letras para buscar" : "No se encontraron resultados"}
+                />
+                {props.formValues.cost_center_id && (
+                  <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "#28a745" }}>
+                    <i className="fa fa-check-circle" style={{ marginRight: "6px" }} />
+                    Cliente y contacto cargados automáticamente del centro de costo
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Cliente & Contacto - Se auto-llenan con el centro de costo */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
@@ -225,7 +227,7 @@ class FormCreate extends React.Component {
                   menuPortalTarget={document.body}
                   value={props.formAutocomplete}
                   placeholder="Seleccione cliente"
-                  isDisabled={!!props.formValues.cost_center_id}
+                  isDisabled={!!props.cost_center_id}
                 />
               </div>
 

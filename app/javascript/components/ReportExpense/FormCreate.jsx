@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import Select from "react-select";
+import { CmModal, CmButton } from "../../generalcomponents/ui";
 
 const selectStyles = {
   control: (base, state) => ({
@@ -74,20 +74,28 @@ class FormCreate extends Component {
     const costCenterLoading = this.props.costCenterLoading || false;
 
     return (
-      <React.Fragment>
-        <Modal
-          isOpen={this.props.modal}
-          toggle={this.props.toggle}
-          className="modal-dialog-centered modal-lg"
-          backdrop={this.props.backdrop}
-        >
-          <ModalHeader className="cm-modal-header" toggle={this.props.toggle}>
-            <i className="fa fa-receipt cm-header-icon"></i>
+      <CmModal
+        isOpen={this.props.modal}
+        toggle={this.props.toggle}
+        size="lg"
+        title={
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <i className="fa fa-receipt" style={{ color: "#f5a623" }}></i>
             {this.props.title}
-          </ModalHeader>
-
-          <form onSubmit={this.handleSubmit}>
-            <ModalBody className="cm-modal-body">
+          </div>
+        }
+        footer={
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+            <CmButton variant="outline" onClick={() => this.props.toggle()}>
+              <i className="fa fa-times"></i> Cancelar
+            </CmButton>
+            <CmButton variant="accent" onClick={this.props.submitForm}>
+              <i className="fa fa-save"></i> {this.props.nameBnt}
+            </CmButton>
+          </div>
+        }
+      >
+        <form onSubmit={this.handleSubmit}>
               {this.state.showMessage && (
                 <div className="alert alert-warning mb-3">
                   {this.state.message} copiado
@@ -385,51 +393,9 @@ class FormCreate extends Component {
                   Debes completar todos los campos requeridos
                 </div>
               )}
-            </ModalBody>
-
-            <ModalFooter className="cm-modal-footer">
-              <button
-                type="button"
-                className="cm-btn cm-btn-cancel"
-                onClick={() => this.props.toggle()}
-              >
-                <i className="fa fa-times"></i> Cancelar
-              </button>
-              <button
-                type="button"
-                className="cm-btn cm-btn-submit"
-                onClick={this.props.submitForm}
-              >
-                <i className="fa fa-save"></i> {this.props.nameBnt}
-              </button>
-            </ModalFooter>
-          </form>
-        </Modal>
+        </form>
 
         <style>{`
-          .cm-modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px 12px 0 0;
-            padding: 16px 24px;
-            border-bottom: none;
-          }
-          .cm-modal-header .close {
-            color: white;
-            opacity: 0.8;
-            text-shadow: none;
-          }
-          .cm-modal-header .close:hover {
-            opacity: 1;
-          }
-          .cm-header-icon {
-            margin-right: 10px;
-            font-size: 1.2em;
-          }
-          .cm-modal-body {
-            padding: 24px;
-            background: #fff;
-          }
           .cm-form-grid-1 {
             display: grid;
             grid-template-columns: 1fr;
@@ -461,14 +427,14 @@ class FormCreate extends Component {
           .cm-label {
             font-size: 13px;
             font-weight: 400;
-            color: #4a5568;
+            color: #374151;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 6px;
           }
           .cm-label i {
-            color: #718096;
+            color: #6b7280;
             font-size: 12px;
           }
           .cm-input {
@@ -479,6 +445,7 @@ class FormCreate extends Component {
             font-size: 14px;
             background: #fcfcfd;
             transition: all 0.2s ease;
+            box-sizing: border-box;
           }
           .cm-input:focus {
             outline: none;
@@ -490,7 +457,7 @@ class FormCreate extends Component {
             border-color: #f5a623;
           }
           .cm-input::placeholder {
-            color: #a0aec0;
+            color: #9ca3af;
           }
           .cm-textarea {
             resize: vertical;
@@ -499,11 +466,11 @@ class FormCreate extends Component {
           .cm-input-disabled {
             background: #edf2f7;
             cursor: not-allowed;
-            color: #718096;
+            color: #6b7280;
           }
           .cm-field-hint {
             font-size: 12px;
-            color: #718096;
+            color: #6b7280;
             margin-top: 4px;
           }
           .cm-divider {
@@ -512,60 +479,23 @@ class FormCreate extends Component {
             margin: 20px 0;
           }
           .cm-error-message {
-            background: #fff5f5;
-            border: 1px solid #fc8181;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
             border-radius: 8px;
             padding: 12px 16px;
-            color: #c53030;
+            color: #dc2626;
             font-size: 14px;
             margin-top: 16px;
             display: flex;
             align-items: center;
             gap: 8px;
           }
-          .cm-modal-footer {
-            background: #fcfcfd;
-            border-top: 1px solid #e2e5ea;
-            padding: 16px 24px;
-            border-radius: 0 0 12px 12px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-          }
-          .cm-btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: none;
-          }
-          .cm-btn-cancel {
-            background: #fff;
-            color: #4a5568;
-            border: 1px solid #e2e5ea;
-          }
-          .cm-btn-cancel:hover {
-            background: #f7fafc;
-            border-color: #cbd5e0;
-          }
-          .cm-btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-          }
-          .cm-btn-submit:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-          }
           .error-class {
-            border-color: #fc8181 !important;
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important;
           }
         `}</style>
-      </React.Fragment>
+      </CmModal>
     );
   }
 }

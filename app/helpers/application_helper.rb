@@ -196,6 +196,9 @@ module ApplicationHelper
     end
   end
 
+  # DEPRECATED: Este método cargaba TODOS los centros de costo, causando problemas de rendimiento.
+  # Los componentes React ahora usan búsqueda AJAX via /search_cost_centers o /shifts/search_cost_centers.
+  # Este método puede ser eliminado en una versión futura.
   def get_cost_center_select
     cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO")
     cost_centers.collect do |cost_center|

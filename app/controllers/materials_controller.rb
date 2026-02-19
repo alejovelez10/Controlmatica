@@ -21,7 +21,7 @@ class MaterialsController < ApplicationController
   end
 
   def get_materials
-    materials = Material.all.includes(:cost_center, :provider)
+    materials = Material.all.includes(:cost_center, :provider, :user, :last_user_edited, :material_invoices)
 
     if params[:search].present?
       term = "%#{params[:search].downcase}%"

@@ -87,7 +87,7 @@ class OrdenesDeCompraTable extends Component {
 
     var url = this.state.purchase_order_id ? "/sales_orders/" + this.state.purchase_order_id : "/sales_orders";
     var method = this.state.purchase_order_id ? "PATCH" : "POST";
-    fetch(url, { method: method, body: formData, headers: {} })
+    fetch(url, { method: method, body: formData, headers: { "X-CSRF-Token": csrfToken() } })
       .then((r) => r.json())
       .then(() => { self.setState({ modal: false }); self.loadData(); self.clearValues(); });
   };

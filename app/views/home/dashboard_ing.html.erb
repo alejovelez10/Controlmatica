@@ -7,5 +7,5 @@
 %>
 
 <%= javascript_pack_tag 'InformeIng' %> 
-<%= react_component('InformeIng', cost_centers: get_cost_center_select, current_user: [{ label: current_user.names, value: current_user.id }], users_select: get_users_select, usuario: current_user, users: get_users_rol, microsoft_auth: microsoft_auth, rol: current_user.rol , current_user_id: current_user.id , current_user_name: (current_user.names), ver_todos: authorization_tablero_user, current_tab: params[:tab]) %>
+<%= react_component('InformeIng', current_user: [{ label: current_user.names, value: current_user.id }], users_select: get_users_select, usuario: current_user, users: get_users_rol, microsoft_auth: microsoft_auth, rol: current_user.rol , current_user_id: current_user.id , current_user_name: (current_user.names), ver_todos: authorization_tablero_user, current_tab: params[:tab]) %>
 
