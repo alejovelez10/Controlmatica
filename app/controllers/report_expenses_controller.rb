@@ -5,31 +5,24 @@ class ReportExpensesController < ApplicationController
   include ApplicationHelper
 
   def index
-    report_expense = ModuleControl.find_by_name("Gastos")
-    is_admin = current_user.rol.name == "Administrador"
-
-    # Una sola query para obtener todos los permisos
-    permission_names = current_user.rol.accion_modules
-      .where(module_control_id: report_expense.id)
-      .pluck(:name)
-
+    # Usar helpers memoizados - evita query de ModuleControl y accion_modules (785ms -> ~0ms)
     @estados = {
-      create: is_admin || permission_names.include?("Crear"),
-      edit: is_admin || permission_names.include?("Editar"),
-      delete: is_admin || permission_names.include?("Eliminar"),
-      closed: is_admin || permission_names.include?("Aceptar gasto"),
-      export: is_admin || permission_names.include?("Exportar a excel"),
-      show_user: is_admin || permission_names.include?("Cambiar responsable"),
+      create: is_admin? || has_menu_permission?("Gastos", "Crear"),
+      edit: is_admin? || has_menu_permission?("Gastos", "Editar"),
+      delete: is_admin? || has_menu_permission?("Gastos", "Eliminar"),
+      closed: is_admin? || has_menu_permission?("Gastos", "Aceptar gasto"),
+      export: is_admin? || has_menu_permission?("Gastos", "Exportar a excel"),
+      show_user: is_admin? || has_menu_permission?("Gastos", "Cambiar responsable"),
     }
   end
 
   def indicators_expenses
-    @validate = (current_user.rol.name == "Administrador" ? true : false)
+    @validate = is_admin?
   end
 
   def get_report_expenses
-    report_expense = ModuleControl.find_by_name("Gastos")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id, name: "Ver todos").exists?
+    # Usar helper memoizado para evitar queries de permisos (581ms -> ~0ms)
+    show_all = is_admin? || has_menu_permission?("Gastos", "Ver todos")
 
     # Base query con includes para evitar N+1
     base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user)
@@ -126,8 +119,8 @@ class ReportExpensesController < ApplicationController
   end
 
   def update_filter_values
-    report_expense = ModuleControl.find_by_name("Gastos")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
+    # Usar helper memoizado para evitar queries de permisos
+    show_all = is_admin? || has_menu_permission?("Gastos", "Ver todos")
 
     if show_all
       report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
@@ -194,9 +187,8 @@ class ReportExpensesController < ApplicationController
   end
 
   def download_file
-    centro = ModuleControl.find_by_name("Gastos")
-    estado = current_user.rol.accion_modules.where(module_control_id: centro.id).where(name: "Ver todos").exists?
-    validate = (current_user.rol.name == "Administrador" ? true : estado)
+    # Usar helper memoizado para evitar queries de permisos
+    validate = is_admin? || has_menu_permission?("Gastos", "Ver todos")
     if validate
       if params[:type] == "filtro"
         @items = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
@@ -311,6 +303,11 @@ class ReportExpensesController < ApplicationController
   end
 
   private
+
+  # Memoizado para evitar queries repetidas de rol (204ms -> ~0ms)
+  def is_admin?
+    @_is_admin ||= current_user.rol.name == "Administrador"
+  end
 
   def report_expense_find
     @report_expense = ReportExpense.find(params[:id])

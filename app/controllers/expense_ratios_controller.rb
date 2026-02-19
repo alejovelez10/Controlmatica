@@ -4,22 +4,27 @@ class ExpenseRatiosController < ApplicationController
 
     def index
         expense_ratio = ModuleControl.find_by_name("Relación de gastos")
+        is_admin = current_user.rol.name == "Administrador"
 
-        create = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Crear").exists?
-        edit = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Editar").exists?
-        delete = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Eliminar").exists?
-        pdf = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Ver pdf").exists?
-    
-        @estados = {      
-          create: (current_user.rol.name == "Administrador" ? true : create),
-          edit: (current_user.rol.name == "Administrador" ? true : edit),
-          delete: (current_user.rol.name == "Administrador" ? true : delete),
-          pdf: (current_user.rol.name == "Administrador" ? true : pdf),
+        # Una sola query para obtener todos los permisos
+        permission_names = current_user.rol.accion_modules
+          .where(module_control_id: expense_ratio.id)
+          .pluck(:name)
+
+        @estados = {
+          create: is_admin || permission_names.include?("Crear"),
+          edit: is_admin || permission_names.include?("Editar"),
+          delete: is_admin || permission_names.include?("Eliminar"),
+          pdf: is_admin || permission_names.include?("Ver pdf"),
         }
     end
 
     def pdf
-        @report_expenses = ReportExpense.where(user_invoice_id: @expense_ratio.user_report_id).where("invoice_date >= ?", @expense_ratio.start_date).where("invoice_date <= ?", @expense_ratio.end_date)
+        # Eager loading para evitar N+1 en la vista PDF
+        @report_expenses = ReportExpense
+          .includes(:cost_center, :user_invoice, :type_identification, :payment_type)
+          .where(user_invoice_id: @expense_ratio.user_report_id)
+          .where(invoice_date: @expense_ratio.start_date..@expense_ratio.end_date)
 
         respond_to do |format|
             #format.html
@@ -69,30 +74,37 @@ class ExpenseRatiosController < ApplicationController
 
     def get_expense_ratios
         expense_ratio = ModuleControl.find_by_name("Relación de gastos")
-        show_all = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id).where(name: "Ver todos").exists?
-        
-        if params[:user_direction_id] || params[:user_report_id] || params[:observations] || params[:start_date] || params[:end_date] || params[:creation_date] || params[:area] 
-            if show_all
-                expense_ratios = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).paginate(page: params[:page], :per_page => 10)
-                total = ExpenseRatio.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).count
-            else
-                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).paginate(page: params[:page], :per_page => 10)
-                total = ExpenseRatio.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).count
-            end
-        else
-            if show_all
-                expense_ratios = ExpenseRatio.all.paginate(page: params[:page], :per_page => 10)
-                total = ExpenseRatio.all.count
-            else
-                expense_ratios = ExpenseRatio.where(user_report_id: current_user.id).paginate(page: params[:page], :per_page => 10)
-                total = ExpenseRatio.where(user_report_id: current_user.id).count
-            end
+        show_all = current_user.rol.accion_modules.where(module_control_id: expense_ratio.id, name: "Ver todos").exists?
+        validation = current_user.rol.name == "Administrador" || show_all
+
+        # Base query con includes para evitar N+1 (el serializer usa user_report, user_direction, last_user_edited, user)
+        base_query = ExpenseRatio.includes(:user_report, :user_direction, :last_user_edited, :user)
+
+        # Filtrar por usuario si no tiene permiso de ver todos
+        base_query = base_query.where(user_report_id: current_user.id) unless validation
+
+        # Aplicar filtros de busqueda si hay parametros
+        has_filters = params[:user_direction_id].present? || params[:user_report_id].present? ||
+                      params[:observations].present? || params[:start_date].present? ||
+                      params[:end_date].present? || params[:creation_date].present? || params[:area].present?
+
+        if has_filters
+            base_query = base_query.search(
+                params[:user_direction_id], params[:user_report_id], params[:observations],
+                params[:start_date], params[:end_date], params[:creation_date], params[:area]
+            )
         end
 
+        # Obtener total antes de paginar (una sola query con count)
+        total = base_query.count
+
+        # Ordenar ANTES de paginar y paginar
+        expense_ratios = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+
         render json: {
-          data: ActiveModelSerializers::SerializableResource.new(expense_ratios.order(created_at: :desc), each_serializer: ExpenseRatioSerializer),
+          data: ActiveModelSerializers::SerializableResource.new(expense_ratios, each_serializer: ExpenseRatioSerializer),
           total: total
-        }   
+        }
     end
     
     def create

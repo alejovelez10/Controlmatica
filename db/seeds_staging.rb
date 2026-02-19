@@ -934,3 +934,138 @@ puts ""
 puts "Para ejecutar en staging:"
 puts "  heroku run rails runner db/seeds_staging.rb -a tu-app-staging"
 puts ""
+
+# ============================================
+# 17. COMISIONES - 30
+# ============================================
+
+puts "Creando 30 comisiones..."
+
+observaciones_comision = [
+  "Comisión por gestión de proyecto de automatización",
+  "Comisión por cierre de venta de equipos industriales",
+  "Comisión por servicio técnico especializado",
+  "Comisión por mantenimiento preventivo programado",
+  "Comisión por instalación de sistema SCADA",
+  "Comisión por puesta en marcha de variadores",
+  "Comisión por programación de PLC",
+  "Comisión por calibración de instrumentos",
+  "Comisión por soporte técnico en planta",
+  "Comisión por capacitación de personal técnico",
+  "Comisión por diseño de tablero de control",
+  "Comisión por integración de sistemas",
+  "Comisión por consultoría en automatización",
+  "Comisión por venta de materiales eléctricos",
+  "Comisión por proyecto de eficiencia energética"
+]
+
+customer_invoice_ids = CustomerInvoice.pluck(:id)
+customer_report_ids = CustomerReport.pluck(:id)
+
+existing_commissions = Commission.count
+if existing_commissions < 30
+  (30 - existing_commissions).times do |i|
+    start_dt = Date.today - rand(30..365)
+    end_dt = start_dt + rand(7..60)
+    hours = rand(10..160).to_f
+    value_hour = rand(40_000..150_000).to_f
+    cc_id = cost_center_ids.sample
+    ci_id = customer_invoice_ids.sample
+    cr_id = customer_report_ids.sample
+
+    commission = Commission.new(
+      user_id: user_id,
+      user_invoice_id: user_ids.sample,
+      start_date: start_dt,
+      end_date: end_dt,
+      customer_invoice_id: ci_id,
+      observation: observaciones_comision.sample,
+      hours_worked: hours,
+      value_hour: value_hour,
+      is_acepted: [true, false].sample,
+      last_user_edited_id: user_ids.sample,
+      cost_center_id: cc_id,
+      customer_report_id: cr_id
+    )
+    commission.save(validate: false)
+  end
+end
+puts "✓ #{Commission.count} comisiones"
+
+# ============================================
+# 18. RELACIONES DE COMISIONES - 50
+# ============================================
+
+puts "Creando 50 relaciones de comisiones..."
+
+areas_comision = [
+  "Operaciones", "Administración", "Proyectos", "Ventas", "Mantenimiento",
+  "Ingeniería", "Soporte Técnico", "Automatización", "Control", "Supervisión"
+]
+
+observaciones_relacion = [
+  "Relación de comisiones del período mensual",
+  "Consolidado de comisiones por proyecto",
+  "Comisiones por servicios técnicos realizados",
+  "Relación de comisiones de ventas",
+  "Comisiones por mantenimiento preventivo",
+  "Consolidado de comisiones de ingeniería",
+  "Relación de comisiones por capacitaciones",
+  "Comisiones por soporte técnico en sitio",
+  "Consolidado de comisiones por instalaciones",
+  "Relación de comisiones por consultoría"
+]
+
+existing_commission_relations = CommissionRelation.count
+if existing_commission_relations < 50
+  (50 - existing_commission_relations).times do |i|
+    start_dt = Date.today - rand(30..365)
+    end_dt = start_dt + rand(7..60)
+    creation_dt = start_dt - rand(1..7)
+
+    commission_relation = CommissionRelation.new(
+      creation_date: creation_dt,
+      user_report_id: user_ids.sample,
+      start_date: start_dt,
+      end_date: end_dt,
+      area: areas_comision.sample,
+      observations: "#{observaciones_relacion.sample} - #{start_dt.strftime('%B %Y')}",
+      user_direction_id: user_ids.sample,
+      last_user_edited_id: user_ids.sample,
+      user_id: user_id
+    )
+    commission_relation.save(validate: false)
+  end
+end
+puts "✓ #{CommissionRelation.count} relaciones de comisiones"
+
+# ============================================
+# RESUMEN FINAL ACTUALIZADO
+# ============================================
+
+puts ""
+puts "============================================"
+puts " SEED STAGING COMPLETADO (ACTUALIZADO)"
+puts "============================================"
+puts " Roles:               #{Rol.count}"
+puts " Usuarios:            #{User.count}"
+puts " Clientes:            #{Customer.count}"
+puts " Proveedores:         #{Provider.count}"
+puts " Contactos:           #{Contact.count}"
+puts " Centros Costo:       #{CostCenter.count}"
+puts " Tipos Gastos:        #{ReportExpenseOption.count}"
+puts " Ordenes Compra:      #{SalesOrder.count}"
+puts " Tableristas:         #{Contractor.count}"
+puts " Materiales:          #{Material.count}"
+puts " Reportes:            #{Report.count}"
+puts " Reportes Cliente:    #{CustomerReport.count}"
+puts " Facturas Cliente:    #{CustomerInvoice.count}"
+puts " Turnos:              #{Shift.count}"
+puts " Reportes Gastos:     #{ReportExpense.count}"
+puts " Relaciones Gastos:   #{ExpenseRatio.count}"
+puts " Alertas:             #{Alert.count rescue 'N/A'}"
+puts " Notif. Alertas:      #{NotificationAlert.count}"
+puts " Registros Edicion:   #{RegisterEdit.count}"
+puts " Comisiones:          #{Commission.count}"
+puts " Relac. Comisiones:   #{CommissionRelation.count}"
+puts "============================================"

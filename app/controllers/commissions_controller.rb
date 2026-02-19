@@ -1,62 +1,57 @@
 class CommissionsController < ApplicationController
   before_action :authenticate_user!
   before_action :commission_find, only: [:update, :destroy]
+  include ApplicationHelper
 
   def index
-    report_expense = ModuleControl.find_by_name("Comisiones")
+    module_control = ModuleControl.find_by_name("Comisiones")
+    is_admin = current_user.rol.name == "Administrador"
 
-    create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
-
-    accept_commission = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Aceptar comisión").exists?
-    export_exel = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Exportar a excel").exists?
-    change_responsible = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar responsable").exists?
-    change_value_hour = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Cambiar valor hora").exists?
-    edit_after_acepted = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar despues de aceptado").exists?
-    delete_after_acepted = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar despues de aceptado").exists?
-    force_hour = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Forzar horas").exists?
+    # Una sola query para obtener todos los permisos del modulo
+    permission_names = current_user.rol.accion_modules
+      .where(module_control_id: module_control.id)
+      .pluck(:name)
 
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      accept_commission: (current_user.rol.name == "Administrador" ? true : accept_commission),
-      export_exel: (current_user.rol.name == "Administrador" ? true : export_exel),
-      change_responsible: (current_user.rol.name == "Administrador" ? true : change_responsible),
-      edit_after_acepted: (current_user.rol.name == "Administrador" ? true : edit_after_acepted),
-      delete_after_acepted: (current_user.rol.name == "Administrador" ? true : delete_after_acepted),
-      change_value_hour: (current_user.rol.name == "Administrador" ? true : change_value_hour),
-      force_hour: (current_user.rol.name == "Administrador" ? true : force_hour),
-
-
+      create: is_admin || permission_names.include?("Crear"),
+      edit: is_admin || permission_names.include?("Editar"),
+      delete: is_admin || permission_names.include?("Eliminar"),
+      accept_commission: is_admin || permission_names.include?("Aceptar comisión"),
+      export_exel: is_admin || permission_names.include?("Exportar a excel"),
+      change_responsible: is_admin || permission_names.include?("Cambiar responsable"),
+      edit_after_acepted: is_admin || permission_names.include?("Editar despues de aceptado"),
+      delete_after_acepted: is_admin || permission_names.include?("Eliminar despues de aceptado"),
+      change_value_hour: is_admin || permission_names.include?("Cambiar valor hora"),
+      force_hour: is_admin || permission_names.include?("Forzar horas"),
     }
   end
 
   def get_commissions
-    report_expense = ModuleControl.find_by_name("Comisiones")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
-    validation = (current_user.rol.name == "Administrador" ? true : show_all)
+    show_all = has_menu_permission?("Comisiones", "Ver todos")
+    is_admin = current_user.rol.name == "Administrador"
+    validation = is_admin || show_all
 
-    if params[:user_invoice_id] || params[:start_date] || params[:end_date] || params[:customer_invoice_id] || params[:observation] || params[:hours_worked] || params[:total_value] || params[:is_acepted]
-      if validation
-        commissions = Commission.order(created_at: :desc).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
-        total = Commission.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).count
-      else
-        commissions = Commission.order(created_at: :desc).where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).paginate(page: params[:page], :per_page => 10)
-        total = Commission.where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted]).count
-      end
-    else
-      if validation
-        puts "ENTRO A VALIDATION"
-        commissions = Commission.all.order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
-        total = Commission.all.count
-      else
-        puts "no ENTRO A VALIDATION"
-        commissions = Commission.where(user_invoice_id: current_user.id).order(created_at: :desc).paginate(page: params[:page], :per_page => 10)
-        total = Commission.where(user_invoice_id: current_user.id).count
-      end
+    # Base query con includes para evitar N+1
+    base_query = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
+
+    # Filtrar por usuario si no tiene permiso de ver todos
+    base_query = base_query.where(user_invoice_id: current_user.id) unless validation
+
+    # Aplicar filtros de busqueda si hay parametros
+    has_filters = params[:user_invoice_id].present? || params[:start_date].present? || params[:end_date].present? ||
+                  params[:customer_invoice_id].present? || params[:observation].present? || params[:hours_worked].present? ||
+                  params[:total_value].present? || params[:is_acepted].present?
+
+    if has_filters
+      base_query = base_query.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id],
+                                     params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
     end
+
+    # Obtener total antes de paginar (una sola query con count)
+    total = base_query.count
+
+    # Paginar y ordenar
+    commissions = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(commissions, each_serializer: CommissionSerializer),
@@ -65,22 +60,28 @@ class CommissionsController < ApplicationController
   end
 
   def update_filter_values_commissions
-    report_expense = ModuleControl.find_by_name("Comisiones")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
-    validation = (current_user.rol.name == "Administrador" ? true : show_all)
+    show_all = has_menu_permission?("Comisiones", "Ver todos")
+    is_admin = current_user.rol.name == "Administrador"
+    validation = is_admin || show_all
 
-    if validation
-      report_expenses = Commission.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
-    else
-      report_expenses = Commission.where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
-    end
+    # Base query con includes para evitar N+1
+    base_query = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
 
-    update_status = report_expenses.update(is_acepted: true)
+    # Filtrar por usuario si no tiene permiso de ver todos
+    base_query = base_query.where(user_invoice_id: current_user.id) unless validation
+
+    # Aplicar filtros de busqueda
+    commissions = base_query.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id],
+                                    params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
+
+    update_status = commissions.update_all(is_acepted: true)
 
     if update_status
+      # Recargar con includes para el serializer
+      updated_commissions = commissions.reload
       render :json => {
         success: "Los registros fue actualizados con exito!",
-        data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: CommissionSerializer),
+        data: ActiveModelSerializers::SerializableResource.new(updated_commissions, each_serializer: CommissionSerializer),
         type: "success",
       }
     else
@@ -92,29 +93,29 @@ class CommissionsController < ApplicationController
   end
 
   def download_file
-    report_expense = ModuleControl.find_by_name("Comisiones")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
-    validate = (current_user.rol.name == "Administrador" ? true : estado)
+    show_all = has_menu_permission?("Comisiones", "Ver todos")
+    is_admin = current_user.rol.name == "Administrador"
+    validate = is_admin || show_all
 
-    if validate
-      if params[:type] == "filtro"
-        @items = Commission.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
-      else
-        @items = Commission.all
-      end
+    # Base query con includes para evitar N+1 en el template xlsx
+    base_query = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
+
+    # Filtrar por usuario si no tiene permiso de ver todos
+    base_query = base_query.where(user_invoice_id: current_user.id) unless validate
+
+    if params[:type] == "filtro"
+      @items = base_query.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id],
+                                 params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
     else
-      if params[:type] == "filtro"
-        @items = Commission.where(user_invoice_id: current_user.id).search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id], params[:observation], params[:hours_worked], params[:total_value], params[:is_acepted])
-      else
-        @items = Commission.where(user_invoice_id: current_user.id)
-      end
+      @items = base_query
     end
 
     render xlsx: "Reporte de comisiones", template: "commissions/download_file.xlsx.axlsx"
   end
 
   def update_state_commission
-    commission = Commission.find(params[:id])
+    commission = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
+                           .find(params[:id])
     update_status = commission.update(is_acepted: params[:state], last_user_edited_id: current_user.id)
 
     if update_status
@@ -131,6 +132,9 @@ class CommissionsController < ApplicationController
     params["value_hour"] = valor1
     commission = Commission.create(commission_create)
     if commission.save
+      # Recargar con includes para el serializer
+      commission = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
+                             .find(commission.id)
       render :json => {
                success: "El Registro fue creado con exito!",
                register: ActiveModelSerializers::SerializableResource.new(commission, each_serializer: CommissionSerializer),
@@ -150,6 +154,9 @@ class CommissionsController < ApplicationController
     params["value_hour"] = valor1
     update_status = @commission.update(commission_update)
     if update_status
+      # Recargar con includes para el serializer
+      @commission = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
+                              .find(@commission.id)
       render :json => {
                success: "El Registro fue actualizado con exito!",
                register: ActiveModelSerializers::SerializableResource.new(@commission, each_serializer: CommissionSerializer),
@@ -158,7 +165,7 @@ class CommissionsController < ApplicationController
     else
       render :json => {
                success: "El Registro No se creo!",
-               message: @report_expense.errors.full_messages,
+               message: @commission.errors.full_messages,
                type: "error",
              }
     end
