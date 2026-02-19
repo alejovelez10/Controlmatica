@@ -78,7 +78,7 @@ class index extends React.Component {
       searchTerm: "",
       sortKey: null,
       sortDir: "asc",
-      meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
+      meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
       // Filters
       showFilters: false,
       filters: {
@@ -277,7 +277,28 @@ class index extends React.Component {
   // ─── Filters ───
 
   toggleFilters = function () {
-    this.setState({ showFilters: !this.state.showFilters });
+    var self = this;
+    var willClose = this.state.showFilters;
+    this.setState({ showFilters: !this.state.showFilters }, function () {
+      if (willClose) {
+        self.setState({
+          filters: {
+            work_description: "",
+            report_execute_id: "",
+            date_ejecution: "",
+            report_sate: "",
+            cost_center_id: "",
+            customer_id: "",
+            date_desde: "",
+            date_hasta: "",
+            code_report: "",
+          },
+          costCenterOptions: [],
+        }, function () {
+          self.loadData(1);
+        });
+      }
+    });
   }.bind(this);
 
   handleFilterChange = function (e) {
@@ -788,7 +809,7 @@ class index extends React.Component {
     var meta = self.state.meta;
 
     return React.createElement(React.Fragment, null,
-      estados.create ? React.createElement(CmPageActions, null,
+      estados.create ? React.createElement(CmPageActions, { label: "Crear reporte" },
         React.createElement("button", {
           onClick: self.openNewModal,
           className: "cm-btn cm-btn-accent cm-btn-sm"
@@ -796,6 +817,17 @@ class index extends React.Component {
       ) : null,
 
       self.state.showFilters ? React.createElement("div", { className: "cm-filter-panel" },
+        // Header con título y botón cerrar
+        React.createElement("div", { className: "cm-filter-header" },
+          React.createElement("h3", { className: "cm-filter-title" },
+            React.createElement("i", { className: "fas fa-filter" }), " Filtros avanzados"
+          ),
+          React.createElement("button", {
+            type: "button",
+            onClick: self.toggleFilters,
+            className: "cm-filter-close"
+          }, React.createElement("i", { className: "fas fa-times" }))
+        ),
         // Row 1: Descripcion | Responsable Ejecucion | Fecha de inicio | Estado de reporte
         React.createElement("div", { className: "cm-filter-row" },
           React.createElement("div", { className: "cm-form-group" },

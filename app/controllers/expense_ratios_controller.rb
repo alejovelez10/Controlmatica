@@ -98,8 +98,24 @@ class ExpenseRatiosController < ApplicationController
         # Obtener total antes de paginar (una sola query con count)
         total = base_query.count
 
-        # Ordenar ANTES de paginar y paginar
-        expense_ratios = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+        # Ordenamiento dinámico con validación
+        sort_dir = params[:dir] == "asc" ? "ASC" : "DESC"
+        direct_columns = %w[area creation_date start_date end_date observations anticipo created_at updated_at]
+
+        if direct_columns.include?(params[:sort])
+          sort_order = "expense_ratios.#{params[:sort]} #{sort_dir}"
+          expense_ratios = base_query.order(Arel.sql(sort_order)).paginate(page: params[:page], per_page: params[:per_page] || 50)
+        elsif params[:sort] == "user_direction_name"
+          expense_ratios = base_query.joins("LEFT JOIN users AS directors ON directors.id = expense_ratios.user_direction_id")
+                                     .order(Arel.sql("directors.names #{sort_dir}"))
+                                     .paginate(page: params[:page], per_page: params[:per_page] || 50)
+        elsif params[:sort] == "user_report_name"
+          expense_ratios = base_query.joins("LEFT JOIN users AS reporters ON reporters.id = expense_ratios.user_report_id")
+                                     .order(Arel.sql("reporters.names #{sort_dir}"))
+                                     .paginate(page: params[:page], per_page: params[:per_page] || 50)
+        else
+          expense_ratios = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:per_page] || 50)
+        end
 
         render json: {
           data: ActiveModelSerializers::SerializableResource.new(expense_ratios, each_serializer: ExpenseRatioSerializer),

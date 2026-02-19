@@ -29,13 +29,13 @@ class ExpenseRatio < ApplicationRecord
     end
 
     def self.search(search1, search2, search3, search4, search5, search6, search7)
-        search1 != "" ? (scope :user_direction, -> { where(user_direction_id: search1) }) : (scope :user_direction, -> { where.not(id: nil) })
-        search2 != "" ? (scope :user_report, -> { where(user_report_id: search2) }) : (scope :user_report, -> { where.not(id: nil) })
-        search3 != "" ? (scope :descripcion, -> { where("observations like '%#{search3.downcase}%' or observations like '%#{search3.upcase}%' or observations like '%#{search3.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-        search4 != "" ? (scope :f_comienzo, -> { where(start_date: search4) }) : (scope :f_comienzo, -> { where.not(id: nil) })
-        search5 != "" ? (scope :f_final, -> { where(end_date: search5) }) : (scope :f_final, -> { where.not(id: nil) })
-        search6 != "" ? (scope :f_creation, -> { where(creation_date: search6) }) : (scope :f_creation, -> { where.not(id: nil) })
-        search7 != "" ? (scope :are, -> { where("area like '%#{search7.downcase}%' or area like '%#{search7.upcase}%' or area like '%#{search7.capitalize}%' ") }) : (scope :are, -> { where.not(id: nil) })
+        search1.present? ? (scope :user_direction, -> { where(user_direction_id: search1) }) : (scope :user_direction, -> { where.not(id: nil) })
+        search2.present? ? (scope :user_report, -> { where(user_report_id: search2) }) : (scope :user_report, -> { where.not(id: nil) })
+        search3.present? ? (scope :descripcion, -> { where("LOWER(observations) LIKE ?", "%#{search3.downcase}%") }) : (scope :descripcion, -> { where.not(id: nil) })
+        search4.present? ? (scope :f_comienzo, -> { where(start_date: search4) }) : (scope :f_comienzo, -> { where.not(id: nil) })
+        search5.present? ? (scope :f_final, -> { where(end_date: search5) }) : (scope :f_final, -> { where.not(id: nil) })
+        search6.present? ? (scope :f_creation, -> { where(creation_date: search6) }) : (scope :f_creation, -> { where.not(id: nil) })
+        search7.present? ? (scope :are, -> { where("LOWER(area) LIKE ?", "%#{search7.downcase}%") }) : (scope :are, -> { where.not(id: nil) })
         user_direction.user_report.descripcion.f_comienzo.f_final.f_creation.are
     end
     

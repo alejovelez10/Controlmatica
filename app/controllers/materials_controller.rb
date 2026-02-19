@@ -54,7 +54,7 @@ class MaterialsController < ApplicationController
     end
 
     page = (params[:page] || 1).to_i
-    per_page = [(params[:per_page] || 10).to_i, 100].min
+    per_page = [(params[:per_page] || 50).to_i, 100].min
     total = materials.except(:includes).count
     paginated = materials.offset((page - 1) * per_page).limit(per_page)
 

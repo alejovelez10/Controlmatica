@@ -47,22 +47,22 @@ class ReportExpense < ApplicationRecord
   end
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9, search10, search11, search12, search13, search14, search15)
-    search1 != "" ? (scope :centro, -> { where(cost_center_id: search1) }) : (scope :centro, -> { where.not(id: nil) })
-    search2 != "" ? (scope :user, -> { where(user_invoice_id: search2) }) : (scope :user, -> { where.not(id: nil) })
-    search3 != "" ? (scope :name_gasto, -> { where("invoice_name like '%#{search3.downcase}%' or invoice_name like '%#{search3.upcase}%' or invoice_name like '%#{search3.capitalize}%' ") }) : (scope :name_gasto, -> { where.not(id: nil) })
-    search4 != "" ? (scope :date, -> { where(invoice_date: search4) }) : (scope :date, -> { where.not(id: nil) })
-    search5 != "" ? (scope :indetificacion, -> { where(identification: search5) }) : (scope :indetificacion, -> { where.not(id: nil) })
-    search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-    search7 != "" ? (scope :numero_factura, -> { where(invoice_number: search7) }) : (scope :numero_factura, -> { where.not(id: nil) })
-    search8 != "" ? (scope :tipo_identificacion, -> { where(type_identification_id: search8) }) : (scope :tipo_identificacion, -> { where.not(id: nil) })
-    search9 != "" ? (scope :tipo_pago, -> { where(payment_type_id: search9) }) : (scope :tipo_pago, -> { where.not(id: nil) })
-    search10 != "" ? (scope :valor_factura, -> { where(invoice_value: search10) }) : (scope :valor_factura, -> { where.not(id: nil) })
-    search11 != "" ? (scope :inpuesto_factura, -> { where(invoice_tax: search11) }) : (scope :inpuesto_factura, -> { where.not(id: nil) })
-    search12 != "" ? (scope :total_factura, -> { where(invoice_total: search12) }) : (scope :total_factura, -> { where.not(id: nil) })
+    search1.present? ? (scope :centro, -> { where(cost_center_id: search1) }) : (scope :centro, -> { where.not(id: nil) })
+    search2.present? ? (scope :user, -> { where(user_invoice_id: search2) }) : (scope :user, -> { where.not(id: nil) })
+    search3.present? ? (scope :name_gasto, -> { where("LOWER(invoice_name) LIKE ?", "%#{search3.downcase}%") }) : (scope :name_gasto, -> { where.not(id: nil) })
+    search4.present? ? (scope :date, -> { where(invoice_date: search4) }) : (scope :date, -> { where.not(id: nil) })
+    search5.present? ? (scope :indetificacion, -> { where(identification: search5) }) : (scope :indetificacion, -> { where.not(id: nil) })
+    search6.present? ? (scope :descripcion, -> { where("LOWER(description) LIKE ?", "%#{search6.downcase}%") }) : (scope :descripcion, -> { where.not(id: nil) })
+    search7.present? ? (scope :numero_factura, -> { where(invoice_number: search7) }) : (scope :numero_factura, -> { where.not(id: nil) })
+    search8.present? ? (scope :tipo_identificacion, -> { where(type_identification_id: search8) }) : (scope :tipo_identificacion, -> { where.not(id: nil) })
+    search9.present? ? (scope :tipo_pago, -> { where(payment_type_id: search9) }) : (scope :tipo_pago, -> { where.not(id: nil) })
+    search10.present? ? (scope :valor_factura, -> { where(invoice_value: search10) }) : (scope :valor_factura, -> { where.not(id: nil) })
+    search11.present? ? (scope :inpuesto_factura, -> { where(invoice_tax: search11) }) : (scope :inpuesto_factura, -> { where.not(id: nil) })
+    search12.present? ? (scope :total_factura, -> { where(invoice_total: search12) }) : (scope :total_factura, -> { where.not(id: nil) })
 
-    search13 != "" ? (scope :fdesdep, -> { where(["invoice_date > ?", search13]) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search14 != "" ? (scope :fhastap, -> { where(["invoice_date < ?", search14]) }) : (scope :fhastap, -> { where.not(id: nil) })
-    search15 != "" ? (scope :estado, -> { where(is_acepted: search15) }) : (scope :estado, -> { where.not(id: nil) })
+    search13.present? ? (scope :fdesdep, -> { where("invoice_date >= ?", search13) }) : (scope :fdesdep, -> { where.not(id: nil) })
+    search14.present? ? (scope :fhastap, -> { where("invoice_date <= ?", search14) }) : (scope :fhastap, -> { where.not(id: nil) })
+    search15.present? ? (scope :estado, -> { where(is_acepted: search15) }) : (scope :estado, -> { where.not(id: nil) })
 
     centro.user.name_gasto.date.indetificacion.descripcion.numero_factura.tipo_identificacion.tipo_pago.valor_factura.inpuesto_factura.total_factura.fdesdep.fhastap.estado
   end

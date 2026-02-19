@@ -96,7 +96,7 @@ class CommissionRelationIndex extends React.Component {
         return React.createElement("a", {
           href: "/commission_relations_pdf/" + row.id + ".pdf",
           target: "_blank",
-          style: { color: "#28a745", fontSize: "18px" },
+          style: { color: "#7dc89b", fontSize: "18px" },
           title: "Ver PDF",
           onClick: function(e) { e.stopPropagation(); }
         }, React.createElement("i", { className: "fas fa-file-pdf" }));

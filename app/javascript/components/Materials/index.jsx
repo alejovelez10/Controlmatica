@@ -62,7 +62,7 @@ class index extends React.Component {
       searchTerm: "",
       sortKey: null,
       sortDir: "asc",
-      meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
+      meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
       // Modal
       modalOpen: false,
       modalMode: "new",
@@ -1351,7 +1351,7 @@ class index extends React.Component {
 
     return (
       React.createElement(React.Fragment, null,
-        estados.create ? React.createElement(CmPageActions, null,
+        estados.create ? React.createElement(CmPageActions, { label: "Crear material" },
           React.createElement("button", {
             onClick: self.openNewModal,
             className: "cm-btn cm-btn-accent cm-btn-sm"
@@ -1359,9 +1359,22 @@ class index extends React.Component {
         ) : null,
 
         self.state.showFilters ? React.createElement("div", { className: "cm-filter-panel" },
+          // Header con título y botón cerrar
+          React.createElement("div", { className: "cm-filter-header" },
+            React.createElement("h3", { className: "cm-filter-title" },
+              React.createElement("i", { className: "fas fa-filter" }), " Filtros avanzados"
+            ),
+            React.createElement("button", {
+              type: "button",
+              onClick: self.toggleFilters,
+              className: "cm-filter-close"
+            }, React.createElement("i", { className: "fas fa-times" }))
+          ),
           React.createElement("div", { className: "cm-filter-row" },
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Proveedor"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-truck" }), " Proveedor"
+              ),
               React.createElement(Select, {
                 options: self.providerOptions,
                 value: self.state.filters.provider_id ? self.providerOptions.find(function(o) { return o.value == self.state.filters.provider_id; }) || null : null,
@@ -1376,15 +1389,22 @@ class index extends React.Component {
               })
             ),
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Descripcion"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-align-left" }), " Descripcion"
+              ),
               React.createElement("input", { className: "cm-input", name: "description", value: self.state.filters.description, onChange: self.handleFilterChange })
             ),
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Fecha de Orden"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha de Orden"
+              ),
               React.createElement("input", { className: "cm-input", type: "date", name: "sales_date", value: self.state.filters.sales_date, onChange: self.handleFilterChange })
             ),
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Centro de costo"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-map-marker-alt" }), " Centro de costo ",
+                React.createElement("small", { className: "cm-label-hint" }, "(3+ letras)")
+              ),
               React.createElement(Select, {
                 options: self.state.filterCostCenterOptions,
                 value: self.state.filterCentro,
@@ -1401,7 +1421,9 @@ class index extends React.Component {
           ),
           React.createElement("div", { className: "cm-filter-row" },
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Estado de compra"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-flag" }), " Estado de compra"
+              ),
               React.createElement("select", { className: "cm-input", name: "estado", value: self.state.filters.estado, onChange: self.handleFilterChange },
                 React.createElement("option", { value: "" }, "Todos"),
                 React.createElement("option", { value: "Pendiente" }, "Pendiente"),
@@ -1411,15 +1433,21 @@ class index extends React.Component {
               )
             ),
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Fecha desde"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha desde"
+              ),
               React.createElement("input", { className: "cm-input", type: "date", name: "date_desde", value: self.state.filters.date_desde, onChange: self.handleFilterChange })
             ),
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "Fecha hasta"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha hasta"
+              ),
               React.createElement("input", { className: "cm-input", type: "date", name: "date_hasta", value: self.state.filters.date_hasta, onChange: self.handleFilterChange })
             ),
             React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" }, "# Orden"),
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-hashtag" }), " # Orden"
+              ),
               React.createElement("input", { className: "cm-input", name: "sales_number", value: self.state.filters.sales_number, onChange: self.handleFilterChange })
             )
           ),
@@ -1427,12 +1455,12 @@ class index extends React.Component {
             React.createElement("div", null),
             React.createElement("div", null),
             React.createElement("div", null),
-            React.createElement("div", { style: { display: "flex", gap: "8px", alignItems: "flex-end" } },
-              React.createElement("button", { className: "cm-btn cm-btn-accent cm-btn-sm", onClick: self.applyFilters },
-                React.createElement("i", { className: "fas fa-search" }), " Aplicar"
+            React.createElement("div", { className: "cm-form-group", style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: "8px" } },
+              React.createElement("button", { type: "button", onClick: self.toggleFilters, className: "cm-btn cm-btn-outline cm-btn-sm" },
+                React.createElement("i", { className: "fas fa-eraser" }), " Limpiar"
               ),
-              React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", onClick: self.toggleFilters },
-                React.createElement("i", { className: "fas fa-times" }), " Cerrar filtros"
+              React.createElement("button", { type: "button", onClick: self.applyFilters, className: "cm-btn cm-btn-accent cm-btn-sm" },
+                React.createElement("i", { className: "fas fa-search" }), " Aplicar filtros"
               )
             )
           )

@@ -38,7 +38,7 @@ class index extends React.Component {
       searchTerm: "",
       sortKey: null,
       sortDir: "asc",
-      meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
+      meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
       // Filters
       showFilters: false,
       filters: Object.assign({}, EMPTY_FILTERS),
@@ -609,7 +609,7 @@ class index extends React.Component {
 
     return (
       React.createElement(React.Fragment, null,
-        estados.create ? React.createElement(CmPageActions, null,
+        estados.create ? React.createElement(CmPageActions, { label: "Crear informe" },
           React.createElement("button", {
             onClick: self.openNewModal,
             className: "cm-btn cm-btn-accent cm-btn-sm"
@@ -617,6 +617,17 @@ class index extends React.Component {
         ) : null,
 
         self.state.showFilters ? React.createElement("div", { className: "cm-filter-panel" },
+          // Header con título y botón cerrar
+          React.createElement("div", { className: "cm-filter-header" },
+            React.createElement("h3", { className: "cm-filter-title" },
+              React.createElement("i", { className: "fas fa-filter" }), " Filtros avanzados"
+            ),
+            React.createElement("button", {
+              type: "button",
+              onClick: self.toggleFilters,
+              className: "cm-filter-close"
+            }, React.createElement("i", { className: "fas fa-times" }))
+          ),
           React.createElement("div", { className: "cm-filter-row" },
             React.createElement("div", { className: "cm-form-group" },
               React.createElement("label", { className: "cm-label" },

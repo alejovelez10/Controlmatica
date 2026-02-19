@@ -47,8 +47,20 @@ class ReportExpensesController < ApplicationController
     # Obtener total antes de paginar (una sola query con count)
     total = base_query.count
 
-    # Paginar y ordenar
-    report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+    # Ordenamiento dinámico con validación
+    sort_dir = params[:dir] == "asc" ? "ASC" : "DESC"
+    direct_columns = %w[invoice_name invoice_date identification description invoice_number invoice_value invoice_tax invoice_total is_acepted created_at updated_at]
+
+    if direct_columns.include?(params[:sort])
+      sort_order = "report_expenses.#{params[:sort]} #{sort_dir}"
+      report_expenses = base_query.order(Arel.sql(sort_order)).paginate(page: params[:page], per_page: params[:per_page] || 50)
+    elsif params[:sort] == "cost_center_code"
+      report_expenses = base_query.joins(:cost_center).order(Arel.sql("cost_centers.code #{sort_dir}")).paginate(page: params[:page], per_page: params[:per_page] || 50)
+    elsif params[:sort] == "user_invoice_name"
+      report_expenses = base_query.joins(:user_invoice).order(Arel.sql("users.names #{sort_dir}")).paginate(page: params[:page], per_page: params[:per_page] || 50)
+    else
+      report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:per_page] || 50)
+    end
 
     render json: {
              data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),
@@ -79,7 +91,7 @@ class ReportExpensesController < ApplicationController
     total = base_query.count
 
     # Paginar y ordenar
-    report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+    report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),

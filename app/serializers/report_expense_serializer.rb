@@ -42,7 +42,7 @@ class ReportExpenseSerializer < ActiveModel::Serializer
     return nil unless object.user_invoice.present?
     {
       id: object.user_invoice.id,
-      name: object.user_invoice.names
+      names: object.user_invoice.names
     }
   end
   
