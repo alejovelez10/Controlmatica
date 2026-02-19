@@ -27,15 +27,17 @@ class CommissionsController < ApplicationController
   end
 
   def get_commissions
-    show_all = has_menu_permission?("Comisiones", "Ver todos")
+    # Administrador SIEMPRE ve todo, sin importar permisos
     is_admin = current_user.rol.name == "Administrador"
-    validation = is_admin || show_all
+    show_all = is_admin || has_menu_permission?("Comisiones", "Ver todos")
 
     # Base query con includes para evitar N+1
     base_query = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
 
     # Filtrar por usuario si no tiene permiso de ver todos
-    base_query = base_query.where(user_invoice_id: current_user.id) unless validation
+    unless show_all
+      base_query = base_query.where(user_invoice_id: current_user.id)
+    end
 
     # Aplicar filtros de busqueda si hay parametros
     has_filters = params[:user_invoice_id].present? || params[:start_date].present? || params[:end_date].present? ||
@@ -60,15 +62,17 @@ class CommissionsController < ApplicationController
   end
 
   def update_filter_values_commissions
-    show_all = has_menu_permission?("Comisiones", "Ver todos")
+    # Administrador SIEMPRE ve todo
     is_admin = current_user.rol.name == "Administrador"
-    validation = is_admin || show_all
+    show_all = is_admin || has_menu_permission?("Comisiones", "Ver todos")
 
     # Base query con includes para evitar N+1
     base_query = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
 
     # Filtrar por usuario si no tiene permiso de ver todos
-    base_query = base_query.where(user_invoice_id: current_user.id) unless validation
+    unless show_all
+      base_query = base_query.where(user_invoice_id: current_user.id)
+    end
 
     # Aplicar filtros de busqueda
     commissions = base_query.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id],
@@ -93,15 +97,17 @@ class CommissionsController < ApplicationController
   end
 
   def download_file
-    show_all = has_menu_permission?("Comisiones", "Ver todos")
+    # Administrador SIEMPRE ve todo
     is_admin = current_user.rol.name == "Administrador"
-    validate = is_admin || show_all
+    show_all = is_admin || has_menu_permission?("Comisiones", "Ver todos")
 
     # Base query con includes para evitar N+1 en el template xlsx
     base_query = Commission.includes(:user, :user_invoice, :last_user_edited, :customer_invoice, :customer_report, :cost_center)
 
     # Filtrar por usuario si no tiene permiso de ver todos
-    base_query = base_query.where(user_invoice_id: current_user.id) unless validate
+    unless show_all
+      base_query = base_query.where(user_invoice_id: current_user.id)
+    end
 
     if params[:type] == "filtro"
       @items = base_query.search(params[:user_invoice_id], params[:start_date], params[:end_date], params[:customer_invoice_id],

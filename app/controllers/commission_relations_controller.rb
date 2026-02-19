@@ -14,14 +14,16 @@ class CommissionRelationsController < ApplicationController
   end
 
   def get_commission_relations
-    # Usar helper memoizado para evitar queries de permisos
+    # Administrador SIEMPRE ve todo, sin importar permisos
     show_all = is_admin? || has_menu_permission?("Relación de comisiones", "Ver todos")
 
     # Base query con includes para evitar N+1 (serializer usa user_report, user_direction, last_user_edited, user)
     base_query = CommissionRelation.includes(:user_report, :user_direction, :last_user_edited, :user)
 
     # Filtrar por usuario si no tiene permiso de ver todos
-    base_query = base_query.where(user_report_id: current_user.id) unless show_all
+    unless show_all
+      base_query = base_query.where(user_report_id: current_user.id)
+    end
 
     # Aplicar filtros de búsqueda si hay parámetros
     has_filters = params[:user_direction_id].present? || params[:user_report_id].present? ||
