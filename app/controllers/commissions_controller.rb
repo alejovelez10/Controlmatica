@@ -52,8 +52,24 @@ class CommissionsController < ApplicationController
     # Obtener total antes de paginar (una sola query con count)
     total = base_query.count
 
-    # Paginar y ordenar
-    commissions = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+    # Ordenamiento dinámico con validación
+    sort_dir = params[:sort_dir] == "asc" ? "ASC" : "DESC"
+
+    # Columnas directas de la tabla
+    direct_columns = %w[start_date end_date hours_worked value_hour total_value observation is_acepted created_at updated_at]
+
+    if direct_columns.include?(params[:sort_key])
+      sort_order = "commissions.#{params[:sort_key]} #{sort_dir}"
+      commissions = base_query.order(Arel.sql(sort_order)).paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "user_invoice_name"
+      commissions = base_query.joins(:user_invoice).order(Arel.sql("users.names #{sort_dir}")).paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "cost_center_code"
+      commissions = base_query.joins(:cost_center).order(Arel.sql("cost_centers.code #{sort_dir}")).paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "customer_invoice_num"
+      commissions = base_query.joins(:customer_invoice).order(Arel.sql("customer_invoices.number_invoice #{sort_dir}")).paginate(page: params[:page], per_page: params[:filter] || 50)
+    else
+      commissions = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:filter] || 50)
+    end
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(commissions, each_serializer: CommissionSerializer),

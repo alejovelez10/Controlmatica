@@ -35,16 +35,16 @@ class Commission < ApplicationRecord
   before_save :save_total
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8)
-    search1 != "" ? (scope :user, -> { where(user_invoice_id: search1) }) : (scope :user, -> { where.not(id: nil) })
+    search1.present? ? (scope :user, -> { where(user_invoice_id: search1) }) : (scope :user, -> { where.not(id: nil) })
 
-    search2 != "" ? (scope :fdesdep, -> { where("start_date >= ?", search2) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search3 != "" ? (scope :fhastap, -> { where("end_dateComisiónes <= ?", search3) }) : (scope :fhastap, -> { where.not(id: nil) })
+    search2.present? ? (scope :fdesdep, -> { where("start_date >= ?", search2) }) : (scope :fdesdep, -> { where.not(id: nil) })
+    search3.present? ? (scope :fhastap, -> { where("end_date <= ?", search3) }) : (scope :fhastap, -> { where.not(id: nil) })
 
-    search4 != "" ? (scope :customer_invoice_find, -> { where(customer_invoice_id: search4) }) : (scope :customer_invoice_find, -> { where.not(id: nil) })
-    search5 != "" ? (scope :descripcion, -> { where("observation like '%#{search5.downcase}%' or observation like '%#{search5.upcase}%' or observation like '%#{search5.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-    search6 != "" ? (scope :hours, -> { where(hours_worked: search6) }) : (scope :hours, -> { where.not(id: nil) })
-    search7 != "" ? (scope :total, -> { where(total_value: search7) }) : (scope :total, -> { where.not(id: nil) })
-    search8 != "" ? (scope :estado, -> { where(is_acepted: search8) }) : (scope :estado, -> { where.not(id: nil) })
+    search4.present? ? (scope :customer_invoice_find, -> { where(customer_invoice_id: search4) }) : (scope :customer_invoice_find, -> { where.not(id: nil) })
+    search5.present? ? (scope :descripcion, -> { where("LOWER(observation) LIKE ?", "%#{search5.downcase}%") }) : (scope :descripcion, -> { where.not(id: nil) })
+    search6.present? ? (scope :hours, -> { where(hours_worked: search6) }) : (scope :hours, -> { where.not(id: nil) })
+    search7.present? ? (scope :total, -> { where(total_value: search7) }) : (scope :total, -> { where.not(id: nil) })
+    search8.present? ? (scope :estado, -> { where(is_acepted: search8) }) : (scope :estado, -> { where.not(id: nil) })
 
     user.fdesdep.fhastap.customer_invoice_find.descripcion.hours.total.estado
   end

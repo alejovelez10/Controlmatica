@@ -40,8 +40,26 @@ class CommissionRelationsController < ApplicationController
     # Obtener total antes de paginar (una sola query con count)
     total = base_query.count
 
-    # Paginar y ordenar
-    commission_relations = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: 10)
+    # Ordenamiento dinámico con validación
+    sort_dir = params[:sort_dir] == "asc" ? "ASC" : "DESC"
+
+    # Columnas directas de la tabla
+    direct_columns = %w[area creation_date start_date end_date observations created_at updated_at]
+
+    if direct_columns.include?(params[:sort_key])
+      sort_order = "commission_relations.#{params[:sort_key]} #{sort_dir}"
+      commission_relations = base_query.order(Arel.sql(sort_order)).paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "user_direction_name"
+      commission_relations = base_query.joins("LEFT JOIN users AS directors ON directors.id = commission_relations.user_direction_id")
+                                       .order(Arel.sql("directors.names #{sort_dir}"))
+                                       .paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "user_report_name"
+      commission_relations = base_query.joins("LEFT JOIN users AS reporters ON reporters.id = commission_relations.user_report_id")
+                                       .order(Arel.sql("reporters.names #{sort_dir}"))
+                                       .paginate(page: params[:page], per_page: params[:filter] || 50)
+    else
+      commission_relations = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:filter] || 50)
+    end
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(commission_relations, each_serializer: CommissionRelationSerializer),
