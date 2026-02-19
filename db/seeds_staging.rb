@@ -796,6 +796,113 @@ end
 puts "✓ #{Alert.count rescue 0} configuración de alertas"
 
 # ============================================
+# NOTIFICACIONES DE ALERTAS
+# ============================================
+
+puts "\n📢 Creando notificaciones de alertas..."
+
+notification_modules = ["Centro de Costo", "Materiales", "Contratistas", "Reportes", "Turnos", "Ordenes de Compra"]
+notification_descriptions = [
+  "El centro de costo ha superado el presupuesto estimado",
+  "Los materiales exceden el valor cotizado",
+  "Las horas de contratista superan lo planificado",
+  "El reporte presenta diferencias en valores",
+  "Turno sin registrar horas de trabajo",
+  "Orden de compra pendiente de aprobación",
+  "Vencimiento próximo del proyecto",
+  "Costos de ingeniería por encima del límite",
+  "Viáticos exceden el presupuesto",
+  "Facturación pendiente por más de 30 días"
+]
+
+users = User.all.to_a
+cost_centers = CostCenter.all.to_a
+
+50.times do |i|
+  user = users.sample
+  cc = cost_centers.sample
+  expected = rand(1000..50000).to_f
+  real = expected * rand(0.8..1.5)
+
+  NotificationAlert.create!(
+    user_id: user.id,
+    cost_center_id: cc&.id,
+    module: notification_modules.sample,
+    description: "#{notification_descriptions.sample} - #{cc&.code || 'General'}",
+    expected: expected,
+    real: real,
+    state: [true, false, false].sample, # 33% leídas
+    date_update: Date.today - rand(0..60).days
+  )
+end
+puts "✓ #{NotificationAlert.count} notificaciones de alertas"
+
+# ============================================
+# REGISTROS DE EDICIÓN (Auditoría)
+# ============================================
+
+puts "\n📝 Creando registros de edición..."
+
+edit_modules = ["Usuarios", "Clientes", "Proveedores", "Centro de Costos", "Materiales", "Contratistas", "Reportes", "Turnos", "Ordenes de Compra"]
+edit_types = ["edito", "creo", "elimino"]
+edit_states = ["completado", "pendiente", "revisado"]
+
+edit_descriptions = [
+  "actualizó los datos del registro",
+  "modificó el valor del campo",
+  "cambió el estado del registro",
+  "actualizó la información de contacto",
+  "modificó los valores monetarios",
+  "actualizó las fechas del proyecto",
+  "cambió el responsable asignado",
+  "actualizó la descripción",
+  "modificó la configuración",
+  "actualizó los permisos"
+]
+
+field_examples = {
+  "Usuarios" => { name: "Juan Pérez", email: "juan@ejemplo.com", rol_id: 1 },
+  "Clientes" => { name: "Cliente S.A.S", nit: "900123456-7", phone: "3001234567" },
+  "Proveedores" => { name: "Proveedor Ltda", nit: "800987654-3", email: "prov@mail.com" },
+  "Centro de Costos" => { code: "PRO-001", description: "Proyecto ejemplo", quotation_value: 50000000 },
+  "Materiales" => { description: "Material XYZ", amount: 1500000, quantity: 10 },
+  "Contratistas" => { hours: 160, ammount: 3200000, description: "Trabajo mes" },
+  "Reportes" => { working_time: 8, working_value: 400000, viatic_value: 50000 },
+  "Turnos" => { start_date: "2026-02-01", end_date: "2026-02-15", hours: 120 },
+  "Ordenes de Compra" => { total: 25000000, state: "PROCESADO", description: "Orden de materiales" }
+}
+
+100.times do |i|
+  user = users.sample
+  register_user = users.sample
+  mod = edit_modules.sample
+  type_edit = edit_types.sample
+
+  old_values = field_examples[mod] || {}
+  new_values = old_values.transform_values do |v|
+    case v
+    when Integer then v + rand(-1000..5000)
+    when Float then v * rand(0.9..1.2)
+    when String then v.include?("@") ? v : "#{v} (modificado)"
+    else v
+    end
+  end
+
+  RegisterEdit.create!(
+    user_id: user.id,
+    register_user_id: register_user.id,
+    module: mod,
+    description: "#{register_user.names} #{edit_descriptions.sample}",
+    type_edit: type_edit,
+    state: edit_states.sample,
+    editValues: old_values.to_json,
+    newValues: new_values.to_json,
+    date_update: Date.today - rand(0..90).days
+  )
+end
+puts "✓ #{RegisterEdit.count} registros de edición"
+
+# ============================================
 # RESUMEN FINAL
 # ============================================
 
@@ -820,6 +927,8 @@ puts " Turnos:              #{Shift.count}"
 puts " Reportes Gastos:     #{ReportExpense.count}"
 puts " Relaciones Gastos:   #{ExpenseRatio.count}"
 puts " Alertas:             #{Alert.count rescue 'N/A'}"
+puts " Notif. Alertas:      #{NotificationAlert.count}"
+puts " Registros Edición:   #{RegisterEdit.count}"
 puts "============================================"
 puts ""
 puts "Para ejecutar en staging:"
