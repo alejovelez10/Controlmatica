@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_18_000003) do
+ActiveRecord::Schema.define(version: 2026_02_19_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -354,6 +354,8 @@ ActiveRecord::Schema.define(version: 2026_02_18_000003) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["cost_center_id"], name: "index_notification_alerts_on_cost_center_id"
+    t.index ["state", "date_update"], name: "index_notification_alerts_on_state_and_date_update", order: { date_update: :desc }
+    t.index ["state"], name: "index_notification_alerts_on_state"
   end
 
   create_table "parameterizations", force: :cascade do |t|
@@ -418,6 +420,8 @@ ActiveRecord::Schema.define(version: 2026_02_18_000003) do
     t.string "module"
     t.text "description"
     t.string "type_edit", default: "edito"
+    t.index ["state", "created_at"], name: "index_register_edits_on_state_and_created_at", order: { created_at: :desc }
+    t.index ["state"], name: "index_register_edits_on_state"
   end
 
   create_table "report_expense_options", force: :cascade do |t|

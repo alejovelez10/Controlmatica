@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(grep:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(RBENV_VERSION=system ruby:*)",
+      "Bash(ruby -wc:*)"
     ]
   }
 }
