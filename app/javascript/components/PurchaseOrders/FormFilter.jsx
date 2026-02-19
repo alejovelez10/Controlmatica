@@ -162,9 +162,12 @@ class FormFilter extends Component {
                 <div className="col-md-12 mt-4">
                     <div className="row">
                       <div className="col-md-12 text-right">
-                        
+
                         <label onClick={this.close} className="btn btn-light float-right mr-2">Cerrar filtros</label>
                         <button onClick={this.props.onClick} className="btn btn-secondary float-right mr-3">Aplicar</button>
+                        <button onClick={this.props.cancelFilter} className="cm-btn cm-btn-outline cm-btn-sm float-right mr-3" type="button">
+                          <i className="fas fa-eraser" /> Limpiar
+                        </button>
                       </div>
                     </div>
                 </div>

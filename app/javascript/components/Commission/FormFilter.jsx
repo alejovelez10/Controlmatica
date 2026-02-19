@@ -3,12 +3,27 @@ import NumberFormat from 'react-number-format';
 import Select from "react-select";
 
 class FormFilter extends Component {
+    close = () => {
+        this.props.filter(false);
+    };
+
     render() {
         return (
             <React.Fragment>
                 <div className="row">
                     <div className="col-md-12">
                         <div className="tile">
+
+                            {/* Header con botón de cerrar */}
+                            <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--cm-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 600, color: "var(--cm-text-muted)" }}>
+                                    <i className="fas fa-filter" style={{ marginRight: 8, opacity: 0.6 }} />
+                                    Filtros avanzados
+                                </span>
+                                <button onClick={this.close} className="cm-dt-action-btn" title="Cerrar filtros" style={{ width: 28, height: 28 }}>
+                                    <i className="fas fa-times" />
+                                </button>
+                            </div>
 
                             <div className="tile-body">
                                 <div className="row">
@@ -94,19 +109,12 @@ class FormFilter extends Component {
                                 </div>
                             </div>
 
-                            <div className="tile-footer">
-                                <button
-                                    className="btn btn-secondary mr-3"
-                                    onClick={() => this.props.HandleClickFilter()}
-                                >
-                                    Aplicar
+                            <div className="tile-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                                <button onClick={this.props.cancelFilter} className="cm-btn cm-btn-outline cm-btn-sm" type="button">
+                                    <i className="fas fa-eraser" /> Limpiar
                                 </button>
-
-                                <button
-                                    className="btn btn-danger"
-                                    onClick={() => this.props.filter(false)}
-                                >
-                                    Cancelar
+                                <button onClick={() => this.props.HandleClickFilter()} className="cm-btn cm-btn-accent cm-btn-sm" type="button">
+                                    <i className="fas fa-search" /> Aplicar filtros
                                 </button>
                             </div>
                         </div>
