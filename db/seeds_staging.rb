@@ -18,12 +18,25 @@ puts "Verificando parametrizaciones requeridas..."
 
 # Requerida para el modelo Commission (before_save :save_total)
 unless Parameterization.exists?(name: "PORCENTAJE DE COMISION")
-  Parameterization.create!(
-    name: "PORCENTAJE DE COMISION",
-    money_value: 10.0,
-    user_id: 1
-  )
-  puts "✓ Creada parametrización PORCENTAJE DE COMISION (10%)"
+  first_user = User.first
+  if first_user
+    Parameterization.create!(
+      name: "PORCENTAJE DE COMISION",
+      money_value: 10.0,
+      user_id: first_user.id
+    )
+    puts "✓ Creada parametrización PORCENTAJE DE COMISION (10%)"
+  else
+    puts "⚠ No hay usuarios - no se puede crear parametrización"
+  end
+end
+
+# Verificar que exista
+param = Parameterization.find_by_name("PORCENTAJE DE COMISION")
+if param
+  puts "✓ Parametrización PORCENTAJE DE COMISION existe (#{param.money_value}%)"
+else
+  puts "✗ ERROR: No existe PORCENTAJE DE COMISION - las comisiones fallarán"
 end
 
 puts "✓ Parametrizaciones verificadas"
