@@ -11,6 +11,25 @@ puts "============================================"
 puts ""
 
 # ============================================
+# 0. PARAMETRIZACIONES REQUERIDAS
+# ============================================
+
+puts "Verificando parametrizaciones requeridas..."
+
+# Requerida para el modelo Commission (before_save :save_total)
+unless Parameterization.exists?(name: "PORCENTAJE DE COMISION")
+  Parameterization.create!(
+    name: "PORCENTAJE DE COMISION",
+    money_value: 10.0,
+    user_id: 1
+  )
+  puts "✓ Creada parametrización PORCENTAJE DE COMISION (10%)"
+end
+
+puts "✓ Parametrizaciones verificadas"
+puts ""
+
+# ============================================
 # Datos base para generación
 # ============================================
 
@@ -962,8 +981,29 @@ observaciones_comision = [
 customer_invoice_ids = CustomerInvoice.pluck(:id)
 customer_report_ids = CustomerReport.pluck(:id)
 
+# Verificar que existan los registros necesarios
+if customer_invoice_ids.empty?
+  puts "⚠ No hay facturas de cliente - creando algunas..."
+  # Crear facturas de cliente básicas si no existen
+  cc_sample = CostCenter.first(10)
+  cc_sample.each_with_index do |cc, idx|
+    CustomerInvoice.create!(
+      number_invoice: "FAC-#{Date.today.year}-#{1000 + idx}",
+      invoice_date: Date.today - rand(1..180),
+      invoice_value: rand(1_000_000..50_000_000),
+      engineering_value: rand(500_000..10_000_000),
+      cost_center_id: cc.id
+    )
+  end
+  customer_invoice_ids = CustomerInvoice.pluck(:id)
+end
+
+# Obtener el porcentaje de comisión
+porcentaje_comision = (Parameterization.find_by_name("PORCENTAJE DE COMISION")&.money_value.to_f || 10.0) / 100
+
 existing_commissions = Commission.count
-if existing_commissions < 30
+if existing_commissions < 30 && customer_invoice_ids.any? && cost_center_ids.any?
+  puts "Creando #{30 - existing_commissions} comisiones nuevas..."
   (30 - existing_commissions).times do |i|
     start_dt = Date.today - rand(30..365)
     end_dt = start_dt + rand(7..60)
@@ -972,6 +1012,9 @@ if existing_commissions < 30
     cc_id = cost_center_ids.sample
     ci_id = customer_invoice_ids.sample
     cr_id = customer_report_ids.sample
+
+    # Calcular total_value directamente para evitar problemas con el callback
+    total_value = value_hour * hours * porcentaje_comision
 
     commission = Commission.new(
       user_id: user_id,
@@ -982,15 +1025,23 @@ if existing_commissions < 30
       observation: observaciones_comision.sample,
       hours_worked: hours,
       value_hour: value_hour,
+      total_value: total_value,
       is_acepted: [true, false].sample,
       last_user_edited_id: user_ids.sample,
       cost_center_id: cc_id,
       customer_report_id: cr_id
     )
-    commission.save(validate: false)
+
+    if commission.save
+      puts "  ✓ Comisión #{i + 1} creada"
+    else
+      puts "  ✗ Error creando comisión #{i + 1}: #{commission.errors.full_messages.join(', ')}"
+    end
   end
+else
+  puts "⚠ Saltando comisiones: faltan datos requeridos (facturas: #{customer_invoice_ids.count}, centros: #{cost_center_ids.count})"
 end
-puts "✓ #{Commission.count} comisiones"
+puts "✓ #{Commission.count} comisiones totales"
 
 # ============================================
 # 18. RELACIONES DE COMISIONES - 50
