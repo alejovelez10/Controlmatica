@@ -133,7 +133,7 @@ class FormFilter extends Component {
                 <button onClick={this.props.cancelFilter} className="cm-btn cm-btn-outline cm-btn-sm" type="button">
                   <i className="fas fa-eraser" /> Limpiar
                 </button>
-                <button onClick={this.props.onClick} className="cm-btn cm-btn-primary cm-btn-sm" type="button">
+                <button onClick={this.props.onClick} className="cm-btn cm-btn-accent cm-btn-sm" type="button">
                   <i className="fas fa-search" /> Aplicar filtros
                 </button>
               </div>

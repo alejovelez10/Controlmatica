@@ -1360,14 +1360,14 @@ class index extends React.Component {
 
         self.state.showFilters ? React.createElement("div", { className: "cm-filter-panel" },
           // Header con título y botón cerrar
-          React.createElement("div", { className: "cm-filter-header" },
-            React.createElement("h3", { className: "cm-filter-title" },
-              React.createElement("i", { className: "fas fa-filter" }), " Filtros avanzados"
+          React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" } },
+            React.createElement("h3", { style: { margin: 0, fontSize: "16px", fontWeight: 600, color: "#333", display: "flex", alignItems: "center", gap: "8px" } },
+              React.createElement("i", { className: "fas fa-filter", style: { color: "#6b7280" } }), " Filtros avanzados"
             ),
             React.createElement("button", {
               type: "button",
               onClick: self.toggleFilters,
-              className: "cm-filter-close"
+              style: { background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: "4px", color: "#6b7280", fontSize: "16px" }
             }, React.createElement("i", { className: "fas fa-times" }))
           ),
           React.createElement("div", { className: "cm-filter-row" },

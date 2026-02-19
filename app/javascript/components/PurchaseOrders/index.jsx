@@ -879,22 +879,35 @@ class index extends React.Component {
 
     return (
       <div className="cm-filter-panel">
+        {/* Header con título y botón cerrar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#333", display: "flex", alignItems: "center", gap: "8px" }}>
+            <i className="fas fa-filter" style={{ color: "#6b7280" }} /> Filtros avanzados
+          </h3>
+          <button
+            type="button"
+            onClick={this.toggleFilter}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: "4px", color: "#6b7280", fontSize: "16px" }}
+          >
+            <i className="fas fa-times" />
+          </button>
+        </div>
         {/* Row 1: Fecha desde | Fecha hasta | Numero | Centro de costo */}
         <div className="cm-filter-row">
           <div className="cm-form-group">
-            <label className="cm-label">Fecha desde</label>
+            <label className="cm-label"><i className="fas fa-calendar-alt" /> Fecha desde</label>
             <input type="date" name="date_desde" className="cm-input" value={f.date_desde} onChange={this.handleFilterChange} />
           </div>
           <div className="cm-form-group">
-            <label className="cm-label">Fecha hasta</label>
+            <label className="cm-label"><i className="fas fa-calendar-alt" /> Fecha hasta</label>
             <input type="date" name="date_hasta" className="cm-input" value={f.date_hasta} onChange={this.handleFilterChange} />
           </div>
           <div className="cm-form-group">
-            <label className="cm-label">Numero</label>
+            <label className="cm-label"><i className="fas fa-hashtag" /> Numero</label>
             <input type="text" name="number_order" className="cm-input" value={f.number_order} onChange={this.handleFilterChange} placeholder="Numero de orden" />
           </div>
           <div className="cm-form-group">
-            <label className="cm-label">Centro de costo</label>
+            <label className="cm-label"><i className="fas fa-map-marker-alt" /> Centro de costo <small className="cm-label-hint">(3+ letras)</small></label>
             <Select
               placeholder="Centro de costo"
               options={this.state.filterCostCenterOptions}
@@ -913,7 +926,7 @@ class index extends React.Component {
         {/* Row 2: Estado de centro de costo | Descripción | Clientes | Numero de factura */}
         <div className="cm-filter-row">
           <div className="cm-form-group">
-            <label className="cm-label">Estado de centro de costo</label>
+            <label className="cm-label"><i className="fas fa-flag" /> Estado de centro de costo</label>
             <select name="state" className="cm-input" value={f.state} onChange={this.handleFilterChange}>
               <option value="">Seleccione un estado</option>
               <option value="LEGALIZADO">LEGALIZADO</option>
@@ -925,11 +938,11 @@ class index extends React.Component {
             </select>
           </div>
           <div className="cm-form-group">
-            <label className="cm-label">Descripción</label>
+            <label className="cm-label"><i className="fas fa-align-left" /> Descripción</label>
             <input type="text" name="description" className="cm-input" value={f.description} onChange={this.handleFilterChange} placeholder="Descripción..." />
           </div>
           <div className="cm-form-group">
-            <label className="cm-label">Clientes</label>
+            <label className="cm-label"><i className="fas fa-building" /> Clientes <small className="cm-label-hint">(2+ letras)</small></label>
             <Select
               placeholder="Escriba 2+ letras para buscar..."
               options={this.state.filterCustomerOptions}
@@ -945,21 +958,25 @@ class index extends React.Component {
             />
           </div>
           <div className="cm-form-group">
-            <label className="cm-label">Numero de factura</label>
+            <label className="cm-label"><i className="fas fa-file-invoice" /> Numero de factura</label>
             <input type="text" name="number_invoice" className="cm-input" value={f.number_invoice} onChange={this.handleFilterChange} placeholder="Numero de factura" />
           </div>
         </div>
         {/* Row 3: Numero de cotización | (empty) | (empty) | Aplicar + Cerrar filtros */}
         <div className="cm-filter-row">
           <div className="cm-form-group">
-            <label className="cm-label">Numero de cotización</label>
+            <label className="cm-label"><i className="fas fa-file-alt" /> Numero de cotización</label>
             <input type="text" name="quotation_number" className="cm-input" value={f.quotation_number} onChange={this.handleFilterChange} placeholder="Numero de cotización" />
           </div>
           <div className="cm-form-group" />
           <div className="cm-form-group" />
           <div className="cm-form-group" style={{ display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 8 }}>
-            <button className="cm-btn cm-btn-primary cm-btn-sm" onClick={this.applyFilters}>Aplicar</button>
-            <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.toggleFilter}>Cerrar filtros</button>
+            <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.toggleFilter}>
+              <i className="fas fa-eraser" /> Limpiar
+            </button>
+            <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={this.applyFilters}>
+              <i className="fas fa-search" /> Aplicar filtros
+            </button>
           </div>
         </div>
       </div>
@@ -970,7 +987,7 @@ class index extends React.Component {
     var meta = this.props.meta;
     return (
       <React.Fragment>
-        <CmPageActions>
+        <CmPageActions label="Crear orden">
           {this.props.estados.create && (
             <button onClick={this.openNewModal} className="cm-btn cm-btn-accent cm-btn-sm">
               <i className="fas fa-plus" /> Nueva Orden

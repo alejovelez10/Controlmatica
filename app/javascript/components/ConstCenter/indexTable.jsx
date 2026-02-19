@@ -35,7 +35,7 @@ class indexTable extends React.Component {
       // Server pagination state
       serverMeta: {
         page: 1,
-        per_page: 10,
+        per_page: 50,
         total: 0,
         total_pages: 1,
       },
@@ -1234,7 +1234,7 @@ class indexTable extends React.Component {
     return (
       <React.Fragment>
         {estados.create && (
-          <CmPageActions>
+          <CmPageActions label="Crear centro de costo">
             <button onClick={() => this.toggle("new")} className="cm-btn cm-btn-accent cm-btn-sm">
               <i className="fas fa-plus" /> Nuevo Centro de Costo
             </button>

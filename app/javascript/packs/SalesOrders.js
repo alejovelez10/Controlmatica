@@ -25,7 +25,7 @@ class SalesOrders extends Component {
     this.state = {
       data: [],
       loading: true,
-      meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
+      meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
       search: "",
       sort: "",
       dir: "asc",

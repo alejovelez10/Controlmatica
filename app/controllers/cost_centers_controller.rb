@@ -69,7 +69,7 @@ class CostCentersController < ApplicationController
     permissions = load_permissions("Centro de Costos", "Ver todos")
     validate = permissions["Ver todos"]
 
-    per_page = (params[:per_page] || 10).to_i
+    per_page = [(params[:per_page] || 50).to_i, 100].min
     page = (params[:page] || 1).to_i
     sort_column = params[:sort_column].presence || "created_at"
     sort_direction = params[:sort_direction] == "asc" ? "asc" : "desc"
