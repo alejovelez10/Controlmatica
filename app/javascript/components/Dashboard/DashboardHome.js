@@ -13,17 +13,58 @@ const CARD_CONFIG = [
   { key: 'customer_reports',label: 'Reportes de Cliente',   icon: 'fa-file-alt',            color: '#6366f1', bg: '#eef2ff',  link: '/customer_reports' },
 ];
 
+// Inject global CSS for animations and responsive
+const STYLE_ID = 'dashboard-home-styles';
+function injectStyles() {
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = STYLE_ID;
+  style.textContent = `
+    @keyframes dashboard-shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .dashboard-skeleton-anim {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%) !important;
+      background-size: 200% 100% !important;
+      animation: dashboard-shimmer 1.5s infinite !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 class DashboardHome extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       counts: null,
       loading: true,
-      error: false
+      error: false,
+      isMobile: window.innerWidth < 640,
+      isTablet: window.innerWidth >= 640 && window.innerWidth < 1024
     };
+    this.handleResize = this.handleResize.bind(this);
   }
 
   componentDidMount() {
+    injectStyles();
+    window.addEventListener('resize', this.handleResize);
+    this.fetchCounts();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleResize);
+  }
+
+  handleResize() {
+    const w = window.innerWidth;
+    this.setState({
+      isMobile: w < 640,
+      isTablet: w >= 640 && w < 1024
+    });
+  }
+
+  fetchCounts() {
     fetch('/home/dashboard_counts')
       .then(res => {
         if (!res.ok) throw new Error('Error');
@@ -38,46 +79,241 @@ class DashboardHome extends React.Component {
     return n;
   }
 
+  getStyles() {
+    const { isMobile, isTablet } = this.state;
+
+    return {
+      container: {
+        fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
+        padding: isMobile ? '0' : '4px'
+      },
+      headerCard: {
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        borderRadius: isMobile ? '12px' : '16px',
+        padding: isMobile ? '18px 16px' : '28px 32px',
+        marginBottom: isMobile ? '18px' : '28px',
+        border: '1px solid #e2e8f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: isMobile ? '12px' : '16px'
+      },
+      headerLeft: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? '12px' : '16px',
+        minWidth: 0,
+        flex: 1
+      },
+      avatarCircle: {
+        width: isMobile ? '42px' : '52px',
+        height: isMobile ? '42px' : '52px',
+        minWidth: isMobile ? '42px' : '52px',
+        borderRadius: '50%',
+        background: '#fffbeb',
+        border: '2px solid #f5a62340',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      greeting: {
+        fontSize: isMobile ? '17px' : '22px',
+        fontWeight: '700',
+        color: '#1e293b',
+        margin: '0 0 2px 0',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap'
+      },
+      subtitle: {
+        fontSize: isMobile ? '12px' : '13px',
+        color: '#94a3b8',
+        margin: 0,
+        fontWeight: '500'
+      },
+      headerBadge: {
+        background: '#f0fdf4',
+        border: '1px solid #bbf7d0',
+        borderRadius: isMobile ? '10px' : '12px',
+        padding: isMobile ? '8px 14px' : '10px 18px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      },
+      badgeNumber: {
+        fontSize: isMobile ? '16px' : '20px',
+        fontWeight: '700',
+        color: '#16a34a'
+      },
+      badgeLabel: {
+        fontSize: isMobile ? '11px' : '13px',
+        color: '#4ade80',
+        fontWeight: '500'
+      },
+      grid: {
+        display: 'grid',
+        gridTemplateColumns: isMobile
+          ? 'repeat(2, 1fr)'
+          : isTablet
+            ? 'repeat(3, 1fr)'
+            : 'repeat(auto-fill, minmax(220px, 1fr))',
+        gap: isMobile ? '12px' : '18px'
+      },
+      card: {
+        background: '#fff',
+        borderRadius: isMobile ? '12px' : '16px',
+        overflow: 'hidden',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        border: '1px solid #f1f5f9',
+        cursor: 'pointer',
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        textDecoration: 'none',
+        display: 'block',
+        position: 'relative'
+      },
+      cardBar: {
+        height: isMobile ? '3px' : '4px',
+        width: '100%'
+      },
+      cardContent: {
+        padding: isMobile ? '14px 14px 16px' : '20px 22px 22px'
+      },
+      cardRow: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: isMobile ? '12px' : '18px'
+      },
+      iconCircle: {
+        width: isMobile ? '38px' : '46px',
+        height: isMobile ? '38px' : '46px',
+        borderRadius: isMobile ? '10px' : '14px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      iconSize: isMobile ? '15px' : '18px',
+      arrowWrap: {
+        width: isMobile ? '24px' : '28px',
+        height: isMobile ? '24px' : '28px',
+        borderRadius: '8px',
+        background: '#f8fafc',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      countWrap: {
+        marginBottom: '2px'
+      },
+      count: {
+        fontSize: isMobile ? '24px' : '34px',
+        fontWeight: '800',
+        lineHeight: 1,
+        letterSpacing: '-1px'
+      },
+      label: {
+        fontSize: isMobile ? '11px' : '13px',
+        fontWeight: '600',
+        color: '#64748b',
+        margin: '4px 0 0 0',
+        letterSpacing: '0.01em',
+        lineHeight: '1.3'
+      },
+      skeletonCard: {
+        background: '#fff',
+        borderRadius: isMobile ? '12px' : '16px',
+        padding: isMobile ? '16px 14px' : '24px 22px',
+        border: '1px solid #f1f5f9'
+      },
+      skeletonIcon: {
+        width: isMobile ? '38px' : '46px',
+        height: isMobile ? '38px' : '46px',
+        borderRadius: isMobile ? '10px' : '14px',
+        marginBottom: isMobile ? '12px' : '18px'
+      },
+      skeletonLine: {
+        height: '14px',
+        borderRadius: '6px',
+        marginBottom: '10px',
+        width: '80%'
+      },
+      emptyState: {
+        textAlign: 'center',
+        padding: isMobile ? '40px 16px' : '60px 20px',
+        background: '#fff',
+        borderRadius: isMobile ? '12px' : '16px',
+        border: '1px solid #f1f5f9'
+      },
+      emptyIconWrap: {
+        width: isMobile ? '60px' : '72px',
+        height: isMobile ? '60px' : '72px',
+        borderRadius: '50%',
+        background: '#f8fafc',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '16px'
+      },
+      emptyText: {
+        fontSize: isMobile ? '14px' : '15px',
+        color: '#94a3b8',
+        margin: '0 0 16px 0'
+      },
+      retryBtn: {
+        background: '#f5a623',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '10px',
+        padding: '10px 24px',
+        fontSize: '14px',
+        fontWeight: '600',
+        cursor: 'pointer'
+      }
+    };
+  }
+
   render() {
     const { userName } = this.props;
-    const { counts, loading, error } = this.state;
+    const { counts, loading, error, isMobile } = this.state;
+    const st = this.getStyles();
 
     const visibleCards = counts
       ? CARD_CONFIG.filter(c => counts[c.key] && counts[c.key] > 0)
       : [];
 
     return (
-      <div style={s.container}>
+      <div style={st.container}>
         {/* Header */}
-        <div style={s.headerCard}>
-          <div style={s.headerLeft}>
-            <div style={s.avatarCircle}>
-              <i className="fas fa-user" style={{ fontSize: '22px', color: '#f5a623' }}></i>
+        <div style={st.headerCard}>
+          <div style={st.headerLeft}>
+            <div style={st.avatarCircle}>
+              <i className="fas fa-user" style={{ fontSize: isMobile ? '18px' : '22px', color: '#f5a623' }}></i>
             </div>
-            <div>
-              <h1 style={s.greeting}>Bienvenido, {userName}</h1>
-              <p style={s.subtitle}>
+            <div style={{ minWidth: 0 }}>
+              <h1 style={st.greeting}>Hola, {userName}</h1>
+              <p style={st.subtitle}>
                 <i className="fas fa-chart-pie" style={{ marginRight: '6px' }}></i>
                 Resumen de tu actividad
               </p>
             </div>
           </div>
           {!loading && !error && visibleCards.length > 0 && (
-            <div style={s.headerBadge}>
-              <span style={s.badgeNumber}>{visibleCards.length}</span>
-              <span style={s.badgeLabel}>modulos activos</span>
+            <div style={st.headerBadge}>
+              <span style={st.badgeNumber}>{visibleCards.length}</span>
+              <span style={st.badgeLabel}>modulos activos</span>
             </div>
           )}
         </div>
 
         {/* Loading skeleton */}
         {loading && (
-          <div style={s.grid}>
+          <div style={st.grid}>
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} style={s.skeletonCard}>
-                <div style={s.skeletonIcon}></div>
-                <div style={s.skeletonLine}></div>
-                <div style={{ ...s.skeletonLine, width: '60%' }}></div>
+              <div key={i} style={st.skeletonCard}>
+                <div className="dashboard-skeleton-anim" style={st.skeletonIcon}></div>
+                <div className="dashboard-skeleton-anim" style={st.skeletonLine}></div>
+                <div className="dashboard-skeleton-anim" style={{ ...st.skeletonLine, width: '60%' }}></div>
               </div>
             ))}
           </div>
@@ -85,16 +321,16 @@ class DashboardHome extends React.Component {
 
         {/* Error */}
         {error && (
-          <div style={s.emptyState}>
-            <div style={s.emptyIconWrap}>
-              <i className="fas fa-exclamation-triangle" style={{ fontSize: '32px', color: '#f59e0b' }}></i>
+          <div style={st.emptyState}>
+            <div style={st.emptyIconWrap}>
+              <i className="fas fa-exclamation-triangle" style={{ fontSize: isMobile ? '26px' : '32px', color: '#f59e0b' }}></i>
             </div>
-            <p style={s.emptyText}>Error al cargar los datos</p>
+            <p style={st.emptyText}>Error al cargar los datos</p>
             <button
-              style={s.retryBtn}
+              style={st.retryBtn}
               onClick={() => {
                 this.setState({ loading: true, error: false });
-                this.componentDidMount();
+                this.fetchCounts();
               }}
             >
               <i className="fas fa-redo" style={{ marginRight: '6px' }}></i>
@@ -105,51 +341,54 @@ class DashboardHome extends React.Component {
 
         {/* Empty */}
         {!loading && !error && visibleCards.length === 0 && (
-          <div style={s.emptyState}>
-            <div style={s.emptyIconWrap}>
-              <i className="fas fa-inbox" style={{ fontSize: '32px', color: '#cbd5e1' }}></i>
+          <div style={st.emptyState}>
+            <div style={st.emptyIconWrap}>
+              <i className="fas fa-inbox" style={{ fontSize: isMobile ? '26px' : '32px', color: '#cbd5e1' }}></i>
             </div>
-            <p style={s.emptyText}>No tienes registros aun</p>
+            <p style={st.emptyText}>No tienes registros aun</p>
           </div>
         )}
 
         {/* Cards */}
         {!loading && !error && visibleCards.length > 0 && (
-          <div style={s.grid}>
+          <div style={st.grid}>
             {visibleCards.map(card => (
               <a
                 key={card.key}
                 href={card.link}
-                style={s.card}
+                style={st.card}
                 onMouseEnter={e => {
+                  if (isMobile) return;
                   e.currentTarget.style.transform = 'translateY(-4px)';
                   e.currentTarget.style.boxShadow = `0 12px 24px ${card.color}20, 0 4px 8px rgba(0,0,0,0.06)`;
                   e.currentTarget.style.borderColor = card.color + '40';
                 }}
                 onMouseLeave={e => {
+                  if (isMobile) return;
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
                   e.currentTarget.style.borderColor = '#f1f5f9';
                 }}
               >
-                {/* Decorative top bar */}
-                <div style={{ ...s.cardBar, background: `linear-gradient(135deg, ${card.color}, ${card.color}cc)` }}></div>
+                <div style={{ ...st.cardBar, background: `linear-gradient(135deg, ${card.color}, ${card.color}cc)` }}></div>
 
-                <div style={s.cardContent}>
-                  <div style={s.cardRow}>
-                    <div style={{ ...s.iconCircle, background: card.bg }}>
-                      <i className={`fas ${card.icon}`} style={{ fontSize: '18px', color: card.color }}></i>
+                <div style={st.cardContent}>
+                  <div style={st.cardRow}>
+                    <div style={{ ...st.iconCircle, background: card.bg }}>
+                      <i className={`fas ${card.icon}`} style={{ fontSize: st.iconSize, color: card.color }}></i>
                     </div>
-                    <div style={s.arrowWrap}>
-                      <i className="fas fa-arrow-right" style={{ fontSize: '12px', color: '#cbd5e1' }}></i>
-                    </div>
+                    {!isMobile && (
+                      <div style={st.arrowWrap}>
+                        <i className="fas fa-arrow-right" style={{ fontSize: '12px', color: '#cbd5e1' }}></i>
+                      </div>
+                    )}
                   </div>
 
-                  <div style={s.countWrap}>
-                    <span style={{ ...s.count, color: card.color }}>{this.formatCount(counts[card.key])}</span>
+                  <div style={st.countWrap}>
+                    <span style={{ ...st.count, color: card.color }}>{this.formatCount(counts[card.key])}</span>
                   </div>
 
-                  <p style={s.label}>{card.label}</p>
+                  <p style={st.label}>{card.label}</p>
                 </div>
               </a>
             ))}
@@ -159,198 +398,5 @@ class DashboardHome extends React.Component {
     );
   }
 }
-
-const s = {
-  container: {
-    fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, sans-serif",
-    padding: '4px'
-  },
-
-  // Header
-  headerCard: {
-    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-    borderRadius: '16px',
-    padding: '28px 32px',
-    marginBottom: '28px',
-    border: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: '16px'
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px'
-  },
-  avatarCircle: {
-    width: '52px',
-    height: '52px',
-    borderRadius: '50%',
-    background: '#fffbeb',
-    border: '2px solid #f5a62340',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  greeting: {
-    fontSize: '22px',
-    fontWeight: '700',
-    color: '#1e293b',
-    margin: '0 0 2px 0'
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: '#94a3b8',
-    margin: 0,
-    fontWeight: '500'
-  },
-  headerBadge: {
-    background: '#f0fdf4',
-    border: '1px solid #bbf7d0',
-    borderRadius: '12px',
-    padding: '10px 18px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px'
-  },
-  badgeNumber: {
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#16a34a'
-  },
-  badgeLabel: {
-    fontSize: '13px',
-    color: '#4ade80',
-    fontWeight: '500'
-  },
-
-  // Grid
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '18px'
-  },
-
-  // Card
-  card: {
-    background: '#fff',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-    border: '1px solid #f1f5f9',
-    cursor: 'pointer',
-    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-    textDecoration: 'none',
-    display: 'block',
-    position: 'relative'
-  },
-  cardBar: {
-    height: '4px',
-    width: '100%'
-  },
-  cardContent: {
-    padding: '20px 22px 22px'
-  },
-  cardRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '18px'
-  },
-  iconCircle: {
-    width: '46px',
-    height: '46px',
-    borderRadius: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  arrowWrap: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '8px',
-    background: '#f8fafc',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  countWrap: {
-    marginBottom: '4px'
-  },
-  count: {
-    fontSize: '34px',
-    fontWeight: '800',
-    lineHeight: 1,
-    letterSpacing: '-1px'
-  },
-  label: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#64748b',
-    margin: '6px 0 0 0',
-    letterSpacing: '0.01em'
-  },
-
-  // Skeleton
-  skeletonCard: {
-    background: '#fff',
-    borderRadius: '16px',
-    padding: '24px 22px',
-    border: '1px solid #f1f5f9'
-  },
-  skeletonIcon: {
-    width: '46px',
-    height: '46px',
-    borderRadius: '14px',
-    background: 'linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)',
-    backgroundSize: '200% 100%',
-    animation: 'shimmer 1.5s infinite',
-    marginBottom: '18px'
-  },
-  skeletonLine: {
-    height: '14px',
-    borderRadius: '6px',
-    background: 'linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)',
-    backgroundSize: '200% 100%',
-    marginBottom: '10px',
-    width: '80%'
-  },
-
-  // Empty
-  emptyState: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    background: '#fff',
-    borderRadius: '16px',
-    border: '1px solid #f1f5f9'
-  },
-  emptyIconWrap: {
-    width: '72px',
-    height: '72px',
-    borderRadius: '50%',
-    background: '#f8fafc',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '16px'
-  },
-  emptyText: {
-    fontSize: '15px',
-    color: '#94a3b8',
-    margin: '0 0 16px 0'
-  },
-  retryBtn: {
-    background: '#f5a623',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '10px',
-    padding: '10px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    cursor: 'pointer'
-  }
-};
 
 export default DashboardHome;
