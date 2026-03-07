@@ -1,6 +1,6 @@
 <%= javascript_pack_tag 'Dashboard' %>
 
-<div id="Dashboard-react-component"
-  data-user-name="<%= current_user.names || current_user.email %>"
-  data-user-email="<%= current_user.email %>">
-</div>
+<%= react_component 'DashboardHome', {
+  userName: current_user.names || current_user.email,
+  userEmail: current_user.email
+} %>
