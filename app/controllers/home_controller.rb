@@ -7,6 +7,44 @@ class HomeController < ApplicationController
   def dashboard
   end
 
+  def dashboard_counts
+    user = current_user
+    counts = {}
+
+    # Use .size on associations - Rails uses COUNT(*) query
+    count = user.cost_centers.size
+    counts[:cost_centers] = count if count > 0
+
+    count = user.sales_orders.size
+    counts[:sales_orders] = count if count > 0
+
+    count = user.materials.size
+    counts[:materials] = count if count > 0
+
+    count = user.contractors.size
+    counts[:contractors] = count if count > 0
+
+    count = user.report_expenses.size
+    counts[:report_expenses] = count if count > 0
+
+    count = user.shifts.size
+    counts[:shifts] = count if count > 0
+
+    count = user.reports.size
+    counts[:reports] = count if count > 0
+
+    count = Commission.where(user_id: user.id).size
+    counts[:commissions] = count if count > 0
+
+    count = user.customer_reports.size
+    counts[:customer_reports] = count if count > 0
+
+    count = user.expense_ratios.size
+    counts[:expense_ratios] = count if count > 0
+
+    render json: counts
+  end
+
   def dashboard_ing
   end
 

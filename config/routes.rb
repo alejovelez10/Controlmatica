@@ -187,6 +187,7 @@ Rails.application.routes.draw do
   get "home/get_dashboard_three_ing/:ye/:mo/:user_id", to: "home#get_dashboard_three_ing", as: "get_dashboard_three_ing"
   get "home/get_dashboard_four_ing/:id/:user_id", to: "home#get_dashboard_four_ing", as: "get_dashboard_four_ing"
   get "home/get_dashboard_five_ing/:id/:user_id", to: "home#get_dashboard_five_ing", as: "get_dashboard_five_ing"
+  get "home/dashboard_counts", to: "home#dashboard_counts", as: "dashboard_counts"
 
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
   get "enviar_aprobacion/:report", to: "customer_reports#enviar_aprobacion", as: "enviar_aprobacion"

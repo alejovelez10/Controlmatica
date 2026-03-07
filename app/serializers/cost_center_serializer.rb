@@ -82,6 +82,7 @@
 #  index_cost_centers_on_last_user_edited_id  (last_user_edited_id)
 #  index_cost_centers_on_service_type         (service_type)
 #  index_cost_centers_on_start_date           (start_date)
+#  index_cost_centers_on_start_date_year      (EXTRACT(year FROM start_date))
 #  index_cost_centers_on_user_id              (user_id)
 #  index_cost_centers_on_user_owner_id        (user_owner_id)
 #

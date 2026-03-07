@@ -19,7 +19,11 @@
 #
 # Indexes
 #
-#  index_sales_orders_on_cost_center_id  (cost_center_id)
+#  index_sales_orders_on_cost_center_id       (cost_center_id)
+#  index_sales_orders_on_created_date         (created_date)
+#  index_sales_orders_on_last_user_edited_id  (last_user_edited_id)
+#  index_sales_orders_on_order_number         (order_number)
+#  index_sales_orders_on_user_id              (user_id)
 #
 
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html

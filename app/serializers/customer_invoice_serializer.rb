@@ -20,7 +20,9 @@
 #
 # Indexes
 #
-#  index_customer_invoices_on_cost_center_id  (cost_center_id)
+#  index_customer_invoices_on_cost_center_id     (cost_center_id)
+#  index_customer_invoices_on_invoice_date_year  (EXTRACT(year FROM invoice_date))
+#  index_customer_invoices_on_sales_order_id     (sales_order_id)
 #
 
 class CustomerInvoiceSerializer < ActiveModel::Serializer

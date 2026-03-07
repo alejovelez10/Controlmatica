@@ -22,6 +22,7 @@
 # Indexes
 #
 #  index_commissions_on_cost_center_id  (cost_center_id)
+#  index_commissions_on_user_id         (user_id)
 #
 
 one:

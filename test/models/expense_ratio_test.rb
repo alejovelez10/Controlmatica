@@ -16,6 +16,10 @@
 #  user_id             :integer
 #  user_report_id      :integer
 #
+# Indexes
+#
+#  index_expense_ratios_on_user_id  (user_id)
+#
 
 require 'test_helper'
 

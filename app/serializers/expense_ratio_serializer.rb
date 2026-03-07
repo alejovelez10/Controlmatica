@@ -16,6 +16,10 @@
 #  user_id             :integer
 #  user_report_id      :integer
 #
+# Indexes
+#
+#  index_expense_ratios_on_user_id  (user_id)
+#
 
 class ExpenseRatioSerializer < ActiveModel::Serializer
   attributes :id, :creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id, :updated_at, :created_at, :anticipo, :user_direction, :user_report

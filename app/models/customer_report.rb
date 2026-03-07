@@ -23,6 +23,7 @@
 # Indexes
 #
 #  index_customer_reports_on_cost_center_id  (cost_center_id)
+#  index_customer_reports_on_user_id         (user_id)
 #
 
 class CustomerReport < ApplicationRecord
