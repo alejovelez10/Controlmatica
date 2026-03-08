@@ -1269,6 +1269,48 @@
   }
 </style>
 
+
+<script>
+// Global openMenu for cm-dt-menu dropdowns (used by all table components)
+window.cmOpenMenu = function(e) {
+  e.stopPropagation();
+  var btn = e.currentTarget;
+  var menu = btn.nextElementSibling;
+
+  // Close all open menus
+  document.querySelectorAll('.cm-dt-menu-dropdown.open').forEach(function(m) {
+    m.classList.remove('open');
+  });
+
+  var rect = btn.getBoundingClientRect();
+  document.body.appendChild(menu);
+
+  // Position: to the right of button
+  var menuWidth = 160;
+  var left = rect.right + 4;
+  // If overflows right, flip to left
+  if (left + menuWidth > window.innerWidth) {
+    left = rect.left - menuWidth - 4;
+  }
+  if (left < 8) left = 8;
+
+  menu.style.top = (rect.bottom + 4) + 'px';
+  menu.style.left = left + 'px';
+  menu.style.zIndex = '2147483647';
+  menu.classList.add('open');
+
+  // Close on click on any item or outside
+  var close = function(ev) {
+    menu.classList.remove('open');
+    if (btn.parentNode) btn.parentNode.appendChild(menu);
+    document.removeEventListener('click', close, true);
+  };
+  setTimeout(function() {
+    document.addEventListener('click', close, true);
+  }, 0);
+};
+</script>
+
   </body>
 </html>
 

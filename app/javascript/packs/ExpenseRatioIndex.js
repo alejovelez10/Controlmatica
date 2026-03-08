@@ -307,26 +307,7 @@ class ExpenseRatioIndex extends React.Component {
 
   // ─── Row Actions ───
 
-  openMenu = function(e) {
-    e.stopPropagation();
-    var btn = e.currentTarget;
-    var menu = btn.nextElementSibling;
-    var all = document.querySelectorAll('.cm-dt-menu-dropdown.open');
-    all.forEach(function(m) { m.classList.remove('open'); });
-    var rect = btn.getBoundingClientRect();
-    document.body.appendChild(menu);
-    menu.style.top = (rect.bottom + 4) + 'px';
-    menu.style.left = (rect.right - 160) + 'px';
-    menu.classList.add('open');
-    var close = function(ev) {
-      if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
-        menu.classList.remove('open');
-        if (btn.parentNode) btn.parentNode.appendChild(menu);
-        document.removeEventListener('click', close);
-      }
-    };
-    document.addEventListener('click', close);
-  }.bind(this);
+  openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);
 
   getRowActions = function(row) {
     var self = this;
@@ -379,7 +360,7 @@ class ExpenseRatioIndex extends React.Component {
     var f = this.state.filters;
 
     return React.createElement("div", { style: { marginBottom: 16 } },
-      React.createElement("div", { className: "cm-dt", style: { overflow: "visible" } },
+      React.createElement("div", { className: "cm-filter-panel" },
         // Header con botón cerrar
         React.createElement("div", { style: { padding: "14px 20px", borderBottom: "1px solid var(--cm-border)", display: "flex", alignItems: "center", justifyContent: "space-between" } },
           React.createElement("span", { style: { fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 600, color: "var(--cm-text-muted)" } },

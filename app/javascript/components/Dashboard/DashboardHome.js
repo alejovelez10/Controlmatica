@@ -90,13 +90,13 @@ class DashboardHome extends React.Component {
       headerCard: {
         background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
         borderRadius: isMobile ? '12px' : '16px',
-        padding: isMobile ? '18px 16px' : '28px 32px',
-        marginBottom: isMobile ? '18px' : '28px',
+        padding: isMobile ? '16px' : '28px 32px',
+        marginBottom: isMobile ? '16px' : '28px',
         border: '1px solid #e2e8f0',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: isMobile ? 'flex-start' : 'center',
         justifyContent: 'space-between',
-        flexWrap: 'wrap',
+        flexDirection: isMobile ? 'column' : 'row',
         gap: isMobile ? '12px' : '16px'
       },
       headerLeft: {
@@ -121,10 +121,7 @@ class DashboardHome extends React.Component {
         fontSize: isMobile ? '17px' : '22px',
         fontWeight: '700',
         color: '#1e293b',
-        margin: '0 0 2px 0',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap'
+        margin: '0 0 2px 0'
       },
       subtitle: {
         fontSize: isMobile ? '12px' : '13px',

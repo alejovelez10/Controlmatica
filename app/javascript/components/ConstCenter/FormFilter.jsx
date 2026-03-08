@@ -31,20 +31,19 @@ class FormFilter extends Component {
     const f = this.props.formValuesFilter;
 
     return (
-      <div style={{ marginBottom: 16 }}>
-        <div className="cm-dt" style={{ overflow: "visible" }}>
-          <div style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--cm-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "'Poppins', sans-serif", fontSize: 13, fontWeight: 600, color: "var(--cm-text-muted)" }}>
-              <i className="fas fa-filter" style={{ marginRight: 8, opacity: 0.6 }} />
-              Filtros avanzados
-            </span>
-            <button onClick={this.close} className="cm-dt-action-btn" title="Cerrar filtros" style={{ width: 28, height: 28 }}>
-              <i className="fas fa-times" />
-            </button>
-          </div>
+      <div className="cm-filter-panel">
+        <div className="cm-filter-panel-header">
+          <span className="cm-filter-panel-title">
+            <i className="fas fa-filter" />
+            Filtros avanzados
+          </span>
+          <button onClick={this.close} className="cm-dt-action-btn" title="Cerrar filtros" style={{ width: 28, height: 28 }}>
+            <i className="fas fa-times" />
+          </button>
+        </div>
 
-          <div style={{ padding: "16px 20px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "14px 16px" }}>
+        <div className="cm-filter-panel-body">
+            <div className="cm-filter-row">
               <div className="cm-form-group" style={{ marginBottom: 0 }}>
                 <label className="cm-label">Fecha inicio (desde)</label>
                 <input className="cm-input" type="date" name="start_date" onChange={this.props.onChangeFilter} value={f.start_date} />
@@ -124,12 +123,12 @@ class FormFilter extends Component {
                 <input className="cm-input" type="text" name="quotation_number" placeholder="# Cotizacion" onChange={this.props.onChangeFilter} value={f.quotation_number} />
               </div>
 
-              <div className="cm-form-group" style={{ marginBottom: 0, gridColumn: "1 / 3" }}>
+              <div className="cm-form-group cm-filter-span-2" style={{ marginBottom: 0 }}>
                 <label className="cm-label">Descripcion</label>
                 <input className="cm-input" type="text" name="descripcion" placeholder="Buscar por descripcion..." onChange={this.props.onChangeFilter} value={f.descripcion} />
               </div>
 
-              <div style={{ gridColumn: "3 / 5", display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 }}>
+              <div className="cm-filter-span-2 cm-filter-actions">
                 <button onClick={this.props.cancelFilter} className="cm-btn cm-btn-outline cm-btn-sm" type="button">
                   <i className="fas fa-eraser" /> Limpiar
                 </button>
@@ -140,7 +139,6 @@ class FormFilter extends Component {
             </div>
           </div>
         </div>
-      </div>
     );
   }
 }

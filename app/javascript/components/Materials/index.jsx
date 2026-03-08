@@ -613,26 +613,7 @@ class index extends React.Component {
     };
 
     // Open menu handler
-    var openMenu = function(e) {
-      e.stopPropagation();
-      var btn = e.currentTarget;
-      var menu = btn.nextElementSibling;
-      var all = document.querySelectorAll('.cm-dt-menu-dropdown.open');
-      all.forEach(function(m) { m.classList.remove('open'); });
-      var rect = btn.getBoundingClientRect();
-      document.body.appendChild(menu);
-      menu.style.top = (rect.bottom + 4) + 'px';
-      menu.style.left = (rect.right - 160) + 'px';
-      menu.classList.add('open');
-      var close = function(ev) {
-        if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
-          menu.classList.remove('open');
-          btn.parentNode.appendChild(menu);
-          document.removeEventListener('click', close);
-        }
-      };
-      document.addEventListener('click', close);
-    };
+    var openMenu = function(e) { window.cmOpenMenu(e); };
 
     // Table component
     var renderTable = function() {
@@ -799,26 +780,7 @@ class index extends React.Component {
 
   // ─── Renders ───
 
-  openMenu = function(e) {
-    e.stopPropagation();
-    var btn = e.currentTarget;
-    var menu = btn.nextElementSibling;
-    var all = document.querySelectorAll(".cm-dt-menu-dropdown.open");
-    all.forEach(function(m) { m.classList.remove("open"); });
-    var rect = btn.getBoundingClientRect();
-    document.body.appendChild(menu);
-    menu.style.top = (rect.bottom + 4) + "px";
-    menu.style.left = (rect.right - 160) + "px";
-    menu.classList.add("open");
-    var close = function(ev) {
-      if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
-        menu.classList.remove("open");
-        btn.parentNode.appendChild(menu);
-        document.removeEventListener("click", close);
-      }
-    };
-    document.addEventListener("click", close);
-  };
+  openMenu = function(e) { window.cmOpenMenu(e); };
 
   renderActions = function(row) {
     var estados = this.props.estados;

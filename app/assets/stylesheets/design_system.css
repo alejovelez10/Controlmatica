@@ -1294,18 +1294,54 @@ select.cm-input {
    ============================================ */
 
 .cm-filter-panel {
-  background: var(--cm-bg-card);
-  border: 1px solid var(--cm-border);
-  border-radius: var(--cm-radius);
-  box-shadow: var(--cm-shadow-sm);
-  padding: 24px 28px 12px;
+  background: #fff;
+  border: 1px solid var(--cm-border, #e2e5ea);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   margin-bottom: 16px;
+  overflow: visible;
+  padding: 20px 24px;
+}
+
+.cm-filter-panel-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--cm-border, #e2e5ea);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cm-filter-panel-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cm-text-muted, #6b7280);
+}
+
+.cm-filter-panel-title i {
+  margin-right: 8px;
+  opacity: 0.6;
+}
+
+.cm-filter-panel-body {
+  padding: 16px 20px;
 }
 
 .cm-filter-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 0 20px;
+  gap: 14px 16px;
+}
+
+.cm-filter-span-2 {
+  grid-column: span 2;
+}
+
+.cm-filter-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .cm-filter-panel .cm-form-group {
@@ -1866,8 +1902,40 @@ select.cm-input {
 
   .cm-form-grid-2,
   .cm-form-grid-3,
-  .cm-filter-grid {
+  .cm-filter-grid,
+  .cm-filter-row {
     grid-template-columns: 1fr !important;
+  }
+
+  .cm-filter-span-2,
+  .cm-filter-row > * {
+    grid-column: span 1 !important;
+  }
+
+  .cm-filter-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cm-filter-actions .cm-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cm-filter-panel {
+    padding: 14px;
+  }
+
+  .cm-filter-panel-header {
+    padding: 12px 14px 10px;
+  }
+
+  .cm-filter-panel-body {
+    padding: 12px 14px;
+  }
+
+  .cm-filter-grid {
+    padding: 14px;
   }
 
   .cm-password-requirements {
@@ -1964,8 +2032,8 @@ select.cm-input {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 10px 14px !important;
-    margin: -16px -12px 16px -12px !important;
+    padding: 8px 14px !important;
+    margin: -16px -12px 8px -12px !important;
     gap: 8px;
   }
 
@@ -2003,5 +2071,132 @@ select.cm-input {
   .app-title-right .cm-btn i,
   .app-title-right button i {
     font-size: 14px !important;
+  }
+}
+
+/* ============================================
+   Action Buttons - Portal Dropdown
+   Uses React Portal (renders in body, never clipped)
+   ============================================ */
+
+.cm-dropdown-portal-trigger {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.cm-dropdown-portal-trigger:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+}
+
+.cm-dropdown-portal-trigger:active {
+  transform: scale(0.93);
+}
+
+.cm-dropdown-portal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.cm-dropdown-portal-menu {
+  position: fixed;
+  min-width: 160px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  padding: 4px;
+  z-index: 10000;
+  animation: cm-dropdown-fade 0.15s ease;
+}
+
+@keyframes cm-dropdown-fade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cm-dropdown-portal-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  cursor: pointer;
+  border-radius: 6px;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.cm-dropdown-portal-item:hover {
+  background: #f3f4f6;
+}
+
+.cm-dropdown-portal-item i {
+  width: 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.cm-dropdown-portal-danger {
+  color: #ef4444;
+}
+
+.cm-dropdown-portal-danger i {
+  color: #ef4444;
+}
+
+.cm-dropdown-portal-danger:hover {
+  background: #fef2f2;
+}
+
+/* Mobile: full-width bottom sheet style */
+@media (max-width: 768px) {
+  .cm-dropdown-portal-menu {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)) 4px;
+    animation: cm-dropdown-slide-up 0.2s ease;
+  }
+
+  @keyframes cm-dropdown-slide-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .cm-dropdown-portal-overlay {
+    background: rgba(0,0,0,0.3);
+  }
+
+  .cm-dropdown-portal-item {
+    padding: 14px 20px;
+    font-size: 15px;
   }
 }

@@ -536,53 +536,7 @@ class index extends React.Component {
 
   // ─── Renders ───
 
-  openMenu = function(e) {
-    e.stopPropagation();
-    var btn = e.currentTarget;
-    var menu = btn.nextElementSibling;
-    var all = document.querySelectorAll(".cm-dt-menu-dropdown.open");
-    all.forEach(function(m) { m.classList.remove("open"); });
-    var rect = btn.getBoundingClientRect();
-    document.body.appendChild(menu);
-    menu.style.top = (rect.bottom + 4) + "px";
-    menu.style.left = (rect.right - 160) + "px";
-    menu.classList.add("open");
-    var close = function(ev) {
-      if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
-        menu.classList.remove("open");
-        btn.parentNode.appendChild(menu);
-        document.removeEventListener("click", close);
-      }
-    };
-    document.addEventListener("click", close);
-  };
-
-  renderActions = function(row) {
-    var estados = this.props.estados;
-    var self = this;
-    return (
-      React.createElement("div", { className: "cm-dt-menu" },
-        React.createElement("button", { className: "cm-dt-menu-trigger", onClick: self.openMenu },
-          React.createElement("i", { className: "fas fa-ellipsis-v" })
-        ),
-        React.createElement("div", { className: "cm-dt-menu-dropdown" },
-          self.getStateEdit(row.user_id) ? React.createElement("button", {
-            onClick: function() { self.openEditModal(row); },
-            className: "cm-dt-menu-item"
-          }, React.createElement("i", { className: "fas fa-pen" }), " Editar") : null,
-          estados.delete ? React.createElement("button", {
-            onClick: function() { self.handleDelete(row.id); },
-            className: "cm-dt-menu-item cm-dt-menu-item--danger"
-          }, React.createElement("i", { className: "fas fa-trash" }), " Eliminar") : null,
-          estados.generate_pdf ? React.createElement("a", {
-            href: "/customer_pdf/" + row.id + ".pdf",
-            target: "_blank",
-            className: "cm-dt-menu-item"
-          }, React.createElement("i", { className: "fas fa-file-pdf" }), " Generar PDF") : null
-        )
-      )
-    );
-  }.bind(this);
+  openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);
 
   renderHeaderActions = function() {
     var estados = this.props.estados;

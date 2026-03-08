@@ -45,9 +45,14 @@
 
   .dropdown-menu{
     padding: 7px;
-    position: absolute;
-    top: 41px;
-    left: -117px;
+  }
+
+  @media (min-width: 769px) {
+    .dropdown-menu {
+      position: absolute;
+      top: 41px;
+      left: -117px;
+    }
   }
 
   .float{
@@ -177,6 +182,7 @@
   overflow-x: auto;
 }
 
+
 .table-width{
   width: 220% !important;
   max-width: 220% !important;
@@ -290,6 +296,7 @@ input[type="file"] label{
 .home-dashboard_ing-content{
   margin-top: 0;
 }
+
 
 .title-board-ing{
   background: #ffffff;
@@ -452,4 +459,168 @@ input[type="file"] label{
   background: #f9fafb;
   border-radius: 12px;
   margin-bottom: 20px;
+}
+
+// Dashboard header (InformeIng)
+.dashboard-custom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  margin-bottom: 16px;
+  background: #ffffff;
+}
+
+.dashboard-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-header-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    color: #f5a623;
+    font-size: 24px;
+  }
+}
+
+.dashboard-header-text {
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    color: #6b7280;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+// Dashboard tabs
+.dashboard-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-bottom: 2px solid #e5e7eb;
+
+  .nav-item {
+    margin-bottom: -2px;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    text-decoration: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #f5a623;
+    }
+
+    &.active {
+      color: #f5a623;
+      border-bottom: 2px solid #f5a623;
+    }
+  }
+}
+
+// Mobile responsive for dashboard
+@media (max-width: 768px) {
+  .home-dashboard_ing-content {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .home-dashboard_ing-content > .col-md-12.page {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-dashboard_ing-content .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .home-dashboard_ing-content [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-dashboard_ing-content .pl-3,
+  .home-dashboard_ing-content .pl-0 {
+    padding-left: 0 !important;
+  }
+  .dashboard-custom-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 4px 0 12px 0;
+    margin-bottom: 8px;
+  }
+
+  .dashboard-custom-header .dashboard-select {
+    width: 100%;
+  }
+
+  .dashboard-header-icon {
+    width: 36px;
+    height: 36px;
+
+    i {
+      font-size: 20px;
+    }
+  }
+
+  .dashboard-header-text {
+    h1 {
+      font-size: 16px;
+    }
+
+    p {
+      font-size: 12px;
+    }
+  }
+
+  .dashboard-tabs .nav-link {
+    padding: 10px 14px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .dashboard-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .dashboard-select {
+    font-size: 13px;
+    padding: 8px 36px 8px 12px;
+  }
+
+  .dashboard-filters {
+    padding: 12px;
+    gap: 8px;
+  }
 }

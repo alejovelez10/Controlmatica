@@ -4,6 +4,7 @@ import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2";
 import NumberFormat from 'react-number-format';
 import Pagination from "react-js-pagination";
+import ActionButtons from '../shared/ActionButtons';
 
 class Index extends Component {
     constructor(props) {
@@ -367,30 +368,11 @@ class Index extends Component {
                                                 this.props.data.map(expense_ratio => (
                                                     <tr key={expense_ratio.id}>
                                                         {(this.props.estados.delete || this.props.estados.edit) && (
-                                                            <td className="text-right" style={{ width: "10px"}}>          
-                                                                <div className="btn-group" role="group" aria-label="Button group with nested dropdown">
-                                                                    <div className="btn-group" role="group">
-                                                                        <button className="btn btn-secondary" id="btnGroupDrop1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                            <i className="fas fa-bars"></i>
-                                                                        </button>
-                                                                        
-                                                                        <div className="dropdown-menu dropdown-menu-right">
-
-                                                                            {this.props.estados.edit && (
-                                                                                <button onClick={() => this.edit(expense_ratio)} className="dropdown-item">
-                                                                                    Editar
-                                                                                </button>
-                                                                            )}
-
-                                                                            {this.props.estados.delete && (
-                                                                                <button onClick={() => this.delete(expense_ratio.id)} className="dropdown-item">
-                                                                                    Eliminar
-                                                                                </button>
-                                                                            )}
-
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                            <td className="text-right" style={{ width: "10px"}}>
+                                                                <ActionButtons actions={[
+                                                                    ...(this.props.estados.edit ? [{ label: 'Editar', icon: 'fa-pen', onClick: () => this.edit(expense_ratio) }] : []),
+                                                                    ...(this.props.estados.delete ? [{ label: 'Eliminar', icon: 'fa-trash', onClick: () => this.delete(expense_ratio.id), danger: true }] : []),
+                                                                ]} />
                                                             </td>
                                                         )}
 

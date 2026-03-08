@@ -103,17 +103,7 @@ class OrdenesDeCompraTable extends Component {
       });
   };
 
-  openMenu = (e) => {
-    e.stopPropagation();
-    var btn = e.currentTarget; var menu = btn.nextElementSibling;
-    document.querySelectorAll('.cm-dt-menu-dropdown.open').forEach(function(m) { m.classList.remove('open'); });
-    var rect = btn.getBoundingClientRect();
-    document.body.appendChild(menu);
-    menu.style.top = (rect.bottom + 4) + 'px'; menu.style.left = (rect.right - 160) + 'px';
-    menu.classList.add('open');
-    var close = function(ev) { if (!menu.contains(ev.target) && !btn.contains(ev.target)) { menu.classList.remove('open'); btn.parentNode.appendChild(menu); document.removeEventListener('click', close); } };
-    document.addEventListener('click', close);
-  };
+  openMenu = (e) => { window.cmOpenMenu(e); };
 
   renderActions = (row) => (
     <div className="cm-dt-menu">

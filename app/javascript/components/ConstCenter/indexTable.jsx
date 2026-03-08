@@ -1336,7 +1336,8 @@ class indexTable extends React.Component {
                 var rect = btn.getBoundingClientRect();
                 document.body.appendChild(menu);
                 menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.left = (rect.right - 160) + 'px';
+                menu.style.left = (rect.right + 4) + 'px';
+    if (rect.right + 4 + 160 > window.innerWidth) { menu.style.left = (rect.left - 164) + 'px'; }
                 menu.classList.add('open');
                 var close = function(ev) {
                   if (!menu.contains(ev.target) && !btn.contains(ev.target)) {
