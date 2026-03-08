@@ -760,17 +760,51 @@ thead .cm-dt-sticky-col {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
+  /* Toolbar: single row, search + actions inline */
   .cm-dt-toolbar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .cm-dt-search-group {
+    flex: 1;
+    min-width: 0;
   }
 
   .cm-dt-search {
-    max-width: 100%;
+    min-width: 0;
+    flex: 1;
   }
 
+  .cm-dt-search-input {
+    padding: 8px 10px 8px 32px;
+    font-size: 12px;
+  }
+
+  .cm-dt-search-icon {
+    left: 10px;
+    font-size: 12px;
+  }
+
+  /* Actions: icon-only on mobile */
   .cm-dt-toolbar-right {
-    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+
+  .cm-dt-header-actions .cm-btn,
+  .cm-dt-header-actions a.cm-btn {
+    padding: 7px 10px;
+    font-size: 0;
+    gap: 0;
+    min-width: 34px;
+    justify-content: center;
+  }
+
+  .cm-dt-header-actions .cm-btn i,
+  .cm-dt-header-actions a.cm-btn i {
+    font-size: 13px;
   }
 
   .cm-dt-footer {

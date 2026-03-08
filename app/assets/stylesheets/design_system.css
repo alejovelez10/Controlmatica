@@ -435,6 +435,18 @@ select.cm-input {
   gap: 16px 20px;
 }
 
+.cm-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cm-form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
 .cm-form-row .cm-form-group,
 .cm-form-row .cm-input-group {
   margin-bottom: 2px;
@@ -1368,4 +1380,383 @@ select.cm-input {
   outline: none;
   border-color: #f5a623;
   box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+}
+
+/* ============================================
+   MODAL - Estructura base (patron ConstCenter)
+   ============================================ */
+
+.cm-modal-container {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.cm-modal-header {
+  background: #fcfcfd;
+  padding: 20px 32px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.cm-modal-header .close { display: none; }
+
+.cm-modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cm-modal-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+  flex-shrink: 0;
+}
+
+.cm-modal-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.cm-modal-subtitle {
+  font-size: 12px;
+  color: #6c757d;
+  margin: 2px 0 0 0;
+}
+
+.cm-modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #e9ecef;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.cm-modal-close:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.cm-modal-body {
+  padding: 24px 32px !important;
+  background: #fff;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.cm-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 32px;
+  background: #fcfcfd;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+/* Filter grid - 4 columns desktop, responsive on mobile */
+.cm-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px;
+}
+
+/* Form helpers */
+.cm-form-group.cm-full-width {
+  grid-column: 1 / -1;
+}
+
+.cm-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.cm-alert-error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Botones de modal */
+.cm-btn-cancel {
+  background: #fff;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.cm-btn-cancel:hover:not(:disabled) {
+  background: #fcfcfd;
+  border-color: #adb5bd;
+}
+
+.cm-btn-submit {
+  background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%);
+  color: #fff;
+}
+
+.cm-btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e09520 0%, #e5a82a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
+}
+
+/* Info card (used in Commission hours summary) */
+.cm-info-card {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 1px solid #ffcc80;
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.cm-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.cm-info-row:last-child {
+  border-bottom: none;
+}
+
+.cm-info-label {
+  color: #6d4c00;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cm-info-label i {
+  color: #f5a623;
+  width: 16px;
+}
+
+.cm-info-value {
+  font-weight: 700;
+  color: #6d4c00;
+  font-size: 16px;
+}
+
+.cm-info-highlight {
+  background: rgba(245, 166, 35, 0.2);
+  border-radius: 6px;
+  padding: 12px !important;
+  margin-top: 8px;
+}
+
+.cm-info-highlight .cm-info-value {
+  color: #e65100;
+  font-size: 18px;
+}
+
+/* Error message for form fields */
+.cm-error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  /* Modal: full width, full height on mobile */
+  .cm-modal .modal-dialog {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100vw !important;
+    min-height: 100vh !important;
+    width: 100% !important;
+    align-items: flex-end !important;
+  }
+
+  .cm-modal .modal-content {
+    max-height: 95vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    min-height: 50vh;
+  }
+
+  .cm-modal .modal-body {
+    padding: 16px !important;
+  }
+
+  .cm-modal .modal-header {
+    padding: 14px 16px !important;
+  }
+
+  .cm-modal .modal-footer {
+    padding: 14px 16px !important;
+    position: sticky;
+    bottom: 0;
+  }
+
+  /* Forms: single column on mobile */
+  .cm-form-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .cm-form-section-item .cm-form-row {
+    gap: 12px !important;
+  }
+
+  .cm-form-grid-2,
+  .cm-form-grid-3,
+  .cm-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Global: modals as bottom sheet on mobile (only centered modals) */
+  .modal-dialog-centered {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    align-items: flex-end !important;
+    display: flex !important;
+  }
+
+  .modal-dialog-centered .modal-content {
+    max-height: 95vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    min-height: auto !important;
+    width: 100% !important;
+  }
+
+  .modal-dialog-centered .modal-header {
+    padding: 14px 16px !important;
+  }
+
+  .modal-dialog-centered .modal-footer {
+    padding: 14px 16px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #fff !important;
+  }
+
+  .cm-modal-container {
+    max-height: 95vh !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .cm-modal-body,
+  .modal-body {
+    max-height: calc(95vh - 140px) !important;
+    padding: 16px !important;
+  }
+
+  .cm-modal-header {
+    padding: 14px 16px !important;
+    gap: 12px !important;
+  }
+
+  .cm-modal-header-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+    gap: 10px !important;
+  }
+
+  .cm-modal-icon {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 16px !important;
+  }
+
+  .cm-modal-title {
+    font-size: 15px !important;
+  }
+
+  .cm-modal-subtitle {
+    font-size: 11px !important;
+  }
+
+  .cm-modal-close {
+    flex-shrink: 0 !important;
+    margin-left: 8px !important;
+  }
+
+  .cm-modal-footer,
+  .modal-footer {
+    padding: 16px !important;
+    flex-shrink: 0 !important;
+    gap: 10px !important;
+  }
+  /* App title: row with title left, action button right */
+  .app-title {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    margin: -16px -12px 16px -12px !important;
+    gap: 8px;
+  }
+
+  .app-title h1 {
+    font-size: 14px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .app-title p {
+    display: none !important;
+  }
+
+  /* Portal button: icon-only on mobile */
+  .app-title-right {
+    flex-shrink: 0;
+  }
+
+  #page-actions-portal .cm-btn,
+  #page-actions-portal button,
+  .app-title-right .cm-btn,
+  .app-title-right button {
+    padding: 7px 10px !important;
+    font-size: 0 !important;
+    gap: 0 !important;
+    min-width: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #page-actions-portal .cm-btn i,
+  #page-actions-portal button i,
+  .app-title-right .cm-btn i,
+  .app-title-right button i {
+    font-size: 14px !important;
+  }
 }

@@ -963,6 +963,94 @@ class Calendar extends Component {
             .btn-filter-modern i {
                 font-size: 14px;
             }
+
+            /* Mobile responsive */
+            @media (max-width: 768px) {
+                .fc .fc-toolbar.fc-header-toolbar {
+                    flex-wrap: wrap;
+                    gap: 8px;
+                    margin-bottom: 1em;
+                    padding: 0;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk:first-child {
+                    order: 2;
+                    flex: 1 1 50%;
+                    justify-content: flex-start;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+                    order: 1;
+                    flex: 1 1 100%;
+                    justify-content: center;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk:last-child {
+                    order: 3;
+                    flex: 1 1 50%;
+                    justify-content: flex-end;
+                }
+
+                .fc .fc-toolbar-title {
+                    font-size: 1.1em;
+                }
+
+                .fc .fc-button {
+                    padding: 6px 10px;
+                    font-size: 11px;
+                }
+
+                .fc .fc-prev-button,
+                .fc .fc-next-button {
+                    padding: 6px 8px;
+                }
+
+                .fc .fc-button-group > .fc-button {
+                    margin-left: 2px;
+                }
+
+                .calendar-modern-header {
+                    padding: 12px 14px;
+                }
+
+                .calendar-modern-body {
+                    padding: 10px;
+                }
+
+                .btn-filter-modern {
+                    padding: 8px 14px;
+                    font-size: 13px;
+                }
+
+                .fc .fc-col-header-cell-cushion {
+                    font-size: 11px;
+                    letter-spacing: 0;
+                }
+
+                .fc .fc-daygrid-day-number {
+                    padding: 4px 6px;
+                    font-size: 12px;
+                }
+
+                .fc-event {
+                    padding: 2px 4px;
+                    font-size: 11px;
+                }
+
+                .fc .fc-scrollgrid {
+                    border-radius: 8px;
+                }
+
+                .fc .fc-view-harness {
+                    min-height: 60vh;
+                }
+            }
         `;
 
         if (this.state.isLoaded) {

@@ -3,7 +3,8 @@ import WebpackerReact from "webpacker-react";
 import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
-import { CmDataTable, CmPageActions, CmModal, CmButton } from "../generalcomponents/ui";
+import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
+import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
@@ -513,13 +514,13 @@ class ReportExpenseIndex extends React.Component {
           )
         ),
         // Content - Grid de 4 columnas
-        React.createElement("div", { style: { padding: "20px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" } },
+        React.createElement("div", { className: "cm-filter-grid" },
           // Row 1
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
               React.createElement("i", { className: "fas fa-building", style: { marginRight: 6, opacity: 0.5 } }),
               "Centro de costo",
-              React.createElement("span", { style: { fontSize: 10, color: "#9ca3af", marginLeft: 4 } }, "(3+ letras)")
+              React.createElement("span", { className: "cm-hint", style: { marginLeft: 4 } }, "(3+ letras)")
             ),
             React.createElement(Select, {
               options: self.state.filterCostCenterOptions,
@@ -554,14 +555,14 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("i", { className: "fas fa-calendar", style: { marginRight: 6, opacity: 0.5 } }),
               "Fecha desde"
             ),
-            React.createElement("input", { type: "date", name: "start_date", className: "cm-input", value: f.start_date, onChange: self.handleFilterChange, style: { height: 38 } })
+            React.createElement("input", { type: "date", name: "start_date", className: "cm-input", value: f.start_date, onChange: self.handleFilterChange })
           ),
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
               React.createElement("i", { className: "fas fa-calendar", style: { marginRight: 6, opacity: 0.5 } }),
               "Fecha hasta"
             ),
-            React.createElement("input", { type: "date", name: "end_date", className: "cm-input", value: f.end_date, onChange: self.handleFilterChange, style: { height: 38 } })
+            React.createElement("input", { type: "date", name: "end_date", className: "cm-input", value: f.end_date, onChange: self.handleFilterChange })
           ),
           // Row 2
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
@@ -569,13 +570,14 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("i", { className: "fas fa-flag", style: { marginRight: 6, opacity: 0.5 } }),
               "Estado"
             ),
-            React.createElement("select", { name: "is_acepted", className: "cm-input", value: f.is_acepted, onChange: self.handleFilterChange, style: { height: 38 } },
+            React.createElement("select", { name: "is_acepted", className: "cm-input", value: f.is_acepted, onChange: self.handleFilterChange },
               React.createElement("option", { value: "" }, "Todos"),
               React.createElement("option", { value: "true" }, "Aceptado"),
               React.createElement("option", { value: "false" }, "No aceptado")
             )
           ),
-          React.createElement("div", { style: { gridColumn: "span 2" } }),
+          React.createElement("div", null),
+          React.createElement("div", null),
           React.createElement("div", { style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },
             React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", type: "button", onClick: self.clearFilters },
               React.createElement("i", { className: "fas fa-eraser" }), " Limpiar"
@@ -598,187 +600,173 @@ class ReportExpenseIndex extends React.Component {
 
     if (!this.state.modal) return null;
 
-    var modalTitle = React.createElement("div", { className: "cm-form-header" },
-      React.createElement("div", { className: "cm-form-header-icon-wrapper" },
-        React.createElement("i", { className: "fas fa-receipt" })
-      ),
-      React.createElement("div", null,
-        React.createElement("div", { className: "cm-form-header-title" }, title),
-        React.createElement("div", { className: "cm-form-header-subtitle" }, "Complete los campos para gestionar el gasto")
-      )
-    );
-
-    var modalFooter = React.createElement("div", { className: "cm-form-footer" },
-      React.createElement(CmButton, { variant: "outline", onClick: self.closeModal },
-        React.createElement("i", { className: "fas fa-times" }), " Cancelar"
-      ),
-      React.createElement(CmButton, { variant: "accent", onClick: self.handleSubmit },
-        React.createElement("i", { className: "fas fa-save" }), isEdit ? " Actualizar" : " Crear"
-      )
-    );
-
-    return React.createElement(CmModal, { isOpen: true, toggle: self.closeModal, size: "lg", title: modalTitle, footer: modalFooter },
-      React.createElement("form", null,
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Centro de costo
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-building" }),
-              " Centro de costo ", React.createElement("span", { className: "cm-required" }, "*"),
-              React.createElement("span", { className: "cm-hint" }, " (3 letras)")
+    return React.createElement(Modal, { isOpen: true, toggle: self.closeModal, className: "modal-dialog-centered modal-lg", backdrop: "static" },
+      React.createElement("div", { className: "cm-modal-container" },
+        React.createElement("div", { className: "cm-modal-header" },
+          React.createElement("div", { className: "cm-modal-header-content" },
+            React.createElement("div", { className: "cm-modal-icon" },
+              React.createElement("i", { className: "fas fa-receipt" })
             ),
-            React.createElement(Select, {
-              options: self.state.formCostCenterOptions,
-              value: self.state.selectedCostCenter,
-              onChange: function(opt) { self.setState({ selectedCostCenter: opt, form: Object.assign({}, form, { cost_center_id: opt ? opt.value : "" }) }); },
-              onInputChange: self.handleFormCostCenterSearch,
-              isLoading: self.state.formCostCenterLoading,
-              placeholder: "Buscar centro de costo...",
-              noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
-              styles: selectStyles,
-              menuPortalTarget: document.body,
-              className: hasError("cost_center_id") ? "cm-select-error" : "",
-            })
+            React.createElement("div", null,
+              React.createElement("h2", { className: "cm-modal-title" }, title),
+              React.createElement("p", { className: "cm-modal-subtitle" }, "Complete los campos para gestionar el gasto")
+            )
           ),
-          // Usuario
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-user" }),
-              " Responsable ", React.createElement("span", { className: "cm-required" }, "*")
-            ),
-            React.createElement(Select, {
-              options: self.userOptions,
-              value: self.state.selectedUser,
-              onChange: function(opt) { self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }); },
-              placeholder: "Seleccionar...",
-              styles: selectStyles,
-              menuPortalTarget: document.body,
-              className: hasError("user_invoice_id") ? "cm-select-error" : "",
-            })
+          React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeModal },
+            React.createElement("i", { className: "fa fa-times" })
           )
         ),
+        React.createElement("form", null,
+          React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
+            React.createElement("div", { className: "cm-form-grid-2" },
+              // Centro de costo
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-building" }),
+                  " Centro de costo ", React.createElement("span", { className: "cm-hint" }, "(3 letras)")
+                ),
+                React.createElement(Select, {
+                  options: self.state.formCostCenterOptions,
+                  value: self.state.selectedCostCenter,
+                  onChange: function(opt) { self.setState({ selectedCostCenter: opt, form: Object.assign({}, form, { cost_center_id: opt ? opt.value : "" }) }); },
+                  onInputChange: self.handleFormCostCenterSearch,
+                  isLoading: self.state.formCostCenterLoading,
+                  placeholder: "Buscar centro de costo...",
+                  noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
+                  styles: selectStyles,
+                  menuPortalTarget: document.body,
+                  className: hasError("cost_center_id") ? "cm-select-error" : "",
+                })
+              ),
+              // Usuario
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-user" }),
+                  " Responsable"
+                ),
+                React.createElement(Select, {
+                  options: self.userOptions,
+                  value: self.state.selectedUser,
+                  onChange: function(opt) { self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }); },
+                  placeholder: "Seleccionar...",
+                  styles: selectStyles,
+                  menuPortalTarget: document.body,
+                  className: hasError("user_invoice_id") ? "cm-select-error" : "",
+                })
+              ),
+              // Nombre
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-file-alt" }),
+                  " Nombre"
+                ),
+                React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: "Nombre del gasto", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // Fecha
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-calendar-alt" }),
+                  " Fecha de factura"
+                ),
+                React.createElement("input", { type: "date", name: "invoice_date", value: form.invoice_date || "", onChange: self.handleFormChange, className: hasError("invoice_date") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // NIT/Cedula
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-id-card" }),
+                  " NIT / Cédula"
+                ),
+                React.createElement("input", { type: "text", name: "identification", value: form.identification || "", onChange: self.handleFormChange, placeholder: "NIT o cédula", className: "cm-input" })
+              ),
+              // # Factura
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-hashtag" }),
+                  " # Factura"
+                ),
+                React.createElement("input", { type: "text", name: "invoice_number", value: form.invoice_number || "", onChange: self.handleFormChange, placeholder: "Número de factura", className: "cm-input" })
+              ),
+              // Tipo
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-tag" }),
+                  " Tipo"
+                ),
+                React.createElement(Select, {
+                  options: self.typeOptions,
+                  value: self.state.selectedType,
+                  onChange: function(opt) { self.setState({ selectedType: opt, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
+                  placeholder: "Seleccionar tipo...",
+                  isClearable: true,
+                  styles: selectStyles,
+                  menuPortalTarget: document.body,
+                })
+              ),
+              // Medio de pago
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-credit-card" }),
+                  " Medio de pago"
+                ),
+                React.createElement(Select, {
+                  options: self.paymentOptions,
+                  value: self.state.selectedPayment,
+                  onChange: function(opt) { self.setState({ selectedPayment: opt, form: Object.assign({}, form, { payment_type_id: opt ? opt.value : "" }) }); },
+                  placeholder: "Seleccionar...",
+                  isClearable: true,
+                  styles: selectStyles,
+                  menuPortalTarget: document.body,
+                })
+              ),
+              // Valor
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-dollar-sign" }),
+                  " Valor"
+                ),
+                React.createElement(NumberFormat, { name: "invoice_value", thousandSeparator: true, prefix: "$", value: form.invoice_value || "", onChange: self.handleFormChangeMoney, placeholder: "$0", className: "cm-input" })
+              ),
+              // IVA
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-percent" }),
+                  " IVA"
+                ),
+                React.createElement(NumberFormat, { name: "invoice_tax", thousandSeparator: true, prefix: "$", value: form.invoice_tax || "", onChange: self.handleFormChangeMoney, placeholder: "$0", className: "cm-input" })
+              ),
+              // Total
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-calculator" }),
+                  " Total"
+                ),
+                React.createElement(NumberFormat, { name: "invoice_total", thousandSeparator: true, prefix: "$", value: form.invoice_total || "", displayType: "input", className: "cm-input", disabled: true, style: { background: "#e9ecef" } })
+              ),
+              // Descripcion
+              React.createElement("div", { className: "cm-form-group cm-full-width" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-align-left" }),
+                  " Descripción"
+                ),
+                React.createElement("textarea", { name: "description", rows: "3", value: form.description || "", onChange: self.handleFormChange, placeholder: "Descripción del gasto...", className: "cm-input", style: { resize: "vertical", minHeight: "80px" } })
+              )
+            ),
 
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Nombre
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-file-alt" }),
-              " Nombre ", React.createElement("span", { className: "cm-required" }, "*")
-            ),
-            React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: "Nombre del gasto", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
+            self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
+              React.createElement("i", { className: "fas fa-exclamation-circle" }),
+              React.createElement("span", null, "Debe completar todos los campos requeridos")
+            )
           ),
-          // Fecha
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-calendar-alt" }),
-              " Fecha de factura ", React.createElement("span", { className: "cm-required" }, "*")
+          React.createElement("div", { className: "cm-modal-footer" },
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
+              React.createElement("i", { className: "fa fa-times" }), " Cancelar"
             ),
-            React.createElement("input", { type: "date", name: "invoice_date", value: form.invoice_date || "", onChange: self.handleFormChange, className: hasError("invoice_date") ? "cm-input cm-input-error" : "cm-input" })
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit },
+              React.createElement("i", { className: "fa fa-save" }), isEdit ? " Actualizar" : " Crear"
+            )
           )
-        ),
-
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // NIT/Cedula
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-id-card" }),
-              " NIT / Cédula"
-            ),
-            React.createElement("input", { type: "text", name: "identification", value: form.identification || "", onChange: self.handleFormChange, placeholder: "NIT o cédula", className: "cm-input" })
-          ),
-          // # Factura
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-hashtag" }),
-              " # Factura"
-            ),
-            React.createElement("input", { type: "text", name: "invoice_number", value: form.invoice_number || "", onChange: self.handleFormChange, placeholder: "Número de factura", className: "cm-input" })
-          )
-        ),
-
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Tipo
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-tag" }),
-              " Tipo"
-            ),
-            React.createElement(Select, {
-              options: self.typeOptions,
-              value: self.state.selectedType,
-              onChange: function(opt) { self.setState({ selectedType: opt, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
-              placeholder: "Seleccionar tipo...",
-              isClearable: true,
-              styles: selectStyles,
-              menuPortalTarget: document.body,
-            })
-          ),
-          // Medio de pago
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-credit-card" }),
-              " Medio de pago"
-            ),
-            React.createElement(Select, {
-              options: self.paymentOptions,
-              value: self.state.selectedPayment,
-              onChange: function(opt) { self.setState({ selectedPayment: opt, form: Object.assign({}, form, { payment_type_id: opt ? opt.value : "" }) }); },
-              placeholder: "Seleccionar...",
-              isClearable: true,
-              styles: selectStyles,
-              menuPortalTarget: document.body,
-            })
-          )
-        ),
-
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Valor
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-dollar-sign" }),
-              " Valor"
-            ),
-            React.createElement(NumberFormat, { name: "invoice_value", thousandSeparator: true, prefix: "$", value: form.invoice_value || "", onChange: self.handleFormChangeMoney, placeholder: "$0", className: "cm-input" })
-          ),
-          // IVA
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-percent" }),
-              " IVA"
-            ),
-            React.createElement(NumberFormat, { name: "invoice_tax", thousandSeparator: true, prefix: "$", value: form.invoice_tax || "", onChange: self.handleFormChangeMoney, placeholder: "$0", className: "cm-input" })
-          )
-        ),
-
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Total
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-calculator" }),
-              " Total"
-            ),
-            React.createElement(NumberFormat, { name: "invoice_total", thousandSeparator: true, prefix: "$", value: form.invoice_total || "", displayType: "input", className: "cm-input", disabled: true, style: { background: "#e9ecef" } })
-          ),
-          React.createElement("div", { className: "cm-form-group" })
-        ),
-
-        // Descripcion
-        React.createElement("div", { className: "cm-form-group" },
-          React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-align-left" }),
-            " Descripción"
-          ),
-          React.createElement("textarea", { name: "description", rows: "3", value: form.description || "", onChange: self.handleFormChange, placeholder: "Descripción del gasto...", className: "cm-input cm-textarea" })
-        ),
-
-        self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
-          React.createElement("i", { className: "fas fa-exclamation-circle" }),
-          React.createElement("span", null, "Debe completar todos los campos requeridos")
         )
-      ),
-
-      // Estilos inline
-      React.createElement("style", null, "\n        .cm-form-header { display: flex; align-items: center; gap: 16px; }\n        .cm-form-header-icon-wrapper { width: 48px; height: 48px; background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3); }\n        .cm-form-header-title { font-size: 1.25rem; font-weight: 600; color: #1a1a2e; margin: 0; }\n        .cm-form-header-subtitle { font-size: 12px; color: #6c757d; margin: 2px 0 0 0; }\n        .cm-form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }\n        @media (max-width: 768px) { .cm-form-grid-2 { grid-template-columns: 1fr; } }\n        .cm-form-group { margin-bottom: 16px; }\n        .cm-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: #374151; margin-bottom: 6px; }\n        .cm-label i { color: #6b7280; font-size: 13px; }\n        .cm-required { color: #dc3545; font-weight: 600; }\n        .cm-hint { font-size: 11px; color: #9ca3af; font-weight: 400; }\n        .cm-input { width: 100%; padding: 10px 14px; font-size: 14px; border: 1px solid #e2e5ea; border-radius: 8px; background: #fcfcfd; transition: all 0.2s ease; box-sizing: border-box; }\n        .cm-input:focus { outline: none; border-color: #f5a623; box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15); background: #fff; }\n        .cm-input::placeholder { color: #9ca3af; }\n        .cm-input-error { border-color: #dc3545 !important; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important; }\n        .cm-select-error .css-yk16xz-control, .cm-select-error .css-1pahdxg-control { border-color: #dc3545 !important; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important; }\n        .cm-textarea { resize: vertical; min-height: 80px; }\n        .cm-alert { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-top: 16px; }\n        .cm-alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }\n        .cm-alert-error i { font-size: 16px; }\n        .cm-form-footer { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }\n      ")
+      )
     );
   }.bind(this);
 
@@ -786,36 +774,38 @@ class ReportExpenseIndex extends React.Component {
     var self = this;
     if (!this.state.modalImport) return null;
 
-    return React.createElement(CmModal, { isOpen: true, toggle: self.closeImportModal, size: "md", hideHeader: true, footer: null },
-      React.createElement("div", { style: { background: "#fcfcfd", padding: "20px 32px", borderBottom: "1px solid #e9ecef", display: "flex", alignItems: "center", justifyContent: "space-between" }},
-        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "16px" }},
-          React.createElement("div", { style: { width: "48px", height: "48px", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", color: "#fff", boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)" }},
-            React.createElement("i", { className: "fas fa-file-import" })
+    return React.createElement(Modal, { isOpen: true, toggle: self.closeImportModal, className: "modal-dialog-centered", backdrop: "static" },
+      React.createElement("div", { className: "cm-modal-container" },
+        React.createElement("div", { className: "cm-modal-header" },
+          React.createElement("div", { className: "cm-modal-header-content" },
+            React.createElement("div", { className: "cm-modal-icon" },
+              React.createElement("i", { className: "fas fa-file-import" })
+            ),
+            React.createElement("div", null,
+              React.createElement("h2", { className: "cm-modal-title" }, "Importar archivo"),
+              React.createElement("p", { className: "cm-modal-subtitle" }, "Suba un archivo Excel para importar gastos")
+            )
           ),
-          React.createElement("div", null,
-            React.createElement("h2", { style: { fontFamily: "'Poppins', sans-serif", fontSize: "18px", fontWeight: "600", color: "#333", margin: "0 0 2px 0" }}, "Importar archivo"),
-            React.createElement("p", { style: { fontSize: "12px", color: "#6c757d", margin: "0" }}, "Suba un archivo Excel para importar gastos")
+          React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeImportModal },
+            React.createElement("i", { className: "fa fa-times" })
           )
         ),
-        React.createElement("button", { onClick: self.closeImportModal, style: { width: "32px", height: "32px", border: "none", background: "#e9ecef", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6c757d" }},
-          React.createElement("i", { className: "fas fa-times" })
-        )
-      ),
-      React.createElement("div", { style: { padding: "24px 32px" }},
         React.createElement("form", { action: "/upload_file/report_expenses", method: "POST", encType: "multipart/form-data" },
-          React.createElement("input", { type: "hidden", name: "authenticity_token", value: csrfToken() }),
-          React.createElement("div", { style: { marginBottom: "16px" }},
-            React.createElement("label", { style: { fontSize: "13px", fontWeight: "400", color: "#495057", marginBottom: "6px", display: "block" }},
-              React.createElement("i", { className: "fas fa-file-excel", style: { color: "#6c757d", marginRight: "6px" }}),
-              "Seleccionar archivo"
-            ),
-            React.createElement("input", { type: "file", name: "file", accept: ".xlsx,.xls", className: "cm-input", style: { padding: "8px" } })
+          React.createElement(ModalBody, { className: "cm-modal-body" },
+            React.createElement("input", { type: "hidden", name: "authenticity_token", value: csrfToken() }),
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" },
+                React.createElement("i", { className: "fas fa-file-excel" }),
+                " Seleccionar archivo"
+              ),
+              React.createElement("input", { type: "file", name: "file", accept: ".xlsx,.xls", className: "cm-input", style: { padding: "8px" } })
+            )
           ),
-          React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: "12px" }},
-            React.createElement("button", { type: "button", onClick: self.closeImportModal, style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "10px 20px", fontFamily: "'Poppins', sans-serif", fontSize: "14px", fontWeight: "500", borderRadius: "8px", cursor: "pointer", background: "#fff", color: "#6c757d", border: "1px solid #dee2e6" }},
-              React.createElement("i", { className: "fas fa-times" }), " Cancelar"
+          React.createElement("div", { className: "cm-modal-footer" },
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeImportModal },
+              React.createElement("i", { className: "fa fa-times" }), " Cancelar"
             ),
-            React.createElement("button", { type: "submit", style: { display: "inline-flex", alignItems: "center", gap: "8px", padding: "10px 20px", fontFamily: "'Poppins', sans-serif", fontSize: "14px", fontWeight: "500", borderRadius: "8px", cursor: "pointer", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", color: "#fff", border: "none" }},
+            React.createElement("button", { type: "submit", className: "cm-btn cm-btn-submit" },
               React.createElement("i", { className: "fas fa-upload" }), " Subir"
             )
           )
@@ -826,9 +816,6 @@ class ReportExpenseIndex extends React.Component {
 
   renderHeaderActions = function() {
     var self = this;
-    var btnStyle = { display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 16px", fontFamily: "'Poppins', sans-serif", fontSize: "13px", fontWeight: "500", borderRadius: "6px", cursor: "pointer", background: "#fff", color: "#6c757d", border: "1px solid #dee2e6", textDecoration: "none" };
-    var btnActiveStyle = Object.assign({}, btnStyle, { background: "#f5a623", color: "#fff", borderColor: "#f5a623" });
-    var btnSuccessStyle = Object.assign({}, btnStyle, { background: "#28a745", color: "#fff", borderColor: "#28a745" });
 
     var buttons = [];
 
@@ -837,7 +824,7 @@ class ReportExpenseIndex extends React.Component {
       React.createElement("button", {
         key: "filter",
         onClick: self.toggleFilters,
-        style: self.state.showFilters ? btnActiveStyle : btnStyle,
+        className: "cm-btn " + (self.state.showFilters ? "cm-btn-accent" : "cm-btn-outline"),
       },
         React.createElement("i", { className: "fas fa-filter" }),
         " Filtros"
@@ -850,7 +837,7 @@ class ReportExpenseIndex extends React.Component {
         React.createElement("button", {
           key: "accept",
           onClick: self.acceptFilteredExpenses,
-          style: btnSuccessStyle,
+          className: "cm-btn cm-btn-success",
         },
           React.createElement("i", { className: "fas fa-check" }),
           " Aceptar gastos"
@@ -864,7 +851,7 @@ class ReportExpenseIndex extends React.Component {
         React.createElement("button", {
           key: "import",
           onClick: self.openImportModal,
-          style: btnStyle,
+          className: "cm-btn cm-btn-outline",
         },
           React.createElement("i", { className: "fas fa-file-import" }),
           " Importar"
@@ -879,7 +866,7 @@ class ReportExpenseIndex extends React.Component {
           key: "export",
           href: self.getExportUrl(),
           target: "_blank",
-          style: btnStyle,
+          className: "cm-btn cm-btn-outline",
         },
           React.createElement("i", { className: "fas fa-file-excel" }),
           " Exportar"
@@ -887,7 +874,7 @@ class ReportExpenseIndex extends React.Component {
       );
     }
 
-    return React.createElement("div", { style: { display: "flex", gap: "8px" }}, buttons);
+    return React.createElement("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" }}, buttons);
   }.bind(this);
 
   render() {

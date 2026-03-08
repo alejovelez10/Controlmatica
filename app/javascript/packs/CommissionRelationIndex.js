@@ -2,7 +2,8 @@ import React from "react";
 import WebpackerReact from "webpacker-react";
 import Swal from "sweetalert2";
 import Select from "react-select";
-import { CmDataTable, CmPageActions, CmModal, CmButton } from "../generalcomponents/ui";
+import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
+import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
@@ -354,7 +355,7 @@ class CommissionRelationIndex extends React.Component {
           )
         ),
         // Content - Grid de 4 columnas
-        React.createElement("div", { style: { padding: "20px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" } },
+        React.createElement("div", { className: "cm-filter-grid" },
           // Row 1
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
@@ -415,7 +416,7 @@ class CommissionRelationIndex extends React.Component {
             ),
             React.createElement("input", { type: "text", name: "area", className: "cm-input", value: f.area, onChange: self.handleFilterChange, placeholder: "Buscar por área..." })
           ),
-          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0, gridColumn: "span 2" } },
+          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
               React.createElement("i", { className: "fas fa-comment-alt", style: { marginRight: 6, opacity: 0.5 } }),
               "Observaciones"
@@ -423,8 +424,9 @@ class CommissionRelationIndex extends React.Component {
             React.createElement("input", { type: "text", name: "observations", className: "cm-input", value: f.observations, onChange: self.handleFilterChange, placeholder: "Buscar por observaciones..." })
           ),
           // Botones
-          React.createElement("div", { style: { gridColumn: "1 / 3" } }),
-          React.createElement("div", { style: { gridColumn: "3 / 5", display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },
+          React.createElement("div", null),
+          React.createElement("div", null),
+          React.createElement("div", { style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },
             React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", type: "button", onClick: self.clearFilters },
               React.createElement("i", { className: "fas fa-eraser" }), " Limpiar"
             ),
@@ -446,140 +448,130 @@ class CommissionRelationIndex extends React.Component {
 
     if (!this.state.modal) return null;
 
-    var modalTitle = React.createElement("div", { className: "cm-form-header" },
-      React.createElement("div", { className: "cm-form-header-icon-wrapper" },
-        React.createElement("i", { className: "fas fa-link" })
-      ),
-      React.createElement("div", null,
-        React.createElement("div", { className: "cm-form-header-title" }, title),
-        React.createElement("div", { className: "cm-form-header-subtitle" }, "Complete los campos para gestionar la relación")
-      )
-    );
-
-    var modalFooter = React.createElement("div", { className: "cm-form-footer" },
-      React.createElement(CmButton, { variant: "outline", onClick: self.closeModal },
-        React.createElement("i", { className: "fas fa-times" }), " Cancelar"
-      ),
-      React.createElement(CmButton, { variant: "accent", onClick: self.handleSubmit },
-        React.createElement("i", { className: "fas fa-save" }), isEdit ? " Actualizar" : " Crear"
-      )
-    );
-
-    return React.createElement(CmModal, { isOpen: true, toggle: self.closeModal, size: "md", title: modalTitle, footer: modalFooter },
-      React.createElement("form", null,
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Director
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-user-tie" }),
-              " Nombre director ", React.createElement("span", { className: "cm-required" }, "*")
+    return React.createElement(Modal, { isOpen: true, toggle: self.closeModal, className: "modal-dialog-centered", backdrop: "static" },
+      React.createElement("div", { className: "cm-modal-container" },
+        React.createElement("div", { className: "cm-modal-header" },
+          React.createElement("div", { className: "cm-modal-header-content" },
+            React.createElement("div", { className: "cm-modal-icon" },
+              React.createElement("i", { className: "fas fa-link" })
             ),
-            React.createElement(Select, {
-              options: self.userOptions,
-              value: self.state.selectedUserDirection,
-              onChange: function(opt) { self.setState({ selectedUserDirection: opt, form: Object.assign({}, form, { user_direction_id: opt ? opt.value : "" }) }); },
-              placeholder: "Seleccionar...",
-              styles: selectStyles,
-              menuPortalTarget: document.body,
-              className: hasError("user_direction_id") ? "cm-select-error" : "",
-            })
+            React.createElement("div", null,
+              React.createElement("h2", { className: "cm-modal-title" }, title),
+              React.createElement("p", { className: "cm-modal-subtitle" }, "Complete los campos para gestionar la relación")
+            )
           ),
-          // Empleado
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-user" }),
-              " Nombre del empleado ", React.createElement("span", { className: "cm-required" }, "*")
-            ),
-            React.createElement(Select, {
-              options: self.userOptions,
-              value: self.state.selectedUserReport,
-              onChange: function(opt) { self.setState({ selectedUserReport: opt, form: Object.assign({}, form, { user_report_id: opt ? opt.value : "" }) }); },
-              placeholder: "Seleccionar...",
-              styles: selectStyles,
-              menuPortalTarget: document.body,
-              className: hasError("user_report_id") ? "cm-select-error" : "",
-            })
+          React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeModal },
+            React.createElement("i", { className: "fa fa-times" })
           )
         ),
-
-        // Observaciones
-        React.createElement("div", { className: "cm-form-group" },
-          React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-comment-alt" }),
-            " Observaciones ", React.createElement("span", { className: "cm-required" }, "*")
-          ),
-          React.createElement("textarea", { name: "observations", rows: "4", value: form.observations || "", onChange: self.handleFormChange, placeholder: "Escribe las observaciones...", className: hasError("observations") ? "cm-input cm-textarea cm-input-error" : "cm-input cm-textarea" })
-        ),
-
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Fecha inicial
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-calendar-alt" }),
-              " Fecha inicial ", React.createElement("span", { className: "cm-required" }, "*")
+        React.createElement("form", null,
+          React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
+            React.createElement("div", { className: "cm-form-grid-2" },
+              // Director
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-user-tie" }),
+                  " Nombre director"
+                ),
+                React.createElement(Select, {
+                  options: self.userOptions,
+                  value: self.state.selectedUserDirection,
+                  onChange: function(opt) { self.setState({ selectedUserDirection: opt, form: Object.assign({}, form, { user_direction_id: opt ? opt.value : "" }) }); },
+                  placeholder: "Seleccionar...",
+                  styles: selectStyles,
+                  menuPortalTarget: document.body,
+                  className: hasError("user_direction_id") ? "cm-select-error" : "",
+                })
+              ),
+              // Empleado
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-user" }),
+                  " Nombre del empleado"
+                ),
+                React.createElement(Select, {
+                  options: self.userOptions,
+                  value: self.state.selectedUserReport,
+                  onChange: function(opt) { self.setState({ selectedUserReport: opt, form: Object.assign({}, form, { user_report_id: opt ? opt.value : "" }) }); },
+                  placeholder: "Seleccionar...",
+                  styles: selectStyles,
+                  menuPortalTarget: document.body,
+                  className: hasError("user_report_id") ? "cm-select-error" : "",
+                })
+              ),
+              // Observaciones
+              React.createElement("div", { className: "cm-form-group cm-full-width" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-comment-alt" }),
+                  " Observaciones"
+                ),
+                React.createElement("textarea", { name: "observations", rows: "3", value: form.observations || "", onChange: self.handleFormChange, placeholder: "Escribe las observaciones...", className: hasError("observations") ? "cm-input cm-input-error" : "cm-input", style: { resize: "vertical", minHeight: "80px" } })
+              ),
+              // Fecha inicial
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-calendar-alt" }),
+                  " Fecha inicial"
+                ),
+                React.createElement("input", { type: "date", name: "start_date", value: form.start_date || "", onChange: self.handleFormChange, className: hasError("start_date") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // Fecha final
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-calendar-check" }),
+                  " Fecha final"
+                ),
+                React.createElement("input", { type: "date", name: "end_date", value: form.end_date || "", onChange: self.handleFormChange, className: hasError("end_date") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // Fecha de creación
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-calendar-plus" }),
+                  " Fecha de creación"
+                ),
+                React.createElement("input", { type: "date", name: "creation_date", value: form.creation_date || "", onChange: self.handleFormChange, className: hasError("creation_date") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // Área
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-building" }),
+                  " Área"
+                ),
+                React.createElement("input", { type: "text", name: "area", value: form.area || "", onChange: self.handleFormChange, placeholder: "Ingrese el área", className: hasError("area") ? "cm-input cm-input-error" : "cm-input" })
+              )
             ),
-            React.createElement("input", { type: "date", name: "start_date", value: form.start_date || "", onChange: self.handleFormChange, className: hasError("start_date") ? "cm-input cm-input-error" : "cm-input" })
+
+            self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
+              React.createElement("i", { className: "fas fa-exclamation-circle" }),
+              React.createElement("span", null, "Debe completar todos los campos requeridos")
+            )
           ),
-          // Fecha final
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-calendar-check" }),
-              " Fecha final ", React.createElement("span", { className: "cm-required" }, "*")
+          React.createElement("div", { className: "cm-modal-footer" },
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
+              React.createElement("i", { className: "fa fa-times" }), " Cancelar"
             ),
-            React.createElement("input", { type: "date", name: "end_date", value: form.end_date || "", onChange: self.handleFormChange, className: hasError("end_date") ? "cm-input cm-input-error" : "cm-input" })
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit },
+              React.createElement("i", { className: "fa fa-save" }), isEdit ? " Actualizar" : " Crear"
+            )
           )
-        ),
-
-        React.createElement("div", { className: "cm-form-grid-2" },
-          // Fecha de creación
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-calendar-plus" }),
-              " Fecha de creación ", React.createElement("span", { className: "cm-required" }, "*")
-            ),
-            React.createElement("input", { type: "date", name: "creation_date", value: form.creation_date || "", onChange: self.handleFormChange, className: hasError("creation_date") ? "cm-input cm-input-error" : "cm-input" })
-          ),
-          // Área
-          React.createElement("div", { className: "cm-form-group" },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-building" }),
-              " Área ", React.createElement("span", { className: "cm-required" }, "*")
-            ),
-            React.createElement("input", { type: "text", name: "area", value: form.area || "", onChange: self.handleFormChange, placeholder: "Ingrese el área", className: hasError("area") ? "cm-input cm-input-error" : "cm-input" })
-          )
-        ),
-
-        self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
-          React.createElement("i", { className: "fas fa-exclamation-circle" }),
-          React.createElement("span", null, "Debe completar todos los campos requeridos")
         )
-      ),
-
-      // Estilos inline
-      React.createElement("style", null, "\n        .cm-form-header { display: flex; align-items: center; gap: 16px; }\n        .cm-form-header-icon-wrapper { width: 48px; height: 48px; background: linear-gradient(135deg, #f5a623 0%, #f7b731 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3); }\n        .cm-form-header-title { font-size: 1.25rem; font-weight: 600; color: #1a1a2e; margin: 0; }\n        .cm-form-header-subtitle { font-size: 12px; color: #6c757d; margin: 2px 0 0 0; }\n        .cm-form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }\n        @media (max-width: 768px) { .cm-form-grid-2 { grid-template-columns: 1fr; } }\n        .cm-form-group { margin-bottom: 16px; }\n        .cm-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: #374151; margin-bottom: 6px; }\n        .cm-label i { color: #6b7280; font-size: 13px; }\n        .cm-required { color: #dc3545; font-weight: 600; }\n        .cm-input { width: 100%; padding: 10px 14px; font-size: 14px; border: 1px solid #e2e5ea; border-radius: 8px; background: #fcfcfd; transition: all 0.2s ease; box-sizing: border-box; }\n        .cm-input:focus { outline: none; border-color: #f5a623; box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15); background: #fff; }\n        .cm-input::placeholder { color: #9ca3af; }\n        .cm-input-error { border-color: #dc3545 !important; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important; }\n        .cm-select-error .css-yk16xz-control, .cm-select-error .css-1pahdxg-control { border-color: #dc3545 !important; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15) !important; }\n        .cm-textarea { resize: vertical; min-height: 80px; }\n        .cm-alert { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-top: 16px; }\n        .cm-alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }\n        .cm-alert-error i { font-size: 16px; }\n        .cm-form-footer { display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }\n      ")
+      )
     );
   }.bind(this);
 
   renderHeaderActions = function() {
     var self = this;
-    var btnStyle = { display: "inline-flex", alignItems: "center", gap: "6px", padding: "8px 16px", fontFamily: "'Poppins', sans-serif", fontSize: "13px", fontWeight: "500", borderRadius: "6px", cursor: "pointer", background: "#fff", color: "#6c757d", border: "1px solid #dee2e6", textDecoration: "none" };
-    var btnActiveStyle = Object.assign({}, btnStyle, { background: "#f5a623", color: "#fff", borderColor: "#f5a623" });
 
-    var buttons = [];
-
-    // Filtros
-    buttons.push(
+    return React.createElement("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" }},
       React.createElement("button", {
         key: "filter",
         onClick: self.toggleFilters,
-        style: self.state.showFilters ? btnActiveStyle : btnStyle,
+        className: "cm-btn " + (self.state.showFilters ? "cm-btn-accent" : "cm-btn-outline"),
       },
         React.createElement("i", { className: "fas fa-filter" }),
         " Filtros"
       )
     );
-
-    return React.createElement("div", { style: { display: "flex", gap: "8px" }}, buttons);
   }.bind(this);
 
   render() {

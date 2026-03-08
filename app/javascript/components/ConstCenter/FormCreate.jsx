@@ -651,11 +651,37 @@ class FormCreate extends React.Component {
             box-shadow: 0 4px 12px rgba(245, 166, 35, 0.35);
           }
           @media (max-width: 768px) {
-            .cm-modal-header,
-            .cm-modal-body,
+            .modal-dialog-centered {
+              margin: 0 !important;
+              padding: 0 !important;
+              max-width: 100% !important;
+              min-height: 100vh !important;
+              align-items: flex-end !important;
+            }
+            .cm-modal-container {
+              max-height: 95vh !important;
+              border-radius: 16px 16px 0 0 !important;
+            }
+            .cm-modal-header {
+              padding: 14px 16px !important;
+            }
+            .cm-modal-icon {
+              width: 38px;
+              height: 38px;
+              font-size: 16px;
+            }
+            .cm-modal-title {
+              font-size: 15px;
+            }
+            .cm-modal-body {
+              padding: 16px !important;
+              max-height: calc(95vh - 140px) !important;
+            }
             .cm-modal-footer {
-              padding-left: 20px !important;
-              padding-right: 20px !important;
+              padding: 12px 16px !important;
+            }
+            .cm-form-grid-2 {
+              grid-template-columns: 1fr !important;
             }
           }
         `}</style>

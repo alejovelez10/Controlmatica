@@ -17,7 +17,27 @@
   </head>
 
   <body class="app <%= current_user.menu %> modern-layout no-header">
+    <script>
+      (function() {
+        var b = document.body;
+        if (window.innerWidth < 768) {
+          b.className = b.className.replace('sidenav-toggled', '').replace(/\s+/g, ' ');
+          b.classList.add('is-mobile');
+        }
+      })();
+    </script>
     <!-- Sidebar menu-->
+
+    <!-- Mobile header with logo + hamburger -->
+    <div class="mobile-header">
+      <a href="/" class="mobile-header__logo">
+        <img class="mobile-header__logo-icon" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png" alt="Controlmatica">
+        <img class="mobile-header__logo-text" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/593/controlmaticatexto.png" alt="Controlmatica">
+      </a>
+      <button class="mobile-header__toggle" data-toggle="sidebar" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
 
     <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
     <aside class="app-sidebar">
@@ -433,10 +453,20 @@
 
     var treeviewMenu = $('.app-menu');
 
+    var isMobile = window.innerWidth < 768;
+
+    // On mobile: remove sidenav-toggled on load (it means "open" in mobile CSS)
+    if (isMobile) {
+      $('.app').removeClass('sidenav-toggled');
+    }
+
     // Toggle Sidebar
     $('[data-toggle="sidebar"]').click(function(event) {
       event.preventDefault();
       $('.app').toggleClass('sidenav-toggled');
+
+      // On mobile: don't save menu preference
+      if (isMobile) return;
 
       if ( $('.app').hasClass('sidenav-toggled')) {
           $.get("/menu/" + <%= current_user.id %> + "/" + "sidebar-mini rtl sidenav-toggled" , function(data, status){});
@@ -456,7 +486,7 @@
           $(".col16").removeClass("col16responsive");
 
       }else{
-          
+
         $.get("/menu/" + <%= current_user.id %> + "/" + "sidebar-mini rtl" , function(data, status){});
         $(".col9").addClass("col9responsive");
         $(".col8").addClass("col8responsive");
@@ -470,7 +500,7 @@
         $(".col14").addClass("col14responsive");
         $(".col15").addClass("col15responsive");
         $(".col16").addClass("col16responsive");
-      } 
+      }
 
       
 
@@ -1081,7 +1111,80 @@
     display: none;
   }
 
-  /* Responsive adjustments */
+  /* Mobile: sidebar + overlay controlled by .is-mobile class set by JS */
+  body.is-mobile .app-sidebar {
+    left: -230px !important;
+  }
+  body.is-mobile .app-sidebar__overlay {
+    display: none !important;
+  }
+  body.is-mobile.sidenav-toggled .app-sidebar {
+    left: 0 !important;
+    z-index: 1100 !important;
+  }
+  body.is-mobile.sidenav-toggled .app-sidebar__overlay {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 1050 !important;
+    background: rgba(0,0,0,0.5) !important;
+  }
+  body.is-mobile .app-content {
+    margin-left: 0 !important;
+    margin-top: 54px !important;
+    padding: 16px 12px !important;
+  }
+  body.is-mobile.sidenav-toggled .app-content {
+    margin-left: 0 !important;
+  }
+
+  /* Mobile: when sidebar is open, show full sidebar (not collapsed) */
+  body.is-mobile.sidenav-toggled .sidebar-logo__text {
+    display: inline !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-logo {
+    justify-content: space-between !important;
+    padding: 12px 15px !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-footer__notif-text {
+    display: inline !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-footer__notif-item {
+    justify-content: flex-start !important;
+    padding: 8px 10px !important;
+    position: static !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-footer__notif-badge {
+    position: static !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+    padding: 0 6px !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-footer__user {
+    justify-content: flex-start !important;
+    padding: 8px 10px !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-footer__user-info,
+  body.is-mobile.sidenav-toggled .sidebar-footer__chevron {
+    display: flex !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-footer__user-info {
+    flex-direction: column !important;
+  }
+  body.is-mobile.sidenav-toggled .app-menu__label {
+    display: inline !important;
+  }
+  body.is-mobile.sidenav-toggled .treeview-indicator {
+    display: inline !important;
+  }
+
+  /* ========================================
+     MOBILE RESPONSIVE OVERRIDES
+     ======================================== */
   @media (max-width: 767px) {
     .header-user-info {
       display: none;
@@ -1089,6 +1192,79 @@
     .notification-panel {
       min-width: 280px;
       max-width: 300px;
+    }
+
+    /* Sidebar hidden by default on mobile */
+    .modern-layout .app-sidebar,
+    .modern-layout.app .app-sidebar {
+      left: -230px !important;
+      transition: left 0.3s ease;
+    }
+
+    /* Show sidebar when toggled */
+    .modern-layout.sidenav-toggled .app-sidebar,
+    .modern-layout.app.sidenav-toggled .app-sidebar {
+      left: 0 !important;
+    }
+
+    /* Overlay - hidden and non-blocking when sidebar closed */
+    .modern-layout .app-sidebar__overlay,
+    .modern-layout.app .app-sidebar__overlay {
+      visibility: hidden !important;
+      opacity: 0;
+      pointer-events: none !important;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1050;
+      background: rgba(0,0,0,0.5);
+    }
+    .modern-layout.sidenav-toggled .app-sidebar__overlay,
+    .modern-layout.app.sidenav-toggled .app-sidebar__overlay {
+      visibility: visible !important;
+      opacity: 1;
+      pointer-events: auto !important;
+    }
+
+    /* Content: below mobile header, full width */
+    .modern-layout .app-content,
+    .modern-layout.no-header .app-content {
+      margin-left: 0 !important;
+      margin-top: 54px !important;
+      padding: 16px 12px !important;
+      min-height: calc(100vh - 54px);
+    }
+
+    /* Keep content in place when sidebar open */
+    .modern-layout.sidenav-toggled .app-content,
+    .modern-layout.app.sidenav-toggled .app-content {
+      margin-left: 0 !important;
+    }
+
+    /* App title */
+    .modern-layout .app-title,
+    .modern-layout.no-header .app-title {
+      margin: -16px -12px 16px -12px !important;
+      padding: 12px 16px !important;
+      z-index: 100 !important;
+    }
+    .modern-layout .app-title h1 {
+      font-size: 15px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .modern-layout .app-content,
+    .modern-layout.no-header .app-content {
+      padding: 12px 8px !important;
+    }
+    .modern-layout .app-title,
+    .modern-layout.no-header .app-title {
+      margin: -12px -8px 12px -8px !important;
+      padding: 10px 12px !important;
     }
   }
 </style>

@@ -11199,6 +11199,12 @@ body.stop-scrolling {
         bottom: 0;
         right: 0;
         z-index: 9;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    .app.sidenav-toggled .app-sidebar__overlay {
+        visibility: visible;
+        pointer-events: auto;
     }
 }
 
@@ -11492,14 +11498,10 @@ body.stop-scrolling {
 @media (max-width: 480px) {
     .app-title {
         margin: -15px -15px 15px;
-        padding: 20px;
-        -webkit-box-orient: vertical;
-        -webkit-box-direction: normal;
-        -ms-flex-direction: column;
-        flex-direction: column;
-        -webkit-box-align: start;
-        -ms-flex-align: start;
-        align-items: flex-start;
+        padding: 12px 14px;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
 }
 
@@ -13064,5 +13066,180 @@ body.stop-scrolling {
 
     .modern-layout.sidebar-mini.sidenav-toggled .treeview-menu .app-menu__item {
         padding-left: 16px;
+    }
+}
+
+/* Mobile header bar hidden on desktop */
+.mobile-header {
+    display: none;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE - modern-layout
+   ======================================== */
+@media (max-width: 767px) {
+    /* Mobile top header bar with logo + hamburger */
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 54px;
+        z-index: 1045;
+        background: #1a252f;
+        padding: 0 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .mobile-header__logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    .mobile-header__logo-icon {
+        height: 28px;
+        width: auto;
+    }
+    .mobile-header__logo-text {
+        height: 16px;
+        width: auto;
+    }
+    .mobile-header__toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.2s;
+    }
+    .mobile-header__toggle:hover,
+    .mobile-header__toggle:active {
+        background: rgba(255,255,255,0.2);
+    }
+
+    /* Sidebar hidden by default on mobile - !important to override base .app rules */
+    .modern-layout.app .app-sidebar,
+    .modern-layout .app-sidebar {
+        left: -230px !important;
+        transition: left 0.3s ease;
+    }
+
+    /* Show sidebar when toggled on mobile */
+    .modern-layout.app.sidenav-toggled .app-sidebar,
+    .modern-layout.sidenav-toggled .app-sidebar {
+        left: 0 !important;
+    }
+
+    /* Overlay hidden by default - !important to override base rules */
+    .modern-layout.app .app-sidebar__overlay,
+    .modern-layout .app-sidebar__overlay {
+        visibility: hidden !important;
+        opacity: 0;
+        pointer-events: none !important;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1050;
+        background: rgba(0,0,0,0.5);
+    }
+    .modern-layout.app.sidenav-toggled .app-sidebar__overlay,
+    .modern-layout.sidenav-toggled .app-sidebar__overlay {
+        visibility: visible !important;
+        opacity: 1;
+        pointer-events: auto !important;
+    }
+
+    /* Content below mobile header, full width */
+    .modern-layout.app .app-content,
+    .modern-layout .app-content {
+        margin-left: 0 !important;
+        margin-top: 54px !important;
+        padding: 16px 14px !important;
+    }
+
+    .modern-layout.no-header .app-content {
+        margin-top: 54px !important;
+        padding: 16px 12px !important;
+    }
+
+    /* When sidebar open on mobile, content stays in place */
+    .modern-layout.app.sidenav-toggled .app-content {
+        margin-left: 0 !important;
+    }
+
+    /* App title smaller on mobile - below mobile header */
+    .modern-layout .app-title,
+    .modern-layout.no-header .app-title {
+        margin: -16px -12px 16px -12px !important;
+        padding: 12px 16px;
+        z-index: 100 !important;
+        position: relative;
+    }
+    .modern-layout .app-title h1 {
+        font-size: 15px;
+    }
+
+    /* Hide the floating hamburger button (replaced by mobile header) */
+    .modern-layout .sidebar-toggle-mobile {
+        display: none !important;
+    }
+
+    /* Hide desktop toggle inside sidebar on mobile */
+    .modern-layout .sidebar-logo .sidebar-toggle {
+        display: none;
+    }
+
+    /* Sidebar footer compact on mobile */
+    .sidebar-footer {
+        padding: 8px 10px;
+    }
+    .sidebar-footer__user {
+        padding: 6px 8px;
+    }
+
+    /* Notification panel on mobile */
+    .sidebar-footer .notification-panel {
+        position: fixed !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: 12px !important;
+        top: auto !important;
+        margin-left: 0;
+        width: calc(100vw - 24px);
+        max-width: 340px;
+    }
+
+    /* Content row full width */
+    .modern-layout .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .modern-layout .col-md-12.page {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+
+/* Small phones */
+@media (max-width: 400px) {
+    .modern-layout .app-content,
+    .modern-layout.no-header .app-content {
+        padding: 12px 8px !important;
+    }
+    .modern-layout.no-header .app-title {
+        margin: -12px -8px 12px -8px !important;
+        padding: 12px;
     }
 }

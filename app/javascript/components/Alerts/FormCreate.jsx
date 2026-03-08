@@ -265,7 +265,7 @@ class FormCreate extends Component {
 
               {/* Ingenieria Ejecucion */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Ingenieria Ejecucion (Max Verde)
@@ -297,7 +297,7 @@ class FormCreate extends Component {
 
               {/* Ingenieria Costo */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Ingenieria Costo (Max Verde)
@@ -329,7 +329,7 @@ class FormCreate extends Component {
 
               {/* Tablerista Ejecucion */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Tablerista Ejecucion (Max Verde)
@@ -361,7 +361,7 @@ class FormCreate extends Component {
 
               {/* Tablerista Costo */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Tablerista Costo (Max Verde)
@@ -393,7 +393,7 @@ class FormCreate extends Component {
 
               {/* Desplazamiento */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Desplazamiento (Max Verde)
@@ -425,7 +425,7 @@ class FormCreate extends Component {
 
               {/* Materiales */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Materiales (Max Verde)
@@ -457,7 +457,7 @@ class FormCreate extends Component {
 
               {/* Viaticos */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Viaticos (Max Verde)
@@ -489,7 +489,7 @@ class FormCreate extends Component {
 
               {/* Total */}
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-check-circle" style={{ ...styles.labelIcon, color: '#28a745' }} /> Total (Max Verde)
@@ -527,7 +527,7 @@ class FormCreate extends Component {
               </div>
 
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-minus-circle" style={styles.labelIcon} /> Menor o igual (Valor)
@@ -557,7 +557,7 @@ class FormCreate extends Component {
               </div>
 
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-arrows-alt-h" style={styles.labelIcon} /> Mayor que anterior y menor que
@@ -587,7 +587,7 @@ class FormCreate extends Component {
               </div>
 
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-plus-circle" style={styles.labelIcon} /> Mayor o igual al valor anterior
@@ -617,7 +617,7 @@ class FormCreate extends Component {
               </div>
 
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-minus-circle" style={styles.labelIcon} /> Menor o igual (Valor)
@@ -647,7 +647,7 @@ class FormCreate extends Component {
               </div>
 
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-arrows-alt-h" style={styles.labelIcon} /> Mayor que anterior y menor que
@@ -677,7 +677,7 @@ class FormCreate extends Component {
               </div>
 
               <div style={styles.formSection}>
-                <div style={styles.formGrid2}>
+                <div className="cm-form-grid-2">
                   <div style={styles.formGroup}>
                     <label style={styles.label}>
                       <i className="fa fa-plus-circle" style={styles.labelIcon} /> Mayor o igual al valor anterior

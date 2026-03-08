@@ -2,7 +2,8 @@ import React from "react";
 import Swal from "sweetalert2";
 import NumberFormat from "react-number-format";
 import Select from "react-select";
-import { CmDataTable, CmPageActions, CmModal, CmButton } from "../../generalcomponents/ui";
+import { Modal, ModalBody } from "reactstrap";
+import { CmDataTable, CmPageActions, CmButton } from "../../generalcomponents/ui";
 import IndexInvoice from "../SalesOrders/IndexInvoice";
 
 function csrfToken() {
@@ -632,244 +633,147 @@ class index extends React.Component {
     var labelIconStyle = { color: "#6b7280", fontSize: "12px" };
 
     return (
-      <CmModal
+      <Modal
+        returnFocusAfterClose={true}
         isOpen={s.modalOpen}
+        className="modal-dialog-centered modal-lg"
         toggle={this.closeModal}
-        size="lg"
-        footer={null}
-        hideHeader={true}
+        backdrop="static"
       >
-        <div style={{
-          margin: "-20px -24px -24px -24px",
-          display: "flex",
-          flexDirection: "column",
-          maxHeight: "90vh"
-        }}>
-          {/* Header */}
-          <div style={{
-            background: "#fcfcfd",
-            padding: "20px 32px",
-            borderBottom: "1px solid #e9ecef",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{
-                width: "48px",
-                height: "48px",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
-              }}>
-                <i className="fas fa-shopping-cart" style={{ color: "#fff", fontSize: "20px" }} />
+        <div className="cm-modal-container">
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon">
+                <i className="fas fa-shopping-cart"></i>
               </div>
               <div>
-                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>{title}</h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>{subtitle}</p>
+                <h2 className="cm-modal-title">{title}</h2>
+                <p className="cm-modal-subtitle">{subtitle}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={this.closeModal}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "none",
-                background: "#e9ecef",
-                borderRadius: "50%",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#6c757d",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={function(e) { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
-              onMouseOut={function(e) { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
-            >
-              <i className="fas fa-times" />
+            <button type="button" className="cm-modal-close" onClick={this.closeModal}>
+              <i className="fas fa-times"></i>
             </button>
           </div>
 
-          {/* Form Content */}
-          <div style={{ padding: "24px 32px", flex: 1, overflowY: "auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              <div>
-                <label style={labelStyle}>
-                  <i className="fa fa-calendar-alt" style={labelIconStyle} />
-                  Fecha de generación <span style={{ color: "#dc3545" }}>*</span>
-                </label>
-                <input
-                  type="date"
-                  name="created_date"
-                  value={s.form.created_date}
-                  onChange={this.handleFormChange}
-                  style={s.ErrorValues === false && s.form.created_date === "" ? inputErrorStyle : inputStyle}
-                />
+          <form onSubmit={function(e) { e.preventDefault(); }}>
+            <ModalBody className="cm-modal-body cm-modal-scroll">
+              <div className="cm-form-grid-2">
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-calendar-alt"></i> Fecha de generación <span className="cm-required">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="created_date"
+                    value={s.form.created_date}
+                    onChange={this.handleFormChange}
+                    className={"cm-input" + (s.ErrorValues === false && s.form.created_date === "" ? " cm-input-error" : "")}
+                  />
+                </div>
+
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-hashtag"></i> Número de orden <span className="cm-required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="order_number"
+                    value={s.form.order_number}
+                    onChange={this.handleFormChange}
+                    placeholder="Número de orden"
+                    className={"cm-input" + (s.ErrorValues === false && s.form.order_number === "" ? " cm-input-error" : "")}
+                  />
+                </div>
+
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-dollar-sign"></i> Valor <span className="cm-required">*</span>
+                  </label>
+                  <NumberFormat
+                    name="order_value"
+                    thousandSeparator={true}
+                    prefix={"$"}
+                    value={s.form.order_value}
+                    onChange={this.handleFormChange}
+                    placeholder="Valor"
+                    className={"cm-input" + (s.ErrorValues === false && s.form.order_value === "" ? " cm-input-error" : "")}
+                  />
+                </div>
+
+                <div className="cm-form-group">
+                  <input type="hidden" name="cost_center_id" value={s.selectedOptionCentro.value} />
+                  <label className="cm-label">
+                    <i className="fa fa-building"></i> Centro de costo
+                  </label>
+                  <Select
+                    onChange={this.handleChangeAutocompleteCentro}
+                    options={s.formCostCenterOptions}
+                    isLoading={s.formCostCenterLoading}
+                    onInputChange={this.handleFormCostCenterSearch}
+                    autoFocus={false}
+                    value={s.selectedOptionCentro.value ? s.selectedOptionCentro : null}
+                    placeholder="Escriba 3+ letras para buscar..."
+                    noOptionsMessage={() => "Escriba 3+ letras para buscar"}
+                    filterOption={null}
+                    isClearable={true}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+
+                <div className="cm-form-group cm-full-width">
+                  <label className="cm-label">
+                    <i className="fa fa-file-upload"></i> Archivo
+                  </label>
+                  <input
+                    type="file"
+                    name="order_file"
+                    onChange={this.handleFileOrderFile}
+                    className="cm-input"
+                    style={{ padding: "8px 14px", cursor: "pointer" }}
+                  />
+                </div>
+
+                <div className="cm-form-group cm-full-width">
+                  <label className="cm-label">
+                    <i className="fa fa-align-left"></i> Descripción
+                  </label>
+                  <textarea
+                    name="description"
+                    value={s.form.description}
+                    onChange={this.handleFormChange}
+                    rows="3"
+                    placeholder="Descripción..."
+                    className="cm-input"
+                    style={{ resize: "vertical", minHeight: "80px" }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={labelStyle}>
-                  <i className="fa fa-hashtag" style={labelIconStyle} />
-                  Número de orden <span style={{ color: "#dc3545" }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  name="order_number"
-                  value={s.form.order_number}
-                  onChange={this.handleFormChange}
-                  placeholder="Número de orden"
-                  style={s.ErrorValues === false && s.form.order_number === "" ? inputErrorStyle : inputStyle}
-                />
-              </div>
+              {s.ErrorValues === false && (
+                <div className="cm-alert cm-alert-error">
+                  <i className="fa fa-exclamation-circle"></i>
+                  <span>Debes completar todos los campos requeridos</span>
+                </div>
+              )}
+            </ModalBody>
 
-              <div>
-                <label style={labelStyle}>
-                  <i className="fa fa-dollar-sign" style={labelIconStyle} />
-                  Valor <span style={{ color: "#dc3545" }}>*</span>
-                </label>
-                <NumberFormat
-                  name="order_value"
-                  thousandSeparator={true}
-                  prefix={"$"}
-                  value={s.form.order_value}
-                  onChange={this.handleFormChange}
-                  placeholder="Valor"
-                  style={s.ErrorValues === false && s.form.order_value === "" ? inputErrorStyle : inputStyle}
-                />
-              </div>
-
-              <div>
-                <input type="hidden" name="cost_center_id" value={s.selectedOptionCentro.value} />
-                <label style={labelStyle}>
-                  <i className="fa fa-building" style={labelIconStyle} />
-                  Centro de costo
-                </label>
-                <Select
-                  onChange={this.handleChangeAutocompleteCentro}
-                  options={s.formCostCenterOptions}
-                  isLoading={s.formCostCenterLoading}
-                  onInputChange={this.handleFormCostCenterSearch}
-                  autoFocus={false}
-                  value={s.selectedOptionCentro.value ? s.selectedOptionCentro : null}
-                  placeholder="Escriba 3+ letras para buscar..."
-                  noOptionsMessage={() => "Escriba 3+ letras para buscar"}
-                  filterOption={null}
-                  isClearable={true}
-                  styles={selectStyles}
-                  menuPortalTarget={document.body}
-                />
-              </div>
+            <div className="cm-modal-footer">
+              <button type="button" className="cm-btn cm-btn-cancel" onClick={this.closeModal}>
+                <i className="fas fa-times"></i> Cancelar
+              </button>
+              <button type="button" className="cm-btn cm-btn-submit" onClick={this.handleSubmit} disabled={s.saving}>
+                {s.saving ? (
+                  <React.Fragment><i className="fas fa-spinner fa-spin"></i> Guardando...</React.Fragment>
+                ) : (
+                  <React.Fragment><i className="fas fa-save"></i> {isNew ? "Crear" : "Actualizar"}</React.Fragment>
+                )}
+              </button>
             </div>
-
-            <div style={{ marginTop: "16px" }}>
-              <label style={labelStyle}>
-                <i className="fa fa-file-upload" style={labelIconStyle} />
-                Archivo
-              </label>
-              <input
-                type="file"
-                name="order_file"
-                onChange={this.handleFileOrderFile}
-                style={Object.assign({}, inputStyle, { padding: "8px 14px", cursor: "pointer" })}
-              />
-            </div>
-
-            <div style={{ marginTop: "16px" }}>
-              <label style={labelStyle}>
-                <i className="fa fa-align-left" style={labelIconStyle} />
-                Descripción
-              </label>
-              <textarea
-                name="description"
-                value={s.form.description}
-                onChange={this.handleFormChange}
-                rows="4"
-                placeholder="Descripción..."
-                style={Object.assign({}, inputStyle, { resize: "vertical", minHeight: "100px" })}
-              />
-            </div>
-
-            {s.ErrorValues === false && (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                marginTop: "20px",
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                color: "#dc2626",
-                fontSize: "14px"
-              }}>
-                <i className="fa fa-exclamation-circle" style={{ fontSize: "16px" }} />
-                <span>Debes completar todos los campos requeridos</span>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            padding: "16px 32px",
-            background: "#fcfcfd",
-            borderTop: "1px solid #e9ecef",
-            flexShrink: 0
-          }}>
-            <button
-              type="button"
-              onClick={this.closeModal}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: "pointer",
-                border: "1px solid #dee2e6",
-                background: "#fff",
-                color: "#6c757d"
-              }}
-            >
-              <i className="fas fa-times" /> Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={this.handleSubmit}
-              disabled={s.saving}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: s.saving ? "not-allowed" : "pointer",
-                border: "none",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                color: "#fff",
-                opacity: s.saving ? 0.7 : 1
-              }}
-            >
-              {s.saving
-                ? React.createElement(React.Fragment, null, React.createElement("i", { className: "fas fa-spinner fa-spin" }), " Guardando...")
-                : React.createElement(React.Fragment, null, React.createElement("i", { className: "fas fa-save" }), " ", isNew ? "Crear" : "Actualizar")
-              }
-            </button>
-          </div>
+          </form>
         </div>
-      </CmModal>
+      </Modal>
     );
   };
 

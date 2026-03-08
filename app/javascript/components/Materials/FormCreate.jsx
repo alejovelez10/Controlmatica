@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import NumberFormat from "react-number-format";
 import Select from "react-select";
+import { Modal, ModalBody } from "reactstrap";
 
 const selectStyles = {
   control: (base, state) => ({
@@ -22,462 +23,255 @@ const selectStyles = {
   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
 };
 
-const FormCreate = (props) => {
-  const [costCenterOptions, setCostCenterOptions] = useState([]);
-  const [isLoadingCostCenter, setIsLoadingCostCenter] = useState(false);
-  const [searchTimeout, setSearchTimeout] = useState(null);
+class FormCreate extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      costCenterOptions: [],
+      isLoadingCostCenter: false,
+      searchTimeout: null,
+    };
+  }
 
-  const form = props.formValues;
-  const errors = props.errors || [];
-  const saving = props.isLoading;
-  const isNew = !props.modeEdit;
-  const title = props.titulo || (isNew ? "Nuevo Material" : "Editar Material");
-  const hasCostCenter = props.cost_center_id != null && props.cost_center_id !== undefined;
-
-  // Convertir providers a formato de react-select si es necesario
-  const providerOptions = (props.providerOptions || props.providers || []).map((p) =>
-    p.label ? p : { label: p.name, value: p.id }
-  );
-
-  const handleCostCenterInputChange = useCallback((inputValue, { action }) => {
+  handleCostCenterInputChange = (inputValue, { action }) => {
     if (action !== "input-change") return;
 
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+    if (this.state.searchTimeout) {
+      clearTimeout(this.state.searchTimeout);
     }
 
     if (inputValue.length >= 3) {
-      setIsLoadingCostCenter(true);
+      this.setState({ isLoadingCostCenter: true });
       const timeout = setTimeout(() => {
         fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue))
           .then((response) => response.json())
           .then((data) => {
-            setCostCenterOptions(data || []);
-            setIsLoadingCostCenter(false);
+            this.setState({ costCenterOptions: data || [], isLoadingCostCenter: false });
           })
           .catch(() => {
-            setCostCenterOptions([]);
-            setIsLoadingCostCenter(false);
+            this.setState({ costCenterOptions: [], isLoadingCostCenter: false });
           });
       }, 300);
-      setSearchTimeout(timeout);
+      this.setState({ searchTimeout: timeout });
     } else {
-      setCostCenterOptions([]);
-      setIsLoadingCostCenter(false);
+      this.setState({ costCenterOptions: [], isLoadingCostCenter: false });
     }
-  }, [props.centro, props.onSearchCostCenter, searchTimeout]);
+  };
 
-  if (!props.modal) return null;
+  render() {
+    const p = this.props;
+    const form = p.formValues;
+    const errors = p.errors || [];
+    const saving = p.isLoading;
+    const isNew = !p.modeEdit;
+    const title = p.titulo || (isNew ? "Nuevo Material" : "Editar Material");
+    const hasCostCenter = p.cost_center_id != null && p.cost_center_id !== undefined;
 
-  return (
-    <div className="cm-modal-overlay">
-      <div className="cm-modal cm-modal-lg">
-        {/* Header */}
-        <div className="cm-modal-header">
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: 40, height: 40, borderRadius: "50%", background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(245, 166, 35, 0.3)" }}>
-              <i className="fas fa-boxes" style={{ color: "#fff", fontSize: 18 }} />
-            </div>
-            <div>
-              <h2 className="cm-modal-title">{title}</h2>
-              <p style={{ margin: 0, fontSize: 12, color: "#6b7280" }}>Complete los datos del material</p>
-            </div>
-          </div>
-          <button className="cm-modal-close" onClick={props.toggle}>
-            <i className="fas fa-times" />
-          </button>
-        </div>
+    const providerOptions = (p.providerOptions || p.providers || []).map((item) =>
+      item.label ? item : { label: item.name, value: item.id }
+    );
 
-        {/* Body */}
-        <div className="cm-modal-body">
-          {props.errorValues === false && (
-            <div className="cm-form-errors">
-              <p>Debes de completar todos los campos requeridos</p>
-            </div>
-          )}
+    if (!p.modal) return null;
 
-          {errors.length > 0 && (
-            <div className="cm-form-errors">
-              <ul>
-                {errors.map((e, i) => (
-                  <li key={i}>{e}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Form Fields */}
-          <div className="cm-form-grid-2">
-            {/* Proveedor */}
-            <div className="cm-form-group">
-              <label className="cm-label">
-                <i className="fas fa-truck" style={{ marginRight: 6, color: "#6b7280" }} /> Proveedor
-              </label>
-              <Select
-                options={providerOptions}
-                value={providerOptions.find((p) => p.value === form.provider_id) || null}
-                onChange={(opt) => {
-                  const e = { target: { name: "provider_id", value: opt ? opt.value : "" } };
-                  props.onChangeForm(e);
-                }}
-                placeholder="Seleccione proveedor"
-                styles={selectStyles}
-                menuPortalTarget={document.body}
-                isClearable
-              />
-            </div>
-
-            {/* Centro de Costo - with debounce autocomplete */}
-            {!hasCostCenter && (
-              <div className="cm-form-group">
-                <label className="cm-label">
-                  <i className="fas fa-building" style={{ marginRight: 6, color: "#6b7280" }} /> Centro de Costo{" "}
-                  <span style={{ fontSize: "11px", color: "#888", fontWeight: "normal" }}>
-                    (escribe al menos 3 letras)
-                  </span>
-                </label>
-                <Select
-                  options={costCenterOptions}
-                  value={props.formAutocompleteCentro}
-                  onChange={props.onChangeAutocompleteCentro}
-                  onInputChange={handleCostCenterInputChange}
-                  isLoading={isLoadingCostCenter}
-                  placeholder="Centro de costos"
-                  styles={selectStyles}
-                  menuPortalTarget={document.body}
-                  noOptionsMessage={() => "Escribe al menos 3 letras para buscar"}
-                />
+    return (
+      <React.Fragment>
+        <Modal
+          returnFocusAfterClose={true}
+          isOpen={p.modal}
+          className="modal-dialog-centered modal-lg"
+          toggle={p.toggle}
+          backdrop="static"
+        >
+          <div className="cm-modal-container">
+            <div className="cm-modal-header">
+              <div className="cm-modal-header-content">
+                <div className="cm-modal-icon">
+                  <i className="fas fa-boxes"></i>
+                </div>
+                <div>
+                  <h2 className="cm-modal-title">{title}</h2>
+                  <p className="cm-modal-subtitle">Complete los datos del material</p>
+                </div>
               </div>
-            )}
-
-            {/* Fecha de Orden */}
-            <div className="cm-form-group">
-              <label className="cm-label">
-                <i className="fas fa-calendar-alt" style={{ marginRight: 6, color: "#6b7280" }} /> Fecha de Orden
-              </label>
-              <input
-                type="date"
-                name="sales_date"
-                className="cm-input"
-                value={form.sales_date || ""}
-                onChange={props.onChangeForm}
-              />
+              <button type="button" className="cm-modal-close" onClick={p.toggle}>
+                <i className="fas fa-times"></i>
+              </button>
             </div>
 
-            {/* Numero de Orden */}
-            <div className="cm-form-group">
-              <label className="cm-label">
-                <i className="fas fa-hashtag" style={{ marginRight: 6, color: "#6b7280" }} /> Numero de Orden
-              </label>
-              <input
-                type="text"
-                name="sales_number"
-                className="cm-input"
-                placeholder="Numero de orden"
-                value={form.sales_number || ""}
-                onChange={props.onChangeForm}
-              />
-            </div>
+            <form onSubmit={(e) => e.preventDefault()}>
+              <ModalBody className="cm-modal-body cm-modal-scroll">
+                {p.errorValues === false && (
+                  <div className="cm-alert cm-alert-error">
+                    <i className="fas fa-exclamation-circle"></i>
+                    <span>Debes de completar todos los campos requeridos</span>
+                  </div>
+                )}
 
-            {/* Valor */}
-            <div className="cm-form-group">
-              <label className="cm-label">
-                <i className="fas fa-dollar-sign" style={{ marginRight: 6, color: "#6b7280" }} /> Valor
-              </label>
-              <NumberFormat
-                name="amount"
-                thousandSeparator={true}
-                prefix="$"
-                className="cm-input"
-                value={form.amount || ""}
-                onChange={props.onChangeForm}
-                placeholder="Valor"
-              />
-            </div>
+                {errors.length > 0 && (
+                  <div className="cm-alert cm-alert-error">
+                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                      {errors.map((e, i) => (
+                        <li key={i}>{e}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-            {/* Fecha Entrega */}
-            <div className="cm-form-group">
-              <label className="cm-label">
-                <i className="fas fa-calendar-check" style={{ marginRight: 6, color: "#6b7280" }} /> Fecha Entrega
-              </label>
-              <input
-                type="date"
-                name="delivery_date"
-                className="cm-input"
-                value={form.delivery_date || ""}
-                onChange={props.onChangeForm}
-              />
-            </div>
+                <div className="cm-form-grid-2">
+                  {/* Proveedor */}
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fas fa-truck"></i> Proveedor
+                    </label>
+                    <Select
+                      options={providerOptions}
+                      value={providerOptions.find((item) => item.value === form.provider_id) || null}
+                      onChange={(opt) => {
+                        const e = { target: { name: "provider_id", value: opt ? opt.value : "" } };
+                        p.onChangeForm(e);
+                      }}
+                      placeholder="Seleccione proveedor"
+                      styles={selectStyles}
+                      menuPortalTarget={document.body}
+                      isClearable
+                    />
+                  </div>
 
-            {/* Estado */}
-            <div className="cm-form-group">
-              <label className="cm-label">
-                <i className="fas fa-flag" style={{ marginRight: 6, color: "#6b7280" }} /> Estado
-              </label>
-              <select
-                className="cm-input"
-                name="sales_state"
-                value={form.sales_state || ""}
-                onChange={props.onChangeForm}
-              >
-                <option value="">Seleccione estado</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Parcial">Parcial</option>
-                <option value="Entregado">Entregado</option>
-                <option value="Cancelado">Cancelado</option>
-              </select>
-            </div>
+                  {/* Centro de Costo */}
+                  {!hasCostCenter && (
+                    <div className="cm-form-group">
+                      <label className="cm-label">
+                        <i className="fas fa-building"></i> Centro de Costo{" "}
+                        <span className="cm-hint">(escribe al menos 3 letras)</span>
+                      </label>
+                      <Select
+                        options={this.state.costCenterOptions}
+                        value={p.formAutocompleteCentro}
+                        onChange={p.onChangeAutocompleteCentro}
+                        onInputChange={this.handleCostCenterInputChange}
+                        isLoading={this.state.isLoadingCostCenter}
+                        placeholder="Centro de costos"
+                        styles={selectStyles}
+                        menuPortalTarget={document.body}
+                        noOptionsMessage={() => "Escribe al menos 3 letras para buscar"}
+                      />
+                    </div>
+                  )}
+
+                  {/* Fecha de Orden */}
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fas fa-calendar-alt"></i> Fecha de Orden
+                    </label>
+                    <input
+                      type="date"
+                      name="sales_date"
+                      className="cm-input"
+                      value={form.sales_date || ""}
+                      onChange={p.onChangeForm}
+                    />
+                  </div>
+
+                  {/* Numero de Orden */}
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fas fa-hashtag"></i> Numero de Orden
+                    </label>
+                    <input
+                      type="text"
+                      name="sales_number"
+                      className="cm-input"
+                      placeholder="Numero de orden"
+                      value={form.sales_number || ""}
+                      onChange={p.onChangeForm}
+                    />
+                  </div>
+
+                  {/* Valor */}
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fas fa-dollar-sign"></i> Valor
+                    </label>
+                    <NumberFormat
+                      name="amount"
+                      thousandSeparator={true}
+                      prefix="$"
+                      className="cm-input"
+                      value={form.amount || ""}
+                      onChange={p.onChangeForm}
+                      placeholder="Valor"
+                    />
+                  </div>
+
+                  {/* Fecha Entrega */}
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fas fa-calendar-check"></i> Fecha Entrega
+                    </label>
+                    <input
+                      type="date"
+                      name="delivery_date"
+                      className="cm-input"
+                      value={form.delivery_date || ""}
+                      onChange={p.onChangeForm}
+                    />
+                  </div>
+
+                  {/* Estado */}
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fas fa-flag"></i> Estado
+                    </label>
+                    <select
+                      className="cm-input"
+                      name="sales_state"
+                      value={form.sales_state || ""}
+                      onChange={p.onChangeForm}
+                    >
+                      <option value="">Seleccione estado</option>
+                      <option value="Pendiente">Pendiente</option>
+                      <option value="Parcial">Parcial</option>
+                      <option value="Entregado">Entregado</option>
+                      <option value="Cancelado">Cancelado</option>
+                    </select>
+                  </div>
+
+                  {/* Descripcion - full width */}
+                  <div className="cm-form-group cm-full-width">
+                    <label className="cm-label">
+                      <i className="fas fa-align-left"></i> Descripcion
+                    </label>
+                    <textarea
+                      className="cm-input"
+                      name="description"
+                      rows="3"
+                      value={form.description || ""}
+                      onChange={p.onChangeForm}
+                      placeholder="Descripcion del material"
+                      style={{ resize: "vertical", minHeight: "80px" }}
+                    />
+                  </div>
+                </div>
+              </ModalBody>
+
+              <div className="cm-modal-footer">
+                <button type="button" className="cm-btn cm-btn-cancel" onClick={p.toggle}>
+                  <i className="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" className="cm-btn cm-btn-submit" onClick={p.submit} disabled={saving}>
+                  {saving ? (
+                    <span><i className="fas fa-spinner fa-spin"></i> Guardando...</span>
+                  ) : (
+                    <span><i className="fas fa-save"></i> {p.nameSubmit || "Guardar"}</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-
-          {/* Descripcion - full width */}
-          <div className="cm-form-group" style={{ marginTop: "16px" }}>
-            <label className="cm-label">
-              <i className="fas fa-align-left" style={{ marginRight: 6, color: "#6b7280" }} /> Descripcion
-            </label>
-            <textarea
-              className="cm-input"
-              name="description"
-              rows="4"
-              value={form.description || ""}
-              onChange={props.onChangeForm}
-              placeholder="Descripcion del material"
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="cm-modal-footer">
-          <button className="cm-btn cm-btn-secondary" onClick={props.toggle}>
-            <i className="fas fa-times" /> Cancelar
-          </button>
-          <button
-            className="cm-btn cm-btn-primary"
-            onClick={props.submit}
-            disabled={saving}
-          >
-            {saving ? (
-              <span>
-                <i className="fas fa-spinner fa-spin" /> Guardando...
-              </span>
-            ) : (
-              <span>
-                <i className="fas fa-save" /> {props.nameSubmit || "Guardar"}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      <style>{`
-        .cm-modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-        }
-
-        .cm-modal {
-          background: #fff;
-          border-radius: 12px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-          max-height: 90vh;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .cm-modal-lg {
-          width: 100%;
-          max-width: 700px;
-        }
-
-        .cm-modal-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 20px 24px;
-          border-bottom: 1px solid #e2e5ea;
-          background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-        }
-
-        .cm-modal-title {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 600;
-          color: #1a1a2e;
-        }
-
-        .cm-modal-close {
-          background: none;
-          border: none;
-          font-size: 20px;
-          color: #888;
-          cursor: pointer;
-          padding: 4px 8px;
-          border-radius: 4px;
-          transition: all 0.2s;
-        }
-
-        .cm-modal-close:hover {
-          background: #f0f0f0;
-          color: #333;
-        }
-
-        .cm-modal-body {
-          padding: 24px;
-          overflow-y: auto;
-          flex: 1;
-        }
-
-        .cm-modal-footer {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          padding: 16px 24px;
-          border-top: 1px solid #e2e5ea;
-          background: #fcfcfd;
-        }
-
-        .cm-form-grid-2 {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-        }
-
-        @media (max-width: 600px) {
-          .cm-form-grid-2 {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .cm-form-group {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .cm-label {
-          font-size: 13px;
-          font-weight: 400;
-          color: #374151;
-          margin-bottom: 6px;
-          display: flex;
-          align-items: center;
-        }
-
-        .cm-label i {
-          color: #6b7280;
-          font-size: 12px;
-        }
-
-        .cm-input {
-          width: 100%;
-          padding: 10px 12px;
-          font-size: 14px;
-          border: 1px solid #e2e5ea;
-          border-radius: 8px;
-          background: #fcfcfd;
-          transition: all 0.2s;
-          box-sizing: border-box;
-        }
-
-        .cm-input:focus {
-          outline: none;
-          border-color: #f5a623;
-          box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
-          background: #fff;
-        }
-
-        .cm-input::placeholder {
-          color: #aaa;
-        }
-
-        textarea.cm-input {
-          resize: vertical;
-          min-height: 80px;
-        }
-
-        select.cm-input {
-          cursor: pointer;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 12px center;
-          padding-right: 32px;
-        }
-
-        .cm-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 20px;
-          font-size: 14px;
-          font-weight: 500;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .cm-btn:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .cm-btn-primary {
-          background: linear-gradient(135deg, #f5a623 0%, #e6951c 100%);
-          color: #fff;
-          box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
-        }
-
-        .cm-btn-primary:hover:not(:disabled) {
-          background: linear-gradient(135deg, #e6951c 0%, #d58619 100%);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
-        }
-
-        .cm-btn-secondary {
-          background: #fff;
-          color: #666;
-          border: 1px solid #ddd;
-        }
-
-        .cm-btn-secondary:hover:not(:disabled) {
-          background: #f5f5f5;
-          border-color: #ccc;
-        }
-
-        .cm-form-errors {
-          background: #fff5f5;
-          border: 1px solid #ffcdd2;
-          border-radius: 8px;
-          padding: 12px 16px;
-          margin-bottom: 16px;
-          color: #c62828;
-          font-size: 14px;
-        }
-
-        .cm-form-errors ul {
-          margin: 0;
-          padding-left: 20px;
-        }
-
-        .cm-form-errors li {
-          margin: 4px 0;
-        }
-
-        .cm-form-errors p {
-          margin: 0;
-        }
-      `}</style>
-    </div>
-  );
-};
+        </Modal>
+      </React.Fragment>
+    );
+  }
+}
 
 export default FormCreate;
