@@ -1,6 +1,7 @@
 import React from "react";
 import Swal from "sweetalert2";
-import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui";
+import { CmDataTable, CmPageActions } from "../../generalcomponents/ui";
+import { Modal } from "reactstrap";
 
 const EMPTY_MODULE = { name: "", description: "" };
 const EMPTY_ACTION = { name: "", description: "" };
@@ -311,216 +312,53 @@ class Index extends React.Component {
     const icon = moduleMode === "new" ? "fa-cubes" : "fa-cube";
 
     return (
-      <CmModal
-        isOpen={moduleModalOpen}
-        toggle={this.closeModuleModal}
-        size="md"
-        footer={null}
-        hideHeader={true}
-      >
-        <div style={{
-          margin: "-20px -24px -24px -24px",
-          display: "flex",
-          flexDirection: "column"
-        }}>
-          {/* Header */}
-          <div style={{
-            background: "#fcfcfd",
-            padding: "20px 32px",
-            borderBottom: "1px solid #e9ecef",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{
-                width: "48px",
-                height: "48px",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
-              }}>
-                <i className={`fas ${icon}`} style={{ color: "#fff", fontSize: "20px" }} />
-              </div>
+      <Modal isOpen={moduleModalOpen} toggle={this.closeModuleModal} className="modal-lg modal-dialog-centered">
+        <div className="cm-modal-container">
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon"><i className={`fas ${icon}`} /></div>
               <div>
-                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>{title}</h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>{subtitle}</p>
+                <h2 className="cm-modal-title">{title}</h2>
+                <p className="cm-modal-subtitle">{subtitle}</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={this.closeModuleModal}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "none",
-                background: "#e9ecef",
-                borderRadius: "50%",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#6c757d",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
-            >
+            <button type="button" className="cm-modal-close" onClick={this.closeModuleModal}>
               <i className="fas fa-times" />
             </button>
           </div>
-
-          {/* Form Content */}
-          <div style={{ padding: "24px 32px" }}>
+          <div className="cm-modal-body">
             {moduleErrors.length > 0 && (
-              <div style={{
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "8px",
-                padding: "12px 16px",
-                marginBottom: "20px"
-              }}>
-                <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+              <div className="cm-alert cm-alert-danger">
+                <ul style={{ margin: 0, paddingLeft: "20px" }}>
                   {moduleErrors.map((e, i) => <li key={i}>{e}</li>)}
                 </ul>
               </div>
             )}
-
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px"
-            }}>
-              <div>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  placeholder="Nombre del módulo"
-                  value={moduleForm.name}
-                  onChange={(e) => this.handleModuleFormChange("name", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none",
-                    boxSizing: "border-box"
-                  }}
-                />
+            <div className="cm-form-grid-2">
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-tag" /> Nombre</label>
+                <input type="text" className="cm-input" placeholder="Nombre del módulo" value={moduleForm.name} onChange={(e) => this.handleModuleFormChange("name", e.target.value)} />
               </div>
-              <div>
-                <label style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-align-left" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Descripción
-                </label>
-                <input
-                  type="text"
-                  placeholder="Descripción"
-                  value={moduleForm.description}
-                  onChange={(e) => this.handleModuleFormChange("description", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none",
-                    boxSizing: "border-box"
-                  }}
-                />
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-align-left" /> Descripción</label>
+                <input type="text" className="cm-input" placeholder="Descripción" value={moduleForm.description} onChange={(e) => this.handleModuleFormChange("description", e.target.value)} />
               </div>
             </div>
           </div>
-
-          {/* Footer */}
-          <div style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            padding: "16px 32px",
-            background: "#fcfcfd",
-            borderTop: "1px solid #e9ecef"
-          }}>
-            <button
-              type="button"
-              onClick={this.closeModuleModal}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                border: "1px solid #dee2e6",
-                background: "#fff",
-                color: "#6c757d"
-              }}
-            >
+          <div className="cm-modal-footer">
+            <button type="button" className="cm-btn cm-btn-cancel" onClick={this.closeModuleModal}>
               <i className="fas fa-times" /> Cancelar
             </button>
-            <button
-              type="button"
-              onClick={this.handleModuleSubmit}
-              disabled={moduleSaving}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: moduleSaving ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
-                border: "none",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                color: "#fff",
-                opacity: moduleSaving ? 0.7 : 1
-              }}
-            >
+            <button type="button" className="cm-btn cm-btn-submit" onClick={this.handleModuleSubmit} disabled={moduleSaving}>
               {moduleSaving ? (
-                <React.Fragment>
-                  <i className="fas fa-spinner fa-spin" /> Guardando...
-                </React.Fragment>
+                <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>
               ) : (
-                <React.Fragment>
-                  <i className="fas fa-save" /> Guardar
-                </React.Fragment>
+                <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>
               )}
             </button>
           </div>
         </div>
-      </CmModal>
+      </Modal>
     );
   };
 
@@ -529,243 +367,56 @@ class Index extends React.Component {
     if (!actionsModule) return null;
 
     return (
-      <CmModal
-        isOpen={actionsModalOpen}
-        toggle={this.closeActionsModal}
-        size="lg"
-        footer={null}
-        hideHeader={true}
-      >
-        <div style={{
-          margin: "-20px -24px -24px -24px",
-          display: "flex",
-          flexDirection: "column",
-          maxHeight: "90vh"
-        }}>
-          {/* Header */}
-          <div style={{
-            background: "#fcfcfd",
-            padding: "20px 32px",
-            borderBottom: "1px solid #e9ecef",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{
-                width: "48px",
-                height: "48px",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
-              }}>
-                <i className="fas fa-cogs" style={{ color: "#fff", fontSize: "20px" }} />
-              </div>
+      <Modal isOpen={actionsModalOpen} toggle={this.closeActionsModal} className="modal-lg modal-dialog-centered">
+        <div className="cm-modal-container">
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon"><i className="fas fa-cogs" /></div>
               <div>
-                <h2 style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>
-                  Acciones de {actionsModule.name}
-                </h2>
-                <p style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>
-                  Gestione las acciones del módulo
-                </p>
+                <h2 className="cm-modal-title">Acciones de {actionsModule.name}</h2>
+                <p className="cm-modal-subtitle">Gestione las acciones del módulo</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={this.closeActionsModal}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "none",
-                background: "#e9ecef",
-                borderRadius: "50%",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#6c757d",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
-            >
+            <button type="button" className="cm-modal-close" onClick={this.closeActionsModal}>
               <i className="fas fa-times" />
             </button>
           </div>
-
-          {/* Content - Scrollable */}
-          <div style={{
-            padding: "24px 32px",
-            flex: 1,
-            overflowY: "auto"
-          }}>
+          <div className="cm-modal-body">
             {/* Action form */}
             {actionMode && (
-              <div style={{
-                background: "#fcfcfd",
-                borderRadius: "12px",
-                padding: "20px",
-                marginBottom: "20px"
-              }}>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  marginBottom: "16px"
-                }}>
-                  <div style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "8px",
-                    background: "rgba(245, 166, 35, 0.15)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    <i className={`fa ${actionMode === "new" ? "fa-plus" : "fa-edit"}`} style={{ color: "#f5a623", fontSize: "16px" }} />
+              <div className="cm-contacts-section" style={{ marginBottom: "20px" }}>
+                <div className="cm-contacts-header">
+                  <div className="cm-contacts-title">
+                    <div className="cm-contacts-icon">
+                      <i className={`fa ${actionMode === "new" ? "fa-plus" : "fa-edit"}`} />
+                    </div>
+                    <span style={{ fontWeight: 600, color: "#374151", fontSize: "16px" }}>
+                      {actionMode === "new" ? "Nueva Acción" : "Editar Acción"}
+                    </span>
                   </div>
-                  <span style={{ fontWeight: 600, color: "#374151", fontSize: "16px" }}>
-                    {actionMode === "new" ? "Nueva Acción" : "Editar Acción"}
-                  </span>
                 </div>
-
                 {actionErrors.length > 0 && (
-                  <div style={{
-                    background: "#fef2f2",
-                    border: "1px solid #fecaca",
-                    borderRadius: "8px",
-                    padding: "12px 16px",
-                    marginBottom: "16px"
-                  }}>
-                    <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+                  <div className="cm-alert cm-alert-danger">
+                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
                       {actionErrors.map((e, i) => <li key={i}>{e}</li>)}
                     </ul>
                   </div>
                 )}
-
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "16px",
-                  marginBottom: "16px"
-                }}>
-                  <div>
-                    <label style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "6px",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#374151"
-                    }}>
-                      <i className="fa fa-tag" style={{ color: "#6b7280", fontSize: "12px" }} />
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nombre de la acción"
-                      value={actionForm.name}
-                      onChange={(e) => this.handleActionFormChange("name", e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        border: "1px solid #e2e5ea",
-                        borderRadius: "8px",
-                        fontSize: "14px",
-                        background: "#fff",
-                        transition: "all 0.2s",
-                        outline: "none",
-                        boxSizing: "border-box"
-                      }}
-                    />
+                <div className="cm-form-grid-2" style={{ marginBottom: "16px" }}>
+                  <div className="cm-form-group">
+                    <label className="cm-label"><i className="fa fa-tag" /> Nombre</label>
+                    <input type="text" className="cm-input" placeholder="Nombre de la acción" value={actionForm.name} onChange={(e) => this.handleActionFormChange("name", e.target.value)} />
                   </div>
-                  <div>
-                    <label style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "6px",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#374151"
-                    }}>
-                      <i className="fa fa-align-left" style={{ color: "#6b7280", fontSize: "12px" }} />
-                      Descripción
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Descripción"
-                      value={actionForm.description}
-                      onChange={(e) => this.handleActionFormChange("description", e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        border: "1px solid #e2e5ea",
-                        borderRadius: "8px",
-                        fontSize: "14px",
-                        background: "#fff",
-                        transition: "all 0.2s",
-                        outline: "none",
-                        boxSizing: "border-box"
-                      }}
-                    />
+                  <div className="cm-form-group">
+                    <label className="cm-label"><i className="fa fa-align-left" /> Descripción</label>
+                    <input type="text" className="cm-input" placeholder="Descripción" value={actionForm.description} onChange={(e) => this.handleActionFormChange("description", e.target.value)} />
                   </div>
                 </div>
-
                 <div style={{ display: "flex", gap: "12px" }}>
-                  <button
-                    type="button"
-                    onClick={this.handleActionSubmit}
-                    disabled={actionSaving}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 20px",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      borderRadius: "8px",
-                      cursor: actionSaving ? "not-allowed" : "pointer",
-                      transition: "all 0.2s ease",
-                      border: "none",
-                      background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                      color: "#fff",
-                      opacity: actionSaving ? 0.7 : 1
-                    }}
-                  >
-                    {actionSaving ? (
-                      <React.Fragment>
-                        <i className="fas fa-spinner fa-spin" /> Guardando...
-                      </React.Fragment>
-                    ) : (
-                      <React.Fragment>
-                        <i className="fas fa-save" /> Guardar
-                      </React.Fragment>
-                    )}
+                  <button type="button" className="cm-btn cm-btn-submit" onClick={this.handleActionSubmit} disabled={actionSaving}>
+                    {actionSaving ? (<React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>) : (<React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>)}
                   </button>
-                  <button
-                    type="button"
-                    onClick={this.cancelActionForm}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 20px",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      border: "1px solid #dee2e6",
-                      background: "#fff",
-                      color: "#6c757d"
-                    }}
-                  >
+                  <button type="button" className="cm-btn cm-btn-cancel" onClick={this.cancelActionForm}>
                     <i className="fas fa-times" /> Cancelar
                   </button>
                 </div>
@@ -774,23 +425,7 @@ class Index extends React.Component {
 
             {!actionMode && (
               <div style={{ marginBottom: "20px" }}>
-                <button
-                  onClick={this.startNewAction}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    padding: "10px 20px",
-                    fontSize: "14px",
-                    fontWeight: 500,
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    border: "none",
-                    background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                    color: "#fff"
-                  }}
-                >
+                <button className="cm-btn cm-btn-submit" onClick={this.startNewAction}>
                   <i className="fas fa-plus" /> Nueva Acción
                 </button>
               </div>
@@ -798,13 +433,13 @@ class Index extends React.Component {
 
             {/* Actions list */}
             {actionsLoading ? (
-              <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af" }}>
-                <i className="fas fa-spinner fa-spin" style={{ fontSize: "24px", marginBottom: "12px", display: "block" }} />
+              <div className="cm-contacts-empty">
+                <i className="fas fa-spinner fa-spin" />
                 Cargando...
               </div>
             ) : actions.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af" }}>
-                <i className="fas fa-cog" style={{ fontSize: "32px", marginBottom: "12px", display: "block", opacity: 0.5 }} />
+              <div className="cm-contacts-empty">
+                <i className="fas fa-cog" />
                 No hay acciones en este módulo
               </div>
             ) : (
@@ -842,40 +477,13 @@ class Index extends React.Component {
               </table>
             )}
           </div>
-
-          {/* Footer */}
-          <div style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            padding: "16px 32px",
-            background: "#fcfcfd",
-            borderTop: "1px solid #e9ecef",
-            flexShrink: 0
-          }}>
-            <button
-              type="button"
-              onClick={this.closeActionsModal}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                border: "1px solid #dee2e6",
-                background: "#fff",
-                color: "#6c757d"
-              }}
-            >
+          <div className="cm-modal-footer">
+            <button type="button" className="cm-btn cm-btn-cancel" onClick={this.closeActionsModal}>
               <i className="fas fa-times" /> Cerrar
             </button>
           </div>
         </div>
-      </CmModal>
+      </Modal>
     );
   };
 

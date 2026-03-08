@@ -1395,6 +1395,14 @@ select.cm-input {
   max-height: 90vh;
 }
 
+.cm-modal-container form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .cm-modal-header {
   background: #fcfcfd;
   padding: 20px 32px;
@@ -1464,8 +1472,9 @@ select.cm-input {
 .cm-modal-body {
   padding: 24px 32px !important;
   background: #fff;
-  max-height: 70vh;
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .cm-modal-footer {
@@ -1581,6 +1590,228 @@ select.cm-input {
   font-size: 18px;
 }
 
+/* Password field with toggle */
+.cm-password-wrapper {
+  position: relative;
+}
+
+.cm-password-wrapper .cm-input {
+  padding-right: 45px;
+}
+
+.cm-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.cm-password-toggle:hover {
+  color: var(--cm-accent);
+}
+
+/* Password requirements checklist */
+.cm-password-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.cm-password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.cm-req-met { color: #276749; }
+.cm-req-met i { color: #38a169; }
+.cm-req-unmet { color: #c53030; }
+.cm-req-unmet i { color: #e53e3e; }
+
+/* Avatar section (user form) */
+.cm-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--cm-border);
+}
+
+.cm-avatar-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--cm-accent);
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+}
+
+.cm-avatar-upload {
+  flex: 1;
+}
+
+.cm-file-input {
+  padding: 8px !important;
+}
+
+/* Select error state */
+.cm-select-error > div {
+  border-color: var(--cm-danger) !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Alert variants for forms */
+.cm-alert-header {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Color input (alerts form) */
+.cm-color-input {
+  width: 100%;
+  height: 42px;
+  padding: 4px;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  background: #fcfcfd;
+  cursor: pointer;
+}
+
+/* Section divider (alerts form) */
+.cm-section-divider {
+  display: flex;
+  align-items: center;
+  margin: 24px 0 16px;
+  border-top: 1px solid var(--cm-border);
+  padding-top: 16px;
+}
+
+.cm-section-divider-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cm-accent);
+}
+
+/* Contacts section (providers/customers) */
+.cm-contacts-section {
+  background: #fcfcfd;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 8px;
+}
+
+.cm-contacts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cm-contacts-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cm-contacts-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(245, 166, 35, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cm-accent);
+  font-size: 16px;
+}
+
+.cm-contact-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 50px 16px 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--cm-border);
+  position: relative;
+}
+
+.cm-contact-remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.cm-contact-remove:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.cm-contacts-empty {
+  text-align: center;
+  padding: 24px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.cm-contacts-empty i {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+  opacity: 0.5;
+}
+
+/* Permissions section (roles form) */
+.cm-permissions-section {
+  background: #fcfcfd;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+}
+
+.cm-permissions-header {
+  background: #fff;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cm-permissions-body {
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 /* Error message for form fields */
 .cm-error-message {
   color: #dc3545;
@@ -1639,21 +1870,32 @@ select.cm-input {
     grid-template-columns: 1fr !important;
   }
 
+  .cm-password-requirements {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cm-avatar-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
   /* Global: modals as bottom sheet on mobile (only centered modals) */
-  .modal-dialog-centered {
+  .modal-dialog.modal-dialog-centered {
     margin: 0 !important;
     padding: 0 !important;
     max-width: 100% !important;
+    width: 100% !important;
     min-height: 100vh !important;
     align-items: flex-end !important;
     display: flex !important;
   }
 
-  .modal-dialog-centered .modal-content {
+  .modal-dialog.modal-dialog-centered > .modal-content {
     max-height: 95vh !important;
     border-radius: 16px 16px 0 0 !important;
     min-height: auto !important;
     width: 100% !important;
+    flex: none !important;
   }
 
   .modal-dialog-centered .modal-header {
@@ -1674,7 +1916,9 @@ select.cm-input {
 
   .cm-modal-body,
   .modal-body {
-    max-height: calc(95vh - 140px) !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
     padding: 16px !important;
   }
 
@@ -1711,6 +1955,7 @@ select.cm-input {
   .cm-modal-footer,
   .modal-footer {
     padding: 16px !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
     flex-shrink: 0 !important;
     gap: 10px !important;
   }

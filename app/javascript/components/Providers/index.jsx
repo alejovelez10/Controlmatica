@@ -1,29 +1,11 @@
 import React from "react";
 import Swal from "sweetalert2";
-import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui";
+import { CmDataTable, CmPageActions } from "../../generalcomponents/ui";
+import { Modal } from "reactstrap";
 
 const EMPTY_FORM = { name: "", email: "", nit: "", phone: "", address: "", web: "" };
 const EMPTY_CONTACT = { name: "", phone: "", email: "", position: "" };
 
-const selectStyles = {
-  control: (base, state) => ({
-    ...base,
-    background: "#fcfcfd",
-    borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
-    boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
-    "&:hover": { borderColor: "#f5a623" },
-    borderRadius: "8px",
-    padding: "2px 4px",
-    fontSize: "14px",
-  }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
-    color: state.isSelected ? "#fff" : "#333",
-    fontSize: "14px",
-  }),
-  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-};
 
 function csrfToken() {
   const meta = document.querySelector('meta[name="csrf-token"]');
@@ -341,491 +323,152 @@ class index extends React.Component {
     const visibleContacts = contacts.filter((c) => !c._destroy);
 
     return (
-      <CmModal
-        isOpen={modalOpen}
-        toggle={this.closeModal}
-        size="lg"
-        footer={null}
-        hideHeader={true}
-      >
-        <div className="cm-modal-container" style={{
-          margin: "-20px -24px -24px -24px",
-          display: "flex",
-          flexDirection: "column",
-          maxHeight: "90vh"
-        }}>
-          {/* Header - Same style as CustomerReports */}
-          <div className="cm-modal-header" style={{
-            background: "#fcfcfd",
-            padding: "20px 32px",
-            borderBottom: "1px solid #e9ecef",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexShrink: 0
-          }}>
-            <div className="cm-modal-header-content" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div className="cm-modal-icon" style={{
-                width: "48px",
-                height: "48px",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(245, 166, 35, 0.3)"
-              }}>
-                <i className="fas fa-truck" style={{ color: "#fff", fontSize: "20px" }} />
-              </div>
-              <div className="cm-modal-header-text">
-                <h2 className="cm-modal-title" style={{ margin: "0 0 2px 0", fontSize: "18px", fontWeight: 600, color: "#333" }}>{title}</h2>
-                <p className="cm-modal-subtitle" style={{ margin: 0, fontSize: "12px", color: "#6c757d" }}>
+      <Modal isOpen={modalOpen} toggle={this.closeModal} className="modal-lg modal-dialog-centered">
+        <div className="cm-modal-container">
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon"><i className="fas fa-truck" /></div>
+              <div>
+                <h2 className="cm-modal-title">{title}</h2>
+                <p className="cm-modal-subtitle">
                   {modalMode === "new" ? "Complete los datos del nuevo proveedor" : "Modifique los datos del proveedor"}
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              className="cm-modal-close"
-              onClick={this.closeModal}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "none",
-                background: "#e9ecef",
-                borderRadius: "50%",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#6c757d",
-                transition: "all 0.2s"
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = "#dc3545"; e.currentTarget.style.color = "#fff"; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = "#e9ecef"; e.currentTarget.style.color = "#6c757d"; }}
-            >
-              <i className="fas fa-times" />
-            </button>
+            <button type="button" className="cm-modal-close" onClick={this.closeModal}><i className="fas fa-times" /></button>
           </div>
 
-          {/* Form Content - Scrollable */}
-          <div className="cm-modal-body-scroll" style={{
-            padding: "24px 32px",
-            flex: 1,
-            overflowY: "auto"
-          }}>
+          <div className="cm-modal-body cm-modal-scroll">
             {errors.length > 0 && (
-              <div style={{
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "8px",
-                padding: "12px 16px",
-                marginBottom: "20px"
-              }}>
-                <ul style={{ margin: 0, paddingLeft: "20px", color: "#dc2626" }}>
+              <div className="cm-alert cm-alert-danger">
+                <ul style={{ margin: 0, paddingLeft: "20px" }}>
                   {errors.map((e, i) => <li key={i}>{e}</li>)}
                 </ul>
               </div>
             )}
 
-            {/* Provider Info Section */}
-            <div className="cm-form-grid-2" style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "16px",
-              marginBottom: "24px"
-            }}>
-              <div>
-                <label className="cm-label" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-building" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Nombre
-                </label>
+            <div className="cm-form-grid-2">
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-building" /> Nombre</label>
                 <input
                   type="text"
                   className="cm-input"
                   placeholder="Nombre del proveedor"
                   value={form.name}
                   onChange={(e) => this.handleFormChange("name", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none"
-                  }}
                 />
               </div>
-              <div>
-                <label className="cm-label" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-envelope" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Email
-                </label>
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-envelope" /> Email</label>
                 <input
                   type="email"
                   className="cm-input"
                   placeholder="correo@ejemplo.com"
                   value={form.email}
                   onChange={(e) => this.handleFormChange("email", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none"
-                  }}
                 />
               </div>
-              <div>
-                <label className="cm-label" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-phone" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Telefono
-                </label>
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-phone" /> Telefono</label>
                 <input
                   type="text"
                   className="cm-input"
                   placeholder="Telefono"
                   value={form.phone}
                   onChange={(e) => this.handleFormChange("phone", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none"
-                  }}
                 />
               </div>
-              <div>
-                <label className="cm-label" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-map-marker-alt" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Direccion
-                </label>
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-map-marker-alt" /> Direccion</label>
                 <input
                   type="text"
                   className="cm-input"
                   placeholder="Direccion"
                   value={form.address}
                   onChange={(e) => this.handleFormChange("address", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none"
-                  }}
                 />
               </div>
-              <div>
-                <label className="cm-label" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-id-card" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  NIT
-                </label>
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-id-card" /> NIT</label>
                 <input
                   type="text"
                   className="cm-input"
                   placeholder="NIT"
                   value={form.nit}
                   onChange={(e) => this.handleFormChange("nit", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none"
-                  }}
                 />
               </div>
-              <div>
-                <label className="cm-label" style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  marginBottom: "6px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "#374151"
-                }}>
-                  <i className="fa fa-globe" style={{ color: "#6b7280", fontSize: "12px" }} />
-                  Web
-                </label>
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-globe" /> Web</label>
                 <input
                   type="text"
                   className="cm-input"
                   placeholder="https://..."
                   value={form.web}
                   onChange={(e) => this.handleFormChange("web", e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    background: "#fcfcfd",
-                    transition: "all 0.2s",
-                    outline: "none"
-                  }}
                 />
               </div>
             </div>
 
-            {/* Contacts Section */}
-            <div style={{
-              background: "#fcfcfd",
-              borderRadius: "12px",
-              padding: "20px",
-              marginTop: "8px"
-            }}>
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "16px"
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "8px",
-                    background: "rgba(245, 166, 35, 0.15)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}>
-                    <i className="fa fa-address-book" style={{ color: "#f5a623", fontSize: "16px" }} />
-                  </div>
+            <div className="cm-contacts-section">
+              <div className="cm-contacts-header">
+                <div className="cm-contacts-title">
+                  <div className="cm-contacts-icon"><i className="fa fa-address-book" /></div>
                   <span style={{ fontWeight: 600, color: "#374151", fontSize: "16px" }}>
                     Contactos ({visibleContacts.length})
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={this.addContact}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 14px",
-                    background: "#fff",
-                    border: "1px solid #e2e5ea",
-                    borderRadius: "8px",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: "#374151",
-                    cursor: "pointer",
-                    transition: "all 0.2s"
-                  }}
-                >
-                  <i className="fa fa-plus" style={{ fontSize: "11px" }} /> Agregar
+                <button type="button" className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.addContact}>
+                  <i className="fa fa-plus" /> Agregar
                 </button>
               </div>
 
               {contacts.map((contact, index) => {
                 if (contact._destroy) return null;
                 return (
-                  <div key={index} style={{
-                    background: "#fff",
-                    borderRadius: "10px",
-                    padding: "16px 50px 16px 16px",
-                    marginBottom: "12px",
-                    border: "1px solid #e2e5ea",
-                    position: "relative"
-                  }}>
-                    <button
-                      type="button"
-                      onClick={() => this.removeContact(index)}
-                      title="Eliminar contacto"
-                      style={{
-                        position: "absolute",
-                        top: "10px",
-                        right: "10px",
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "8px",
-                        border: "1px solid #fecaca",
-                        background: "#fef2f2",
-                        color: "#dc2626",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.2s",
-                        fontSize: "14px"
-                      }}
-                      onMouseOver={(e) => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#f87171"; }}
-                      onMouseOut={(e) => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.borderColor = "#fecaca"; }}
-                    >
+                  <div key={index} className="cm-contact-card">
+                    <button type="button" className="cm-contact-remove" onClick={() => this.removeContact(index)} title="Eliminar contacto">
                       <i className="fa fa-trash-alt" />
                     </button>
-                    <div className="cm-form-grid-2" style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "12px"
-                    }}>
-                      <div>
-                        <label className="cm-label" style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          marginBottom: "4px",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#6b7280"
-                        }}>
-                          <i className="fa fa-user" style={{ fontSize: "11px" }} /> Nombre
-                        </label>
+                    <div className="cm-form-grid-2">
+                      <div className="cm-form-group">
+                        <label className="cm-label"><i className="fa fa-user" /> Nombre</label>
                         <input
                           type="text"
                           className="cm-input"
                           placeholder="Nombre"
                           value={contact.name}
                           onChange={(e) => this.handleContactChange(index, "name", e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            border: "1px solid #e2e5ea",
-                            borderRadius: "6px",
-                            fontSize: "13px",
-                            background: "#fcfcfd"
-                          }}
                         />
                       </div>
-                      <div>
-                        <label className="cm-label" style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          marginBottom: "4px",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#6b7280"
-                        }}>
-                          <i className="fa fa-mobile-alt" style={{ fontSize: "11px" }} /> Celular
-                        </label>
+                      <div className="cm-form-group">
+                        <label className="cm-label"><i className="fa fa-mobile-alt" /> Celular</label>
                         <input
                           type="text"
                           className="cm-input"
                           placeholder="Celular"
                           value={contact.phone}
                           onChange={(e) => this.handleContactChange(index, "phone", e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            border: "1px solid #e2e5ea",
-                            borderRadius: "6px",
-                            fontSize: "13px",
-                            background: "#fcfcfd"
-                          }}
                         />
                       </div>
-                      <div>
-                        <label className="cm-label" style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          marginBottom: "4px",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#6b7280"
-                        }}>
-                          <i className="fa fa-envelope" style={{ fontSize: "11px" }} /> Email
-                        </label>
+                      <div className="cm-form-group">
+                        <label className="cm-label"><i className="fa fa-envelope" /> Email</label>
                         <input
                           type="email"
                           className="cm-input"
                           placeholder="Email"
                           value={contact.email}
                           onChange={(e) => this.handleContactChange(index, "email", e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            border: "1px solid #e2e5ea",
-                            borderRadius: "6px",
-                            fontSize: "13px",
-                            background: "#fcfcfd"
-                          }}
                         />
                       </div>
-                      <div>
-                        <label className="cm-label" style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          marginBottom: "4px",
-                          fontSize: "13px",
-                          fontWeight: 500,
-                          color: "#6b7280"
-                        }}>
-                          <i className="fa fa-briefcase" style={{ fontSize: "11px" }} /> Cargo
-                        </label>
+                      <div className="cm-form-group">
+                        <label className="cm-label"><i className="fa fa-briefcase" /> Cargo</label>
                         <input
                           type="text"
                           className="cm-input"
                           placeholder="Cargo"
                           value={contact.position}
                           onChange={(e) => this.handleContactChange(index, "position", e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            border: "1px solid #e2e5ea",
-                            borderRadius: "6px",
-                            fontSize: "13px",
-                            background: "#fcfcfd"
-                          }}
                         />
                       </div>
                     </div>
@@ -834,12 +477,7 @@ class index extends React.Component {
               })}
 
               {visibleContacts.length === 0 && (
-                <div style={{
-                  textAlign: "center",
-                  padding: "24px",
-                  color: "#9ca3af",
-                  fontSize: "14px"
-                }}>
+                <div className="cm-contacts-empty">
                   <i className="fa fa-users" style={{ fontSize: "24px", marginBottom: "8px", display: "block", opacity: 0.5 }} />
                   No hay contactos agregados
                 </div>
@@ -847,71 +485,20 @@ class index extends React.Component {
             </div>
           </div>
 
-          {/* Footer - Same style as CustomerReports */}
-          <div className="cm-modal-footer" style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "12px",
-            padding: "16px 32px",
-            background: "#fcfcfd",
-            borderTop: "1px solid #e9ecef",
-            flexShrink: 0
-          }}>
-            <button
-              type="button"
-              className="cm-btn cm-btn-outline"
-              onClick={this.closeModal}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                border: "1px solid #dee2e6",
-                background: "#fff",
-                color: "#6c757d"
-              }}
-            >
+          <div className="cm-modal-footer">
+            <button type="button" className="cm-btn cm-btn-cancel" onClick={this.closeModal}>
               <i className="fas fa-times" /> Cancelar
             </button>
-            <button
-              type="button"
-              className="cm-btn cm-btn-accent"
-              onClick={this.handleSubmit}
-              disabled={saving}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: 500,
-                borderRadius: "8px",
-                cursor: saving ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
-                border: "none",
-                background: "linear-gradient(135deg, #f5a623 0%, #f7b731 100%)",
-                color: "#fff",
-                opacity: saving ? 0.7 : 1
-              }}
-            >
+            <button type="button" className="cm-btn cm-btn-submit" onClick={this.handleSubmit} disabled={saving}>
               {saving ? (
-                <React.Fragment>
-                  <i className="fas fa-spinner fa-spin" /> Guardando...
-                </React.Fragment>
+                <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>
               ) : (
-                <React.Fragment>
-                  <i className="fas fa-save" /> Guardar
-                </React.Fragment>
+                <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>
               )}
             </button>
           </div>
         </div>
-      </CmModal>
+      </Modal>
     );
   };
 
