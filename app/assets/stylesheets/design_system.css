@@ -1903,8 +1903,43 @@ select.cm-input {
   .cm-form-grid-2,
   .cm-form-grid-3,
   .cm-filter-grid,
-  .cm-filter-row {
+  .cm-filter-row,
+  .cm-show-info-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .cm-show-info-item--description,
+  .cm-show-info-item--audit {
+    grid-column: span 1 !important;
+  }
+
+  .cm-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cm-show-header {
+    padding: 14px 16px;
+  }
+
+  .cm-show-title-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .cm-show-title {
+    font-size: 16px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .cm-show-actions {
+    width: 100%;
+  }
+
+  .cm-show-actions .cm-btn {
+    flex: 1;
+    justify-content: center;
   }
 
   .cm-filter-span-2,
