@@ -1118,45 +1118,6 @@ class index extends React.Component {
             })
           ),
 
-          // Estado
-          React.createElement("div", { style: { display: "flex", flexDirection: "column" }},
-            React.createElement("label", { style: {
-              fontSize: "13px",
-              fontWeight: "400",
-              color: "#495057",
-              marginBottom: "6px"
-            }},
-              React.createElement("i", { className: "fas fa-flag", style: { color: "#6c757d", marginRight: "6px", width: "14px" }}),
-              "Estado"
-            ),
-            React.createElement("select", {
-              value: form.sales_state || "",
-              onChange: function(e) { self.handleFormChange("sales_state", e.target.value); },
-              style: {
-                width: "100%",
-                padding: "10px 14px",
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: "14px",
-                color: "#333",
-                background: "#fcfcfd",
-                border: "1px solid #e2e5ea",
-                borderRadius: "8px",
-                boxSizing: "border-box",
-                cursor: "pointer",
-                appearance: "none",
-                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 12px center",
-                paddingRight: "32px"
-              }
-            },
-              React.createElement("option", { value: "" }, "Seleccione estado"),
-              React.createElement("option", { value: "Pendiente" }, "Pendiente"),
-              React.createElement("option", { value: "Parcial" }, "Parcial"),
-              React.createElement("option", { value: "Entregado" }, "Entregado"),
-              React.createElement("option", { value: "Cancelado" }, "Cancelado")
-            )
-          )
         ),
 
         // Descripción - full width

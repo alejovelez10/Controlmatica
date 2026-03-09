@@ -470,6 +470,15 @@ class index extends React.Component {
         self.setState({ dataCostCenter: arrayCentro });
       });
 
+    fetch("/get_client/" + report.customer_id)
+      .then(function (response) { return response.json(); })
+      .then(function (data) {
+        var contacts = data.map(function (item) {
+          return { label: item.name, value: item.id };
+        });
+        self.setState({ dataContact: contacts });
+      });
+
     this.setState({
       modalOpen: true,
       modeEdit: true,

@@ -217,25 +217,6 @@ class FormCreate extends React.Component {
                     />
                   </div>
 
-                  {/* Estado */}
-                  <div className="cm-form-group">
-                    <label className="cm-label">
-                      <i className="fas fa-flag"></i> Estado
-                    </label>
-                    <select
-                      className="cm-input"
-                      name="sales_state"
-                      value={form.sales_state || ""}
-                      onChange={p.onChangeForm}
-                    >
-                      <option value="">Seleccione estado</option>
-                      <option value="Pendiente">Pendiente</option>
-                      <option value="Parcial">Parcial</option>
-                      <option value="Entregado">Entregado</option>
-                      <option value="Cancelado">Cancelado</option>
-                    </select>
-                  </div>
-
                   {/* Descripcion - full width */}
                   <div className="cm-form-group cm-full-width">
                     <label className="cm-label">

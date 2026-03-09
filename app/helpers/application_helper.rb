@@ -574,11 +574,7 @@ module ApplicationHelper
 
     #contractor
     cont_horas_eje = @cost_center.contractors.sum(:hours)
-    puts cont_horas_eje
-    puts "holaaaaaa"
     cont_horas_porcentaje = @cost_center.hours_contractor.to_f > 0 ? (((cont_horas_eje.to_f / @cost_center.hours_contractor.to_f)) * 100).round(1) : 0
-    puts cont_horas_eje.to_f / @cost_center.hours_contractor.to_f
-    puts cont_horas_porcentaje
     cont_costo_cotizado = (@cost_center.hours_contractor_invoices.to_f * @cost_center.hours_contractor.to_f).round(1)
     cont_costo_real = (@cost_center.hours_contractor_real.to_f * cont_horas_eje.to_f).round(1)
     cont_costo_porcentaje = cont_costo_cotizado.to_f > 0 ? (((1 - (cont_costo_real.to_f / cont_costo_cotizado.to_f)) * 100)).round(1) : 0

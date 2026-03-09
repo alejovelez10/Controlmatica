@@ -70,33 +70,29 @@ class table extends React.Component {
 
   validationForm = () => {
     if(this.props.estados.viatics){
-        if (this.state.form.customer_id != "" &&
-          this.state.form.contact_id != "" &&
-          this.state.form.report_date != "" &&
-          this.state.form.working_time != "" &&
-          this.state.form.work_description != "" &&
-          this.state.form.viatic_value != ""
+        if (this.state.form.customer_id !== "" &&
+          this.state.form.contact_id !== "" &&
+          this.state.form.report_date !== "" &&
+          (this.state.form.working_time !== "" && this.state.form.working_time !== null && this.state.form.working_time !== undefined) &&
+          this.state.form.work_description !== "" &&
+          (this.state.form.viatic_value !== "" && this.state.form.viatic_value !== null && this.state.form.viatic_value !== undefined)
       ) {
-        console.log("los campos estan llenos")
         this.setState({ ErrorValues: true })
         return true
       } else {
-        console.log("los campos no se han llenado")
         this.setState({ ErrorValues: false })
         return false
       }
     }else{
-      if (this.state.form.customer_id != "" &&
-          this.state.form.contact_id != "" &&
-          this.state.form.report_date != "" &&
-          this.state.form.working_time != "" &&
-          this.state.form.work_description != ""
+      if (this.state.form.customer_id !== "" &&
+          this.state.form.contact_id !== "" &&
+          this.state.form.report_date !== "" &&
+          (this.state.form.working_time !== "" && this.state.form.working_time !== null && this.state.form.working_time !== undefined) &&
+          this.state.form.work_description !== ""
       ) {
-        console.log("los campos estan llenos")
         this.setState({ ErrorValues: true })
         return true
       } else {
-        console.log("los campos no se han llenado")
         this.setState({ ErrorValues: false })
         return false
       }
@@ -433,12 +429,10 @@ class table extends React.Component {
   }
 
   HandleClickContact = () => {
-    let array = []
-
     if (this.validationFormContact() == true) {
       fetch("/create_contact", {
-        method: 'POST', // or 'PUT'
-        body: JSON.stringify(this.state.formContact), // data can be `string` or {object}!
+        method: 'POST',
+        body: JSON.stringify(this.state.formContact),
         headers: {
           'Content-Type': 'application/json',
         }
@@ -447,11 +441,14 @@ class table extends React.Component {
         .then(data => {
           this.MessageSucces(data.message, data.type, data.message_error)
 
-          array.push({ label: data.register.name, value: data.register.id })
+          let updatedContacts = (this.state.dataContact || []).slice()
+          updatedContacts.push({ label: data.register.name, value: data.register.id })
 
           this.setState({
             state_create: true,
-            dataContact: array
+            dataContact: updatedContacts,
+            selectedOptionContact: { value: data.register.id, label: data.register.name },
+            form: { ...this.state.form, contact_id: data.register.id },
           })
 
         });
@@ -473,17 +470,17 @@ class table extends React.Component {
     fetch(`/customer_user/${modulo.customer_id}`)
       .then(response => response.json())
       .then(data => {
-
-        console.log(data)
-
         data.map((item) => (
           arrayCentro.push({ label: item.code, value: item.id })
         ))
+        this.setState({ dataCostCenter: arrayCentro })
+      });
 
-        this.setState({
-          dataCostCenter: arrayCentro
-        })
-
+    fetch(`/get_client/${modulo.customer_id}`)
+      .then(response => response.json())
+      .then(data => {
+        let contacts = data.map((item) => ({ label: item.name, value: item.id }))
+        this.setState({ dataContact: contacts })
       });
 
     this.setState({
