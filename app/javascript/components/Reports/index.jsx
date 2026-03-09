@@ -649,14 +649,18 @@ class index extends React.Component {
       .catch(function (error) { console.error("Error:", error); })
       .then(function (data) {
         self.setState({ modalOpen: false, saving: false });
-        Swal.fire({
-          position: "center",
-          icon: data.type,
-          title: data.message,
-          showConfirmButton: false,
-          timer: 1500,
-        });
         self.loadData(self.state.modeEdit ? undefined : 1);
+        try {
+          Swal.fire({
+            position: "center",
+            icon: data.type,
+            title: data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        } catch (e) {
+          console.warn("SweetAlert error:", e);
+        }
       });
   }.bind(this);
 
@@ -674,21 +678,27 @@ class index extends React.Component {
       .then(function (res) { return res.json(); })
       .catch(function (error) { console.error("Error:", error); })
       .then(function (data) {
-        Swal.fire({
-          position: "center",
-          icon: data.type,
-          title: data.message,
-          showConfirmButton: false,
-          timer: 1500,
-        });
         var updatedContacts = self.state.dataContact.slice();
-        updatedContacts.push({ label: data.register.name, value: data.register.id });
+        if (data.register) {
+          updatedContacts.push({ label: data.register.name, value: data.register.id });
+        }
         self.setState({
           state_create: true,
           dataContact: updatedContacts,
-          selectedOptionContact: { value: data.register.id, label: data.register.name },
-          form: Object.assign({}, self.state.form, { contact_id: data.register.id }),
+          selectedOptionContact: data.register ? { value: data.register.id, label: data.register.name } : self.state.selectedOptionContact,
+          form: Object.assign({}, self.state.form, { contact_id: data.register ? data.register.id : self.state.form.contact_id }),
         });
+        try {
+          Swal.fire({
+            position: "center",
+            icon: data.type,
+            title: data.message,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        } catch (e) {
+          console.warn("SweetAlert error:", e);
+        }
       });
   }.bind(this);
 
