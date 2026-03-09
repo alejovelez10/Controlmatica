@@ -386,12 +386,12 @@ class index extends React.Component {
     var form = this.state.form;
     if (this.props.estados.viatics) {
       if (
-        form.customer_id != "" &&
-        form.contact_id != "" &&
-        form.report_date != "" &&
-        form.working_time != "" &&
-        form.work_description != "" &&
-        form.viatic_value != ""
+        form.customer_id !== "" &&
+        form.contact_id !== "" &&
+        form.report_date !== "" &&
+        (form.working_time !== "" && form.working_time !== null && form.working_time !== undefined) &&
+        form.work_description !== "" &&
+        (form.viatic_value !== "" && form.viatic_value !== null && form.viatic_value !== undefined)
       ) {
         this.setState({ ErrorValues: true });
         return true;
@@ -401,11 +401,11 @@ class index extends React.Component {
       }
     } else {
       if (
-        form.customer_id != "" &&
-        form.contact_id != "" &&
-        form.report_date != "" &&
-        form.working_time != "" &&
-        form.work_description != ""
+        form.customer_id !== "" &&
+        form.contact_id !== "" &&
+        form.report_date !== "" &&
+        (form.working_time !== "" && form.working_time !== null && form.working_time !== undefined) &&
+        form.work_description !== ""
       ) {
         this.setState({ ErrorValues: true });
         return true;
