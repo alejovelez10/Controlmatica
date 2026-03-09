@@ -664,7 +664,6 @@ class index extends React.Component {
 
   handleSubmitContact = function () {
     var self = this;
-    var array = [];
     if (self.validationFormContact() !== true) return;
 
     fetch("/create_contact", {
@@ -682,8 +681,14 @@ class index extends React.Component {
           showConfirmButton: false,
           timer: 1500,
         });
-        array.push({ label: data.register.name, value: data.register.id });
-        self.setState({ state_create: true, dataContact: array });
+        var updatedContacts = self.state.dataContact.slice();
+        updatedContacts.push({ label: data.register.name, value: data.register.id });
+        self.setState({
+          state_create: true,
+          dataContact: updatedContacts,
+          selectedOptionContact: { value: data.register.id, label: data.register.name },
+          form: Object.assign({}, self.state.form, { contact_id: data.register.id }),
+        });
       });
   }.bind(this);
 
