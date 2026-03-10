@@ -127,7 +127,16 @@ class index extends React.Component {
           return formatCurrency(row.amount);
         }
       },
-      { key: "description", label: "Descripción", width: "250px" },
+      {
+        key: "description",
+        label: "Descripción",
+        width: "250px",
+        render: function(row) {
+          return React.createElement("div", { className: "cm-cell-truncate", "data-tooltip": row.description || "" },
+            React.createElement("span", { className: "cm-cell-truncate-text" }, row.description || "—")
+          );
+        }
+      },
       { key: "sales_date", label: "Fecha Orden", width: "120px" },
       { key: "delivery_date", label: "Fecha Entrega", width: "120px" },
       {
