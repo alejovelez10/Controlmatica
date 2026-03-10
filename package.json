@@ -24,7 +24,6 @@
     "reactstrap": "^8.9.0",
     "sass": "^1.89.0",
     "sweetalert2": "11.7.32",
-    "sweetalert2-react": "^0.8.3",
     "webpacker-react": "^0.3.2"
   },
   "devDependencies": {

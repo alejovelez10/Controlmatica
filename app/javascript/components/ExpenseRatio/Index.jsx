@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import FormCreate from './FormCreate'
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2";
 import NumberFormat from 'react-number-format';
 import Pagination from "react-js-pagination";

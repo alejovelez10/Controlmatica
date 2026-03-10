@@ -1,6 +1,5 @@
 import React from 'react';
 import FormCreateControlModule from "../Module/formCreateControlModule"
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2";
 
 

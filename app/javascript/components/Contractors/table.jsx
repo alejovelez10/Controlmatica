@@ -1,5 +1,4 @@
 import React from "react";
-import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2'
 import FormCreate from "../Contractors/FormCreate"
 import NumberFormat from 'react-number-format';

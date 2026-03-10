@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import NumberFormat from 'react-number-format';
-import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2'
 
 class IndexInvoice extends Component {

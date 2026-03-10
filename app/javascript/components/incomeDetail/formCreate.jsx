@@ -2,7 +2,6 @@ import React from 'react';
 import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import {Button, CardBody, Card, Collapse} from 'reactstrap';
-import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2'
 
 

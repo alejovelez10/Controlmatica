@@ -1,5 +1,4 @@
 import React from "react";
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2";
 
 class table extends React.Component {

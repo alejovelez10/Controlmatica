@@ -352,7 +352,7 @@ class index extends React.Component {
         if (data.type === "success") {
           self.setState({ editingStateId: null });
           self.loadData();
-          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+          try { Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 }); } catch(e) { console.warn("SweetAlert error:", e); }
         }
       });
   }.bind(this);
@@ -731,13 +731,7 @@ class index extends React.Component {
         if (result.data.type === "success") {
           self.closeModal();
           self.loadData(isNew ? 1 : undefined);
-          Swal.fire({
-            position: "center",
-            icon: "success",
-            title: result.data.message,
-            showConfirmButton: false,
-            timer: 1500
-          });
+          try { Swal.fire({ position: "center", icon: "success", title: result.data.message, showConfirmButton: false, timer: 1500 }); } catch(e) { console.warn("SweetAlert error:", e); }
         } else {
           self.setState({
             errors: result.data.message_error || [result.data.message || "Error al guardar"],
@@ -754,28 +748,36 @@ class index extends React.Component {
 
   handleDelete = function(id) {
     var self = this;
-    Swal.fire({
-      title: "¿Estás seguro?",
-      text: "El registro será eliminado permanentemente",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#2a3f53",
-      cancelButtonColor: "#dc3545",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar"
-    }).then(function(result) {
-      if (result.value) {
-        fetch("/materials/" + id, {
-          method: "delete",
-          headers: { "X-CSRF-Token": csrfToken() }
-        })
-          .then(function(response) { return response.json(); })
-          .then(function() {
-            self.loadData();
-            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
-          });
+    try {
+      Swal.fire({
+        title: "¿Estás seguro?",
+        text: "El registro será eliminado permanentemente",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#2a3f53",
+        cancelButtonColor: "#dc3545",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      }).then(function(result) {
+        if (result.value) {
+          fetch("/materials/" + id, {
+            method: "delete",
+            headers: { "X-CSRF-Token": csrfToken() }
+          })
+            .then(function(response) { return response.json(); })
+            .then(function() {
+              self.loadData();
+              try { Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" }); } catch(e) { console.warn("SweetAlert error:", e); }
+            });
+        }
+      });
+    } catch(e) {
+      console.warn("SweetAlert error:", e);
+      if (confirm("¿Estás seguro? El registro será eliminado permanentemente")) {
+        fetch("/materials/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
+          .then(function() { self.loadData(); });
       }
-    });
+    }
   }.bind(this);
 
   // ─── Renders ───

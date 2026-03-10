@@ -2,7 +2,6 @@ import WebpackerReact from 'webpacker-react';
 import React, { useState, useEffect } from 'react';
 import FormCreate from '../components/Shifts/FormCreate';
 import FormFilter from '../components/Shifts/FormFilter';
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2";
 
 const Shifts = (props) => {
