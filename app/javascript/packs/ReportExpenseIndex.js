@@ -365,7 +365,7 @@ class ReportExpenseIndex extends React.Component {
     if (self._formCcTimer) clearTimeout(self._formCcTimer);
     self._formCcTimer = setTimeout(function() {
       self.setState({ formCostCenterLoading: true });
-      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue), { headers: { "X-CSRF-Token": csrfToken() } })
+      fetch("/search_cost_centers?q=" + encodeURIComponent(inputValue) + "&exclude_finalized=true", { headers: { "X-CSRF-Token": csrfToken() } })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           self.setState({ formCostCenterOptions: data.map(function(d) { return { value: d.id, label: d.label }; }), formCostCenterLoading: false });

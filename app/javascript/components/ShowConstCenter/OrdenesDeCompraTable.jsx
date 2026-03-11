@@ -33,6 +33,31 @@ class OrdenesDeCompraTable extends Component {
       { key: "created_date", label: "Fecha Orden" },
       { key: "order_number", label: "Número" },
       { key: "order_value", label: "Valor", render: (r) => <NumberFormat value={r.order_value} displayType="text" thousandSeparator={true} prefix="$" /> },
+      { key: "customer_invoices", label: "Facturas", width: "420px", sortable: false, render: (r) => {
+        if (!r.customer_invoices || r.customer_invoices.length === 0) {
+          return <span style={{ color: "#999", fontSize: "12px" }}>Sin facturas</span>;
+        }
+        return (
+          <table style={{ tableLayout: "fixed", width: "100%", fontSize: "12px", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <td style={{ padding: "4px", textAlign: "center", fontWeight: "bold", border: "1px solid #e0e0e0" }}>Numero</td>
+                <td style={{ padding: "4px", textAlign: "center", fontWeight: "bold", border: "1px solid #e0e0e0" }}>Fecha</td>
+                <td style={{ padding: "4px", textAlign: "center", fontWeight: "bold", border: "1px solid #e0e0e0" }}>Valor</td>
+              </tr>
+            </thead>
+            <tbody>
+              {r.customer_invoices.map((inv, idx) => (
+                <tr key={inv.id || idx}>
+                  <td style={{ padding: "5px", textAlign: "center", border: "1px solid #e0e0e0" }}>{inv.number_invoice}</td>
+                  <td style={{ padding: "5px", textAlign: "center", border: "1px solid #e0e0e0" }}>{inv.invoice_date}</td>
+                  <td style={{ padding: "5px", textAlign: "center", border: "1px solid #e0e0e0" }}><NumberFormat value={inv.invoice_value} displayType="text" thousandSeparator={true} prefix="$" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      }},
       { key: "sum_invoices", label: "Total Facturas", render: (r) => <NumberFormat value={r.sum_invoices} displayType="text" thousandSeparator={true} prefix="$" /> },
       { key: "description", label: "Descripción" },
       { key: "invoiced_state", label: "Estado CC", render: (r) => r.cost_center ? r.cost_center.invoiced_state : "" },

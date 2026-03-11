@@ -45,6 +45,7 @@ class CostCentersController < ApplicationController
     term = "%#{query}%"
     results = CostCenter.where("code ILIKE ? OR description ILIKE ?", term, term)
     results = results.where(customer_id: params[:customer_id]) if params[:customer_id].present?
+    results = results.where.not(execution_state: "FINALIZADO") if params[:exclude_finalized] == "true"
     results = results.select(:id, :code, :description).limit(15)
 
     render json: results.map { |cc| { id: cc.id, label: "#{cc.code} - (#{cc.description})" } }
