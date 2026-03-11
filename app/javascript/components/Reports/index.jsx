@@ -147,7 +147,16 @@ class index extends React.Component {
         },
       },
       { key: "working_time", label: "Horas", width: "80px" },
-      { key: "work_description", label: "Descripcion", width: "300px" },
+      {
+        key: "work_description",
+        label: "Descripcion",
+        width: "300px",
+        render: function(row) {
+          return React.createElement("div", { className: "cm-cell-truncate", "data-tooltip": row.work_description || "" },
+            React.createElement("span", { className: "cm-cell-truncate-text" }, row.work_description || "—")
+          );
+        }
+      },
       {
         key: "viatic_value",
         label: "Viaticos",
