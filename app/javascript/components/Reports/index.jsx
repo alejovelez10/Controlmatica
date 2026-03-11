@@ -604,7 +604,7 @@ class index extends React.Component {
           cost_center_id: selectedOptionCentro.value,
           customer_id: costCenter.customer_id || "",
           contact_id: costCenter.contact_id || "",
-          report_execute_id: costCenter.user_owner_id || self.state.form.report_execute_id,
+          report_execute_id: self.state.form.report_execute_id,
         });
 
         // Actualizar cliente seleccionado
