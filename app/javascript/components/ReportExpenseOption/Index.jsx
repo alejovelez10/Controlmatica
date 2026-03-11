@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import FormCreate from './FormCreate'
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 
 class Index extends Component {

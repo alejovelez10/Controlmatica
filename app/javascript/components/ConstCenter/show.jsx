@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardImg, CardText, CardBody, CardTitle, CardSubtitle, Button } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import FormCreate from "./FormCreate";
-import SweetAlert from 'sweetalert2-react';
 import Swal from 'sweetalert2/dist/sweetalert2.js';
 import TabContentShow from '../ShowConstCenter/TabContentShow'
 import Calendar from '../Shifts/Calendar';

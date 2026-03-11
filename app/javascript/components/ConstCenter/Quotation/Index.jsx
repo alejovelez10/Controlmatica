@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import FormCreate from './FormCreate'
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { Modal, ModalHeader, ModalBody, ModalFooter, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import NumberFormat from 'react-number-format';

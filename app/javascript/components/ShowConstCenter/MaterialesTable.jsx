@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
 import FormCreate from '../Materials/FormCreate';
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import IndexInvoice from '../incomeDetail/IndexInvoice';
 

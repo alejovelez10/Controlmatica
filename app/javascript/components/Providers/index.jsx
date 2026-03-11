@@ -1,6 +1,5 @@
 import React from 'react';
 import Table from "../Providers/table";
-import SweetAlert from "sweetalert2-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 
 class index extends React.Component {
