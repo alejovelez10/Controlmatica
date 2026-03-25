@@ -538,6 +538,38 @@ class index extends React.Component {
 
   openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);
 
+  renderActions = function(row) {
+    var self = this;
+    var estados = this.props.estados;
+    var canEdit = self.getStateEdit(row.user_id);
+    var canDelete = estados.delete;
+    var canPdf = estados.generate_pdf;
+
+    if (!canEdit && !canDelete && !canPdf) return null;
+
+    return React.createElement("div", { className: "cm-dt-menu" },
+      React.createElement("button", {
+        className: "cm-dt-menu-trigger",
+        onClick: self.openMenu
+      }, React.createElement("i", { className: "fas fa-ellipsis-v" })),
+      React.createElement("div", { className: "cm-dt-menu-dropdown" },
+        canEdit ? React.createElement("button", {
+          className: "cm-dt-menu-item",
+          onClick: function() { self.openEditModal(row); }
+        }, React.createElement("i", { className: "fas fa-pen" }), " Editar") : null,
+        canDelete ? React.createElement("button", {
+          className: "cm-dt-menu-item cm-dt-menu-item--danger",
+          onClick: function() { self.handleDelete(row.id); }
+        }, React.createElement("i", { className: "fas fa-trash" }), " Eliminar") : null,
+        canPdf ? React.createElement("a", {
+          className: "cm-dt-menu-item",
+          href: "/customer_pdf/" + row.id + ".pdf",
+          target: "_blank"
+        }, React.createElement("i", { className: "fas fa-file-pdf" }), " Generar PDF") : null
+      )
+    );
+  }.bind(this);
+
   renderHeaderActions = function() {
     var estados = this.props.estados;
     var self = this;
