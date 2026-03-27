@@ -31,8 +31,8 @@ class CustomerInvoicesController < ApplicationController
   # POST /customer_invoices.json
 
   def create
-    valor1 = customer_invoice_params["invoice_value"].gsub('$','').gsub(',','')
-    params["invoice_value"] = valor1
+    params["invoice_value"] = clean_money(params["invoice_value"]) if params["invoice_value"].present?
+    params["engineering_value"] = clean_money(params["engineering_value"]) if params["engineering_value"].present?
 
     @customer_invoice = CustomerInvoice.create(customer_invoice_params)
 
@@ -56,12 +56,8 @@ class CustomerInvoicesController < ApplicationController
   # PATCH/PUT /customer_invoices/1
   # PATCH/PUT /customer_invoices/1.json
   def update
-    if params["invoice_value"].present?
-      if customer_invoice_params["invoice_value"].class.to_s != "Integer"
-        valor1 = customer_invoice_params["invoice_value"].gsub('$','').gsub(',','')
-        params["invoice_value"] = valor1
-      end
-    end
+    params["invoice_value"] = clean_money(params["invoice_value"]) if params["invoice_value"].present?
+    params["engineering_value"] = clean_money(params["engineering_value"]) if params["engineering_value"].present?
 
     if @customer_invoice.update(customer_invoice_params) 
       recalculate_cost_center(@customer_invoice.sales_order.cost_center_id)
@@ -109,5 +105,10 @@ class CustomerInvoicesController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_invoice_params
       params.permit(:cost_center_id, :sales_order_id, :invoice_value, :invoice_date, :delivery_certificate_file, :delivery_certificate_state, :reception_report_file, :reception_report_state, :invoice_state, :number_invoice, :engineering_value)
+    end
+
+    def clean_money(value)
+      return value if value.is_a?(Numeric)
+      value.to_s.gsub(/[$,]/, "")
     end
 end
