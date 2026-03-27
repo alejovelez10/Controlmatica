@@ -68,6 +68,7 @@ module SalesOrdersHelper
                 :invoice_date => customer_invoice.invoice_date,
                 :invoice_value => customer_invoice.invoice_value,
                 :number_invoice => customer_invoice.number_invoice,
+                :engineering_value => customer_invoice.engineering_value,
 			}
 		end
     end
