@@ -37,7 +37,7 @@ class Index extends Component {
     };
 
     this.columns = [
-      { key: "description", label: "Descripción" },
+      { key: "description", label: "Descripción", render: function(r) { return React.createElement("div", { className: "cm-cell-truncate", "data-tooltip": r.description || "" }, React.createElement("span", { className: "cm-cell-truncate-text" }, r.description || "—")); } },
       { key: "quotation_number", label: "N. Cotización" },
       { key: "eng_hours", label: "Hora Ing." },
       { key: "hour_real", label: "Valor hora costo", render: (r) => <NumberFormat value={r.hour_real} displayType="text" thousandSeparator={true} prefix="$" /> },

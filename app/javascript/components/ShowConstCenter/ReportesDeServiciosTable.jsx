@@ -41,9 +41,9 @@ class ReportesDeServiciosTable extends Component {
       { key: "report_date", label: "Fecha Ejecución" },
       { key: "report_execute_name", label: "Responsable", render: (r) => r.report_execute ? r.report_execute.names : "" },
       { key: "working_time", label: "Horas" },
-      { key: "work_description", label: "Descripción Trabajo" },
+      { key: "work_description", label: "Descripción Trabajo", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.work_description || ""}><span className="cm-cell-truncate-text">{r.work_description || "—"}</span></div> },
       { key: "viatic_value", label: "Viáticos", render: (r) => <NumberFormat value={r.viatic_value} displayType="text" thousandSeparator={true} prefix="$" /> },
-      { key: "viatic_description", label: "Desc. Viáticos" },
+      { key: "viatic_description", label: "Desc. Viáticos", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.viatic_description || ""}><span className="cm-cell-truncate-text">{r.viatic_description || "—"}</span></div> },
       { key: "total_value", label: "Valor Reporte", render: (r) => <NumberFormat value={r.total_value} displayType="text" thousandSeparator={true} prefix="$" /> },
       { key: "report_sate", label: "Estado", render: (r) => r.report_sate ? "Aprobado" : "Sin Aprobar" },
     ];

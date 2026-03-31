@@ -39,7 +39,7 @@ class ExpensesTable extends Component {
       { key: "invoice_name", label: "Nombre" },
       { key: "invoice_date", label: "Fecha factura" },
       { key: "identification", label: "NIT / Cédula" },
-      { key: "description", label: "Descripción" },
+      { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
       { key: "invoice_number", label: "# Factura" },
       { key: "type_identification_name", label: "Tipo", render: (r) => r.type_identification ? r.type_identification.name : "" },
       { key: "payment_type_name", label: "Medio pago", render: (r) => r.payment_type ? r.payment_type.name : "" },

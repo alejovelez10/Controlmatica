@@ -59,7 +59,7 @@ class OrdenesDeCompraTable extends Component {
         );
       }},
       { key: "sum_invoices", label: "Total Facturas", render: (r) => <NumberFormat value={r.sum_invoices} displayType="text" thousandSeparator={true} prefix="$" /> },
-      { key: "description", label: "Descripción" },
+      { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
       { key: "invoiced_state", label: "Estado CC", render: (r) => r.cost_center ? r.cost_center.invoiced_state : "" },
       { key: "order_file", label: "Archivo", sortable: false, render: (r) => r.order_file && r.order_file.url ? <a href={r.order_file.url} target="_blank" className="cm-btn cm-btn-outline cm-btn-sm"><i className="fas fa-download" /></a> : <i className="fas fa-times" style={{ color: "#ccc" }} /> },
     ];

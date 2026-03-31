@@ -30,7 +30,7 @@ class TableristasTable extends Component {
       { key: "sales_date", label: "Fecha" },
       { key: "hours", label: "Horas" },
       { key: "user_execute_name", label: "Trabajo realizado por", render: (r) => r.user_execute ? r.user_execute.names : "" },
-      { key: "description", label: "Descripción" },
+      { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
     ];
   }
 

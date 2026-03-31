@@ -33,7 +33,7 @@ class MaterialesTable extends Component {
       { key: "provider_name", label: "Proveedor", render: (r) => r.provider ? r.provider.name : "" },
       { key: "sales_number", label: "# Orden" },
       { key: "amount", label: "Valor", render: (r) => <NumberFormat value={r.amount} displayType="text" thousandSeparator={true} prefix="$" /> },
-      { key: "description", label: "Descripción" },
+      { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
       { key: "sales_date", label: "Fecha Orden" },
       { key: "delivery_date", label: "Fecha Entrega" },
       { key: "provider_invoice_value", label: "Valor Facturas", render: (r) => <NumberFormat value={r.provider_invoice_value} displayType="text" thousandSeparator={true} prefix="$" /> },
