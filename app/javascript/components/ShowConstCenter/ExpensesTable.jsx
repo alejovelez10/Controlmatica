@@ -35,7 +35,7 @@ class ExpensesTable extends Component {
     };
 
     this.columns = [
-      { key: "user_invoice_name", label: "Responsable", render: (r) => r.user_invoice ? r.user_invoice.name : "" },
+      { key: "user_invoice_name", label: "Responsable", render: (r) => r.user_invoice ? r.user_invoice.names : "" },
       { key: "invoice_name", label: "Nombre" },
       { key: "invoice_date", label: "Fecha factura" },
       { key: "identification", label: "NIT / Cédula" },
