@@ -105,10 +105,10 @@ class ReportExpense < ApplicationRecord
         puts "  Tipo (Excel): '#{row["type_identification_id"]}'"
         puts "  Medio de pago (Excel): '#{row["payment_type_id"]}'"
 
-        user_invoice = User.find_by_names(row["user_invoice_id"].to_s.strip)
-        cost_center = CostCenter.find_by_code(row["cost_center_id"].to_s.strip)
-        type_identification = ReportExpenseOption.find_by_name(row["type_identification_id"].to_s.strip)
-        payment_type = ReportExpenseOption.find_by_name(row["payment_type_id"].to_s.strip)
+        user_invoice = User.where("LOWER(TRIM(names)) = ?", row["user_invoice_id"].to_s.strip.downcase).first
+        cost_center = CostCenter.where("LOWER(TRIM(code)) = ?", row["cost_center_id"].to_s.strip.downcase).first
+        type_identification = ReportExpenseOption.where("LOWER(TRIM(name)) = ?", row["type_identification_id"].to_s.strip.downcase).first
+        payment_type = ReportExpenseOption.where("LOWER(TRIM(name)) = ?", row["payment_type_id"].to_s.strip.downcase).first
 
         puts "  Usuario encontrado: #{user_invoice.present? ? "SI (id: #{user_invoice.id})" : "NO"}"
         puts "  Centro encontrado: #{cost_center.present? ? "SI (id: #{cost_center.id})" : "NO"}"
