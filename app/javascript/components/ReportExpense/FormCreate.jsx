@@ -269,9 +269,11 @@ class FormCreate extends Component {
                     value={this.props.selectedOptionTypeIndentification}
                     placeholder="Seleccionar tipo..."
                   />
-                  <div className="cm-field-hint">
-                    {this.props.selectedOptionTypeIndentification.label}
-                  </div>
+                  {this.props.selectedOptionTypeIndentification && this.props.selectedOptionTypeIndentification.label ? (
+                    <div className="cm-field-hint cm-field-hint--copyable" onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")}>
+                      <i className="fa fa-copy"></i> {this.props.selectedOptionTypeIndentification.label}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="cm-form-group">
@@ -298,9 +300,11 @@ class FormCreate extends Component {
                     value={this.props.selectedOptionPaymentType}
                     placeholder="Seleccionar medio..."
                   />
-                  <div className="cm-field-hint">
-                    {this.props.selectedOptionPaymentType.label}
-                  </div>
+                  {this.props.selectedOptionPaymentType && this.props.selectedOptionPaymentType.label ? (
+                    <div className="cm-field-hint cm-field-hint--copyable" onClick={() => this.copyQuestion(this.props.selectedOptionPaymentType.label, "Medio de pago")}>
+                      <i className="fa fa-copy"></i> {this.props.selectedOptionPaymentType.label}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="cm-form-group">
@@ -472,6 +476,17 @@ class FormCreate extends Component {
             font-size: 12px;
             color: #6b7280;
             margin-top: 4px;
+          }
+          .cm-field-hint--copyable {
+            cursor: pointer;
+            color: #4d99db;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+          }
+          .cm-field-hint--copyable:hover {
+            text-decoration: underline;
+            color: #2a7ac0;
           }
           .cm-divider {
             border: none;

@@ -100,6 +100,8 @@ class ReportExpenseIndex extends React.Component {
       selectedPayment: null,
       // Estado inline edit
       editingStatusId: null,
+      // Copy hint
+      copyMessage: "",
     };
 
     this.userOptions = (props.users || []).map(function(u) {
@@ -599,6 +601,7 @@ class ReportExpenseIndex extends React.Component {
         ),
         React.createElement("form", null,
           React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
+            self.state.copyMessage ? React.createElement("div", { className: "alert alert-warning", style: { marginBottom: "12px" } }, self.state.copyMessage) : null,
             React.createElement("div", { className: "cm-form-grid-2" },
               // Centro de costo
               React.createElement("div", { className: "cm-form-group" },
@@ -681,7 +684,11 @@ class ReportExpenseIndex extends React.Component {
                   isClearable: true,
                   styles: selectStyles,
                   menuPortalTarget: document.body,
-                })
+                }),
+                self.state.selectedType && self.state.selectedType.label ? React.createElement("div", {
+                  className: "cm-field-hint cm-field-hint--copyable",
+                  onClick: function() { navigator.clipboard.writeText(self.state.selectedType.label); self.setState({ copyMessage: "Tipo copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
+                }, React.createElement("i", { className: "fas fa-copy" }), " ", self.state.selectedType.label) : null
               ),
               // Medio de pago
               React.createElement("div", { className: "cm-form-group" },
@@ -697,7 +704,11 @@ class ReportExpenseIndex extends React.Component {
                   isClearable: true,
                   styles: selectStyles,
                   menuPortalTarget: document.body,
-                })
+                }),
+                self.state.selectedPayment && self.state.selectedPayment.label ? React.createElement("div", {
+                  className: "cm-field-hint cm-field-hint--copyable",
+                  onClick: function() { navigator.clipboard.writeText(self.state.selectedPayment.label); self.setState({ copyMessage: "Medio de pago copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
+                }, React.createElement("i", { className: "fas fa-copy" }), " ", self.state.selectedPayment.label) : null
               ),
               // Valor
               React.createElement("div", { className: "cm-form-group" },
