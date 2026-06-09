@@ -416,6 +416,30 @@ class index extends React.Component {
 
   openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);
 
+  renderActions = function (row) {
+    var self = this;
+    var estados = self.props.estados;
+    var canEdit = self.getState(row);
+    if (!canEdit && !estados.delete) return null;
+    return (
+      React.createElement("div", { className: "cm-dt-menu" },
+        React.createElement("button", { className: "cm-dt-menu-trigger", onClick: self.openMenu },
+          React.createElement("i", { className: "fas fa-ellipsis-v" })
+        ),
+        React.createElement("div", { className: "cm-dt-menu-dropdown" },
+          canEdit ? React.createElement("button", {
+            onClick: function () { self.openEditModal(row); },
+            className: "cm-dt-menu-item"
+          }, React.createElement("i", { className: "fas fa-pen" }), " Editar") : null,
+          estados.delete ? React.createElement("button", {
+            onClick: function () { self.deleteRecord(row.id); },
+            className: "cm-dt-menu-item cm-dt-menu-item--danger"
+          }, React.createElement("i", { className: "fas fa-trash" }), " Eliminar") : null
+        )
+      )
+    );
+  }.bind(this);
+
   renderHeaderActions = function () {
     var self = this;
     var estados = self.props.estados;
@@ -438,6 +462,10 @@ class index extends React.Component {
     var self = this;
     var meta = self.state.meta;
     var estados = self.props.estados;
+    var userId = self.props.usuario.id;
+    var hasActions = estados.edit_all || estados.delete || (
+      estados.edit && self.state.data.some(function (r) { return r.user && r.user.id === userId; })
+    );
 
     return (
       React.createElement(React.Fragment, null,
@@ -543,7 +571,7 @@ class index extends React.Component {
           columns: self.columns,
           data: self.state.data,
           loading: self.state.loading,
-          actions: self.renderActions,
+          actions: hasActions ? self.renderActions : undefined,
           headerActions: self.renderHeaderActions(),
           onSearch: self.handleSearch,
           searchPlaceholder: "Buscar por descripción o centro de costo...",
