@@ -49,7 +49,7 @@ class FormCreate extends React.Component {
             .then((response) => response.json())
             .then((data) => {
               this.setState({
-                costCenterOptions: data,
+                costCenterOptions: data.map((d) => ({ value: d.id, label: d.label })),
                 isLoadingCostCenter: false,
               });
             })
