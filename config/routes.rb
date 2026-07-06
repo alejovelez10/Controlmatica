@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # MCP server (official `mcp` SDK, Streamable HTTP, stateless) — additive, para Taimes
+  match '/mcp', to: 'mcp#handle', via: %i[post get delete]
+
   namespace :api do
     namespace :v1 do
       resources :cost_centers, only: [:index]
