@@ -106,7 +106,9 @@ notification_alerts, parameterizations, rols, report_expense_options.
   llamada). Argumentos inválidos de schema los rechaza el propio protocolo MCP.
 - **Multi-tenant:** no aplica del lado Controlmatica (una sola empresa). Taimes gestiona
   la separación por tenant y credenciales.
-- **Convención de nombres:** `<modulo>_<accion>` (ej. `cost_centers_create`, `reports_update`).
+- **Convención de nombres:** `<modulo>_<accion>` (ej. `cost_centers_create`, `reports_list`, `materials_get`).
+- **Alcance actual:** por ahora se exponen solo tools de **lectura y creación** (list/get/create)
+  más `records_search`/`records_aggregate`. Las de editar/eliminar no están disponibles todavía.
 
 ---
 
