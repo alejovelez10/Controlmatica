@@ -3,7 +3,7 @@
 Guía para que **Taimes** consuma el servidor **MCP** (Model Context Protocol) de
 **Controlmatica** y un agente pueda operar toda la aplicación por chat web / WhatsApp.
 
-> Generado automáticamente desde `tools/list` del servidor. **86 tools** disponibles.
+> Generado automáticamente desde `tools/list` del servidor. **54 tools** disponibles.
 
 ---
 
@@ -34,7 +34,7 @@ header `X-Api-Key`. Sin un key válido, cada tool responde
 2. **Asignar el server al tenant** correspondiente (auth_mode `shared`).
 3. **Cargar la credencial**: el `X-Api-Key` (= `MCP_API_KEY`) como
    `integration_credential(provider='controlmatica')`.
-4. **Sync tools**: botón "Sync tools" → puebla la tabla `tools` con las 86
+4. **Sync tools**: botón "Sync tools" → puebla la tabla `tools` con las 54
    descubiertas. (Los grants se resuelven **por nombre de tool**, no por UUID — los UUID
    difieren entre dev/prod.)
 5. **Crear skills** que granteen las tools por nombre, agrupadas por módulo (ver catálogo).
@@ -110,7 +110,7 @@ notification_alerts, parameterizations, rols, report_expense_options.
 
 ---
 
-## 6. Catálogo completo de tools (86)
+## 6. Catálogo completo de tools (54)
 
 > Los parámetros `server_context` son internos (no se envían): la autenticación va por el
 > header `X-Api-Key`. Cada tool recibe únicamente los parámetros listados en `arguments`.
@@ -170,15 +170,6 @@ filters={"invoice_value":{"gte":1000000}}, sort="-invoice_value".
 
 ### Centros de Costo (proyectos/servicios)
 
-#### `cost_centers_change_execution_state`
-
-Cambia el estado de ejecución de un centro de costo (ej. 'EN EJECUCION', 'FINALIZADO'). Devuelve el registro actualizado.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del centro de costo |
-| `execution_state` | string | ✔ | Nuevo estado de ejecución |
-
 #### `cost_centers_create`
 
 Crea un centro de costo (proyecto/servicio). Requiere customer_id, description y service_type. Los campos numéricos son opcionales (default 0). Devuelve el registro creado o los errores de validación. Usa customers_list para obtener customer_id válidos.
@@ -201,14 +192,6 @@ Crea un centro de costo (proyecto/servicio). Requiere customer_id, description y
 | `displacement_hours` | number |  | Horas de desplazamiento (default 0) |
 | `materials_value` | number |  | Valor de materiales (default 0) |
 | `viatic_value` | number |  | Valor viáticos (default 0) |
-
-#### `cost_centers_delete`
-
-Elimina un centro de costo por ID (y sus relaciones dependientes: reportes, materiales, contratistas, etc.). Devuelve confirmación con el id eliminado.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del centro de costo a eliminar |
 
 #### `cost_centers_get`
 
@@ -234,26 +217,6 @@ Lista centros de costo (proyectos/servicios) con filtros opcionales: descripció
 | `quotation_number` | string |  | Número de cotización |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `cost_centers_update`
-
-Actualiza un centro de costo por ID. Solo modifica los campos enviados. Devuelve el registro actualizado o los errores de validación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del centro de costo (requerido) |
-| `description` | string |  | Descripción |
-| `customer_id` | integer |  | ID del cliente |
-| `contact_id` | integer |  | ID del contacto |
-| `service_type` | string |  | PROYECTO o SERVICIO |
-| `quotation_number` | string |  | Número de cotización |
-| `start_date` | string |  | Fecha inicio YYYY-MM-DD |
-| `end_date` | string |  | Fecha fin YYYY-MM-DD |
-| `eng_hours` | number |  | Horas de ingeniería |
-| `hour_real` | number |  | Valor hora costo |
-| `hour_cotizada` | number |  | Valor hora cotizada |
-| `materials_value` | number |  | Valor de materiales |
-| `viatic_value` | number |  | Valor viáticos |
-
 
 ### Clientes
 
@@ -272,14 +235,6 @@ Crea un cliente. Requiere name. Devuelve el cliente creado o errores de validaci
 | `web` | string |  | Sitio web (opcional) |
 | `address` | string |  | Dirección (opcional) |
 
-#### `customers_delete`
-
-Elimina un cliente por ID (y sus contactos/reportes dependientes). Falla si tiene datos que impidan el borrado. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del cliente a eliminar |
-
 #### `customers_get`
 
 Obtiene un cliente por ID, con sus contactos y conteo de proyectos/reportes.
@@ -297,22 +252,6 @@ Lista clientes. Filtro opcional `q` (busca en nombre/código/nit/email). Devuelv
 | `q` | string |  | Texto a buscar (nombre, código, nit, email) |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `customers_update`
-
-Actualiza un cliente por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del cliente (requerido) |
-| `name` | string |  | Nombre / razón social |
-| `client` | string |  | Nombre comercial |
-| `code` | string |  | Código |
-| `nit` | string |  | NIT |
-| `phone` | string |  | Teléfono |
-| `email` | string |  | Email |
-| `web` | string |  | Sitio web |
-| `address` | string |  | Dirección |
-
 
 ### Contactos
 
@@ -328,14 +267,6 @@ Crea un contacto. Requiere name. Asócialo a un cliente (customer_id) y/o provee
 | `position` | string |  | Cargo (opcional) |
 | `customer_id` | integer |  | ID del cliente (opcional) |
 | `provider_id` | integer |  | ID del proveedor (opcional) |
-
-#### `contacts_delete`
-
-Elimina un contacto por ID. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del contacto a eliminar |
 
 #### `contacts_get`
 
@@ -356,20 +287,6 @@ Lista contactos. Filtros opcionales: customer_id, provider_id, q (nombre/email).
 | `q` | string |  | Texto en nombre o email |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `contacts_update`
-
-Actualiza un contacto por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del contacto (requerido) |
-| `name` | string |  | Nombre |
-| `email` | string |  | Email |
-| `phone` | string |  | Teléfono |
-| `position` | string |  | Cargo |
-| `customer_id` | integer |  | ID del cliente |
-| `provider_id` | integer |  | ID del proveedor |
-
 
 ### Proveedores
 
@@ -385,14 +302,6 @@ Crea un proveedor. Requiere name. Devuelve el proveedor creado o errores.
 | `email` | string |  | Email (opcional) |
 | `web` | string |  | Sitio web (opcional) |
 | `address` | string |  | Dirección (opcional) |
-
-#### `providers_delete`
-
-Elimina un proveedor por ID (y sus contactos dependientes). Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del proveedor a eliminar |
 
 #### `providers_get`
 
@@ -411,20 +320,6 @@ Lista proveedores. Filtro opcional `q` (nombre/nit/email). Devuelve hasta `limit
 | `q` | string |  | Texto a buscar |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `providers_update`
-
-Actualiza un proveedor por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del proveedor (requerido) |
-| `name` | string |  | Nombre / razón social |
-| `nit` | string |  | NIT |
-| `phone` | string |  | Teléfono |
-| `email` | string |  | Email |
-| `web` | string |  | Sitio web |
-| `address` | string |  | Dirección |
-
 
 ### Materiales / Compras
 
@@ -442,14 +337,6 @@ Crea un material/compra en un centro de costo. Requiere cost_center_id y provide
 | `delivery_date` | string |  | Fecha estimada de entrega YYYY-MM-DD (opcional) |
 | `description` | string |  | Descripción (opcional) |
 | `sales_state` | string |  | Estado de compra (opcional) |
-
-#### `materials_delete`
-
-Elimina un material/compra por ID. Recalcula los totales del centro de costo. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del material a eliminar |
 
 #### `materials_get`
 
@@ -471,21 +358,6 @@ Lista materiales/compras. Filtros opcionales: cost_center_id, provider_id, q (de
 | `sales_state` | string |  | Estado de compra |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `materials_update`
-
-Actualiza un material/compra por ID. Solo modifica los campos enviados. Recalcula los totales del centro de costo.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del material (requerido) |
-| `provider_id` | integer |  | ID del proveedor |
-| `amount` | number |  | Valor de la compra |
-| `sales_number` | string |  | Número de orden |
-| `sales_date` | string |  | Fecha de orden YYYY-MM-DD |
-| `delivery_date` | string |  | Fecha de entrega YYYY-MM-DD |
-| `description` | string |  | Descripción |
-| `sales_state` | string |  | Estado de compra |
-
 
 ### Contratistas / Tableristas (horas)
 
@@ -501,14 +373,6 @@ Registra horas de contratista/tablerista en un centro de costo. Requiere cost_ce
 | `sales_number` | string |  | Número/consecutivo (opcional) |
 | `sales_date` | string |  | Fecha YYYY-MM-DD (opcional) |
 | `description` | string |  | Descripción (opcional) |
-
-#### `contractors_delete`
-
-Elimina un registro de contratista/tablerista por ID. Recalcula totales del centro de costo.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del registro a eliminar |
 
 #### `contractors_get`
 
@@ -528,19 +392,6 @@ Lista registros de contratistas/tableristas (horas). Filtros opcionales: cost_ce
 | `user_execute_id` | integer |  | Filtra por usuario que ejecuta las horas |
 | `q` | string |  | Texto en la descripción |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
-
-#### `contractors_update`
-
-Actualiza un registro de contratista/tablerista por ID. Solo modifica los campos enviados. El valor (ammount) se recalcula como horas × valor hora del centro.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del registro (requerido) |
-| `user_execute_id` | integer |  | ID del usuario que ejecuta las horas |
-| `hours` | number |  | Horas trabajadas |
-| `sales_number` | string |  | Número/consecutivo |
-| `sales_date` | string |  | Fecha YYYY-MM-DD |
-| `description` | string |  | Descripción |
 
 
 ### Reportes de servicio
@@ -562,14 +413,6 @@ Crea un reporte de servicio en un centro de costo. Requiere cost_center_id, cust
 | `work_description` | string |  | Descripción del trabajo (opcional) |
 | `viatic_description` | string |  | Descripción de viáticos (opcional) |
 
-#### `reports_delete`
-
-Elimina un reporte de servicio por ID. Recalcula totales del centro de costo. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del reporte a eliminar |
-
 #### `reports_get`
 
 Obtiene un reporte de servicio por ID.
@@ -590,21 +433,6 @@ Lista reportes de servicio. Filtros opcionales: cost_center_id, customer_id, rep
 | `q` | string |  | Texto en la descripción del trabajo |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `reports_update`
-
-Actualiza un reporte de servicio por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del reporte (requerido) |
-| `report_date` | string |  | Fecha del reporte YYYY-MM-DD |
-| `working_time` | number |  | Horas trabajadas |
-| `displacement_hours` | number |  | Horas de desplazamiento |
-| `viatic_value` | number |  | Valor viáticos |
-| `work_description` | string |  | Descripción del trabajo |
-| `viatic_description` | string |  | Descripción de viáticos |
-| `contact_id` | integer |  | ID del contacto |
-
 
 ### Órdenes de compra/venta
 
@@ -620,14 +448,6 @@ Crea una orden de compra/venta en un centro de costo. Requiere cost_center_id. o
 | `created_date` | string |  | Fecha de la orden YYYY-MM-DD (opcional) |
 | `state` | string |  | Estado (opcional) |
 | `description` | string |  | Descripción (opcional) |
-
-#### `sales_orders_delete`
-
-Elimina una orden de compra/venta por ID (y sus facturas de cliente dependientes). Recalcula el estado del centro de costo. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la orden a eliminar |
 
 #### `sales_orders_get`
 
@@ -648,19 +468,6 @@ Lista órdenes de compra/venta. Filtros opcionales: cost_center_id, state, q (n�
 | `q` | string |  | Texto en número de orden o descripción |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `sales_orders_update`
-
-Actualiza una orden de compra/venta por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la orden (requerido) |
-| `order_number` | string |  | Número de orden |
-| `order_value` | number |  | Valor de la orden |
-| `created_date` | string |  | Fecha de la orden YYYY-MM-DD |
-| `state` | string |  | Estado |
-| `description` | string |  | Descripción |
-
 
 ### Facturas de cliente
 
@@ -677,14 +484,6 @@ Crea una factura de cliente contra una orden. Requiere cost_center_id, sales_ord
 | `invoice_date` | string |  | Fecha de la factura YYYY-MM-DD (opcional) |
 | `number_invoice` | string |  | Número de factura (opcional) |
 | `invoice_state` | string |  | Estado (opcional) |
-
-#### `customer_invoices_delete`
-
-Elimina una factura de cliente por ID. Recalcula el estado del centro de costo. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la factura a eliminar |
 
 #### `customer_invoices_get`
 
@@ -705,19 +504,6 @@ Lista facturas de cliente. Filtros opcionales: cost_center_id, sales_order_id, i
 | `invoice_state` | string |  | Estado de la factura |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `customer_invoices_update`
-
-Actualiza una factura de cliente por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la factura (requerido) |
-| `invoice_value` | number |  | Valor de la factura |
-| `engineering_value` | number |  | Valor de ingeniería |
-| `invoice_date` | string |  | Fecha YYYY-MM-DD |
-| `number_invoice` | string |  | Número de factura |
-| `invoice_state` | string |  | Estado |
-
 
 ### Facturas de proveedor (materiales)
 
@@ -731,14 +517,6 @@ Registra una factura de proveedor sobre un material. Requiere material_id y valu
 | `value` | number | ✔ | Valor de la factura (requerido) |
 | `number` | string |  | Número de factura (opcional) |
 | `observation` | string |  | Observación (opcional) |
-
-#### `material_invoices_delete`
-
-Elimina una factura de proveedor (de material) por ID. Actualiza el valor facturado del material.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la factura a eliminar |
 
 #### `material_invoices_get`
 
@@ -756,17 +534,6 @@ Lista facturas de proveedor asociadas a materiales. Filtro opcional material_id.
 |---|---|:--:|---|
 | `material_id` | integer |  | Filtra por material |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
-
-#### `material_invoices_update`
-
-Actualiza una factura de proveedor (de material) por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la factura (requerido) |
-| `value` | number |  | Valor de la factura |
-| `number` | string |  | Número de factura |
-| `observation` | string |  | Observación |
 
 
 ### Gastos / Legalizaciones
@@ -791,14 +558,6 @@ Registra un gasto/legalización en un centro de costo. Requiere cost_center_id y
 | `type_identification_id` | integer |  | ID de opción tipo de identificación (opcional) |
 | `payment_type_id` | integer |  | ID de opción tipo de pago (opcional) |
 
-#### `report_expenses_delete`
-
-Elimina un gasto/legalización por ID. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del gasto a eliminar |
-
 #### `report_expenses_get`
 
 Obtiene un gasto/legalización por ID.
@@ -818,23 +577,6 @@ Lista gastos/legalizaciones de un centro de costo. Filtros opcionales: cost_cent
 | `q` | string |  | Texto en nombre o descripción |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `report_expenses_update`
-
-Actualiza un gasto/legalización por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del gasto (requerido) |
-| `invoice_name` | string |  | Nombre/proveedor |
-| `invoice_number` | string |  | Número de factura |
-| `invoice_type` | string |  | Tipo de factura |
-| `invoice_date` | string |  | Fecha YYYY-MM-DD |
-| `invoice_value` | number |  | Valor base |
-| `invoice_tax` | number |  | IVA |
-| `invoice_total` | number |  | Total |
-| `identification` | string |  | NIT/identificación |
-| `description` | string |  | Descripción |
-
 
 ### Turnos / Agenda
 
@@ -852,14 +594,6 @@ Crea un turno/agenda. Requiere user_id, cost_center_id, start_date y end_date (d
 | `subject` | string |  | Asunto/título (opcional) |
 | `description` | string |  | Descripción (opcional) |
 | `color` | string |  | Color para el calendario (opcional) |
-
-#### `shifts_delete`
-
-Elimina un turno por ID. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del turno a eliminar |
 
 #### `shifts_get`
 
@@ -881,21 +615,6 @@ Lista turnos/agenda. Filtros opcionales: cost_center_id, user_id, y rango de fec
 | `date_to` | string |  | Fin del rango (YYYY-MM-DD) |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `shifts_update`
-
-Actualiza un turno por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del turno (requerido) |
-| `start_date` | string |  | Inicio (datetime) |
-| `end_date` | string |  | Fin (datetime) |
-| `user_id` | integer |  | ID del usuario asignado |
-| `user_responsible_id` | integer |  | ID del usuario responsable |
-| `subject` | string |  | Asunto/título |
-| `description` | string |  | Descripción |
-| `color` | string |  | Color |
-
 
 ### Relaciones de gastos / Anticipos
 
@@ -913,14 +632,6 @@ Crea una relación de gastos / anticipo. Requiere user_report_id y user_directio
 | `creation_date` | string |  | Fecha de creación YYYY-MM-DD (opcional) |
 | `observations` | string |  | Observaciones (opcional) |
 | `anticipo` | number |  | Valor del anticipo (opcional) |
-
-#### `expense_ratios_delete`
-
-Elimina una relación de gastos / anticipo por ID. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la relación a eliminar |
 
 #### `expense_ratios_get`
 
@@ -940,19 +651,6 @@ Lista relaciones de gastos / anticipos. Filtros opcionales: user_report_id, area
 | `area` | string |  | Área |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
 
-#### `expense_ratios_update`
-
-Actualiza una relación de gastos / anticipo por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la relación (requerido) |
-| `area` | string |  | Área |
-| `start_date` | string |  | Fecha inicio YYYY-MM-DD |
-| `end_date` | string |  | Fecha fin YYYY-MM-DD |
-| `observations` | string |  | Observaciones |
-| `anticipo` | number |  | Valor del anticipo |
-
 
 ### Informes de cliente
 
@@ -969,14 +667,6 @@ Crea un informe de cliente (para aprobación) sobre un centro de costo. Requiere
 | `description` | string |  | Descripción (opcional) |
 | `email` | string |  | Email de envío (opcional) |
 | `report_ids` | array<integer> |  | IDs de reportes de servicio a incluir (opcional) |
-
-#### `customer_reports_delete`
-
-Elimina un informe de cliente por ID. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del informe a eliminar |
 
 #### `customer_reports_get`
 
@@ -996,19 +686,6 @@ Lista informes de cliente (los que se envían a aprobación). Filtros opcionales
 | `customer_id` | integer |  | Filtra por cliente |
 | `report_state` | string |  | Estado del informe |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
-
-#### `customer_reports_update`
-
-Actualiza un informe de cliente por ID. Solo modifica los campos enviados.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del informe (requerido) |
-| `report_date` | string |  | Fecha del informe YYYY-MM-DD |
-| `description` | string |  | Descripción |
-| `email` | string |  | Email de envío |
-| `report_state` | string |  | Estado del informe |
-| `contact_id` | integer |  | ID del contacto |
 
 
 ### Comisiones
@@ -1030,14 +707,6 @@ Crea una comisión. Requiere user_id, user_invoice_id, customer_invoice_id y cos
 | `observation` | string |  | Observación (opcional) |
 | `customer_report_id` | integer |  | ID del informe de cliente (opcional) |
 
-#### `commissions_delete`
-
-Elimina una comisión por ID. Devuelve confirmación.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la comisión a eliminar |
-
 #### `commissions_get`
 
 Obtiene una comisión por ID.
@@ -1056,19 +725,6 @@ Lista comisiones. Filtros opcionales: cost_center_id, user_id, is_acepted. Devue
 | `user_id` | integer |  | Filtra por usuario de la comisión |
 | `is_acepted` | boolean |  | Filtra por aceptadas/no aceptadas |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
-
-#### `commissions_update`
-
-Actualiza una comisión por ID. Solo modifica los campos enviados. Recalcula el total.
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID de la comisión (requerido) |
-| `value_hour` | number |  | Valor hora |
-| `hours_worked` | number |  | Horas trabajadas |
-| `start_date` | string |  | Fecha inicio YYYY-MM-DD |
-| `end_date` | string |  | Fecha fin YYYY-MM-DD |
-| `observation` | string |  | Observación |
 
 
 ### Cotizaciones (solo lectura)
@@ -1122,16 +778,6 @@ Lista parámetros de configuración del sistema (valores de hora, porcentajes, e
 | Parámetro | Tipo | Req. | Descripción |
 |---|---|:--:|---|
 | `q` | string |  | Texto en el nombre del parámetro |
-
-#### `parameterizations_update`
-
-Actualiza el valor de un parámetro de configuración por ID (number_value y/o money_value).
-
-| Parámetro | Tipo | Req. | Descripción |
-|---|---|:--:|---|
-| `id` | integer | ✔ | ID del parámetro (requerido) |
-| `number_value` | integer |  | Valor numérico |
-| `money_value` | integer |  | Valor monetario |
 
 
 ### Alertas / Notificaciones (solo lectura)
