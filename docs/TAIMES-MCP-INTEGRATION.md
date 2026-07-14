@@ -4,6 +4,20 @@ Guía para que **Taimes** consuma el servidor **MCP** (Model Context Protocol) d
 **Controlmatica** y un agente pueda operar toda la aplicación por chat web / WhatsApp.
 
 > Generado automáticamente desde `tools/list` del servidor. **54 tools** disponibles.
+> Alcance actual: **solo lectura y creación** (list / get / create + búsqueda y agregación).
+> Editar y eliminar están deshabilitados por ahora.
+
+---
+
+## 0. Quick start (TL;DR)
+
+1. **Endpoint:** `POST https://<host-controlmatica>/mcp` — protocolo MCP sobre JSON-RPC 2.0.
+2. **Auth:** header `X-Api-Key: <MCP_API_KEY>` en cada request.
+3. **Descubrir:** `{"jsonrpc":"2.0","id":1,"method":"tools/list"}` → devuelve las 54 tools con su schema.
+4. **Ejecutar:** `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"<tool>","arguments":{...}}}`.
+5. **Leer resultado:** el JSON útil viene como string en `result.content[0].text`.
+6. **Regla para el agente:** casi todo se resuelve con `records_search` (buscar cualquier registro
+   por cualquier campo) y `records_aggregate` (totales/conteos); usa los `*_create` para dar de alta.
 
 ---
 
@@ -41,6 +55,26 @@ header `X-Api-Key`. Sin un key válido, cada tool responde
    Sugerencia de skills: "Centros de Costo", "Materiales y Compras", "Reportes",
    "Facturación", "Comisiones", "Búsqueda y Reportes" (records_search + records_aggregate).
 6. **Crear el agente**, asignarle las skills y dar membership al usuario. Listo para chat.
+
+### Agrupación de skills sugerida
+
+| Skill | Tools a grantear |
+|---|---|
+| **Búsqueda y Reportes** (base, recomendada) | `records_search`, `records_aggregate` |
+| **Centros de Costo** | `cost_centers_list`, `cost_centers_get`, `cost_centers_create` |
+| **Clientes y Contactos** | `customers_list/get/create`, `contacts_list/get/create` |
+| **Proveedores** | `providers_list/get/create` |
+| **Materiales y Compras** | `materials_list/get/create`, `material_invoices_list/get/create` |
+| **Contratistas** | `contractors_list/get/create` |
+| **Reportes de servicio** | `reports_list/get/create`, `customer_reports_list/get/create` |
+| **Facturación** | `sales_orders_list/get/create`, `customer_invoices_list/get/create` |
+| **Gastos y Anticipos** | `report_expenses_list/get/create`, `expense_ratios_list/get/create`, `report_expense_options_list` |
+| **Comisiones** | `commissions_list/get/create` |
+| **Turnos** | `shifts_list/get/create` |
+| **Catálogos** (lookup) | `users_list/get`, `rols_list`, `parameterizations_list`, `quotations_list`, `notification_alerts_list` |
+
+> Puedes empezar con solo **"Búsqueda y Reportes"** (cubre consultas de todo el sistema) y
+> sumar las skills de creación módulo por módulo.
 
 ---
 
@@ -112,7 +146,31 @@ notification_alerts, parameterizations, rols, report_expense_options.
 
 ---
 
-## 6. Catálogo completo de tools (54)
+## 6. Playbook del agente (petición → tools)
+
+Ejemplos de cómo un agente resuelve peticiones típicas del chat:
+
+| El usuario pide… | Tool(s) a usar | Ejemplo de `arguments` |
+|---|---|---|
+| "Busca el centro de costo CC-0099" | `records_search` | `{"entity":"cost_centers","filters":{"code":"CC-0099"}}` |
+| "¿Cuánto llevamos facturado este año?" | `records_aggregate` | `{"entity":"customer_invoices","metric":"sum","field":"invoice_value","filters":{"invoice_date":{"gte":"2026-01-01"}}}` |
+| "Facturación por centro de costo" | `records_aggregate` | `{"entity":"customer_invoices","metric":"sum","field":"invoice_value","group_by":"cost_center_id"}` |
+| "¿Cuántos proyectos hay en ejecución?" | `records_aggregate` | `{"entity":"cost_centers","metric":"count","group_by":"execution_state"}` |
+| "Muéstrame el cliente con NIT 805757055" | `records_search` | `{"entity":"customers","filters":{"nit":"805757055"}}` |
+| "Detalle del centro de costo 10647" | `cost_centers_get` | `{"id":10647}` |
+| "Crea un cliente llamado ACME" | `customers_create` | `{"name":"ACME"}` |
+| "Registra una compra de $500.000 al proveedor 204 en el centro 10647" | `materials_create` | `{"cost_center_id":10647,"provider_id":204,"amount":500000}` |
+| "Crea un reporte de servicio hoy en el centro 10647" | `reports_create` | `{"cost_center_id":10647,"customer_id":88,"report_execute_id":1,"report_date":"2026-07-14"}` |
+| "Lista los últimos 10 gastos del centro 10647" | `report_expenses_list` | `{"cost_center_id":10647,"limit":10}` |
+
+**Patrón recomendado:** para *encontrar* algo → `records_search`; para *números/totales* →
+`records_aggregate`; para *ver el detalle completo* de un registro → `<modulo>_get`; para *dar de
+alta* → `<modulo>_create`. Antes de crear, usa las tools de lookup (`users_list`, `providers_list`,
+`report_expense_options_list`, etc.) para obtener los IDs válidos.
+
+---
+
+## 7. Catálogo completo de tools (54)
 
 > Los parámetros `server_context` son internos (no se envían): la autenticación va por el
 > header `X-Api-Key`. Cada tool recibe únicamente los parámetros listados en `arguments`.
