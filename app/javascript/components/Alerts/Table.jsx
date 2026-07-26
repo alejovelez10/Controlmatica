@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import FormCreate from './FormCreate'
 
 class Table extends Component {
@@ -249,7 +249,7 @@ class Table extends Component {
         Swal.fire({
             title: "Estas seguro?",
             text: "El registro sera eliminado para siempre!",
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#009688",
             cancelButtonColor: "#d33",

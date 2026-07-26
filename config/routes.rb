@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # MCP server (official `mcp` SDK, Streamable HTTP, stateless) — additive, para Taimes
+  match '/mcp', to: 'mcp#handle', via: %i[post get delete]
+
   namespace :api do
     namespace :v1 do
       resources :cost_centers, only: [:index]
@@ -11,6 +14,7 @@ Rails.application.routes.draw do
   get "commissions/index"
   get "commission_relations/index"
   get "get_show_center/:id", to: "cost_centers#get_show_center"
+  get "get_cost_center_details/:id", to: "cost_centers#get_cost_center_details"
   get "employed_performance/show", to: "employed_performance#show", as: "employed_performance_show"
   get "employed_performance/info_pdf", to: "employed_performance#info_pdf", as: "info_pdf"
   get "employed_performance/info_pdf_new", to: "employed_performance#info_pdf_new", as: "info_pdf_new"
@@ -48,6 +52,8 @@ Rails.application.routes.draw do
   get "get_shifts/(:from)", to: "shifts#get_shifts"
   get "shifts/calendar/:from", to: "shifts#calendar" , as: "shift_calendar"
   get "get_shifts_const_center/:const_center_id", to: "shifts#get_shifts_const_center"
+  get "shifts/search_cost_centers", to: "shifts#search_cost_centers"
+  get "shifts/search_users", to: "shifts#search_users"
 
   ## commissions routes
   get "download_file/commissions/:type", to: "commissions#download_file"
@@ -117,11 +123,14 @@ Rails.application.routes.draw do
   get "get_parameterizations", to: "parameterizations#get_parameterizations"
   get "get_providers", to: "providers#get_providers"
   get "get_customers", to: "customers#get_customers"
+  get "search_customers", to: "customers#search_autocomplete"
   get "get_customer_reports", to: "customer_reports#get_customer_reports"
+  get "search_cost_centers", to: "cost_centers#search_autocomplete"
   get "get_cost_centers", to: "cost_centers#get_cost_centers"
   get "get_sales_order", to: "sales_orders#get_sales_order"
   get "get_reports", to: "reports#get_reports"
   get "get_rols", to: "rols#get_rols"
+  get "get_modules_with_actions", to: "rols#get_modules_with_actions"
 
   get "get_report_value/:id", to: "customer_reports#get_report_value"
 
@@ -181,6 +190,7 @@ Rails.application.routes.draw do
   get "home/get_dashboard_three_ing/:ye/:mo/:user_id", to: "home#get_dashboard_three_ing", as: "get_dashboard_three_ing"
   get "home/get_dashboard_four_ing/:id/:user_id", to: "home#get_dashboard_four_ing", as: "get_dashboard_four_ing"
   get "home/get_dashboard_five_ing/:id/:user_id", to: "home#get_dashboard_five_ing", as: "get_dashboard_five_ing"
+  get "home/dashboard_counts", to: "home#dashboard_counts", as: "dashboard_counts"
 
   get "customer_pdf/:id", to: "customer_reports#pdf_customer_report", as: "customer_pdf"
   get "enviar_aprobacion/:report", to: "customer_reports#enviar_aprobacion", as: "enviar_aprobacion"

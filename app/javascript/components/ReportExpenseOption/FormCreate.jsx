@@ -1,78 +1,127 @@
-import React, { Component } from 'react';
-import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
-import NumberFormat from 'react-number-format';
+import React from "react";
+import { Modal } from "reactstrap";
 import Select from "react-select";
 
-class FormCreate extends Component {
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    background: "#fcfcfd",
+    borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
+    "&:hover": { borderColor: "#f5a623" },
+    borderRadius: "8px",
+    padding: "2px 4px",
+    fontSize: "14px",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
+    color: state.isSelected ? "#fff" : "#333",
+    fontSize: "14px",
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
 
-    constructor(props){
-        super(props)
-    }
+const categoryOptions = [
+  { value: "", label: "Selecciona un tipo" },
+  { value: "Tipo", label: "Tipo" },
+  { value: "Medio de pago", label: "Medio de pago" },
+];
 
-    handleSubmit = e => {
-        e.preventDefault();
-    };
+const FormCreate = (props) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
 
-    render() {
-        return (
-            <React.Fragment>
-                <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered" backdrop={this.props.backdrop}>
-                    <ModalHeader className="title-modal" toggle={this.props.toggle}><i className="app-menu__icon fa fa-user mr-2"></i> {this.props.title}</ModalHeader>
+  const hasError = (field) => !props.errorValues && props.formValues[field] === "";
 
-                        <form onSubmit={this.handleSubmit}>
-                            <ModalBody>
-                                <div className="row">
-                                    <div className="col-md-6">
-                                        <label>Nombre</label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={this.props.formValues.name}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.name == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
+  const selectedCategory = categoryOptions.find(
+    (opt) => opt.value === props.formValues.category
+  ) || categoryOptions[0];
 
-                                    <div className="col-md-6">
-                                        <label>Tipo</label>
-                                        <select 
-                                            name="category"
-                                            value={this.props.formValues.category}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control`}
-                                        >
-                                            <option value="">Selecciona un tipo</option>
-                                            <option value="Tipo">Tipo</option>
-                                            <option value="Medio de pago">Medio de pago</option>
-                                        </select>
-                                    </div>
+  const handleCategoryChange = (selected) => {
+    props.onChangeForm({
+      target: { name: "category", value: selected ? selected.value : "" },
+    });
+  };
 
+  return (
+    <Modal
+      isOpen={props.modal}
+      toggle={props.toggle}
+      className="modal-lg modal-dialog-centered"
+      backdrop={props.backdrop}
+    >
+      <div className="cm-modal-container">
+        <div className="cm-modal-header">
+          <div className="cm-modal-header-content">
+            <div className="cm-modal-icon">
+              <i className="fas fa-coins" />
+            </div>
+            <div>
+              <h2 className="cm-modal-title">{props.title}</h2>
+              <p className="cm-modal-subtitle">Gestionar opciones de gastos</p>
+            </div>
+          </div>
+          <button type="button" className="cm-modal-close" onClick={props.toggle}>
+            <i className="fas fa-times" />
+          </button>
+        </div>
 
-                                    {!this.props.errorValues && (
-                                        <div className="col-md-12 mt-4">
-                                            <div className="alert alert-danger" role="alert">
-                                                <b>Debes de completar todos los campos requerios</b>
-                                            </div>
-                                        </div>
-                                    )}
+        <form onSubmit={handleSubmit}>
+          <div className="cm-modal-body">
+            <div className="cm-form-grid-2">
+              <div className="cm-form-group">
+                <label className="cm-label">
+                  <i className="fas fa-tag" /> Nombre
+                  <span className="cm-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={props.formValues.name}
+                  onChange={props.onChangeForm}
+                  className={`cm-input ${hasError("name") ? "cm-input-error" : ""}`}
+                  placeholder="Nombre del tipo"
+                />
+              </div>
 
-                                </div>
-                            </ModalBody>
+              <div className="cm-form-group">
+                <label className="cm-label">
+                  <i className="fas fa-folder" /> Tipo
+                  <span className="cm-required">*</span>
+                </label>
+                <Select
+                  value={selectedCategory}
+                  onChange={handleCategoryChange}
+                  options={categoryOptions}
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  placeholder="Selecciona un tipo"
+                />
+              </div>
+            </div>
 
-                            <ModalFooter>
-                                <label className="btn btn-light mt-2" onClick={() => this.props.toggle()}>Cerrar</label>
-                                <button className="btn btn-secondary"
-                                    onClick={this.props.submitForm}
-                                    style={{ color: "#ffff" }}
-                                >
-                                    {this.props.nameBnt}
-                                </button>
-                            </ModalFooter>
-                        </form>
-                </Modal>
-            </React.Fragment>
-        );
-    }
-}
+            {!props.errorValues && (
+              <div className="cm-alert cm-alert-danger">
+                <i className="fas fa-exclamation-circle" />
+                <span>Debes completar todos los campos requeridos</span>
+              </div>
+            )}
+          </div>
+
+          <div className="cm-modal-footer">
+            <button type="button" className="cm-btn cm-btn-cancel" onClick={props.toggle}>
+              <i className="fas fa-times" /> Cerrar
+            </button>
+            <button type="button" className="cm-btn cm-btn-submit" onClick={props.submitForm}>
+              <i className="fas fa-save" /> {props.nameBnt}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Modal>
+  );
+};
 
 export default FormCreate;

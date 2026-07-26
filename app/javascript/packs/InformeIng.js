@@ -69,40 +69,46 @@ class InformeIng extends Component {
         return (
             <div className={`${this.props.current_tab != "home" ? "" : "row"}`}>
 
-                <div className="col-md-12 pl-0">
-                    <ul className="nav nav-tabs" id="myTab" role="tablist">
-                        <li className="nav-item">
-                            <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>Informacion</a>
-                        </li>
-
-                        <li className="nav-item">
-                            <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>Calendario</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div className='col-md-12 title-board-ing' >
-
-                    <div style={{ fontSize: "25px", margin: "0px" }}> 
-                        ¡HOLA! <span> {this.state.form.name ? this.state.form.name.toUpperCase() : ""} A CONTINUACION VAS A VER TU TABLERO</span> 
+                {/* Header personalizado del dashboard */}
+                <div className="col-md-12 dashboard-custom-header">
+                    <div className="dashboard-header-left">
+                        <div className="dashboard-header-icon">
+                            <i className="fas fa-chart-line"></i>
+                        </div>
+                        <div className="dashboard-header-text">
+                            <h1>Hola, {this.state.form.name || 'Usuario'}</h1>
+                            <p>Bienvenido a tu tablero de control</p>
+                        </div>
                     </div>
-
-                    {/*<a href={`/shifts/calendar/MY`} data-turbolinks="false" className="btn btn-secondary float-right mr-2">Vista calendario</a>*/}
-
                     {this.props.ver_todos && (
                         <select
                             name="value"
-                            className={`form form-control`}
+                            className="dashboard-select"
                             value={[this.state.form.value, this.state.form.name]}
                             onChange={this.handleChange}
-                            style={{ width: "200px", marginLeft: "10px" }}
-                        >  <option value="">Seleccione Usuario</option>
+                        >
+                            <option value="">Seleccione Usuario</option>
                             {this.props.users.map(user => (
-                                <option value={[user.id, user.names, user.rol]}>{user.names}</option>
+                                <option key={user.id} value={[user.id, user.names, user.rol]}>{user.names}</option>
                             ))}
-
                         </select>
-                    )}                           
+                    )}
+                </div>
+
+                <div className="col-md-12 pl-0">
+                    <ul className="nav dashboard-tabs" id="myTab" role="tablist">
+                        <li className="nav-item">
+                            <a className={`nav-link ${this.props.current_tab == "home" ? "active" : ""}`} id="home-tab" href={`/home/dashboard_ing?tab=home`}>
+                                <i className="fas fa-chart-bar"></i> Informacion
+                            </a>
+                        </li>
+
+                        <li className="nav-item">
+                            <a className={`nav-link ${this.props.current_tab != "home" ? "active" : ""}`} id="profile-tab" href={`/home/dashboard_ing?tab=calendar`}>
+                                <i className="fas fa-calendar-alt"></i> Calendario
+                            </a>
+                        </li>
+                    </ul>
                 </div>
 
                 <div className="tab-content" id="myTabContent">
@@ -111,46 +117,38 @@ class InformeIng extends Component {
 
                             {this.state.is_tablerista == "TABLERISTA" ? (
                                 <div className='row pl-3' style={{width:"100%"}}>
-                                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                                    <div className='col-md-6' style={{ padding: "10px" }}>
                                         <HourDay user={this.state.form.value} ref="child" height="400" />
                                     </div>
 
-                                    <div style={{ background: "white", padding: "10px" }} className='col-md-6'>
+                                    <div className='col-md-6' style={{ padding: "10px" }}>
                                         <ReporterHours user={this.state.form.value} ref="child"  height="350" />
                                     </div>
                                 </div>
                             ): (
                                 <div className='col-md-12'>
                                     <div className="row pl-3" style={{width:"100%"}}>
-                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                        <div className='col-md-4' style={{ padding: "10px" }}>
                                             <HourDay user={this.state.form.value} ref="child" height="400" />
                                         </div>
 
-                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+                                        <div className='col-md-4' style={{ padding: "10px" }}>
                                             <ReporterHours user={this.state.form.value} ref="child"  height="350" />
                                         </div>
-                                        
-                                        <div style={{ background: "white", padding: "10px" }} className='col-md-4'>
+
+                                        <div className='col-md-4' style={{ padding: "10px" }}>
                                             <Commisions user={this.state.form.value} ref="child" height="350" />
                                         </div>
                                     </div>
                                 </div>
                             )}
-                    
 
+                            <div className="col-md-12" style={{ marginTop: "20px" }}>
+                                <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
+                            </div>
 
-
-                            <div className="col-md-12">
-                                <div className='col-md-12'> <hr /></div>
-
-                                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                                    <HourProjectMonth user={this.state.form.value} ref="child" height="400" />
-                                </div>
-                                <div className='col-md-12'> <hr /></div>
-
-                                <div style={{ background: "white", padding: "10px" }} className='col-md-12'>
-                                    <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
-                                </div>
+                            <div className="col-md-12" style={{ marginTop: "20px" }}>
+                                <HourPerMonth user={this.state.form.value} ref="child" height="400"  />
                             </div>
                         </div>
                     </div>

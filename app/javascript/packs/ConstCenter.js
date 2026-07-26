@@ -12,9 +12,6 @@ class ConstCenter extends React.Component {
     }
 }
 
-
-
-
 export default ConstCenter;
 
 WebpackerReact.setup({ ConstCenter });

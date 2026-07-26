@@ -21,7 +21,10 @@
 #
 # Indexes
 #
-#  index_materials_on_cost_center_id  (cost_center_id)
+#  index_materials_on_cost_center_id         (cost_center_id)
+#  index_materials_on_sales_date_year        (EXTRACT(year FROM sales_date))
+#  index_materials_on_sales_date_year_month  (EXTRACT(year FROM sales_date), EXTRACT(month FROM sales_date))
+#  index_materials_on_user_id                (user_id)
 #
 
 require 'test_helper'

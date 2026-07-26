@@ -16,7 +16,9 @@
 #
 # Indexes
 #
-#  index_notification_alerts_on_cost_center_id  (cost_center_id)
+#  index_notification_alerts_on_cost_center_id         (cost_center_id)
+#  index_notification_alerts_on_state                  (state)
+#  index_notification_alerts_on_state_and_date_update  (state,date_update DESC)
 #
 
 class NotificationAlertSerializer < ActiveModel::Serializer

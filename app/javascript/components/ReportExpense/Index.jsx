@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import FormCreate from './FormCreate'
 import FormImportFile from './FormImportFile';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import NumberFormat from "react-number-format";
 import Pagination from "react-js-pagination";
 
@@ -140,7 +140,7 @@ class Index extends Component {
         Swal.fire({
             title: "Estas seguro?",
             text: "El registro sera eliminado para siempre!",
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#009688",
             cancelButtonColor: "#d33",

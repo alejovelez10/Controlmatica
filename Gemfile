@@ -97,6 +97,9 @@ gem "active_model_serializers", "~> 0.10.0"
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 
+# MCP server (official `mcp` SDK, Streamable HTTP, stateless) — para consumir desde Taimes
+gem 'mcp', '~> 0.22'
+
 gem 'rubyzip', '>= 1.2.1'
 gem 'axlsx', git: 'https://github.com/randym/axlsx.git', ref: 'c8ac844'
 gem 'axlsx_rails'

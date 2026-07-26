@@ -2,7 +2,7 @@ import React from 'react';
 import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import NumberFormat from 'react-number-format';
 import {Button, CardBody, Card, Collapse} from 'reactstrap';
-import Swal from 'sweetalert2/dist/sweetalert2.js'
+import Swal from 'sweetalert2'
 
 
 class formCreate extends React.Component {

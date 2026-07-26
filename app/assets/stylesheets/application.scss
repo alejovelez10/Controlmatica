@@ -21,3 +21,26 @@
 //@import "fullcalendar_daygrid";
 //@import "fullcalendar_timegrid";
 
+/* Placeholder styles for modernized forms */
+input::placeholder,
+textarea::placeholder {
+  color: #c0c0c0 !important;
+  opacity: 1;
+}
+
+/* Scrollbar styles for modals */
+.cm-modal-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.cm-modal-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+.cm-modal-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+.cm-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+

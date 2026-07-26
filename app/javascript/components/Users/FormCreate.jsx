@@ -1,250 +1,311 @@
 import React from "react";
-import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Modal } from "reactstrap";
 import Select from "react-select";
+
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    background: "#fcfcfd",
+    borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
+    "&:hover": { borderColor: "#f5a623" },
+    borderRadius: "8px",
+    padding: "2px 4px",
+    fontSize: "14px",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
+    color: state.isSelected ? "#fff" : "#333",
+    fontSize: "14px",
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
+
+const documentTypeOptions = [
+  { value: "", label: "Seleccione un tipo" },
+  { value: "Cédula de Ciudadanía", label: "Cédula de Ciudadanía" },
+  { value: "Tarjeta de Identidad", label: "Tarjeta de Identidad" },
+  { value: "Registro Civil de Nacimiento", label: "Registro Civil de Nacimiento" },
+  { value: "Cedula de Extranjeria", label: "Cédula de Extranjeria" },
+  { value: "Pasaporte", label: "Pasaporte" },
+  { value: "Menor sin Identificación", label: "Menor sin Identificación" },
+  { value: "Adulto sin Identificación", label: "Adulto sin Identificación" },
+  { value: "Carnet Diplomático", label: "Carnet Diplomático" },
+];
 
 class FormCreate extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       show_password: false,
-      show_password_confirmation: false
-    }
+      show_password_confirmation: false,
+    };
   }
 
-
-  getUrl(){
-    if (this.props.editState == true) {
-      
-      if (this.props.formValues.avatar == undefined) {
-        return <img src="https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg" className="img-user-create" alt=""/>
-      }else{
-        return <img src={this.props.formValues.avatar} className="img-user-create" alt=""/>
-      }
-     
-     
-    }else{
-      return <img src="https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg" className="img-user-create" alt=""/>
+  getUrl() {
+    const defaultAvatar = "https://dnuba.s3.amazonaws.com/uploads/bank_image/achivo/44/user.jpeg";
+    if (this.props.editState === true && this.props.formValues.avatar !== undefined) {
+      return this.props.formValues.avatar;
     }
-
+    return defaultAvatar;
   }
 
+  getDocumentTypeValue() {
+    const docType = this.props.formValues.document_type;
+    return documentTypeOptions.find((opt) => opt.value === docType) || documentTypeOptions[0];
+  }
+
+  handleDocumentTypeChange = (selected) => {
+    const event = {
+      target: {
+        name: "document_type",
+        value: selected ? selected.value : "",
+      },
+    };
+    this.props.onChangeForm(event);
+  };
 
   render() {
     return (
-
-      <React.Fragment>
-        <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-lg modal-dialog-centered" backdrop={this.props.backdrop}>
-          <ModalHeader className="title-modal" toggle={this.props.toggle}><i className="app-menu__icon fa fa-user mr-2"></i> {this.props.titulo}</ModalHeader>
+      <Modal
+        isOpen={this.props.modal}
+        toggle={this.props.toggle}
+        className="modal-lg modal-dialog-centered"
+        backdrop={this.props.backdrop}
+      >
+        <div className="cm-modal-container">
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon">
+                <i className="fas fa-user-plus" />
+              </div>
+              <div>
+                <h2 className="cm-modal-title">{this.props.titulo}</h2>
+                <p className="cm-modal-subtitle">Gestionar información del usuario</p>
+              </div>
+            </div>
+            <button type="button" className="cm-modal-close" onClick={this.props.toggle}>
+              <i className="fas fa-times" />
+            </button>
+          </div>
 
           <form onSubmit={this.props.FormSubmit}>
-            <ModalBody>
-              <div className="row">
+            <div className="cm-modal-body">
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                {/* Avatar Section */}
+                <div className="cm-avatar-section">
+                  <div>
+                    <img src={this.getUrl()} className="cm-avatar-img" alt="Avatar" />
+                  </div>
+                  <div className="cm-avatar-upload">
+                    <label className="cm-label">
+                      <i className="fa fa-camera"></i> Foto de perfil
+                    </label>
+                    <input
+                      type="file"
+                      name="avatar"
+                      onChange={this.props.handleFileUpload}
+                      className="cm-input cm-file-input"
+                    />
+                  </div>
+                </div>
 
-                <div className="col-md-8">
-                  <div className="row">
+                {/* Personal Information */}
+                <div className="cm-form-grid-2">
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-user"></i> Nombre y apellido <span className="cm-required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="names"
+                      value={this.props.formValues.names}
+                      onChange={this.props.onChangeForm}
+                      className={`cm-input ${this.props.errorValues === false && this.props.formValues.names === "" ? "cm-input-error" : ""}`}
+                      placeholder="Nombre completo"
+                    />
+                  </div>
 
-                    <div className="col-md-6 mb-4">
-                      <label>Nombre y apellido <small className="validate-label">*</small></label>
-                        <input
-                          type="text"
-                          name="names"
-                          value={this.props.formValues.names}
-                          onChange={this.props.onChangeForm}
-                          className={`form form-control ${this.props.errorValues == false && this.props.formValues.names == "" ? "error-class" : ""}`}
-                          placeholder="Nombre completo"
-                        />
-                    </div>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-envelope"></i> Correo electrónico <span className="cm-required">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={this.props.formValues.email}
+                      onChange={this.props.onChangeForm}
+                      className={`cm-input ${this.props.errorValues === false && this.props.formValues.email === "" ? "cm-input-error" : ""}`}
+                      placeholder="correo@ejemplo.com"
+                    />
+                  </div>
 
-                    <div className="col-md-6 mb-4">
-                      <label>Correo electrónico <small className="validate-label">*</small></label>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-id-card"></i> Tipo de documento <span className="cm-required">*</span>
+                    </label>
+                    <Select
+                      value={this.getDocumentTypeValue()}
+                      onChange={this.handleDocumentTypeChange}
+                      options={documentTypeOptions}
+                      styles={selectStyles}
+                      menuPortalTarget={document.body}
+                      placeholder="Seleccione un tipo"
+                      className={this.props.errorValues === false && this.props.formValues.document_type === "" ? "cm-select-error" : ""}
+                    />
+                  </div>
 
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-id-badge"></i> Numero de documento <span className="cm-required">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="number_document"
+                      value={this.props.formValues.number_document}
+                      onChange={this.props.onChangeForm}
+                      className={`cm-input ${this.props.errorValues === false && this.props.formValues.number_document === "" ? "cm-input-error" : ""}`}
+                      placeholder="Documento"
+                    />
+                  </div>
+                </div>
+
+                {/* Role Selection */}
+                <div className="cm-form-group cm-full-width">
+                  <input type="hidden" name="rol_id" value={this.props.formAutocomplete.rol_id} />
+                  <label className="cm-label">
+                    <i className="fa fa-user-tag"></i> Rol <span className="cm-required">*</span>
+                  </label>
+                  <Select
+                    onChange={this.props.onChangeAutocomplete}
+                    options={this.props.roles}
+                    autoFocus={false}
+                    styles={selectStyles}
+                    menuPortalTarget={document.body}
+                    value={this.props.formAutocomplete}
+                    placeholder="Seleccione un rol"
+                    className={this.props.errorValues === false && this.props.formValues.rol_id === "" ? "cm-select-error" : ""}
+                  />
+                </div>
+
+                {/* Password Section */}
+                <div className="cm-form-grid-2">
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-lock"></i> Contrasena <span className="cm-required">*</span>
+                    </label>
+                    <div className="cm-password-wrapper">
                       <input
-                        type="email"
-                        name="email"
-                        value={this.props.formValues.email}
+                        type={this.state.show_password ? "text" : "password"}
+                        name="password"
+                        value={this.props.formValues.password}
                         onChange={this.props.onChangeForm}
-                        className={`form form-control ${this.props.errorValues == false && this.props.formValues.email == "" ? "error-class" : ""}`}
-                        placeholder="Correo"
+                        onBlur={this.props.onBlurPasswordConfirmation}
+                        className="cm-input"
+                        placeholder="Contrasena"
                       />
-                    </div>
-
-                    <div className="col-md-6 mb-4">
-                      <label>Tipo de documento <small className="validate-label">*</small></label>
-                        <select 
-                          name="document_type"
-                          className={`form form-control ${this.props.errorValues == false && this.props.formValues.document_type == "" ? "error-class" : ""}`}
-                          value={this.props.formValues.document_type}
-                          onChange={this.props.onChangeForm}
+                      {this.props.formValues.password.length >= 1 && (
+                        <button
+                          type="button"
+                          className="cm-password-toggle"
+                          onClick={() => this.setState({ show_password: !this.state.show_password })}
                         >
-                          <option value="">Seleccione un tipo</option>
-                          <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
-                          <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
-                          <option value="Registro Civil de Nacimiento">Registro Civil de Nacimiento</option>
-                          <option value="Cedula de Extranjeria">Cédula de Extranjeria</option>
-                          <option value="Pasaporte">Pasaporte</option>
-                          <option value="Menor sin Identificación">Menor sin Identificación</option>
-                          <option value="Adulto sin Identificación">Adulto sin Identificación</option>
-                          <option value="Carnet Diplomático">Carnet Diplomático</option>
-                      </select>
-                    </div>
-
-                    <div className="col-md-6 mb-4">
-                      <label>Numero de documento <small className="validate-label">*</small></label>
-                      <input
-                        type="number"
-                        name="number_document"
-                        value={this.props.formValues.number_document}
-                        onChange={this.props.onChangeForm}
-                        className={`form form-control ${this.props.errorValues == false && this.props.formValues.number_document == "" ? "error-class" : ""}`}
-                        placeholder="Documento"
-                      />
-                    </div>
-
-                    <div className="col-md-12 mb-4">
-                      <input
-                        type="hidden"
-                        name="rol_id"
-                        value={this.props.formAutocomplete.rol_id}
-                      />
-                      <label>Rol <small className="validate-label">*</small></label>
-                      <Select
-                        onChange={this.props.onChangeAutocomplete}
-                        options={this.props.roles}
-                        autoFocus={false}
-                        className={`link-form ${this.props.errorValues == false && this.props.formValues.rol_id == "" ? "error-class" : ""}`}
-                        value={this.props.formAutocomplete}
-                      />
-                    </div>
-
-
-
-                  </div>
-                </div>
-
-                <div className="col-md-4 text-center">
-
-                  <p>{this.getUrl()}</p>
-
-                  <input
-                    type="file"
-                    name="avatar"
-                    onChange={this.props.handleFileUpload}
-                    className="form form-control"
-                    placeholder="Nombre completo"
-                  /> 
- 
-                </div>
-
-                <div className="col-md-12 mt-4">
-                  <div className="row">
-
-                    <div className="col-md-6">
-                        <label>Contraseña <small className="validate-label">*</small></label>
-                        <input
-                          type={this.state.show_password == false ? "password" : "text"}
-                          name="password"
-                          value={this.props.formValues.password}
-                          onChange={this.props.onChangeForm}
-                          onBlur={this.props.onBlurPasswordConfirmation}
-                          className="form form-control"
-                          placeholder="Contraseña"
-                        />
-
-                        {this.props.formValues.password.length >= 1 && (
-                          <label className="btn-password" onClick={() => this.state.show_password == false  ? this.setState({ show_password: true }) : this.setState({ show_password: false }) }>{this.state.show_password == false ? <i className ="fas fa-eye-slash"></i> : <i className="fas fa-eye"></i> }</label>
-                        )}  
-
-                    </div>
-
-                    <br />
-
-                    <div className="col-md-6">
-                    <label>Confirmar contraseña <small className="validate-label">*</small></label>
-                        <input
-                          type={this.state.show_password_confirmation == false ? "password" : "text"}
-                          name="password_confirmation"
-                          value={this.props.formValues.password_confirmation}
-                          onChange={this.props.onChangeForm}
-                          onBlur={this.props.onBlurPasswordConfirmation}
-                          className="form form-control"
-                          placeholder="Confirmar contraseña"
-                        />
-
-                        {this.props.formValues.password_confirmation.length >= 1 && (
-                          <label className="btn-password" onClick={() => this.state.show_password_confirmation == false  ? this.setState({ show_password_confirmation: true }) : this.setState({ show_password_confirmation: false }) }>{this.state.show_password_confirmation == false ? <i className ="fas fa-eye-slash"></i> : <i className="fas fa-eye"></i>}</label>
-                        )}  
-                    </div>
-
-                  </div>
-                </div>
-
-                {this.props.formValues.password.length >= 1 && (
-                    <React.Fragment>
-                      {this.props.passworState == false && (
-                        <div className="col-md-12 mt-1">
-                          <div className="alert alert-danger" role="alert">
-                          <p>Requerido de contraseña</p>
-
-                            <div className="row">
-                              <div className="col-md-6">
-                                <ul>
-                                  <li className={this.props.formValues.password.length >= 6 ? "color-password" : "color-falsePassword"}>Mínimo 6 caracteres</li>
-                                  <li className={(/[A-Z]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Al menos una letra mayúscula</li>
-                                  <li className={(/[a-z]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Una letra minúscula</li>
-                                  <li className={(/[0-9]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Un número</li>
-                                  {/*<li className={(/[@$!%*_?]/).test(this.props.formValues.password) ? "color-password" : "color-falsePassword"}>Un carácter especial(@$!%*_?)</li>*/}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          <i className={this.state.show_password ? "fas fa-eye" : "fas fa-eye-slash"}></i>
+                        </button>
                       )}
-                    </React.Fragment>
+                    </div>
+                  </div>
+
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-lock"></i> Confirmar contrasena <span className="cm-required">*</span>
+                    </label>
+                    <div className="cm-password-wrapper">
+                      <input
+                        type={this.state.show_password_confirmation ? "text" : "password"}
+                        name="password_confirmation"
+                        value={this.props.formValues.password_confirmation}
+                        onChange={this.props.onChangeForm}
+                        onBlur={this.props.onBlurPasswordConfirmation}
+                        className="cm-input"
+                        placeholder="Confirmar contrasena"
+                      />
+                      {this.props.formValues.password_confirmation.length >= 1 && (
+                        <button
+                          type="button"
+                          className="cm-password-toggle"
+                          onClick={() => this.setState({ show_password_confirmation: !this.state.show_password_confirmation })}
+                        >
+                          <i className={this.state.show_password_confirmation ? "fas fa-eye" : "fas fa-eye-slash"}></i>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Password Requirements Alert */}
+                {this.props.formValues.password.length >= 1 && this.props.passworState === false && (
+                  <div className="cm-alert cm-alert-warning">
+                    <div className="cm-alert-header">
+                      <i className="fa fa-exclamation-triangle"></i> Requisitos de contrasena
+                    </div>
+                    <ul className="cm-password-requirements">
+                      <li className={this.props.formValues.password.length >= 6 ? "cm-req-met" : "cm-req-unmet"}>
+                        <i className={this.props.formValues.password.length >= 6 ? "fa fa-check" : "fa fa-times"}></i>
+                        Minimo 6 caracteres
+                      </li>
+                      <li className={/[A-Z]/.test(this.props.formValues.password) ? "cm-req-met" : "cm-req-unmet"}>
+                        <i className={/[A-Z]/.test(this.props.formValues.password) ? "fa fa-check" : "fa fa-times"}></i>
+                        Al menos una letra mayuscula
+                      </li>
+                      <li className={/[a-z]/.test(this.props.formValues.password) ? "cm-req-met" : "cm-req-unmet"}>
+                        <i className={/[a-z]/.test(this.props.formValues.password) ? "fa fa-check" : "fa fa-times"}></i>
+                        Una letra minuscula
+                      </li>
+                      <li className={/[0-9]/.test(this.props.formValues.password) ? "cm-req-met" : "cm-req-unmet"}>
+                        <i className={/[0-9]/.test(this.props.formValues.password) ? "fa fa-check" : "fa fa-times"}></i>
+                        Un numero
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {/* Password Confirmation Alert */}
+                {this.props.passworState === true &&
+                  this.props.formValues.password.length >= 1 &&
+                  this.props.formValues.password_confirmation.length >= 1 && (
+                    <div className={`cm-alert ${this.props.passworConfirmationState ? "cm-alert-success" : "cm-alert-error"}`}>
+                      <i className={this.props.passworConfirmationState ? "fa fa-check-circle" : "fa fa-times-circle"}></i>
+                      {this.props.passworConfirmationState
+                        ? "Contrasenas iguales"
+                        : "La confirmacion de la contrasena no es igual a la contrasena"}
+                    </div>
                   )}
 
-                {this.props.passworState == true && this.props.formValues.password.length >= 1 && this.props.formValues.password_confirmation.length >= 1 &&(
-                  <React.Fragment>
-                      <div className="col-md-12">
-                        <div className={this.props.passworConfirmationState == false ? "alert alert-danger" : "alert alert-primary"} role="alert">
-                          <b>{this.props.passworConfirmationState == false ? "La confirmacion de la contraseña no es igual a la contraseña " : "Contraseñas iguales"}</b>
-                        </div>
-                      </div>
-                  </React.Fragment>
-                )}
-
-            
-
-                {this.props.errorValues == false && (
-                  <div className="col-md-12 mt-4">
-                    <div className="alert alert-danger" role="alert">
-                      <b>Debes de completar todos los campos requerios</b>
-                    </div>
+                {/* Error Alert */}
+                {this.props.errorValues === false && (
+                  <div className="cm-alert cm-alert-error">
+                    <i className="fa fa-exclamation-circle"></i>
+                    Debes completar todos los campos requeridos
                   </div>
                 )}
-
-
               </div>
+            </div>
 
-              
-            </ModalBody>
-
-        
-          <ModalFooter>
-                <label className="btn btn-light mt-2" onClick={this.props.toggle}>Cerrar</label>
-                <button className="btn btn-secondary" onClick={this.props.submit}>{this.props.nameSubmit}</button>
-          </ModalFooter>
-
+            <div className="cm-modal-footer">
+              <button type="button" className="cm-btn cm-btn-cancel" onClick={this.props.toggle}>
+                <i className="fa fa-times"></i> Cancelar
+              </button>
+              <button type="submit" className="cm-btn cm-btn-submit" onClick={this.props.submit}>
+                <i className="fa fa-save"></i> {this.props.nameSubmit}
+              </button>
+            </div>
           </form>
-
-
-
-
-        </Modal>
-      </React.Fragment>
-     
+        </div>
+      </Modal>
     );
   }
 }
 
 export default FormCreate;
-

@@ -1,144 +1,179 @@
 import React, { Component } from 'react';
-import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
-import NumberFormat from 'react-number-format';
+import { Modal, ModalBody } from 'reactstrap';
 import Select from "react-select";
 
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    background: "#fcfcfd",
+    borderColor: state.isFocused ? "#f5a623" : "#e2e5ea",
+    boxShadow: state.isFocused ? "0 0 0 3px rgba(245, 166, 35, 0.15)" : "none",
+    "&:hover": { borderColor: "#f5a623" },
+    borderRadius: "8px",
+    padding: "2px 4px",
+    fontSize: "14px",
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected ? "#f5a623" : state.isFocused ? "#fff3e0" : "#fff",
+    color: state.isSelected ? "#fff" : "#333",
+    fontSize: "14px",
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
 
 class FormCreate extends Component {
+  handleSubmit = (e) => {
+    e.preventDefault();
+  };
 
-    constructor(props){
-        super(props)
-        
-    }
+  render() {
+    return (
+      <React.Fragment>
+        <Modal
+          isOpen={this.props.modal}
+          toggle={this.props.toggle}
+          className="modal-dialog-centered"
+          backdrop={this.props.backdrop}
+        >
+          <div className="cm-modal-container">
+            <div className="cm-modal-header">
+              <div className="cm-modal-header-content">
+                <div className="cm-modal-icon">
+                  <i className="fa fa-link"></i>
+                </div>
+                <div>
+                  <h2 className="cm-modal-title">{this.props.title}</h2>
+                  <p className="cm-modal-subtitle">Complete los datos de la relacion</p>
+                </div>
+              </div>
+              <button type="button" className="cm-modal-close" onClick={() => this.props.toggle()}>
+                <i className="fa fa-times"></i>
+              </button>
+            </div>
 
-    handleSubmit = e => {
-        e.preventDefault();
-    };
+            <form onSubmit={this.handleSubmit}>
+              <ModalBody className="cm-modal-body cm-modal-scroll">
+                <div className="cm-form-grid-2">
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-user-tie"></i> Nombre director
+                    </label>
+                    <Select
+                      onChange={this.props.handleChangeAutocompleteUserDirection}
+                      options={this.props.users}
+                      autoFocus={false}
+                      className={!this.props.errorValues && this.props.formValues.user_direction_id == "" ? "cm-select-error" : ""}
+                      value={this.props.selectedOptionUserDirection}
+                      styles={selectStyles}
+                      menuPortalTarget={document.body}
+                    />
+                  </div>
 
-    render() {
-        return (
-            <React.Fragment>
-                <Modal isOpen={this.props.modal} toggle={this.props.toggle} className="modal-dialog-centered" backdrop={this.props.backdrop}>
-                    <ModalHeader className="title-modal" toggle={this.props.toggle}><i className="app-menu__icon fa fa-user mr-2"></i> {this.props.title}</ModalHeader>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-user"></i> Nombre del empleado
+                    </label>
+                    <Select
+                      onChange={this.props.handleChangeAutocompleteUserReport}
+                      options={this.props.users}
+                      autoFocus={false}
+                      className={!this.props.errorValues && this.props.formValues.user_report_id == "" ? "cm-select-error" : ""}
+                      value={this.props.selectedOptionUserReport}
+                      styles={selectStyles}
+                      menuPortalTarget={document.body}
+                    />
+                  </div>
 
-                        <form onSubmit={this.handleSubmit}>
-                            <ModalBody>
-                                <div className="row">
+                  <div className="cm-form-group cm-full-width">
+                    <label className="cm-label">
+                      <i className="fa fa-comment-alt"></i> Observaciones
+                    </label>
+                    <textarea
+                      name="observations"
+                      rows="3"
+                      value={this.props.formValues.observations}
+                      onChange={this.props.onChangeForm}
+                      className={"cm-input" + (!this.props.errorValues && this.props.formValues.observations == "" ? " cm-input-error" : "")}
+                      style={{ resize: "vertical", minHeight: "80px" }}
+                    />
+                  </div>
 
-                                    <div className="col-md-6 mb-3">
-                                        <input
-                                            type="hidden"
-                                            name="user_direction_id"
-                                            value={this.props.selectedOptionUserDirection.user_direction_id}
-                                        />                                                        
-                                        <label>Nombre director </label>
-                                        <Select
-                                            onChange={this.props.handleChangeAutocompleteUserDirection}
-                                            options={this.props.users}
-                                            autoFocus={false}
-                                            className={`link-form ${!this.props.errorValues && this.props.formValues.user_direction_id == "" ? "error-class" : ""}`}
-                                            value={this.props.selectedOptionUserDirection}
-                                        />
-                                    </div>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-calendar-alt"></i> Fecha inicial
+                    </label>
+                    <input
+                      type="date"
+                      name="start_date"
+                      value={this.props.formValues.start_date}
+                      onChange={this.props.onChangeForm}
+                      className={"cm-input" + (!this.props.errorValues && this.props.formValues.start_date == "" ? " cm-input-error" : "")}
+                    />
+                  </div>
 
-                                    <div className="col-md-6 mb-3">
-                                        <input
-                                            type="hidden"
-                                            name="user_report_id"
-                                            value={this.props.selectedOptionUserReport.user_report_id}
-                                        />                                                        
-                                        <label>Nombre del empleado </label>
-                                        <Select
-                                            onChange={this.props.handleChangeAutocompleteUserReport}
-                                            options={this.props.users}
-                                            autoFocus={false}
-                                            className={`link-form ${!this.props.errorValues && this.props.formValues.user_report_id == "" ? "error-class" : ""}`}
-                                            value={this.props.selectedOptionUserReport}
-                                        />
-                                    </div>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-calendar-check"></i> Fecha final
+                    </label>
+                    <input
+                      type="date"
+                      name="end_date"
+                      value={this.props.formValues.end_date}
+                      onChange={this.props.onChangeForm}
+                      className={"cm-input" + (!this.props.errorValues && this.props.formValues.end_date == "" ? " cm-input-error" : "")}
+                    />
+                  </div>
 
-                                    <div className="col-md-12">
-                                        <label>Observaciones </label>
-                                        <textarea
-                                            type="text"
-                                            name="observations"
-                                            rows="6"
-                                            value={this.props.formValues.observations}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control mb-3 ${!this.props.errorValues && this.props.formValues.observations == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-calendar-plus"></i> Fecha de creacion
+                    </label>
+                    <input
+                      type="date"
+                      name="creation_date"
+                      value={this.props.formValues.creation_date}
+                      onChange={this.props.onChangeForm}
+                      className={"cm-input" + (!this.props.errorValues && this.props.formValues.creation_date == "" ? " cm-input-error" : "")}
+                    />
+                  </div>
 
-                                    <div className="col-md-6 mb-3">
-                                        <label>Fecha inicial </label>
-                                        <input
-                                            type="date"
-                                            name="start_date"
-                                            value={this.props.formValues.start_date}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.start_date == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
+                  <div className="cm-form-group">
+                    <label className="cm-label">
+                      <i className="fa fa-building"></i> Area
+                    </label>
+                    <input
+                      type="text"
+                      name="area"
+                      value={this.props.formValues.area}
+                      onChange={this.props.onChangeForm}
+                      className={"cm-input" + (!this.props.errorValues && this.props.formValues.area == "" ? " cm-input-error" : "")}
+                    />
+                  </div>
+                </div>
 
-                                    <div className="col-md-6">
-                                        <label>Fecha final </label>
-                                        <input
-                                            type="date"
-                                            name="end_date"
-                                            value={this.props.formValues.end_date}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.end_date == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
+                {!this.props.errorValues && (
+                  <div className="cm-alert cm-alert-error">
+                    <i className="fa fa-exclamation-circle"></i>
+                    <span>Debes de completar todos los campos requeridos</span>
+                  </div>
+                )}
+              </ModalBody>
 
-                                    <div className="col-md-6 mb-3">
-                                        <label>Fecha de creación </label>
-                                        <input
-                                            type="date"
-                                            name="creation_date"
-                                            value={this.props.formValues.creation_date}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.creation_date == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
-
-                                    <div className="col-md-6 mb-3">
-                                        <label>Area </label>
-                                        <input
-                                            type="text"
-                                            name="area"
-                                            value={this.props.formValues.area}
-                                            onChange={this.props.onChangeForm}
-                                            className={`form form-control ${!this.props.errorValues && this.props.formValues.area == "" ? "error-class" : ""}`}
-                                        />
-                                    </div>
-
-
-                                    {!this.props.errorValues && (
-                                        <div className="col-md-12 mt-4">
-                                            <div className="alert alert-danger" role="alert">
-                                                <b>Debes de completar todos los campos requerios</b>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </div>
-                            </ModalBody>
-
-                            <ModalFooter>
-                                <label className="btn btn-light mt-2" onClick={() => this.props.toggle()}>Cerrar</label>
-                                <button className="btn btn-secondary"
-                                    onClick={this.props.submitForm}
-                                    style={{ color: "#ffff" }}
-                                >
-                                    {this.props.nameBnt}
-                                </button>
-                            </ModalFooter>
-                        </form>
-                </Modal>
-            </React.Fragment>
-        );
-    }
+              <div className="cm-modal-footer">
+                <button type="button" className="cm-btn cm-btn-cancel" onClick={() => this.props.toggle()}>
+                  <i className="fa fa-times"></i> Cerrar
+                </button>
+                <button type="button" className="cm-btn cm-btn-submit" onClick={this.props.submitForm}>
+                  <i className="fa fa-save"></i> {this.props.nameBnt}
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+      </React.Fragment>
+    );
+  }
 }
 
 export default FormCreate;

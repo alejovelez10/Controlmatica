@@ -1,5 +1,6 @@
-<div class="tile">
-    <div class="tile-body">
-        <h1 align="center">Bienvenido <%= current_user.email %></h1>
-    </div>
-</div>
+<%= javascript_pack_tag 'Dashboard' %>
+
+<%= react_component 'DashboardHome', {
+  userName: current_user.names || current_user.email,
+  userEmail: current_user.email
+} %>

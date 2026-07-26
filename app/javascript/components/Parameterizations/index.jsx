@@ -1,134 +1,278 @@
-import React from 'react';
-import Table from "../Parameterizations/table";
+import React from "react";
+import Swal from "sweetalert2";
+import { CmDataTable, CmPageActions } from "../../generalcomponents/ui";
+import { Modal } from "reactstrap";
+
+const EMPTY_FORM = { name: "", money_value: "" };
+
+function csrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute("content") : "";
+}
+
+function formatMoney(val) {
+  if (!val && val !== 0) return "";
+  return "$" + Number(val).toLocaleString("es-CO");
+}
 
 class index extends React.Component {
-    constructor(props){
-        super(props)
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            data: [],
-            formSearch: {
-              name: "",
-            },
+    this.state = {
+      data: [],
+      loading: true,
+      searchTerm: "",
+      sortKey: null,
+      sortDir: "asc",
+      meta: { total: 0, page: 1, per_page: 10, total_pages: 1 },
+      modalOpen: false,
+      modalMode: "new",
+      editId: null,
+      form: { ...EMPTY_FORM },
+      errors: [],
+      saving: false,
+    };
 
-            stateSearch: false,
-            stateSearchCancel: false,
+    this.columns = [
+      { key: "name", label: "Nombre" },
+      {
+        key: "money_value",
+        label: "Valor monetario",
+        render: (row) => formatMoney(row.money_value),
+      },
+    ];
+  }
+
+  componentDidMount() {
+    this.loadData();
+  }
+
+  loadData = (page, perPage, searchTerm, sortKey, sortDir) => {
+    const p = page || this.state.meta.page;
+    const pp = perPage || this.state.meta.per_page;
+    const term = searchTerm !== undefined ? searchTerm : this.state.searchTerm;
+    const sk = sortKey !== undefined ? sortKey : this.state.sortKey;
+    const sd = sortDir !== undefined ? sortDir : this.state.sortDir;
+
+    this.setState({ loading: true });
+
+    let url = `/get_parameterizations?page=${p}&per_page=${pp}`;
+    if (term) url += `&name=${encodeURIComponent(term)}`;
+    if (sk) url += `&sort=${encodeURIComponent(sk)}&dir=${sd}`;
+
+    fetch(url)
+      .then((r) => r.json())
+      .then((result) => {
+        this.setState({ data: result.data, meta: result.meta, loading: false });
+      });
+  };
+
+  handleSearch = (term) => {
+    this.setState({ searchTerm: term }, () => { this.loadData(1, this.state.meta.per_page, term); });
+  };
+  handlePageChange = (page) => { this.loadData(page, this.state.meta.per_page); };
+  handlePerPageChange = (perPage) => { this.loadData(1, perPage); };
+  handleSort = (key, dir) => {
+    this.setState({ sortKey: key, sortDir: dir }, () => {
+      this.loadData(1, this.state.meta.per_page, undefined, key, dir);
+    });
+  };
+
+  openNewModal = () => {
+    this.setState({ modalOpen: true, modalMode: "new", editId: null, form: { ...EMPTY_FORM }, errors: [], saving: false });
+  };
+
+  openEditModal = (id) => {
+    this.setState({ modalOpen: true, modalMode: "edit", editId: id, errors: [], saving: false });
+    fetch(`/parameterizations/${id}.json`)
+      .then((r) => r.json())
+      .then((data) => {
+        this.setState({ form: { name: data.name || "", money_value: data.money_value || "" } });
+      });
+  };
+
+  closeModal = () => { this.setState({ modalOpen: false }); };
+  handleFormChange = (field, value) => {
+    this.setState((prev) => ({ form: { ...prev.form, [field]: value } }));
+  };
+
+  handleSubmit = () => {
+    const { form, modalMode, editId } = this.state;
+    const isNew = modalMode === "new";
+    const url = isNew ? "/parameterizations" : `/parameterizations/${editId}`;
+    const method = isNew ? "POST" : "PATCH";
+
+    this.setState({ saving: true, errors: [] });
+
+    fetch(`${url}.json`, {
+      method,
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken() },
+      body: JSON.stringify({ parameterization: form }),
+    })
+      .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+      .then(({ ok, data }) => {
+        if (ok) {
+          this.closeModal();
+          this.loadData(isNew ? 1 : undefined);
+          Swal.fire({ position: "center", icon: "success", title: data.message, showConfirmButton: false, timer: 1500 });
+        } else {
+          this.setState({ errors: data.errors || ["Error al guardar"], saving: false });
         }
-    }
+      })
+      .catch(() => { this.setState({ errors: ["Error de conexión"], saving: false }); });
+  };
 
-    loadData = () => {
-        fetch("/get_parameterizations")
-        .then(response => response.json())
-        .then(data => {
-          this.setState({
-            data: data
+  delete = (id) => {
+    Swal.fire({
+      title: "¿Estás seguro?", text: "El registro será eliminado permanentemente",
+      icon: "warning", showCancelButton: true,
+      confirmButtonColor: "#2a3f53", cancelButtonColor: "#dc3545",
+      confirmButtonText: "Sí, eliminar", cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.value) {
+        fetch("/parameterizations/" + id, { method: "delete", headers: { "X-CSRF-Token": csrfToken() } })
+          .then((r) => r.json())
+          .then(() => {
+            this.loadData();
+            Swal.fire({ title: "Eliminado", text: "El registro fue eliminado con éxito", icon: "success", confirmButtonColor: "#2a3f53" });
           });
-        });
-
-
       }
-    
-    componentDidMount() {
-        this.loadData();
-    }
+    });
+  };
 
-    handleChange = e => {
-      this.setState({
-        formSearch: {
-          ...this.state.formSearch,
-          [e.target.name]: e.target.value
-        }
-      });
-    };
+  openMenu = (e) => { window.cmOpenMenu(e); };
 
-    HandleClickFilter = e => {
-      fetch(`/get_parameterizations?name=${this.state.formSearch.name != undefined ? this.state.formSearch.name : "" }`)
-        .then(response => response.json())
-        .then(data => {
-          this.setState({
-            data: data,
-            stateSearchCancel: true
-          });
-        });
-    };
+  renderActions = (row) => {
+    const { estados } = this.props;
+    return (
+      <div className="cm-dt-menu">
+        <button className="cm-dt-menu-trigger" onClick={this.openMenu}>
+          <i className="fas fa-ellipsis-v" />
+        </button>
+        <div className="cm-dt-menu-dropdown">
+          {estados.edit && (
+            <button onClick={() => this.openEditModal(row.id)} className="cm-dt-menu-item">
+              <i className="fas fa-pen" /> Editar
+            </button>
+          )}
+          {estados.delete && (
+            <button onClick={() => this.delete(row.id)} className="cm-dt-menu-item cm-dt-menu-item--danger">
+              <i className="fas fa-trash" /> Eliminar
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
+  renderModal = () => {
+    const { modalOpen, modalMode, form, errors, saving } = this.state;
+    const title = modalMode === "new" ? "Nueva Parametrización" : "Editar Parametrización";
+    const subtitle = modalMode === "new" ? "Complete los datos de la nueva parametrización" : "Modifique los datos de la parametrización";
 
-    CancelFilter = () =>{
-      this.setState({
-        formSearch: {
-          name: "",
-        },
-        stateSearchCancel: false
-      });
-      this.loadData();
-    }
-
-
-    render() {
-        return (
-            <React.Fragment>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="card card-table">
-                    <div className="card-body">
-                    <div className="row mb-4">
-                        <div className="col-md-12">
-                            <div className="row">
-
-                                <div className="col-md-8">
-                                   <div className="col-md-5 pl-0">
-
-                                   <div className="input-group">
-                                      <input type="text" name="name" style={{ height: "37px" }} className="form-control" onChange={this.handleChange} value={this.state.formSearch.name} placeholder="Buscador" />
-
-                                      <div className="input-group-append">
-                                        
-                                        
-                                          <button className="btn btn-secondary" onClick={this.HandleClickFilter}>
-                                            <i className="fas fa-search"></i>
-                                          </button>
-                                      
-
-                                        {this.state.stateSearchCancel == true && (
-                                          <button className="btn btn-danger" onClick={this.CancelFilter} type="button">Cancel</button>
-                                        )}
-
-                                      </div>
-
-                                    </div>
-
-                                   </div>
-                                </div>
-
-                                <div className="col-md-4 text-right">
-                                  {this.props.estados.create == true && (
-                                    <button className="btn btn-secondary" onClick={() => this.child.toggle("new")}>Nueva Parametrizacion</button>
-                                  )}
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                  
-                      <Table 
-                        dataActions={this.state.data} 
-                        loadInfo={this.loadData}
-                        usuario={this.props.usuario}
-                        ref={(element)  => {this.child = element}}
-                        estados={this.props.estados}
-                      />
-                    
-      
-                    </div>
-                  </div>
-                </div>
+    return (
+      <Modal isOpen={modalOpen} toggle={this.closeModal} className="modal-lg modal-dialog-centered">
+        <div className="cm-modal-container">
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon"><i className="fas fa-sliders-h" /></div>
+              <div>
+                <h2 className="cm-modal-title">{title}</h2>
+                <p className="cm-modal-subtitle">{subtitle}</p>
               </div>
+            </div>
+            <button type="button" className="cm-modal-close" onClick={this.closeModal}>
+              <i className="fas fa-times" />
+            </button>
+          </div>
 
-            </React.Fragment>
+          <div className="cm-modal-body">
+            {errors.length > 0 && (
+              <div className="cm-alert cm-alert-danger">
+                <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                  {errors.map((e, i) => <li key={i}>{e}</li>)}
+                </ul>
+              </div>
+            )}
 
-        )
-      
-    }
+            <div className="cm-form-grid-2">
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-tag" /> Nombre</label>
+                <input
+                  type="text"
+                  className="cm-input"
+                  placeholder="Nombre"
+                  value={form.name}
+                  onChange={(e) => this.handleFormChange("name", e.target.value)}
+                />
+              </div>
+              <div className="cm-form-group">
+                <label className="cm-label"><i className="fa fa-dollar-sign" /> Valor monetario</label>
+                <input
+                  type="number"
+                  className="cm-input"
+                  placeholder="0"
+                  value={form.money_value}
+                  onChange={(e) => this.handleFormChange("money_value", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="cm-modal-footer">
+            <button type="button" className="cm-btn cm-btn-cancel" onClick={this.closeModal}>
+              <i className="fas fa-times" /> Cancelar
+            </button>
+            <button type="button" className="cm-btn cm-btn-submit" onClick={this.handleSubmit} disabled={saving}>
+              {saving ? (
+                <React.Fragment><i className="fas fa-spinner fa-spin" /> Guardando...</React.Fragment>
+              ) : (
+                <React.Fragment><i className="fas fa-save" /> Guardar</React.Fragment>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    );
+  };
+
+  render() {
+    const { meta } = this.state;
+    return (
+      <React.Fragment>
+        {this.props.estados.create && (
+          <CmPageActions>
+            <button onClick={this.openNewModal} className="cm-btn cm-btn-accent cm-btn-sm">
+              <i className="fas fa-plus" /> Nueva Parametrización
+            </button>
+          </CmPageActions>
+        )}
+        <CmDataTable
+          columns={this.columns}
+          data={this.state.data}
+          loading={this.state.loading}
+          actions={this.renderActions}
+          onSearch={this.handleSearch}
+          searchPlaceholder="Buscar parametrización..."
+          emptyMessage="No hay parametrizaciones registradas"
+          emptyAction={
+            this.props.estados.create ? (
+              <button onClick={this.openNewModal} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}>
+                <i className="fas fa-plus" /> Nueva Parametrización
+              </button>
+            ) : null
+          }
+          serverPagination
+          serverMeta={meta}
+          onSort={this.handleSort}
+          onPageChange={this.handlePageChange}
+          onPerPageChange={this.handlePerPageChange}
+        />
+        {this.renderModal()}
+      </React.Fragment>
+    );
+  }
 }
 
 export default index;

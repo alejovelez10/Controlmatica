@@ -26,7 +26,14 @@
 #
 # Indexes
 #
-#  index_report_expenses_on_cost_center_id  (cost_center_id)
+#  index_report_expenses_on_cost_center_id          (cost_center_id)
+#  index_report_expenses_on_created_at              (created_at)
+#  index_report_expenses_on_invoice_date            (invoice_date)
+#  index_report_expenses_on_is_acepted              (is_acepted)
+#  index_report_expenses_on_payment_type_id         (payment_type_id)
+#  index_report_expenses_on_type_identification_id  (type_identification_id)
+#  index_report_expenses_on_user_id                 (user_id)
+#  index_report_expenses_on_user_invoice_id         (user_invoice_id)
 #
 
 class ReportExpenseSerializer < ActiveModel::Serializer
@@ -39,9 +46,10 @@ class ReportExpenseSerializer < ActiveModel::Serializer
   belongs_to :user, serializer: UserSerializer
   
   def user_invoice
+    return nil unless object.user_invoice.present?
     {
       id: object.user_invoice.id,
-      name: object.user_invoice.names
+      names: object.user_invoice.names
     }
   end
   

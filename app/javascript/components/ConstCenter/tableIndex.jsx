@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from 'sweetalert2/dist/sweetalert2.js'
+import Swal from 'sweetalert2'
 import NumberFormat from 'react-number-format';
 import FormCreate from "../ConstCenter/FormCreate";
 import ModalError from "./ModalError";

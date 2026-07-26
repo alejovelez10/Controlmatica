@@ -1,3 +1,3 @@
 <%= javascript_pack_tag 'CommissionIndex' %> 
-<%= react_component('CommissionIndex', current_user: get_current_user, estados: @estados, users: get_users, customer_invoices: get_customer_invoices(CustomerInvoice.all), cost_centers: get_cost_center_select, customer_reports: get_customer_reports) %>
+<%= react_component('CommissionIndex', current_user: get_current_user, estados: @estados, users: get_users, customer_invoices: get_customer_invoices(CustomerInvoice.all), customer_reports: get_customer_reports) %>
 

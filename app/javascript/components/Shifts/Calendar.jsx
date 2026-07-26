@@ -5,7 +5,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import FormCreate from './FormCreate'
 import interactionPlugin from "@fullcalendar/interaction"; // needed for dayClick
 import FormFilter from './FormFilter';
-import Swal from "sweetalert2/dist/sweetalert2.js";
+import Swal from "sweetalert2";
 import esLocale from '@fullcalendar/core/locales/es';
 import { array } from 'prop-types';
 
@@ -13,6 +13,7 @@ class Calendar extends Component {
     constructor(props) {
         super(props)
         this.token = document.querySelector("[name='csrf-token']").content;
+        this.searchCostCenterTimeout = null;
         this.state = {
             data: [],
             isLoaded: false,
@@ -25,6 +26,10 @@ class Calendar extends Component {
             arg: "",
             str_label: "",
             errors_create: [],
+
+            // Opciones de autocomplete para centros de costo
+            costCenterOptions: [],
+            costCenterLoading: false,
 
             form: {
                 start_date: "",
@@ -64,6 +69,40 @@ class Calendar extends Component {
         }
     }
 
+    // Búsqueda de centros de costo con debounce
+    handleCostCenterSearch = (inputValue) => {
+        if (this.searchCostCenterTimeout) {
+            clearTimeout(this.searchCostCenterTimeout);
+        }
+
+        if (inputValue.length < 2) {
+            this.setState({ costCenterOptions: [] });
+            return;
+        }
+
+        this.setState({ costCenterLoading: true });
+
+        this.searchCostCenterTimeout = setTimeout(() => {
+            fetch(`/shifts/search_cost_centers?q=${encodeURIComponent(inputValue)}`, {
+                method: 'GET',
+                headers: {
+                    "X-CSRF-Token": this.token,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.setState({
+                    costCenterOptions: data,
+                    costCenterLoading: false
+                });
+            })
+            .catch(() => {
+                this.setState({ costCenterLoading: false });
+            });
+        }, 300);
+    }
+
     clearValues = () => {
         this.setState({
             form: {
@@ -91,12 +130,26 @@ class Calendar extends Component {
     }
 
     componentDidMount = () => {
-        this.loadData();
+        // La carga inicial se hace en handleDatesSet cuando FullCalendar se monta
     }
 
-    loadData = () => {
-        fetch(this.props.url_calendar, {
-            method: 'GET', // or 'PUT'
+    // Callback cuando cambia el rango visible del calendario
+    handleDatesSet = (dateInfo) => {
+        const startDate = dateInfo.startStr.split('T')[0];
+        const endDate = dateInfo.endStr.split('T')[0];
+        this.loadData(startDate, endDate);
+    }
+
+    loadData = (startDate = null, endDate = null) => {
+        let url = this.props.url_calendar;
+
+        // Agregar parámetros de fecha si están disponibles
+        if (startDate && endDate) {
+            url += `?start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        fetch(url, {
+            method: 'GET',
             headers: {
                 "X-CSRF-Token": this.token,
                 "Content-Type": "application/json"
@@ -106,9 +159,14 @@ class Calendar extends Component {
             .then(data => {
                 const array = []
 
-                //array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: new Date(item.start_date).setDate(new Date(item.start_date).getDate()), end: new Date(item.end_date).setDate(new Date(item.end_date).getDate()), id: item.id })
                 data.data.map((item) => (
-                    array.push({ title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`, start: this.getDate(item.start_date), end: this.getDate(item.end_date), id: item.id, backgroundColor: item.color })
+                    array.push({
+                        title: `${item.cost_center.code} - ${item.user_responsible ? item.user_responsible.names : "sin nombre"}`,
+                        start: this.getDate(item.start_date),
+                        end: this.getDate(item.end_date),
+                        id: item.id,
+                        backgroundColor: item.color
+                    })
                 ))
 
                 this.setState({
@@ -162,7 +220,7 @@ class Calendar extends Component {
                 .then(response => response.json())
                 .then(response => {
                     this.messageSuccess(response);
-                    this.loadData();
+                    this.reloadCurrentView();
                     this.clearValues();
                     this.setState({ modal: false, modeEdit: false, shift_id: "", str_label: "" })
                 });
@@ -213,7 +271,29 @@ class Calendar extends Component {
         const start_date = `${arg.dateStr}`
         const end_date = `${arg.dateStr}`
 
-        if (true) {
+        // Si hay un centro de costo fijo (desde gestionar centro de costo)
+        if (this.props.fixedCostCenter) {
+            this.getDescriptionCostCenter(this.props.fixedCostCenter.value);
+            this.setState({
+                modal: true,
+                shift_id: "",
+                errors_create: [],
+                arg: arg,
+                str_label: `${this.props.fixedCostCenter.label} - ${this.props.current_user_name}`,
+
+                form: {
+                    ...this.state.form,
+                    start_date: this.getDateOpenModal(start_date, "08:00"),
+                    end_date: this.getDateOpenModal(end_date, "17:00"),
+                    cost_center_id: this.props.fixedCostCenter.value,
+                },
+
+                selectedOptionCostCenter: {
+                    value: this.props.fixedCostCenter.value,
+                    label: this.props.fixedCostCenter.label,
+                },
+            });
+        } else {
             this.setState({
                 modal: true,
                 shift_id: "",
@@ -359,7 +439,7 @@ class Calendar extends Component {
     }
 
     cancelFilter = () => {
-        this.loadData()
+        this.reloadCurrentView()
         this.setState({
             isFiltering: false,
             isLoaded: false,
@@ -474,7 +554,7 @@ class Calendar extends Component {
                     .then(res => res.json())
                     .catch(error => console.error("Error:", error))
                     .then(data => {
-                        this.loadData();
+                        this.reloadCurrentView();
                         this.clearValues();
                         this.setState({
                             modal: false,
@@ -507,7 +587,7 @@ class Calendar extends Component {
                                 errors_create: [],
                             })
                             this.clearValues();
-                            this.loadData();
+                            this.reloadCurrentView();
                         }
                     });
             }
@@ -596,20 +676,382 @@ class Calendar extends Component {
     closeFilter = () => {
         this.setState({ modalFilter: false })
         this.clearValuesFilter();
-        this.loadData();
+        // Recargar con el rango actual del calendario
+        this.reloadCurrentView();
+    }
+
+    reloadCurrentView = () => {
+        if (this.calendarComponentRef.current) {
+            const calendarApi = this.calendarComponentRef.current.getApi();
+            const view = calendarApi.view;
+            const startDate = view.activeStart.toISOString().split('T')[0];
+            const endDate = view.activeEnd.toISOString().split('T')[0];
+            this.loadData(startDate, endDate);
+        } else {
+            this.loadData();
+        }
     }
 
     renderEventContent(eventInfo) {
-        console.log("eventInfo", eventInfo);
+        const eventStyle = {
+            backgroundColor: eventInfo.event.backgroundColor || '#f5a623',
+            width: "100%",
+            padding: "6px 10px",
+            borderRadius: "6px",
+            textAlign: "left",
+            color: "#fff",
+            fontSize: "12px",
+            fontWeight: "500",
+            lineHeight: "1.3",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap"
+        };
+
         return (
-          <div style={{ backgroundColor: eventInfo.backgroundColor, width: "100%", padding: "3px", border: "1px", textAlign: "center" }}>
-            <b>{eventInfo.event.title}</b>
-          </div>
+            <div style={eventStyle} title={eventInfo.event.title}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <i className="fas fa-circle" style={{ fontSize: '6px', opacity: 0.7 }}></i>
+                    {eventInfo.event.title}
+                </span>
+            </div>
         )
     }
 
 
     render() {
+        const calendarStyles = `
+            /* Contenedor principal del calendario */
+            .fc {
+                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+
+            /* Toolbar header */
+            .fc .fc-toolbar.fc-header-toolbar {
+                margin-bottom: 1.5em;
+                padding: 0 4px;
+            }
+
+            .fc .fc-toolbar-title {
+                font-size: 1.4em;
+                font-weight: 600;
+                color: #2d3748;
+            }
+
+            /* Botones del calendario - naranja Controlmatica */
+            .fc .fc-button {
+                background: #f5a623;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-size: 13px;
+                font-weight: 500;
+                text-transform: capitalize;
+                transition: all 0.2s ease;
+            }
+
+            .fc .fc-button:hover {
+                background: #e09000;
+            }
+
+            .fc .fc-button:focus {
+                box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.3);
+            }
+
+            .fc .fc-button-primary:disabled {
+                background: #cbd5e0;
+            }
+
+            /* Botón activo - mismo estilo que los otros */
+            .fc .fc-button-primary:not(:disabled).fc-button-active,
+            .fc .fc-button-primary:not(:disabled):active {
+                background: #f5a623 !important;
+            }
+
+            /* Grupo de botones */
+            .fc .fc-button-group {
+                gap: 4px;
+            }
+
+            .fc .fc-button-group > .fc-button {
+                border-radius: 8px !important;
+                margin-left: 4px;
+                background: #f5a623 !important;
+            }
+
+            .fc .fc-button-group > .fc-button:first-child {
+                margin-left: 0;
+            }
+
+            .fc .fc-button-group > .fc-button:hover {
+                background: #e09000 !important;
+            }
+
+            /* Botones de navegación (prev, next) */
+            .fc .fc-prev-button,
+            .fc .fc-next-button {
+                padding: 8px 12px;
+            }
+
+            .fc .fc-prev-button .fc-icon,
+            .fc .fc-next-button .fc-icon {
+                font-size: 1.2em;
+            }
+
+            /* Botón Today */
+            .fc .fc-today-button {
+                background: #fff;
+                color: #f5a623;
+                border: 2px solid #f5a623;
+                box-shadow: none;
+            }
+
+            .fc .fc-today-button:hover:not(:disabled) {
+                background: #f5a623;
+                color: #fff;
+            }
+
+            .fc .fc-today-button:disabled {
+                background: #f7fafc;
+                color: #a0aec0;
+                border-color: #e2e8f0;
+            }
+
+            /* Grid del calendario */
+            .fc .fc-scrollgrid {
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                overflow: hidden;
+            }
+
+            .fc .fc-scrollgrid td,
+            .fc .fc-scrollgrid th {
+                border-color: #e2e8f0;
+            }
+
+            /* Encabezado días de la semana */
+            .fc .fc-col-header-cell {
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                padding: 12px 0;
+            }
+
+            .fc .fc-col-header-cell-cushion {
+                color: #4a5568;
+                font-weight: 600;
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            /* Celdas de días */
+            .fc .fc-daygrid-day {
+                transition: background 0.2s ease;
+            }
+
+            .fc .fc-daygrid-day:hover {
+                background: #f8fafc;
+            }
+
+            .fc .fc-daygrid-day-number {
+                color: #4a5568;
+                font-weight: 500;
+                padding: 8px 10px;
+            }
+
+            /* Día de hoy */
+            .fc .fc-day-today {
+                background: rgba(245, 166, 35, 0.08) !important;
+            }
+
+            .fc .fc-day-today .fc-daygrid-day-number {
+                background: #f5a623;
+                color: #fff;
+                border-radius: 50%;
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 4px;
+            }
+
+            /* Time grid */
+            .fc .fc-timegrid-slot {
+                height: 48px;
+            }
+
+            .fc .fc-timegrid-slot-label-cushion {
+                color: #718096;
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            /* Eventos */
+            .fc-event {
+                border-radius: 6px;
+                border: none;
+                padding: 4px 8px;
+                font-size: 12px;
+                font-weight: 500;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .fc-event:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+
+            .fc-event-title {
+                font-weight: 500;
+            }
+
+            /* Popover */
+            .fc .fc-popover {
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+
+            .fc .fc-popover-header {
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-radius: 12px 12px 0 0;
+                padding: 10px 12px;
+            }
+
+            /* Card container moderno */
+            .calendar-modern-card {
+                background: #fff;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                border: 1px solid #e2e8f0;
+            }
+
+            .calendar-modern-header {
+                padding: 16px 20px;
+                border-bottom: 1px solid #f0f0f0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .calendar-modern-body {
+                padding: 20px;
+            }
+
+            /* Botón de filtros - gris claro */
+            .btn-filter-modern {
+                background: #adb5bd;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #fff;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+
+            .btn-filter-modern:hover {
+                background: #6c757d;
+            }
+
+            .btn-filter-modern i {
+                font-size: 14px;
+            }
+
+            /* Mobile responsive */
+            @media (max-width: 768px) {
+                .fc .fc-toolbar.fc-header-toolbar {
+                    flex-wrap: wrap;
+                    gap: 8px;
+                    margin-bottom: 1em;
+                    padding: 0;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk:first-child {
+                    order: 2;
+                    flex: 1 1 50%;
+                    justify-content: flex-start;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+                    order: 1;
+                    flex: 1 1 100%;
+                    justify-content: center;
+                }
+
+                .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-chunk:last-child {
+                    order: 3;
+                    flex: 1 1 50%;
+                    justify-content: flex-end;
+                }
+
+                .fc .fc-toolbar-title {
+                    font-size: 1.1em;
+                }
+
+                .fc .fc-button {
+                    padding: 6px 10px;
+                    font-size: 11px;
+                }
+
+                .fc .fc-prev-button,
+                .fc .fc-next-button {
+                    padding: 6px 8px;
+                }
+
+                .fc .fc-button-group > .fc-button {
+                    margin-left: 2px;
+                }
+
+                .calendar-modern-header {
+                    padding: 12px 14px;
+                }
+
+                .calendar-modern-body {
+                    padding: 10px;
+                }
+
+                .btn-filter-modern {
+                    padding: 8px 14px;
+                    font-size: 13px;
+                }
+
+                .fc .fc-col-header-cell-cushion {
+                    font-size: 11px;
+                    letter-spacing: 0;
+                }
+
+                .fc .fc-daygrid-day-number {
+                    padding: 4px 6px;
+                    font-size: 12px;
+                }
+
+                .fc-event {
+                    padding: 2px 4px;
+                    font-size: 11px;
+                }
+
+                .fc .fc-scrollgrid {
+                    border-radius: 8px;
+                }
+
+                .fc .fc-view-harness {
+                    min-height: 60vh;
+                }
+            }
+        `;
+
         if (this.state.isLoaded) {
             return (
                 <div className="card">
@@ -622,6 +1064,7 @@ class Calendar extends Component {
 
         return (
             <React.Fragment>
+                <style>{calendarStyles}</style>
                 {this.state.modal && (
                     <FormCreate
                         errors={this.state.errors_create}
@@ -642,7 +1085,10 @@ class Calendar extends Component {
 
                         selectedOptionCostCenter={this.state.selectedOptionCostCenter}
                         handleChangeAutocompleteCostCenter={this.handleChangeAutocompleteCostCenter}
-                        cost_centers={this.props.cost_centers}
+                        cost_centers={this.state.costCenterOptions}
+                        onCostCenterSearch={this.handleCostCenterSearch}
+                        costCenterLoading={this.state.costCenterLoading}
+                        fixedCostCenter={this.props.fixedCostCenter}
 
                         selectedOptionUser={this.state.selectedOptionUser}
                         handleChangeAutocompleteUser={this.handleChangeAutocompleteUser}
@@ -664,27 +1110,25 @@ class Calendar extends Component {
                         handleClickFilter={this.handleClickFilter}
                         closeFilter={this.closeFilter}
                         users={this.props.users}
-                        cost_centers={this.props.cost_centers}
                     />
                 )}
 
 
-                <div className="content main-card mb-3 card">
+                <div className="calendar-modern-card">
 
                     {!this.state.modalFilter && (
-                        <div className="card-header">
-                            {true && (
-                                <button
-                                    className="btn btn-primary ml-3"
-                                    onClick={() => this.toogleFilter("new")}
-                                >
-                                    Filtros
-                                </button>
-                            )}
+                        <div className="calendar-modern-header">
+                            <button
+                                className="btn-filter-modern"
+                                onClick={() => this.toogleFilter("new")}
+                            >
+                                <i className="fas fa-filter"></i>
+                                Filtros
+                            </button>
                         </div>
                     )}
 
-                    <div className="card-body">
+                    <div className="calendar-modern-body">
 
                         <FullCalendar
                             editable={true}
@@ -695,6 +1139,7 @@ class Calendar extends Component {
                             weekends={this.state.calendarWeekends}
                             events={this.state.data}
                             dateClick={this.handleDateClick}
+                            datesSet={this.handleDatesSet}
                             headerToolbar={{
                                 left: 'prev,next today',
                                 center: 'title',

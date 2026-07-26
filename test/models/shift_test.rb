@@ -18,7 +18,12 @@
 #
 # Indexes
 #
-#  index_shifts_on_cost_center_id  (cost_center_id)
+#  index_shifts_on_cost_center_id       (cost_center_id)
+#  index_shifts_on_end_date             (end_date)
+#  index_shifts_on_start_date           (start_date)
+#  index_shifts_on_user_dates           (user_responsible_id,start_date,end_date)
+#  index_shifts_on_user_id              (user_id)
+#  index_shifts_on_user_responsible_id  (user_responsible_id)
 #
 require "test_helper"
 

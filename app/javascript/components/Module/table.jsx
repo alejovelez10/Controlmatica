@@ -1,5 +1,5 @@
 import React from "react";
-import Swal from 'sweetalert2/dist/sweetalert2.js'
+import Swal from 'sweetalert2'
 import FormCreateControlModule from "../Module/formCreateControlModule"
 
 

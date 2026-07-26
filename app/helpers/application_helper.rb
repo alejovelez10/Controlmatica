@@ -1,53 +1,55 @@
 module ApplicationHelper
   def controller_name_helper(controller, action)
     if controller == "providers" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-user'></i> Proveedores" + "</h1>" + "<p>" + "Gestiona tus proveedores" + "</p>"
+      card = "<h1>" + " <i class='fas fa-truck'></i> Proveedores" + "</h1>" + "<p>" + "Gestiona tus proveedores" + "</p>"
     elsif controller == "customers" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Clientes " + "</h1>" + "<p>" + "Gestiona tus clientes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-building'></i> Clientes " + "</h1>" + "<p>" + "Gestiona tus clientes" + "</p>"
     elsif controller == "parameterizations" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-layer-group'></i> Parametrizaciones " + "</h1>" + "<p>" + "Parametriza tu aplicación" + "</p>"
+      card = "<h1>" + " <i class='fas fa-sliders-h'></i> Parametrizaciones " + "</h1>" + "<p>" + "Parametriza tu aplicación" + "</p>"
     elsif controller == "home" && action == "users"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Usuarios " + "</h1>" + "<p>" + "Gestiona tus usuarios" + "</p>"
+      card = "<h1>" + " <i class='fas fa-users'></i> Usuarios " + "</h1>" + "<p>" + "Gestiona tus usuarios" + "</p>"
     elsif controller == "customer_reports" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Reportes de clientes" + "</h1>" + "<p>" + "Crea y envia reportes a tus clientes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-file-contract'></i> Reportes de clientes" + "</h1>" + "<p>" + "Crea y envia reportes a tus clientes" + "</p>"
     elsif controller == "cost_centers" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Centro de Costos " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
+      card = "<h1>" + " <i class='fas fa-sitemap'></i> Centro de Costos " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
     elsif controller == "sales_orders" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Ordenes de Compra " + "</h1>" + "<p>" + "Gestiona tus centros de costos" + "</p>"
+      card = "<h1>" + " <i class='fas fa-shopping-cart'></i> Ordenes de Compra " + "</h1>" + "<p>" + "Gestiona tus ordenes de compra" + "</p>"
     elsif controller == "register_edits" && action == "notifications"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Registro de edicion " + "</h1>" + "<p>" + "Gestion de registros" + "</p>"
+      card = "<h1>" + " <i class='fas fa-history'></i> Registro de edicion " + "</h1>" + "<p>" + "Gestion de registros" + "</p>"
     elsif controller == "notification_alerts" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Notificación de alertas" + "</h1>" + "<p>" + "Gestion de notificación de alertas" + "</p>"
+      card = "<h1>" + " <i class='fas fa-exclamation-triangle'></i> Notificación de alertas" + "</h1>" + "<p>" + "Gestion de notificación de alertas" + "</p>"
     elsif controller == "cost_centers" && action == "show"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "Analiza como va tu proyecto" + "</p>"
+      card = "<h1>" + " <i class='fas fa-sitemap'></i> Gestion del centro de costo " + "</h1>" + "<p>" + "Analiza como va tu proyecto" + "</p>"
     elsif controller == "materials" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Materiales " + "</h1>" + "<p>" + "Gestiona tus materiales" + "</p>"
+      card = "<h1>" + " <i class='fas fa-boxes'></i> Materiales " + "</h1>" + "<p>" + "Gestiona tus materiales" + "</p>"
     elsif controller == "contractors" && action == "index"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-chart-bar'></i> Gestion de Tableristas " + "</h1>" + "<p>" + "Gestiona tus tableristas" + "</p>"
+      card = "<h1>" + " <i class='fas fa-hard-hat'></i> Gestion de Tableristas " + "</h1>" + "<p>" + "Gestiona tus tableristas" + "</p>"
     elsif controller == "reports" && action == "index"
-      card = "<h1>" + " <i class='fas fa-university'></i> Reportes de servicios " + "</h1>" + "<p>" + "Gestiona los reportes de servicios" + "</p>"
+      card = "<h1>" + " <i class='fas fa-clipboard-list'></i> Reportes de servicios " + "</h1>" + "<p>" + "Gestiona los reportes de servicios" + "</p>"
     elsif controller == "employed_performance" && action == "show"
-      card = "<h1>" + " <i class='app-menu__icon fa fa-street-view'></i> Informe de rendimiento" + "</h1>" + "<p>" + "" + "</p>"
+      card = "<h1>" + " <i class='fas fa-user-tie'></i> Informe de rendimiento" + "</h1>" + "<p>" + "" + "</p>"
     elsif controller == "alerts" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Alertas " + "</h1>" + "<p>" + "Gestiona de requerimientos" + "</p>"
+      card = "<h1>" + " <i class='fas fa-bell'></i> Alertas " + "</h1>" + "<p>" + "Gestiona de requerimientos" + "</p>"
     elsif controller == "reports" && action == "controlmatica"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Informes " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-chart-pie'></i> Informes " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
     elsif controller == "report_expenses" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-receipt'></i> Control de gastos " + "</h1>" + "<p>" + "Gestiona tus gastos" + "</p>"
     elsif controller == "report_expenses" && action == "indicators_expenses"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Informe de control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-receipt'></i> Informe de control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
     elsif controller == "shifts" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Turnos " + "</h1>" + "<p>" + "Gestiona de turnos" + "</p>"
+      card = "<h1>" + " <i class='fas fa-calendar-alt'></i> Turnos " + "</h1>" + "<p>" + "Gestiona tus turnos" + "</p>"
     elsif controller == "shifts" && action == "calendar"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Vista de los turnos en calendario " + "</h1>" + "<p>" + "Gestiona de turnos" + "</p>"
+      card = "<h1>" + " <i class='fas fa-calendar-alt'></i> Vista de los turnos en calendario " + "</h1>" + "<p>" + "Gestiona tus turnos" + "</p>"
     elsif controller == "expense_ratios" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i> Relacion de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-calculator'></i> Relacion de gastos " + "</h1>" + "<p>" + "Gestiona tus relaciones de gastos" + "</p>"
     elsif controller == "report_expense_options" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i>  Tipos de Gastos " + "</h1>" + "<p>" + "Gestiona de tipos" + "</p>"
+      card = "<h1>" + " <i class='fas fa-tags'></i> Tipos de Gastos " + "</h1>" + "<p>" + "Gestiona los tipos de gastos" + "</p>"
     elsif controller == "commissions" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i>  Comisiones " + "</h1>" + "<p>" + "Gestion de comisiónes" + "</p>"
+      card = "<h1>" + " <i class='fas fa-coins'></i> Comisiones " + "</h1>" + "<p>" + "Gestion de comisiones" + "</p>"
     elsif controller == "commission_relations" && action == "index"
-      card = "<h1>" + " <i class='fas fa-handshake'></i>  Relacion de comisiones " + "</h1>" + "<p>" + "Gestion de relacion de comisiones" + "</p>"
+      card = "<h1>" + " <i class='fas fa-link'></i> Relacion de comisiones " + "</h1>" + "<p>" + "Gestion de relacion de comisiones" + "</p>"
+    elsif controller == "home" && action == "dashboard_ing"
+      card = "<h1>" + " <i class='fas fa-chart-line'></i> Mi Tablero " + "</h1>" + "<p>" + "Tu panel de control personal" + "</p>"
     else
       "Proyectos"
     end
@@ -161,7 +163,8 @@ module ApplicationHelper
   end
 
   def get_cost_center
-    CostCenter.all
+    # Solo devolver id y code para dropdowns (evita cargar 26MB de datos)
+    CostCenter.select(:id, :code).order(:code).map { |cc| { id: cc.id, code: cc.code } }
   end
 
   def get_provider
@@ -193,6 +196,9 @@ module ApplicationHelper
     end
   end
 
+  # DEPRECATED: Este método cargaba TODOS los centros de costo, causando problemas de rendimiento.
+  # Los componentes React ahora usan búsqueda AJAX via /search_cost_centers o /shifts/search_cost_centers.
+  # Este método puede ser eliminado en una versión futura.
   def get_cost_center_select
     cost_centers = CostCenter.where("service_type = ? OR service_type = ?", "SERVICIO", "PROYECTO")
     cost_centers.collect do |cost_center|
@@ -225,12 +231,52 @@ module ApplicationHelper
     CostCenter.where(service_type: "PROYECTO").where.not(execution_state: "FINALIZADO")
   end
 
+  # Memoizado para evitar múltiples queries en el layout
+  # Retorna hash con :records (max 4) y :count
+  def get_register_edit_data
+    @_register_edit_data ||= begin
+      relation = RegisterEdit.where(state: "pending")
+      {
+        records: relation.order(created_at: :desc).limit(4).load,
+        count: relation.count
+      }
+    end
+  end
+
   def get_register_edit
-    RegisterEdit.where(state: "pending").order(created_at: :desc)
+    get_register_edit_data[:records]
+  end
+
+  def get_register_edit_count
+    get_register_edit_data[:count]
+  end
+
+  def get_register_edit_any?
+    get_register_edit_data[:count] > 0
+  end
+
+  # Memoizado para evitar múltiples queries en el layout
+  # Retorna hash con :records (max 4) y :count
+  def get_notification_alert_data
+    @_notification_alert_data ||= begin
+      relation = NotificationAlert.where(state: false)
+      {
+        records: relation.order(date_update: :desc).limit(4).load,
+        count: relation.count
+      }
+    end
   end
 
   def get_notification_alert
-    NotificationAlert.where(state: false).order(date_update: :desc)
+    get_notification_alert_data[:records]
+  end
+
+  def get_notification_alert_count
+    get_notification_alert_data[:count]
+  end
+
+  def get_notification_alert_any?
+    get_notification_alert_data[:count] > 0
   end
 
   def get_date(fecha)
@@ -513,41 +559,41 @@ module ApplicationHelper
   def recalculate_cost_center(cost, module_is = "nt")
     @cost_center = CostCenter.find(cost)
     ing_horas_eje = @cost_center.reports.sum(:working_time)
-    ing_horas_porcentaje = (@cost_center.eng_hours || 0) > 0 ? (((ing_horas_eje.to_f / @cost_center.eng_hours)) * 100).round(1) : 0
+    ing_horas_porcentaje = @cost_center.eng_hours.to_f > 0 ? (((ing_horas_eje.to_f / @cost_center.eng_hours.to_f)) * 100).round(1) : 0
 
     #desplazamiento
-    cotizado_desplazamiento = (@cost_center.value_displacement_hours || 0) * (@cost_center.displacement_hours || 0)
+    cotizado_desplazamiento = @cost_center.value_displacement_hours.to_f * @cost_center.displacement_hours.to_f
     ejecutado_desplazamiento = @cost_center.reports.sum(:value_displacement_hours)
     desp_horas_eje = @cost_center.reports.sum(:displacement_hours)
-    desp_horas_porcentaje = (@cost_center.displacement_hours || 0) > 0 ? (((desp_horas_eje.to_f / @cost_center.displacement_hours)) * 100).round(1) : "N/A"
+    desp_horas_porcentaje = @cost_center.displacement_hours.to_f > 0 ? (((desp_horas_eje.to_f / @cost_center.displacement_hours.to_f)) * 100).round(1) : "N/A"
 
     #ingenieria costos
-    ing_costo_cotizado = ((@cost_center.hour_cotizada || 0) * (@cost_center.eng_hours || 0)).round(1) + cotizado_desplazamiento
-    ing_costo_real = ((@cost_center.hour_real || 0) * ing_horas_eje).round(1) + ejecutado_desplazamiento
-    ing_costo_porcentaje = ing_costo_cotizado > 0 ? (((1 - (ing_costo_real.to_f / ing_costo_cotizado)) * 100)).round(1) : 0
+    ing_costo_cotizado = (@cost_center.hour_cotizada.to_f * @cost_center.eng_hours.to_f).round(1) + cotizado_desplazamiento
+    ing_costo_real = (@cost_center.hour_real.to_f * ing_horas_eje.to_f).round(1) + ejecutado_desplazamiento
+    ing_costo_porcentaje = ing_costo_cotizado.to_f > 0 ? (((1 - (ing_costo_real.to_f / ing_costo_cotizado.to_f)) * 100)).round(1) : 0
 
     #contractor
     cont_horas_eje = @cost_center.contractors.sum(:hours)
-    cont_horas_porcentaje = (@cost_center.hours_contractor || 0) > 0 ? (((cont_horas_eje.to_f / @cost_center.hours_contractor)) * 100).round(1) : 0
-    cont_costo_cotizado = ((@cost_center.hours_contractor_invoices || 0) * (@cost_center.hours_contractor || 0)).round(1)
-    cont_costo_real = ((@cost_center.hours_contractor_real || 0) * cont_horas_eje).round(1)
-    cont_costo_porcentaje = cont_costo_cotizado > 0 ? (((1 - (cont_costo_real.to_f / cont_costo_cotizado)) * 100)).round(1) : 0
+    cont_horas_porcentaje = @cost_center.hours_contractor.to_f > 0 ? (((cont_horas_eje.to_f / @cost_center.hours_contractor.to_f)) * 100).round(1) : 0
+    cont_costo_cotizado = (@cost_center.hours_contractor_invoices.to_f * @cost_center.hours_contractor.to_f).round(1)
+    cont_costo_real = (@cost_center.hours_contractor_real.to_f * cont_horas_eje.to_f).round(1)
+    cont_costo_porcentaje = cont_costo_cotizado.to_f > 0 ? (((1 - (cont_costo_real.to_f / cont_costo_cotizado.to_f)) * 100)).round(1) : 0
 
     mat_costo_real = @cost_center.materials.sum(:amount)
-    mat_costo_porcentaje = (@cost_center.materials_value || 0) > 0 ? ((1 - (mat_costo_real.to_f / @cost_center.materials_value)) * 100).round(1) : 0
+    mat_costo_porcentaje = @cost_center.materials_value.to_f > 0 ? ((1 - (mat_costo_real.to_f / @cost_center.materials_value.to_f)) * 100).round(1) : 0
 
     viat_costo_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_value)
-    viat_costo_porcentaje = (@cost_center.viatic_value || 0) > 0 ? ((viat_costo_real.to_f / @cost_center.viatic_value) * 100).round(1) : 0
+    viat_costo_porcentaje = @cost_center.viatic_value.to_f > 0 ? ((viat_costo_real.to_f / @cost_center.viatic_value.to_f) * 100).round(1) : 0
 
     fact_real = @cost_center.customer_invoices.sum(:invoice_value)
-    fact_porcentaje = (@cost_center.quotation_value || 0) > 0 ? ((fact_real.to_f / @cost_center.quotation_value) * 100).round(1) : 0
+    fact_porcentaje = @cost_center.quotation_value.to_f > 0 ? ((fact_real.to_f / @cost_center.quotation_value.to_f) * 100).round(1) : 0
 
     gastos = ing_costo_real + cont_costo_real + mat_costo_real + viat_costo_real
     aiu = fact_real - gastos
-    aiu_percent = fact_real > 0 ? (((aiu.to_f / fact_real.to_f)) * 100).round(1) : 0
+    aiu_percent = fact_real.to_f > 0 ? (((aiu.to_f / fact_real.to_f)) * 100).round(1) : 0
 
-    aiu_real = (@cost_center.quotation_value || 0) - gastos
-    aiu_percent_real = (@cost_center.quotation_value || 0) > 0 ? (((aiu_real.to_f / @cost_center.quotation_value.to_f)) * 100).round(1) : 0
+    aiu_real = @cost_center.quotation_value.to_f - gastos
+    aiu_percent_real = @cost_center.quotation_value.to_f > 0 ? (((aiu_real.to_f / @cost_center.quotation_value.to_f)) * 100).round(1) : 0
 
     @cost_center.update(
       ing_horas_eje: ing_horas_eje,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_02_200002) do
+ActiveRecord::Schema.define(version: 2026_03_07_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -108,6 +108,7 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "customer_report_id"
     t.float "value_hour"
     t.index ["cost_center_id"], name: "index_commissions_on_cost_center_id"
+    t.index ["user_id"], name: "index_commissions_on_user_id"
   end
 
   create_table "contacts", force: :cascade do |t|
@@ -137,7 +138,10 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "user_execute_id"
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index "EXTRACT(year FROM sales_date)", name: "index_contractors_on_sales_date_year"
+    t.index "EXTRACT(year FROM sales_date), EXTRACT(month FROM sales_date)", name: "index_contractors_on_sales_date_year_month"
     t.index ["cost_center_id"], name: "index_contractors_on_cost_center_id"
+    t.index ["user_id"], name: "index_contractors_on_user_id"
   end
 
   create_table "cost_centers", force: :cascade do |t|
@@ -209,6 +213,7 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "user_owner_id"
     t.string "sales_state", default: "SIN COMPRAS"
     t.boolean "has_many_quotes", default: false
+    t.index "EXTRACT(year FROM start_date)", name: "index_cost_centers_on_start_date_year"
     t.index ["contact_id"], name: "index_cost_centers_on_contact_id"
     t.index ["created_at"], name: "index_cost_centers_on_created_at"
     t.index ["customer_id"], name: "index_cost_centers_on_customer_id"
@@ -236,7 +241,9 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.string "number_invoice"
     t.float "engineering_value", default: 0.0
     t.float "others_value", default: 0.0
+    t.index "EXTRACT(year FROM invoice_date)", name: "index_customer_invoices_on_invoice_date_year"
     t.index ["cost_center_id"], name: "index_customer_invoices_on_cost_center_id"
+    t.index ["sales_order_id"], name: "index_customer_invoices_on_sales_order_id"
   end
 
   create_table "customer_reports", force: :cascade do |t|
@@ -257,6 +264,7 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "update_user"
     t.integer "last_user_edited_id"
     t.index ["cost_center_id"], name: "index_customer_reports_on_cost_center_id"
+    t.index ["user_id"], name: "index_customer_reports_on_user_id"
   end
 
   create_table "customer_reports_reports", id: false, force: :cascade do |t|
@@ -294,6 +302,7 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "last_user_edited_id"
     t.integer "user_id"
     t.float "anticipo"
+    t.index ["user_id"], name: "index_expense_ratios_on_user_id"
   end
 
   create_table "material_invoices", force: :cascade do |t|
@@ -323,7 +332,10 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.datetime "updated_at", null: false
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index "EXTRACT(year FROM sales_date)", name: "index_materials_on_sales_date_year"
+    t.index "EXTRACT(year FROM sales_date), EXTRACT(month FROM sales_date)", name: "index_materials_on_sales_date_year_month"
     t.index ["cost_center_id"], name: "index_materials_on_cost_center_id"
+    t.index ["user_id"], name: "index_materials_on_user_id"
   end
 
   create_table "module_controls", force: :cascade do |t|
@@ -347,6 +359,8 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["cost_center_id"], name: "index_notification_alerts_on_cost_center_id"
+    t.index ["state", "date_update"], name: "index_notification_alerts_on_state_and_date_update", order: { date_update: :desc }
+    t.index ["state"], name: "index_notification_alerts_on_state"
   end
 
   create_table "parameterizations", force: :cascade do |t|
@@ -411,6 +425,8 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.string "module"
     t.text "description"
     t.string "type_edit", default: "edito"
+    t.index ["state", "created_at"], name: "index_register_edits_on_state_and_created_at", order: { created_at: :desc }
+    t.index ["state"], name: "index_register_edits_on_state"
   end
 
   create_table "report_expense_options", force: :cascade do |t|
@@ -443,6 +459,13 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "last_user_edited_id"
     t.boolean "is_acepted", default: false
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
+    t.index ["created_at"], name: "index_report_expenses_on_created_at"
+    t.index ["invoice_date"], name: "index_report_expenses_on_invoice_date"
+    t.index ["is_acepted"], name: "index_report_expenses_on_is_acepted"
+    t.index ["payment_type_id"], name: "index_report_expenses_on_payment_type_id"
+    t.index ["type_identification_id"], name: "index_report_expenses_on_type_identification_id"
+    t.index ["user_id"], name: "index_report_expenses_on_user_id"
+    t.index ["user_invoice_id"], name: "index_report_expenses_on_user_invoice_id"
   end
 
   create_table "reports", force: :cascade do |t|
@@ -473,6 +496,8 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.float "value_displacement_hours"
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.index "EXTRACT(year FROM report_date)", name: "index_reports_on_report_date_year"
+    t.index "EXTRACT(year FROM report_date), EXTRACT(month FROM report_date)", name: "index_reports_on_report_date_year_month"
     t.index ["contact_id"], name: "index_reports_on_contact_id"
     t.index ["cost_center_id"], name: "index_reports_on_cost_center_id"
     t.index ["customer_id"], name: "index_reports_on_customer_id"
@@ -507,6 +532,10 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.integer "update_user"
     t.integer "last_user_edited_id"
     t.index ["cost_center_id"], name: "index_sales_orders_on_cost_center_id"
+    t.index ["created_date"], name: "index_sales_orders_on_created_date"
+    t.index ["last_user_edited_id"], name: "index_sales_orders_on_last_user_edited_id"
+    t.index ["order_number"], name: "index_sales_orders_on_order_number"
+    t.index ["user_id"], name: "index_sales_orders_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -532,6 +561,11 @@ ActiveRecord::Schema.define(version: 2026_02_02_200002) do
     t.boolean "force_save", default: false
     t.string "microsoft_id"
     t.index ["cost_center_id"], name: "index_shifts_on_cost_center_id"
+    t.index ["end_date"], name: "index_shifts_on_end_date"
+    t.index ["start_date"], name: "index_shifts_on_start_date"
+    t.index ["user_id"], name: "index_shifts_on_user_id"
+    t.index ["user_responsible_id", "start_date", "end_date"], name: "index_shifts_on_user_dates"
+    t.index ["user_responsible_id"], name: "index_shifts_on_user_responsible_id"
   end
 
   create_table "shifts_users", id: false, force: :cascade do |t|

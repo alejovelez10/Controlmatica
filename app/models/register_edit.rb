@@ -15,6 +15,11 @@
 #  register_user_id :integer
 #  user_id          :integer
 #
+# Indexes
+#
+#  index_register_edits_on_state                 (state)
+#  index_register_edits_on_state_and_created_at  (state,created_at DESC)
+#
 
 class RegisterEdit < ApplicationRecord
     belongs_to :user

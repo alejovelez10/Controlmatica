@@ -21,7 +21,10 @@
 #
 # Indexes
 #
-#  index_materials_on_cost_center_id  (cost_center_id)
+#  index_materials_on_cost_center_id         (cost_center_id)
+#  index_materials_on_sales_date_year        (EXTRACT(year FROM sales_date))
+#  index_materials_on_sales_date_year_month  (EXTRACT(year FROM sales_date), EXTRACT(month FROM sales_date))
+#  index_materials_on_user_id                (user_id)
 #
 
 class MaterialSerializer < ActiveModel::Serializer
@@ -67,6 +70,7 @@ class MaterialSerializer < ActiveModel::Serializer
   end
 
   def sum_material_invoices
-    object.material_invoices.sum(:value)
+    # Usar la asociación precargada en vez de hacer query SUM separada
+    object.material_invoices.map(&:value).compact.sum
   end
 end

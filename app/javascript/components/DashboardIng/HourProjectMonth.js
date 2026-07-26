@@ -61,32 +61,27 @@ class HourProjectMonth extends Component {
         return (
             <div className='row'>
                 <div className='col-md-6'>
-                    <div className='p-1' style={{ display: "flex", gap: "10px" }}>
+                    <div className='dashboard-filters'>
                         <select
                             name="year"
-                            className={`form form-control`}
+                            className="dashboard-select"
                             value={this.state.form.year}
                             onChange={this.handleChange}
-                            style={{ width: "200px" }}
                         >
                             <option value="">Seleccione año</option>
+                            <option value="2026">2026</option>
                             <option value="2025">2025</option>
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
                             <option value="2022">2022</option>
                             <option value="2021">2021</option>
                             <option value="2020">2020</option>
-                            <option value="2019">2019</option>
-                            <option value="2018">2018</option>
-                            <option value="2017">2017</option>
-
                         </select>
                         <select
                             name="month"
-                            className={`form form-control`}
+                            className="dashboard-select"
                             value={this.state.form.month}
                             onChange={this.handleChange}
-                            style={{ width: "200px" }}
                         >
                             <option value="">Seleccione mes</option>
                             <option value="1">Enero</option>
@@ -101,20 +96,21 @@ class HourProjectMonth extends Component {
                             <option value="10">Octubre</option>
                             <option value="11">Noviembre</option>
                             <option value="12">Diciembre</option>
-
-
-
                         </select>
-                        <button className='btn btn-primary' onClick={() => this.filter()}>Filtrar </button>
+                        <button className='dashboard-btn-filter' onClick={() => this.filter()}>
+                            <i className="fas fa-filter" style={{ marginRight: '6px' }}></i>
+                            Filtrar
+                        </button>
                     </div>
-                    <hr />
-                    <BarReporterHours data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES"} leyend={false} height={this.props.height} />
+                    <div className="dashboard-card">
+                        <BarReporterHours data={this.state.data} title={"Horas por Proyecto del Mes"} leyend={false} height={this.props.height} />
+                    </div>
                 </div>
-                <div className='col-md-6' style={{ marginTop: "45px" }}>
-                    <hr />
-                    <DonutDaysReport data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO MES %"} height={this.props.height} />
+                <div className='col-md-6'>
+                    <div className="dashboard-card" style={{ marginTop: "76px" }}>
+                        <DonutDaysReport data={this.state.data} title={"Distribución de Horas por Proyecto"} height={this.props.height} />
+                    </div>
                 </div>
-
             </div>
         )
 

@@ -1,80 +1,96 @@
 class ModuleControlsController < ApplicationController
-    before_action :set_module_control, only: [:destroy, :edit, :update, :show, :get_accion_modules]
-    before_action :authenticate_user!
-    skip_before_action :verify_authenticity_token
-  
-    def index
-      contractors = ModuleControl.find_by_name("Tableristas")
+  before_action :authenticate_user!
+  skip_before_action :verify_authenticity_token, only: [:create, :update, :destroy, :get_actions, :get_accion_modules]
 
-      create = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Crear").exists?
-      edit = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Editar").exists?
-      delete = current_user.rol.accion_modules.where(module_control_id: contractors.id).where(name: "Eliminar").exists?
-  
-      @estados = {      
-        create: (current_user.rol.name == "Administrador" ? true : create),
-        edit: (current_user.rol.name == "Administrador" ? true : edit),
-        delete: (current_user.rol.name == "Administrador" ? true : delete),
-        gestionar: (current_user.rol.name == "Administrador" ? true : true)
+  SORTABLE_COLUMNS = %w[name description].freeze
+
+  def index
+    mod = ModuleControl.find_by_name("Tableristas")
+    if mod
+      perms = current_user.rol.accion_modules.where(module_control_id: mod.id).pluck(:name)
+      is_admin = current_user.rol.name == "Administrador"
+      @estados = {
+        create:    is_admin || perms.include?("Crear"),
+        edit:      is_admin || perms.include?("Editar"),
+        delete:    is_admin || perms.include?("Eliminar"),
+        gestionar: true,
       }
-    end
-  
-    def get_actions
-      @modulo = ModuleControl.all
-      render :json => @modulo, include: { :user => { :only => [:name, :email] }}
-    end
-  
-  
-    def get_accion_modules
-        @accion_module = AccionModule.where(module_control_id: @modulo.id)
-      render :json => @accion_module
-    end
-    
-  
-    def create
-        @modulo = ModuleControl.create(module_params)
-        if @modulo.save
-          render :json => @modulo
-        else
-          render :json => @modulo.errors
-        end
-    end
-  
-    def new
-      
-    end
-  
-    def edit
-      render :json => @modulo
-    end
-  
-    def update 
-      if @modulo.update(module_params)
-        render :json => {
-          message: "¡El Registro fue actualizado con exito!"
-        }
-      else 
-        render :json => {
-          message: "¡El Registro fue actualizado con exito!"
-        }
-      end
-    end
-  
-    def destroy
-          if @modulo.destroy
-          render :json => @modulo
-        else 
-          render :json => @modulo.errors
-        end
-    end
-  
-    private 
-  
-    def set_module_control
-        @modulo = ModuleControl.find(params[:id])
-    end
-  
-    def module_params
-      params.permit(:name, :description, :user_id)
+    else
+      @estados = { create: false, edit: false, delete: false, gestionar: false }
     end
   end
-  
+
+  def get_actions
+    modules = ModuleControl.all
+
+    if params[:name].present?
+      modules = modules.where("LOWER(name) LIKE ?", "%#{params[:name].downcase}%")
+    end
+
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      modules = modules.order(params[:sort] => direction)
+    else
+      modules = modules.order(created_at: :desc)
+    end
+
+    page = (params[:page] || 1).to_i
+    per_page = [(params[:per_page] || 10).to_i, 100].min
+    total = modules.count
+    paginated = modules.includes(:accion_modules).offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      data: paginated.as_json(
+        only: [:id, :name, :description],
+        include: { accion_modules: { only: [:id, :name, :description] } }
+      ),
+      meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
+    }
+  end
+
+  def show
+    @modulo = ModuleControl.find(params[:id])
+    render json: @modulo.as_json(
+      only: [:id, :name, :description],
+      include: { accion_modules: { only: [:id, :name, :description] } }
+    )
+  end
+
+  def get_accion_modules
+    @modulo = ModuleControl.find(params[:id])
+    render json: @modulo.accion_modules.order(:name).as_json(only: [:id, :name, :description])
+  end
+
+  def create
+    @modulo = ModuleControl.new(module_params)
+    if @modulo.save
+      render json: { success: true, message: "Módulo creado exitosamente" }, status: :created
+    else
+      render json: { success: false, errors: @modulo.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  def update
+    @modulo = ModuleControl.find(params[:id])
+    if @modulo.update(module_params)
+      render json: { success: true, message: "Módulo actualizado exitosamente" }
+    else
+      render json: { success: false, errors: @modulo.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @modulo = ModuleControl.find(params[:id])
+    if @modulo.destroy
+      render json: @modulo
+    else
+      render json: @modulo.errors.full_messages, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def module_params
+    params.permit(:name, :description, :user_id)
+  end
+end

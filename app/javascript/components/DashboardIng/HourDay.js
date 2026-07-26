@@ -51,26 +51,23 @@ class HourDay extends Component {
 
     render() {
         return (
-            <div >
-                <div className='p-1'>
+            <div>
+                <div className='dashboard-filters'>
                     <select
                         name="value"
-                        className={`form form-control`}
+                        className="dashboard-select"
                         value={this.state.form.value}
                         onChange={this.handleChange}
-                        style={{ width: "200px" }}
                     >
-                        <option value="">Seleccione año</option>
-                        <option value="10">Ultimos 10 días</option>
-                        <option value="15">Ultimos 15 días</option>
-                        <option value="30">Ultimos 30 días</option>
-
+                        <option value="">Seleccione período</option>
+                        <option value="10">Últimos 10 días</option>
+                        <option value="15">Últimos 15 días</option>
+                        <option value="30">Últimos 30 días</option>
                     </select>
-                    {/* <button className='btn btn-primary' onClick={()=>this.loadData("6")}> 6 </button>
-                        <button className='btn btn-primary' onClick={()=>this.loadData("3")}> 3 </button> */}
                 </div>
-                <hr />
-                <BarReporterHours data={this.state.data} title={"ESTAS SON TUS HORAS POR PROYECTO DÍA"} leyend={true}  height={this.props.height}/>
+                <div className="dashboard-card">
+                    <BarReporterHours data={this.state.data} title={"Horas por Proyecto por Día"} leyend={true} height={this.props.height}/>
+                </div>
             </div>
         )
 

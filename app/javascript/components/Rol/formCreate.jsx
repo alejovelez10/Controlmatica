@@ -1,60 +1,88 @@
 import React from "react";
-import {Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Modal } from "reactstrap";
 import CheckboxContainer from "../Rol/checkbox_container";
 
-class formCreate extends React.Component {
+class FormCreate extends React.Component {
   constructor(props) {
     super(props);
   }
 
   render() {
+    const { modal, toggle, backdrop, titulo, formValues, onChangeForm, FormSubmit, submit, nameSubmit, checkedItems, handleChangeAccions, checkboxes, modules } = this.props;
+
     return (
-      <React.Fragment>
-        <Modal returnFocusAfterClose={true} isOpen={this.props.modal} className="modal-lg modal-dialog-centered" toggle={this.props.toggle} backdrop={this.props.backdrop}>
-          <ModalHeader className="title-modal" toggle={this.props.toggle}> <i className="app-menu__icon fa fa-street-view mr-2"></i> {this.props.titulo} </ModalHeader>
+      <Modal isOpen={modal} toggle={toggle} className="modal-lg modal-dialog-centered" backdrop={backdrop}>
+        <div className="cm-modal-container">
+          {/* Header */}
+          <div className="cm-modal-header">
+            <div className="cm-modal-header-content">
+              <div className="cm-modal-icon">
+                <i className="fas fa-user-tag" />
+              </div>
+              <div>
+                <h2 className="cm-modal-title">{titulo}</h2>
+                <p className="cm-modal-subtitle">Configure los permisos del rol</p>
+              </div>
+            </div>
+            <button type="button" className="cm-modal-close" onClick={toggle}>
+              <i className="fas fa-times" />
+            </button>
+          </div>
 
-          <form onSubmit={this.props.FormSubmit}>
-            <ModalBody>
-            <div className="row">
+          {/* Form Content */}
+          <form onSubmit={FormSubmit}>
+            <div className="cm-modal-body">
+              {/* Name Input */}
+              <div className="cm-form-group">
+                <label className="cm-label">
+                  <i className="fas fa-tag" /> Nombre <span className="cm-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  className="cm-input"
+                  value={formValues.name}
+                  onChange={onChangeForm}
+                  placeholder="Nombre del rol"
+                  autoComplete="off"
+                />
+              </div>
 
-                  <div className="col-md-12">
-                    <label>Nombre <small className="validate-label">*</small></label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={this.props.formValues.name}
-                      onChange={this.props.onChangeForm}
-                      className="form form-control"
-                      autoComplete="off"
-                      placeholder="Nombre"
-                    />
-
-                    <hr/>
+              {/* Permissions Section */}
+              <div className="cm-permissions-section">
+                <div className="cm-permissions-header">
+                  <div className="cm-contacts-icon">
+                    <i className="fas fa-lock" />
                   </div>
-                  
-
-
-                  <div className="col-md-12">
-                    <CheckboxContainer
-                      checkedItems={this.props.checkedItems}
-                      handleChangeAccions={this.props.handleChangeAccions}
-                      checkboxes={this.props.checkboxes}
-                      modules={this.props.modules}
-                    />
-                  </div>
+                  <span style={{ fontWeight: 600, color: "#374151", fontSize: "16px" }}>
+                    Permisos del rol
+                  </span>
+                </div>
+                <div className="cm-permissions-body">
+                  <CheckboxContainer
+                    checkedItems={checkedItems}
+                    handleChangeAccions={handleChangeAccions}
+                    checkboxes={checkboxes}
+                    modules={modules}
+                  />
+                </div>
+              </div>
             </div>
 
-            </ModalBody>
-
-            <ModalFooter>
-                <button className="btn btn-light" onClick={this.props.toggle}>Cerrar</button>
-                <button className="btn btn-secondary" onClick={this.props.submit}>{this.props.nameSubmit}</button>
-            </ModalFooter>
+            {/* Footer */}
+            <div className="cm-modal-footer">
+              <button type="button" className="cm-btn cm-btn-cancel" onClick={toggle}>
+                <i className="fas fa-times" /> Cancelar
+              </button>
+              <button type="submit" className="cm-btn cm-btn-submit" onClick={submit}>
+                <i className="fas fa-save" /> {nameSubmit}
+              </button>
+            </div>
           </form>
-        </Modal>
-      </React.Fragment>
+        </div>
+      </Modal>
     );
   }
 }
 
-export default formCreate;
+export default FormCreate;

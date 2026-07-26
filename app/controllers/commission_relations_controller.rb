@@ -1,48 +1,68 @@
 class CommissionRelationsController < ApplicationController
   before_action :authenticate_user!
   before_action :commission_relation_find, only: [:update, :destroy]
+  include ApplicationHelper
 
   def index
-    report_expense = ModuleControl.find_by_name("Relación de comisiones")
-
-    create = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Crear").exists?
-    edit = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Editar").exists?
-    delete = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Eliminar").exists?
-    show_pdf = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver pdf").exists?
-
+    # Usar helpers memoizados - evita queries de ModuleControl y accion_modules
     @estados = {
-      create: (current_user.rol.name == "Administrador" ? true : create),
-      edit: (current_user.rol.name == "Administrador" ? true : edit),
-      delete: (current_user.rol.name == "Administrador" ? true : delete),
-      pdf: (current_user.rol.name == "Administrador" ? true : show_pdf),
+      create: is_admin? || has_menu_permission?("Relación de comisiones", "Crear"),
+      edit: is_admin? || has_menu_permission?("Relación de comisiones", "Editar"),
+      delete: is_admin? || has_menu_permission?("Relación de comisiones", "Eliminar"),
+      pdf: is_admin? || has_menu_permission?("Relación de comisiones", "Ver pdf"),
     }
   end
 
   def get_commission_relations
-    report_expense = ModuleControl.find_by_name("Relación de comisiones")
-    show_all = current_user.rol.accion_modules.where(module_control_id: report_expense.id).where(name: "Ver todos").exists?
-    validation = (current_user.rol.name == "Administrador" ? true : show_all)
+    # Administrador SIEMPRE ve todo, sin importar permisos
+    show_all = is_admin? || has_menu_permission?("Relación de comisiones", "Ver todos")
 
-    if params[:user_direction_id] || params[:user_report_id] || params[:observations] || params[:start_date] || params[:end_date] || params[:creation_date] || params[:area]
-      if validation
-        expense_ratios = CommissionRelation.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).paginate(page: params[:page], :per_page => 10)
-        total = CommissionRelation.search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).count
-      else
-        expense_ratios = CommissionRelation.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).paginate(page: params[:page], :per_page => 10)
-        total = CommissionRelation.where(user_report_id: current_user.id).search(params[:user_direction_id], params[:user_report_id], params[:observations], params[:start_date], params[:end_date], params[:creation_date], params[:area]).count
-      end
+    # Base query con includes para evitar N+1 (serializer usa user_report, user_direction, last_user_edited, user)
+    base_query = CommissionRelation.includes(:user_report, :user_direction, :last_user_edited, :user)
+
+    # Filtrar por usuario si no tiene permiso de ver todos
+    unless show_all
+      base_query = base_query.where(user_report_id: current_user.id)
+    end
+
+    # Aplicar filtros de búsqueda si hay parámetros
+    has_filters = params[:user_direction_id].present? || params[:user_report_id].present? ||
+                  params[:observations].present? || params[:start_date].present? ||
+                  params[:end_date].present? || params[:creation_date].present? || params[:area].present?
+
+    if has_filters
+      base_query = base_query.search(
+        params[:user_direction_id], params[:user_report_id], params[:observations],
+        params[:start_date], params[:end_date], params[:creation_date], params[:area]
+      )
+    end
+
+    # Obtener total antes de paginar (una sola query con count)
+    total = base_query.count
+
+    # Ordenamiento dinámico con validación
+    sort_dir = params[:sort_dir] == "asc" ? "ASC" : "DESC"
+
+    # Columnas directas de la tabla
+    direct_columns = %w[area creation_date start_date end_date observations created_at updated_at]
+
+    if direct_columns.include?(params[:sort_key])
+      sort_order = "commission_relations.#{params[:sort_key]} #{sort_dir}"
+      commission_relations = base_query.order(Arel.sql(sort_order)).paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "user_direction_name"
+      commission_relations = base_query.joins("LEFT JOIN users AS directors ON directors.id = commission_relations.user_direction_id")
+                                       .order(Arel.sql("directors.names #{sort_dir}"))
+                                       .paginate(page: params[:page], per_page: params[:filter] || 50)
+    elsif params[:sort_key] == "user_report_name"
+      commission_relations = base_query.joins("LEFT JOIN users AS reporters ON reporters.id = commission_relations.user_report_id")
+                                       .order(Arel.sql("reporters.names #{sort_dir}"))
+                                       .paginate(page: params[:page], per_page: params[:filter] || 50)
     else
-      if validation
-        expense_ratios = CommissionRelation.all.paginate(page: params[:page], :per_page => 10)
-        total = CommissionRelation.all.count
-      else
-        expense_ratios = CommissionRelation.where(user_report_id: current_user.id).paginate(page: params[:page], :per_page => 10)
-        total = CommissionRelation.where(user_report_id: current_user.id).count
-      end
+      commission_relations = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:filter] || 50)
     end
 
     render json: {
-      data: ActiveModelSerializers::SerializableResource.new(expense_ratios.order(created_at: :desc), each_serializer: CommissionRelationSerializer),
+      data: ActiveModelSerializers::SerializableResource.new(commission_relations, each_serializer: CommissionRelationSerializer),
       total: total,
     }
   end
@@ -126,5 +146,10 @@ class CommissionRelationsController < ApplicationController
   def commission_relation_update
     defaults = { last_user_edited_id: current_user.id }
     params.permit(:last_user_edited_id, :creation_date, :user_report_id, :start_date, :end_date, :area, :observations, :user_direction_id).reverse_merge(defaults)
+  end
+
+  # Memoizado para evitar queries repetidas de rol
+  def is_admin?
+    @_is_admin ||= current_user.rol.name == "Administrador"
   end
 end
