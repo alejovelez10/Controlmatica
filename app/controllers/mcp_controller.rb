@@ -16,7 +16,14 @@ class McpController < ActionController::Base
       name: "controlmatica",
       version: "1.0.0",
       tools: self.class.mcp_tools,
-      server_context: { api_key: request.headers["X-Api-Key"] },
+      server_context: {
+        api_key: request.headers["X-Api-Key"],
+        # Email del usuario que originó la request en el sistema consumidor
+        # (Taimes lo envía como X-Actor-Email). Se usa para resolver el usuario
+        # "actor" real por correo (ver ApplicationTool.actor_user); si no llega o
+        # no matchea, se cae al Administrador por defecto.
+        actor_email: request.headers["X-Actor-Email"],
+      },
     )
 
     transport = MCP::Server::Transports::StreamableHTTPTransport.new(

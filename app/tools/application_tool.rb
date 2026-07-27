@@ -38,16 +38,40 @@ class ApplicationTool < MCP::Tool
 
     # Usuario que "actúa" en las escrituras. En una API no hay usuario de request,
     # así que usamos el Administrador (primero por id) o, en su defecto, el primer user.
-    def actor_user(_tenant = nil)
+    #
+    # Si el server_context trae actor_email (Taimes lo envía como X-Actor-Email),
+    # se prioriza el usuario cuyo correo coincida (case-insensitive). Esto permite
+    # atribuir la escritura al usuario real que la originó en Taimes en vez de a un
+    # Administrador genérico. Sin match / sin email → fallback al Administrador.
+    def actor_user(_tenant = nil, server_context = nil)
+      email = actor_email(server_context)
+      if email
+        matched = User.where("LOWER(email) = ?", email).order(:id).first
+        return matched if matched
+      end
       User.joins(:rol).where(rols: { name: "Administrador" }).order(:id).first ||
         User.order(:id).first
     end
 
+    # Correo del actor recibido en el server_context (normalizado), o nil.
+    def actor_email(server_context)
+      (server_context && server_context[:actor_email]).to_s.strip.downcase.presence
+    end
+
+    # Resuelve el usuario del actor por correo SIN caer al Administrador. Útil para
+    # defaultear campos "quién reporta" solo cuando hay un match real de correo.
+    def actor_user_by_email(server_context)
+      email = actor_email(server_context)
+      return nil unless email
+
+      User.where("LOWER(email) = ?", email).order(:id).first
+    end
+
     # Ejecuta un bloque con User.current seteado al actor (para callbacks que
     # dependen de Thread.current[:user]). Restaura el valor previo al terminar.
-    def as_actor(tenant)
+    def as_actor(tenant, server_context = nil)
       previous = User.current
-      actor = actor_user(tenant)
+      actor = actor_user(tenant, server_context)
       User.current = actor
       yield actor
     ensure
