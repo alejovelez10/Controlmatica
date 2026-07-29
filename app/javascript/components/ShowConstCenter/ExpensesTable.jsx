@@ -19,6 +19,10 @@ class ExpensesTable extends Component {
       id: "",
       data: [],
       loading: true,
+      meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
+      searchTerm: "",
+      sortKey: null,
+      sortDir: "desc",
       report_expense_options_type: [],
       report_expense_options_payment: [],
       formCreate: {
@@ -64,12 +68,41 @@ class ExpensesTable extends Component {
     this.setState({ report_expense_options_type: type, report_expense_options_payment: payment });
   };
 
-  loadData = () => {
+  loadData = (page, perPage, searchTerm, sortKey, sortDir) => {
+    var p = page || this.state.meta.page;
+    var pp = perPage || this.state.meta.per_page;
+    var term = searchTerm !== undefined ? searchTerm : this.state.searchTerm;
+    var sk = sortKey !== undefined ? sortKey : this.state.sortKey;
+    var sd = sortDir !== undefined ? sortDir : this.state.sortDir;
+
     this.setState({ loading: true });
-    fetch("/get_cost_center_report_expenses/" + this.props.cost_center.id)
+
+    var params = ["page=" + p, "per_page=" + pp];
+    if (term) params.push("q=" + encodeURIComponent(term));
+    if (sk) params.push("sort=" + sk + "&dir=" + sd);
+
+    fetch("/get_cost_center_report_expenses/" + this.props.cost_center.id + "?" + params.join("&"))
       .then((r) => r.json())
-      .then((data) => { this.setState({ data: data.data, loading: false }); });
+      .then((data) => {
+        var total = data.total || 0;
+        var lastPage = Math.max(1, Math.ceil(total / pp));
+        // Si la página quedó fuera de rango (ej. tras eliminar el último registro), recargar la última válida
+        if (p > lastPage) { return this.loadData(lastPage, pp, term, sk, sd); }
+        this.setState({
+          data: data.data || [],
+          meta: { total: total, page: p, per_page: pp, total_pages: Math.max(1, Math.ceil(total / pp)) },
+          loading: false,
+          searchTerm: term,
+          sortKey: sk,
+          sortDir: sd,
+        });
+      });
   };
+
+  handlePageChange = (page) => { this.loadData(page); };
+  handlePerPageChange = (pp) => { this.loadData(1, pp); };
+  handleSearch = (term) => { this.loadData(1, undefined, term); };
+  handleSort = (key, dir) => { this.loadData(1, undefined, undefined, key, dir); };
 
   toogle = (from) => {
     if (from === "new") { this.setState({ modal: true }); }
@@ -133,8 +166,10 @@ class ExpensesTable extends Component {
     fetch(url, { method: method, body: JSON.stringify(this.state.formCreate), headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken() } })
       .then((r) => r.json())
       .then((data) => {
+        var wasEdit = self.state.modeEdit;
         self.setState({ modal: false });
-        self.loadData();
+        // Al crear, volver a la primera página para ver el nuevo registro
+        self.loadData(wasEdit ? undefined : 1);
         self.clearValues();
         Swal.fire({ position: "center", icon: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
       });
@@ -188,6 +223,9 @@ class ExpensesTable extends Component {
         )}
         <CmDataTable
           columns={this.columns} data={this.state.data} loading={this.state.loading}
+          serverPagination serverMeta={this.state.meta}
+          onPageChange={this.handlePageChange} onPerPageChange={this.handlePerPageChange}
+          onSearch={this.handleSearch} onSort={this.handleSort}
           actions={this.renderActions} stickyActions
           searchPlaceholder="Buscar gasto..." emptyMessage="No hay gastos registrados"
           headerActions={this.props.estados.cost_center_edit ? <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={() => this.toogle("new")}><i className="fas fa-plus" /> Nuevo Gasto</button> : null}

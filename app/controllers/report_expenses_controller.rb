@@ -87,11 +87,33 @@ class ReportExpensesController < ApplicationController
                                       params[:start_date], params[:end_date], params[:is_acepted])
     end
 
+    # Búsqueda libre del buscador de la tabla
+    if params[:q].present?
+      term = "%#{params[:q].to_s.downcase}%"
+      base_query = base_query.where(
+        "LOWER(report_expenses.invoice_name) LIKE :t OR LOWER(report_expenses.description) LIKE :t OR " \
+        "LOWER(report_expenses.invoice_number) LIKE :t OR LOWER(report_expenses.identification) LIKE :t",
+        t: term
+      )
+    end
+
     # Obtener total antes de paginar
     total = base_query.count
 
-    # Paginar y ordenar
-    report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:per_page] || 50)
+    # Ordenamiento dinámico con validación
+    sort_dir = params[:dir] == "asc" ? "ASC" : "DESC"
+    direct_columns = %w[invoice_name invoice_date identification description invoice_number invoice_value invoice_tax invoice_total is_acepted created_at updated_at]
+
+    ordered_query = if direct_columns.include?(params[:sort])
+        base_query.order(Arel.sql("report_expenses.#{params[:sort]} #{sort_dir}"))
+      elsif params[:sort] == "user_invoice_name"
+        base_query.joins(:user_invoice).order(Arel.sql("users.names #{sort_dir}"))
+      else
+        base_query.order(created_at: :desc)
+      end
+
+    # Paginar
+    report_expenses = ordered_query.paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),

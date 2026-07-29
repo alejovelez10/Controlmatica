@@ -3,8 +3,9 @@
 # Servidor MCP de Controlmatica (SDK oficial `mcp`, Streamable HTTP, stateless).
 #
 # Un único endpoint POST /mcp sirve todo el protocolo JSON-RPC. Se construye un
-# MCP::Server fresco por request con el X-Api-Key del header en server_context;
-# no hay sesión ni SSE, así cualquier proceso Puma atiende cualquier request.
+# MCP::Server fresco por request con el X-Api-Key (header o query param) en
+# server_context; no hay sesión ni SSE, así cualquier proceso Puma atiende
+# cualquier request.
 #
 # NO hay que tocar este controller al agregar tools: las auto-descubre desde
 # app/tools/*_tool.rb.
@@ -17,12 +18,18 @@ class McpController < ActionController::Base
       version: "1.0.0",
       tools: self.class.mcp_tools,
       server_context: {
-        api_key: request.headers["X-Api-Key"],
+        # Preferimos el header (así lo envía Taimes). El fallback por query param
+        # existe para clientes que no permiten headers custom, como el diálogo
+        # "Add custom connector" de claude.ai, que solo acepta una URL:
+        #   https://<host>/mcp?api_key=<MCP_API_KEY>&actor_email=<correo>
+        # OJO: la key viaja en la URL y queda en los logs del router → rotarla si
+        # se filtra, y preferir el header siempre que el cliente lo soporte.
+        api_key: request.headers["X-Api-Key"].presence || params[:api_key],
         # Email del usuario que originó la request en el sistema consumidor
         # (Taimes lo envía como X-Actor-Email). Se usa para resolver el usuario
         # "actor" real por correo (ver ApplicationTool.actor_user); si no llega o
         # no matchea, se cae al Administrador por defecto.
-        actor_email: request.headers["X-Actor-Email"],
+        actor_email: request.headers["X-Actor-Email"].presence || params[:actor_email],
       },
     )
 
