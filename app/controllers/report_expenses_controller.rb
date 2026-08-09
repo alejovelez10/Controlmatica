@@ -113,7 +113,7 @@ class ReportExpensesController < ApplicationController
       end
 
     # Paginar
-    report_expenses = ordered_query.paginate(page: params[:page], per_page: params[:per_page] || 50)
+    report_expenses = ordered_query.paginate(page: params[:page], per_page: params[:per_page] || 100)
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),

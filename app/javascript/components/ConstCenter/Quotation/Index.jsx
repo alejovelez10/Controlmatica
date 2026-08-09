@@ -165,6 +165,7 @@ class Index extends Component {
           columns={this.columns}
           data={this.state.data}
           loading={this.state.loading}
+          perPage={100}
           actions={this.renderActions}
           stickyActions
           searchPlaceholder="Buscar cotización..."

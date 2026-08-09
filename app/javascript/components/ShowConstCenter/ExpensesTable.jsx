@@ -19,7 +19,7 @@ class ExpensesTable extends Component {
       id: "",
       data: [],
       loading: true,
-      meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
+      meta: { total: 0, page: 1, per_page: 100, total_pages: 1 },
       searchTerm: "",
       sortKey: null,
       sortDir: "desc",

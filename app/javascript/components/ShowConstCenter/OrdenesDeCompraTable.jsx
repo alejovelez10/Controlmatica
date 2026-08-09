@@ -160,7 +160,7 @@ class OrdenesDeCompraTable extends Component {
         <CmDataTable
           columns={this.columns} data={this.state.data} loading={this.state.loading}
           actions={this.renderActions} stickyActions
-          searchPlaceholder="Buscar orden..." emptyMessage="No hay órdenes de compra"
+          perPage={100} searchPlaceholder="Buscar orden..." emptyMessage="No hay órdenes de compra"
           headerActions={this.props.estados.cost_center_edit ? <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={() => this.toogle("new")}><i className="fas fa-plus" /> Nueva Orden</button> : null}
           emptyAction={this.props.estados.cost_center_edit ? <button onClick={() => this.toogle("new")} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}><i className="fas fa-plus" /> Nueva Orden</button> : null}
         />

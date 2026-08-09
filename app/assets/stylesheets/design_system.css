@@ -1123,7 +1123,17 @@ select.cm-input {
 }
 
 .cm-tabs-content .cm-dt {
-  max-height: 500px;
+  max-height: none;
+}
+
+/* Las tablas dentro de los tabs crecen con su contenido (sin scroll vertical interno) */
+.cm-tabs-content .cm-dt-table-wrapper {
+  max-height: none;
+  overflow-x: auto;
+}
+
+.cm-tabs-content .cm-dt--skeleton {
+  height: auto;
 }
 
 /* ============================================
