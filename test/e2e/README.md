@@ -23,9 +23,15 @@ npm run report                # abre el reporte HTML de la ultima corrida
 |---|---|
 | `npm install` | ~3 s |
 | `npm run install:browsers` (una vez) | ~40 s, 95 MB |
-| `bin/webpack` en frio (packs-test y cache borrados, 29 packs) | **6,4 s** |
+| `bin/webpack` en frio (packs-test y cache borrados, 29 packs) | **6,2 s** |
 | `bin/webpack` saltado por mtime | 0 s |
-| `npm run test:smoke` completo (incluye levantar el server) | **~12 s**, 6 tests |
+| `npm run test:smoke` **en frio** (`rm -rf public/packs-test tmp/cache/webpacker`) | **~20 s**, 6 tests |
+| `npm run test:smoke` **en tibio** (packs ya compilados) | **~12 s**, 6 tests |
+
+Medidos en esta maquina (M-series, `node_modules` instalado, chromium ya
+descargado) con el server de test cayendose y levantandose en cada corrida. La
+fila "en frio" incluye los 6,2 s de webpack: son el mismo comando, la diferencia
+es solo si `prepare.js` salta la compilacion por mtime.
 
 ## Cosas que cuestan horas si no se saben
 
@@ -40,4 +46,12 @@ npm run report                # abre el reporte HTML de la ultima corrida
 - **Nunca usar helpers `*_url` de Rails en un spec**: `config/routes.rb` fija
   `default_url_options host: "controlmatica.herokuapp.com"` y apuntarian a
   **produccion**. Siempre rutas relativas sobre `baseURL`.
+- **`engines.node: "16.x"` del `package.json` de la raiz** (contrato con Heroku)
+  contra el Node 22 de las maquinas de desarrollo: cualquier `yarn <script>`
+  aborta con *"The engine node is incompatible with this module"*. Webpacker
+  caia ahi porque resolvia el binario con `yarn bin`, cuya salida viene con
+  codigos ANSI cuando stdout es una tuberia, y al no encontrar el archivo se iba
+  a su plan B `yarn webpack`. Arreglado en `bin/webpack` fijando
+  `WEBPACKER_NODE_MODULES_BIN_PATH`. Si vuelve a aparecer ese error, mirar ahi
+  antes que nada: el sintoma es un E2E que sale con exit 1 sin correr un test.
 - Los specs funcionales son del **paquete 12**. Aqui solo vive `smoke.spec.js`.
