@@ -86,6 +86,9 @@ Rails.application.routes.draw do
   post "upload_file/report_expenses", to: "report_expenses#upload_file"
   get "indicators_expenses", to: "report_expenses#indicators_expenses"
   get "get_report_expenses", to: "report_expenses#get_report_expenses"
+  # Multimoneda (paquete 05). Contrato en 00-ARQUITECTURA E.1: responde 200
+  # tanto en exito como en error y el frontend discrimina por `type`.
+  get "get_exchange_rate", to: "exchange_rates#get_exchange_rate"
   resources :notification_alerts, :only => [:index]
 
   get "get_expense_ratios", to: "expense_ratios#get_expense_ratios"
