@@ -15,6 +15,40 @@
 4. Su especificación está en `NN-<nombre>.md`. Ejecuta **solo** las tareas de ese paquete y respeta
    la matriz de propiedad §7.2: si un archivo es de otro paquete, no lo toques.
 
+### Protocolo de continuación (leer si la sesión se limpió)
+
+**Primero comprueba si quedó algo corriendo**: mira si el tablero tiene una ola en ⏳ y compárala
+con `git log --oneline -15`. Si la ola en curso ya tiene sus commits, terminó; si no, o se cortó o
+sigue viva. Ante la duda, **verifica el estado real corriendo la suite** antes de relanzar nada:
+relanzar una ola a medio hacer duplica trabajo y genera conflictos.
+
+**Orden de las olas** (no lo alteres, la auditoría verificó las dependencias):
+
+```
+1  → 01                    infraestructura de pruebas
+2  → 02, luego 03          esquema; después deuda técnica (comparten report_expense.rb)
+3a → 04, luego 05          presupuesto; después multimoneda
+3b → 06, luego 10*         comprobante+contabilidad; después solo el esqueleto de extracción
+4  → 07, luego 14          API y permisos; después reglas de gastos
+5  → 09 y 11 en paralelo   verificados disjuntos por la auditoría
+6  → 08                    frontend de presupuesto y formulario
+7  → 12                    E2E
+8  → 13                    cierre y documentación
+```
+
+\* Del paquete 10 **solo** el motor de reglas ya no aplica (se fue al 14) y el esqueleto del
+servicio de extracción. La llamada al modelo de visión es de Taimes: ver "Frontera de alcance".
+
+**Cómo se ejecuta cada ola**: un workflow por ola, con este ciclo por paquete —
+implementar → verificar (agente independiente que corre los comandos de verdad y **no** puede
+arreglar) → arreglar si quedó rojo, hasta 3 intentos → actualizar este tablero.
+Reglas que se le pasan a todos los agentes: nunca `git push`, nunca tocar producción, commits
+atómicos en español, respetar §7.2, y prohibido borrar pruebas o marcarlas `skip` para que pasen.
+
+**Los gotchas verificados** (User.current en callbacks, `rails runner` que se cuelga, credenciales
+de S3, etc.) están en la memoria del proyecto y en `00-ARQUITECTURA.md`. Pásalos siempre en el
+prompt: sin ellos los agentes los redescubren y pierden horas.
+
 ---
 
 ## Tablero
