@@ -75,7 +75,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. **Con el 05 mergeado la suite completa queda en `332 runs / 983 assertions / 0 fallos`, reconfirmada 3 veces con seeds 56250, 12345 y 99 (~6,9 s).** **Salvedades: 4 (ver bitácora ola 3a y 3a-bis)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo (fuera de la matriz §7.2), el criterio 26 (firma del acta de la Tarea 0) es del cliente, y **el criterio 9 NO se pudo re-verificar de forma independiente** (el sandbox bloqueó la mutación temporal): la evidencia es la del implementador |
 | 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48). **Salvedades: 5** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07; el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 (hoy son 23); **el commit `28218b2` tocó `test/models/report_expense_audit_legacy_test.rb`, que por §7.2 es del paquete 03, y perdió una aserción**; y `report_expense_import_currency_test.rb` **no ejercita `ReportExpense.import`** (reimplementa el mapeo dentro del propio test) |
 | 3b | 06 — Comprobante y contabilidad | ⚠️ | `d0f1444`..`76fcf2e` | **TERMINADO, pendiente de verificación independiente.** 5 commits. Todas las tareas vivas de los bloques A, B y C (A1, A3, A6, A7, A8, A9, B1, B3, B4, B10, B11 y C3 retiradas por auditoría): `ReceiptUploader` privado con las dos allowlists, comprobante montado y auditado (`audit_field :receipt_file`), `delete_receipt`/`download_receipt` con descarga forzada (§7.8), el **backend completo de Contabilidad** (5 endpoints, `filtered_scope` con la excepción de la corrección 13, `ids[]` como filtro válido y tope de 500), las **dos plantillas .axlsx a 18 columnas idénticas**, `ReportExpense.import` con detección de layout y las 2 claves 27-28 del list tool MCP. **100 pruebas propias verdes**; suite completa **432 runs / 1.281 assertions / 0 fallos**, corrida con 4 seeds distintos (~7,7 s). E2E Playwright: **6 passed**. **Salvedades: 4** — se **regeneraron 2 fixtures .xlsx del paquete 01** (su encabezado real contradecía §7.12), los criterios **5, 6** y el test "expone los campos nuevos" quedan **bloqueados por el paquete 07** (serializer + strong params), `KEYS.size` es **25 y no 28** (faltan las 17-19 del 11) y `GET /accounting_expenses` en HTML no tiene plantilla hasta que mergee el **09** |
-| 3b | 10 — IA: extracción y reglas | ⬜ | — | |
+| 3b | 10 — IA: extracción y reglas | ⚠️ | `41c8bbc`..`1ae2af0` | **Solo el esqueleto de extracción** (alcance reducido por decisión del cliente: la IA es de Taimes). 2 commits: `ReceiptExtractionService` completo salvo el seam `call_vision_model`, que levanta `NotImplementedError` documentado, más `test/support/fake_anthropic_client.rb` y **49 pruebas** de contrato sin red. Suite completa **481 runs / 1.432 assertions / 0 fallos**. **Salvedades: 5** — el kill switch arranca **apagado** (el plan lo daba en `true`), no se instaló `gem "anthropic"` (criterio 33), el motor de reglas se fue al **14**, y el endpoint `extract_receipt` + su ruta + su test quedan **declarados y no construidos** hasta que exista la extracción |
 | 4 | 07 — API, permisos y rutas | ⬜ | — | |
 | 5 | 09 — Frontend: tablas y contabilidad | ⬜ | — | |
 | 5 | 11 — MCP y contrato con Taimes | ⬜ | — | Sin la Tarea 1, ya hecha |
@@ -1244,3 +1244,70 @@ producción**, ni Heroku, ni una sola config var remota.
 `git status --short` vacío. `git branch -r` sin la rama: **nada empujado**. 5 commits atómicos, en
 español, con el POR QUÉ en el cuerpo y el trailer `Co-Authored-By`. **No se tocó producción**, ni
 Heroku, ni una config var remota, ni ninguna migración.
+
+---
+
+### Ola 3b — Paquete 10: SOLO el esqueleto del servicio de extracción
+
+**Estado honesto: verde, pero es una fracción del paquete original.** 2 commits atómicos,
+`41c8bbc..1ae2af0`. Nada empujado al remoto, producción intacta.
+
+**Por qué es tan poco.** Decisión del cliente (2026-08-10, "Frontera de alcance" de este mismo
+archivo): **todo lo que hable con un modelo de IA lo implementa el agente de Taimes**. Y el motor
+de reglas —la otra mitad del paquete 10— se fue completo al **paquete 14**. Lo que quedaba para
+esta ejecución era exactamente una cosa: dejarle a Taimes el hueco listo.
+
+**Qué se hizo**
+
+- `app/services/receipt_extraction_service.rb`: `extract(file, context = {})`, el `Result`
+  (`ok/fields/confidence/error/error_message/model/usage`, con `error` **singular** — la única
+  excepción documentada al `Result` canónico, §4.2), el `SCHEMA` de salida, el `SYSTEM_PROMPT`, la
+  validación de entrada (5 MB, formatos, HEIC rechazado, deducción por extensión), los umbrales de
+  confianza (0,30 / 0,60), la normalización de campos y los 9 códigos de error con su mensaje.
+- El seam `self.call_vision_model(payload)` **no se implementa**: levanta `NotImplementedError`
+  diciendo en una línea que lo completa Taimes, y arriba lleva el contrato de la respuesta y el
+  **ejemplo exacto del JSON** que debe devolver.
+- `test/support/fake_anthropic_client.rb` (doble + `WithFakeExtractor` + el payload de referencia)
+  y `test/services/receipt_extraction_service_test.rb` con **49 casos**. **Cero red**: ningún test
+  construye un cliente del SDK.
+- `config/application.yml` (gitignorado): las tres variables declaradas, con
+  `RECEIPT_EXTRACTION_ENABLED: "false"` y `ANTHROPIC_API_KEY` comentada.
+
+**Números reales medidos**
+
+| Comprobación | Comando | Resultado |
+|---|---|---|
+| Solo este paquete | `bin/rails test test/services/receipt_extraction_service_test.rb` | `49 runs, 151 assertions, 0 failures, 0 errors, 0 skips` (0,36 s) |
+| Suite completa (Spring) | `bin/rails test` | `481 runs, 1432 assertions, 0 failures, 0 errors, 0 skips` (8,53 s) |
+| Suite completa (sin Spring, con el `application.yml` nuevo cargado) | `bin/spring stop` + `DISABLE_SPRING=1 bundle exec rails test` | idéntico (10,25 s) |
+
+**Las 5 salvedades — sin adornos**
+
+1. **El kill switch arranca APAGADO y el plan decía `true`.** `RECEIPT_EXTRACTION_ENABLED` sin
+   valor ⇒ `enabled? == false`. Es deliberado: encender por omisión una extracción cuyo seam no
+   existe solo produciría errores. **Cuando Taimes implemente `call_vision_model` hay que cambiar
+   el default o sembrar la variable en `true`**, o la extracción seguirá apagada.
+2. **No se instaló `gem "anthropic"`** (criterio 33 del paquete, incumplido a propósito). Nada de
+   lo entregado abre un socket, así que el gem no hace falta todavía; lo instala Taimes junto con
+   el seam. Consecuencia: el mapeo de excepciones se hace **por nombre de clase**
+   (`TIMEOUT_ERROR_NAMES`) y las excepciones del SDK se declaran en el archivo de soporte con una
+   guarda `unless defined?`, que desaparece sola cuando llegue el gem real. **Si el SDK real usa
+   otros nombres de clase, hay que revisar ese mapeo.**
+3. **`ExpenseRuleService`, la rake de parametrizaciones y `parameterizations` NO se tocaron**: son
+   del paquete **14** desde la re-partición. Los criterios 11 a 19 del documento del 10 no aplican
+   aquí.
+4. **El endpoint `POST /extract_receipt/report_expenses`, su ruta, su test de 16 casos y el guard
+   de reglas en `create`/`update` quedan DECLARADOS y no construidos.** Los criterios 20 a 29.1 del
+   paquete siguen abiertos. Sin extracción no tendrían nada que orquestar, y el guard depende del
+   motor de reglas del 14.
+5. **`extract` responde `:not_configured` cuando el seam sigue sin implementar**, en vez de
+   propagar el `NotImplementedError` (que además no es `StandardError` y se colaría por cualquier
+   `rescue` genérico). Es una decisión de producto: el contrato D.1 dice que extraer **nunca**
+   puede impedir registrar el gasto a mano. Queda un `Rails.logger.error` para que quien encienda
+   el flag sin la implementación sepa por qué no funciona.
+
+**Detalle a favor de quien verifique**: `assert_empty fake.calls` es la aserción que demuestra que
+un HEIC, un archivo de más de 5 MB, un `nil` o el kill switch apagado **no gastan un solo token**.
+
+**Higiene git**: `git status --porcelain` vacío, 2 commits en español con el POR QUÉ y el trailer
+`Co-Authored-By`. **Nada empujado al remoto y producción intacta.**
