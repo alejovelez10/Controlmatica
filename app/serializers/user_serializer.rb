@@ -17,6 +17,8 @@
 #  menu                   :string           default("nav-sm")
 #  names                  :string
 #  number_document        :integer
+#  phone                  :string
+#  phone_normalized       :string
 #  remember_created_at    :datetime
 #  reset_password_sent_at :datetime
 #  reset_password_token   :string
@@ -29,6 +31,7 @@
 # Indexes
 #
 #  index_users_on_email                 (email) UNIQUE
+#  index_users_on_phone_normalized      (phone_normalized)
 #  index_users_on_reset_password_token  (reset_password_token) UNIQUE
 #  index_users_on_rol_id                (rol_id)
 #
