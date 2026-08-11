@@ -64,7 +64,27 @@
 > correcto. Ahora manda un valor que el servicio no puede escribir. **No se relajó la aserción: se
 > volvió más estricta.**
 >
-> ➡️ **Lo que sigue es la ola 5: paquetes 09 y 11 en paralelo.**
+> ✅ **ESTADO AL 2026-08-11 (madrugada): la ola 5 está CERRADA y REVERIFICADA.** Los paquetes 09
+> (frontend de tablas y Contabilidad) y 11 (MCP y contrato con Taimes) están terminados, commiteados
+> y reverificados por un agente independiente que no podía arreglar nada. Suite completa:
+> **853 runs / 2.652 assertions / 0 failures / 0 errors / 0 skips** en **12,90 s**, repetida con
+> `--seed=4242` con cifras idénticas: es determinista. E2E Playwright: **6 passed** en 17,7 s (los 6
+> smokes del paquete 01; ningún spec nuevo, y está bien: los specs son del **12**).
+> `git status` limpio, 19 commits de la ola y **nada empujado al remoto**.
+>
+> 🔴 **Hay algo en rojo y no es la suite: se incumplió una regla inviolable del encargo.**
+> **Los commits de la ola 5 NO son atómicos.** Los dos agentes trabajaron en paralelo y se
+> contaminaron: cuatro commits contienen archivos de un paquete distinto al que anuncia su mensaje.
+> Consecuencia concreta: **ningún commit del 09 contiene sus propias pruebas** (están dentro de
+> `7cbb9d9`, rotulado "MCP"), y **revertir cualquiera de los tres commits del 09 citados rompería el
+> servidor MCP**. La historia no se reescribió porque son 19 commits ya encadenados y un rebase
+> interactivo a esta altura arriesga más de lo que arregla; queda como **pendiente #23**, decisión de
+> una persona.
+>
+> 🟡 **Los dos paquetes quedan en ⚠️, no en ✅.** Las salvedades nuevas son los pendientes **#23 a
+> #27**. Lee la entrada "Ola 5" al final antes de dar la ola por buena.
+>
+> ➡️ **Lo que sigue es la ola 6: paquete 08 (y la pantalla de reglas del 14).**
 
 ---
 
@@ -127,8 +147,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 3b | 06 — Comprobante y contabilidad | ⚠️ | `d0f1444`..`76fcf2e` (docs `35a6f61`) | **TERMINADO y reverificado por un agente independiente (ola 3b-bis).** 5 commits. Todas las tareas vivas de los bloques A, B y C (A1, A3, A6, A7, A8, A9, B1, B3, B4, B10, B11 y C3 retiradas por auditoría): `ReceiptUploader` privado con las dos allowlists, comprobante montado y auditado (`audit_field :receipt_file`), `delete_receipt`/`download_receipt` con descarga forzada (§7.8), el **backend completo de Contabilidad** (5 endpoints, `filtered_scope` con la excepción de la corrección 13, `ids[]` como filtro válido y tope de 500), las **dos plantillas .axlsx a 18 columnas idénticas**, `ReportExpense.import` con detección de layout y las 2 claves 27-28 del list tool MCP. **98 pruebas propias verdes reconfirmadas por el verificador** (98 runs / 292 assertions / 0 fallos en los 6 archivos del paquete); suite completa **481 runs / 1.432 assertions / 0 fallos** con el 10 mergeado (7,3 s). E2E Playwright: **6 passed**. **Salvedades: 5** — se **regeneraron 2 fixtures .xlsx del paquete 01** (`1df14e8`, violación de §7.2 confirmada por el verificador), los criterios **5, 6** y el test "expone los campos nuevos" quedan **bloqueados por el paquete 07** (serializer + strong params), `KEYS.size` es **25 y no 28** (las 2 claves nuevas caen en 24-25, no en 27-28: faltan las del 11), `GET /accounting_expenses` en HTML no tiene plantilla hasta que mergee el **09** y **ningún E2E ejercita comprobante ni Contabilidad** (es del 12) |
 | 3b | 10 — IA: extracción y reglas | ⚠️ | `41c8bbc`..`1ae2af0` (docs `fbf4f3f`) | **Solo el esqueleto de extracción** (alcance reducido por decisión del cliente: la IA es de Taimes). 2 commits: `ReceiptExtractionService` completo salvo el seam `call_vision_model`, que levanta `NotImplementedError` documentado, más `test/support/fake_anthropic_client.rb` y **49 pruebas** de contrato sin red. Suite completa **481 runs / 1.432 assertions / 0 fallos**. **Reverificado por un agente independiente (ola 3b-bis)**: los 3 archivos existen, el diff toca exactamente esos 3 y hay **cero red** (`grep api_client` en `app/` y `Anthropic::Client.new` en `test/` dan vacío). **Salvedades: 6** — el kill switch arranca **apagado** (el plan lo daba en `true`), no se instaló `gem "anthropic"` (criterio 33), **`vision_client` no existe** (criterio 7: la cadena `timeout: 18, max_retries: 0` solo aparece en un comentario que instruye a Taimes), el motor de reglas se fue al **14**, y el endpoint `extract_receipt` + su ruta + sus 16 tests quedan **declarados y no construidos** |
 | 4 | 07 — API, permisos y rutas | ⚠️ | `ce818d8`..`b886632` | **TERMINADO tras un arreglo de verificación en rojo, y REVERIFICADO en verde por un agente independiente (ola 4-bis).** 7 commits. Las 8 tareas vivas (1–4, 21 y los 6 criterios retirados por auditoría no aplican): las 10 claves canónicas de `@estados`, las rutas, `ExpenseBudgetSerializer`, el `ExpenseBudgetsController` completo (6 endpoints, doble capa de autorización, `preload_amounts!` en 2 queries fijas), el `ReportExpenseSerializer` con los **13 atributos nuevos** + `belongs_to :accounting_approved_by` + `receipt_file`, el bloque 6 de `ReportExpensesController` (`q` con `id::text`, los 4 filtros nuevos, `EXPENSE_SORT_COLUMNS`, strong params con comprobante/moneda/`cop_manual_override`, `destroy` con recálculo) y **el cableado presupuestal de la tarea 23**, que era la corrección bloqueante de la auditoría. **110 pruebas propias verdes recontadas una por una por el verificador independiente** en los 5 archivos del paquete (`expense_budgets_controller_test` 60, `report_expenses_controller_test` 28, `report_expenses_budget_wiring_test` 9, `report_expense_serializer_test` 8, `expense_budget_serializer_test` 5), contra las **93 pedidas**: están las 93 nominadas por nombre, más extras; suite completa **656 runs / 2.050 assertions / 0 fallos** (8,5 s con Spring), reconfirmada con `--seed=4242` con cifras idénticas. Subconjunto del criterio 24 (`test/controllers test/serializers`): **198 runs / 730 assertions / 0 fallos**. E2E Playwright: **6 passed**. **Los 33 criterios verificados uno a uno: cumplen 32.** **Salvedades: 3** — el criterio 1 pide `grep -c expense_budget == 6` y da **7** (la línea alias `PUT` que genera `resources`; los 6 endpoints y la ausencia del `index` sí son correctos: criterio mal calibrado, no el código); los 4 filtros nuevos se aplican **en el controller y no en `ReportExpense.search`**, porque ese método es del paquete 03 y tiene 6 call sites (mismo camino que ya tomó `AccountingExpensesController#filtered_scope`); y los tests usan `users(:gerente)` como "pleno" y `users(:ingeniero_dos)` con rol reasignado en caliente como "limitado", porque `users(:pleno)`/`users(:limitado)` **no existen** y `users.yml` es del paquete 01 (criterio 33) |
-| 5 | 09 — Frontend: tablas y contabilidad | ⬜ | — | |
-| 5 | 11 — MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`ea98dad` | **TERMINADO (pendiente de reverificación independiente).** 9 commits. Todas las tareas vivas (1 y 2 ya estaban; la 5 retirada por auditoría): actor por teléfono estricto en `ApplicationTool` (`actor_phone`, `actor_user_by_phone`, `actor_user_strict`, `as_actor_strict` con el `ensure` en `begin` interno), `X-Actor-Phone` en `McpController` y `ALWAYS_EXPOSED` con 6 nombres, las 3 claves 17-19 de `ReportExpensesListTool::KEYS` (**ahora 28, criterio compartido cumplido**) + 5 filtros, `report_expenses_create` con actor estricto + guard de `ExpenseRuleService` + `persist_with_evaluation!` + los 6 campos de moneda + `exchange_rate_source` de servidor, el mismo criterio estricto en `expense_ratios_create`, y **8 tools nuevas**: `expense_budgets_list/available`, `exchange_rates_get`, `expense_rules_validate`, `expense_rules_list` (cierra la Tarea 7 del 14), `report_expenses_receipt_url_get/attach_receipt`, `users_find_by_phone`, más `Mcp::S3DirectUpload` y las 2 entidades nuevas de `records_search`. **191 pruebas propias verdes** (contra las ~120 nominadas), suite completa **853 runs / 2.652 assertions / 0 fallos**, corrida 3 veces con seeds distintos. `tools/list` real devuelve **62 tools**. **Salvedades: 4** — (1) **el guard de reglas usa `confirm_rule_violations`** en vez de rechazar siempre: el documento del 11 (criterio 35) y el del 14 ("una violación nunca impide guardar") se contradicen, y se resolvió exigiendo confirmación explícita de la persona, que es lo mismo que hace la web; (2) `report_expenses_attach_receipt` trae el binario por `fog` (`fetch_body`) y **no** con `remote_receipt_file_url=`, porque en CarrierWave 3 esa descarga pasa por `SsrfFilter`; (3) se tocaron **dos tests ajenos** (`report_expenses_list_tool_{currency,accounting}_keys_test.rb`, de los paquetes 05 y 06) para subir sus aserciones de 25 a 28 claves y de índice 16 a 19, que es lo que sus propios comentarios anunciaban; (4) los criterios **27 y 28** (S3 y `heroku restart` en staging) **no se verificaron**: son del paquete 13 y requieren `users.phone` poblado |
+| 5 | 09 — Frontend: tablas y contabilidad | ⚠️ | `3d96073`..`d6b182d` | **TERMINADO y reverificado por un agente independiente (ola 5).** 7 commits. Todas las tareas vivas: helpers de presentación de los estados nuevos, las **6 columnas nuevas** en el índice de Gastos y las mismas en la tabla del centro de costo, un **único `filterParams()`** (un solo `cost_center_id=` en todo el pack, con 3 consumidores), 3 filtros nuevos + confirmación de la aceptación masiva con `meta.total`, **columna de selección opt-in en `CmDataTable`** (`indeterminate` por `ref`, `colSpan` que suma la columna) y la **pantalla de Contabilidad con selección múltiple** (`packs/AccountingExpenseIndex.js`, 813 líneas, `views/accounting_expenses/index.html.erb` y `generalcomponents/expenseIndicators.js`). **23 pruebas propias verdes recontadas una a una** por el verificador (`accounting_expenses_view_test` 10, `application_helper_menu_test` 7, `expense_menu_test` 6 → 23 runs / 56 assertions / 0 fallos); suite completa **853 runs / 2.652 assertions / 0 fallos**. **De los 51 criterios cumplen 50.** **Salvedades: 4** — (1) el **criterio 21** (`./bin/webpack` compila sin error) **falla en la letra**: revienta con `ERR_OSSL_EVP_UNSUPPORTED` en Node 22 (problema de entorno **preexistente**, pendiente #5); con `NODE_OPTIONS=--openssl-legacy-provider` compila limpio y emite `AccountingExpenseIndex-05d8b2ed2d16558b532f.js`; (2) se tocó **`generalcomponents/ui/CmPageActions.jsx`** (compartido por ~20 pantallas) para añadirle la prop `testId`, y ese archivo **no está en la tabla del paquete ni en §7.2** (pendiente #25); (3) **~30 criterios de comportamiento puramente de cliente (4-8, 11, 12, 16-18, 27, 28, 31-42) no los ejercita ninguna prueba automática**: no hay runner de JS en el repo y los specs son del 12 — se verificaron **leyendo el código línea por línea** y todos coinciden, pero es inspección, no ejecución; (4) **sus 3 archivos de prueba viven en un commit rotulado "MCP"** (pendiente #23) |
+| 5 | 11 — MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | **TERMINADO y REVERIFICADO por un agente independiente (ola 5).** 12 commits (incluidos los 2 de documentación y el del tablero). Todas las tareas vivas (1 y 2 ya estaban; la 5 retirada por auditoría): actor por teléfono estricto en `ApplicationTool` (`actor_phone`, `actor_user_by_phone`, `actor_user_strict`, `as_actor_strict` con el `ensure` en `begin` interno), `X-Actor-Phone` en `McpController` y `ALWAYS_EXPOSED` con 6 nombres, las 3 claves 17-19 de `ReportExpensesListTool::KEYS` (**ahora 28, criterio compartido cumplido**) + 5 filtros, `report_expenses_create` con actor estricto + guard de `ExpenseRuleService` + `persist_with_evaluation!` + los 6 campos de moneda + `exchange_rate_source` de servidor, el mismo criterio estricto en `expense_ratios_create`, y **8 tools nuevas**: `expense_budgets_list/available`, `exchange_rates_get`, `expense_rules_validate`, `expense_rules_list` (cierra la Tarea 7 del 14), `report_expenses_receipt_url_get/attach_receipt`, `users_find_by_phone`, más `Mcp::S3DirectUpload` y las 2 entidades nuevas de `records_search`. **191 pruebas propias verdes** (contra las ~120 nominadas), suite completa **853 runs / 2.652 assertions / 0 fallos**, corrida 3 veces con seeds distintos. `tools/list` real devuelve **62 tools**. **Salvedades: 4** — (1) **el guard de reglas usa `confirm_rule_violations`** en vez de rechazar siempre: el documento del 11 (criterio 35) y el del 14 ("una violación nunca impide guardar") se contradicen, y se resolvió exigiendo confirmación explícita de la persona, que es lo mismo que hace la web; (2) `report_expenses_attach_receipt` trae el binario por `fog` (`fetch_body`) y **no** con `remote_receipt_file_url=`, porque en CarrierWave 3 esa descarga pasa por `SsrfFilter`; (3) se tocaron **dos tests ajenos** (`report_expenses_list_tool_{currency,accounting}_keys_test.rb`, de los paquetes 05 y 06) para subir sus aserciones de 25 a 28 claves y de índice 16 a 19, que es lo que sus propios comentarios anunciaban; (4) los criterios **27 y 28** (S3 y `heroku restart` en staging) **no se verificaron**: son del paquete 13 y requieren `users.phone` poblado. **La reverificación independiente confirmó las 191 pruebas** (191 runs / 569 assertions / 0 fallos en `test/tools` + `mcp_protocol_test` + `mcp_controller_exposure_test` + `user_phone_test`, exactamente lo prometido), el conteo real de **62 tools** aplicando `exposed?`, `ALWAYS_EXPOSED` con 6 nombres, `KEYS.size == 28` sin repetidos, `ExchangeRatesGetTool::KEYS` con 7 claves y **cero `require_relative`** en las pruebas; y añadió **3 salvedades nuevas**: (5) el **criterio 35** ("un gasto con violación bloqueante es rechazado") **solo se cumple en el camino por defecto**: con `confirm_rule_violations: true` el gasto **sí se crea**, y hay un test que lo consagra — el criterio, tal como está escrito, no admite excepciones (pendiente **#26**); (6) `app/tools/expense_rules_list_tool.rb` (52 líneas, 4 pruebas) **no figura en la tabla "A crear"** del paquete: es alcance extra no declarado; (7) la **segunda mitad del criterio 38** (`db:rollback STEP=1` revierte la migración del teléfono) **NO se verificó de forma independiente** — se comprobó que la migración define `up`/`down` y no `change`, pero **el rollback no se ejecutó** |
 | 6 | 08 — Frontend: presupuesto y formulario | ⬜ | — | |
 | 7 | 12 — Suite E2E Playwright | ⬜ | — | |
 | 4 | 14 — Reglas de gastos configurables | ⚠️ | `6dac5f9`..`e34111e` | **Backend TERMINADO y reverificado en verde por un agente independiente (ola 4-bis); el frontend NO.** 4 commits. Tareas 1 a 5 completas: las 2 migraciones (con el índice único **parcial** `WHERE (is_default AND active)` y `report_expenses.rule_violations` jsonb), el modelo `ExpenseRule` con la resolución de 3 ramas (`aplicables_a`), `ExpenseRuleService` con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en `ReportExpense` (`before_save`, que corre **después** del `evaluate!` del presupuesto y por eso puede pisarle el "aprobado"), y `ExpenseRulesController` + rutas + `ExpenseRuleSerializer` + rake de permisos propia. **65 pruebas propias verdes recontadas por el verificador independiente** (15 modelo + 26 servicio + 24 controller, contra las **30 pedidas**: los 30 casos nominados en el documento están todos presentes por nombre); suite completa **656 runs / 2.050 assertions / 0 fallos**. **De los 8 criterios de aceptación cumplen los 6 de backend** (varias reglas, gana la más restrictiva, fallback a la default, deterministas en servidor vía `before_save` —así aplica igual a web, MCP e import—, el semántico no se evalúa, y una violación no bloquea el guardado pero fuerza `sin_presupuesto` con auditoría en `RegisterEdit`); **incumplen 2 por alcance no ejecutado**: no hay pantalla (Tarea 6) ni los 4 escenarios E2E. **Salvedades: 5** — (1) **la Tarea 6 (pantalla React bajo Configuración) NO está hecha**: hoy las reglas solo se administran por JSON; (2) la **Tarea 7 (tool MCP `expense_rules_for_user`) tampoco**, porque `app/tools/*` es del paquete **11** (§7.2) — el endpoint HTTP que necesita ya existe; (3) los **4 escenarios E2E** son del paquete **12** por §7.2, igual que los del 07 que la auditoría retiró; (4) `rule_violations` **no se expone en `ReportExpenseSerializer`**: ese archivo es dueño único del 07 y agregarle un atributo del 14 rompería §7.2 — hace falta decidir quién lo agrega antes de que el 08/09 pinten la advertencia; **(5) el módulo de permisos "Reglas de gastos" NO está sembrado en `lib/tasks/create_config.rake`** (hallazgo nuevo de la ola 4-bis, pendiente **#21**): existe `lib/tasks/permissions_expense_rules.rake` para instalaciones ya montadas, pero una **instalación limpia nace sin el módulo**, mientras que "Presupuesto" y "Contabilidad" del 07 sí están replicados en `create_config.rake` (líneas 275 y 285) |
@@ -331,6 +351,63 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     considera que el cupo por centro es información sensible, hay que acotarlos —por ejemplo, a los
     centros que el usuario ve— y eso **cambia un criterio de aceptación ya aprobado**, así que no se
     hizo por cuenta propia.
+23. 🔴 **Decidir qué se hace con los commits NO atómicos de la ola 5.** Es el único incumplimiento
+    de una **regla inviolable** del encargo en toda la rama. Los paquetes 09 y 11 se ejecutaron en
+    paralelo y **cuatro commits mezclan archivos de los dos**:
+    - `135e2b9` ("Gastos IA 09: seis columnas nuevas…") incluye `app/controllers/mcp_controller.rb`,
+      `app/tools/application_tool.rb` y `test/support/mcp_test_helpers.rb`, que son **el núcleo del
+      paquete 11**.
+    - `35c4880` ("09: un único `filterParams()`") incluye `app/tools/report_expenses_list_tool.rb`.
+    - `daa660b` ("09: columna de selección opt-in en `CmDataTable`") incluye
+      `app/tools/report_expenses_create_tool.rb`.
+    - Y al revés: `7cbb9d9` ("MCP: `exchange_rates_get`…") contiene **los tres archivos de prueba
+      del paquete 09** (`accounting_expenses_view_test.rb`, `application_helper_menu_test.rb`,
+      `expense_menu_test.rb`).
+
+    **Consecuencias concretas, no teóricas**: (a) **ningún commit del 09 contiene sus propias
+    pruebas**; (b) **revertir cualquiera de los tres commits del 09 citados rompería el servidor
+    MCP**; (c) el `git log` miente sobre qué toca cada cambio, que es justamente lo que la regla
+    quería evitar. **No se reescribió la historia por cuenta propia**: son 19 commits encadenados y
+    un rebase interactivo a esta altura arriesga más de lo que arregla, además de que reescribir
+    commits ya revisados es decisión de quien revisa. Las opciones son: aceptarlo con esta nota,
+    o rehacer la ola 5 en una rama limpia con `git rebase -i` / cherry-pick por archivo.
+24. **Decidir la versión de Node — otra vez, ahora con consecuencia visible.** Es el mismo pendiente
+    **#5**, pero la ola 5 le puso precio: el **criterio 21 del paquete 09** (`./bin/webpack` compila
+    sin error) **falla literalmente** porque Node 22.22.0 rompe `babel-loader` con
+    `Error: error:0308010C:digital envelope routines::unsupported` (`ERR_OSSL_EVP_UNSUPPORTED`,
+    lanzado desde `node_modules/babel-loader/lib/fs-cache.js:76`). **Con
+    `NODE_OPTIONS=--openssl-legacy-provider` compila limpio**, sin un solo ERROR ni WARNING, emite
+    `./app/javascript/packs/AccountingExpenseIndex.js 43.2 kB [built]` y deja
+    `public/packs/AccountingExpenseIndex-05d8b2ed2d16558b532f.js`. Es decir: **el paquete 09 está
+    bien, el entorno no**. Hay que elegir una de tres: fijar Node 16 con `.nvmrc`, ampliar `engines`,
+    o exportar `NODE_OPTIONS=--openssl-legacy-provider` en los binstubs. Cualquiera de las tres toca
+    el contrato de build con Heroku, así que **no se tomó por cuenta propia**.
+25. **Aceptar o revertir el cambio en `CmPageActions.jsx` (paquete 09).** El criterio 48
+    (`data-testid="expense-new"`) **sí se cumple**, pero no como decía la Tarea 2 bis (editar
+    `packs/ReportExpenseIndex.js`): se añadió una **prop nueva `testId`** a
+    `app/javascript/generalcomponents/ui/CmPageActions.jsx` —componente compartido por unas **20
+    pantallas**— y el pack la pasa con `testId: "expense-new"` en la línea 1024. Ese archivo **no
+    figura ni en la tabla del paquete 09 ni en §7.2**, así que es una desviación de la matriz de
+    propiedad, del mismo tipo que las de los pendientes #11 y #14. Técnicamente el cambio es
+    aditivo y retrocompatible (sin `testId` el componente se comporta igual que antes), pero **es un
+    archivo de otro dueño**.
+26. **Resolver la contradicción de `confirm_rule_violations` (criterio 35 del 11 vs. paquete 14).**
+    El documento del 11 dice que "un gasto con violación **bloqueante** es rechazado por MCP" y el
+    del 14 dice que "una violación **nunca** impide guardar". Se implementó un punto medio:
+    `app/tools/report_expenses_create_tool.rb:92-99` rechaza **salvo** que llegue
+    `confirm_rule_violations: true`, y hay un test que lo consagra ("con `confirm_rule_violations` la
+    persona puede registrar igual y el gasto NO queda aprobado"). Es lo mismo que hace la web, y el
+    gasto confirmado **nunca queda aprobado**. Pero **el criterio 35, tal como está escrito, no
+    admite excepciones**, así que hoy está incumplido en la letra. Hay que decidir: se corrige el
+    criterio, o se quita la puerta de escape y el agente de WhatsApp deja de poder registrar gastos
+    que violan una regla.
+27. **Decidir cuándo se cubre con E2E todo el frontend del paquete 09.** Igual que en las olas 3b y
+    4, pero ahora es la superficie **más grande** sin cobertura de navegador: la pantalla entera de
+    Contabilidad, la selección múltiple, la aceptación masiva con tope de 500 y los 3 filtros nuevos.
+    **No existe runner de JS en el repo** (ni Jest ni Vitest) y el paquete **12** —dueño de los
+    specs— aún no está escrito, así que **~30 criterios del 09 se verificaron leyendo el código, no
+    ejecutándolo**. Todos coinciden con lo especificado, pero conviene saber que **la parte de la ola
+    5 que ve el usuario no tiene ni una sola prueba que la ejecute**.
 
 ---
 
@@ -1704,6 +1781,143 @@ se saltó ni se relajó en toda la rama, y los 0 skips de la suite lo confirman.
 (`ce818d8..8efb65a`), todos en español explicando el porqué y con el trailer `Co-Authored-By`. Rama
 `feature/gastos-presupuesto-ia`. **Nada empujado al remoto** (verificado: no se ejecutó ningún
 `push`) y **producción intacta**.
+
+---
+
+### Ola 5 — Paquetes 09 y 11: frontend de tablas/Contabilidad y MCP (2026-08-11, madrugada)
+
+Los dos paquetes se ejecutaron **en paralelo** (la auditoría los había declarado disjuntos) y luego
+un agente que **no podía arreglar nada** volvió a correr todos los comandos y a comprobar los
+criterios uno por uno, leyendo las pruebas de a una. **Resultado: la suite está VERDE y el verde es
+real y sustantivo.** La ola queda cerrada en `3d96073..d54b09c`, 19 commits.
+
+**Los dos paquetes se quedan en ⚠️ y esta vez no es solo por huecos de alcance: se rompió una regla
+inviolable del encargo.** Ver el punto 1 de "lo frágil".
+
+#### Qué se construyó de verdad (lo que existe hoy, no lo que se prometió)
+
+- **Paquete 09** (7 commits, `3d96073`, `135e2b9`, `446c03d`, `35c4880`, `9e969df`, `daa660b`,
+  `d6b182d`): helpers de presentación de los estados nuevos; las **6 columnas nuevas** en el índice
+  de Gastos y las mismas en la tabla del centro de costo; **un único `filterParams()`**
+  (`grep -c "cost_center_id="` devuelve **1** y los tres consumidores lo usan); 3 filtros nuevos y la
+  confirmación de la aceptación masiva con `meta.total` **antes** del PATCH; la **columna de
+  selección opt-in** en `CmDataTable.jsx` (con `indeterminate` por `ref` y `colSpan` que suma la
+  columna); y la **pantalla de Contabilidad con selección múltiple**:
+  `app/javascript/packs/AccountingExpenseIndex.js` (**813 líneas**),
+  `app/views/accounting_expenses/index.html.erb` (2) y
+  `app/javascript/generalcomponents/expenseIndicators.js` (73).
+  Esto último es lo que desbloquea la salvedad que arrastraba el paquete 06: `GET
+  /accounting_expenses` en HTML **ya tiene plantilla**.
+- **Paquete 11** (12 commits, `d1a3b75`..`d54b09c`): actor por teléfono **estricto** en
+  `ApplicationTool`, `X-Actor-Phone` en `McpController`, `ALWAYS_EXPOSED` con exactamente 6 nombres,
+  las 3 claves presupuestales en las posiciones 17-19 de `ReportExpensesListTool::KEYS` (**28
+  claves**, criterio compartido con el 05 y el 06 por fin cumplido), **8 tools nuevas**,
+  `app/tools/mcp/s3_direct_upload.rb`, `test/support/mcp_test_helpers.rb` y los 2 documentos del
+  contrato con Taimes.
+- **Todos los archivos prometidos existen y con contenido real: ninguna clase vacía, ningún stub.**
+
+#### Cuántas pruebas hay ahora y cuánto tardan — medido, no copiado
+
+| Suite | Resultado literal | Tiempo |
+|---|---|---|
+| `bin/rails test` (completa) | `853 runs, 2652 assertions, 0 failures, 0 errors, 0 skips` | **12,90 s** |
+| La misma con `--seed=4242` | cifras **idénticas** (853 / 2.652 / 0 / 0 / 0) | — |
+| Criterio 43 del 09 (`accounting_expenses_view_test` + `application_helper_menu_test` + `expense_menu_test`) | `23 runs, 56 assertions, 0F / 0E / 0S` | — |
+| Criterio 31 del 11 (`test/tools` + `mcp_protocol_test` + `mcp_controller_exposure_test` + `user_phone_test`) | `191 runs, 569 assertions, 0F / 0E / 0S` | — |
+| `npx playwright test` (en `test/e2e`) | `6 passed` | **17,7 s** |
+
+La suite pasó de **656** runs (ola 4) a **853**: **+197 pruebas**. Repetirla con otro seed y obtener
+el mismo número **importa**: descarta que el verde dependa del orden. Es determinista, no es suerte.
+
+**Las pruebas son reales y hay más de las pedidas**, recontadas una a una por el verificador:
+
+| Paquete | Prometidas | Reales | Desglose |
+|---|---|---|---|
+| 09 | 23 | **23** | `accounting_expenses_view_test` 10, `application_helper_menu_test` 7, `expense_menu_test` 6 |
+| 11 | ~120 | **191** | 12 archivos, contados uno a uno |
+
+Todas con aserciones sustantivas y mensajes de fallo explicativos. Los 6 Playwright siguen siendo
+los smokes del paquete 01: **ningún spec nuevo, y es lo correcto** — los specs son del paquete 12
+por la corrección 4 de auditoría.
+
+#### Los criterios de aceptación, uno por uno
+
+- **Paquete 09 (46 + 5 del cierre = 51): cumplen 50.** Verificados por comando, entre otros: 1
+  (`this.columns` solo en el constructor, en los 3 archivos), 2 y 3 (`sortable: false` en
+  `foreign_total` y en `accounting_approved`), 9 (`EMPTY_FILTERS` con las 8 claves exactas), 10 (un
+  solo `cost_center_id=`), 13 (Swal con `meta.total` antes del PATCH), 14
+  (`props.currencies || window.CM_CURRENCIES || []`), 15-18 (columna de selección opt-in, `colSpan`,
+  `indeterminate` por `ref`), 20 (`WebpackerReact.setup`), 22 (`serverPagination` + `serverMeta`),
+  26 (sin opción "Excedido"), 27/28 (`estados.approve` / `estados.export`), 29/30 (`message[0]` y 403
+  por status), **31-34 (la selección se conserva al paginar, ordenar y cambiar `per_page`, y se
+  limpia al buscar, filtrar y limpiar)**, 35-37 (`MAX_BULK = 500` con `disabled` y aviso), 38 (un
+  solo `ids[]=`), 39 (`allPageSelected && isFiltering && meta.total > n`), 42 (el export **nunca**
+  lleva `ids[]`), 46 (los 17 `accounting-*`, los tres `filter-*`, `expense-*` y `cm-dt-select-*`:
+  **ninguno inventado**) y 47-51. **El único que falla es el 21**, y falla por el entorno, no por el
+  código (pendiente **#24**).
+- **Paquete 11 (39): verificados.** Estáticos comprobados a mano: 1 (schema con `phone`,
+  `phone_normalized` e índice), 12 (`ALWAYS_EXPOSED` con 6 nombres, ninguno terminado en `_list`,
+  `_get` o `_create`), 13 (`KEYS.size == 28`, sin repetidos, con las 3 presupuestales en 17-19 y
+  **sin reordenar las previas**), 37 (`ExchangeRatesGetTool::KEYS` = 7 claves con `id` y
+  `effective_date`), 38 (migración con `up`/`down`, sin `change`), 39 (**cero `require_relative`** en
+  `test/tools` y `test/integration`), 33/34 (los dos documentos existen;
+  `TAIMES-MCP-INTEGRATION.md` declara "62 tools", documenta `X-Actor-Phone` y
+  `MCP_STRICT_EXPENSE_ACTOR`, y dice explícitamente que "ya no se cae al Administrador genérico").
+  **El conteo real de tools expuestas aplicando `exposed?` es 62**, que coincide con lo declarado.
+
+#### Lo frágil, pendiente o asumido — sin adornos
+
+1. 🔴 **LOS COMMITS DE LA OLA 5 NO SON ATÓMICOS. Es el incumplimiento de una regla inviolable del
+   encargo, y es lo primero que hay que leer.** Los dos agentes trabajaron en paralelo y se
+   contaminaron mutuamente: hay código de MCP dentro de commits rotulados "Gastos IA 09"
+   (`135e2b9`, `35c4880`, `daa660b`) y **los tres archivos de prueba del 09 dentro de un commit
+   rotulado "MCP"** (`7cbb9d9`). Consecuencia: **ningún commit del 09 contiene sus propias pruebas**
+   y **revertir cualquiera de esos tres commits del 09 rompería el servidor MCP**. No se reescribió
+   la historia por cuenta propia. Pendiente **#23**, decisión de una persona.
+2. **El criterio 21 del 09 falla literalmente**: `NODE_ENV=development ./bin/webpack` sale con
+   **EXIT=1** y `Error: error:0308010C:digital envelope routines::unsupported`
+   (`ERR_OSSL_EVP_UNSUPPORTED`) sobre Node.js v22.22.0. **Es el pendiente #5 cobrándose su primera
+   víctima, no un defecto del paquete**: con `NODE_OPTIONS=--openssl-legacy-provider` compila limpio,
+   sin un solo ERROR ni WARNING, y emite el bundle
+   `public/packs/AccountingExpenseIndex-05d8b2ed2d16558b532f.js`. Pendiente **#24**.
+3. **~30 criterios del 09 no los ejercita ninguna prueba automática.** No existe runner de JS en el
+   repo (ni Jest ni Vitest) y el paquete 12 aún no está escrito, así que los criterios **4-8, 11, 12,
+   16-18, 27, 28 y 31-42** —ciclo de vida de `selectedIds`, `indeterminate` por `ref`, `colSpan`,
+   tope de 500, un solo `ids[]`, export sin selección, guarda de `currencies`— se verificaron
+   **leyendo el código línea por línea**. Todos coinciden con lo especificado, pero **es inspección,
+   no ejecución**. Pendiente **#27**.
+4. **Se tocó `CmPageActions.jsx`, que es de otro dueño** (§7.2). Pendiente **#25**.
+5. **El criterio 35 del 11 tiene una puerta de escape declarada**: con `confirm_rule_violations:
+   true` un gasto con violación bloqueante **sí se crea** (nunca aprobado). Pendiente **#26**.
+6. **Se modificaron dos pruebas ajenas** (§7.2): el commit `5c52689` toca
+   `report_expenses_list_tool_currency_keys_test.rb` y `report_expenses_list_tool_accounting_keys_test.rb`,
+   que son de los paquetes **05** y **06**. **Ninguna aserción se relajó**: subieron de 25 a 28
+   claves y de índice 16 a 19, que es exactamente lo que sus propios comentarios anunciaban desde la
+   ola 3a. Es el cierre de la salvedad que el 05 dejó abierta ("`KEYS.size == 28` no se puede afirmar
+   hasta que mergee el 11").
+7. **`app/tools/expense_rules_list_tool.rb` es alcance extra no declarado**: 52 líneas, 4 pruebas,
+   expuesta y funcionando, pero **no figura en la tabla "A crear"** del paquete 11. Cierra de hecho
+   la Tarea 7 del paquete 14, que estaba bloqueada por §7.2.
+8. **La segunda mitad del criterio 38 del 11 NO se verificó de forma independiente**: se comprobó que
+   `db/migrate/20260405000001_add_phone_to_users.rb` define `up` y `down` explícitos con guardas de
+   idempotencia y **no** define `change`, pero **el `bin/rails db:rollback STEP=1` no se ejecutó**.
+9. **Los criterios 27 y 28 del 11 (S3 en staging y supervivencia a `heroku restart`) siguen sin
+   verificar y no son verificables aquí**: requieren staging desplegado y `users.phone` poblado, y
+   el encargo prohíbe tocar entornos remotos. Siguen siendo pendientes **#3** y del paquete 13.
+10. **El canal de WhatsApp sigue sin poder identificar a nadie.** El actor estricto por teléfono está
+    implementado y probado, y `MCP_STRICT_EXPENSE_ACTOR` ya no cae al Administrador genérico — pero
+    **`users.phone` tiene 0 de 29 filas pobladas**. Con el modo estricto encendido y sin teléfonos,
+    **ningún gasto se puede crear por MCP**. Pendiente **#3**: es la ruta crítica y no la desbloquea
+    ningún agente.
+
+#### Higiene git verificada
+
+`git status --porcelain` **vacío**, también después de compilar webpack. **19 commits de la ola 5**,
+los 19 en español explicando el porqué y **los 19 con el trailer `Co-Authored-By: Claude Opus 5`**.
+Rama `feature/gastos-presupuesto-ia` **sin upstream** y `git branch -r --contains HEAD` **vacío**:
+**nada se empujó al remoto**. **Producción intacta**: ni un `heroku config:set`, ni un deploy, ni una
+migración remota. **Ninguna prueba se borró, se marcó `skip` ni se relajó** — los 0 skips de la suite
+lo confirman.
 
 ---
 
