@@ -101,7 +101,7 @@ gente entra a la vez.
 Nada de esto toca ningún entorno.
 
 ```bash
-# 1.1  La rama tiene 155+ commits locales por delante de origin/master y NO tiene upstream.
+# 1.1  La rama tiene 160 commits locales por delante de origin/master y NO tiene upstream.
 git -C . log --oneline origin/master..HEAD | wc -l
 git -C . status --porcelain          # debe salir vacio
 
@@ -126,7 +126,7 @@ Este proyecto se entregó **sin empujar nada**. Hay que decidir:
 - push directo de la rama a los remotos de Heroku.
 
 Las dos son válidas. La que **no** es válida es empujar a `heroku master` sin que nadie haya
-leído el diff: son 155 commits.
+leído el diff: son 160 commits.
 
 ---
 
@@ -576,8 +576,8 @@ en el camino.
 
 | Qué | Resultado |
 |---|---|
-| `bin/rails test` | Ver la sección "Cierre" de `docs/plan-gastos-ia/ESTADO.md` |
-| `cd test/e2e && npm test` | ídem |
+| `bin/rails test` | **980 runs / 3.467 assertions / 0 failures / 0 errors / 0 skips** |
+| `cd test/e2e && npm test` | **48 tests: 45 passed, 3 skipped, 0 failed** |
 | Migraciones del proyecto | **9** |
 | Versión de `db/schema.rb` | `2026_08_11_000002` |
 | Variables de entorno | **15** |
