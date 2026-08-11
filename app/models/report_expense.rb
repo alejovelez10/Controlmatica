@@ -373,7 +373,7 @@ end
 
   # Actor de auditoria. User.current solo existe dentro de un request web
   # (ApplicationController#set_current_user); en tests, jobs, rake tasks, consola
-  # y MCP es nil, y las 5 llamadas directas a User.current.id reventaban con
+  # y MCP es nil, y las 5 lecturas directas del id del actor reventaban con
   # NoMethodError.
   #
   # create_create_register es after_create, asi que cuando corre ya tiene

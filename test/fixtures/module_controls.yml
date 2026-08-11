@@ -15,8 +15,8 @@
 #
 
 # Los 6 modulos reales. El sistema los busca por STRING LITERAL
-# (has_menu_permission?("Gastos", "Crear")), asi que los MyString del scaffold
-# eran inservibles.
+# (has_menu_permission?("Gastos", "Crear")), asi que los nombres de relleno del
+# scaffold eran inservibles.
 #
 # "Reportes de servicios" y "Tablero de Ingenieros" son OBLIGATORIOS:
 # ApplicationController#after_sign_in_path_for hace .id sobre

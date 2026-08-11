@@ -11,7 +11,8 @@ class ActiveSupport::TestCase
   # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
   fixtures :all
 
-  # SIN parallelize: la suite corre en serie mientras ReportExpense.search siga
+  # NO agregar paralelismo de procesos aqui: la suite corre en serie mientras
+  # ReportExpense.search siga
   # definiendo scopes de CLASE en runtime (arquitectura, invariante 6). Con
   # procesos paralelos esos scopes se pisan entre si y producen fallos
   # intermitentes indistinguibles de bugs reales.

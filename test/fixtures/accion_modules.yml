@@ -17,7 +17,7 @@
 #
 
 # Las 21 acciones reales. Se buscan por (name, module_control_id) con string
-# literal, asi que los MyString del scaffold eran inservibles.
+# literal, asi que los nombres de relleno del scaffold eran inservibles.
 # AccionModule belongs_to :user es REQUERIDO: todas llevan user.
 # Las etiquetas de este archivo son las que rols.yml referencia en su HABTM inline.
 
