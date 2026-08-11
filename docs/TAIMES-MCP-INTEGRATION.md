@@ -3,7 +3,7 @@
 Guía para que **Taimes** consuma el servidor **MCP** (Model Context Protocol) de
 **Controlmatica** y un agente pueda operar toda la aplicación por chat web / WhatsApp.
 
-> Generado automáticamente desde `tools/list` del servidor. **54 tools** disponibles.
+> Generado automáticamente desde `tools/list` del servidor. **62 tools** disponibles.
 > Alcance actual: **solo lectura y creación** (list / get / create + búsqueda y agregación).
 > Editar y eliminar están deshabilitados por ahora.
 
@@ -13,7 +13,7 @@ Guía para que **Taimes** consuma el servidor **MCP** (Model Context Protocol) d
 
 1. **Endpoint:** `POST https://<host-controlmatica>/mcp` — protocolo MCP sobre JSON-RPC 2.0.
 2. **Auth:** header `X-Api-Key: <MCP_API_KEY>` en cada request.
-3. **Descubrir:** `{"jsonrpc":"2.0","id":1,"method":"tools/list"}` → devuelve las 54 tools con su schema.
+3. **Descubrir:** `{"jsonrpc":"2.0","id":1,"method":"tools/list"}` → devuelve las 62 tools con su schema.
 4. **Ejecutar:** `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"<tool>","arguments":{...}}}`.
 5. **Leer resultado:** el JSON útil viene como string en `result.content[0].text`.
 6. **Regla para el agente:** casi todo se resuelve con `records_search` (buscar cualquier registro
@@ -48,7 +48,7 @@ header `X-Api-Key`. Sin un key válido, cada tool responde
 2. **Asignar el server al tenant** correspondiente (auth_mode `shared`).
 3. **Cargar la credencial**: el `X-Api-Key` (= `MCP_API_KEY`) como
    `integration_credential(provider='controlmatica')`.
-4. **Sync tools**: botón "Sync tools" → puebla la tabla `tools` con las 54
+4. **Sync tools**: botón "Sync tools" → puebla la tabla `tools` con las 62
    descubiertas. (Los grants se resuelven **por nombre de tool**, no por UUID — los UUID
    difieren entre dev/prod.)
 5. **Crear skills** que granteen las tools por nombre, agrupadas por módulo (ver catálogo).
@@ -69,6 +69,7 @@ header `X-Api-Key`. Sin un key válido, cada tool responde
 | **Reportes de servicio** | `reports_list/get/create`, `customer_reports_list/get/create` |
 | **Facturación** | `sales_orders_list/get/create`, `customer_invoices_list/get/create` |
 | **Gastos y Anticipos** | `report_expenses_list/get/create`, `expense_ratios_list/get/create`, `report_expense_options_list` |
+| **Gastos IA** (WhatsApp: foto/voz → gasto) | `report_expenses_list/get/create`, `report_expenses_receipt_url_get`, `report_expenses_attach_receipt`, `expense_budgets_list`, `expense_budgets_available`, `exchange_rates_get`, `expense_rules_validate`, `expense_rules_list`, `users_find_by_phone`, `report_expense_options_list`, `cost_centers_list` |
 | **Comisiones** | `commissions_list/get/create` |
 | **Turnos** | `shifts_list/get/create` |
 | **Catálogos** (lookup) | `users_list/get`, `rols_list`, `parameterizations_list`, `quotations_list`, `notification_alerts_list` |
@@ -134,15 +135,103 @@ notification_alerts, parameterizations, rols, report_expense_options.
 
 ## 5. Notas de comportamiento
 
-- **Escrituras (create/update/delete):** el "actor" de la operación es el usuario con rol
-  `Administrador` de Controlmatica; no se recibe usuario por request.
+- **Escrituras:** el "actor" de la operación es la **persona real** identificada por
+  `X-Actor-Phone` o `X-Actor-Email` (ver §5.1). En las tools de gasto y anticipo, si no se
+  identifica a nadie la llamada se **rechaza**; ya **no** se cae al Administrador genérico.
+  En las **lecturas** sí se mantiene el fallback (no hay nada que atribuir).
 - **Errores de validación** se devuelven como texto `"Error: <mensajes>"` (no rompen la
   llamada). Argumentos inválidos de schema los rechaza el propio protocolo MCP.
 - **Multi-tenant:** no aplica del lado Controlmatica (una sola empresa). Taimes gestiona
   la separación por tenant y credenciales.
 - **Convención de nombres:** `<modulo>_<accion>` (ej. `cost_centers_create`, `reports_list`, `materials_get`).
 - **Alcance actual:** por ahora se exponen solo tools de **lectura y creación** (list/get/create)
-  más `records_search`/`records_aggregate`. Las de editar/eliminar no están disponibles todavía.
+  más `records_search`/`records_aggregate` y las acciones de dominio explícitamente listadas
+  (`expense_budgets_available`, `expense_rules_validate`, `report_expenses_attach_receipt`,
+  `users_find_by_phone`). Las de editar/eliminar no están disponibles.
+
+---
+
+## 5.1 Identificación del actor (quién reporta el gasto)
+
+Controlmatica necesita saber **a nombre de quién** queda cada gasto. Taimes lo dice con dos
+headers, que se envían en **cada** request:
+
+| Header | Valor | Cuándo |
+|---|---|---|
+| `X-Actor-Phone` | El número de WhatsApp del remitente, en cualquier formato (`+57 300 123 4567`, `3001234567`, `whatsapp:+573001234567`) | Canal WhatsApp |
+| `X-Actor-Email` | El correo del usuario de Taimes | Canal web |
+
+Reglas, en este orden:
+
+1. Si llega `X-Actor-Email` y coincide con un usuario, ese es el actor.
+2. Si no, se normaliza `X-Actor-Phone` (**últimos 10 dígitos**, para absorber el `+57` y el
+   prefijo `whatsapp:`) y se busca en `users.phone_normalized`.
+3. **Si el número está registrado en DOS usuarios, no se identifica a nadie.** Dos
+   coincidencias significan cero actor, nunca "el primero": atribuirle el gasto a uno de dos
+   personas que comparten línea es peor que no registrarlo.
+4. Sin actor y sin `user_invoice_id` explícito, estas tools **rechazan y no crean nada**:
+   `report_expenses_create`, `expense_ratios_create`, `report_expenses_attach_receipt` y
+   `expense_budgets_available`. El texto de respuesta contiene *"no se pudo identificar a la
+   persona que reporta"*.
+
+Diagnóstico: `users_find_by_phone` dice si un número resuelve, no resuelve (`no_match`) o está
+repetido (`ambiguous`). Es la tool que usa soporte cuando alguien reporta "el bot no me deja
+registrar".
+
+> **Precondición operativa:** `users.phone` tiene que estar **poblado**. Si está vacío, en modo
+> estricto todo gasto por WhatsApp se rechaza. La carga inicial es una tarea de datos, no de
+> código.
+
+**Válvula de reversión:** `MCP_STRICT_EXPENSE_ACTOR=false` restaura el comportamiento anterior
+(fallback al Administrador) **sin desplegar código**. Por defecto —variable ausente— el modo es
+estricto. Existe para poder revertir en caliente si Taimes todavía no envía los headers.
+
+---
+
+## 5.2 Adjuntar comprobantes (3 pasos)
+
+El binario **no viaja por MCP**: una foto de factura de 3 MB son ~4 MB de base64 dentro del
+contexto del modelo. El agente pide una URL firmada, sube el archivo directo a S3 y confirma.
+
+```bash
+# 1) URL firmada (el gasto YA tiene que existir: no hay comprobantes huérfanos)
+curl -sS -X POST https://<host>/mcp \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -H "X-Api-Key: $MCP_API_KEY" -H "X-Actor-Phone: +573001234567" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        "name":"report_expenses_receipt_url_get",
+        "arguments":{"report_expense_id":8813,"filename":"factura.pdf",
+                     "content_type":"application/pdf","byte_size":184320}}}'
+# -> { "upload_url": "...", "upload_key": "uploads/tmp/mcp_receipts/<uuid>/factura.pdf",
+#      "method":"PUT", "headers":{"Content-Type":"application/pdf"} }
+
+# 2) PUT directo a S3, SIN cabecera de autorización y con EXACTAMENTE ese Content-Type
+curl -sS -X PUT --upload-file factura.pdf \
+  -H 'Content-Type: application/pdf' "<upload_url>"
+
+# 3) Asociar el archivo al gasto
+curl -sS -X POST https://<host>/mcp \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -H "X-Api-Key: $MCP_API_KEY" -H "X-Actor-Phone: +573001234567" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        "name":"report_expenses_attach_receipt",
+        "arguments":{"report_expense_id":8813,
+                     "upload_key":"uploads/tmp/mcp_receipts/<uuid>/factura.pdf"}}}'
+```
+
+Detalles que evitan horas perdidas:
+
+- El `Content-Type` del PUT debe ser **byte a byte** el que se firmó, o S3 responde
+  `403 SignatureDoesNotMatch` y el mensaje no explica nada.
+- La URL firmada dura **15 minutos**. Máximo **10 MB**. Extensiones: jpg, jpeg, png, webp,
+  heic, pdf.
+- Solo se aceptan `upload_key` emitidas por `report_expenses_receipt_url_get`. Cualquier otra
+  ruta del bucket se rechaza: es un control de seguridad, no un formato.
+- Alternativa sin S3 (o archivos pequeños): `file_base64` + `filename` + `content_type`,
+  máximo 4 MB codificados. Si llegan los dos, gana `upload_key`.
+- `receipt_file_url` es una URL **firmada y de corta duración**. El agente no debe guardarla ni
+  reenviarla de conversaciones viejas: cuando la necesite, vuelve a llamar a
+  `report_expenses_get`.
 
 ---
 
@@ -170,7 +259,7 @@ alta* → `<modulo>_create`. Antes de crear, usa las tools de lookup (`users_lis
 
 ---
 
-## 7. Catálogo completo de tools (54)
+## 7. Catálogo completo de tools (62)
 
 > Los parámetros `server_context` son internos (no se envían): la autenticación va por el
 > header `X-Api-Key`. Cada tool recibe únicamente los parámetros listados en `arguments`.
@@ -218,7 +307,7 @@ filters={"invoice_value":{"gte":1000000}}, sort="-invoice_value".
 
 | Parámetro | Tipo | Req. | Descripción |
 |---|---|:--:|---|
-| `entity` | enum(cost_centers, customers, contacts, providers, materials, contractors, reports, sales_orders, customer_invoices, material_invoices, report_expenses, shifts, expense_ratios, customer_reports, commissions, quotations, users, notification_alerts, parameterizations, rols, report_expense_options) | ✔ | Módulo a buscar |
+| `entity` | enum(cost_centers, customers, contacts, providers, materials, contractors, reports, sales_orders, customer_invoices, material_invoices, report_expenses, shifts, expense_ratios, customer_reports, commissions, quotations, users, notification_alerts, parameterizations, rols, report_expense_options, expense_budgets, exchange_rates) | ✔ | Módulo a buscar |
 | `filters` | object |  | Campo:condición (valor, array=IN, u objeto de operadores) |
 | `q` | string |  | Texto libre sobre todas las columnas de texto |
 | `sort` | string |  | Orden: "campo", "-campo" (desc), o lista separada por comas |
@@ -600,23 +689,41 @@ Lista facturas de proveedor asociadas a materiales. Filtro opcional material_id.
 
 #### `report_expenses_create`
 
-Registra un gasto/legalización en un centro de costo. Requiere cost_center_id y user_invoice_id. Los valores (invoice_value/tax/total) son opcionales. Usa report_expense_options_list para obtener type_identification_id y payment_type_id válidos.
+Registra un gasto/legalización en un centro de costo. Requiere cost_center_id. El gasto queda
+SIEMPRE a nombre de la persona identificada por `X-Actor-Phone` o `X-Actor-Email`; si no se
+identifica a nadie y no se indica `user_invoice_id` explícito, la tool **rechaza y no registra
+nada**. Antes de llamarla, valida con `expense_rules_validate`.
 
 | Parámetro | Tipo | Req. | Descripción |
 |---|---|:--:|---|
 | `cost_center_id` | integer | ✔ | ID del centro de costo (requerido) |
-| `user_invoice_id` | integer | ✔ | ID del usuario que reporta el gasto (requerido) |
+| `user_invoice_id` | integer |  | ID del usuario que reporta (por defecto, la persona del teléfono o correo) |
 | `invoice_name` | string |  | Nombre/proveedor de la factura (opcional) |
 | `invoice_number` | string |  | Número de factura (opcional) |
 | `invoice_type` | string |  | Tipo de factura (opcional) |
 | `invoice_date` | string |  | Fecha de la factura YYYY-MM-DD (opcional) |
-| `invoice_value` | number |  | Valor base (opcional) |
-| `invoice_tax` | number |  | IVA (opcional) |
-| `invoice_total` | number |  | Total (opcional) |
+| `invoice_value` | number |  | Valor base en COP (opcional) |
+| `invoice_tax` | number |  | IVA en COP (opcional) |
+| `invoice_total` | number |  | Total en COP (opcional) |
 | `identification` | string |  | NIT/identificación (opcional) |
 | `description` | string |  | Descripción (opcional) |
 | `type_identification_id` | integer |  | ID de opción tipo de identificación (opcional) |
 | `payment_type_id` | integer |  | ID de opción tipo de pago (opcional) |
+| `currency` | string |  | Moneda ISO 4217. Válidas: COP, USD, EUR. Default COP |
+| `foreign_value` | number |  | Valor base en la moneda del comprobante (solo si currency ≠ COP) |
+| `foreign_tax` | number |  | Impuestos en la moneda del comprobante |
+| `foreign_total` | number |  | Total en la moneda del comprobante |
+| `exchange_rate` | number |  | Cuántos COP vale 1 unidad de `currency`. Pídela con `exchange_rates_get` |
+| `exchange_rate_date` | string |  | Fecha de la tasa aplicada, YYYY-MM-DD. Normalmente = invoice_date |
+| `confirm_rule_violations` | boolean |  | Solo `true` DESPUÉS de mostrarle las violaciones a la persona y de que confirme registrar igual |
+
+**Campos que escribe el servidor y NO se pueden enviar** (se ignoran si llegan):
+`budget_status`, `budget_reason`, `expense_budget_id`, `exchange_rate_source`,
+`accounting_approved`, `accounting_approved_by_id`, `accounting_approved_at`, `is_acepted`,
+`receipt_file`, `last_user_edited_id`, `rule_violations`.
+
+La respuesta trae además `budget_message` (texto ya redactado en español sobre el resultado
+presupuestal: repítelo tal cual) y `rule_violations`.
 
 #### `report_expenses_get`
 
@@ -628,14 +735,127 @@ Obtiene un gasto/legalización por ID.
 
 #### `report_expenses_list`
 
-Lista gastos/legalizaciones de un centro de costo. Filtros opcionales: cost_center_id, user_invoice_id, q (nombre/descripción). Devuelve hasta `limit` resultados.
+Lista gastos/legalizaciones de un centro de costo. Devuelve hasta `limit` resultados.
 
 | Parámetro | Tipo | Req. | Descripción |
 |---|---|:--:|---|
 | `cost_center_id` | integer |  | Filtra por centro de costo |
 | `user_invoice_id` | integer |  | Filtra por usuario que reporta el gasto |
 | `q` | string |  | Texto en nombre o descripción |
+| `budget_status` | enum(sin_presupuesto, aprobado, excedido) |  | Estado presupuestal |
+| `currency` | string |  | Moneda ISO 4217 del comprobante |
+| `accounting_approved` | boolean |  | Filtra por aprobación contable |
+| `date_from` | string |  | Fecha de factura desde, YYYY-MM-DD |
+| `date_to` | string |  | Fecha de factura hasta, YYYY-MM-DD |
 | `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
+
+Cada fila trae 28 campos, entre ellos `budget_status`, `budget_reason`, `expense_budget_id`,
+los 7 de moneda, `accounting_approved` y `receipt_file_url`.
+
+
+### Gastos IA (presupuesto, moneda, reglas y comprobantes)
+
+> Estas 8 tools son las que usa el agente de WhatsApp. El orden de llamada y los guiones de
+> conversación están en **`docs/TAIMES-AGENTE-GASTOS.md`**.
+
+#### `users_find_by_phone`
+
+Identifica a una persona por su teléfono (cualquier formato). Devuelve `found:false` con
+`reason` = `invalid_phone` | `no_match` | `ambiguous`. **Nunca asumas una persona si `found` es
+false.**
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `phone` | string | ✔ | Número de teléfono en cualquier formato |
+
+#### `expense_budgets_available`
+
+Presupuesto disponible de una persona en un centro: asignado, gastado y disponible, en COP.
+Si se omite `user_id` usa la persona del actor. Usa el campo `message` tal cual: ya viene
+formateado en pesos.
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `cost_center_id` | integer | ✔ | ID del centro de costo |
+| `user_id` | integer |  | ID de la persona (por defecto, el actor) |
+| `exclude_expense_id` | integer |  | Gasto a excluir del gastado (al editar) |
+
+#### `expense_budgets_list`
+
+Partidas presupuestales de un centro y/o de una persona. Cada fila trae `assigned`, `spent` y
+`available` del par (centro, persona). Los montos son strings decimales en COP.
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `cost_center_id` | integer |  | Filtra por centro de costo |
+| `user_id` | integer |  | Filtra por persona beneficiaria |
+| `only_active` | boolean |  | Si true, solo partidas activas |
+| `limit` | integer |  | Máximo de resultados (default 50, máx 200) |
+
+#### `exchange_rates_get`
+
+Tasa de cambio a COP para una moneda y una fecha. Si la fuente no tiene esa fecha devuelve la
+del último día hábil anterior y lo indica en `rate_date` (distinto de `requested_date`).
+**Si no hay tasa devuelve `Error:` — no inventes una tasa, pídesela a la persona.**
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `currency` | string | ✔ | Código ISO 4217. Válidos: COP, USD, EUR |
+| `date` | string | ✔ | Fecha YYYY-MM-DD (normalmente la del comprobante) |
+
+#### `expense_rules_validate`
+
+Valida un gasto candidato contra las reglas de negocio y, opcionalmente, contra el presupuesto.
+**No guarda nada.** Llámala siempre antes de `report_expenses_create`. Devuelve `ok`,
+`blocking_count`, `warning_count`, `violations[]`, `agent_instructions`, `applied_rules` y
+`budget`.
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `cost_center_id` | integer | ✔ | ID del centro de costo |
+| `user_invoice_id` | integer |  | Persona responsable (por defecto, el actor) |
+| `invoice_name` / `identification` / `invoice_number` / `invoice_date` | string |  | Datos del comprobante |
+| `invoice_value` / `invoice_tax` / `invoice_total` | number |  | Valores en COP |
+| `currency` / `foreign_value` / `foreign_tax` / `foreign_total` / `exchange_rate` | — |  | Igual que en `report_expenses_create` |
+| `description` | string |  | Descripción del gasto |
+| `exclude_expense_id` | integer |  | Gasto que se está editando |
+| `include_budget` | boolean |  | Incluir el bloque de presupuesto (default true) |
+
+#### `expense_rules_list`
+
+Reglas de gasto aplicables a una persona, con los límites ya resueltos (antigüedad máxima, tope
+de valor, validación de duplicados) y las instrucciones en texto libre que escribió el
+administrador. **El servidor no evalúa el texto: lo aplica el agente.**
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `user_id` | integer |  | ID de la persona (por defecto, el actor) |
+
+#### `report_expenses_receipt_url_get`
+
+Paso 1 de 2 del comprobante: URL firmada de S3 para subir el archivo con un PUT directo.
+Ver §5.2.
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `report_expense_id` | integer | ✔ | ID del gasto (tiene que existir) |
+| `filename` | string | ✔ | Nombre con extensión: jpg, jpeg, png, webp, heic o pdf |
+| `content_type` | string | ✔ | image/jpeg, image/png, image/webp, image/heic o application/pdf |
+| `byte_size` | integer |  | Tamaño en bytes (máx 10485760) |
+
+#### `report_expenses_attach_receipt`
+
+Paso 2 de 2: asocia al gasto el comprobante ya subido. Alternativa para archivos pequeños:
+`file_base64` (máx 4 MB codificados) con `filename` y `content_type`. Si llegan los dos, gana
+`upload_key`. Reemplaza el comprobante anterior.
+
+| Parámetro | Tipo | Req. | Descripción |
+|---|---|:--:|---|
+| `report_expense_id` | integer | ✔ | ID del gasto |
+| `upload_key` | string |  | Clave devuelta por `report_expenses_receipt_url_get` |
+| `file_base64` | string |  | Contenido del archivo en base64 |
+| `filename` | string |  | Nombre del archivo (requerido con file_base64) |
+| `content_type` | string |  | MIME (requerido con file_base64) |
 
 
 ### Turnos / Agenda
