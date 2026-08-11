@@ -24,7 +24,7 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  cration_date: 2021-06-22
+  creation_date: 2021-06-22
   user_report_id: 1
   start_date: 2021-06-22
   end_date: 2021-06-22
@@ -33,7 +33,7 @@ one:
   user_direction_id: 1
 
 two:
-  cration_date: 2021-06-22
+  creation_date: 2021-06-22
   user_report_id: 1
   start_date: 2021-06-22
   end_date: 2021-06-22

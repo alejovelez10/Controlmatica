@@ -25,18 +25,8 @@
 
 one:
   user_id: 1
-  names: MyString
-  email: MyString
-  document_type: MyString
-  number_document: MyString
-  rol_id: MyString
-  editValues: 
+  editValues:
 
 two:
   user_id: 1
-  names: MyString
-  email: MyString
-  document_type: MyString
-  number_document: MyString
-  rol_id: MyString
-  editValues: 
+  editValues:
