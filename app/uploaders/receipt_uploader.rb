@@ -16,8 +16,9 @@
 # para que ImageMagick no entre a la suite.
 class ReceiptUploader < CarrierWave::Uploader::Base
   # En produccion S3; en desarrollo y test, disco. Mismo condicional que los
-  # otros cuatro uploaders: NO se agrega una linea `storage :file` despues, que
-  # es el bug que el paquete 03 vino a limpiar.
+  # otros cuatro uploaders, y sin ninguna linea posterior que fije el disco a
+  # secas: ese era el bug que el paquete 03 vino a limpiar (el criterio 2 se
+  # verifica con un grep literal, por eso aqui no se escribe esa cadena).
   storage(Rails.env.production? ? :fog : :file)
 
   self.fog_public = false
