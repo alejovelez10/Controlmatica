@@ -714,4 +714,18 @@ module ApplicationHelper
   def authorization_expense_rules
     has_menu_permission?("Reglas de gastos")
   end
+
+  # === CAPTURA ASISTIDA DE COMPROBANTES (paquete 10) =======================
+  # Unico puente entre el kill switch del servidor y el global de JavaScript
+  # `window.CM_RECEIPT_EXTRACTION_ENABLED` que publica layouts/user.html.erb.
+  #
+  # Devuelve `true`/`false` a secas (nunca nil) porque el valor se interpola
+  # CRUDO dentro de un <script>: cualquier otra cosa produciria JavaScript
+  # invalido o un `undefined`, y los dos formularios comparan con `=== true`.
+  #
+  # No lleva `raw`/`html_safe` a proposito: un booleano no tiene nada que
+  # escapar y asi el dia que alguien cambie la fuente no se abre un hueco de XSS.
+  def receipt_extraction_enabled?
+    ReceiptExtractionService.enabled? ? true : false
+  end
 end

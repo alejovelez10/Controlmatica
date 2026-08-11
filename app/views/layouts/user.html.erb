@@ -1303,6 +1303,24 @@
 // Mismo patron que window.cmOpenMenu, que ya existe justo debajo.
 window.CM_CURRENCIES = <%= raw get_currencies.to_json %>;
 
+// CAPTURA ASISTIDA DE COMPROBANTES (paquete 10). Kill switch de UI.
+//
+// Los dos formularios de gasto (el del indice de Gastos y el de la pestana del
+// centro de costos) leen este global para decidir si pintan el boton "Extraer
+// datos del comprobante". Se publica desde aqui, y no por props, por el mismo
+// motivo que CM_CURRENCIES: el modal del indice de Gastos (`renderModal()`) no
+// recibe props y se quedaria sin flag.
+//
+// OJO: este comentario viaja al HTML de TODAS las pantallas, asi que no puede
+// nombrar packs por su nombre exacto — `accounting_expenses_view_test` verifica
+// que la pantalla de Contabilidad no mencione el pack de Gastos.
+//
+// El valor lo manda el servidor: ReceiptExtractionService.enabled? lee el ENV
+// RECEIPT_EXTRACTION_ENABLED, que ARRANCA APAGADO a proposito (el seam
+// call_vision_model todavia no existe; lo completa Taimes). Encenderlo es
+// cambiar la variable de entorno, no tocar codigo.
+window.CM_RECEIPT_EXTRACTION_ENABLED = <%= receipt_extraction_enabled? %>;
+
 // Global openMenu for cm-dt-menu dropdowns (used by all table components)
 window.cmOpenMenu = function(e) {
   e.stopPropagation();
