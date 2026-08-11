@@ -58,3 +58,8 @@ yarn-debug.log*
 # E2E_UPLOAD_ROOT=public.
 /public/uploads/report_expense/
 /tmp/e2e
+
+# Playwright MCP: directorio de trabajo que crea la herramienta al conducir el
+# navegador desde el agente (capturas, trazas, perfil temporal). Es ruido de
+# desarrollo, no artefacto del proyecto.
+/.playwright-mcp
