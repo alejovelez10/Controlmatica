@@ -269,6 +269,22 @@ class ReportExpenseIndex extends React.Component {
     this.loadData();
   }
 
+  // UNICA fuente de los parametros de filtro. Antes la lista estaba copiada en
+  // cuatro sitios (loadData, acceptFilteredExpenses, getExportUrl y
+  // EMPTY_FILTERS) y agregar un filtro en tres de los cuatro produce el peor bug
+  // del modulo: el usuario ve tres filas filtradas, hace clic en "Aceptar
+  // gastos" y el servidor acepta miles porque el PATCH salio sin el filtro.
+  filterParams = function() {
+    var f = this.state.filters;
+    var out = [];
+    if (f.cost_center_id) out.push("cost_center_id=" + f.cost_center_id);
+    if (f.user_invoice_id) out.push("user_invoice_id=" + f.user_invoice_id);
+    if (f.start_date) out.push("start_date=" + f.start_date);
+    if (f.end_date) out.push("end_date=" + f.end_date);
+    if (f.is_acepted) out.push("is_acepted=" + f.is_acepted);
+    return out;
+  }.bind(this);
+
   loadData = function(page, perPage, searchTerm, sortKey, sortDir) {
     var self = this;
     var p = page || this.state.meta.page;
@@ -276,18 +292,13 @@ class ReportExpenseIndex extends React.Component {
     var term = searchTerm !== undefined ? searchTerm : this.state.searchTerm;
     var sk = sortKey !== undefined ? sortKey : this.state.sortKey;
     var sd = sortDir !== undefined ? sortDir : this.state.sortDir;
-    var f = this.state.filters;
 
     self.setState({ loading: true });
 
     var params = ["page=" + p, "per_page=" + pp];
     if (term) params.push("q=" + encodeURIComponent(term));
     if (sk) params.push("sort=" + sk + "&dir=" + sd);
-    if (f.cost_center_id) params.push("cost_center_id=" + f.cost_center_id);
-    if (f.user_invoice_id) params.push("user_invoice_id=" + f.user_invoice_id);
-    if (f.start_date) params.push("start_date=" + f.start_date);
-    if (f.end_date) params.push("end_date=" + f.end_date);
-    if (f.is_acepted) params.push("is_acepted=" + f.is_acepted);
+    params = params.concat(this.filterParams());
 
     fetch("/get_report_expenses?" + params.join("&"), { headers: { "X-CSRF-Token": csrfToken() } })
       .then(function(r) { return r.json(); })
@@ -351,13 +362,7 @@ class ReportExpenseIndex extends React.Component {
 
   acceptFilteredExpenses = function() {
     var self = this;
-    var f = this.state.filters;
-    var params = [];
-    if (f.cost_center_id) params.push("cost_center_id=" + f.cost_center_id);
-    if (f.user_invoice_id) params.push("user_invoice_id=" + f.user_invoice_id);
-    if (f.start_date) params.push("start_date=" + f.start_date);
-    if (f.end_date) params.push("end_date=" + f.end_date);
-    if (f.is_acepted) params.push("is_acepted=" + f.is_acepted);
+    var params = this.filterParams();
 
     fetch("/update_filter_values?" + params.join("&"), {
       method: "PATCH",
@@ -374,17 +379,10 @@ class ReportExpenseIndex extends React.Component {
   closeImportModal = function() { this.setState({ modalImport: false }); }.bind(this);
 
   getExportUrl = function() {
-    var f = this.state.filters;
     if (!this.state.isFiltering) {
       return "/download_file/report_expenses/todos.xlsx";
     }
-    var params = [];
-    if (f.cost_center_id) params.push("cost_center_id=" + f.cost_center_id);
-    if (f.user_invoice_id) params.push("user_invoice_id=" + f.user_invoice_id);
-    if (f.start_date) params.push("start_date=" + f.start_date);
-    if (f.end_date) params.push("end_date=" + f.end_date);
-    if (f.is_acepted) params.push("is_acepted=" + f.is_acepted);
-    return "/download_file/report_expenses/filtro.xlsx?" + params.join("&");
+    return "/download_file/report_expenses/filtro.xlsx?" + this.filterParams().join("&");
   }.bind(this);
 
   openNewModal = function() {

@@ -30,6 +30,7 @@ class ReportExpensesListTool < ApplicationTool
   KEYS = %i[id cost_center_id user_invoice_id invoice_name invoice_date invoice_number invoice_type
             invoice_value invoice_tax invoice_total description identification
             type_identification_id payment_type_id is_acepted created_at
+            budget_status budget_reason expense_budget_id
             currency foreign_value foreign_tax foreign_total
             exchange_rate exchange_rate_date exchange_rate_source
             accounting_approved receipt_file_url].freeze
