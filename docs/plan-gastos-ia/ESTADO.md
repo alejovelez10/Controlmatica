@@ -56,7 +56,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | Ola | Paquete | Estado | Commit | Notas |
 |---|---|---|---|---|
 | — | Migración `users.phone` (Tarea 1 del 11, adelantada) | ✅ | `653e312` | Columna creada y aplicada en dev. **El dato no existe**: 0 de 29 usuarios |
-| 1 | 01 — Infraestructura de pruebas | ⚠️ | `0b37a40`..`9bdc4d0` | Minitest **verde** (42 runs, 0 fallos). **Playwright en ROJO en frío**: `npm run test:smoke` no arranca (Node 22 vs `engines: 16.x`) |
+| 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`0e93f5b` | Minitest **verde** (42 runs, 97 assertions, 0 fallos) y Playwright **verde también en frío** (6 passed, ~21 s) tras `5a31c32` |
 | 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 pruebas verdes |
 | 2 | 02 — Migraciones y esquema | ⬜ | — | |
 | 2 | 03 — Deuda técnica bloqueante | ⬜ | — | Uploaders a S3, refactor de `search`, concern de auditoría |
@@ -142,7 +142,9 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
 
 ### Ola 1 — Infraestructura de pruebas + teléfono (paquete 01 y tarea extra)
 
-**Estado honesto: Minitest verde, Playwright rojo.** El paquete 01 queda en ⚠️, no en ✅.
+**Estado honesto: Minitest verde y Playwright verde, también en frío.** El paquete 01 pasa a ✅
+después de `5a31c32`, `516b4fb` y `0e93f5b`, que cierran los tres hallazgos de la verificación.
+La sección "Lo que quedó en rojo" se conserva más abajo, ya resuelta, porque el diagnóstico sirve.
 
 **Qué se hizo** (22 commits atómicos, `8b3abbc..49d96ec`, ninguno empujado al remoto):
 
@@ -164,28 +166,48 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
 
 | Suite | Comando | Resultado real |
 |---|---|---|
-| Minitest completo | `bundle exec rails test` | ✅ 42 runs, 95 assertions, 0 failures, 0 errors, 0 skips |
+| Minitest completo | `bundle exec rails test` | ✅ 42 runs, 97 assertions, 0 failures, 0 errors, 0 skips |
 | Solo teléfono | `bundle exec rails test test/models/user_phone_test.rb test/controllers/users/registrations_controller_phone_test.rb` | ✅ 24 runs, 47 assertions, 0 fallos |
-| E2E smoke | `npm run test:smoke` | ❌ **no arranca** en frío (ver abajo) |
-| E2E con packs ya compilados | `npx playwright test` tras compilar los packs aparte | ✅ 6 passed en **13,1 s** |
+| E2E smoke en frío | `cd test/e2e && npm run test:smoke` tras `rm -rf public/packs-test tmp/cache/webpacker` | ✅ 6 passed en **~21 s** (6,6 s de webpack) |
+| E2E smoke en tibio | el mismo comando, corrida siguiente | ✅ 6 passed en **~12 s** |
 
 **Cuántas pruebas hay ahora**: 42 casos Minitest repartidos en **5 archivos reales**
 (`user_phone_test` 17, `fixtures_integrity_test` 8, `test_helpers_test` 7,
 `registrations_controller_phone_test` 7, `authentication_smoke_test` 3) + 6 specs Playwright.
 
-**Lo que quedó en rojo**
+**Lo que quedó en rojo (y cómo se cerró)**
 
-1. **`npm run test:smoke` falla en frío, 2 de 2 veces, sin ejecutar un solo test.** Muere en el
+> Resuelto en `5a31c32`, `516b4fb` y `0e93f5b`. Se deja el diagnóstico porque la causa real no era
+> la que se sospechaba y volver a buscarla cuesta horas.
+>
+> **La causa no era el `engines` a secas.** Webpacker 5.4.4 resuelve el binario con `` `yarn bin` ``
+> (`lib/webpacker/runner.rb:13`) y yarn 1.22 antepone a esa salida la secuencia ANSI `\e[2K\e[1G`
+> cuando su stdout es una tubería y no una terminal — justo el caso del `webServer` de Playwright,
+> y por eso `bin/webpack` lanzado a mano sí compilaba. Con la ruta ensuciada, el `File.exist?` del
+> runner da falso y webpacker cae a su plan B, `yarn webpack`; **es ese plan B** el que dispara el
+> chequeo de engines y muere. El arreglo fija `WEBPACKER_NODE_MODULES_BIN_PATH` en `bin/webpack` y
+> `bin/webpack-dev-server`, con lo que ni se ejecuta `yarn bin` ni existe el plan B.
+> **`engines.node: "16.x"` del `package.json` de la raíz se deja intacto**: es el contrato de build
+> con Heroku y tocarlo sí sería tocar producción. Va en los binstubs y no en `prepare.js` porque el
+> compilador on-demand de webpacker (`compile: true` en test) también ejecuta `./bin/webpack`.
+> Un tercer hallazgo, el criterio 13-bis, era un falso positivo de forma: la única aparición de la
+> cadena prohibida en `parameterizations.yml` estaba dentro del comentario que la prohíbe. Se
+> describe con palabras y el test guardián ahora también exige que no aparezca literal.
+
+1. ~~**`npm run test:smoke` falla en frío, 2 de 2 veces, sin ejecutar un solo test.**~~ Moría en el
    paso 2/3 de `test/e2e/scripts/prepare.js` al llamar `bin/webpack`:
    `error Controlmatica@1.19.0: The engine "node" is incompatible with this module. Expected version "16.x". Got "22.22.0"`
    → `Process from config.webServer was not able to start. Exit code: 1`.
    Los 6 specs en sí son correctos (validan `nav-gastos`, `page-report-expenses`, `cm-datatable`,
-   `cm-datatable-row` y el redirect a login sin sesión); lo que está roto es el arranque.
-   **Arreglo pendiente**: alinear la versión de Node (nvm/`engines`) o pasar `--ignore-engines`
-   en el `prepare.js`. Hasta entonces, el E2E **no es ejecutable con un solo comando**.
-2. **`test/e2e/README.md` y el cuerpo del commit `1246b31` mienten sobre los tiempos.** Documentan
-   `bin/webpack` en frío = 6,4 s y `npm run test:smoke` completo ≈ 12 s con 6 tests. Con el repo tal
-   como quedó commiteado, ese comando no llega a correr ningún test. Hay que corregir el README.
+   `cm-datatable-row` y el redirect a login sin sesión); lo que estaba roto era el arranque.
+   **Arreglado en `5a31c32`** (ver el recuadro de arriba: la causa era el `yarn bin` de webpacker,
+   no el `engines` por sí solo). El E2E vuelve a ser ejecutable con un solo comando.
+2. ~~**`test/e2e/README.md` y el cuerpo del commit `1246b31` mienten sobre los tiempos.**~~
+   Documentaban `bin/webpack` en frío = 6,4 s y `npm run test:smoke` completo ≈ 12 s con 6 tests,
+   extrapolando un tiempo medido en tibio al escenario en frío. **Corregido en `0e93f5b`**: la tabla
+   tiene ahora dos filas separadas, frío (~20 s) y tibio (~12 s), medidas de nuevo. El cuerpo del
+   commit `1246b31` no se puede reescribir sin alterar la historia; queda corregido aquí y en el
+   README, que es lo que la gente lee.
 
 **Lo frágil**
 
@@ -194,7 +216,7 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
   salvo `user_phone` / `fixtures_integrity` / `test_helpers`, y todo `test/jobs` y `test/mailers`.
   Que la suite esté "verde" **no** significa que el sistema esté probado.
 - El E2E depende de que `public/packs-test` esté compilado. Es artefacto gitignoreado, así que
-  cualquier máquina nueva empieza en frío — es decir, en el fallo (1).
+  cualquier máquina nueva empieza en frío: son ~8 s extra por corrida, ya no un fallo.
 - `FormCreate.jsx` y `table.jsx` de Usuarios son **código muerto**: el pack monta
   `components/Users/index`. Si alguien edita los muertos, no verá ningún cambio.
 
