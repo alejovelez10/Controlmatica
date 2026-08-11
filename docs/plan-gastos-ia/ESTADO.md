@@ -40,9 +40,22 @@
 > corrida con 4 seeds distintos. E2E Playwright: **6 passed** en 12,8 s. `git status` limpio y
 > **nada empujado al remoto**.
 >
-> 🟡 **Los dos paquetes quedan en ⚠️, no en ✅.** Las salvedades del 07 son 3 (una es un criterio
-> mal calibrado, no el código) y las del 14 son 4, de las que **pesa una: la pantalla React de
-> reglas (Tarea 6) no está hecha**; hoy las reglas solo se administran por JSON.
+> ✅ **REVERIFICADA por un agente independiente (ola 4-bis) que no podía arreglar nada: el verde es
+> real y es sustantivo.** Suite completa **656 runs / 2.050 assertions / 0 failures / 0 errors / 0
+> skips** en 8,5 s con Spring, repetida con `--seed=4242` con cifras idénticas: es determinista, no
+> es suerte de orden. El verificador leyó las pruebas **una por una** y contó **más** de las
+> prometidas: el 07 tiene **110 casos** (prometía 93) y el 14 tiene **65** (prometía 30), todas con
+> aserciones sustantivas y mensajes de fallo explicativos. Los 33 criterios del 07 se comprobaron
+> uno a uno y **cumplen todos salvo el 1**, que está mal calibrado (pide 6 rutas y hay 7 por la
+> línea alias `PUT`). Todos los archivos prometidos existen con contenido real: ninguna clase vacía.
+>
+> 🟡 **Los dos paquetes quedan en ⚠️, no en ✅**, y no por la suite: son huecos de alcance. Las
+> salvedades del 07 son 3 (una es el criterio mal calibrado, no el código) y las del 14 son 5, de
+> las que **pesa una: la pantalla React de reglas (Tarea 6) no está hecha**; hoy las reglas solo se
+> administran por JSON. La ola 4-bis añadió dos hallazgos nuevos, los pendientes **#21 y #22**:
+> el módulo de permisos "Reglas de gastos" **no está sembrado en `create_config.rake`** (una
+> instalación limpia nace sin él, mientras que "Presupuesto" y "Contabilidad" del 07 sí están), y
+> **dos endpoints de lectura responden 200 a cualquier usuario autenticado sin permiso de módulo**.
 >
 > ⚠️ **Una prueba ajena se corrigió, y hay que saberlo**: `report_expenses_receipt_test.rb`
 > (paquete 06) afirmaba que un PATCH con `budget_status: "aprobado"` dejaba el gasto en
@@ -113,12 +126,12 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48). **Salvedades: 5** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07; el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 (hoy son 23); **el commit `28218b2` tocó `test/models/report_expense_audit_legacy_test.rb`, que por §7.2 es del paquete 03, y perdió una aserción**; y `report_expense_import_currency_test.rb` **no ejercita `ReportExpense.import`** (reimplementa el mapeo dentro del propio test) |
 | 3b | 06 — Comprobante y contabilidad | ⚠️ | `d0f1444`..`76fcf2e` (docs `35a6f61`) | **TERMINADO y reverificado por un agente independiente (ola 3b-bis).** 5 commits. Todas las tareas vivas de los bloques A, B y C (A1, A3, A6, A7, A8, A9, B1, B3, B4, B10, B11 y C3 retiradas por auditoría): `ReceiptUploader` privado con las dos allowlists, comprobante montado y auditado (`audit_field :receipt_file`), `delete_receipt`/`download_receipt` con descarga forzada (§7.8), el **backend completo de Contabilidad** (5 endpoints, `filtered_scope` con la excepción de la corrección 13, `ids[]` como filtro válido y tope de 500), las **dos plantillas .axlsx a 18 columnas idénticas**, `ReportExpense.import` con detección de layout y las 2 claves 27-28 del list tool MCP. **98 pruebas propias verdes reconfirmadas por el verificador** (98 runs / 292 assertions / 0 fallos en los 6 archivos del paquete); suite completa **481 runs / 1.432 assertions / 0 fallos** con el 10 mergeado (7,3 s). E2E Playwright: **6 passed**. **Salvedades: 5** — se **regeneraron 2 fixtures .xlsx del paquete 01** (`1df14e8`, violación de §7.2 confirmada por el verificador), los criterios **5, 6** y el test "expone los campos nuevos" quedan **bloqueados por el paquete 07** (serializer + strong params), `KEYS.size` es **25 y no 28** (las 2 claves nuevas caen en 24-25, no en 27-28: faltan las del 11), `GET /accounting_expenses` en HTML no tiene plantilla hasta que mergee el **09** y **ningún E2E ejercita comprobante ni Contabilidad** (es del 12) |
 | 3b | 10 — IA: extracción y reglas | ⚠️ | `41c8bbc`..`1ae2af0` (docs `fbf4f3f`) | **Solo el esqueleto de extracción** (alcance reducido por decisión del cliente: la IA es de Taimes). 2 commits: `ReceiptExtractionService` completo salvo el seam `call_vision_model`, que levanta `NotImplementedError` documentado, más `test/support/fake_anthropic_client.rb` y **49 pruebas** de contrato sin red. Suite completa **481 runs / 1.432 assertions / 0 fallos**. **Reverificado por un agente independiente (ola 3b-bis)**: los 3 archivos existen, el diff toca exactamente esos 3 y hay **cero red** (`grep api_client` en `app/` y `Anthropic::Client.new` en `test/` dan vacío). **Salvedades: 6** — el kill switch arranca **apagado** (el plan lo daba en `true`), no se instaló `gem "anthropic"` (criterio 33), **`vision_client` no existe** (criterio 7: la cadena `timeout: 18, max_retries: 0` solo aparece en un comentario que instruye a Taimes), el motor de reglas se fue al **14**, y el endpoint `extract_receipt` + su ruta + sus 16 tests quedan **declarados y no construidos** |
-| 4 | 07 — API, permisos y rutas | ⚠️ | `ce818d8`..`b886632` | **TERMINADO tras un arreglo de verificación en rojo.** 7 commits. Las 8 tareas vivas (1–4, 21 y los 6 criterios retirados por auditoría no aplican): las 10 claves canónicas de `@estados`, las rutas, `ExpenseBudgetSerializer`, el `ExpenseBudgetsController` completo (6 endpoints, doble capa de autorización, `preload_amounts!` en 2 queries fijas), el `ReportExpenseSerializer` con los **13 atributos nuevos** + `belongs_to :accounting_approved_by` + `receipt_file`, el bloque 6 de `ReportExpensesController` (`q` con `id::text`, los 4 filtros nuevos, `EXPENSE_SORT_COLUMNS`, strong params con comprobante/moneda/`cop_manual_override`, `destroy` con recálculo) y **el cableado presupuestal de la tarea 23**, que era la corrección bloqueante de la auditoría. **105 pruebas propias verdes** en los 4 archivos que el plan exige (60 + 28 + 9 + 8, contra las 93 pedidas); suite completa **656 runs / 2.050 assertions / 0 fallos**, corrida con 4 seeds distintos. E2E Playwright: **6 passed**. **Salvedades: 3** — el criterio 1 pide `grep -c expense_budget == 6` y da **7** (la línea alias `PUT` que genera `resources`; los 6 endpoints y la ausencia del `index` sí son correctos: criterio mal calibrado, no el código); los 4 filtros nuevos se aplican **en el controller y no en `ReportExpense.search`**, porque ese método es del paquete 03 y tiene 6 call sites (mismo camino que ya tomó `AccountingExpensesController#filtered_scope`); y los tests usan `users(:gerente)` como "pleno" y `users(:ingeniero_dos)` con rol reasignado en caliente como "limitado", porque `users(:pleno)`/`users(:limitado)` **no existen** y `users.yml` es del paquete 01 (criterio 33) |
+| 4 | 07 — API, permisos y rutas | ⚠️ | `ce818d8`..`b886632` | **TERMINADO tras un arreglo de verificación en rojo, y REVERIFICADO en verde por un agente independiente (ola 4-bis).** 7 commits. Las 8 tareas vivas (1–4, 21 y los 6 criterios retirados por auditoría no aplican): las 10 claves canónicas de `@estados`, las rutas, `ExpenseBudgetSerializer`, el `ExpenseBudgetsController` completo (6 endpoints, doble capa de autorización, `preload_amounts!` en 2 queries fijas), el `ReportExpenseSerializer` con los **13 atributos nuevos** + `belongs_to :accounting_approved_by` + `receipt_file`, el bloque 6 de `ReportExpensesController` (`q` con `id::text`, los 4 filtros nuevos, `EXPENSE_SORT_COLUMNS`, strong params con comprobante/moneda/`cop_manual_override`, `destroy` con recálculo) y **el cableado presupuestal de la tarea 23**, que era la corrección bloqueante de la auditoría. **110 pruebas propias verdes recontadas una por una por el verificador independiente** en los 5 archivos del paquete (`expense_budgets_controller_test` 60, `report_expenses_controller_test` 28, `report_expenses_budget_wiring_test` 9, `report_expense_serializer_test` 8, `expense_budget_serializer_test` 5), contra las **93 pedidas**: están las 93 nominadas por nombre, más extras; suite completa **656 runs / 2.050 assertions / 0 fallos** (8,5 s con Spring), reconfirmada con `--seed=4242` con cifras idénticas. Subconjunto del criterio 24 (`test/controllers test/serializers`): **198 runs / 730 assertions / 0 fallos**. E2E Playwright: **6 passed**. **Los 33 criterios verificados uno a uno: cumplen 32.** **Salvedades: 3** — el criterio 1 pide `grep -c expense_budget == 6` y da **7** (la línea alias `PUT` que genera `resources`; los 6 endpoints y la ausencia del `index` sí son correctos: criterio mal calibrado, no el código); los 4 filtros nuevos se aplican **en el controller y no en `ReportExpense.search`**, porque ese método es del paquete 03 y tiene 6 call sites (mismo camino que ya tomó `AccountingExpensesController#filtered_scope`); y los tests usan `users(:gerente)` como "pleno" y `users(:ingeniero_dos)` con rol reasignado en caliente como "limitado", porque `users(:pleno)`/`users(:limitado)` **no existen** y `users.yml` es del paquete 01 (criterio 33) |
 | 5 | 09 — Frontend: tablas y contabilidad | ⬜ | — | |
 | 5 | 11 — MCP y contrato con Taimes | ⬜ | — | Sin la Tarea 1, ya hecha |
 | 6 | 08 — Frontend: presupuesto y formulario | ⬜ | — | |
 | 7 | 12 — Suite E2E Playwright | ⬜ | — | |
-| 4 | 14 — Reglas de gastos configurables | ⚠️ | `6dac5f9`..`e34111e` | **Backend TERMINADO; el frontend NO.** 4 commits. Tareas 1 a 5 completas: las 2 migraciones (con el índice único **parcial** `WHERE (is_default AND active)` y `report_expenses.rule_violations` jsonb), el modelo `ExpenseRule` con la resolución de 3 ramas (`aplicables_a`), `ExpenseRuleService` con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en `ReportExpense` (`before_save`, que corre **después** del `evaluate!` del presupuesto y por eso puede pisarle el "aprobado"), y `ExpenseRulesController` + rutas + `ExpenseRuleSerializer` + rake de permisos propia. **65 pruebas propias verdes** (15 modelo + 26 servicio + 24 controller, contra las 30 pedidas); suite completa **656 runs / 2.050 assertions / 0 fallos**. **Salvedades: 4** — (1) **la Tarea 6 (pantalla React bajo Configuración) NO está hecha**: hoy las reglas solo se administran por JSON; (2) la **Tarea 7 (tool MCP `expense_rules_for_user`) tampoco**, porque `app/tools/*` es del paquete **11** (§7.2) — el endpoint HTTP que necesita ya existe; (3) los **4 escenarios E2E** son del paquete **12** por §7.2, igual que los del 07 que la auditoría retiró; (4) `rule_violations` **no se expone en `ReportExpenseSerializer`**: ese archivo es dueño único del 07 y agregarle un atributo del 14 rompería §7.2 — hace falta decidir quién lo agrega antes de que el 08/09 pinten la advertencia |
+| 4 | 14 — Reglas de gastos configurables | ⚠️ | `6dac5f9`..`e34111e` | **Backend TERMINADO y reverificado en verde por un agente independiente (ola 4-bis); el frontend NO.** 4 commits. Tareas 1 a 5 completas: las 2 migraciones (con el índice único **parcial** `WHERE (is_default AND active)` y `report_expenses.rule_violations` jsonb), el modelo `ExpenseRule` con la resolución de 3 ramas (`aplicables_a`), `ExpenseRuleService` con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en `ReportExpense` (`before_save`, que corre **después** del `evaluate!` del presupuesto y por eso puede pisarle el "aprobado"), y `ExpenseRulesController` + rutas + `ExpenseRuleSerializer` + rake de permisos propia. **65 pruebas propias verdes recontadas por el verificador independiente** (15 modelo + 26 servicio + 24 controller, contra las **30 pedidas**: los 30 casos nominados en el documento están todos presentes por nombre); suite completa **656 runs / 2.050 assertions / 0 fallos**. **De los 8 criterios de aceptación cumplen los 6 de backend** (varias reglas, gana la más restrictiva, fallback a la default, deterministas en servidor vía `before_save` —así aplica igual a web, MCP e import—, el semántico no se evalúa, y una violación no bloquea el guardado pero fuerza `sin_presupuesto` con auditoría en `RegisterEdit`); **incumplen 2 por alcance no ejecutado**: no hay pantalla (Tarea 6) ni los 4 escenarios E2E. **Salvedades: 5** — (1) **la Tarea 6 (pantalla React bajo Configuración) NO está hecha**: hoy las reglas solo se administran por JSON; (2) la **Tarea 7 (tool MCP `expense_rules_for_user`) tampoco**, porque `app/tools/*` es del paquete **11** (§7.2) — el endpoint HTTP que necesita ya existe; (3) los **4 escenarios E2E** son del paquete **12** por §7.2, igual que los del 07 que la auditoría retiró; (4) `rule_violations` **no se expone en `ReportExpenseSerializer`**: ese archivo es dueño único del 07 y agregarle un atributo del 14 rompería §7.2 — hace falta decidir quién lo agrega antes de que el 08/09 pinten la advertencia; **(5) el módulo de permisos "Reglas de gastos" NO está sembrado en `lib/tasks/create_config.rake`** (hallazgo nuevo de la ola 4-bis, pendiente **#21**): existe `lib/tasks/permissions_expense_rules.rake` para instalaciones ya montadas, pero una **instalación limpia nace sin el módulo**, mientras que "Presupuesto" y "Contabilidad" del 07 sí están replicados en `create_config.rake` (líneas 275 y 285) |
 | 8 | 13 — Cierre, documentación y puesta en marcha | ⬜ | — | |
 
 Leyenda: ⬜ pendiente · ⏳ en curso · ✅ terminado y probado · ⚠️ terminado con salvedades
@@ -297,6 +310,27 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     `resources :expense_budgets` genera además la línea alias `PUT` junto a la `PATCH`. Los 6
     endpoints distintos son los correctos y `GET /expense_budgets` (el `index`) **no** existe, que
     es la mitad importante del criterio. Se corrige el criterio, no el `routes.rb`.
+21. **Sembrar el módulo "Reglas de gastos" en `lib/tasks/create_config.rake`** (hallazgo de la ola
+    4-bis). `grep -n 'Reglas de gastos' lib/tasks/create_config.rake` no devuelve **nada**, mientras
+    que los módulos "Presupuesto" y "Contabilidad" del paquete 07 sí están replicados ahí (líneas
+    **275** y **285**). Consecuencia concreta: en una **instalación limpia** el módulo de reglas no
+    nace, y por tanto nadie puede tener permiso sobre él sin correr aparte
+    `lib/tasks/permissions_expense_rules.rake`. En una instalación ya montada (dev, staging, prod)
+    la rake propia lo crea, así que no rompe nada hoy; el riesgo es futuro y silencioso. **Es una
+    decisión de propiedad**: `create_config.rake` no aparece en la tabla de archivos del paquete 14
+    y tocarlo desde ahí sería una desviación de §7.2, igual que la que el plan lleva evitando desde
+    la ola 1.
+22. **Decidir si se cierra el hueco de autorización de dos endpoints de lectura** (hallazgo de la
+    ola 4-bis; es **heredado**, no lo introdujo esta ola, pero ahora está por escrito).
+    `GET /get_expense_rules_for_user` y `GET /get_expense_budget_available` responden **200 a
+    cualquier usuario autenticado, sin verificar permiso de módulo**. En el caso de `available` es
+    deliberado y está probado (criterio 7 del paquete 07: el formulario de gasto necesita saber el
+    cupo disponible aunque quien lo llena no administre presupuesto), pero **filtra el cupo de
+    cualquier centro a cualquier empleado con sesión**. En el de las reglas, expone qué reglas se le
+    aplican a cualquier usuario que se pida por parámetro. Ninguno permite escribir. Si el cliente
+    considera que el cupo por centro es información sensible, hay que acotarlos —por ejemplo, a los
+    centros que el usuario ve— y eso **cambia un criterio de aceptación ya aprobado**, así que no se
+    hizo por cuenta propia.
 
 ---
 
@@ -1563,3 +1597,110 @@ ninguno de estos dos paquetes.
 7. **Las fixtures de `expense_rules.yml` no traen ninguna regla por defecto activa**, y es
    deliberado: una regla default aplica a las ocho fixtures de usuario y le cambiaría el
    `budget_status` a media suite ajena. Los tests que la necesitan la crean ellos.
+
+---
+
+### Ola 4-bis — Verificación final independiente de los paquetes 07 y 14 (2026-08-11)
+
+Un agente que **no podía arreglar nada** volvió a correr todos los comandos y a comprobar los
+criterios uno por uno, leyendo las pruebas de a una para ver si eran sustantivas o decorativas.
+**Resultado: VERDE.** La ola 4 queda cerrada en `ce818d8..8efb65a` (9 commits atómicos, incluido el
+del tablero). Los dos paquetes se quedan en ⚠️ y no en ✅ **por huecos de alcance, no por la suite**.
+
+**Qué se construyó en la ola** (lo que existe hoy, no lo que se prometió):
+
+- **Paquete 07**: `app/controllers/expense_budgets_controller.rb` (323 líneas),
+  `app/serializers/expense_budget_serializer.rb` (51), `app/serializers/report_expense_serializer.rb`
+  (118), `app/controllers/report_expenses_controller.rb` (538) y
+  `app/controllers/cost_centers_controller.rb` (651).
+- **Paquete 14**: `app/models/expense_rule.rb` (201), `app/services/expense_rule_service.rb` (145),
+  `app/controllers/expense_rules_controller.rb` (164), 2 migraciones y `db/schema.rb` al día en la
+  versión `2026_08_11_000002`.
+- **Todos los archivos prometidos existen y con contenido real: ninguna clase vacía, ningún stub.**
+
+**Cuántas pruebas hay ahora y cuánto tardan**
+
+| Suite | Resultado literal | Tiempo |
+|---|---|---|
+| `bin/rails test` (completa) | `656 runs, 2050 assertions, 0 failures, 0 errors, 0 skips` — exit 0 | **8,5 s** con Spring |
+| La misma con `--seed=4242` | cifras **idénticas** (656 / 2.050 / 0 / 0 / 0) | — |
+| `bin/rails test test/controllers test/serializers` (criterio 24 del 07) | `198 runs, 730 assertions, 0F / 0E / 0S` | — |
+| Solo los 8 archivos de los paquetes 07 y 14 | `175 runs, 616 assertions, 0F / 0E / 0S` | — |
+| `npx playwright test` (en `test/e2e`) | `6 passed` | **13,0 s** |
+
+Repetir la suite con otro seed y obtener el mismo número **importa**: descarta que el verde dependa
+del orden de ejecución. Es determinista, no es suerte.
+
+**Las pruebas son reales, y hay más de las pedidas.** El verificador las leyó una por una y
+confirmó aserciones sustantivas con mensajes de fallo explicativos:
+
+| Paquete | Prometidas | Reales | Desglose |
+|---|---|---|---|
+| 07 | 93 | **110** | `expense_budgets_controller_test` 60, `report_expenses_controller_test` 28, `report_expenses_budget_wiring_test` 9, `report_expense_serializer_test` 8, `expense_budget_serializer_test` 5 |
+| 14 | 30 | **65** | `expense_rule_test` 15, `expense_rule_service_test` 26, `expense_rules_controller_test` 24 |
+
+Los 30 casos nominados en el documento del 14 están **todos** presentes por nombre; los 93 del 07
+también, más extras.
+
+**Los criterios de aceptación, uno por uno.** Del paquete 07 se comprobaron los **33** y cumplen
+**32**: el único que falla es el **criterio 1**, y falla por estar mal calibrado, no por el código
+(pendiente #20). Entre lo verificado a mano: C6 (los 5 endpoints devuelven 403 con cuerpo JSON, con
+test de bucle), C7 (`available` accesible sin permiso, por diseño), C8 (dueño de centro sin "Ver
+todos"), C9/C10 (los 6 campos de servidor **no** aparecen en `EXPENSE_WRITABLE_PARAMS`, con 7 tests
+de mass-assignment), C11-C13 (`q` con `id::text`, sin filtros devuelve todo, orden), C14/C15/C16
+(los 13 atributos nuevos + `accounting_approved_by`; `receipt_file` devuelve `nil` y no `{url:null}`;
+no hay `belongs_to :expense_budget`), C17 (`destroy` recalcula `viat_costo_real`), C18-C21 (alias
+`beneficiaries`, sin `PG::DuplicateAlias`, tope 100, menos de 15 queries), C22 (las 10 claves
+canónicas exactas en `@estados`, sin `budget_view` ni `is_cost_center_owner`), C26/C29/C32 (grep
+sobre el diff: sin migraciones, sin React, sin axlsx, sin rake), C27 (el cableado presupuestal
+—`aprobado`, `excedido`, `sin_presupuesto`— verificado por **HTTP real** en
+`report_expenses_budget_wiring_test`), C28, C30 (multipart con comprobante y `remove_receipt_file`),
+C31 y C33 (`users.yml` cambia **exactamente una línea**).
+Del paquete 14 se comprobaron los **8** y cumplen los **6 de backend**; los 2 que faltan son los de
+alcance no ejecutado (pantalla y E2E).
+
+**Lo frágil, pendiente o asumido — sin adornos**
+
+1. **CERO cobertura E2E de la superficie de los paquetes 07 y 14.** `test/e2e/specs/` contiene
+   únicamente `auth.setup.js` y `smoke.spec.js`. Los "6 passed" de Playwright son los smokes del
+   paquete 01 y **no tocan ni una pantalla de presupuesto, ni de reglas, ni el formulario de gasto
+   nuevo**. Por §7.2 los specs funcionales son del paquete **12**, así que no es un incumplimiento
+   del 07/14 — pero la promesa del 14 ("los 4 escenarios E2E pasan") **no está cumplida, porque esos
+   escenarios no existen**. Lo que sostiene toda esta superficie son 175 pruebas de controlador y
+   de modelo.
+2. **La pantalla de reglas de gastos (Tarea 6 del 14) no existe.**
+   `find app/javascript -iname '*ExpenseRule*' -o -iname '*Regla*'` no devuelve nada. Hoy una regla
+   solo se crea por JSON. Pendiente **#18**.
+3. **`rule_violations` no llega al navegador.** Aparece únicamente en el bloque `annotate` de
+   `app/serializers/report_expense_serializer.rb`, **no en sus `attributes`**: el JSON del gasto no
+   trae la clave. La mitad visible del criterio "una violación no impide guardar pero impide
+   aprobar" **no se puede pintar**. Pendiente **#19**.
+4. **La tool MCP `expense_rules_for_user` (Tarea 7 del 14) no existe.**
+   `grep -rn expense_rules_for_user` solo encuentra el endpoint HTTP `GET /get_expense_rules_for_user`
+   y sus 4 pruebas de controlador. `app/tools/*` es del paquete **11** por §7.2.
+5. **El módulo de permisos "Reglas de gastos" no se siembra en instalaciones limpias.** Pendiente
+   **#21**, nuevo. No rompe nada hoy porque `permissions_expense_rules.rake` lo crea en las
+   instalaciones existentes, pero es un fallo silencioso a futuro.
+6. **Hallazgo de seguridad heredado, anotado por primera vez.**
+   `GET /get_expense_rules_for_user` y `GET /get_expense_budget_available` responden **200 a
+   cualquier usuario autenticado**, sin permiso de módulo. El de `available` es deliberado (criterio
+   7 del 07), pero expone el cupo de cualquier centro a cualquier empleado con sesión. Pendiente
+   **#22**. **No es un fallo de esta ola y no se corrigió**: tocarlo cambia un criterio ya aprobado.
+7. **Nomenclatura de fixtures desalineada con el documento del 07**: las etiquetas `users(:pleno)` y
+   `users(:limitado)` que nombra el plan **no existen** en `test/fixtures/users.yml`. Es desfase de
+   texto, no de software (ver salvedad 3 del paquete 07 en el tablero).
+8. **El criterio 1 del 07 sigue en rojo por su propia redacción**:
+   `bin/rails routes | grep -c expense_budget` devuelve **7** y el criterio exige exactamente 6. No
+   es un test de la suite. Pendiente **#20**.
+
+**Honestidad sobre la prueba ajena que se tocó.** El verificador leyó el diff de
+`test/controllers/report_expenses_receipt_test.rb` (paquete 06) y confirma lo que ya decía la
+entrada anterior: cambia `budget_status: "aprobado"` por un valor centinela inventado y **añade dos
+aserciones**. La prueba quedó **más estricta**, no más laxa: antes pasaba por la razón equivocada,
+porque no distinguía un mass-assignment bloqueado de un cálculo legítimo. **Ninguna prueba se borró,
+se saltó ni se relajó en toda la rama, y los 0 skips de la suite lo confirman.**
+
+**Higiene git verificada**: `git status` limpio, nada sin commitear. 9 commits atómicos de la ola 4
+(`ce818d8..8efb65a`), todos en español explicando el porqué y con el trailer `Co-Authored-By`. Rama
+`feature/gastos-presupuesto-ia`. **Nada empujado al remoto** (verificado: no se ejecutó ningún
+`push`) y **producción intacta**.
