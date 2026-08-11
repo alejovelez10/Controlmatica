@@ -14,14 +14,41 @@
 #  index_module_controls_on_name  (name)
 #
 
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Los 6 modulos reales. El sistema los busca por STRING LITERAL
+# (has_menu_permission?("Gastos", "Crear")), asi que los MyString del scaffold
+# eran inservibles.
+#
+# "Reportes de servicios" y "Tablero de Ingenieros" son OBLIGATORIOS:
+# ApplicationController#after_sign_in_path_for hace .id sobre
+# ModuleControl.find_by_name sin guarda de nil. Sin ellos, cualquier prueba que
+# haga login por el formulario revienta con NoMethodError.
 
-one:
-  name: MyString
-  description: MyText
-  user_id: 1
+gastos:
+  name: Gastos
+  description: Control de gastos
+  user: admin
 
-two:
-  name: MyString
-  description: MyText
-  user_id: 1
+centro_costos:
+  name: Centro de Costos
+  description: Centros de costo
+  user: admin
+
+presupuesto:
+  name: Presupuesto
+  description: Partidas presupuestales por centro y usuario
+  user: admin
+
+contabilidad:
+  name: Contabilidad
+  description: Aprobacion contable de gastos
+  user: admin
+
+reportes:
+  name: Reportes de servicios
+  description: Reportes de servicio
+  user: admin
+
+tablero:
+  name: Tablero de Ingenieros
+  description: Tablero de ingenieros
+  user: admin

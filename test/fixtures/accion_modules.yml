@@ -16,16 +16,112 @@
 #  index_accion_modules_on_name               (name)
 #
 
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Las 21 acciones reales. Se buscan por (name, module_control_id) con string
+# literal, asi que los MyString del scaffold eran inservibles.
+# AccionModule belongs_to :user es REQUERIDO: todas llevan user.
+# Las etiquetas de este archivo son las que rols.yml referencia en su HABTM inline.
 
-one:
-  name: MyString
-  description: MyText
-  user_id: 1
-  module_control_id: 1
+gastos_ingreso:
+  name: Ingreso al modulo
+  module_control: gastos
+  user: admin
 
-two:
-  name: MyString
-  description: MyText
-  user_id: 1
-  module_control_id: 1
+gastos_crear:
+  name: Crear
+  module_control: gastos
+  user: admin
+
+gastos_editar:
+  name: Editar
+  module_control: gastos
+  user: admin
+
+gastos_eliminar:
+  name: Eliminar
+  module_control: gastos
+  user: admin
+
+gastos_aceptar:
+  name: Aceptar gasto
+  module_control: gastos
+  user: admin
+
+gastos_exportar:
+  name: Exportar a excel
+  module_control: gastos
+  user: admin
+
+gastos_ver_todos:
+  name: Ver todos
+  module_control: gastos
+  user: admin
+
+gastos_responsable:
+  name: Cambiar responsable
+  module_control: gastos
+  user: admin
+
+presupuesto_ingreso:
+  name: Ingreso al modulo
+  module_control: presupuesto
+  user: admin
+
+presupuesto_crear:
+  name: Crear
+  module_control: presupuesto
+  user: admin
+
+presupuesto_editar:
+  name: Editar
+  module_control: presupuesto
+  user: admin
+
+presupuesto_eliminar:
+  name: Eliminar
+  module_control: presupuesto
+  user: admin
+
+presupuesto_ver_todos:
+  name: Ver todos
+  module_control: presupuesto
+  user: admin
+
+contabilidad_ingreso:
+  name: Ingreso al modulo
+  module_control: contabilidad
+  user: admin
+
+contabilidad_aprobar:
+  name: Aprobar
+  module_control: contabilidad
+  user: admin
+
+contabilidad_exportar:
+  name: Exportar a excel
+  module_control: contabilidad
+  user: admin
+
+contabilidad_ver_todos:
+  name: Ver todos
+  module_control: contabilidad
+  user: admin
+
+centro_ingreso:
+  name: Ingreso al modulo
+  module_control: centro_costos
+  user: admin
+
+centro_editar:
+  name: Editar
+  module_control: centro_costos
+  user: admin
+
+reportes_ingreso:
+  name: Ingreso al modulo
+  module_control: reportes
+  user: admin
+
+tablero_ver:
+  name: Ver tablero
+  module_control: tablero
+  user: admin

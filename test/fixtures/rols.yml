@@ -1,0 +1,53 @@
+# == Schema Information
+#
+# Table name: rols
+#
+#  id          :bigint           not null, primary key
+#  description :text
+#  name        :string
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  user_id     :integer
+#
+# Indexes
+#
+#  index_rols_on_name  (name)
+#
+
+# Roles canonicos del proyecto. Los demas paquetes AGREGAN etiquetas aqui,
+# nunca renombran ni reescriben las existentes (00-ARQUITECTURA.md 7.2).
+#
+# El HABTM con accion_modules se declara INLINE (lista separada por comas con
+# las etiquetas de accion_modules.yml). NO existe test/fixtures/accion_modules_rols.yml
+# y no se debe crear: una fixture de tabla suelta no resuelve etiquetas y obliga
+# a escribir ActiveRecord::FixtureSet.identify a mano en cada fila.
+
+administrador:
+  name: Administrador   # literal y case-sensitive: is_admin? compara este string
+  description: Acceso total por rol, sin accion_modules asignados
+
+gerente:
+  name: Gerente
+  description: Tiene TODOS los permisos por accion_modules (no es admin)
+  accion_modules: gastos_ingreso, gastos_crear, gastos_editar, gastos_eliminar,
+                  gastos_aceptar, gastos_exportar, gastos_ver_todos, gastos_responsable,
+                  presupuesto_ingreso, presupuesto_crear, presupuesto_editar,
+                  presupuesto_eliminar, presupuesto_ver_todos,
+                  contabilidad_ingreso, contabilidad_aprobar, contabilidad_exportar,
+                  contabilidad_ver_todos, centro_ingreso, centro_editar,
+                  reportes_ingreso, tablero_ver
+
+ingeniero:
+  name: Ingeniero
+  description: Solo crea y edita sus propios gastos
+  accion_modules: gastos_ingreso, gastos_crear, gastos_editar, reportes_ingreso
+
+contador:
+  name: Contador
+  description: Solo contabilidad
+  accion_modules: contabilidad_ingreso, contabilidad_aprobar, contabilidad_ver_todos,
+                  reportes_ingreso
+
+sin_permisos:
+  name: Sin permisos
+  description: Rol vacio, para probar los gates de 403
