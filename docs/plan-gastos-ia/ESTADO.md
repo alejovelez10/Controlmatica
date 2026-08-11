@@ -56,8 +56,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | Ola | Paquete | Estado | Commit | Notas |
 |---|---|---|---|---|
 | — | Migración `users.phone` (Tarea 1 del 11, adelantada) | ✅ | `653e312` | Columna creada y aplicada en dev. **El dato no existe**: 0 de 29 usuarios |
-| 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`0e93f5b` | Minitest **verde** (42 runs, 97 assertions, 0 fallos) y Playwright **verde también en frío** (6 passed, ~21 s) tras `5a31c32` |
-| 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 pruebas verdes |
+| 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`55e460a` | **Verde confirmado por verificación independiente.** Minitest 42 runs / 97 assertions / 0 fallos en 2,19 s; Playwright 6 passed en frío (19,8 s) y en tibio (12,8 s). 25 de 26 criterios de aceptación PASAN (el 13 está RETIRADO por auditoría) |
+| 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 runs / 47 assertions verdes, verificado aparte |
 | 2 | 02 — Migraciones y esquema | ⬜ | — | |
 | 2 | 03 — Deuda técnica bloqueante | ⬜ | — | Uploaders a S3, refactor de `search`, concern de auditoría |
 | 3a | 04 — Presupuesto y aprobación | ⬜ | — | |
@@ -132,9 +132,20 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
 3. **Recolectar los teléfonos** de los usuarios. Es la ruta crítica del canal de WhatsApp.
 4. **Confirmar las decisiones 0.1 a 0.5** de la tabla de arriba.
 5. **Decidir la versión de Node del proyecto.** `package.json` exige `engines: node 16.x` y la
-   máquina corre 22.22.0: por eso `npm run test:smoke` no arranca (ver Bitácora, ola 1). Hay que
-   elegir entre fijar Node 16 (`.nvmrc`) o ampliar `engines`; es un cambio que afecta también al
-   build de despliegue, así que no se tomó por cuenta propia.
+   máquina corre 22.22.0. **Corrección (ola 1, verificación final): el E2E ya NO está roto.**
+   `npm run test:smoke` arranca y pasa en frío y en tibio desde `5a31c32`, porque `bin/webpack` y
+   `bin/webpack-dev-server` fijan `WEBPACKER_NODE_MODULES_BIN_PATH` y así no se ejecuta el plan B
+   `yarn webpack`, que era el que disparaba el chequeo de engines. Lo que sigue pendiente es solo la
+   **decisión de fondo**: fijar Node 16 (`.nvmrc`) o ampliar `engines`. No se tomó por cuenta propia
+   porque `engines.node: "16.x"` es el contrato de build con Heroku y cambiarlo es tocar producción.
+   Mientras no se decida, el arreglo de los binstubs sostiene el desarrollo local sin riesgo.
+6. **Corregir dos criterios de aceptación del paquete 01** (`01-infraestructura-de-pruebas.md`,
+   líneas 1099-1160), que quedaron desalineados con la realidad y confundirán a quien audite después:
+   el **17** pide "5 tests passed" cuando son 6 (el proyecto `setup` de Playwright cuenta), y el
+   **12** pide "los 11 archivos de §7.12" pero su paréntesis exige `wc -l` = 14, que es lo correcto.
+   **No se editaron por cuenta propia**: son el criterio contra el que el cliente juzga el trabajo y
+   cambiarlos sin permiso parecería mover la portería. Decisión de una persona: se corrigen o se
+   dejan como están con esta nota.
 
 ---
 
@@ -146,7 +157,9 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
 después de `5a31c32`, `516b4fb` y `0e93f5b`, que cierran los tres hallazgos de la verificación.
 La sección "Lo que quedó en rojo" se conserva más abajo, ya resuelta, porque el diagnóstico sirve.
 
-**Qué se hizo** (22 commits atómicos, `8b3abbc..49d96ec`, ninguno empujado al remoto):
+**Qué se hizo** (28 commits atómicos, `8b3abbc..55e460a`, ninguno empujado al remoto — este párrafo
+se escribió cuando iban 22 hasta `49d96ec`; los 6 restantes son los arreglos posteriores y el cierre
+del tablero):
 
 - Se desbloqueó el arranque de la suite: fuera `chromedriver-helper` (`0b37a40`) y fuera los 29
   tests de scaffold heredados que ni siquiera cargaban (`85cf0d4`).
@@ -223,3 +236,77 @@ La sección "Lo que quedó en rojo" se conserva más abajo, ya resuelta, porque 
 **Higiene**: `git status --porcelain` vacío, los 22 commits en español con el POR QUÉ en el cuerpo y
 el trailer `Co-Authored-By`. `git branch -r --contains HEAD` vacío y la rama sin upstream: **nada
 salió al remoto**. No se tocó producción.
+
+---
+
+### Ola 1 — Verificación final independiente (cierre)
+
+Un verificador que **no puede arreglar nada** volvió a correr todo desde cero y a comprobar los
+criterios uno por uno. **Resultado: VERDE CONFIRMADO. Ningún fallo.** El paquete 01 queda ✅ en
+`0b37a40..55e460a` (HEAD `55e460a`).
+
+**Qué se construyó en la ola** (resumen de lo que existe hoy, no de lo que se prometió):
+
+- Infraestructura Minitest: `test/support/` con 4 helpers (`authentication_helpers.rb`,
+  `json_helpers.rb`, `permission_helpers.rb`, `upload_helpers.rb`) y autoload; 22 fixtures saneadas
+  que cargan con `fixtures :all`; 14 archivos reales en `test/fixtures/files` (PDF, JPEG, PNG, HEIC,
+  3 XLSX y 2 archivos con MIME mentiroso a propósito, verificados con `file`).
+- `ReportExpense#current_actor_id`: 0 apariciones de `User.current.id` en el modelo, 5 usos del
+  fallback (líneas 53, 149, 214, 275, 337; definido en la 385). Es el que desactiva el gotcha.
+- `lib/tasks/permissions_gastos_ia.rake`: idempotente de verdad, sin ningún `destroy_all`.
+- Infraestructura Playwright completa en `test/e2e/` con su propio `package.json` (engines `>=18`),
+  aislado del `package.json` de la raíz.
+- Teléfono de usuario: modelo, backend y campo en el formulario vivo.
+
+**Cuántas pruebas hay y cuánto tardan**
+
+| Suite | Resultado literal | Tiempo |
+|---|---|---|
+| Minitest completo | `42 runs, 97 assertions, 0 failures, 0 errors, 0 skips` | **2,19 s** (19,2 runs/s) |
+| Subconjunto de teléfono | `24 runs, 47 assertions, 0 failures, 0 errors, 0 skips` | — |
+| Playwright en tibio | `6 passed` | **12,8 s** |
+| Playwright en frío (tras borrar `public/packs-test` y `tmp/cache/webpacker`) | `6 passed` | **19,8 s** (20,18 s de reloj) |
+
+Total: **42 casos Minitest + 6 specs Playwright**. El E2E se corrió tres veces seguidas
+(tibio → frío → tibio) y las tres dieron verde: el seed es idempotente.
+
+**Lo frágil, pendiente o asumido — sin adornos**
+
+1. **La suite verde NO significa que el sistema esté probado.** 30 de los 35 archivos `*_test.rb`
+   siguen siendo stubs de scaffold con **0 casos**: todo `test/controllers` salvo el del teléfono,
+   todo `test/models` salvo `user_phone` / `fixtures_integrity` / `test_helpers`, y **todo**
+   `test/jobs` y `test/mailers`. Los 42 casos que sí existen son sustantivos (prueban el `ensure` de
+   `as_user` ante excepción, la idempotencia de `grant_permission!`, el content-type de las subidas),
+   pero cubren la infraestructura, no el negocio. El negocio lo cubren las olas siguientes.
+2. **`bundle exec rails runner` sigue tardando ~40 s.** No se cuelga (eso quedó cerrado), pero es
+   lento: para consultar la base sigue siendo mejor `psql` directo.
+3. **El E2E depende de un artefacto gitignoreado** (`public/packs-test`). Cualquier máquina nueva
+   arranca en frío: ~7 s extra por corrida. Ya no es un fallo, es un costo.
+4. **`FormCreate.jsx` y `table.jsx` de Usuarios son código muerto.** El pack monta
+   `components/Users/index`. Quien edite los muertos no verá ningún cambio en pantalla.
+5. **Asumido**: el criterio 15 (chromium descargado para Playwright) se dio por bueno de forma
+   indirecta — las dos corridas de Playwright ejecutaron, luego el navegador está. No se repitió la
+   descarga de ~95 MB.
+
+**Tres salvedades documentales.** Ninguna rompe nada, pero el documento del paquete quedó
+desactualizado respecto del código; el desfase es del texto, no del software:
+
+- El **criterio 17** exige "5 tests passed" y la realidad son **6**: el proyecto `setup` de
+  Playwright cuenta como test. Redacción vieja, no un fallo.
+- El **criterio 12** dice "los 11 archivos de §7.12" pero su propio paréntesis exige que `wc -l` dé
+  **14**, que es lo que da. El criterio se contradice a sí mismo.
+- El **pendiente #5** de este mismo archivo afirmaba que "`npm run test:smoke` no arranca". Eso era
+  **falso** desde `5a31c32`. Ya está corregido arriba: quien leyera solo la lista de pendientes
+  concluiría que el E2E está roto cuando no lo está.
+
+**Higiene git verificada**: rama `feature/gastos-presupuesto-ia`, HEAD `55e460a`,
+`git status --porcelain` **vacío después de todas las corridas**. `git branch -r --contains HEAD`
+vacío y "no upstream configured": **nada salió al remoto**. Los 28 commits del plan llevan el
+trailer `Co-Authored-By`; los 3 sin trailer (`62f8f6b`, `45d8f3e`, `eecf7fe`) son preexistentes de
+la rama base `feature/ui-modernization`. Commits atómicos: mediana de 1–4 archivos; los mayores son
+`85cf0d4` (14, borrado de stubs), `1246b31` (14, Playwright) y `c4ef970`/`8b3abbc` (16 y 15, solo
+documentación).
+
+**No se tocó producción.** Las únicas escrituras fueron el rake corrido en `RAILS_ENV=test` (base
+`controlmatica_test`, desechable, la reinicia `db:test:prepare`) y el borrado/recompilado de
+`public/packs-test`, artefacto gitignoreado.
