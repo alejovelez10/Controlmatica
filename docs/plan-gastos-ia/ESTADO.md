@@ -56,8 +56,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | Ola | Paquete | Estado | Commit | Notas |
 |---|---|---|---|---|
 | — | Migración `users.phone` (Tarea 1 del 11, adelantada) | ✅ | `653e312` | Columna creada y aplicada en dev. **El dato no existe**: 0 de 29 usuarios |
-| 1 | 01 — Infraestructura de pruebas | ⏳ | — | Minitest + Playwright desde cero |
-| 1 | Extra — Teléfono en el formulario de usuario | ⏳ | — | Pedido explícito del cliente |
+| 1 | 01 — Infraestructura de pruebas | ⚠️ | `0b37a40`..`9bdc4d0` | Minitest **verde** (42 runs, 0 fallos). **Playwright en ROJO en frío**: `npm run test:smoke` no arranca (Node 22 vs `engines: 16.x`) |
+| 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 pruebas verdes |
 | 2 | 02 — Migraciones y esquema | ⬜ | — | |
 | 2 | 03 — Deuda técnica bloqueante | ⬜ | — | Uploaders a S3, refactor de `search`, concern de auditoría |
 | 3a | 04 — Presupuesto y aprobación | ⬜ | — | |
@@ -131,9 +131,73 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
    de forma intermitente.
 3. **Recolectar los teléfonos** de los usuarios. Es la ruta crítica del canal de WhatsApp.
 4. **Confirmar las decisiones 0.1 a 0.5** de la tabla de arriba.
+5. **Decidir la versión de Node del proyecto.** `package.json` exige `engines: node 16.x` y la
+   máquina corre 22.22.0: por eso `npm run test:smoke` no arranca (ver Bitácora, ola 1). Hay que
+   elegir entre fijar Node 16 (`.nvmrc`) o ampliar `engines`; es un cambio que afecta también al
+   build de despliegue, así que no se tomó por cuenta propia.
 
 ---
 
 ## Bitácora
 
-*(se llena al cerrar cada ola)*
+### Ola 1 — Infraestructura de pruebas + teléfono (paquete 01 y tarea extra)
+
+**Estado honesto: Minitest verde, Playwright rojo.** El paquete 01 queda en ⚠️, no en ✅.
+
+**Qué se hizo** (22 commits atómicos, `8b3abbc..49d96ec`, ninguno empujado al remoto):
+
+- Se desbloqueó el arranque de la suite: fuera `chromedriver-helper` (`0b37a40`) y fuera los 29
+  tests de scaffold heredados que ni siquiera cargaban (`85cf0d4`).
+- Fixtures reales y cargables: se quitaron columnas inexistentes (`d3731fe`), se sembraron roles,
+  usuarios, módulos y acciones (`bde60b0`) y clientes, centros y parámetros, saneando todas las FKs
+  colgantes (`c0ea667`). `fixtures :all` ya no revienta.
+- Helpers compartidos (`as_user`, Devise, JSON, uploads) con autoload de `test/support` (`1d603b1`),
+  y `ReportExpense#current_actor_id` (`36ed510`) como fallback para el gotcha de `User.current`:
+  es lo que hace testeable la auditoría sin tocar el comportamiento en producción.
+- 18 casos que demuestran que la infraestructura funciona (`63466b1`), permisos por rake idempotente
+  (`0e768f6`), los 4 `data-testid` del contrato de E2E (`7aab00d`) y la infraestructura Playwright
+  con 6 smokes (`1246b31`).
+- Teléfono: normalización en el modelo (`0a718cb`), backend que lo permite y lo expone (`b8ef25f`)
+  y el campo en el formulario vivo `app/javascript/components/Users/index.jsx` (`b58927a`).
+
+**Comandos que corren la suite**
+
+| Suite | Comando | Resultado real |
+|---|---|---|
+| Minitest completo | `bundle exec rails test` | ✅ 42 runs, 95 assertions, 0 failures, 0 errors, 0 skips |
+| Solo teléfono | `bundle exec rails test test/models/user_phone_test.rb test/controllers/users/registrations_controller_phone_test.rb` | ✅ 24 runs, 47 assertions, 0 fallos |
+| E2E smoke | `npm run test:smoke` | ❌ **no arranca** en frío (ver abajo) |
+| E2E con packs ya compilados | `npx playwright test` tras compilar los packs aparte | ✅ 6 passed en **13,1 s** |
+
+**Cuántas pruebas hay ahora**: 42 casos Minitest repartidos en **5 archivos reales**
+(`user_phone_test` 17, `fixtures_integrity_test` 8, `test_helpers_test` 7,
+`registrations_controller_phone_test` 7, `authentication_smoke_test` 3) + 6 specs Playwright.
+
+**Lo que quedó en rojo**
+
+1. **`npm run test:smoke` falla en frío, 2 de 2 veces, sin ejecutar un solo test.** Muere en el
+   paso 2/3 de `test/e2e/scripts/prepare.js` al llamar `bin/webpack`:
+   `error Controlmatica@1.19.0: The engine "node" is incompatible with this module. Expected version "16.x". Got "22.22.0"`
+   → `Process from config.webServer was not able to start. Exit code: 1`.
+   Los 6 specs en sí son correctos (validan `nav-gastos`, `page-report-expenses`, `cm-datatable`,
+   `cm-datatable-row` y el redirect a login sin sesión); lo que está roto es el arranque.
+   **Arreglo pendiente**: alinear la versión de Node (nvm/`engines`) o pasar `--ignore-engines`
+   en el `prepare.js`. Hasta entonces, el E2E **no es ejecutable con un solo comando**.
+2. **`test/e2e/README.md` y el cuerpo del commit `1246b31` mienten sobre los tiempos.** Documentan
+   `bin/webpack` en frío = 6,4 s y `npm run test:smoke` completo ≈ 12 s con 6 tests. Con el repo tal
+   como quedó commiteado, ese comando no llega a correr ningún test. Hay que corregir el README.
+
+**Lo frágil**
+
+- **La cobertura es real pero angosta**: 30 de los 35 archivos `*_test.rb` siguen siendo stubs
+  vacíos de scaffold (0 casos) — todo `test/controllers` salvo el del teléfono, todo `test/models`
+  salvo `user_phone` / `fixtures_integrity` / `test_helpers`, y todo `test/jobs` y `test/mailers`.
+  Que la suite esté "verde" **no** significa que el sistema esté probado.
+- El E2E depende de que `public/packs-test` esté compilado. Es artefacto gitignoreado, así que
+  cualquier máquina nueva empieza en frío — es decir, en el fallo (1).
+- `FormCreate.jsx` y `table.jsx` de Usuarios son **código muerto**: el pack monta
+  `components/Users/index`. Si alguien edita los muertos, no verá ningún cambio.
+
+**Higiene**: `git status --porcelain` vacío, los 22 commits en español con el POR QUÉ en el cuerpo y
+el trailer `Co-Authored-By`. `git branch -r --contains HEAD` vacío y la rama sin upstream: **nada
+salió al remoto**. No se tocó producción.
