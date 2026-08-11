@@ -164,10 +164,26 @@
 >    Contabilidad es redirigido sin explicación. **NO corregido** (el layout no es de este paquete):
 >    pendiente #38.
 >
-> 🟡 **El paquete queda en ⚠️, no en ✅.** Las salvedades son los pendientes **#36 a #41**, y la que
+> 🟡 **El paquete queda en ⚠️, no en ✅.** Las salvedades son los pendientes **#36 a #43**, y la que
 > más pesa es la **#36**: los 3 tests de captura asistida por IA quedan en `fixme` porque no existe
 > la ruta `POST /extract_receipt/report_expenses` y el kill switch arranca apagado. Es la frontera de
 > alcance acordada con el cliente, no un olvido.
+>
+> ✅ **REVERIFICADA por un agente independiente que corrió los comandos él mismo y no podía arreglar
+> nada (ola 7, cierre real).** Minitest **939 / 3.311 / 0 / 0 / 0 en 21,4 s**, coincidencia **al
+> dígito** con lo que publica este tablero. E2E **dos corridas seguidas**: 45 passed / 3 skipped / 0
+> failed, exit 0, con `git status --porcelain` vacío antes, entre y después. Los 3 huecos del
+> **07-fix** se comprobaron uno por uno y **los tres son ciertos**. Nada empujado al remoto (la rama
+> no tiene upstream; 152 commits locales por delante de `origin/master`) y producción intacta.
+>
+> 🔴 **La verificación encontró tres desviaciones, ninguna es un test en rojo, y hay que decirlas:**
+> (1) el **criterio 12 está incumplido** — `stub_calls.log` tiene **3 líneas**, no las ≥5 que exige el
+> criterio, y este tablero afirmaba **7**, cifra que **no se reproduce** (pendiente **#42**);
+> (2) el **criterio 27** (captura asistida) **no se ejecuta**: el test está escrito completo pero vive
+> en `test.fixme()` (pendiente **#43**); (3) **la suite volvió a ensuciar stdout** — el
+> `db/seeds/e2e.rb` del 12 emite ~40 `warning: already initialized constant` y tres volcados
+> `== seed E2E ==`, así que la frase del 07-fix "la suite quedó con la salida limpia" **ya no es
+> cierta** (pendiente **#44**). Por eso **el 07-fix también queda en ⚠️, no en ✅**.
 >
 > ➡️ **Lo que sigue es la ola 8: paquete 13 (cierre, documentación y puesta en marcha).**
 
@@ -235,7 +251,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 5 | 09 — Frontend: tablas y contabilidad | ⚠️ | `3d96073`..`d6b182d` | **TERMINADO y reverificado por un agente independiente (ola 5).** 7 commits. Todas las tareas vivas: helpers de presentación de los estados nuevos, las **6 columnas nuevas** en el índice de Gastos y las mismas en la tabla del centro de costo, un **único `filterParams()`** (un solo `cost_center_id=` en todo el pack, con 3 consumidores), 3 filtros nuevos + confirmación de la aceptación masiva con `meta.total`, **columna de selección opt-in en `CmDataTable`** (`indeterminate` por `ref`, `colSpan` que suma la columna) y la **pantalla de Contabilidad con selección múltiple** (`packs/AccountingExpenseIndex.js`, 813 líneas, `views/accounting_expenses/index.html.erb` y `generalcomponents/expenseIndicators.js`). **23 pruebas propias verdes recontadas una a una** por el verificador (`accounting_expenses_view_test` 10, `application_helper_menu_test` 7, `expense_menu_test` 6 → 23 runs / 56 assertions / 0 fallos); suite completa **853 runs / 2.652 assertions / 0 fallos**. **De los 51 criterios cumplen 50.** **Salvedades: 4** — (1) el **criterio 21** (`./bin/webpack` compila sin error) **falla en la letra**: revienta con `ERR_OSSL_EVP_UNSUPPORTED` en Node 22 (problema de entorno **preexistente**, pendiente #5); con `NODE_OPTIONS=--openssl-legacy-provider` compila limpio y emite `AccountingExpenseIndex-05d8b2ed2d16558b532f.js`; (2) se tocó **`generalcomponents/ui/CmPageActions.jsx`** (compartido por ~20 pantallas) para añadirle la prop `testId`, y ese archivo **no está en la tabla del paquete ni en §7.2** (pendiente #25); (3) **~30 criterios de comportamiento puramente de cliente (4-8, 11, 12, 16-18, 27, 28, 31-42) no los ejercita ninguna prueba automática**: no hay runner de JS en el repo y los specs son del 12 — se verificaron **leyendo el código línea por línea** y todos coinciden, pero es inspección, no ejecución; (4) **sus 3 archivos de prueba viven en un commit rotulado "MCP"** (pendiente #23) |
 | 5 | 11 — MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | **TERMINADO y REVERIFICADO por un agente independiente (ola 5).** 12 commits (incluidos los 2 de documentación y el del tablero). Todas las tareas vivas (1 y 2 ya estaban; la 5 retirada por auditoría): actor por teléfono estricto en `ApplicationTool` (`actor_phone`, `actor_user_by_phone`, `actor_user_strict`, `as_actor_strict` con el `ensure` en `begin` interno), `X-Actor-Phone` en `McpController` y `ALWAYS_EXPOSED` con 6 nombres, las 3 claves 17-19 de `ReportExpensesListTool::KEYS` (**ahora 28, criterio compartido cumplido**) + 5 filtros, `report_expenses_create` con actor estricto + guard de `ExpenseRuleService` + `persist_with_evaluation!` + los 6 campos de moneda + `exchange_rate_source` de servidor, el mismo criterio estricto en `expense_ratios_create`, y **8 tools nuevas**: `expense_budgets_list/available`, `exchange_rates_get`, `expense_rules_validate`, `expense_rules_list` (cierra la Tarea 7 del 14), `report_expenses_receipt_url_get/attach_receipt`, `users_find_by_phone`, más `Mcp::S3DirectUpload` y las 2 entidades nuevas de `records_search`. **191 pruebas propias verdes** (contra las ~120 nominadas), suite completa **853 runs / 2.652 assertions / 0 fallos**, corrida 3 veces con seeds distintos. `tools/list` real devuelve **62 tools**. **Salvedades: 4** — (1) **el guard de reglas usa `confirm_rule_violations`** en vez de rechazar siempre: el documento del 11 (criterio 35) y el del 14 ("una violación nunca impide guardar") se contradicen, y se resolvió exigiendo confirmación explícita de la persona, que es lo mismo que hace la web; (2) `report_expenses_attach_receipt` trae el binario por `fog` (`fetch_body`) y **no** con `remote_receipt_file_url=`, porque en CarrierWave 3 esa descarga pasa por `SsrfFilter`; (3) se tocaron **dos tests ajenos** (`report_expenses_list_tool_{currency,accounting}_keys_test.rb`, de los paquetes 05 y 06) para subir sus aserciones de 25 a 28 claves y de índice 16 a 19, que es lo que sus propios comentarios anunciaban; (4) los criterios **27 y 28** (S3 y `heroku restart` en staging) **no se verificaron**: son del paquete 13 y requieren `users.phone` poblado. **La reverificación independiente confirmó las 191 pruebas** (191 runs / 569 assertions / 0 fallos en `test/tools` + `mcp_protocol_test` + `mcp_controller_exposure_test` + `user_phone_test`, exactamente lo prometido), el conteo real de **62 tools** aplicando `exposed?`, `ALWAYS_EXPOSED` con 6 nombres, `KEYS.size == 28` sin repetidos, `ExchangeRatesGetTool::KEYS` con 7 claves y **cero `require_relative`** en las pruebas; y añadió **3 salvedades nuevas**: (5) el **criterio 35** ("un gasto con violación bloqueante es rechazado") **solo se cumple en el camino por defecto**: con `confirm_rule_violations: true` el gasto **sí se crea**, y hay un test que lo consagra — el criterio, tal como está escrito, no admite excepciones (pendiente **#26**); (6) `app/tools/expense_rules_list_tool.rb` (52 líneas, 4 pruebas) **no figura en la tabla "A crear"** del paquete: es alcance extra no declarado; (7) la **segunda mitad del criterio 38** (`db:rollback STEP=1` revierte la migración del teléfono) **NO se verificó de forma independiente** — se comprobó que la migración define `up`/`down` y no `change`, pero **el rollback no se ejecutó** |
 | 6 | 08 — Frontend: presupuesto y formulario | ⚠️ | `9d327e4`..`35570a9` | **TERMINADO.** 5 commits. Todas las tareas vivas (la 1 y los 4 specs Playwright están retirados por auditoría): la **pestaña Presupuesto** completa (`BudgetsTable` + `BudgetSummaryBoard` + `BudgetFormCreate`, tablero de 6 cifras, tabla server-side con las 5 columnas ordenables que el servidor acepta y las 4 con `sortable:false`, alta/edición/anulación y **validación en vivo del tope que deshabilita Guardar**), `users_select` propagado hasta el select de beneficiario, y **los DOS formularios de gasto** (`ReportExpense/FormCreate.jsx` + `renderModal()` del pack) con comprobante, bloque de moneda extranjera con conversión y TRM en vivo, aviso de disponible presupuestal, modal de previsualización y envío por **`FormData`**. Se borró el `estados` hardcodeado en `true` de `ExpensesTable.jsx`. **26 pruebas propias verdes** (5 + 4 + 9 + 8); suite completa **879 runs / 2.956 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas. E2E Playwright: **6 passed** (los smokes del 01). `./bin/webpack` compila con **0 errores y 0 warnings** y `package.json` no cambió. **Verificado a mano en el navegador contra desarrollo** (ver "Ola 6"): la pestaña aparece, el tablero pinta, el bloqueo por tope funciona, la tolerancia de 0,005 deja asignar el disponible exacto, y la conversión USD→COP consulta la TRM real y avisa del desfase de fecha. **Cifras al cierre de la ola (con el 14-ui dentro): 912 runs / 3.037 assertions / 0 failures / 0 errors / 0 skips en 10,5 s**, repetida con `--seed=1337` con cifras idénticas. **Verificación final independiente sobre `5b4b8e9`**: los 3 componentes existen con contenido real (510 + 166 + 197 líneas), los 4 archivos de prueba tienen los nombres exactos del documento, las 26 pruebas traen 21+16+36+28 aserciones reales, los 5 commits tocan **exactamente 13 archivos** y `cost_centers_controller.rb` **no aparece en el diff** (criterio 48 OK); los criterios 6-27, 30, 38-45 y 47-49 se revisaron **uno por uno leyendo el código** y cumplen, incluidos los 63 `data-testid` contados a mano. **Salvedades: 6** — los pendientes **#28 a #30**, **#32** (ningún E2E ejercita esta superficie) y **#33** (la captura asistida es código muerto en pantalla: el flag no está cableado de punta a punta). El **#31** (servidor de desarrollo obsoleto) era de entorno y se resuelve reiniciando |
-| 7 | 12 — Suite E2E Playwright | ⚠️ | `f93c81f`..`ac334a7` | **TERMINADO.** 11 commits atómicos. Los 9 escenarios del documento más los 4 del paquete 14: `budget` (6), `receipt` (4), `currency` (3), `accounting` (11), `permissions` (5), `pagination` (4), `rules` (4), `ai-capture` (3 en `fixme`), más el `smoke` del 01 (5) y los 3 setups de sesión. **48 tests: 45 passed, 3 skipped, 0 failed**, en 1,5 min, corrida **dos veces seguidas** con exit 0 y `git status --porcelain` limpio. Minitest: **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas (baseline real medido antes de este paquete: 920 runs / 3.055 assertions, no las 912 que decía este tablero). Se entrega además `config/initializers/e2e_stubs.rb` (los dos bordes de red stubeados con doble guarda y bitácora auditable en `tmp/e2e/stub_calls.log`), el seed ampliado a 8 centros / 6 usuarios / 3 roles / `seed-ids.json`, 5 helpers de `support/`, `global-teardown.js`, los 2 proyectos de Playwright con sus sesiones restringidas y 19 pruebas Minitest nuevas (11 de contrato del stub + 8 del seed). **Esta es la primera vez que la superficie de usuario del proyecto se ejecuta en un navegador de verdad**, y encontró 5 defectos que ninguna lectura de código había visto (ver "Ola 7"). **Salvedades: 6** — los pendientes **#36 a #41** |
+| 7 | 07-fix — Cierre de los tres huecos de las olas 5 y 6 | ⚠️ | `3984d1a`, `be1d434`, `0d44ec2` (docs `f4d3689`) | **TERMINADO y REVERIFICADO uno por uno por un agente independiente.** 3 commits atómicos. (1) **Kill switch cableado de punta a punta: CIERTO** — `application_helper.rb:726 receipt_extraction_enabled?` → `ReceiptExtractionService.enabled?` (`receipt_extraction_service.rb:152`, lee `RECEIPT_EXTRACTION_ENABLED` con default `"false"`); `layouts/user.html.erb:1322` publica `window.CM_RECEIPT_EXTRACTION_ENABLED`; lo consumen `packs/ReportExpenseIndex.js:95` (botón `data-testid="expense-extract-btn"` en :1234) y `ShowConstCenter/ExpensesTable.jsx:33` → `FormCreate.jsx:215/224`. `config/application.yml:50` lo tiene en `"false"`, como exige la frontera de alcance, y el seam `call_vision_model` (`receipt_extraction_service.rb:223`) sigue siendo `NotImplementedError` documentado. Blindado por `test/integration/receipt_extraction_flag_test.rb`: **5 pruebas reales con 10 aserciones**, no una clase vacía. (2) **"Reglas de gastos" nace en instalación limpia: CIERTO** — `lib/tasks/create_config.rake:305` crea el `ModuleControl` junto a Presupuesto (:275) y Contabilidad (:285); blindado por `test/models/create_config_task_test.rb` (3 pruebas / 6 aserciones, una de ellas **corre la rake dos veces** para probar idempotencia). (3) **Suite sin `puts`: cierto en lo que afirma** — los 7 archivos citados quedaron sin `puts` salvo `app/models/material.rb`, que conserva 4 **dentro de un bloque `=begin`/`=end`** (método `set_state` comentado, código muerto); el propio `0d44ec2` lo explica en su mensaje, no es un descuido. **Salvedad, y por eso ⚠️ y no ✅: la frase "la suite quedó con la salida limpia" YA NO ES CIERTA.** Hoy `bin/rails test` escupe ~40 líneas de `warning: already initialized constant` (CODIGO_CENTRO, EMAIL_E2E, PASSWORD_E2E, CLIENTE_E2E, E2E_SCOPES, SCOPE, SCOPES_ACTIVOS, MODULOS, GASTOS, ROLES_E2E) desde `db/seeds/e2e.rb`, más los volcados `== seed E2E ==` completos, tres veces. **La regresión la introdujo el paquete 12, no el 07-fix** — pendiente **#44** |
+| 7 | 12 — Suite E2E Playwright | ⚠️ | `f93c81f`..`ac334a7` | **TERMINADO.** 11 commits atómicos. Los 9 escenarios del documento más los 4 del paquete 14: `budget` (6), `receipt` (4), `currency` (3), `accounting` (11), `permissions` (5), `pagination` (4), `rules` (4), `ai-capture` (3 en `fixme`), más el `smoke` del 01 (5) y los 3 setups de sesión. **48 tests: 45 passed, 3 skipped, 0 failed**, en 1,5 min, corrida **dos veces seguidas** con exit 0 y `git status --porcelain` limpio. Minitest: **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas (baseline real medido antes de este paquete: 920 runs / 3.055 assertions, no las 912 que decía este tablero). Se entrega además `config/initializers/e2e_stubs.rb` (los dos bordes de red stubeados con doble guarda y bitácora auditable en `tmp/e2e/stub_calls.log`), el seed ampliado a 8 centros / 6 usuarios / 3 roles / `seed-ids.json`, 5 helpers de `support/`, `global-teardown.js`, los 2 proyectos de Playwright con sus sesiones restringidas y 19 pruebas Minitest nuevas (11 de contrato del stub + 8 del seed). **Esta es la primera vez que la superficie de usuario del proyecto se ejecuta en un navegador de verdad**, y encontró 5 defectos que ninguna lectura de código había visto (ver "Ola 7"). **REVERIFICADO por un agente independiente que no podía arreglar nada**: los 16 archivos prometidos existen con contenido real (`e2e_stubs.rb` 245 l., `accounting.spec.js` 368 l. / 60 `expect()`, `budget.spec.js` 227 l. / 42, `currency` 139/29, `pagination` 174/26, `receipt` 159/17, `permissions` 107/17, `ai-capture` 149/16, los 5 helpers, `global-teardown.js`, `e2e_seed_test.rb` 8/31 y `e2e_stubs_test.rb` 11/30); las dos corridas E2E seguidas dieron **45 passed / 3 skipped / 0 failed** con `git status --porcelain` vacío antes, entre y después; Minitest reprodujo **939 / 3.311 / 0 / 0 / 0** al dígito. **De los criterios de aceptación cumplen todos los verificables salvo uno.** **Salvedades: 8** — los pendientes **#36 a #43**; las dos nuevas son el **criterio 12 INCUMPLIDO** (`tmp/e2e/stub_calls.log` debe tener ≥5 líneas y tiene **3**, pendiente **#42**) y el **criterio 27 NO EJECUTADO** (el test de captura asistida existe completo pero está en `test.fixme()`, pendiente **#43**) |
 | 6 | 14-ui — Reglas de gastos: pantalla (Tarea 6) | ⚠️ | `ffb303b`..`5b4b8e9` | **TERMINADA. Cierra el hueco que la ola 4 dejó abierto: ya NO es cierto que las reglas solo se administren por JSON.** 4 commits (`ffb303b` superficie Ruby + ítem de menú, `9d35236` pantalla React, `0afc600` pruebas, `5b4b8e9` mensajes de error legibles). Existe `app/javascript/components/ExpenseRule/index.jsx` (460 l.) + `FormCreate.jsx` (283 l.) + `packs/ExpenseRuleIndex.js` + `views/expense_rules/index.html.erb` + la ruta `index` + el gate `require_rules_module!` (**redirect HTML, no 403 JSON**) + el ítem bajo Configuración + `config/locales/expense_rule.en.yml`. El formulario trae los **7 campos** del documento (nombre, activa, por defecto, antigüedad máxima numérica, tope de valor en moneda, switch de duplicados y textarea de instrucciones con su ayuda visible) y el **multi-select de usuarios con el aviso permanente de que vacío = NADIE** (`rule-users-empty-warning`), más la columna "Aplica a" que dice "Nadie" / "Todos (por defecto)". Los vacíos viajan como `null` explícito, `user_ids` viaja siempre, el body es JSON plano y la discriminación por `type` se hace con el modal abierto. **33 pruebas nuevas verdes** (15 de vista + 7 de menú + 11 de helpers), con nombres y aserciones reales; suite completa **912 runs / 3.037 assertions / 0 failures / 0 errors / 0 skips** (10,5 s), repetida con `--seed=1337`. `./bin/webpack` emite `ExpenseRuleIndex` entre los packs. **Salvedades: 4** — (1) **ningún E2E la ejecuta**: los 4 escenarios del 14 y los specs del 12 no existen, así que la pantalla se verificó **leyendo código** (pendiente **#32**); (2) el pendiente **#21** sigue abierto y ahora pesa más: "Reglas de gastos" **no está sembrado en `create_config.rake`**, así que en una instalación limpia el módulo no nace y a esta pantalla solo llega el rol Administrador, que entra por el bypass (hay una prueba que lo consagra: *"admin entra aunque el rol no tenga el permiso explícito"*); (3) `rule_violations` sigue **sin exponerse** en `ReportExpenseSerializer` (pendiente **#19**); (4) `ffb303b` escribió en **3 archivos compartidos** de §7.2 (`application_helper.rb`, `layouts/user.html.erb`, `routes.rb`) en bloques que el reparto no contempla, incluida la línea compartida `authorization_config` (pendiente **#35**) |
 | 4 | 14 — Reglas de gastos configurables (backend) | ⚠️ | `6dac5f9`..`e34111e` | **Backend TERMINADO y reverificado en verde por un agente independiente (ola 4-bis).** *(La Tarea 6, el frontend, se completó después en la ola 6: ver la fila `14-ui` arriba. Lo que sigue describe el estado de la ola 4.)* 4 commits. Tareas 1 a 5 completas: las 2 migraciones (con el índice único **parcial** `WHERE (is_default AND active)` y `report_expenses.rule_violations` jsonb), el modelo `ExpenseRule` con la resolución de 3 ramas (`aplicables_a`), `ExpenseRuleService` con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en `ReportExpense` (`before_save`, que corre **después** del `evaluate!` del presupuesto y por eso puede pisarle el "aprobado"), y `ExpenseRulesController` + rutas + `ExpenseRuleSerializer` + rake de permisos propia. **65 pruebas propias verdes recontadas por el verificador independiente** (15 modelo + 26 servicio + 24 controller, contra las **30 pedidas**: los 30 casos nominados en el documento están todos presentes por nombre); suite completa **656 runs / 2.050 assertions / 0 fallos**. **De los 8 criterios de aceptación cumplen los 6 de backend** (varias reglas, gana la más restrictiva, fallback a la default, deterministas en servidor vía `before_save` —así aplica igual a web, MCP e import—, el semántico no se evalúa, y una violación no bloquea el guardado pero fuerza `sin_presupuesto` con auditoría en `RegisterEdit`); **incumplen 2 por alcance no ejecutado**: no hay pantalla (Tarea 6) ni los 4 escenarios E2E. **Salvedades: 5** — (1) ~~la Tarea 6 (pantalla React bajo Configuración) NO está hecha~~ **RESUELTA en la ola 6 (`ffb303b`..`5b4b8e9`)**: la pantalla existe y las reglas ya se administran desde la interfaz; (2) la **Tarea 7 (tool MCP `expense_rules_for_user`) tampoco**, porque `app/tools/*` es del paquete **11** (§7.2) — el endpoint HTTP que necesita ya existe; (3) los **4 escenarios E2E** son del paquete **12** por §7.2, igual que los del 07 que la auditoría retiró; (4) `rule_violations` **no se expone en `ReportExpenseSerializer`**: ese archivo es dueño único del 07 y agregarle un atributo del 14 rompería §7.2 — hace falta decidir quién lo agrega antes de que el 08/09 pinten la advertencia; **(5) el módulo de permisos "Reglas de gastos" NO está sembrado en `lib/tasks/create_config.rake`** (hallazgo nuevo de la ola 4-bis, pendiente **#21**): existe `lib/tasks/permissions_expense_rules.rake` para instalaciones ya montadas, pero una **instalación limpia nace sin el módulo**, mientras que "Presupuesto" y "Contabilidad" del 07 sí están replicados en `create_config.rake` (líneas 275 y 285) |
 | 8 | 13 — Cierre, documentación y puesta en marcha | ⬜ | — | |
@@ -625,6 +642,33 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     columna de estado presupuestal solo pinta el motivo cuando el estado es `excedido`, así que un
     gasto rechazado **por reglas** muestra la etiqueta "Sin presupuesto" sin decir por qué. Los dos
     están anotados dentro de `rules.spec.js`, junto a la aserción que sí se pudo escribir.
+42. 🔴 **El criterio de aceptación 12 del paquete 12 está INCUMPLIDO, y el tablero publicaba una cifra
+    que no se reproduce.** El criterio exige que tras `npm test` el archivo `tmp/e2e/stub_calls.log`
+    tenga **al menos 5 líneas**. Medido en dos corridas seguidas: **3 líneas**, todas de
+    `ExchangeRateService` (USD 2026-06-15, USD 2026-06-13, USD 2026-01-01). El tablero afirmaba
+    "7 líneas JSON": esa cifra **no se reproduce** y ya está tachada arriba. **No es un test en rojo**
+    —la suite E2E pasa entera— sino una bitácora de bordes de red más flaca de lo que el plan
+    esperaba, coherente con que los 3 escenarios de IA estén en `fixme` y por tanto nunca toquen el
+    stub de extracción. Decisión de una persona: **recalibrar el criterio a 3** (que es lo que la
+    suite realmente ejercita hoy) **o** exigir que el log crezca cuando se enciendan los 3 `fixme`.
+43. 🔴 **El criterio 27 del paquete 12 (flujo 5, captura asistida por IA) NO se ejecuta.** El test
+    existe, está escrito completo contra los `data-testid` canónicos y verifica lo que el criterio
+    pide —precarga por IA, corrección humana de un campo y persistencia de ambos—, pero vive dentro
+    de `test.fixme()` y por tanto sale como **skipped** en las dos corridas. Es la misma causa raíz
+    del pendiente **#36** (no existe `POST /extract_receipt/report_expenses` y el kill switch está
+    apagado), pero se anota aparte porque **es un criterio de aceptación formalmente incumplido**, no
+    solo una salvedad de alcance. Se cierra solo, sin escribir una línea de spec, el día que Taimes
+    implemente `call_vision_model` y se quiten los tres `fixme`.
+44. ⚠️ **Regresión de higiene: la suite volvió a ensuciar stdout, y el tablero afirmaba lo contrario.**
+    El paquete 07-fix dejó `bin/rails test` "con la salida limpia". Hoy la corrida escupe ~40 líneas
+    de `warning: already initialized constant` (`CODIGO_CENTRO`, `EMAIL_E2E`, `PASSWORD_E2E`,
+    `CLIENTE_E2E`, `E2E_SCOPES`, `SCOPE`, `SCOPES_ACTIVOS`, `MODULOS`, `GASTOS`, `ROLES_E2E`) más los
+    volcados `== seed E2E ==` completos, **tres veces**. El origen es `db/seeds/e2e.rb` del paquete
+    12, que se carga varias veces en el mismo proceso y redefine constantes de nivel superior. **No
+    afecta a ningún resultado** (939/3.311/0/0/0), pero tapa los avisos que sí importan. Arreglo
+    obvio y barato: envolver las constantes en un módulo o usar `defined?` antes de asignarlas, y
+    silenciar los `puts` del seed salvo con una variable de entorno. No se hizo aquí porque
+    `db/seeds/e2e.rb` es dueño único del paquete 12 y la ola ya estaba cerrada.
 
 ---
 
@@ -2378,7 +2422,7 @@ código dice lo que debe decir" en "la pantalla funciona".
 | `bin/rails test` | **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas |
 | Baseline real antes de esta ola | **920 runs / 3.055 assertions** (el tablero decía 912/3.037: estaba desactualizado) |
 | `git status --porcelain` tras la corrida | **limpio** |
-| `tmp/e2e/stub_calls.log` | 7 líneas JSON, todas de `ExchangeRateService`/`ReceiptExtractionService`, **ninguna con `COP`** |
+| `tmp/e2e/stub_calls.log` | ~~7 líneas JSON~~ **CORREGIDO por la verificación independiente: son 3**, todas de `ExchangeRateService` (USD 2026-06-15, USD 2026-06-13, USD 2026-01-01), **ninguna con `COP`**. El criterio 12 pide ≥5 ⇒ **incumplido**, pendiente **#42** |
 
 **Cobertura por flujo** (los 9 del brief + los 4 de reglas): partidas y bloqueo por tope (6),
 comprobante adjunto con descarga verificada por bytes `%PDF-` (4), moneda extranjera contra el stub
@@ -2467,5 +2511,94 @@ Siguen —y seguirán— los 2 `DEPRECATION WARNING` de axlsx y los avisos de `P
 framework y de la gema, no del código de la aplicación.
 
 **Suite completa tras los tres arreglos: `bin/rails test` → 920 runs, 3055 assertions, 0 failures,
-0 errors, 0 skips**, con la salida limpia. Tres commits atómicos; nada empujado al remoto y
+0 errors, 0 skips**, ~~con la salida limpia~~. Tres commits atómicos; nada empujado al remoto y
 producción intacta.
+
+> ⚠️ **La frase "con la salida limpia" caducó el mismo día.** El paquete 12 entró después y su
+> `db/seeds/e2e.rb` reintroduce ruido: ~40 líneas de `warning: already initialized constant` más los
+> volcados `== seed E2E ==` completos, tres veces por corrida. Los `puts` que quitó el 07-fix siguen
+> quitados; el ruido de hoy es de otro origen. Pendiente **#44**.
+
+---
+
+### Ola 7 — Verificación final independiente (07-fix + paquete 12) — CIERRE REAL
+
+**Esta entrada manda sobre todo lo anterior del documento.** La escribió un agente que corrió los
+comandos él mismo y **no podía arreglar nada**: todo lo que sigue es salida medida, no reportada.
+
+**Lo que se construyó en la ola.** Dos bloques. El **07-fix** cerró los tres huecos que las olas 5 y
+6 dejaron abiertos: el kill switch de captura asistida cableado desde el ENV hasta el botón del
+navegador, el módulo de permisos "Reglas de gastos" sembrado en `create_config.rake` para que nazca
+en instalaciones limpias, y la limpieza de los `puts` de depuración del código legado. El **paquete
+12** montó la suite funcional entera: `config/initializers/e2e_stubs.rb` (los dos bordes de red
+stubeados con doble guarda y bitácora auditable), el seed ampliado a 8 centros / 6 usuarios / 3 roles
+con `seed-ids.json`, 5 helpers de `support/`, `global-teardown.js`, los 2 proyectos de Playwright con
+sus sesiones restringidas, 8 archivos de spec y 19 pruebas Minitest que prueban el stub y el seed.
+
+**Los números, medidos por el verificador, no reportados por el implementador:**
+
+| Qué | Resultado |
+|---|---|
+| `bin/rails test` | **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips** en **21,4 s**, exit 0 |
+| Coincidencia con lo que afirma el tablero | **Exacta, al dígito** (939/3.311/0/0/0) |
+| Baseline documentado de 07-fix | 920 runs / 3.055 assertions — coherente con el **delta de +19** del paquete 12 |
+| `cd test/e2e && npm test`, corrida 1 | 48 tests: **45 passed, 3 skipped, 0 failed**, 1,5 min, exit 0 |
+| `cd test/e2e && npm test`, corrida 2 (inmediata, sin intervención) | **45 passed, 3 skipped, 0 failed**, 1,5 min, exit 0 |
+| Reparto real de los 48 | accounting 11, ai-capture 3 (`fixme`), budget 6, currency 3, pagination 4, receipt 4, permissions 5, smoke 5 = **41** (los 41 exactos del criterio 1) + rules 4 (paquete 14) + 3 setups de sesión |
+| `git status --porcelain` antes, entre y después de las dos corridas | **vacío** |
+
+**Higiene del encargo, comprobada y no asumida.** Rama `feature/gastos-presupuesto-ia`. **Nada
+empujado al remoto**: la rama no tiene upstream y `git branch -r --contains HEAD` no devuelve nada;
+son **152 commits locales** por delante de `origin/master`. **Producción intacta**: no se ejecutó un
+solo comando de Heroku. Los 14 commits revisados (07-fix + paquete 12 + docs) son **atómicos**
+—`f93c81f` toca 2 archivos, `0d44ec2` solo los 7 del cleanup—, están en español, explican el **por
+qué** y todos llevan el trailer `Co-Authored-By` correcto. Los 3 `skipped` son los `test.fixme()`
+declarados de `ai-capture.spec.js`, con el motivo escrito **en el título del test**. **Ninguna prueba
+borrada, ninguna marcada `skip` para tapar un rojo, ninguna aserción relajada.**
+
+**Criterios del paquete 12 verificados y cumplidos:** 1 (41 tests contando los `fixme`), 2 (segunda
+corrida verde), 3 (git limpio), 4 (0 helpers `_url`), 5 (0 `waitForTimeout`/`sleep`), 6 (0 ids
+hardcodeados), 7 (`workers:1` + `fullyParallel:false`), 8 (`package.json` raíz sin Playwright, node
+16.x), 9 (4 ocurrencias de `E2E_STUBS`), 13 (0 líneas `COP` en el log), 15 y 16 (los dos archivos
+Minitest verdes dentro de la suite), 17 (todo `destroy_all`/`delete_all` acotado con `where`), 18
+(`seed-ids.json`: PAG=57, ACC=12, 6 usuarios, 8 centros), 20 y 21 (`.gitignore` correcto, los 78
+archivos trackeados de `public/uploads` intactos), 22 (uploads borrado por el teardown), 23-26 y
+28-31 (aserciones concretas: `budget_status` "aprobado"/"excedido" con `budget_reason`, bytes
+`%PDF-`, tasa 4321.5, count 11 en la aprobación masiva, `budget-tab` `toHaveCount(0)` + 403,
+`new Set().size === 57`), 32 (11 pruebas en 3 `describe`, dueño único), 33 (los 3 negativos del 09
+con `cm-dt-select-header`, `accounting-export` y route 403), 34 (el rango `f4d3689..ac334a7` **no
+toca** `carrierwave.rb` ni `test/fixtures/files`; de hecho no toca ni un archivo de `app/`), 35 (0
+`waitForEvent popup`).
+
+**Lo que quedó frágil, pendiente o asumido — esto es lo que hay que leer:**
+
+1. 🔴 **El criterio 12 está incumplido y el tablero publicaba una cifra falsa.** `stub_calls.log`
+   tiene **3 líneas**, no las ≥5 que exige el criterio ni las **7 que este documento afirmaba**.
+   Corregido arriba y anotado como pendiente **#42**. No es un test en rojo.
+2. 🔴 **El criterio 27 (captura asistida por IA) no se ejecuta**: el test está escrito completo pero
+   vive en `test.fixme()`. Pendiente **#43**. Se cierra cuando Taimes implemente `call_vision_model`.
+3. ⚠️ **Regresión de higiene de salida**: `db/seeds/e2e.rb` reintrodujo ~40 líneas de
+   `warning: already initialized constant` y tres volcados `== seed E2E ==`. Pendiente **#44**. El
+   07-fix ya no puede afirmar "salida limpia", y por eso queda en ⚠️ y no en ✅.
+4. ⚠️ **Cuatro `puts` sobreviven en `app/models/material.rb`**, pero están **dentro de un bloque
+   `=begin`/`=end`** (método `set_state` comentado, código muerto que no se ejecuta). El propio
+   commit `0d44ec2` lo explica. **No es un descuido, es intencional.**
+5. ⚠️ **Tres criterios NO se pudieron verificar en vivo, y se dice por qué en vez de darlos por
+   buenos:** el **10** (`RAILS_ENV=production E2E_STUBS=1` debe abortar) se omitió **a propósito por
+   la regla de no tocar producción** — la guarda está en `e2e_stubs.rb:19` y la cubre un test verde
+   de `e2e_stubs_test.rb`; el **14** (correr con la red bloqueada por `/etc/hosts`) no se hizo por no
+   modificar la máquina del cliente, aunque la bitácora `tmp/e2e/stub_calls.log` demuestra que los
+   dos bordes de red los atendió el stub; y el **19** (`E2E_SCOPE=BUD` no toca el centro SMOKE) no se
+   corrió suelto, lo cubre el test *"el seed e2e no toca datos fuera de su alcance"*, que pasó.
+6. ⚠️ **El pendiente #38 sigue abierto y sin corregir**: el flash de "no tiene permiso" no lo pinta
+   ningún layout. Fue el quinto de los cinco defectos que encontró correr de verdad, y es el único
+   que **no** se arregló, por ser de otro paquete.
+
+**Sobre la honestidad del tablero, que también se auditó.** El documento marcaba el paquete 12 en
+**amarillo y no en verde**, contaba los 3 `fixme`, listaba los 5 defectos encontrados al correr y
+admitía que el quinto no se corrigió. Los números que publicaba se reprodujeron **al dígito**. Las
+únicas desviaciones halladas son las 3 de arriba, y **ninguna es un test en rojo**.
+
+➡️ **Lo que sigue es la ola 8: paquete 13 (cierre, documentación y puesta en marcha).** Antes de
+arrancarla conviene que una persona resuelva los pendientes **#42** (recalibrar el criterio 12 o
+exigir que el log crezca) y **#44** (silenciar el seed E2E), que son de 10 minutos cada uno.
