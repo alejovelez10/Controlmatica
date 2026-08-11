@@ -35,6 +35,7 @@
 | 5 | 11 — MCP y contrato con Taimes | ⬜ | — | Sin la Tarea 1, ya hecha |
 | 6 | 08 — Frontend: presupuesto y formulario | ⬜ | — | |
 | 7 | 12 — Suite E2E Playwright | ⬜ | — | |
+| 4 | 14 — Reglas de gastos configurables | ⬜ | — | **Nuevo**, pedido del cliente. Sustituye el motor de reglas del 10 |
 | 8 | 13 — Cierre, documentación y puesta en marcha | ⬜ | — | |
 
 Leyenda: ⬜ pendiente · ⏳ en curso · ✅ terminado y probado · ⚠️ terminado con salvedades
