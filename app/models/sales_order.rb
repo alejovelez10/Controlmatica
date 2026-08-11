@@ -40,7 +40,6 @@ class SalesOrder < ApplicationRecord
   after_destroy :create_delete_register
 
   def edit_values
-    puts "last_user_edited_idlast_user_edited_idlast_user_edited_idlast_user_edited_id"
     self.last_user_edited_id = User.current.id
   end
 
@@ -49,13 +48,6 @@ class SalesOrder < ApplicationRecord
     sum_invoices = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
     sales_order_sum = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
     customer_invoice = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
-    CustomerInvoice.where(cost_center_id: self.cost_center_id).each do |en|
-      puts en.invoice_value
-    end
-    puts "asfadsfdasfdafasfadsfadsfdsafdfdasfdasfsdfadsfdsafdd"
-    puts customer_invoice
-    puts sales_order_sum
-    puts cost_center.quotation_value
     if (cost_center.quotation_value <= customer_invoice && customer_invoice > 0)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "FACTURADO")
     elsif (customer_invoice > 0 && customer_invoice < cost_center.quotation_value)
@@ -104,15 +96,12 @@ class SalesOrder < ApplicationRecord
 
   def change_state_cost_center_destroy
     cost_center = CostCenter.find(self.cost_center_id)
-    puts "afadsfadsfadsfasdfasdfassfasdf"
     sum_invoices = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)
     sales_order = SalesOrder.where(cost_center_id: self.cost_center_id).sum(:order_value)
     if (cost_center.quotation_value <= sales_order + 1000 && sum_invoices == 0)
-      puts "2222222222222222"
       CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO")
     elsif (sales_order > 0 && sales_order < cost_center.quotation_value && sum_invoices == 0 && sum_invoices == 0)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "LEGALIZADO PARCIAL")
-      puts "afadsfadsfadsfasdfasdfassfasdf11111"
     elsif (sales_order == 0 && sum_invoices == 0)
       CostCenter.find(self.cost_center_id).update(invoiced_state: "PENDIENTE DE ORDEN DE COMPRA")
     end

@@ -271,9 +271,6 @@ class CustomerReportsController < ApplicationController
         type: "error",
         message_error: @customer_report.errors.full_messages
       }
-
-      puts "no guardaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-      puts @customer_report.errors.full_messages
     end
   end
 

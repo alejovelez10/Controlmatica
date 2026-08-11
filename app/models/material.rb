@@ -71,16 +71,12 @@ class Material < ApplicationRecord
     material.provider_invoice_value = invoice_total
 
     if invoice_total > material.amount
-      puts "111111111111111343434434"
       material.update(sales_state: "INGRESADO CON MAYOR VALOR EN FACTURA")
     elsif (invoice_total < material.amount) && invoice_total > 0
-      puts "33333333334334"
       material.update(sales_state: "INGRESADO PARCIAL")
     elsif invoice_total == 0
-      puts "22222234343434"
       material.update(sales_state: "PROCESADO")
     elsif invoice_total == material.amount
-      puts "222222343434"
       material.update(sales_state: "INGRESADO TOTAL")
     end
   end

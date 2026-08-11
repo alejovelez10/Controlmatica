@@ -663,8 +663,6 @@ module ApplicationHelper
         #AlertMailer.send_alert(@cost_center.mat_costo_porcentaje, alert.mat_med ,"El margen esperado esta por debajo de lo minimo esperado").deliver
       end
     end
-
-    puts "hola"
   end
 
   # === MULTIMONEDA (paquete 05) ============================================

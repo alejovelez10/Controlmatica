@@ -109,9 +109,7 @@ class Contractor < ApplicationRecord
   end
 
   def create_create_register
-    puts "hola munodddasfadsfasfsdfafdafasfasdfadsfasfasasdadsffsa"
     self.last_user_edited_id = User.current.id
-    puts "hola munodddasfadsfasfsdfafdafasfasdfadsfasfasasdadsffsa"
     user = User.find(self.user_execute_id)
     user = "<p>Horas trabajadas por: <b>#{user.names}</b>"
     sales_date = "<p>Fecha de generación: <b>#{self.sales_date}</b>" 
@@ -120,7 +118,6 @@ class Contractor < ApplicationRecord
     
     str = "#{user}#{sales_date}#{hours}#{description}"
 
-    puts "hola2 munodddasfadsfasfsdfafdafasfasdfadsfasfasasdadsffsa"
       str = "<p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p>  <p>Centro de costos: #{self.cost_center.code}</p> " + str
       RegisterEdit.create(  
       user_id: User.current.id, 

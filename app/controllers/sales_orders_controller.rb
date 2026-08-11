@@ -77,8 +77,6 @@ class SalesOrdersController < ApplicationController
           if task.customer_invoices.count > 0
 
               task.customer_invoices.order(invoice_date: :desc).each do |invoice|
-              puts i
-
               position = sheet.row(i)
               sheet.row(1).default_format = rows_format
               position[0] = invoice.sales_order.cost_center.code
