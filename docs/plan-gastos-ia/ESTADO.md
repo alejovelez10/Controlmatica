@@ -4,9 +4,15 @@
 > **Rama de trabajo: `feature/gastos-presupuesto-ia`** (creada desde `feature/ui-modernization`).
 > Nada se ha empujado al remoto ni desplegado. Todo es local y reversible.
 
-> 🔴 **ESTADO AL 2026-08-11: la ola 3a se cortó a mitad y hay trabajo SIN COMMITEAR en el árbol.**
-> Antes de tocar nada, lee el **pendiente #0** y la entrada "Ola 3a" de la bitácora. No cambies de
-> rama ni hagas `git checkout`/`git stash` hasta resolverlo: se pierden ~800 líneas que están verdes.
+> ✅ **ESTADO AL 2026-08-11: el paquete 04 quedó TERMINADO y commiteado.** La ola 3a ya no está a
+> mitad por el lado del presupuesto: las Tareas 8–15 se completaron, se agregaron los 2 archivos de
+> prueba que faltaban y la suite completa está en **254 runs / 753 assertions / 0 fallos**, corrida
+> 4 veces con seeds distintos.
+>
+> 🟡 **Lo que SÍ sigue sin commitear**: `app/models/currency.rb` y `test/models/currency_test.rb`,
+> que son del **paquete 05** y su agente los debe cerrar. Siguen valiendo la advertencia de no
+> hacer `git checkout`/`git stash` a la ligera y el **pendiente #0**, ahora reducido a esos 2
+> archivos.
 
 ---
 
@@ -64,7 +70,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 runs / 47 assertions verdes, verificado aparte |
 | 2 | 02 — Migraciones y esquema | ⚠️ | `aed1a89`..`0e52d05` | Las 6 migraciones escritas, aplicadas en dev y test, `schema.rb` regenerado, 33 pruebas nuevas y `rake gastos_ia_schema:check`. **Reverificado por un agente independiente contra la BD con `psql`: los 10 índices, las 14 columnas y los 5.008 gastos intactos.** **Salvedades: staging y producción NO se tocaron** (Tareas 14/15, runbook abajo) y el **drill de rollback (criterio 30) no se pudo reejecutar** en la verificación final |
 | 2 | 03 — Deuda técnica bloqueante | ⚠️ | `db68191`..`342ec2c` | Uploaders a S3 con allowlists, `search` convertido en builder de hash (bug de `scope` de clase, real y demostrado), auditoría extraída a `RegisterAuditable` (−219 líneas en `report_expense.rb`). 73 runs / 140 assertions verdes. **Salvedades: `heroku config:set AWS_REGION=us-east-2` sigue sin ejecutar** (obligatorio antes de mergear) y 3 criterios son de narrativa de PR / producción, no verificables aquí |
-| 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`5610085` | **INCOMPLETO, la ola se cortó a mitad.** 5 commits: modelo `ExpenseBudget`, esqueleto del servicio, `available_for`/`summary_for_center` y `budget_status` en `ReportExpense`. 59 pruebas verdes. **Las Tareas 8–11 (`evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO y CRUD de partidas) están escritas pero SIN COMMITEAR** — 255 líneas en el árbol de trabajo. Faltan la Tarea 15 y 2 archivos de prueba |
+| 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO.** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. Criterio 9 verificado a mano: comentando el `CostCenter.lock.find` fallan exactamente los 2 guardianes de SQL. **Salvedades: 3 (ver bitácora ola 3a)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo para que el mensaje de tope salga sin prefijo en inglés, y el criterio 26 (firma del acta de la Tarea 0) es del cliente |
 | 3a | 05 — Multimoneda y TRM | ⬜ | — | **Sin arrancar de verdad.** Solo existe `app/models/currency.rb` (su Tarea 3) + 5 pruebas, **también sin commitear**. No existen `ExchangeRate`, la fixture, `ExchangeRateClient` ni `ExchangeRateService` |
 | 3b | 06 — Comprobante y contabilidad | ⬜ | — | |
 | 3b | 10 — IA: extracción y reglas | ⬜ | — | |
@@ -129,16 +135,12 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
 
 ## Pendientes que requieren a una persona
 
-0. 🔴 **HAY TRABAJO SIN COMMITEAR EN EL ÁRBOL Y SE PUEDE PERDER.** Es lo más urgente de esta lista.
-   `git status` muestra 4 archivos sin commitear (551 líneas nuevas + 255 modificadas):
-   `app/services/expense_budget_service.rb` (Tareas 8–11 del paquete 04), `app/models/currency.rb`
-   (Tarea 3 del paquete 05), `test/services/expense_budget_service_evaluate_test.rb`,
-   `test/services/expense_budget_service_reevaluate_test.rb` y `test/models/currency_test.rb`.
-   **Está verde** (36 casos, 0 fallos), pero un `git checkout` o un `git stash` descuidado lo borra.
-   **No se commiteó desde aquí a propósito**: es trabajo a medio terminar de otro agente —le falta
-   la Tarea 15 y dos archivos de prueba— y commitearlo con un mensaje ajeno lo daría por cerrado
-   cuando no lo está. Decisión de una persona: commitearlo como WIP o dejar que el agente del
-   paquete 04 lo termine y lo commitee él. **Mientras tanto, no cambies de rama.**
+0. 🟡 **QUEDAN 2 ARCHIVOS SIN COMMITEAR, y ya no son del paquete 04.** Lo del 04 se terminó y se
+   commiteó (`a2a7c43`..`13751ad`). Lo que sigue en el árbol es `app/models/currency.rb` (Tarea 3
+   del **paquete 05**) y `test/models/currency_test.rb`. **Está verde**, pero un `git checkout` o un
+   `git stash` descuidado lo borra. No se commitea desde el paquete 04 porque la matriz de propiedad
+   §7.2 se lo asigna al 05: commitearlo con un mensaje ajeno lo daría por cerrado cuando le faltan
+   19 de sus 20 tareas. **Mientras tanto, no cambies de rama.**
 1. **Rotar la llave de AWS.** Quedó expuesta en un chat y tiene alcance de cuenta completa: ve 19
    buckets de clientes distintos. Lo correcto es un usuario IAM limitado al bucket `controlmatica`.
 2. **`heroku config:set AWS_REGION=us-east-2`** antes de mergear el paquete 03, o las subidas fallan
@@ -678,7 +680,13 @@ respetó la matriz §7.2 a rajatabla: **0** archivos de `db/migrate/`, `app/java
 
 ---
 
-### Ola 3a — Presupuesto (04) y multimoneda (05): **la ola NO terminó**
+### Ola 3a — Presupuesto (04) ✅ terminado · multimoneda (05) sin arrancar
+
+> ⚠️ **Esta entrada tiene dos capas y la primera está SUPERADA.** Lo que sigue a continuación es el
+> corte del 2026-08-11 por la mañana, cuando el paquete 04 estaba a medias. **El cierre real del 04
+> está más abajo, en "✅ CIERRE DEL PAQUETE 04 — continuación del 2026-08-11".** Se conserva el
+> texto viejo a propósito: deja el rastro de qué faltaba y por qué. **Lo que sigue vigente sin
+> cambios es todo lo del paquete 05.**
 
 **Léelo antes que nada: la ola 3a se cortó a mitad del paquete 04. Nada está en rojo, pero nada
 está terminado tampoco.** No hay un solo fallo de la suite ni del E2E; lo que hay es **trabajo
@@ -763,6 +771,87 @@ ni el 05 aportan un solo spec E2E, y así estaba previsto (los funcionales son d
    que faltan. Lo que se afirma arriba sale de correr la suite, correr el E2E, leer los commits y
    leer los archivos. **Cuando el 04 se cierre, hace falta una verificación independiente de verdad**,
    como la que tuvieron las olas 1 y 2.
+
+#### ✅ CIERRE DEL PAQUETE 04 — continuación del 2026-08-11 (lo de arriba quedó superado)
+
+La sesión anterior murió por un error de conexión, no por un error de código. Esta continuación
+**no rehizo nada**: retomó el árbol tal como estaba y completó lo que faltaba. **Los puntos 1, 2, 3
+y 5 de "Lo que quedó frágil" de arriba están RESUELTOS**; se dejan escritos para que quede el
+rastro de qué faltaba y por qué.
+
+**5 commits nuevos, `e258463`..`13751ad`, ninguno empujado al remoto:**
+
+- `e258463` — Tareas 8–11: `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`,
+  `reevaluate_center_user!`, el FIFO `perform_reevaluation` y el CRUD de partidas. Van en un solo
+  commit porque se llaman entre sí y ninguno es verificable solo.
+- `1746c1d` — Tarea 15: el bloque `# CABLEADO OBLIGATORIO` al final del servicio.
+- `6070740` — `expense_budget_service_cap_test.rb` (12 casos) + el arreglo de i18n.
+- `52f74b0` — `expense_budget_service_concurrency_test.rb` (4 casos).
+- `13751ad` — los 2 huecos de cobertura que nadie había pedido pero faltaban.
+
+**Medido, no copiado** (Minitest con Spring, `bin/rails test`):
+
+| Qué | Resultado literal | Tiempo |
+|---|---|---|
+| Suite completa | `254 runs, 753 assertions, 0 failures, 0 errors, 0 skips` | 4,96 s |
+| Suite completa, 3 seeds más | `254 runs, 719→753 assertions, 0 failures` en los 3 | ~5 s c/u |
+| Los 7 archivos que el plan exige | `92 runs, 309 assertions, 0F/0E/0S` (el plan pide 85) | 2,14 s |
+| Solo el archivo de concurrencia | `4 runs, 83 assertions, 0F/0E/0S` | 1,49 s |
+| `test_el_lock_bloquea_a_una_segunda_conexion` solo | `1 runs, 1 assertions, 0F` | **0,73 s** (criterio 10 pide < 3 s) |
+
+**Criterio 9 verificado a mano, no por lectura**: se comentó el `ids.each { |id| CostCenter.lock.find(id) }`
+de `with_center_lock`, se corrió el archivo de cap y fallaron **exactamente 2** tests, los dos
+guardianes de SQL. Se restauró el archivo y volvieron a pasar los 12.
+
+**Honestidad sobre qué prueba y qué NO prueba el archivo de concurrencia** (está escrito también en
+su cabecera, para que nadie lo lea solo aquí):
+
+- `test_el_lock_bloquea_a_una_segunda_conexion` **sí** es probatorio y determinista: un hilo toma el
+  `FOR UPDATE` sobre `cost_centers`, avisa por un `Queue`, y el hilo principal se estrella contra un
+  `LockWaitTimeout` de 300 ms. Demuestra que el lock existe y sobre qué fila cae.
+- `test_dos_gastos_simultaneos_no_superan_el_tope` y `test_dos_partidas_simultaneas_no_superan_viatic_value`
+  son **corroborativos, NO probatorios**. Aun con barrera de arranque y 10 repeticiones, el
+  planificador puede correr los hilos en serie y **pasarían igual con el `FOR UPDATE` borrado**.
+- Quien defiende el invariante es el trío: el test determinista de arriba + los 2 guardianes de SQL
+  de `expense_budget_service_cap_test.rb`. Si alguien borra el lock, esos 3 fallan **siempre**.
+- **No se prueba el nivel de aislamiento de Postgres.** Se asume `READ COMMITTED`, que es el default
+  y que este proyecto no cambia.
+
+**Las 3 salvedades del paquete 04, sin adornos:**
+
+1. 🟡 **El criterio 7 y la Tarea 15 se contradicen.** El criterio pide que
+   `grep recalculate_cost_center app/services/expense_budget_service.rb` no devuelva nada; la Tarea
+   15 (reforzada por la corrección 9 de auditoría) exige un bloque literal que lo menciona
+   justamente para decir que va **fuera** del lock. **Ganó la Tarea 15**: el criterio existe para
+   impedir trabajo lento dentro del lock y un comentario no ejecuta nada. **No hay ninguna llamada
+   real** en el archivo. Los criterios 5, 6 y 18 sí pasan como greps literales.
+2. 🟡 **Se tocaron 2 archivos fuera del paquete: `config/application.rb` (+12 líneas de comentario y
+   1 de código) y el nuevo `config/locales/expense_budget.en.yml`.** Razón: el contrato §A.5 publica
+   el mensaje de tope palabra por palabra, el servicio entrega `errors.full_messages` en
+   `Result#errors` y Rails le anteponía `"Amount "`. El usuario habría visto *"Amount La suma de las
+   partidas ($3.700.000) supera…"* y el E2E del paquete 12 no habría encontrado su texto. Es una
+   contradicción real del plan consigo mismo (Tarea 4 manda `errors.add(:amount, msg)`, Tarea 11
+   manda `full_messages`, §A.5 pide el texto pelado). Se arregló con el alcance más chico posible:
+   `format: "%{message}"` **solo** para `expense_budget.amount`. El flag
+   `i18n_customize_full_message` únicamente habilita una búsqueda de i18n adicional y ninguna otra
+   clave `format` existe en el proyecto, así que **ningún otro modelo cambia**. Verificado corriendo
+   la suite entera antes y después. **Si el cliente prefiere no tocar `config/application.rb`, se
+   revierte y el paquete 07 tendrá que renderizar `errors[:amount]` en vez de `Result#errors`.**
+3. 🔴 **El criterio 26 sigue abierto y es CONDICIÓN DE MERGE, no un trámite.** El PR debe citar el
+   acta de la Tarea 0 con las decisiones **0.1** ("los históricos consumen presupuesto") y **0.2**
+   ("sin IVA, `invoice_value`") **firmadas por el cliente**. Los defaults ya están implementados y
+   probados, pero nadie los firmó. Cambiarlos después de que el cliente vea números en pantalla es
+   carísimo en confianza.
+
+**Lo que este paquete deliberadamente NO hizo**, y le toca a otro: no se tocó
+`report_expenses_controller.rb` (el cableado de la Tarea 15 lo implementa el **paquete 07**, con su
+test de integración), ni las tools MCP (**paquete 11**), ni un solo spec E2E (**paquete 12**).
+Mientras el 07 no cablee el controller, `budget_status` **no se calcula por la vía web**: hoy el
+dominio está completo y probado, y la aplicación sigue mostrando "Sin presupuesto" en todo.
+
+**Sigue en pie el punto 6 de arriba**: esta verificación la hizo el mismo agente que implementó.
+Cuando se cierre la ola, el 04 merece una **verificación independiente de verdad**, como la que
+tuvieron las olas 1 y 2.
 
 #### Decisiones tomadas en esta ola que el cliente debería confirmar
 
