@@ -114,5 +114,14 @@ class FixturesIntegrityTest < ActiveSupport::TestCase
                  "Parameterization NO declara belongs_to :user, asi que Rails " \
                  "intentaria escribir una columna `user` inexistente y tumbaria " \
                  "`fixtures :all` entero."
+
+    # El criterio de aceptacion del paquete se verifica con un grep literal
+    # sobre el archivo. Citar la forma prohibida dentro de un comentario daba
+    # rojo sin haber ningun defecto real, asi que la cadena no puede aparecer
+    # tampoco en los comentarios: se describe con palabras, no se transcribe.
+    refute_includes contenido, "user: admin",
+                    "parameterizations.yml contiene la cadena literal " \
+                    "prohibida (aunque sea dentro de un comentario). " \
+                    "Describe la forma de asociacion con palabras."
   end
 end

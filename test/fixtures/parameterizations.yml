@@ -20,11 +20,15 @@
 # consumidor); este paquete solo garantiza que la fixture cargue. El 10 AGREGA
 # etiquetas si necesita mas, sin reescribir las existentes.
 #
-# user_id: y NUNCA `user: admin`. app/models/parameterization.rb NO declara
-# `belongs_to :user` (solo scopes y self.search), asi que la forma de asociacion
-# hace que Rails intente escribir una columna `user` inexistente y lance
+# La FK se escribe SIEMPRE como `user_id:` con FixtureSet.identify, y NUNCA con
+# la forma de asociacion por etiqueta. app/models/parameterization.rb NO declara
+# `belongs_to :user` (solo scopes y self.search), asi que esa forma hace que
+# Rails intente escribir una columna `user` inexistente y lance
 # Fixture::FixtureError; con `fixtures :all` eso tumba TODA la suite.
 # Hay un test guardian de esto en test/models/fixtures_integrity_test.rb.
+# Ese guardian exige ademas que la forma prohibida no aparezca NI SIQUIERA
+# citada en un comentario de este archivo: el criterio de aceptacion del paquete
+# se verifica con un grep literal y una cita daba rojo sin haber defecto.
 
 antiguedad:
   name: "GASTOS IA - ANTIGUEDAD MAXIMA (DIAS)"
