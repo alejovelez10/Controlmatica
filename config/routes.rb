@@ -94,6 +94,15 @@ Rails.application.routes.draw do
   get "get_expense_budgets/:cost_center_id", to: "expense_budgets#get_expense_budgets"
   get "get_expense_budget_summary/:cost_center_id", to: "expense_budgets#get_expense_budget_summary"
   get "get_expense_budget_available", to: "expense_budgets#get_expense_budget_available"
+  # Reglas de gastos configurables (paquete 14). Sin `index`, `show`, `new` ni
+  # `edit`: la pantalla es un React y el listado entra por `get_expense_rules`,
+  # igual que el resto de las tablas de esta aplicacion.
+  resources :expense_rules, :except => [:show, :new, :edit, :index]
+  get "get_expense_rules", to: "expense_rules#get_expense_rules"
+  # Los limites YA RESUELTOS de una persona: los consume el formulario de gastos
+  # para avisar antes de guardar, y la tool MCP para que el agente sepa las
+  # reglas antes de conversar.
+  get "get_expense_rules_for_user", to: "expense_rules#get_expense_rules_for_user"
   # Multimoneda (paquete 05). Contrato en 00-ARQUITECTURA E.1: responde 200
   # tanto en exito como en error y el frontend discrimina por `type`.
   get "get_exchange_rate", to: "exchange_rates#get_exchange_rate"

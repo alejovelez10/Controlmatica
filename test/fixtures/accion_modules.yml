@@ -125,3 +125,26 @@ tablero_ver:
   name: Ver tablero
   module_control: tablero
   user: admin
+
+# --- Paquete 14 (reglas de gastos) ------------------------------------------
+# Las 4 acciones que ExpenseRulesController referencia POR NOMBRE. Se agregan al
+# set existente; el dueno del archivo es el paquete 01 (§7.2).
+reglas_ingreso:
+  name: Ingreso al modulo
+  module_control: reglas_gastos
+  user: admin
+
+reglas_crear:
+  name: Crear
+  module_control: reglas_gastos
+  user: admin
+
+reglas_editar:
+  name: Editar
+  module_control: reglas_gastos
+  user: admin
+
+reglas_eliminar:
+  name: Eliminar
+  module_control: reglas_gastos
+  user: admin

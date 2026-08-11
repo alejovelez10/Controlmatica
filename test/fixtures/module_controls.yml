@@ -52,3 +52,11 @@ tablero:
   name: Tablero de Ingenieros
   description: Tablero de ingenieros
   user: admin
+
+# --- Paquete 14 (reglas de gastos) ------------------------------------------
+# Se AGREGA la etiqueta, no se reescribe el archivo: el dueno de module_controls.yml
+# es el paquete 01 (matriz §7.2).
+reglas_gastos:
+  name: Reglas de gastos
+  description: Reglas configurables de antiguedad, tope y duplicados de los gastos
+  user: admin
