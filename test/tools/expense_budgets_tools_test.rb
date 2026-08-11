@@ -58,9 +58,11 @@ class ExpenseBudgetsToolsTest < ActiveSupport::TestCase
                                                    user_id: users(:ingeniero).id)).first
       esperado = ExpenseBudgetService.available_for(cost_center_id: @centro.id,
                                                     user_id: users(:ingeniero).id)
-      assert_equal esperado[:assigned].to_s, fila["assigned"]
-      assert_equal esperado[:spent].to_s, fila["spent"]
-      assert_equal esperado[:available].to_s, fila["available"]
+      # Decimal plano, NUNCA notación científica: "700000.0", no "0.7e6".
+      assert_equal "700000.0", fila["assigned"]
+      assert_equal esperado[:spent].to_d.to_s("F"), fila["spent"]
+      assert_equal esperado[:available].to_d.to_s("F"), fila["available"]
+      refute_match(/e/, fila["amount"])
       assert_equal users(:ingeniero).names, fila["user_name"]
       assert_equal @centro.code, fila["cost_center_code"]
     end
@@ -103,6 +105,7 @@ class ExpenseBudgetsToolsTest < ActiveSupport::TestCase
                                                           user_id: users(:ingeniero).id))
       assert cuerpo["has_budget"]
       assert_equal "COP", cuerpo["currency"]
+      assert_equal "700000.0", cuerpo["assigned"]
       assert_equal (cuerpo["assigned"].to_d - cuerpo["spent"].to_d), cuerpo["available"].to_d
       assert_includes cuerpo["message"], "Disponible"
     end

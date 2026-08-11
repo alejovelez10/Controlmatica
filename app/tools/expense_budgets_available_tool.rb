@@ -40,8 +40,10 @@ class ExpenseBudgetsAvailableTool < ApplicationTool
     json(cost_center_id: centro.id, cost_center_code: centro.code,
          user_id: persona.id, user_name: [persona.names, persona.last_names].compact.join(" ").strip,
          has_budget: datos[:has_budget], currency: Currency::DEFAULT,
-         assigned: datos[:assigned].to_s, spent: datos[:spent].to_s,
-         available: datos[:available].to_s,
+         # to_s("F") y no to_s: BigDecimal#to_s da "0.5e6" y el agente le lee
+         # 0,5 pesos a medio millón.
+         assigned: datos[:assigned].to_d.to_s("F"), spent: datos[:spent].to_d.to_s("F"),
+         available: datos[:available].to_d.to_s("F"),
          message: mensaje(datos))
   end
 

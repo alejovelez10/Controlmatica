@@ -46,12 +46,16 @@ class ExpenseBudgetsListTool < ApplicationTool
 
     json(filas.map { |b|
       disponible = pair.call(b.cost_center_id, b.user_id)
+      # `to_s("F")` Y NO `to_s`: BigDecimal#to_s devuelve notación científica
+      # ("0.5e6") y el agente le lee 0,5 pesos a una partida de medio millón.
+      # `amount` se pisa sobre el valor crudo de KEYS por el mismo motivo.
       Mcp::Serialize.record(b, KEYS,
+                            amount: b.amount.to_d.to_s("F"),
                             user_name: b.user&.names,
                             cost_center_code: b.cost_center&.code,
-                            assigned: disponible[:assigned].to_s,
-                            spent: disponible[:spent].to_s,
-                            available: disponible[:available].to_s)
+                            assigned: disponible[:assigned].to_d.to_s("F"),
+                            spent: disponible[:spent].to_d.to_s("F"),
+                            available: disponible[:available].to_d.to_s("F"))
     })
   end
 end
