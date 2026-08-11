@@ -276,4 +276,42 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
     assert_equal "aprobado", segundo.reload.budget_status
     assert_nil segundo.reload.budget_reason
   end
+
+  # El otro lado de la discrepancia D1: 2.7 solo manda recalcular "el gasto
+  # editado", pero BAJARLE el valor libera cupo para los demas del par
+  # exactamente igual que eliminarlo.
+  def test_bajar_el_valor_de_un_gasto_rescata_a_los_excedidos_posteriores
+    crear_partida(100_000)
+    primero = crear_gasto(60_000, dia: 1)
+    segundo = crear_gasto(60_000, dia: 2)
+    reevaluar
+    assert_equal "excedido", segundo.reload.budget_status
+
+    primero.invoice_value = 30_000
+    ExpenseBudgetService.persist_with_evaluation!(primero, actor: @admin)
+
+    # 30.000 + 60.000 caben en los 100.000. Sin el reevaluo del par el segundo
+    # se quedaria excedido aunque ya sobre cupo, y desapareceria de la vista de
+    # contabilidad sin ninguna razon visible para el usuario.
+    assert_equal "aprobado", primero.reload.budget_status
+    assert_equal "aprobado", segundo.reload.budget_status
+    assert_nil segundo.reload.budget_reason
+  end
+
+  # Y el simetrico: subir el valor de un gasto viejo empuja a excedido a los
+  # posteriores, porque el FIFO le da el cupo al mas antiguo.
+  def test_subir_el_valor_de_un_gasto_viejo_empuja_a_excedido_al_posterior
+    crear_partida(100_000)
+    primero = crear_gasto(30_000, dia: 1)
+    segundo = crear_gasto(60_000, dia: 2)
+    reevaluar
+    assert_equal "aprobado", segundo.reload.budget_status
+
+    primero.invoice_value = 90_000
+    ExpenseBudgetService.persist_with_evaluation!(primero, actor: @admin)
+
+    assert_equal "aprobado", primero.reload.budget_status
+    assert_equal "excedido", segundo.reload.budget_status
+    assert_equal "Excede el presupuesto disponible en $50.000", segundo.reload.budget_reason
+  end
 end
