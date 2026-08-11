@@ -254,11 +254,19 @@ ROLES_E2E = {
   # Encargo del paquete 09 (E7.9-E7.11): ENTRA a Contabilidad pero no aprueba ni
   # exporta, que es lo que hace @estados[:approve] == false y
   # @estados[:export] == false en el show.
+  #
+  # "Ver todos" ES OBLIGATORIO aqui, aunque el plan pedia "solo Ingreso al
+  # modulo". Sin ese permiso, `AccountingExpensesController#filtered_scope`
+  # acota la bandeja a `user_invoice_id: current_user.id` y este usuario ve CERO
+  # filas: los tres escenarios negativos exigen el control positivo "la tabla
+  # renderiza CON datos", porque sin el un 500 daria los mismos toHaveCount(0) y
+  # las pruebas pasarian por la razon equivocada. Lo que el encargo pide de
+  # verdad —ni Aprobar ni Exportar— se conserva intacto.
   "Contable E2E" => {
     "Gastos" => ["Ingreso al modulo"],
     "Centro de Costos" => ["Ingreso al modulo"],
     "Reportes de servicios" => ["Ingreso al modulo"],
-    "Contabilidad" => ["Ingreso al modulo"]
+    "Contabilidad" => ["Ingreso al modulo", "Ver todos"]
   }
 }.freeze
 

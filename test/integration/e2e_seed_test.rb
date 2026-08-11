@@ -132,9 +132,16 @@ class E2eSeedTest < ActionDispatch::IntegrationTest
     assert_not_equal "Administrador", rol.name
 
     contabilidad = rol.accion_modules.joins(:module_control)
-                      .where(module_controls: { name: "Contabilidad" })
-    assert_equal 1, contabilidad.count, "solo puede tener UNA accion de Contabilidad"
-    assert_equal "Ingreso al modulo", contabilidad.first.name
+                      .where(module_controls: { name: "Contabilidad" }).pluck(:name).sort
+
+    # "Ver todos" acompaña a "Ingreso al modulo" por necesidad, no por descuido:
+    # sin el, filtered_scope acota la bandeja a los gastos propios y el usuario ve
+    # CERO filas, con lo que los tres escenarios negativos del paquete 09 se
+    # quedan sin control positivo. Lo que el encargo exige es que NO pueda
+    # aprobar ni exportar, y eso es lo que afirman las dos lineas siguientes.
+    assert_equal ["Ingreso al modulo", "Ver todos"], contabilidad
+    refute_includes contabilidad, "Aprobar"
+    refute_includes contabilidad, "Exportar a excel"
     assert_equal 0,
                  rol.accion_modules.joins(:module_control)
                     .where(module_controls: { name: "Presupuesto" }).count
