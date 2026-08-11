@@ -1,0 +1,63 @@
+# == Schema Information
+#
+# Table name: exchange_rates
+#
+#  id             :bigint           not null, primary key
+#  currency       :string           not null
+#  effective_date :date             not null
+#  fetched_at     :datetime         not null
+#  rate_date      :date             not null
+#  rate_to_cop    :decimal(18, 6)   not null
+#  source         :string           not null
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#
+# Indexes
+#
+#  index_exchange_rates_on_currency_and_effective_date  (currency,effective_date)
+#  index_exchange_rates_on_currency_and_rate_date       (currency,rate_date) UNIQUE
+#
+
+# Cuatro filas con semantica distinta, no cuatro filas de relleno:
+#
+#   usd_habil          -> viernes 2026-07-17, rate_date == effective_date.
+#   usd_fin_de_semana  -> sabado 2026-07-18 con la tasa del viernes: es el caso
+#                         que justifica tener las DOS columnas de fecha
+#                         (00-ARQUITECTURA 1.5). Sin el, el test de "segunda
+#                         consulta del domingo sale de cache" no tiene datos.
+#   eur_habil          -> tasa cruzada via BCE, para el inclusion de SOURCES.
+#   usd_vieja          -> 2026-07-01, lejos de las anteriores: alimenta el test
+#                         de fallback por fuente caida (latest_before dentro de
+#                         MAX_STALE_DAYS) y el de "fuera de la ventana".
+
+usd_habil:
+  currency: USD
+  rate_date: 2026-07-17
+  effective_date: 2026-07-17
+  rate_to_cop: 4120.500000
+  source: trm_oficial
+  fetched_at: 2026-07-17 08:00:00
+
+usd_fin_de_semana:
+  currency: USD
+  rate_date: 2026-07-18
+  effective_date: 2026-07-17
+  rate_to_cop: 4120.500000
+  source: trm_oficial
+  fetched_at: 2026-07-18 09:00:00
+
+eur_habil:
+  currency: EUR
+  rate_date: 2026-07-17
+  effective_date: 2026-07-17
+  rate_to_cop: 4480.250000
+  source: bce
+  fetched_at: 2026-07-17 08:00:00
+
+usd_vieja:
+  currency: USD
+  rate_date: 2026-07-01
+  effective_date: 2026-07-01
+  rate_to_cop: 4050.000000
+  source: trm_oficial
+  fetched_at: 2026-07-01 08:00:00

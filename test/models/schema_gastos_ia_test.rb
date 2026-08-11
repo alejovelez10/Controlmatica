@@ -305,7 +305,16 @@ class SchemaGastosIaTest < ActiveSupport::TestCase
       VALUES ('USD', '2026-07-15', '2026-07-15', 4130.75, 'trm_oficial', now(), now(), now())
     SQL
 
-    assert_equal 2, @conn.select_value("SELECT count(*) FROM exchange_rates WHERE currency = 'USD'").to_i
+    # Se cuentan LAS DOS FILAS DE ESTE TEST, no todas las USD de la tabla: el
+    # paquete 05 agrego test/fixtures/exchange_rates.yml (3 filas USD) y un
+    # count global pasaria a medir las fixtures en vez del indice. La asercion
+    # no se relaja, se acota a lo que el test inserta.
+    convivientes = @conn.select_value(<<~SQL).to_i
+      SELECT count(*) FROM exchange_rates
+      WHERE currency = 'USD' AND rate_date IN ('2026-07-14', '2026-07-15')
+    SQL
+
+    assert_equal 2, convivientes
   end
 
   # --- report_expenses: contabilidad ----------------------------------------
