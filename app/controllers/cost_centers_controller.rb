@@ -181,6 +181,33 @@ class CostCentersController < ApplicationController
       cost_center_edit: cc_perms["Editar"],
     }
 
+    # Las 10 CLAVES CANONICAS de 00-ARQUITECTURA.md 4.4. Los nombres son
+    # contrato: React las lee por string literal, asi que `budget_view` o
+    # `is_cost_center_owner` (las dos variantes derogadas) dejarian la pestana
+    # Presupuesto invisible para siempre sin que nada falle.
+    #
+    # `is_center_owner` no es un permiso sino una propiedad del negocio, y es
+    # indispensable: sin ella el frontend no distingue "puede administrar
+    # partidas por ser dueno del centro" de "puede por permiso global", y
+    # pintaria botones que el servidor rechaza con 403.
+    #
+    # Los cuatro `expense_*` existen para que el paquete 08 pueda borrar el
+    # `estados` hardcodeado en true de ExpensesTable.jsx.
+    #
+    # Todos los flags son COSMETICOS: el servidor revalida en cada endpoint.
+    @estados = @estados.merge(
+      budget_module: is_admin? || has_menu_permission?("Presupuesto", "Ingreso al modulo"),
+      budget_create: is_admin? || has_menu_permission?("Presupuesto", "Crear"),
+      budget_edit: is_admin? || has_menu_permission?("Presupuesto", "Editar"),
+      budget_delete: is_admin? || has_menu_permission?("Presupuesto", "Eliminar"),
+      budget_show_all: is_admin? || has_menu_permission?("Presupuesto", "Ver todos"),
+      is_center_owner: @cost_center.user_owner_id == current_user.id,
+      expense_create: is_admin? || has_menu_permission?("Gastos", "Crear"),
+      expense_edit: is_admin? || has_menu_permission?("Gastos", "Editar"),
+      expense_delete: is_admin? || has_menu_permission?("Gastos", "Eliminar"),
+      expense_show_all: is_admin? || has_menu_permission?("Gastos", "Ver todos"),
+    )
+
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)
   end
 
@@ -576,6 +603,14 @@ class CostCentersController < ApplicationController
   end
 
   def set_sales_order
+  end
+
+  # Mismo helper memoizado que ReportExpensesController#is_admin?. El patron de
+  # lectura de permisos del proyecto (00-ARQUITECTURA.md 4.4) es siempre
+  # `is_admin? || has_menu_permission?(...)`, y `load_permissions` de abajo no
+  # sirve para eso porque resuelve un solo modulo por llamada.
+  def is_admin?
+    @_is_admin ||= current_user.rol.name == "Administrador"
   end
 
   # Load permissions for a module in 1 query instead of N queries
