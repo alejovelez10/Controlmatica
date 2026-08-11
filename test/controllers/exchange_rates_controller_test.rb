@@ -105,6 +105,19 @@ class ExchangeRatesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "error", JSON.parse(response.body)["type"]
   end
 
+  # El catalogo de monedas llega al navegador como global de layout (Tarea 12).
+  # Se prueba aqui y no en el test del helper porque hace falta renderizar de
+  # verdad layouts/user.html.erb, que es el layout de TODAS las pantallas: si
+  # la linea nueva rompiera el ERB, se cae la aplicacion entera.
+  test "el layout de usuario publica window.CM_CURRENCIES" do
+    sign_in_as(@admin)
+    get report_expenses_path
+
+    assert_response :success
+    assert_match(/window\.CM_CURRENCIES = \[/, response.body)
+    assert_match(/"value":"USD"/, response.body)
+  end
+
   test "nunca devuelve una tasa inventada cuando falla" do
     sign_in_as(@admin)
 

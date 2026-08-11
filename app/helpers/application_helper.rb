@@ -582,6 +582,10 @@ module ApplicationHelper
     mat_costo_real = @cost_center.materials.sum(:amount)
     mat_costo_porcentaje = @cost_center.materials_value.to_f > 0 ? ((1 - (mat_costo_real.to_f / @cost_center.materials_value.to_f)) * 100).round(1) : 0
 
+    # INVARIANTE (00-ARQUITECTURA 1.3 / invariante 3): invoice_value SIEMPRE esta en COP.
+    # Los valores en moneda extranjera viven en foreign_* y NUNCA entran a esta suma.
+    # Un viat_costo_real mal calculado se propaga a aiu, aiu_percent, aiu_real y
+    # aiu_percent_real, y no hay ninguna validacion que lo detecte.
     viat_costo_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_value)
     viat_costo_porcentaje = @cost_center.viatic_value.to_f > 0 ? ((viat_costo_real.to_f / @cost_center.viatic_value.to_f) * 100).round(1) : 0
 
@@ -649,5 +653,18 @@ module ApplicationHelper
     end
 
     puts "hola"
+  end
+
+  # === MULTIMONEDA (paquete 05) ============================================
+  # Catalogo de monedas para el <select> de los dos formularios de gasto.
+  #
+  # El nombre es `get_currencies` y no `currency_options`: lo consume tal cual
+  # el paquete 09 y el layout que publica window.CM_CURRENCIES.
+  #
+  # Va por global de layout y no por prop porque llegar por props al formulario
+  # de la pestaña del centro exige atravesar seis archivos que otros paquetes
+  # estan tocando a la vez. El repo ya usa este patron con window.cmOpenMenu.
+  def get_currencies
+    Currency.options
   end
 end
