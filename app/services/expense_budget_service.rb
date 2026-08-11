@@ -461,3 +461,33 @@ class ExpenseBudgetService
   end
   private_class_method :with_actor
 end
+
+# CABLEADO OBLIGATORIO (lo implementa el paquete 07; el 11 usa el mismo punto de entrada):
+#
+#   create:  expense = ReportExpense.new(report_expense_params_create)
+#            result  = ExpenseBudgetService.persist_with_evaluation!(expense, actor: current_user)
+#
+#   update:  prev_cc = @report_expense.cost_center_id
+#            prev_u  = @report_expense.user_invoice_id
+#            @report_expense.assign_attributes(report_expense_params_update)
+#            result  = ExpenseBudgetService.persist_with_evaluation!(
+#                        @report_expense, actor: current_user,
+#                        previous_cost_center_id: prev_cc, previous_user_invoice_id: prev_u)
+#
+#   destroy: cc = @report_expense.cost_center_id; u = @report_expense.user_invoice_id
+#            @report_expense.destroy
+#            ExpenseBudgetService.on_expense_destroyed!(cost_center_id: cc, user_id: u, actor: current_user)
+#
+#   recalculate_cost_center(...) se sigue llamando en el controller, DESPUES y FUERA del
+#   servicio: es un helper de controller que depende de la ivar @cost_center y no puede vivir
+#   dentro de una transaccion con lock.
+#
+# NO ES DOCUMENTACION DECORATIVA, ES UN CONTRATO EXIGIBLE. Sin este cableado,
+# `budget_status` nunca se calcula por la via web: el tablero del paquete 08, las
+# columnas del 09 y la vista de contabilidad del 06 muestran datos falsos con
+# total confianza. Y el `save` + `evaluate!` + `reload` que se uso antes queda
+# derogado: el reload pierde los tres valores recien calculados y deja en
+# `sin_presupuesto` todo gasto creado por WhatsApp.
+#
+# En el destroy, el par (cost_center_id, user_invoice_id) se captura ANTES del
+# `destroy`: despues el objeto ya no sirve para reevaluar.
