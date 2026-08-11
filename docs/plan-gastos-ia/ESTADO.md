@@ -14,7 +14,18 @@
 > criterios que **decide una persona**. Las nuevas son los pendientes **#10 a #13**. Lee la entrada
 > "Ola 3a-bis" al final antes de dar la ola por buena.
 >
-> ➡️ **Lo que sigue es la ola 3b: paquete 06, y después el esqueleto del 10.**
+> ✅ **ESTADO AL 2026-08-11 (cierre): la ola 3b está CERRADA y REVERIFICADA.** Los paquetes 06
+> (comprobante + contabilidad) y 10 (solo el esqueleto de extracción) están terminados, commiteados
+> y reverificados por un agente independiente que no podía arreglar nada. Suite completa:
+> **481 runs / 1.432 assertions / 0 failures / 0 errors / 0 skips**, medida dos veces (con Spring
+> 7,27 s, sin Spring 7,48 s, cifras idénticas). E2E Playwright: **6 passed** en 12,8 s.
+> `git status` limpio, 89 commits sobre `master` y **nada empujado al remoto**.
+>
+> 🟡 **Los dos paquetes quedan en ⚠️, no en ✅**, y otra vez no por la suite: son salvedades de
+> alcance y de criterios que **decide una persona**. Las nuevas son los pendientes **#16 y #17**.
+> Lee la entrada "Ola 3b-bis" al final antes de dar la ola por buena.
+>
+> ➡️ **Lo que sigue es la ola 4: paquete 07, y después el 14.**
 
 ---
 
@@ -74,8 +85,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 2 | 03 — Deuda técnica bloqueante | ⚠️ | `db68191`..`342ec2c` | Uploaders a S3 con allowlists, `search` convertido en builder de hash (bug de `scope` de clase, real y demostrado), auditoría extraída a `RegisterAuditable` (−219 líneas en `report_expense.rb`). 73 runs / 140 assertions verdes. **Salvedades: `heroku config:set AWS_REGION=us-east-2` sigue sin ejecutar** (obligatorio antes de mergear) y 3 criterios son de narrativa de PR / producción, no verificables aquí |
 | 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. **Con el 05 mergeado la suite completa queda en `332 runs / 983 assertions / 0 fallos`, reconfirmada 3 veces con seeds 56250, 12345 y 99 (~6,9 s).** **Salvedades: 4 (ver bitácora ola 3a y 3a-bis)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo (fuera de la matriz §7.2), el criterio 26 (firma del acta de la Tarea 0) es del cliente, y **el criterio 9 NO se pudo re-verificar de forma independiente** (el sandbox bloqueó la mutación temporal): la evidencia es la del implementador |
 | 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48). **Salvedades: 5** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07; el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 (hoy son 23); **el commit `28218b2` tocó `test/models/report_expense_audit_legacy_test.rb`, que por §7.2 es del paquete 03, y perdió una aserción**; y `report_expense_import_currency_test.rb` **no ejercita `ReportExpense.import`** (reimplementa el mapeo dentro del propio test) |
-| 3b | 06 — Comprobante y contabilidad | ⚠️ | `d0f1444`..`76fcf2e` | **TERMINADO, pendiente de verificación independiente.** 5 commits. Todas las tareas vivas de los bloques A, B y C (A1, A3, A6, A7, A8, A9, B1, B3, B4, B10, B11 y C3 retiradas por auditoría): `ReceiptUploader` privado con las dos allowlists, comprobante montado y auditado (`audit_field :receipt_file`), `delete_receipt`/`download_receipt` con descarga forzada (§7.8), el **backend completo de Contabilidad** (5 endpoints, `filtered_scope` con la excepción de la corrección 13, `ids[]` como filtro válido y tope de 500), las **dos plantillas .axlsx a 18 columnas idénticas**, `ReportExpense.import` con detección de layout y las 2 claves 27-28 del list tool MCP. **100 pruebas propias verdes**; suite completa **432 runs / 1.281 assertions / 0 fallos**, corrida con 4 seeds distintos (~7,7 s). E2E Playwright: **6 passed**. **Salvedades: 4** — se **regeneraron 2 fixtures .xlsx del paquete 01** (su encabezado real contradecía §7.12), los criterios **5, 6** y el test "expone los campos nuevos" quedan **bloqueados por el paquete 07** (serializer + strong params), `KEYS.size` es **25 y no 28** (faltan las 17-19 del 11) y `GET /accounting_expenses` en HTML no tiene plantilla hasta que mergee el **09** |
-| 3b | 10 — IA: extracción y reglas | ⚠️ | `41c8bbc`..`1ae2af0` | **Solo el esqueleto de extracción** (alcance reducido por decisión del cliente: la IA es de Taimes). 2 commits: `ReceiptExtractionService` completo salvo el seam `call_vision_model`, que levanta `NotImplementedError` documentado, más `test/support/fake_anthropic_client.rb` y **49 pruebas** de contrato sin red. Suite completa **481 runs / 1.432 assertions / 0 fallos**. **Salvedades: 5** — el kill switch arranca **apagado** (el plan lo daba en `true`), no se instaló `gem "anthropic"` (criterio 33), el motor de reglas se fue al **14**, y el endpoint `extract_receipt` + su ruta + su test quedan **declarados y no construidos** hasta que exista la extracción |
+| 3b | 06 — Comprobante y contabilidad | ⚠️ | `d0f1444`..`76fcf2e` (docs `35a6f61`) | **TERMINADO y reverificado por un agente independiente (ola 3b-bis).** 5 commits. Todas las tareas vivas de los bloques A, B y C (A1, A3, A6, A7, A8, A9, B1, B3, B4, B10, B11 y C3 retiradas por auditoría): `ReceiptUploader` privado con las dos allowlists, comprobante montado y auditado (`audit_field :receipt_file`), `delete_receipt`/`download_receipt` con descarga forzada (§7.8), el **backend completo de Contabilidad** (5 endpoints, `filtered_scope` con la excepción de la corrección 13, `ids[]` como filtro válido y tope de 500), las **dos plantillas .axlsx a 18 columnas idénticas**, `ReportExpense.import` con detección de layout y las 2 claves 27-28 del list tool MCP. **98 pruebas propias verdes reconfirmadas por el verificador** (98 runs / 292 assertions / 0 fallos en los 6 archivos del paquete); suite completa **481 runs / 1.432 assertions / 0 fallos** con el 10 mergeado (7,3 s). E2E Playwright: **6 passed**. **Salvedades: 5** — se **regeneraron 2 fixtures .xlsx del paquete 01** (`1df14e8`, violación de §7.2 confirmada por el verificador), los criterios **5, 6** y el test "expone los campos nuevos" quedan **bloqueados por el paquete 07** (serializer + strong params), `KEYS.size` es **25 y no 28** (las 2 claves nuevas caen en 24-25, no en 27-28: faltan las del 11), `GET /accounting_expenses` en HTML no tiene plantilla hasta que mergee el **09** y **ningún E2E ejercita comprobante ni Contabilidad** (es del 12) |
+| 3b | 10 — IA: extracción y reglas | ⚠️ | `41c8bbc`..`1ae2af0` (docs `fbf4f3f`) | **Solo el esqueleto de extracción** (alcance reducido por decisión del cliente: la IA es de Taimes). 2 commits: `ReceiptExtractionService` completo salvo el seam `call_vision_model`, que levanta `NotImplementedError` documentado, más `test/support/fake_anthropic_client.rb` y **49 pruebas** de contrato sin red. Suite completa **481 runs / 1.432 assertions / 0 fallos**. **Reverificado por un agente independiente (ola 3b-bis)**: los 3 archivos existen, el diff toca exactamente esos 3 y hay **cero red** (`grep api_client` en `app/` y `Anthropic::Client.new` en `test/` dan vacío). **Salvedades: 6** — el kill switch arranca **apagado** (el plan lo daba en `true`), no se instaló `gem "anthropic"` (criterio 33), **`vision_client` no existe** (criterio 7: la cadena `timeout: 18, max_retries: 0` solo aparece en un comentario que instruye a Taimes), el motor de reglas se fue al **14**, y el endpoint `extract_receipt` + su ruta + sus 16 tests quedan **declarados y no construidos** |
 | 4 | 07 — API, permisos y rutas | ⬜ | — | |
 | 5 | 09 — Frontend: tablas y contabilidad | ⬜ | — | |
 | 5 | 11 — MCP y contrato con Taimes | ⬜ | — | Sin la Tarea 1, ya hecha |
@@ -203,6 +214,9 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     preexistente del legado (no la introdujo el 05), pero ahora ya no hay ninguna prueba que la
     detecte. Quien arregle el `ORDER BY` en el código de auditoría debe restituir la aserción.
 14. **Decidir si se aceptan las 2 fixtures `.xlsx` regeneradas por el paquete 06.**
+    **Confirmado por la verificación independiente de la ola 3b-bis**: es una violación real de la
+    matriz §7.2, ocurrió en el commit **`1df14e8`** y son reescrituras binarias completas —
+    `gastos_legacy_11col.xlsx` 2.643 → 3.950 bytes y `gastos_v2_18col.xlsx` 2.778 → 4.304 bytes.
     `test/fixtures/files/gastos_legacy_11col.xlsx` y `gastos_v2_18col.xlsx` son del **paquete 01**
     por §7.2, pero su contenido contradecía lo que §7.12 declara que contienen: el encabezado real
     empezaba en `FECHA` y traía el email en `BENEFICIARIO`, así que no lo podía leer ni el `import`
@@ -219,6 +233,23 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     inalcanzables desde allí. La frontera está anotada en la cabecera de
     `test/controllers/report_expenses_receipt_test.rb` y de
     `test/controllers/accounting_expenses_controller_test.rb`.
+16. **Aceptar formalmente que el paquete 10 se cierra con 3 criterios incumplidos a propósito.** El
+    verificador independiente los confirmó uno por uno y no son bugs, son alcance recortado: el
+    **criterio 7** (`vision_client` con `timeout: 18, max_retries: 0`) — el método **no existe**, la
+    cadena solo aparece en un comentario de `receipt_extraction_service.rb:211` que le dice a Taimes
+    cómo construirlo; el **criterio 33** (`gem "anthropic"` pineado en el `Gemfile`) — `grep -n
+    anthropic Gemfile Gemfile.lock` no devuelve **nada**; y los **criterios 20 a 29.1** (endpoint
+    `POST /extract_receipt/report_expenses`, su ruta, el guard de reglas en `create`/`update` y los
+    16 tests de `report_expenses_extract_receipt_test.rb`) — **no existe ninguno de los cuatro**.
+    Los tres se difieren a Taimes por la "Frontera de alcance". **Si el cliente esperaba el endpoint
+    construido y apagado con `RECEIPT_EXTRACTION_ENABLED=false`, eso NO está**: hoy solo hay el
+    servicio con su seam. Es lo único de la ola 3b que puede sorprenderle al despertar.
+17. **Decidir cuándo se cubre con E2E el comprobante y la pantalla de Contabilidad.** Hoy
+    `test/e2e/specs/` contiene **solo** `auth.setup.js` y `smoke.spec.js` (los 6 casos del paquete
+    01). **Cero** specs de Playwright tocan subir un comprobante, descargarlo, borrarlo, ni la
+    pantalla de Contabilidad, que es toda la superficie nueva del paquete 06. Está previsto en el
+    paquete **12**, pero conviene saberlo: la parte de la ola 3b que ve el usuario **no tiene ni una
+    sola prueba de navegador**. Lo que la sostiene son los 33 casos de controlador del 06.
 13. **Conseguir el `DATOS_GOV_APP_TOKEN`** (gratis, en datos.gov.co) antes de producción. Sin él las
     peticiones a Socrata son anónimas y el servicio estrangula por IP con HTTP 429: **todo gasto en
     USD terminaría pidiendo captura manual de la tasa**. Y sembrar con `heroku config:set` las cinco
@@ -1311,3 +1342,86 @@ un HEIC, un archivo de más de 5 MB, un `nil` o el kill switch apagado **no gast
 
 **Higiene git**: `git status --porcelain` vacío, 2 commits en español con el POR QUÉ y el trailer
 `Co-Authored-By`. **Nada empujado al remoto y producción intacta.**
+
+---
+
+### Ola 3b-bis — Verificación final independiente de los paquetes 06 y 10 (2026-08-11)
+
+Un verificador que **no puede arreglar nada** volvió a correrlo todo y a comprobar los criterios uno
+por uno, leyendo los archivos y los diffs en vez de creerle a la documentación.
+**Resultado: SUITE VERDE Y REPRODUCIBLE. Ningún test falla.** Los dos paquetes quedan en **⚠️**, no
+en ✅, por salvedades de **alcance** que decide una persona (pendientes #14, #16 y #17).
+
+**Números reales, medidos dos veces**
+
+| Suite | Comando | Resultado literal | Tiempo |
+|---|---|---|---|
+| Minitest (con Spring) | `bin/rails test` | `481 runs, 1432 assertions, 0 failures, 0 errors, 0 skips` | **7,27 s** |
+| Minitest (sin Spring) | `bin/spring stop` + `DISABLE_SPRING=1 bundle exec rails test` | **idéntico** | **7,48 s** |
+| Solo los 6 archivos del paquete 06 | aislados | `98 runs, 292 assertions, 0 fallos` | — |
+| Solo el paquete 10 | `test/services/receipt_extraction_service_test.rb` | `49 runs, 0 fallos` | — |
+| E2E Playwright | `cd test/e2e && npm run test:smoke` | `6 passed` | **12,8 s** |
+
+**Total hoy: 481 casos Minitest + 6 specs Playwright.** La ola 3b aportó **147** casos nuevos
+(98 del 06 y 49 del 10) sobre los 332 con que cerró la 3a.
+
+**Qué se construyó de verdad** (comprobado archivo por archivo, no clases vacías):
+
+- **06**: `ReceiptUploader` (50 líneas, con `extension_allowlist`, `content_type_allowlist`,
+  `size_range 1.byte..10.megabytes` y `self.fog_public = false`; `grep 'storage :file'` = **0**, y
+  también 0 en los 4 uploaders viejos), `accounting_expenses_controller.rb` (250 líneas, 5
+  endpoints, `FILTER_KEYS` con `:ids`, `MAX_BULK = 500` aplicado con `.limit(MAX_BULK + 1)`), las
+  **2 plantillas .axlsx** cuyos encabezados son **byte a byte idénticos** (verificado con `diff`:
+  18 columnas, `"ID"` primera, `column_widths` con exactamente 18 argumentos en ambas), el modelo
+  con `mount_uploader`, `belongs_to :accounting_approved_by`, los scopes
+  `accounting_visible`/`accounting_pending` y `audit_field :receipt_file`, y `download_receipt`
+  forzando la descarga por **las dos ramas** (`response-content-disposition` en la URL firmada de S3
+  y `send_file disposition: "attachment"` en disco local).
+- **10**: `receipt_extraction_service.rb` (497 líneas), `fake_anthropic_client.rb` (92) y su test
+  (549, 49 casos). El diff del paquete toca **exactamente esos 3 archivos**. El `Result` es un
+  `Struct` con `ok/fields/confidence/error/error_message/model/usage` y `ok?`; `fields` devuelve 10
+  claves con `nil` por defecto; el payload usa `output_config` con `json_schema` (salida
+  estructurada, no texto libre); el seam levanta `NotImplementedError` y `extract` lo rescata
+  devolviendo `:not_configured`; `enabled?` arranca en **`false`**.
+
+**Los tres tests obligatorios de las correcciones 5 y 13 EXISTEN y pasan**: "un aprobado empujado a
+excedido no sale por defecto", "…sí sale con el filtro Aprobados por contabilidad" e "ids con un
+excedido no lo aprueba y el count lo refleja". También se confirmaron C1 (schema con
+`receipt_file`, las 3 columnas `accounting_approved*` y su índice), C28 (ningún `puts` en
+`self.import`), C33 (bloque `Schema Information` al día), C34 (la golden
+`HTML_EDICION_VALOR_Y_COMPROBANTE`), C36 (`params.permit(ids: [])`) y **C38**
+(`report_expense_serializer.rb` **no** aparece en el diff del 06).
+
+**Lo que quedó frágil, pendiente o asumido — sin adornos**
+
+1. **El paquete 06 pisó dos archivos que no son suyos.** El commit `1df14e8` reescribió por completo
+   `test/fixtures/files/gastos_legacy_11col.xlsx` y `gastos_v2_18col.xlsx`, cuyo dueño único por
+   §7.2 es el **paquete 01**. Está razonado (su encabezado real contradecía §7.12) y confesado desde
+   el principio, pero es una violación de la matriz de propiedad y **la decide el cliente**:
+   pendiente **#14**.
+2. **El criterio 30 del 06 no se cumple en la letra.** `accounting_approved` y `receipt_file_url`
+   están en las posiciones **24 y 25** de `ReportExpensesListTool::KEYS`, no en la 27 y 28, y
+   `KEYS.size == 25`, no 28. Faltan las 3 claves del paquete **11**. No es un error: es una
+   dependencia sin mergear. Cuando entre el 11 hay que **volver a comprobar las posiciones**, o el
+   contrato con Taimes se desalinea en silencio.
+3. **Del paquete 10 falta más de lo que hay** (pendiente **#16**): no existe `vision_client`
+   (criterio 7), no existe `gem "anthropic"` (criterio 33) y **no existe el endpoint
+   `extract_receipt`** — ni la ruta, ni la acción, ni el guard de reglas, ni sus 16 tests
+   (criterios 20 a 29.1). Los criterios 11 a 19 (`ExpenseRuleService`, rake de parametrizaciones)
+   **no aplican**: se fueron al paquete 14, y `app/services/` lo confirma — solo contiene
+   `exchange_rate_client.rb`, `exchange_rate_service.rb`, `expense_budget_service.rb` y
+   `receipt_extraction_service.rb`.
+4. **Cero cobertura E2E de lo nuevo** (pendiente **#17**). `test/e2e/specs/` sigue teniendo solo
+   `auth.setup.js` y `smoke.spec.js`. Ni comprobante ni Contabilidad se ejercitan en navegador.
+5. **La suite escupe ruido preexistente por stdout** — `hola`, `asfadsfdasfdafasfadsf…`, `0.0`,
+   `1000.0`, `50000000.0`, `last_user_edited_id` — más 2 `DEPRECATION WARNING` de axlsx
+   ("Rendering actions with . in the name is deprecated"). **No es imputable a estos paquetes** (son
+   los callbacks de auditoría del legado y datos de fixtures), pero ensucia la salida y hace más
+   difícil ver un fallo real. Limpiarlo es trabajo del paquete 13.
+6. **Asumido**: que los 481 casos verdes bastan como evidencia de la superficie nueva. No hay
+   verificación manual contra el navegador de la pantalla de Contabilidad, porque **su plantilla
+   HTML todavía no existe** (es del paquete 09): hoy solo se puede ejercitar por JSON.
+
+**Higiene git verificada**: rama `feature/gastos-presupuesto-ia`, árbol de trabajo **limpio**,
+**89 commits** sobre `master`, `git branch -r` **sin la rama**: nada empujado, producción intacta.
+Todos los commits del alcance llevan mensaje en español y el trailer `Co-Authored-By`.
