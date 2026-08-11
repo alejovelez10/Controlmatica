@@ -56,7 +56,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | Ola | Paquete | Estado | Commit | Notas |
 |---|---|---|---|---|
 | — | Migración `users.phone` (Tarea 1 del 11, adelantada) | ✅ | `653e312` | Columna creada y aplicada en dev. **El dato no existe**: 0 de 29 usuarios |
-| 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`55e460a` | **Verde confirmado por verificación independiente.** Minitest 42 runs / 97 assertions / 0 fallos en 2,19 s; Playwright 6 passed en frío (19,8 s) y en tibio (12,8 s). 25 de 26 criterios de aceptación PASAN (el 13 está RETIRADO por auditoría) |
+| 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`b8f46c4` | **Verde reconfirmado por una segunda verificación independiente sobre `b8f46c4`.** Minitest 42 runs / 97 assertions / 0 fallos (2,16 s con Spring; 1,96 s sin Spring); Playwright 6 passed dos veces (14,2 s y 12,9 s). Los 25 criterios verificables PASAN (el 13 está RETIRADO por auditoría); 3 salvedades son de redacción del criterio, no del software |
 | 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 runs / 47 assertions verdes, verificado aparte |
 | 2 | 02 — Migraciones y esquema | ⬜ | — | |
 | 2 | 03 — Deuda técnica bloqueante | ⬜ | — | Uploaders a S3, refactor de `search`, concern de auditoría |
@@ -139,10 +139,13 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
    **decisión de fondo**: fijar Node 16 (`.nvmrc`) o ampliar `engines`. No se tomó por cuenta propia
    porque `engines.node: "16.x"` es el contrato de build con Heroku y cambiarlo es tocar producción.
    Mientras no se decida, el arreglo de los binstubs sostiene el desarrollo local sin riesgo.
-6. **Corregir dos criterios de aceptación del paquete 01** (`01-infraestructura-de-pruebas.md`,
+6. **Corregir tres criterios de aceptación del paquete 01** (`01-infraestructura-de-pruebas.md`,
    líneas 1099-1160), que quedaron desalineados con la realidad y confundirán a quien audite después:
-   el **17** pide "5 tests passed" cuando son 6 (el proyecto `setup` de Playwright cuenta), y el
-   **12** pide "los 11 archivos de §7.12" pero su paréntesis exige `wc -l` = 14, que es lo correcto.
+   el **17** pide "5 tests passed" cuando son 6 (el proyecto `setup` de Playwright cuenta), el
+   **12** pide "los 11 archivos de §7.12" pero su paréntesis exige `wc -l` = 14, que es lo correcto,
+   y el **21** (`grep -rn "_url" test/e2e/` debe dar 0) devuelve **2 líneas**, ambas dentro de
+   comentarios de `playwright.config.js` que explican por qué no se deben usar los helpers `*_url`.
+   Usos reales: cero. El criterio pasa en sustancia pero falla en la letra.
    **No se editaron por cuenta propia**: son el criterio contra el que el cliente juzga el trabajo y
    cambiarlos sin permiso parecería mover la portería. Decisión de una persona: se corrigen o se
    dejan como están con esta nota.
@@ -310,3 +313,87 @@ documentación).
 **No se tocó producción.** Las únicas escrituras fueron el rake corrido en `RAILS_ENV=test` (base
 `controlmatica_test`, desechable, la reinicia `db:test:prepare`) y el borrado/recompilado de
 `public/packs-test`, artefacto gitignoreado.
+
+---
+
+### Ola 1 — Segunda verificación independiente sobre `b8f46c4` (cierre definitivo)
+
+Se volvió a verificar la ola completa sobre el HEAD actual, con un verificador que **no puede
+arreglar nada** y que corrió cada comando él mismo: **ninguna cifra de esta sección viene de la
+documentación**. **Resultado: VERDE CONFIRMADO. Nada falló.**
+
+**Alcance deducido, no dado.** El encargo llegó sin decir qué ola verificar. Se dedujo del repo:
+este tablero y `git log` muestran que lo único implementado es la ola 1 (paquete 01 + la tarea extra
+del teléfono) y que los paquetes 02..14 siguen en ⬜. `b8f46c4` es un commit solo de documentación
+que cierra la ola. Se verificó, por tanto: suite Minitest, E2E, existencia real de los archivos
+prometidos, los criterios de aceptación del paquete 01 e higiene de git.
+
+**Qué se construyó en la ola** — lo mismo que ya describe la sección anterior; esta entrada no añade
+código, añade evidencia. Confirmado archivo por archivo: `test/support/` con sus 4 helpers,
+22 fixtures YAML, 14 archivos en `test/fixtures/files` (comprobados con `file`: PDF 1.4 reales,
+JPEG, PNG, HEIC, 3 XLSX y 2 con MIME mentiroso a propósito, que `file` reporta como `data`),
+`lib/tasks/permissions_gastos_ia.rake`, y `test/e2e/` con 12 archivos trackeados y `package.json`
+propio (`engines >= 18`). **Todos existen.**
+
+**Cuántas pruebas hay y cuánto tardan** (Minitest corrido dos veces, la segunda con Spring detenido
+para descartar caché; Playwright dos veces seguidas con reseed en ambas):
+
+| Suite | Comando | Resultado literal | Tiempo |
+|---|---|---|---|
+| Minitest (con Spring) | `bin/rails test` | `42 runs, 97 assertions, 0 failures, 0 errors, 0 skips` | **2,158 s** (19,47 runs/s) |
+| Minitest (sin Spring) | `bin/spring stop` + `DISABLE_SPRING=1 bundle exec rails test` | idéntico | **1,957 s** |
+| Playwright, 1ª corrida | `cd test/e2e && npm run test:smoke` | `6 passed` | **14,2 s** |
+| Playwright, 2ª corrida | el mismo comando | `6 passed` | **12,9 s** |
+
+Total hoy: **42 casos Minitest + 6 specs Playwright**. La salida de Minitest queda limpia salvo dos
+warnings preexistentes e inocuos (`PG::Coder` deprecado, `axlsx_rails` renombrado) y el HTML que los
+callbacks de auditoría de `ReportExpense` imprimen a stdout.
+
+**Las pruebas son reales, no clases vacías.** Se leyeron los 42 nombres uno por uno, repartidos en
+5 archivos (`user_phone_test` 17, `fixtures_integrity_test` 8, `test_helpers_test` 7,
+`registrations_controller_phone_test` 7, `authentication_smoke_test` 3). Prueban el `ensure` de
+`as_user` ante excepción, el fallback `current_actor_id` con `User.current = nil`, la idempotencia
+de `grant_permission!`, el content-type de las subidas y las FKs de las fixtures.
+
+**Criterios de aceptación: los 25 verificables PASAN** (el 13 está RETIRADO por auditoría).
+Entre otros: `rails runner -e test` responde en 1,95 s y **no se cuelga**; `chromedriver-helper` = 0;
+`User.current.id` = 0 en `report_expense.rb` con 5 usos del fallback; no existe `test/system`;
+`MyString` = 0; `parallelize` = 0; el `package.json` de la raíz sigue sin `playwright` y con
+`engines.node: "16.x"` intacto; `.gitignore:49` cubre `/test/e2e/.auth`; los 4 `data-testid` están
+en `layouts/user.html.erb`, `packs/ReportExpenseIndex.js` y `ui/CmDataTable.jsx` y el E2E los
+encuentra servidos; el rake corrido **dos veces** da `ModuleControl=6 AccionModule=21
+permisos_admin=21` idéntico en ambas, con Presupuesto en 5 acciones y Contabilidad en 4, y sin
+ningún `destroy_all`.
+
+**Lo frágil, pendiente o asumido — sin adornos**
+
+1. **Verde no es lo mismo que probado.** 30 de los 35 archivos `*_test.rb` siguen siendo stubs de
+   scaffold con **0 casos**: todo `test/controllers` salvo el del teléfono, todo `test/models` salvo
+   `user_phone` / `fixtures_integrity` / `test_helpers`, y **todo** `test/jobs` y `test/mailers`.
+   Los 42 casos cubren la infraestructura de pruebas, **no la lógica de negocio**. El negocio no
+   está implementado todavía: los paquetes 02 a 14 están **todos** pendientes.
+2. **Asumido, y es lo único no comprobado de frente**: el criterio 15 (chromium descargado). No se
+   repitió `npm run install:browsers` (~95 MB); se da el navegador por presente de forma
+   **indirecta**, porque dos corridas de Playwright lo ejecutaron.
+3. Siguen vigentes las fragilidades ya anotadas arriba: el E2E depende de `public/packs-test`, que
+   es artefacto gitignoreado (cualquier máquina nueva arranca en frío), y `FormCreate.jsx` /
+   `table.jsx` de Usuarios son código muerto — el pack monta `components/Users/index`.
+
+**Tres salvedades de forma, ninguna es un fallo.** Ya estaban confesadas en este archivo y quedan
+confirmadas: el criterio **17** pide "5 tests passed" y son 6 (el proyecto `setup` de Playwright
+cuenta); el **12** se contradice a sí mismo ("los 11 archivos" contra un `wc -l` = 14, que es lo que
+da); y el **21** devuelve 2 líneas que están **en comentarios** de `playwright.config.js` explicando
+por qué no usar helpers `*_url` — usos reales: cero. Los tres son desfases del texto del criterio,
+no del software, y su corrección es **decisión de una persona** (pendiente #6).
+
+**Higiene git verificada**: rama `feature/gastos-presupuesto-ia`, HEAD `b8f46c4`,
+`git status --porcelain` **vacío antes y después** de correr suite, E2E y el rake.
+`git branch -r --contains HEAD` vacío y "no upstream configured": **nada salió al remoto**.
+32 commits sobre `master`; los 29 del plan llevan el trailer `Co-Authored-By: Claude Opus 5`; los 3
+sin trailer (`62f8f6b`, `45d8f3e`, `eecf7fe`) son preexistentes de la rama base
+`feature/ui-modernization`. Commits atómicos: mediana de 1–4 archivos; los mayores son `c4ef970`
+(16, solo docs), `8b3abbc` (15, solo docs), `85cf0d4` (14, borrado de stubs) y `1246b31`
+(14, Playwright completo).
+
+**No se tocó producción.** Las únicas escrituras fueron el rake en `RAILS_ENV=test` (base
+`controlmatica_test`, desechable) y `public/packs-test`, artefacto gitignoreado.
