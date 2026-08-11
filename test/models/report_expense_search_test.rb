@@ -16,13 +16,7 @@ class ReportExpenseSearchTest < ActiveSupport::TestCase
   # Punto unico de entrada a search. En B1 traducia el hash a los 15
   # posicionales del codigo viejo; tras B2 delega directamente.
   def search_for(receptor = ReportExpense, **f)
-    # PASO 1 (tarea B1): traduce el hash a los 15 posicionales del codigo viejo.
-    # En B4 esta linea pasa a ser `receptor.search(f)`.
-    receptor.search(f[:cost_center_id], f[:user_invoice_id], f[:invoice_name], f[:invoice_date],
-                    f[:identification], f[:description], f[:invoice_number],
-                    f[:type_identification_id], f[:payment_type_id], f[:invoice_value],
-                    f[:invoice_tax], f[:invoice_total], f[:start_date], f[:end_date],
-                    f[:is_acepted])
+    receptor.search(f)
   end
 
   setup do
@@ -297,8 +291,7 @@ class ReportExpenseSearchConcurrencyTest < ActiveSupport::TestCase
       Thread.new do
         ActiveRecord::Base.connection_pool.with_connection do
           ITERACIONES.times do
-            valores = ReportExpense.search(centro.id, nil, nil, nil, nil, nil, nil, nil, nil,
-                                           nil, nil, nil, nil, nil, nil).pluck(:cost_center_id)
+            valores = ReportExpense.search(cost_center_id: centro.id).pluck(:cost_center_id)
             violaciones << [centro.id, valores.uniq] if valores.uniq != [centro.id]
           end
         end
