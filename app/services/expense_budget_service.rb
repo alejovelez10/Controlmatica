@@ -96,6 +96,101 @@ class ExpenseBudgetService
   end
   private_class_method :with_center_lock
 
+  # --- Lectura (sin lock) ----------------------------------------------------
+
+  # Foto del cupo de UN par (centro, beneficiario).
+  #
+  #   => { has_budget: true/false, assigned: BigDecimal, spent: BigDecimal, available: BigDecimal }
+  #
+  # `exclude_expense_id` sirve para evaluar un gasto que YA existe sin que se
+  # cuente contra si mismo: al subir un gasto de 100.000 a 150.000 hay que
+  # comparar 150.000 contra el disponible SIN los 100.000 viejos, o cualquier
+  # edicion al alza quedaria excedida.
+  #
+  # No abre transaccion ni toma lock: es una lectura. Los llamadores que
+  # necesitan consistencia (el propio servicio) ya estan dentro del lock.
+  def self.available_for(cost_center_id:, user_id:, exclude_expense_id: nil)
+    if cost_center_id.blank? || user_id.blank?
+      return { has_budget: false, assigned: BigDecimal(0), spent: BigDecimal(0), available: BigDecimal(0) }
+    end
+
+    partidas = ExpenseBudget.activas.para(cost_center_id, user_id)
+    assigned = partidas.sum(:amount).to_d.round(2)
+    # `exists?` y no `assigned > 0`: el flag responde "hay partida", no "hay
+    # plata". Una partida activa de $0 no deberia existir (la validacion lo
+    # impide), pero si existiera el usuario tiene presupuesto asignado, no
+    # ausencia de presupuesto.
+    has_budget = partidas.exists?
+
+    scope = ReportExpense.where(cost_center_id: cost_center_id, user_invoice_id: user_id)
+                         .where.not(budget_status: STATUS_EXCEDIDO)
+    # TRAMPA: `where.not(id: nil)` devuelve CERO filas, no todas. Con un gasto
+    # nuevo (id nil) el spent daria 0 y todo gasto quedaria aprobado.
+    scope = scope.where.not(id: exclude_expense_id) if exclude_expense_id.present?
+    spent = scope.sum(SPENT_EXPR).to_d.round(2)
+
+    # `available` PUEDE ser negativo y se devuelve negativo. Como pintarlo lo
+    # decide el frontend; el dominio no miente.
+    { has_budget: has_budget, assigned: assigned, spent: spent, available: (assigned - spent).round(2) }
+  end
+
+  # Resumen presupuestal de un centro completo, para el tablero del paquete 08
+  # (via el 07). Lectura pura, sin lock.
+  #
+  #   => { cost_center: { id:, code:, viatic_value: },
+  #        totals:      { viatic_value:, assigned:, unassigned:, spent:, available: },
+  #        by_user:     [ { user_id:, user_name:, assigned:, spent:, available:,
+  #                         budgets_count:, exceeded_expenses_count: } ] }
+  #
+  # Son CUATRO queries agrupadas y ningun bucle con N queries: un centro con 30
+  # beneficiarios no puede costar 90 consultas para pintar una tabla.
+  def self.summary_for_center(cost_center_id)
+    centro = CostCenter.find_by(id: cost_center_id)
+
+    asignado_por_usuario = ExpenseBudget.activas.where(cost_center_id: cost_center_id)
+                                        .group(:user_id).sum(:amount)
+    partidas_por_usuario = ExpenseBudget.activas.where(cost_center_id: cost_center_id)
+                                        .group(:user_id).count
+    gastado_por_usuario  = ReportExpense.where(cost_center_id: cost_center_id)
+                                        .where.not(budget_status: STATUS_EXCEDIDO)
+                                        .group(:user_invoice_id).sum(SPENT_EXPR)
+    excedidos_por_usuario = ReportExpense.where(cost_center_id: cost_center_id,
+                                                budget_status: STATUS_EXCEDIDO)
+                                         .group(:user_invoice_id).count
+
+    # La union y no solo los beneficiarios con partida: quien gasto en el centro
+    # sin tener partida asignada es precisamente el caso que el tablero tiene que
+    # dejar ver.
+    ids = (asignado_por_usuario.keys + gastado_por_usuario.keys + excedidos_por_usuario.keys).compact.uniq
+    nombres = User.where(id: ids).pluck(:id, :names).to_h
+
+    by_user = ids.map do |uid|
+      asignado = asignado_por_usuario.fetch(uid, 0).to_d.round(2)
+      gastado  = gastado_por_usuario.fetch(uid, 0).to_d.round(2)
+      { user_id: uid,
+        user_name: nombres[uid],
+        assigned: asignado,
+        spent: gastado,
+        available: (asignado - gastado).round(2),
+        budgets_count: partidas_por_usuario.fetch(uid, 0),
+        exceeded_expenses_count: excedidos_por_usuario.fetch(uid, 0) }
+    end.sort_by { |fila| fila[:user_name].to_s }
+
+    viaticos        = centro&.viatic_value.to_d.round(2)
+    asignado_total  = asignado_por_usuario.values.sum.to_d.round(2)
+    gastado_total   = gastado_por_usuario.values.sum.to_d.round(2)
+
+    { cost_center: { id: centro&.id, code: centro&.code, viatic_value: viaticos },
+      totals: { viatic_value: viaticos,
+                assigned: asignado_total,
+                # Lo que del tope todavia no esta repartido en partidas. Puede
+                # ser negativo solo si alguien forzo datos por fuera del modelo.
+                unassigned: (viaticos - asignado_total).round(2),
+                spent: gastado_total,
+                available: (asignado_total - gastado_total).round(2) },
+      by_user: by_user }
+  end
+
   # Setea el actor de los callbacks de auditoria y lo restaura pase lo que pase.
   #
   # Es imprescindible porque los callbacks de ReportExpense y ExpenseBudget leen
