@@ -6,154 +6,194 @@ require "minitest/mock"
 # Contrato entre el stub de E2E y el servicio real.
 #
 # ES EL TEST MAS VALIOSO DEL PAQUETE 12: un stub que se desincroniza del servicio
-# real produce 36 E2E verdes que no prueban nada. Aqui se comprueba que el stub
-# conserva la firma, el tipo de retorno y el contrato de error del metodo que
-# reemplaza.
+# real produce una suite E2E verde que no prueba nada. Aqui se comprueba que el
+# stub conserva la firma, el tipo de retorno y el contrato de error de los dos
+# metodos que reemplaza.
 #
-# El initializer no se carga en la suite de Minitest (no hay E2E_STUBS), asi que
-# estos tests lo cargan a mano con la variable puesta y la restauran despues.
-#
-# TRAMPA QUE ESTE ARCHIVO YA PAGO: `prepend` sobre el singleton_class es
-# IRREVERSIBLE y gana sobre el metodo que escribe `Minitest#stub`. Por eso el
-# initializer trae la guarda `E2eStubs.activo?`: con la variable apagada el
-# modulo delega en `super` y los ~10 stubs de exchange_rate_service_test.rb
-# siguen funcionando corra el orden que corra.
+# ┌─ POR QUE EL COMPORTAMIENTO SE PRUEBA EN UN SUBPROCESO ────────────────────┐
+# │ El plan pedia `load` del initializer dentro de este archivo. Se hizo, y   │
+# │ ROMPIO la suite entera de forma intermitente: `SystemStackError` en       │
+# │ exchange_rate_service_test.rb segun el orden aleatorio de Minitest.        │
+# │                                                                           │
+# │ La causa, verificada: el initializer hace `prepend` sobre el              │
+# │ singleton_class, que es IRREVERSIBLE. Cuando despues otro archivo hace    │
+# │ `ExchangeRateService.stub(:fetch_remote, ...)`, Minitest guarda el metodo │
+# │ con `alias_method` y lo restaura al salir del bloque; esa restauracion    │
+# │ COPIA el metodo del modulo prependido DENTRO del singleton_class, y su    │
+# │ `super` pasa a encontrarse a si mismo. Recursion infinita.                │
+# │                                                                           │
+# │ Por eso el prepend no se ejecuta nunca en este proceso: las guardas se    │
+# │ prueban aqui (ninguna de las dos llega a prependir) y el comportamiento   │
+# │ se prueba lanzando UN `bin/rails runner` con E2E_STUBS=1, que es          │
+# │ exactamente como corre el webServer de Playwright. El subprocesso se      │
+# │ ejecuta una sola vez para todo el archivo.                                │
+# └───────────────────────────────────────────────────────────────────────────┘
 class E2eStubsTest < ActiveSupport::TestCase
   INITIALIZER = Rails.root.join("config", "initializers", "e2e_stubs.rb")
 
-  setup do
-    @flag_previo = ENV["E2E_STUBS"]
-    ENV["E2E_STUBS"] = "1"
-    load INITIALIZER
+  # Sonda que corre DENTRO de un proceso con los stubs activos y devuelve un
+  # informe JSON. Todo lo que este archivo afirma sobre comportamiento sale de
+  # aqui.
+  SONDA = <<~'RUBY'.freeze
+    require "json"
+
+    def payload_de(nombre)
+      bytes = Rails.root.join("test", "fixtures", "files", nombre).binread
+      { model: "modelo-de-prueba", max_tokens: 2048, system: "…",
+        messages: [{ role: "user",
+                     content: [{ type: "image",
+                                 source: { type: "base64", media_type: "image/jpeg",
+                                           data: Base64.strict_encode64(bytes) } },
+                               { type: "text", text: "Extrae los datos de este comprobante." }] }] }
+    end
+
+    FileUtils.rm_f(E2eStubs::LOG)
+
+    lunes  = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 6, 15))
+    sabado = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 6, 13))
+    euro   = ExchangeRateService.fetch_remote(currency: "EUR", date: Date.new(2026, 6, 15))
+    vacio  = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 1, 1))
+    lineas_antes_de_cop = File.exist?(E2eStubs::LOG) ? File.readlines(E2eStubs::LOG).size : 0
+    ExchangeRateService.fetch_remote(currency: "COP", date: Date.new(2026, 6, 15))
+    lineas_despues_de_cop = File.exist?(E2eStubs::LOG) ? File.readlines(E2eStubs::LOG).size : 0
+
+    feliz    = ReceiptExtractionService.call_vision_model(payload_de("comprobante_ia.jpg"))
+    feliz_usd = ReceiptExtractionService.call_vision_model(payload_de("comprobante_ia_usd.pdf"))
+    desconocido = ReceiptExtractionService.call_vision_model(payload_de("comprobante.png"))
+
+    ultima = JSON.parse(File.readlines(E2eStubs::LOG).last)
+
+    informe = {
+      prependido: ExchangeRateService.singleton_class.ancestors.map(&:to_s).grep(/E2eStubs/).size,
+      parametros: ExchangeRateService.method(:fetch_remote).parameters.map { |p| p.map(&:to_s) },
+      clase_result: lunes.class.to_s,
+      responde_a: %i[ok? value errors].map { |m| lunes.respond_to?(m) },
+      lunes: { ok: lunes.ok?, clase_quote: lunes.value[:quote].class.to_s,
+               rate: lunes.value[:quote].rate.to_s, source: lunes.value[:source] },
+      sabado: { ok: sabado.ok?, rate: sabado.value[:quote].rate.to_s,
+                efectiva: sabado.value[:quote].effective_date.to_s },
+      euro: { ok: euro.ok?, source: euro.value[:source] },
+      vacio: { ok: vacio.ok?, errors: vacio.errors, value_nil: vacio.value.nil? },
+      cop: { antes: lineas_antes_de_cop, despues: lineas_despues_de_cop },
+      extraccion: { feliz: feliz, feliz_usd: feliz_usd, desconocido: desconocido },
+      ultima_linea: ultima,
+      claves_confianza: ReceiptExtractionService::CONFIDENCE_KEYS.sort
+    }
+
+    puts "===INFORME==="
+    puts informe.to_json
+  RUBY
+
+  # Una sola vez para todo el archivo: arrancar Rails cuesta ~6 s.
+  def self.informe
+    @informe ||= begin
+      salida = IO.popen(
+        { "RAILS_ENV" => "test", "E2E_STUBS" => "1", "DISABLE_SPRING" => "1" },
+        ["bin/rails", "runner", SONDA],
+        chdir: Rails.root.to_s, err: [:child, :out]
+      ) { |io| io.read }
+
+      json = salida[/===INFORME===\n(.*)/m, 1]
+      raise "la sonda de stubs no produjo informe:\n#{salida}" if json.nil?
+
+      JSON.parse(json)
+    end
   end
 
-  teardown do
-    ENV["E2E_STUBS"] = @flag_previo
-    ENV.delete("E2E_STUBS") if @flag_previo.nil?
-    FileUtils.rm_f(E2eStubs::LOG) if defined?(E2eStubs)
-  end
+  def informe = self.class.informe
 
   test "el initializer de stubs aborta si E2E_STUBS esta activo fuera de test" do
-    Rails.stub(:env, ActiveSupport::StringInquirer.new("production")) do
-      error = assert_raises(RuntimeError) { load INITIALIZER }
-      assert_equal "E2E_STUBS=1 fuera de RAILS_ENV=test", error.message
+    con_flag do
+      Rails.stub(:env, ActiveSupport::StringInquirer.new("production")) do
+        error = assert_raises(RuntimeError) { load INITIALIZER }
+        assert_equal "E2E_STUBS=1 fuera de RAILS_ENV=test", error.message
+      end
     end
   end
 
   test "el initializer de stubs no se carga sin el flag" do
-    ENV.delete("E2E_STUBS")
-    # Se carga otra vez sin flag: no debe agregar NADA nuevo a la cadena.
     antes = ExchangeRateService.singleton_class.ancestors.map(&:to_s).count { |m| m.include?("E2eStubs") }
-    load INITIALIZER
-    despues = ExchangeRateService.singleton_class.ancestors.map(&:to_s).count { |m| m.include?("E2eStubs") }
+    assert_equal 0, antes, "sin E2E_STUBS el stub no puede existir en este proceso"
 
-    assert_equal antes, despues, "sin E2E_STUBS el archivo no puede tocar el servicio"
+    load INITIALIZER
+
+    despues = ExchangeRateService.singleton_class.ancestors.map(&:to_s).count { |m| m.include?("E2eStubs") }
+    assert_equal 0, despues, "cargar el archivo sin flag no puede tocar el servicio"
   end
 
-  test "sin el flag el stub delega en el metodo real y no rompe Minitest#stub" do
-    ENV.delete("E2E_STUBS")
-
-    testigo = ExchangeRateService::Result.new(ok: true, value: :del_stub_de_minitest, errors: [])
-    ExchangeRateService.stub(:fetch_remote, ->(**) { testigo }) do
-      resultado = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 6, 15))
-      assert_equal :del_stub_de_minitest, resultado.value,
-                   "el prepend del E2E no puede tapar los stubs de la suite de Minitest"
-    end
+  test "con el flag activo el stub queda prependido en el proceso del webServer" do
+    assert_equal 1, informe["prependido"],
+                 "en la corrida E2E el modulo tiene que estar en la cadena de ExchangeRateService"
   end
 
   test "el stub de tasas conserva la firma del metodo real" do
-    assert_equal [%i[keyreq currency], %i[keyreq date]],
-                 ExchangeRateService.method(:fetch_remote).parameters,
+    assert_equal [%w[keyreq currency], %w[keyreq date]], informe["parametros"],
                  "si Multimoneda cambia la firma, este stub deja de ser valido"
+    # Y la firma del metodo REAL, en este proceso sin stubs, es la misma.
+    assert_equal [%i[keyreq currency], %i[keyreq date]],
+                 ExchangeRateService.method(:fetch_remote).parameters
   end
 
   test "el stub de tasas devuelve el mismo tipo de Result que el real" do
-    resultado = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 6, 15))
-
-    assert_instance_of ExchangeRateService::Result, resultado
-    assert_respond_to resultado, :ok?
-    assert_respond_to resultado, :value
-    assert_respond_to resultado, :errors
-    assert_instance_of ExchangeRateClient::Quote, resultado.value[:quote]
-    assert_equal "trm_oficial", resultado.value[:source]
-    assert_equal BigDecimal("4321.5"), resultado.value[:quote].rate
+    assert_equal "ExchangeRateService::Result", informe["clase_result"]
+    assert_equal [true, true, true], informe["responde_a"]
+    assert_equal "ExchangeRateClient::Quote", informe["lunes"]["clase_quote"]
+    assert_equal "trm_oficial", informe["lunes"]["source"]
+    assert_equal BigDecimal("4321.5"), BigDecimal(informe["lunes"]["rate"])
+    assert_equal "bce", informe["euro"]["source"]
   end
 
   test "el stub de tasas devuelve el habil anterior para un sabado" do
-    resultado = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 6, 13))
-
-    assert resultado.ok?
-    assert_equal Date.new(2026, 6, 12), resultado.value[:quote].effective_date
-    assert_equal BigDecimal("4310.0"), resultado.value[:quote].rate
+    assert informe["sabado"]["ok"]
+    assert_equal "2026-06-12", informe["sabado"]["efectiva"]
+    assert_equal BigDecimal("4310.0"), BigDecimal(informe["sabado"]["rate"])
   end
 
   test "el stub de tasas falla sin excepcion para una fecha sin tasa" do
-    resultado = nil
-    assert_nothing_raised do
-      resultado = ExchangeRateService.fetch_remote(currency: "USD", date: Date.new(2026, 1, 1))
-    end
-
-    refute resultado.ok?
-    assert_equal ["sin_tasa"], resultado.errors
-    assert_nil resultado.value
+    refute informe["vacio"]["ok"]
+    assert_equal ["sin_tasa"], informe["vacio"]["errors"]
+    assert informe["vacio"]["value_nil"]
   end
 
-  test "el stub de extraccion registra la llamada en stub_calls.log y COP no consulta nada" do
-    FileUtils.rm_f(E2eStubs::LOG)
-
-    ReceiptExtractionService.call_vision_model(payload_de("comprobante_ia.jpg"))
-    lineas = File.readlines(E2eStubs::LOG).map { |l| JSON.parse(l) }
-
-    assert_equal 1, lineas.size
-    assert_equal "ReceiptExtractionService", lineas.last["service"]
-    assert_equal "call_vision_model", lineas.last["method"]
-
-    # COP no se consulta a nadie: el log NO crece.
-    ExchangeRateService.fetch_remote(currency: "COP", date: Date.new(2026, 6, 15))
-    assert_equal 1, File.readlines(E2eStubs::LOG).size,
+  test "el stub registra las llamadas y COP no consulta nada" do
+    assert_equal informe["cop"]["antes"], informe["cop"]["despues"],
                  "COP no puede escribir una linea: el servicio real tampoco sale a la red"
+
+    assert_equal "ReceiptExtractionService", informe["ultima_linea"]["service"]
+    assert_equal "call_vision_model", informe["ultima_linea"]["method"]
   end
 
   test "el stub de extraccion devuelve el hash crudo del modelo para el comprobante conocido" do
-    crudo = ReceiptExtractionService.call_vision_model(payload_de("comprobante_ia.jpg"))
+    feliz = informe["extraccion"]["feliz"]
 
-    assert_kind_of Hash, crudo
-    assert_equal "HOTEL DANN CARLTON E2E", crudo["provider_name"]
-    assert_equal "FE-E2E-IA-001", crudo["invoice_number"]
-    assert_equal "COP", crudo["currency"]
+    assert_equal "HOTEL DANN CARLTON E2E", feliz["provider_name"]
+    assert_equal "FE-E2E-IA-001", feliz["invoice_number"]
+    assert_equal "COP", feliz["currency"]
     # Las claves de confianza son EXACTAMENTE las que el servicio real normaliza.
-    assert_equal ReceiptExtractionService::CONFIDENCE_KEYS.sort, crudo["confidence"].keys.sort
+    assert_equal informe["claves_confianza"], feliz["confidence"].keys.sort
   end
 
   test "el stub de extraccion no escribe los COP del caso USD: los calcula el servicio real" do
-    crudo = ReceiptExtractionService.call_vision_model(payload_de("comprobante_ia_usd.pdf"))
+    usd = informe["extraccion"]["feliz_usd"]
 
-    assert_equal "USD", crudo["currency"]
-    assert_equal 120.0, crudo["value"]
-    assert_equal 22.8, crudo["tax"]
+    assert_equal "USD", usd["currency"]
+    assert_equal 120.0, usd["value"]
+    assert_equal 22.8, usd["tax"]
   end
 
   test "el stub de extraccion devuelve vacio para un archivo desconocido y no lanza" do
-    crudo = nil
-    assert_nothing_raised { crudo = ReceiptExtractionService.call_vision_model(payload_de("comprobante.png")) }
-
-    assert_equal({}, crudo)
-    assert crudo.blank?, "el servicio real traduce un crudo vacio a 'No se pudo leer el comprobante'"
+    assert_equal({}, informe["extraccion"]["desconocido"],
+                 "el servicio real traduce un crudo vacio a 'No se pudo leer el comprobante'")
   end
 
   private
 
-  # Arma el payload de 00-ARQUITECTURA 6.7 tal como lo construye
-  # ReceiptExtractionService#payload_for: el nombre del archivo NO viaja en el
-  # payload, solo sus bytes en base64. Por eso el stub selecciona por digesto.
-  def payload_de(nombre)
-    bytes = Rails.root.join("test", "fixtures", "files", nombre).binread
-
-    { model: "modelo-de-prueba", max_tokens: 2048, system: "…",
-      messages: [{ role: "user",
-                   content: [{ type: "image",
-                               source: { type: "base64", media_type: "image/jpeg",
-                                         data: Base64.strict_encode64(bytes) } },
-                             { type: "text", text: "Extrae los datos de este comprobante." }] }] }
+  def con_flag
+    previo = ENV["E2E_STUBS"]
+    ENV["E2E_STUBS"] = "1"
+    yield
+  ensure
+    ENV["E2E_STUBS"] = previo
+    ENV.delete("E2E_STUBS") if previo.nil?
   end
 end
