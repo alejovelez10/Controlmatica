@@ -26,6 +26,7 @@
 #  is_acepted                :boolean          default(FALSE)
 #  payment_type              :string
 #  receipt_file              :string
+#  rule_violations           :jsonb            not null
 #  type_identification       :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null

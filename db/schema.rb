@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_05_000001) do
+ActiveRecord::Schema.define(version: 2026_08_11_000002) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -333,6 +333,31 @@ ActiveRecord::Schema.define(version: 2026_04_05_000001) do
     t.index ["user_id"], name: "index_expense_ratios_on_user_id"
   end
 
+  create_table "expense_rules", force: :cascade do |t|
+    t.string "name", null: false
+    t.boolean "active", default: true, null: false
+    t.boolean "is_default", default: false, null: false
+    t.integer "max_invoice_age_days"
+    t.decimal "max_invoice_value", precision: 15, scale: 2
+    t.boolean "check_duplicates", default: true, null: false
+    t.text "agent_instructions"
+    t.integer "user_id"
+    t.integer "last_user_edited_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["active"], name: "index_expense_rules_on_active"
+    t.index ["is_default"], name: "index_expense_rules_on_is_default"
+    t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"
+  end
+
+  create_table "expense_rules_users", id: false, force: :cascade do |t|
+    t.integer "expense_rule_id", null: false
+    t.integer "user_id", null: false
+    t.index ["expense_rule_id", "user_id"], name: "index_expense_rules_users_unique", unique: true
+    t.index ["expense_rule_id"], name: "index_expense_rules_users_on_expense_rule_id"
+    t.index ["user_id"], name: "index_expense_rules_users_on_user_id"
+  end
+
   create_table "material_invoices", force: :cascade do |t|
     t.integer "material_id"
     t.integer "user_id"
@@ -500,6 +525,7 @@ ActiveRecord::Schema.define(version: 2026_04_05_000001) do
     t.boolean "accounting_approved", default: false, null: false
     t.integer "accounting_approved_by_id"
     t.datetime "accounting_approved_at"
+    t.jsonb "rule_violations", default: [], null: false
     t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
     t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
