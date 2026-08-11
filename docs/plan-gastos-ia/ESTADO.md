@@ -2288,3 +2288,38 @@ se relajó.**
 
 ➡️ **Lo que sigue es la ola 7: el paquete 12 (E2E)** — que es, precisamente, el que convierte "el
 código dice lo que debe decir" en "la pantalla funciona".
+
+---
+
+## ⚠️ CORRECCIÓN DEL TABLERO (2026-08-11) — leer esto, manda sobre lo de arriba
+
+Dos afirmaciones de este documento quedaron **falsas** porque el tablero se escribió antes que los
+últimos commits. Lo que sigue es lo cierto, verificado contra el código:
+
+1. **La pantalla de Reglas de gastos SÍ está construida.** Donde arriba dice que "la Tarea 6 no se
+   hizo" y que "las reglas solo se administran por JSON", ya no aplica: existen
+   `components/ExpenseRule/index.jsx` (460 líneas), su `FormCreate.jsx` (283), el pack, la vista, la
+   ruta, el ítem de menú bajo Configuración y 33 pruebas verdes. Incluye el aviso permanente de que
+   el multi-select vacío significa **nadie**, y la columna "Aplica a" que muestra
+   "Nadie" / "Todos (por defecto)".
+
+2. **La pestaña de Presupuesto y el formulario de gasto extendido también están.** `BudgetsTable`,
+   `BudgetSummaryBoard` y `BudgetFormCreate`, con validación en vivo del disponible, más el
+   comprobante y el bloque de moneda extranjera en los dos formularios de gasto.
+
+Suite al cierre de la ola 6: **912 runs, 3037 assertions, 0 failures**, reproducible con semilla fija.
+
+### Lo que NO está, y hay que decirlo claro
+
+- **La captura asistida es código muerto en pantalla.** El botón "Extraer datos del comprobante" y
+  sus cuatro estados están construidos en los dos formularios, pero detrás de
+  `window.CM_RECEIPT_EXTRACTION_ENABLED`, **que ninguna vista publica**. Poner
+  `RECEIPT_EXTRACTION_ENABLED=true` en `application.yml` NO enciende la interfaz: falta cablear el
+  flag de punta a punta. Es coherente con que la extracción la complete Taimes, pero conviene
+  saberlo para no perder una tarde buscando por qué no aparece el botón.
+- **"Reglas de gastos" no se siembra en una instalación limpia**: falta agregarlo a
+  `lib/tasks/create_config.rake`. Hoy solo existe el rake para instalaciones ya montadas, así que en
+  una base nueva el módulo no nace y a la pantalla solo llega el Administrador, por su bypass.
+- **Cero cobertura E2E de todo lo construido en las olas 5 y 6.** Los specs funcionales son del
+  paquete 12, que aún no corre. Toda la superficie de usuario se verificó **leyendo código**, no
+  ejecutándola en un navegador.
