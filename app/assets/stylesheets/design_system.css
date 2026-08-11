@@ -2275,3 +2275,33 @@ select.cm-input {
     font-size: 15px;
   }
 }
+
+
+/* ============================================
+   PRESUPUESTO Y MONEDA EXTRANJERA (paquete 08)
+   ============================================
+   Se agregan AL FINAL y no se toca ninguna regla existente.
+
+   Van aqui y NO en el bloque <style> de ReportExpense/FormCreate.jsx: ese
+   bloque no tiene scope y ya pisa .cm-input y .cm-label globalmente mientras el
+   modal esta montado. Crecerlo agrava un problema que ya existe. */
+
+.cm-budget-live {
+  background: #f8fafc;
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius);
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.cm-budget-live .cm-info-row {
+  padding: 4px 0;
+}
+
+.cm-budget-foreign {
+  background: #fffaf2;
+  border: 1px solid #f3d9ae;
+  border-radius: var(--cm-radius);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}

@@ -4,6 +4,7 @@ import OrdenesDeCompraTable from './OrdenesDeCompraTable';
 import ReportesDeServiciosTable from './ReportesDeServiciosTable';
 import TableristasTable from './TableristasTable';
 import ExpensesTable from './ExpensesTable';
+import BudgetsTable from './BudgetsTable';
 import QuotationIndex from '../ConstCenter/Quotation/Index';
 
 class TabContentShow extends React.Component {
@@ -29,6 +30,19 @@ class TabContentShow extends React.Component {
       tabs.push({ id: String(tabIndex++), label: "Cotizaciones", icon: "fas fa-file-alt", key: "quotations" });
     }
     tabs.push({ id: String(tabIndex++), label: "Gastos", icon: "fas fa-receipt", key: "expenses" });
+    // La pestana de Presupuesto va DESPUES de Gastos y NUNCA antes. Los ids son
+    // correlativos y `activeTab` arranca en "1": insertarla al principio le
+    // quitaria el id "1" a Cotizaciones (o a Gastos) y cambiaria la pestana que
+    // se abre por defecto en todos los centros. Aqui solo se corren los ids de
+    // las pestanas posteriores, que nadie usa como valor inicial.
+    //
+    // `budget_module` se lee POR STRING LITERAL: es una de las 10 claves
+    // canonicas de @estados (00-ARQUITECTURA.md §4.4) que emite el paquete 07.
+    // Un nombre distinto deja esta pestana invisible para siempre sin que nada
+    // falle ni avise.
+    if (this.props.estados && this.props.estados.budget_module) {
+      tabs.push({ id: String(tabIndex++), label: "Presupuesto", icon: "fas fa-wallet", key: "budgets" });
+    }
     tabs.push({ id: String(tabIndex++), label: "Ordenes de Compra", icon: "fas fa-shopping-cart", key: "orders" });
 
     if (type === "SERVICIO" || type === "PROYECTO") {
@@ -51,6 +65,13 @@ class TabContentShow extends React.Component {
         return <QuotationIndex cost_center_id={p.cost_center.id} cost_center={p.cost_center} loadData={p.loadData} estados={p.estados} />;
       case "expenses":
         return <ExpensesTable usuario={p.usuario} cost_center={p.cost_center} dataExpenses={p.dataExpenses} users={p.users} report_expense_options={p.report_expense_options} estados={p.estados} />;
+      case "budgets":
+        return (
+          <div data-testid="budget-panel">
+            <BudgetsTable usuario={p.usuario} cost_center={p.cost_center}
+                          users_select={p.users_select} estados={p.estados} />
+          </div>
+        );
       case "orders":
         return <OrdenesDeCompraTable usuario={p.usuario} estados={p.estados} cost_center={p.cost_center} dataSalesOrdes={p.dataSalesOrdes} />;
       case "reports":
@@ -79,6 +100,7 @@ class TabContentShow extends React.Component {
                 key={tab.id}
                 className={"cm-tab-btn" + (activeTab === tab.id ? " cm-tab-btn--active" : "")}
                 onClick={function() { self.setTab(tab.id); }}
+                data-testid={tab.key === "budgets" ? "budget-tab" : undefined}
               >
                 <i className={tab.icon} style={{ marginRight: 6 }} />
                 {tab.label}
