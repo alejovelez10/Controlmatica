@@ -9,7 +9,7 @@
 # forma de serializar dos escrituras simultaneas.
 #
 # LAS TRES REGLAS DE NEGOCIO QUE CODIFICA (00-ARQUITECTURA.md 2.6):
-#   1. El "gastado" suma `invoice_value` (SIN IVA), nunca `invoice_total`.
+#   1. El "gastado" suma `invoice_value` (SIN IVA), nunca el total con IVA.
 #   2. Los gastos `excedido` NO consumen cupo; los `sin_presupuesto` SI.
 #   3. La imputacion es FIFO por `created_at`: los gastos mas viejos conservan
 #      el cupo y los mas nuevos son los que se caen a `excedido`.
@@ -78,7 +78,7 @@ class ExpenseBudgetService
   #    (A->B y B->A) producen deadlock. No se usa
   #    `CostCenter.lock.where(id: [...]).order(:id)`: Postgres puede tomar los
   #    locks en orden de scan, ANTES del sort.
-  # 3. Nada de HTTP, subida de archivos ni `recalculate_cost_center` dentro del
+  # 3. Nada de HTTP, subida de archivos ni recalculos de centro dentro del
   #    bloque. El pool de AR es 5.
   def self.with_center_lock(*cost_center_ids, lock_timeout_ms: LOCK_TIMEOUT_MS)
     ids = cost_center_ids.compact.map(&:to_i).uniq.sort
@@ -190,6 +190,261 @@ class ExpenseBudgetService
                 available: (asignado_total - gastado_total).round(2) },
       by_user: by_user }
   end
+
+  # --- Evaluacion de UN gasto -----------------------------------------------
+
+  # Asigna budget_status / budget_reason / expense_budget_id EN MEMORIA. No
+  # guarda, no abre transaccion. Debe invocarse DENTRO de with_center_lock.
+  # Idempotente: llamarlo dos veces sobre el mismo gasto da el mismo resultado.
+  # Devuelve el propio expense.
+  def self.evaluate!(expense, actor: nil)
+    # `ReportExpense.import` puede dejar estas dos FK nulas cuando el Excel trae
+    # un nombre que no resuelve. Reventar aqui haria que un import de 300 filas
+    # se caiga por una.
+    if expense.cost_center_id.blank? || expense.user_invoice_id.blank?
+      return asignar(expense, STATUS_SIN_PRESUPUESTO, nil, nil)
+    end
+
+    budget = ExpenseBudget.activas
+                          .para(expense.cost_center_id, expense.user_invoice_id)
+                          .antiguas_primero.first
+    return asignar(expense, STATUS_SIN_PRESUPUESTO, nil, nil) if budget.nil?
+
+    disponible = available_for(cost_center_id: expense.cost_center_id,
+                               user_id: expense.user_invoice_id,
+                               exclude_expense_id: expense.id)[:available]
+    # Un invoice_value negativo es dato invalido, no un credito: se trata como 0
+    # para que no genere cupo de la nada.
+    valor = [expense.invoice_value.to_d.round(2), 0].max
+
+    if valor <= 0 || valor <= disponible
+      asignar(expense, STATUS_APROBADO, nil, budget.id)
+    else
+      # El expense_budget_id se llena TAMBIEN en excedido: es informativo y da
+      # trazabilidad de contra que partida no alcanzo.
+      asignar(expense, STATUS_EXCEDIDO,
+              "Excede el presupuesto disponible en #{money(valor - disponible)}", budget.id)
+    end
+  end
+
+  # PUNTO DE ENTRADA UNICO para guardar un gasto: toma el lock, evalua, guarda y
+  # reevalua el par (y el par de origen, si el gasto se movio de centro o de
+  # responsable).
+  #
+  # Lo usan el controller del paquete 07 y la tool MCP del paquete 11. El patron
+  # `save` + `evaluate!` + `reload` queda derogado: pierde los tres valores en el
+  # reload y deja en `sin_presupuesto` todo gasto creado por WhatsApp.
+  def self.persist_with_evaluation!(expense, actor:, previous_cost_center_id: nil,
+                                    previous_user_invoice_id: nil)
+    with_center_lock(expense.cost_center_id, previous_cost_center_id) do
+      guardado = with_actor(actor) do
+        evaluate!(expense, actor: actor)
+        expense.save
+      end
+
+      # Un gasto EXCEDIDO se guarda igual: el excedido se informa, no se
+      # bloquea. Aqui solo se corta por errores de validacion reales.
+      next Result.new(ok: false, value: expense, errors: expense.errors.full_messages) unless guardado
+
+      if previous_cost_center_id.present? &&
+         (previous_cost_center_id != expense.cost_center_id ||
+          previous_user_invoice_id != expense.user_invoice_id)
+        # El par de ORIGEN libera cupo: un gasto que estaba excedido alli puede
+        # volver a caber.
+        perform_reevaluation(previous_cost_center_id, previous_user_invoice_id)
+      end
+
+      perform_reevaluation(expense.cost_center_id, expense.user_invoice_id)
+      # perform_reevaluation escribe con update_columns, asi que el objeto en
+      # memoria quedo viejo.
+      expense.reload
+
+      Result.new(ok: true, value: expense, errors: [])
+    end
+  end
+
+  # Se llama DESPUES de destruir el gasto, con el par capturado ANTES (despues el
+  # objeto ya no sirve).
+  #
+  # Eliminar un gasto LIBERA CUPO: sin este reevaluo, un gasto posterior que
+  # habia quedado excedido se queda marcado asi para siempre y desaparece de la
+  # vista de contabilidad sin razon.
+  def self.on_expense_destroyed!(cost_center_id:, user_id:, actor: nil)
+    with_center_lock(cost_center_id) { perform_reevaluation(cost_center_id, user_id) }
+  end
+
+  # Reevaluo FIFO de un par, tomando el lock. Envoltorio publico de
+  # perform_reevaluation para quien no venga de una escritura de gasto.
+  def self.reevaluate_center_user!(cost_center_id:, user_id:, actor: nil)
+    with_center_lock(cost_center_id) { perform_reevaluation(cost_center_id, user_id) }
+  end
+
+  # Reparte el cupo del par entre sus gastos, del mas viejo al mas nuevo.
+  #
+  # ASUME QUE EL LOCK YA ESTA TOMADO y NO abre transaccion propia. Es la unica
+  # forma de que create_budget! y persist_with_evaluation! la reusen sin anidar
+  # transacciones ni volver a pedir el mismo lock. Es privada justamente para que
+  # nadie la llame suelta: correria sin lock y la concurrencia se romperia en
+  # silencio.
+  #
+  # => Result(ok: true, value: <cantidad de gastos que cambiaron>, errors: [])
+  def self.perform_reevaluation(cost_center_id, user_id)
+    return Result.new(ok: true, value: 0, errors: []) if cost_center_id.blank? || user_id.blank?
+
+    asignado = ExpenseBudget.activas.para(cost_center_id, user_id).sum(:amount).to_d.round(2)
+    budget   = ExpenseBudget.activas.para(cost_center_id, user_id).antiguas_primero.first
+
+    corriendo = BigDecimal(0)
+    cambiados = 0
+
+    # `.each` y NO `find_each`: find_each ignora el order y fuerza el suyo por
+    # id. El FIFO depende de created_at, y con created_at seteado a mano (las
+    # fixtures lo hacen) los dos ordenes no coinciden. Son decenas de filas por
+    # persona, no millones.
+    gastos = ReportExpense.where(cost_center_id: cost_center_id, user_invoice_id: user_id)
+                          .order(created_at: :asc, id: :asc)
+
+    gastos.each do |gasto|
+      valor = [gasto.invoice_value.to_d.round(2), 0].max
+
+      # Un historico consume cupo pero NUNCA cambia de estado por un reevaluo
+      # (Discrepancia D2). Si cambiara, editar una partida podria empujar a
+      # `excedido` a un gasto historico y sacarlo de la vista de contabilidad,
+      # que es exactamente lo que la decision de no tocar historicos evitaba.
+      if MANAGED_STATUSES.exclude?(gasto.budget_status)
+        corriendo += valor
+        next
+      end
+
+      destino =
+        if budget.nil?
+          corriendo += valor
+          [STATUS_SIN_PRESUPUESTO, nil, nil]
+        elsif valor <= 0 || corriendo + valor <= asignado
+          resultado = [STATUS_APROBADO, nil, budget.id]
+          corriendo += valor
+          resultado
+        else
+          # `corriendo` NO se incrementa: lo que no cabe no consume cupo, asi que
+          # un gasto grande no arrastra consigo a los siguientes que si caben.
+          [STATUS_EXCEDIDO,
+           "Excede el presupuesto disponible en #{money(corriendo + valor - asignado)}",
+           budget.id]
+        end
+
+      next if [gasto.budget_status, gasto.budget_reason, gasto.expense_budget_id] == destino
+
+      # `update_columns` y no `update`: salta validaciones Y callbacks. Sin eso,
+      # cada gasto tocado dispararia `edit_values` (pisando el
+      # last_user_edited_id con el actor equivocado) y la auditoria del concern
+      # del paquete 03, y una edicion de partida con 40 gastos ensuciaria la
+      # pantalla de notificaciones con 41 registros. Ademas, al escribir solo
+      # cuando el destino difiere, el reevaluo es idempotente y no produce ruido
+      # en updated_at.
+      gasto.update_columns(budget_status: destino[0], budget_reason: destino[1],
+                           expense_budget_id: destino[2], updated_at: Time.current)
+      cambiados += 1
+    end
+
+    Result.new(ok: true, value: cambiados, errors: [])
+  end
+  private_class_method :perform_reevaluation
+
+  # --- CRUD de partidas ------------------------------------------------------
+
+  # `user_id` es el BENEFICIARIO. JAMAS se le pasa el actor: el actor va en
+  # `created_by_id` y solo ahi. Confundirlos le daria a cada jefe el presupuesto
+  # de todo su equipo.
+  def self.create_budget!(cost_center_id:, user_id:, amount:, notes: nil, actor:)
+    with_center_lock(cost_center_id) do
+      budget = ExpenseBudget.new(cost_center_id: cost_center_id, user_id: user_id,
+                                 amount: amount, notes: notes, active: true,
+                                 created_by_id: actor&.id)
+
+      # La validacion de tope corre DENTRO del lock: ese es el punto entero del
+      # bloqueo. Dos partidas simultaneas que por separado caben, juntas no.
+      guardado = with_actor(actor) { budget.save }
+
+      next Result.new(ok: false, value: budget, errors: budget.errors.full_messages) unless guardado
+
+      # Una partida nueva puede rescatar gastos que estaban en excedido.
+      perform_reevaluation(cost_center_id, user_id)
+      Result.new(ok: true, value: budget, errors: [])
+    end
+  end
+
+  # Solo se aplican amount / notes / active. Mover una partida de centro o de
+  # beneficiario cambiaria retroactivamente el cupo de DOS pares y dejaria
+  # gastos imputados a una partida que ya no les corresponde: se anula y se crea
+  # otra, que ademas deja rastro en la auditoria.
+  def self.update_budget!(budget, attrs, actor:)
+    attrs = (attrs || {}).symbolize_keys
+
+    if cambia_de_par?(budget, attrs)
+      return Result.new(ok: false, value: budget,
+                        errors: ["No se puede cambiar el centro de costos ni el beneficiario " \
+                                 "de una partida; anule esta y cree otra"])
+    end
+
+    permitidos = attrs.slice(:amount, :notes, :active)
+
+    with_center_lock(budget.cost_center_id) do
+      guardado = with_actor(actor) { budget.update(permitidos) }
+
+      next Result.new(ok: false, value: budget, errors: budget.errors.full_messages) unless guardado
+
+      # REDUCIR el monto por debajo de lo ya gastado SE PERMITE: la validacion de
+      # tope solo mira hacia arriba. Los gastos que ya no caben pasan a excedido
+      # en este reevaluo. Bloquear la edicion dejaria al jefe sin forma de
+      # corregir una partida inflada por error.
+      perform_reevaluation(budget.cost_center_id, budget.user_id)
+      Result.new(ok: true, value: budget, errors: [])
+    end
+  end
+
+  def self.destroy_budget!(budget, actor:)
+    # Se capturan ANTES: despues del destroy el objeto ya no sirve para
+    # reevaluar.
+    cc = budget.cost_center_id
+    u  = budget.user_id
+
+    with_center_lock(cc) do
+      # `destroy` y no `delete`: dispara la auditoria de eliminacion y el
+      # dependent: :nullify que deja expense_budget_id en NULL.
+      guardado = with_actor(actor) { budget.destroy }
+
+      next Result.new(ok: false, value: budget, errors: budget.errors.full_messages) unless guardado
+
+      # Reimputa a la siguiente partida activa si queda alguna, o deja todo en
+      # sin_presupuesto si no queda ninguna.
+      perform_reevaluation(cc, u)
+      Result.new(ok: true, value: budget, errors: [])
+    end
+  end
+
+  # Envoltorio publico y SIN lock, para que un controller pueda pre-validar y
+  # mostrar el mensaje antes de intentar guardar. La regla vive en el modelo.
+  #
+  # => nil | String
+  def self.validate_cap!(budget)
+    ExpenseBudget.cap_violation_for(cost_center: budget.cost_center, amount: budget.amount,
+                                    active: budget.active,
+                                    exclude_id: (budget.persisted? ? budget.id : nil))
+  end
+
+  def self.cambia_de_par?(budget, attrs)
+    (attrs.key?(:cost_center_id) && attrs[:cost_center_id].to_i != budget.cost_center_id) ||
+      (attrs.key?(:user_id) && attrs[:user_id].to_i != budget.user_id)
+  end
+  private_class_method :cambia_de_par?
+
+  def self.asignar(expense, status, reason, budget_id)
+    expense.budget_status     = status
+    expense.budget_reason     = reason
+    expense.expense_budget_id = budget_id
+    expense
+  end
+  private_class_method :asignar
 
   # Setea el actor de los callbacks de auditoria y lo restaura pase lo que pase.
   #
