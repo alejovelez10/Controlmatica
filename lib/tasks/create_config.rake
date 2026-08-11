@@ -267,6 +267,30 @@ namespace :create_config do
             AccionModule.create(name: "Ingreso al modulo", module_control_id: red.id, user_id: user.id)
         end
 
+        # Modulos del proyecto de gastos/presupuesto/IA. Replican lo que hace
+        # lib/tasks/permissions_gastos_ia.rake, para que una instalacion DESDE
+        # CERO tambien los tenga. En un entorno con datos NO se corre esta task
+        # (arranca borrando en bloque todos los ModuleControl): ahi se corre
+        # permissions_gastos_ia:install, que es idempotente.
+        budget = ModuleControl.create(name: "Presupuesto", user_id: user.id)
+
+        if budget
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: budget.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: budget.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: budget.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: budget.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: budget.id, user_id: user.id)
+        end
+
+        accounting = ModuleControl.create(name: "Contabilidad", user_id: user.id)
+
+        if accounting
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: accounting.id, user_id: user.id)
+            AccionModule.create(name: "Aprobar", module_control_id: accounting.id, user_id: user.id)
+            AccionModule.create(name: "Exportar a excel", module_control_id: accounting.id, user_id: user.id)
+            AccionModule.create(name: "Ver todos", module_control_id: accounting.id, user_id: user.id)
+        end
+
 
 
 
