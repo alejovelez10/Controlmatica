@@ -71,7 +71,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 2 | 02 — Migraciones y esquema | ⚠️ | `aed1a89`..`0e52d05` | Las 6 migraciones escritas, aplicadas en dev y test, `schema.rb` regenerado, 33 pruebas nuevas y `rake gastos_ia_schema:check`. **Reverificado por un agente independiente contra la BD con `psql`: los 10 índices, las 14 columnas y los 5.008 gastos intactos.** **Salvedades: staging y producción NO se tocaron** (Tareas 14/15, runbook abajo) y el **drill de rollback (criterio 30) no se pudo reejecutar** en la verificación final |
 | 2 | 03 — Deuda técnica bloqueante | ⚠️ | `db68191`..`342ec2c` | Uploaders a S3 con allowlists, `search` convertido en builder de hash (bug de `scope` de clase, real y demostrado), auditoría extraída a `RegisterAuditable` (−219 líneas en `report_expense.rb`). 73 runs / 140 assertions verdes. **Salvedades: `heroku config:set AWS_REGION=us-east-2` sigue sin ejecutar** (obligatorio antes de mergear) y 3 criterios son de narrativa de PR / producción, no verificables aquí |
 | 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO.** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. Criterio 9 verificado a mano: comentando el `CostCenter.lock.find` fallan exactamente los 2 guardianes de SQL. **Salvedades: 3 (ver bitácora ola 3a)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo para que el mensaje de tope salga sin prefijo en inglés, y el criterio 26 (firma del acta de la Tarea 0) es del cliente |
-| 3a | 05 — Multimoneda y TRM | ⬜ | — | **Sin arrancar de verdad.** Solo existe `app/models/currency.rb` (su Tarea 3) + 5 pruebas, **también sin commitear**. No existen `ExchangeRate`, la fixture, `ExchangeRateClient` ni `ExchangeRateService` |
+| 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO.** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48); la suite corre sin red. **Salvedades: 3** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07, y el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 |
 | 3b | 06 — Comprobante y contabilidad | ⬜ | — | |
 | 3b | 10 — IA: extracción y reglas | ⬜ | — | |
 | 4 | 07 — API, permisos y rutas | ⬜ | — | |
@@ -135,12 +135,9 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
 
 ## Pendientes que requieren a una persona
 
-0. 🟡 **QUEDAN 2 ARCHIVOS SIN COMMITEAR, y ya no son del paquete 04.** Lo del 04 se terminó y se
-   commiteó (`a2a7c43`..`13751ad`). Lo que sigue en el árbol es `app/models/currency.rb` (Tarea 3
-   del **paquete 05**) y `test/models/currency_test.rb`. **Está verde**, pero un `git checkout` o un
-   `git stash` descuidado lo borra. No se commitea desde el paquete 04 porque la matriz de propiedad
-   §7.2 se lo asigna al 05: commitearlo con un mensaje ajeno lo daría por cerrado cuando le faltan
-   19 de sus 20 tareas. **Mientras tanto, no cambies de rama.**
+0. ✅ **RESUELTO.** Los 2 archivos sueltos (`app/models/currency.rb` y
+   `test/models/currency_test.rb`) los cerró el paquete 05 en su primer commit (`237febf`).
+   `git status` vuelve a estar limpio y ya se puede cambiar de rama sin perder trabajo.
 1. **Rotar la llave de AWS.** Quedó expuesta en un chat y tiene alcance de cuenta completa: ve 19
    buckets de clientes distintos. Lo correcto es un usuario IAM limitado al bucket `controlmatica`.
 2. **`heroku config:set AWS_REGION=us-east-2`** antes de mergear el paquete 03, o las subidas fallan
@@ -873,3 +870,111 @@ Rama `feature/gastos-presupuesto-ia`, HEAD `5610085`. **`git status` NO está li
 pendiente #0; es la única anomalía. `git branch -r --contains HEAD` vacío y sin upstream: **nada
 salió al remoto**. Los 5 commits de la ola son atómicos, en español, con el POR QUÉ en el cuerpo y
 el trailer `Co-Authored-By`. **No se tocó producción**, ni Heroku, ni una sola config var.
+
+---
+
+### Ola 3a — Paquete 05: Multimoneda y TRM ✅ terminado (2026-08-11, noche)
+
+**Estado honesto: verde, y verde de verdad — 46 corridas seguidas de la suite completa con seeds
+distintos, todas en `332 runs / 983 assertions / 0 failures / 0 errors / 0 skips`.** Se corrieron
+los comandos; los números de abajo no están copiados de ningún informe.
+
+#### Precondición verificada antes de arrancar
+
+`psql` directo contra `controlmatica_test`: la tabla `exchange_rates` existe con sus 6 columnas de
+negocio **incluida `effective_date` NOT NULL**, el índice `(currency, rate_date)` es **UNIQUE** y
+el `(currency, effective_date)` está. Las Tareas 1 y 2 (migraciones) estaban retiradas: el 02 ya
+las había aplicado.
+
+#### Los 8 commits
+
+| Commit | Qué entra |
+|---|---|
+| `237febf` | `Currency` (catálogo COP/USD/EUR como constante Ruby) + sus 5 pruebas. Cierra el pendiente #0 |
+| `e27e53a` | `ExchangeRate` (caché, sin auditoría) + `test/fixtures/exchange_rates.yml` (4 filas) + 8 pruebas |
+| `299051f` | `ExchangeRateClient`: la única clase que abre sockets. 14 pruebas, **todas de parsers puros** |
+| `ecaf49a` | `ExchangeRateService`: caché → fuente → persistencia → fallback. 19 pruebas |
+| `a47cce8` | Conversión y validación de moneda en `ReportExpense` + `cop_manual_override`. 17 pruebas |
+| `1cb1fb6` | `GET /get_exchange_rate` (contrato §E.1) + ruta. 9 pruebas |
+| `acfed0e` | `get_currencies` + `window.CM_CURRENCIES` en el layout + no-regresión de `recalculate_cost_center`. 4 pruebas |
+| `1564fab` | Las 7 claves de moneda de `ReportExpensesListTool::KEYS` + contrato de moneda del import. 7 pruebas |
+| `28218b2` | Arreglo de una intermitencia ajena que este paquete destapó (ver abajo) |
+
+**83 pruebas propias**, contra las 66 que pedía el plan. Reparto: 5 + 8 + 14 + 19 + 17 + 4 + 4 + 9 + 3.
+
+#### Decisiones y hallazgos que conviene no volver a descubrir
+
+1. **La suite corre sin red y está demostrado, no afirmado.** Se corrió la suite completa con
+   `TRM_API_URL` y `ECB_API_URL` apuntando a `http://127.0.0.1:1/nope`: **332 runs, 0 fallos, mismo
+   tiempo (5,2 s)**. Ningún test depende de datos.gov.co ni del BCE.
+2. **Verificación manual contra las fuentes reales, una sola vez y fuera de la suite** (2026-08-11):
+   `curl` al dataset Socrata `32sa-8pi3` → HTTP 200, `valor 3125.47` vigente el 2026-08-11; `curl`
+   al BCE `D.USD.EUR.SP00.A` → HTTP 200, CSV con `TIME_PERIOD/OBS_VALUE` y 8 columnas en un orden
+   **distinto** al del ejemplo del plan, que es justamente por lo que los parsers ubican las
+   columnas por nombre. Extremo a extremo: `fetch(currency: "EUR")` devolvió **3.611,48 COP**
+   (1,1555 USD/EUR × 3.125,47 TRM), `source "bce"`, `stale true` (la última observación del BCE era
+   del 10) y persistió las filas del rango. El script de verificación **no quedó en la suite**.
+3. **`minitest/mock` hay que requerirlo a mano.** `rails/test_help` no lo carga y `Object#stub`
+   no existe sin él. No es una gema nueva (viene dentro de minitest) y `test_helper.rb` es del
+   paquete 01, así que el `require "minitest/mock"` va en cada archivo de prueba que stubea.
+4. **Trampa del legado que costó tiempo**: `CostCenter#change_state` (un `before_update`) hace
+   `hour_cotizada * eng_hours` sin guarda de nil. Como `recalculate_cost_center` termina en un
+   `update`, **cualquier** test que lo llame revienta con `NoMethodError` si el centro fixture no
+   tiene esos dos valores. Se siembran con `update_columns` en el `setup` para no disparar el mismo
+   callback.
+5. **Se destapó una intermitencia ajena y se arregló** (`28218b2`). El golden
+   `test_edicion_de_asociacion_ordena_por_id_no_por_viejo_nuevo` (paquete 03) fallaba **1 de cada
+   ~15 corridas completas, sin depender del seed**: sus dos últimas aserciones fijaban la dirección
+   (el centro nuevo en `color-true`) cuando el código de auditoría hace `CostCenter.where(id: [...])`
+   **sin `ORDER BY`**. Con seq scan PostgreSQL devuelve las filas en orden físico y con bitmap index
+   scan sobre la PK las devuelve por id —que en las fixtures es un hash de la etiqueta y va al
+   revés—, y basta con que la tabla acumule tuplas muertas (los tests de multimoneda actualizan
+   centros) para que el planificador cambie de opinión. La aserción **no se relajó**: ahora afirma
+   exactamente lo que el comentario del propio test ya decía, contra el orden real de la consulta.
+   Costó 3 intentos localizarla porque el fallo no se reproduce con el mismo seed.
+6. **`test/models/schema_gastos_ia_test.rb` (paquete 02) necesitó un ajuste de una línea.** Contaba
+   **todas** las filas USD de `exchange_rates` para probar que dos fechas distintas conviven; con la
+   fixture nueva pasó a medir las fixtures en vez del índice. Se acotó el conteo a las dos filas que
+   el propio test inserta.
+
+#### Salvedades — lo que este paquete NO entrega y por qué
+
+1. **Los 4 casos de `report_expense_import_currency_test.rb` no ejercen `ReportExpense.import`.**
+   Ese método tiene dueño único **06** (§7.2) y hoy sigue con el mapeo posicional de 11 columnas;
+   además `test/fixtures/files/gastos_multimoneda.xlsx` (del 01) trae un layout de 18 columnas en un
+   orden **distinto** al de la Tarea 16 de este plan. Escribir aquí las aserciones extremo a extremo
+   habría dejado 4 pruebas rojas permanentes y, peor, habría fijado expectativas de layout
+   equivocadas que el 06 tendría que deshacer. Lo que sí se entrega, verde y contra el archivo real,
+   es **la mitad del contrato que es de este paquete**: las dos reglas de moneda que el 06 debe
+   absorber en su tarea C2 (`currency` por defecto COP; `cop_manual_override = row["invoice_value"].present?`),
+   ubicando las columnas **por nombre de encabezado** y no por posición.
+2. **No hay test de contrato del serializer.** `app/serializers/report_expense_serializer.rb` tiene
+   dueño único **07** y todavía no emite los 7 campos de moneda; el test del criterio 24 corre en
+   verde recién con el 07 mergeado.
+3. **El criterio 29 (`KEYS.size == 28`) no se puede afirmar todavía.** Este paquete agrega las
+   claves **20–26** y hoy `KEYS` tiene **23**: faltan las 17–19 del **11** y las 27–28 del **06**,
+   que se mergean después. El test afirma lo que sí es verificable ahora: que las 7 están, contiguas,
+   en el orden canónico de §7.7, y que las 16 originales siguen intactas y sin reordenar.
+4. **La Tarea 16 (Excel de 18 columnas) no se escribió ni se verificó**, tal como manda la
+   corrección 9: cuando este paquete corre, la plantilla todavía tiene 12 columnas y eso es lo
+   esperado. Solo queda escrito el contrato de las columnas 14–16.
+
+#### Variables de entorno
+
+Las **cinco** de §7.9 quedaron añadidas a `config/application.yml` (**gitignoreado**, no se
+versiona): `TRM_API_URL`, `DATOS_GOV_APP_TOKEN` (vacío), `ECB_API_URL`,
+`EXCHANGE_RATE_HTTP_TIMEOUT` (5) y `EXCHANGE_RATE_OPEN_TIMEOUT` (3). **Ninguna es obligatoria para
+arrancar**: todas tienen default en código. **Pendiente para una persona**: conseguir el
+`DATOS_GOV_APP_TOKEN` gratis en datos.gov.co antes de producción — sin él las peticiones son
+anónimas y Socrata estrangula por IP con HTTP 429, con lo que **todo gasto en USD terminaría
+pidiendo captura manual**. Y sembrar las cinco con `heroku config:set` cuando se despliegue la
+ola 3.
+
+#### Higiene git
+
+Rama `feature/gastos-presupuesto-ia`, HEAD `28218b2`. **`git status` limpio.** `git branch -r
+--contains HEAD` vacío y sin upstream: **nada salió al remoto**. 8 commits atómicos, en español,
+con el POR QUÉ en el cuerpo y el trailer `Co-Authored-By`. **No se tocó producción**, ni Heroku, ni
+una sola config var remota. Sigue en pie la regla del punto 6: esta verificación la hizo el mismo
+agente que implementó, así que el 05 también merece una verificación independiente antes de cerrar
+la ola.
