@@ -11,6 +11,7 @@ class ReportExpenseAuditConcernTest < ActiveSupport::TestCase
     cost_center_id user_invoice_id type_identification_id payment_type_id
     invoice_date invoice_name description identification invoice_number
     invoice_value invoice_tax invoice_total type_identification
+    budget_status
   ].freeze
 
   setup do
@@ -34,9 +35,14 @@ class ReportExpenseAuditConcernTest < ActiveSupport::TestCase
     as_user(@actor) { ReportExpense.create!(atributos) }
   end
 
-  def test_audit_fields_registra_los_trece_campos
-    assert_equal 13, ReportExpense.audit_fields.size
+  # Inventario declarado. Sube de 13 a 14 con `budget_status` (paquete 04); el
+  # paquete 06 lo dejara en 15 con `receipt_file`. La cuenta es a proposito
+  # explicita: si alguien agrega un campo auditado sin pasar por aqui, este test
+  # se lo dice antes de que el golden falle con un diff de HTML ilegible.
+  def test_audit_fields_registra_los_catorce_campos
+    assert_equal 14, ReportExpense.audit_fields.size
     assert_equal CLAVES_ESPERADAS.sort, ReportExpense.audit_fields.keys.sort
+    assert_includes ReportExpense.audit_fields.keys, :budget_status
   end
 
   def test_layout_de_creacion_repite_identification

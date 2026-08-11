@@ -63,7 +63,28 @@ class ReportExpense < ApplicationRecord
   belongs_to :payment_type, class_name: "ReportExpenseOption", :optional => true
   belongs_to :last_user_edited, :class_name => "User", optional: :true
   belongs_to :user, optional: :true
+  # Trazabilidad de contra que partida se evaluo el gasto. Opcional porque un
+  # gasto historico o uno sin partida vigente no apunta a ninguna, y porque
+  # `dependent: :nullify` de ExpenseBudget lo deja en NULL al anular la partida.
+  belongs_to :expense_budget, optional: true
   include RegisterAuditable
+
+  # Etiquetas legibles de budget_status. Viven AQUI, en el dueño de la columna,
+  # y no en cada consumidor: las leen la plantilla axlsx de contabilidad
+  # (paquete 06) y las tools MCP (paquete 11). Duplicarlas garantiza que en
+  # algun momento digan cosas distintas en pantalla y en Excel.
+  BUDGET_STATUS_LABELS = { "sin_presupuesto" => "Sin presupuesto",
+                           "aprobado"        => "Aprobado",
+                           "excedido"        => "Excedido" }.freeze
+
+  scope :presupuesto_aprobado, -> { where(budget_status: "aprobado") }
+  scope :presupuesto_excedido, -> { where(budget_status: "excedido") }
+  scope :sin_presupuesto,      -> { where(budget_status: "sin_presupuesto") }
+  # Base literal de la pantalla de Contabilidad: un gasto excedido no entra a la
+  # vista. Se define aqui para que el paquete 06 no la reescriba.
+  scope :no_excedidos,         -> { where.not(budget_status: "excedido") }
+
+  validates :budget_status, inclusion: { in: %w[sin_presupuesto aprobado excedido] }
 
   # edit_values se declara ANTES de audit_register para preservar el orden de
   # callbacks del legado: primero el edit_values del modelo, despues el
@@ -109,6 +130,10 @@ class ReportExpense < ApplicationRecord
   audit_field :invoice_total,          label: "Total",
               create_format: "<p>%{label}: <b >%{value}</b> </p>"
   audit_field :type_identification,    label: "Tipo de identificacion"   # columna string, solo edicion
+  # PAQUETE 04. Se declara AL FINAL a proposito: el golden compara byte a byte y
+  # el orden de los segmentos del HTML es el orden de esta lista. Cada paquete
+  # que audite un campo nuevo agrega el suyo al final y nunca reordena el ajeno.
+  audit_field :budget_status,          label: "Estado presupuestal"
 
   # create_fields repite `identification` a proposito: en creacion y borrado el
   # NIT sale DOS veces. Las dos listas no tienen ni el mismo orden ni los mismos
@@ -122,9 +147,12 @@ class ReportExpense < ApplicationRecord
                       invoice_date invoice_name description identification invoice_number
                       invoice_value invoice_tax invoice_total identification],
     create_no_joiner_after: %i[cost_center_id],
+    # budget_status va SOLO en edicion (paquete 04): en la creacion el estado
+    # siempre se setea y auditarlo es ruido; en la eliminacion el registro
+    # desaparece.
     edit_fields:   %i[cost_center_id user_invoice_id type_identification_id payment_type_id
                       invoice_date invoice_name description type_identification invoice_number
-                      invoice_value invoice_tax invoice_total identification],
+                      invoice_value invoice_tax invoice_total identification budget_status],
     create_min_length: 5,
     # 59 NO es arbitrario: es el largo exacto del encabezado de edicion. Si
     # alguien lo "redondea", cada save sin cambios (el controller hace uno en

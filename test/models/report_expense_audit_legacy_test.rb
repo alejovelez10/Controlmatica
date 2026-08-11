@@ -52,6 +52,19 @@ class ReportExpenseAuditLegacyTest < ActiveSupport::TestCase
     "<p>Valor: <b class='color-true'>1000.0</b> / <b class='color-false'>2000.0</b></p>" \
     "<p>IVA: <b class='color-true'>190.0</b> / <b class='color-false'>380.0</b></p>"
 
+  # PAQUETE 04 — segmento de `budget_status`, AGREGADO AL FINAL.
+  #
+  # Los 14 golden de arriba no se tocan: `budget_status` es el ultimo elemento de
+  # `edit_fields`, asi que mientras no cambie su segmento renderiza "" y el HTML
+  # de los casos existentes queda byte a byte igual. Esta constante fija donde
+  # aterriza el segmento nuevo cuando SI cambia, que es lo unico que el paquete
+  # 04 agrega al contrato. El paquete 06 hara lo mismo con `receipt_file`,
+  # despues de este.
+  HTML_EDICION_VALOR_Y_ESTADO_PRESUPUESTAL =
+    HTML_EDICION_VALOR +
+    "<p>Estado presupuestal: <b class='color-true'>sin_presupuesto</b> / " \
+    "<b class='color-false'>aprobado</b></p>"
+
   setup do
     @actor = users(:admin)
     # Centro de costo con el code exacto del contrato.
@@ -186,6 +199,26 @@ class ReportExpenseAuditLegacyTest < ActiveSupport::TestCase
     html = RegisterEdit.last.description
     assert_includes html, "<p>Descripcion:"
     refute_includes html, "<p>Descripción:"
+  end
+
+  # PAQUETE 04. No relaja ni reordena ninguno de los 14 golden anteriores: los
+  # complementa fijando que el segmento nuevo va DESPUES del de Valor, que es lo
+  # que el orden de merge (04 antes que 06) tiene que preservar.
+  def test_html_de_edicion_incluye_budget_status_al_final
+    gasto = crear_gasto
+    as_user(@actor) { gasto.update!(invoice_value: 2000.0, budget_status: "aprobado") }
+
+    assert_equal HTML_EDICION_VALOR_Y_ESTADO_PRESUPUESTAL, RegisterEdit.last.description
+  end
+
+  # El otro lado del contrato: `budget_status` NO se audita en creacion ni en
+  # borrado, asi que HTML_CREACION y HTML_BORRADO no cambian.
+  def test_budget_status_no_aparece_en_creacion_ni_en_borrado
+    gasto = crear_gasto
+    refute_includes RegisterEdit.last.description, "Estado presupuestal"
+
+    as_user(@actor) { gasto.destroy }
+    refute_includes RegisterEdit.last.description, "Estado presupuestal"
   end
 
   def test_creacion_repite_nit_dos_veces
