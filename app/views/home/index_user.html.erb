@@ -61,15 +61,12 @@
 </table>
 
 
-<script type="text/javascript">
-    <% if flash[:success].present? %>
-    toastr["success"]("<%= flash[:success] %>");
-  <% end %>
-
-  <% if flash[:delete].present? %>
-    toastr["info"]("<%= flash[:delete] %>");
-  <% end %>
-</script>
+<%# El bloque que habia aqui llamaba a `toastr[...]`, libreria que NO esta
+    instalada en este proyecto (`grep -rl toastr app vendor package.json` no
+    devuelve nada): el aviso nunca se veia y ademas lanzaba un ReferenceError
+    que cortaba el resto del script de la pagina. Ahora el flash lo pinta el
+    layout `layouts/user.html.erb`, en HTML plano y para TODAS las pantallas.
+    Se borra de aqui para no duplicar el mensaje. Paquete 13. %>
 
 <style>
   .menu{

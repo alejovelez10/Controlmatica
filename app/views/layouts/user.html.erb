@@ -451,6 +451,11 @@
       </div>
     </aside>
     <main class="app-content">
+      <%# Avisos del servidor (`flash`). Paquete 13.
+          El contenido esta en `layouts/_flash.html.erb` para poder probarlo
+          suelto: el layout completo necesita `current_user`, permisos y medio
+          menu, y una prueba que arrastre todo eso no prueba el aviso. %>
+      <%= render "layouts/flash" %>
       <div class="app-title <%= controller_name%>-<%= action_name%>">
         <div>
             <%= controller_name_helper(controller_name, action_name).html_safe %>
@@ -865,6 +870,38 @@
     min-height: 100vh;
     padding: 0 30px 30px 30px !important;
     --cm-dt-offset: 120px;
+  }
+
+  /* Avisos del servidor (flash). Paquete 13.
+     Ancho completo y arriba de todo: un aviso que hay que buscar no es un
+     aviso. Los colores no dependen de ninguna libreria externa. */
+  .cm-flash-stack {
+    margin: 0 -30px 0 -30px;
+    padding: 12px 30px 0 30px;
+  }
+  .cm-flash {
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+  }
+  .cm-flash--alert,
+  .cm-flash--error {
+    background: #fdecea;
+    color: #8a1c12;
+    border-left-color: #d93025;
+  }
+  .cm-flash--success {
+    background: #e6f4ea;
+    color: #14532d;
+    border-left-color: #1e8e3e;
+  }
+  .cm-flash--notice {
+    background: #e8f0fe;
+    color: #17418a;
+    border-left-color: #1a73e8;
   }
 
   /* App title - flush to top */

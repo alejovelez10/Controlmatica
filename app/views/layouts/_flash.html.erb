@@ -1,0 +1,34 @@
+<%# Avisos del servidor (`flash`) para todas las pantallas autenticadas.
+    Paquete 13.
+
+    POR QUE ESTE PARCIAL EXISTE: hasta ahora NINGUN layout pintaba el flash
+    (`grep -rn flash app/views/layouts` devolvia cero lineas). Los gates de
+    permiso de Contabilidad y de Reglas de gastos expulsan al usuario con
+    `redirect_to root_path, alert: "No tiene permiso..."`, y esa persona
+    aterrizaba en el inicio SIN NINGUNA EXPLICACION: indistinguible de un
+    enlace roto o de una sesion caida. Es el quinto de los cinco defectos que
+    encontro la suite E2E al correr en un navegador de verdad, y el unico que
+    la ola 7 dejo sin corregir (pendiente #38).
+
+    Se pinta en HTML plano, sin depender de ninguna libreria de JS: el unico
+    render de flash que existia en el repo (`home/index_user.html.erb`)
+    llamaba a `toastr`, que NO esta instalada en este proyecto, asi que el
+    aviso nunca se veia y encima lanzaba un ReferenceError.
+
+    Las claves son las que la aplicacion usa de verdad: `:alert` y `:error`
+    (Devise y los gates de permiso), `:notice` (customers, providers, Devise),
+    `:success` y `:delete` (codigo legado). Las dos ultimas se mapean a un
+    estilo existente en vez de dejarlas caer en silencio. %>
+<% cm_flashes = { "alert"   => flash[:alert],
+                  "error"   => flash[:error],
+                  "success" => flash[:success],
+                  "notice"  => flash[:notice].presence || flash[:delete] }.reject { |_tipo, mensaje| mensaje.blank? } %>
+<% if cm_flashes.any? %>
+  <div class="cm-flash-stack" data-testid="flash-stack">
+    <% cm_flashes.each do |tipo, mensaje| %>
+      <div class="cm-flash cm-flash--<%= tipo %>" role="alert" data-testid="flash-<%= tipo %>">
+        <%= Array(mensaje).join(" ") %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
