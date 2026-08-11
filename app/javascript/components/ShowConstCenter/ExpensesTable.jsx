@@ -412,7 +412,11 @@ class ExpensesTable extends Component {
       foreign_total: round2(fv + ft),
       invoice_value: round2(fv * rate),
       invoice_tax: round2(ft * rate),
-      invoice_total: round2(fv * rate) + round2(ft * rate),
+      // El round2 EXTERIOR no sobra. Sumar dos numeros ya redondeados vuelve a
+      // producir binario sucio: 314414 + 59738.66 da 374152.66000000003 en JS, y
+      // ese valor se pinta tal cual en el campo Total y viaja asi en el
+      // FormData. Verificado en pantalla contra USD 100 + 19 con TRM 3.144,14.
+      invoice_total: round2(round2(fv * rate) + round2(ft * rate)),
     }) }, this.refreshBudgetAvailability);
   };
 
