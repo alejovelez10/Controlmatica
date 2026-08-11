@@ -1,0 +1,75 @@
+# == Schema Information
+#
+# Table name: expense_rules
+#
+#  id                   :bigint           not null, primary key
+#  active               :boolean          default(TRUE), not null
+#  agent_instructions   :text
+#  check_duplicates     :boolean          default(TRUE), not null
+#  is_default           :boolean          default(FALSE), not null
+#  max_invoice_age_days :integer
+#  max_invoice_value    :decimal(15, 2)
+#  name                 :string           not null
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
+#  last_user_edited_id  :integer
+#  user_id              :integer
+#
+
+# 🔴 NINGUNA FIXTURE ES `is_default: true` CON `active: true`, Y ES A PROPOSITO.
+#
+# Una regla por defecto activa aplica a TODA persona que no tenga regla propia,
+# o sea a las ocho fixtures de usuario. Con ella cargada, cada gasto de cada test
+# de la suite —presupuesto, multimoneda, contabilidad, importacion, MCP— pasaria
+# por las tres reglas deterministas, y las fixtures de gasto tienen fechas de
+# junio de 2026: cualquier tope de antiguedad las convertiria en infractoras y
+# les cambiaria el `budget_status` a media suite ajena.
+#
+# Los tests que necesitan una regla por defecto la crean ellos mismos, que
+# ademas es lo unico que prueba de verdad la resolucion "cae a la default".
+#
+# El HABTM con users va INLINE (lista separada por comas con las etiquetas de
+# users.yml), igual que el de rols.yml con accion_modules. NO existe
+# test/fixtures/expense_rules_users.yml y no se debe crear: una fixture de tabla
+# puente suelta no resuelve etiquetas.
+
+# Regla asignada explicitamente. Sirve de "regla del usuario" en los tests de
+# resolucion y de combinacion.
+directivos:
+  name: Regla directivos
+  active: true
+  is_default: false
+  max_invoice_age_days: 30
+  max_invoice_value: 2000000.0
+  check_duplicates: true
+  agent_instructions: No se aceptan licores ni gastos personales.
+  users: gerente
+  user: admin
+
+# Segunda regla del MISMO usuario, mas estricta en antiguedad y sin tope de
+# valor. Existe para probar que gana la mas restrictiva de cada limite por
+# separado, no la regla "mas restrictiva" en bloque.
+directivos_estricta:
+  name: Regla directivos estricta
+  active: true
+  is_default: false
+  max_invoice_age_days: 15
+  max_invoice_value:
+  check_duplicates: false
+  agent_instructions: Las propinas no pueden superar el 10%.
+  users: gerente
+  user: admin
+
+# INACTIVA y marcada como default: el indice unico parcial es
+# `WHERE (is_default AND active)`, asi que esta fila puede convivir con una
+# default activa creada en un test. Prueba las dos cosas a la vez.
+historica:
+  name: Regla historica
+  active: false
+  is_default: true
+  max_invoice_age_days: 5
+  max_invoice_value: 1000.0
+  check_duplicates: true
+  agent_instructions: Regla archivada, no debe aplicar a nadie.
+  users: ingeniero
+  user: admin
