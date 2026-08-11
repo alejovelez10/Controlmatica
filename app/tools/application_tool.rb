@@ -20,6 +20,16 @@ class ApplicationTool < MCP::Tool
   # scopean queries por tenant (todo el dominio pertenece a la única empresa).
   TENANT = :controlmatica
 
+  # Mensaje unico de "no se pudo identificar a la persona". Vive en el cuerpo de
+  # la clase y NO dentro de `class << self`: una constante definida en la clase
+  # singleton no la ve ninguna subclase (el lookup de constantes de un `def
+  # self.call` recorre los ancestros de la CLASE, no los de su singleton), y las
+  # tools de creacion la nombran a pelo.
+  NO_ACTOR_MESSAGE =
+    "Error: no se pudo identificar a la persona que reporta. Envia X-Actor-Phone o " \
+    "X-Actor-Email de un usuario registrado en Controlmatica, o indica user_invoice_id " \
+    "explicitamente. El gasto NO se registro."
+
   class << self
     # Autoriza la request comparando el X-Api-Key contra MCP_API_KEY (constante,
     # secure_compare para evitar timing attacks). Devuelve el sentinel TENANT o nil.
@@ -43,14 +53,45 @@ class ApplicationTool < MCP::Tool
     # se prioriza el usuario cuyo correo coincida (case-insensitive). Esto permite
     # atribuir la escritura al usuario real que la originó en Taimes en vez de a un
     # Administrador genérico. Sin match / sin email → fallback al Administrador.
+    #
+    # Desde el paquete 11 el telefono (X-Actor-Phone) se considera ANTES del
+    # fallback: en WhatsApp no hay correo, y caer al Administrador con un
+    # telefono valido en la mano seria perder al actor real por nada.
+    #
+    # OJO: este resolvedor sigue siendo el LAXO y solo debe usarse en LECTURAS.
+    # Las escrituras usan actor_user_strict / as_actor_strict, que no tienen
+    # fallback (arquitectura §6.3).
     def actor_user(_tenant = nil, server_context = nil)
-      email = actor_email(server_context)
-      if email
-        matched = User.where("LOWER(email) = ?", email).order(:id).first
-        return matched if matched
-      end
-      User.joins(:rol).where(rols: { name: "Administrador" }).order(:id).first ||
+      actor_user_strict(server_context) ||
+        User.joins(:rol).where(rols: { name: "Administrador" }).order(:id).first ||
         User.order(:id).first
+    end
+
+    # Telefono del actor recibido en el server_context, ya normalizado, o nil.
+    def actor_phone(server_context)
+      User.normalize_phone(server_context && server_context[:actor_phone])
+    end
+
+    # Resuelve por telefono SIN caer al Administrador.
+    #
+    # DOS COINCIDENCIAS SIGNIFICAN NINGUN ACTOR, NUNCA "EL PRIMERO": el indice
+    # de phone_normalized no es unico a proposito (dato heredado sucio), y
+    # atribuirle un gasto al primero de dos homonimos es exactamente el error
+    # que este paquete viene a impedir. El `limit(2)` existe para distinguir
+    # "uno" de "mas de uno" sin traerse la tabla entera.
+    def actor_user_by_phone(server_context)
+      key = actor_phone(server_context)
+      return nil if key.blank?
+
+      matches = User.by_normalized_phone(key).order(:id).limit(2).to_a
+      matches.size == 1 ? matches.first : nil
+    end
+
+    # Actor estricto: correo primero, telefono despues, SIN fallback.
+    # El correo manda porque es el identificador que el usuario escribio; el
+    # telefono es el que el gateway de WhatsApp adivino.
+    def actor_user_strict(server_context)
+      actor_user_by_email(server_context) || actor_user_by_phone(server_context)
     end
 
     # Correo del actor recibido en el server_context (normalizado), o nil.
@@ -76,6 +117,28 @@ class ApplicationTool < MCP::Tool
       yield actor
     ensure
       User.current = previous
+    end
+
+    # Como as_actor pero ABORTA con NO_ACTOR_MESSAGE si no hay actor real.
+    # Lo usan las tools que escriben a nombre de una persona (crear gasto, crear
+    # anticipo, adjuntar comprobante).
+    #
+    # ⚠️ EL `ensure` VA EN UN `begin` INTERNO, NO A NIVEL DE METODO. Si se copia
+    # el `def ... ensure ... end` de as_actor, el `return` temprano dispara el
+    # ensure con `previous` todavia sin asignar y deja User.current = nil para
+    # todo el resto del request (y, como Puma reusa hilos, potencialmente para
+    # el siguiente). Hay un test dedicado a esto.
+    def as_actor_strict(_tenant, server_context = nil)
+      actor = actor_user_strict(server_context)
+      return text(NO_ACTOR_MESSAGE) unless actor
+
+      previous = User.current
+      begin
+        User.current = actor
+        yield actor
+      ensure
+        User.current = previous
+      end
     end
 
     # Envuelve un string en la respuesta MCP de texto.

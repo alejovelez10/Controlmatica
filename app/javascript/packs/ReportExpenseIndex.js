@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber } from "../generalcomponents/expenseIndicators";
 import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
@@ -117,6 +118,12 @@ class ReportExpenseIndex extends React.Component {
     });
 
     this.columns = [
+      // El ID de referencia va PRIMERO: es lo que el usuario copia al chat de
+      // soporte y lo que el buscador acepta desde que C.2/F.1 metieron
+      // `id::text` en el LIKE.
+      { key: "id", label: "ID", width: "80px", render: function(row) {
+        return React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id);
+      }},
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
       { key: "user_invoice_name", label: "Responsable", width: "150px", render: function(row) { return row.user_invoice ? row.user_invoice.names : ""; } },
       { key: "invoice_name", label: "Nombre", width: "200px" },
@@ -129,6 +136,41 @@ class ReportExpenseIndex extends React.Component {
       { key: "invoice_value", label: "Valor", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
       { key: "invoice_tax", label: "IVA", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
       { key: "invoice_total", label: "Total", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      // El motivo del exceso va SIEMPRE dentro de .cm-cell-truncate con
+      // data-tooltip: `budget_reason` lo escribe el servicio de presupuesto y
+      // puede traer el nombre del centro, el cupo y lo disponible en una sola
+      // frase; suelto, esa celda estira la tabla y rompe el scroll horizontal.
+      { key: "budget_status", label: "Estado presupuestal", width: "190px", render: function(row) {
+        var badge = budgetStatusBadge(row.budget_status);
+        return React.createElement("div", { "data-testid": "expense-budget-status-" + row.id },
+          React.createElement("span", { className: badge.className }, badge.label),
+          row.budget_status === "excedido" && row.budget_reason
+            ? React.createElement("div", { className: "cm-cell-truncate", "data-tooltip": row.budget_reason },
+                React.createElement("span", { className: "cm-cell-truncate-text" }, row.budget_reason))
+            : null
+        );
+      }},
+      { key: "currency", label: "Moneda", width: "90px", render: function(row) {
+        return React.createElement("span", { "data-testid": "expense-currency-" + row.id }, row.currency || "COP");
+      }},
+      // sortable: false A PROPOSITO. `foreign_total` NO esta en
+      // EXPENSE_SORT_COLUMNS (F.1): con sortable true el servidor cae al `else`
+      // y ordena por created_at, pero la flecha del header cambia igual. El
+      // usuario ve una tabla reordenada por el criterio equivocado y nada avisa.
+      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: function(row) {
+        var total = toNumber(row.foreign_total);
+        if (row.currency === "COP" || total === null) return "—";
+
+        var rate = toNumber(row.exchange_rate);
+        return React.createElement("span", null,
+          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, suffix: " " + row.currency }),
+          rate !== null
+            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
+                "TRM ",
+                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true }))
+            : null
+        );
+      }},
       { key: "is_acepted", label: "Estado", width: "150px", sortable: false, render: function(row) {
         var isEditing = self.state.editingStatusId === row.id;
 
@@ -161,6 +203,45 @@ class ReportExpenseIndex extends React.Component {
             onClick: function(e) { e.stopPropagation(); self.openStatusEdit(row.id); },
             style: { background: "none", border: "none", cursor: "pointer", color: "#6c757d", padding: "4px" }
           }, React.createElement("i", { className: "fas fa-pen", style: { fontSize: "12px" }}))
+        );
+      }},
+      { key: "accounting_approved", label: "Contabilidad", width: "170px", render: function(row) {
+        var badge = accountingBadge(row.accounting_approved);
+        return React.createElement("div", { "data-testid": "expense-accounting-status-" + row.id },
+          React.createElement("span", { className: badge.className }, badge.label),
+          row.accounting_approved
+            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
+                shortDate(row.accounting_approved_at) + (row.accounting_approved_by ? " · " + row.accounting_approved_by.names : ""))
+            : null
+        );
+      }},
+      // El enlace apunta SIEMPRE a /download_receipt/report_expenses/:id y nunca
+      // a `row.receipt_file.url`: esa es la URL firmada de S3 y expira a los 600
+      // segundos, asi que una tabla abierta desde hace diez minutos entregaria
+      // 403 al hacer clic.
+      //
+      // `openReceiptPreview` lo define el paquete 08 FUERA del constructor. Este
+      // paquete se mergea antes, asi que hasta entonces el boton existe y el
+      // metodo no; esta anotado en el PR y no se implementa aqui "por si acaso"
+      // para no dejar dos definiciones del mismo modal.
+      { key: "receipt_file", label: "Comprobante", width: "120px", sortable: false, render: function(row) {
+        if (!row.receipt_file || !row.receipt_file.url) return "—";
+
+        return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "6px" } },
+          React.createElement("a", {
+            href: "/download_receipt/report_expenses/" + row.id,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            title: "Descargar comprobante",
+            "data-testid": "expense-receipt-link-" + row.id
+          }, React.createElement("i", { className: "fas fa-download" })),
+          React.createElement("button", {
+            type: "button",
+            className: "cm-btn cm-btn-outline cm-btn-sm",
+            title: "Previsualizar comprobante",
+            onClick: function() { self.openReceiptPreview(row.id); },
+            "data-testid": "expense-receipt-preview-" + row.id
+          }, React.createElement("i", { className: "fas fa-eye" }))
         );
       }},
       {
@@ -874,6 +955,7 @@ class ReportExpenseIndex extends React.Component {
       React.createElement(CmPageActions, {
         onNew: this.props.estados.create ? this.openNewModal : null,
         label: "Crear gasto",
+        testId: "expense-new",
       }),
 
       this.state.showFilters && this.renderFilters(),

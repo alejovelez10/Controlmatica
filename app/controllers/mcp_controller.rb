@@ -30,6 +30,12 @@ class McpController < ActionController::Base
         # "actor" real por correo (ver ApplicationTool.actor_user); si no llega o
         # no matchea, se cae al Administrador por defecto.
         actor_email: request.headers["X-Actor-Email"].presence || params[:actor_email],
+        # Telefono de WhatsApp del usuario que origino la conversacion en Taimes.
+        # Llega en cualquier formato ("whatsapp:+573001234567", "+57 300 123 4567")
+        # y se normaliza en ApplicationTool.actor_phone (ultimos 10 digitos).
+        # Con el, un gasto por WhatsApp queda a nombre de la persona real; sin el,
+        # las tools de creacion RECHAZAN en vez de caer al Administrador.
+        actor_phone: request.headers["X-Actor-Phone"].presence || params[:actor_phone],
       },
     )
 
@@ -71,7 +77,20 @@ class McpController < ActionController::Base
   #
   # Para habilitar también las escrituras destructivas, setear la variable de entorno:
   #   MCP_ENABLE_WRITES=all
-  ALWAYS_EXPOSED = %w[records_search records_aggregate].freeze
+  #
+  # AQUI SOLO ENTRAN ACCIONES DE DOMINIO QUE NO TERMINAN EN `_list` / `_get` /
+  # `_create`: todo lo que termina asi ya se auto-expone abajo y repetirlo en
+  # esta lista solo crea dos fuentes de verdad que se desincronizan. Por eso
+  # `expense_budgets_list`, `exchange_rates_get`, `expense_rules_list` y
+  # `report_expenses_receipt_url_get` NO figuran, aunque son tools nuevas.
+  ALWAYS_EXPOSED = %w[
+    records_search
+    records_aggregate
+    expense_budgets_available
+    expense_rules_validate
+    report_expenses_attach_receipt
+    users_find_by_phone
+  ].freeze
 
   def self.exposed?(tool_name)
     return true if ENV["MCP_ENABLE_WRITES"] == "all"

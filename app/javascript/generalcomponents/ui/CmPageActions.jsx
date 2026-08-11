@@ -38,10 +38,17 @@ class CmPageActions extends React.Component {
 
     var label = this.props.label || "Nuevo";
 
+    // `testId` es OPCIONAL y aditivo: sin la prop, React no emite el atributo y
+    // el DOM de las ~20 pantallas que usan este boton queda identico. Existe
+    // porque el boton se renderiza por PORTAL a #page-actions-portal, fuera del
+    // arbol del pack, y no hay forma de anotarlo desde afuera (paquete 09,
+    // Tarea 2 bis: `expense-new` es el selector con el que el paquete 12 abre el
+    // modal de gasto en tres escenarios).
     return ReactDOM.createPortal(
       React.createElement("button", {
         onClick: this.props.onNew,
         style: newButtonStyle,
+        "data-testid": this.props.testId,
       },
         React.createElement("i", { className: "fas fa-plus" }),
         " " + label
@@ -55,6 +62,7 @@ CmPageActions.propTypes = {
   children: PropTypes.node,
   onNew: PropTypes.func,
   label: PropTypes.string,
+  testId: PropTypes.string,
 };
 
 export default CmPageActions;
