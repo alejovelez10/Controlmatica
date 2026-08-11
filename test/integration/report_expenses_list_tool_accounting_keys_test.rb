@@ -21,9 +21,11 @@ class ReportExpensesListToolAccountingKeysTest < ActiveSupport::TestCase
   end
 
   test "no se agrego ninguna clave que no sea de este paquete" do
-    # 16 originales + 7 de moneda (paquete 05) + 2 de contabilidad (06). Las
-    # 17-19 del paquete 11 subiran esto a 28.
-    assert_equal 25, ReportExpensesListTool::KEYS.size
+    # 16 originales + 3 presupuestales (paquete 11) + 7 de moneda (05) + 2 de
+    # contabilidad (06). ACTUALIZADO POR EL PAQUETE 11 al mergear sus claves
+    # 17-19: este es el criterio compartido FINAL de 7.7, el que los tres
+    # paquetes prometieron.
+    assert_equal 28, ReportExpensesListTool::KEYS.size
   end
 
   test "el serializador MCP resuelve las 2 claves contra un gasto con comprobante" do

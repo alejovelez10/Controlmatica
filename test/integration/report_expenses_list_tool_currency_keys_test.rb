@@ -26,7 +26,10 @@ class ReportExpensesListToolCurrencyKeysTest < ActiveSupport::TestCase
   test "las 7 claves de moneda estan y en el orden canonico de 7.7" do
     claves = ReportExpensesListTool::KEYS
 
-    assert_equal CLAVES_DE_MONEDA, claves[16, 7]
+    # ACTUALIZADO POR EL PAQUETE 11: al entrar sus claves 17-19 (budget_status,
+    # budget_reason, expense_budget_id), las de moneda quedan en su posicion
+    # canonica definitiva de 7.7, que es la 20-26 (indice 19).
+    assert_equal CLAVES_DE_MONEDA, claves[19, 7]
     # Contiguas: si otro paquete intercala una clave suya en medio, el orden
     # canonico de 7.7 deja de cumplirse y este test lo dice.
     posiciones = CLAVES_DE_MONEDA.map { |k| claves.index(k) }
