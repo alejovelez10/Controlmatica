@@ -1,0 +1,90 @@
+# == Schema Information
+#
+# Table name: expense_budgets
+#
+#  id                  :bigint           not null, primary key
+#  active              :boolean          default(TRUE), not null
+#  amount              :decimal(15, 2)   default(0.0), not null
+#  notes               :text
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  cost_center_id      :integer          not null
+#  created_by_id       :integer
+#  last_user_edited_id :integer
+#  user_id             :integer          not null
+#
+# Indexes
+#
+#  index_expense_budgets_on_center_user_active  (cost_center_id,user_id,active)
+#  index_expense_budgets_on_cost_center_id      (cost_center_id)
+#  index_expense_budgets_on_user_id             (user_id)
+#
+
+# Todas las FK van por ETIQUETA, nunca por id.
+#
+# `created_at` es explicito y distinto en las dos partidas activas del mismo par
+# porque el scope `antiguas_primero` decide a que partida se imputa un gasto: sin
+# fechas fijas el test de "imputa a la mas antigua" seria intermitente.
+#
+# Cupo del centro_con_viaticos (viatic_value 5.000.000): estas fixtures ocupan
+# 500.000 + 200.000 + 300.000 = 1.000.000 en partidas ACTIVAS. La inactiva no
+# cuenta. Quedan 4.000.000 libres para que los tests creen partidas nuevas sin
+# chocar contra el tope por accidente.
+
+activa_ingeniero:
+  cost_center: centro_con_viaticos
+  user: ingeniero
+  amount: 500000.0
+  active: true
+  notes: Partida principal del ingeniero
+  created_by: admin
+  created_at: 2026-01-01 08:00:00
+  updated_at: 2026-01-01 08:00:00
+
+# Mismo par que la anterior y MAS NUEVA: es la que NO debe recibir la imputacion
+# mientras la primera siga activa.
+activa_ingeniero_segunda:
+  cost_center: centro_con_viaticos
+  user: ingeniero
+  amount: 200000.0
+  active: true
+  notes: Ampliacion posterior
+  created_by: admin
+  created_at: 2026-02-01 08:00:00
+  updated_at: 2026-02-01 08:00:00
+
+# Mismo par, inactiva: no aporta ni un peso de cupo aunque sea la de mayor monto.
+inactiva_ingeniero:
+  cost_center: centro_con_viaticos
+  user: ingeniero
+  amount: 900000.0
+  active: false
+  notes: Partida anulada
+  created_by: admin
+  created_at: 2026-01-15 08:00:00
+  updated_at: 2026-01-15 08:00:00
+
+# Mismo CENTRO, otro beneficiario. Existe para probar que el tope es por centro:
+# estos 300.000 le bajan el cupo disponible tambien al ingeniero.
+activa_otro_usuario:
+  cost_center: centro_con_viaticos
+  user: contador
+  amount: 300000.0
+  active: true
+  notes: Partida del contador en el mismo centro
+  created_by: admin
+  created_at: 2026-01-10 08:00:00
+  updated_at: 2026-01-10 08:00:00
+
+# VIOLA EL TOPE A PROPOSITO: el centro tiene viatic_value nil. Se inserta igual
+# porque las fixtures se cargan con INSERT crudo y no ejecutan validaciones.
+# Sirve para probar que la validacion se dispara al GUARDAR, no al LEER.
+centro_sin_viaticos:
+  cost_center: centro_sin_viaticos
+  user: ingeniero
+  amount: 100000.0
+  active: true
+  notes: Partida en centro sin viaticos cotizados
+  created_by: admin
+  created_at: 2026-01-20 08:00:00
+  updated_at: 2026-01-20 08:00:00

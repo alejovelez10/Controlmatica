@@ -97,6 +97,10 @@ class CostCenter < ApplicationRecord
   has_many :shifts, dependent: :destroy
   has_many :notification_alerts, dependent: :destroy
   has_many :report_expenses, dependent: :destroy
+  # :destroy y no :delete_all para que la eliminacion de cada partida quede
+  # auditada en RegisterEdit. El fallback de actor de ExpenseBudget evita que
+  # reviente cuando el centro se borra desde consola, sin User.current.
+  has_many :expense_budgets, dependent: :destroy
   has_many :commissions, dependent: :destroy
   has_many :quotations, dependent: :destroy
 
