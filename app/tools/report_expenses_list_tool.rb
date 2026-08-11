@@ -3,13 +3,20 @@
 class ReportExpensesListTool < ApplicationTool
   tool_name "report_expenses_list"
   description "Lista gastos/legalizaciones de un centro de costo. Filtros opcionales: cost_center_id, " \
-              "user_invoice_id, q (nombre/descripción). Devuelve hasta `limit` resultados."
+              "user_invoice_id, q (nombre/descripción), budget_status, currency, accounting_approved y " \
+              "rango de fechas de factura. Devuelve hasta `limit` resultados."
   input_schema(
     properties: {
-      cost_center_id:  { type: "integer", description: "Filtra por centro de costo" },
-      user_invoice_id: { type: "integer", description: "Filtra por usuario que reporta el gasto" },
-      q:               { type: "string",  description: "Texto en nombre o descripción" },
-      limit:           { type: "integer", description: "Máximo de resultados (default 50, máx 200)" }
+      cost_center_id:      { type: "integer", description: "Filtra por centro de costo" },
+      user_invoice_id:     { type: "integer", description: "Filtra por usuario que reporta el gasto" },
+      q:                   { type: "string",  description: "Texto en nombre o descripción" },
+      budget_status:       { type: "string",  description: "Estado presupuestal del gasto",
+                             enum: %w[sin_presupuesto aprobado excedido] },
+      currency:            { type: "string",  description: "Moneda ISO 4217 del comprobante (COP, USD, EUR)" },
+      accounting_approved: { type: "boolean", description: "Filtra por aprobación contable" },
+      date_from:           { type: "string",  description: "Fecha de factura desde, YYYY-MM-DD" },
+      date_to:             { type: "string",  description: "Fecha de factura hasta, YYYY-MM-DD" },
+      limit:               { type: "integer", description: "Máximo de resultados (default 50, máx 200)" }
     },
     required: []
   )
@@ -35,7 +42,9 @@ class ReportExpensesListTool < ApplicationTool
             exchange_rate exchange_rate_date exchange_rate_source
             accounting_approved receipt_file_url].freeze
 
-  def self.call(server_context:, cost_center_id: nil, user_invoice_id: nil, q: nil, limit: 50)
+  def self.call(server_context:, cost_center_id: nil, user_invoice_id: nil, q: nil,
+                budget_status: nil, currency: nil, accounting_approved: nil,
+                date_from: nil, date_to: nil, limit: 50)
     tenant = current_tenant(server_context)
     return unauthorized! unless tenant
 
@@ -44,6 +53,16 @@ class ReportExpensesListTool < ApplicationTool
     scope = scope.where(cost_center_id: cost_center_id) if cost_center_id
     scope = scope.where(user_invoice_id: user_invoice_id) if user_invoice_id
     scope = scope.where("LOWER(invoice_name) LIKE :t OR LOWER(description) LIKE :t", t: "%#{q.downcase}%") if q.present?
+    scope = scope.where(budget_status: budget_status) if budget_status.present?
+    scope = scope.where(currency: Currency.normalize(currency)) if currency.present?
+    # SE COMPARA CONTRA nil, NO CONTRA EL VALOR: con `if accounting_approved` el
+    # filtro `false` —que es justo el que pide contabilidad, "muestrame lo
+    # pendiente"— se perderia en silencio y devolveria la lista completa.
+    unless accounting_approved.nil?
+      scope = scope.where(accounting_approved: ActiveModel::Type::Boolean.new.cast(accounting_approved))
+    end
+    scope = scope.where("invoice_date >= ?", date_from) if date_from.present?
+    scope = scope.where("invoice_date <= ?", date_to) if date_to.present?
     json(Mcp::Serialize.collection(scope.order(created_at: :desc).limit(limit), KEYS))
   end
 end
