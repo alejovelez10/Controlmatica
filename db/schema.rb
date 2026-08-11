@@ -289,6 +289,34 @@ ActiveRecord::Schema.define(version: 2026_04_05_000001) do
     t.index ["name"], name: "index_customers_on_name"
   end
 
+  create_table "exchange_rates", force: :cascade do |t|
+    t.string "currency", null: false
+    t.date "rate_date", null: false
+    t.date "effective_date", null: false
+    t.decimal "rate_to_cop", precision: 18, scale: 6, null: false
+    t.string "source", null: false
+    t.datetime "fetched_at", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["currency", "effective_date"], name: "index_exchange_rates_on_currency_and_effective_date"
+    t.index ["currency", "rate_date"], name: "index_exchange_rates_on_currency_and_rate_date", unique: true
+  end
+
+  create_table "expense_budgets", force: :cascade do |t|
+    t.integer "cost_center_id", null: false
+    t.integer "user_id", null: false
+    t.decimal "amount", precision: 15, scale: 2, default: "0.0", null: false
+    t.text "notes"
+    t.boolean "active", default: true, null: false
+    t.integer "created_by_id"
+    t.integer "last_user_edited_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["cost_center_id", "user_id", "active"], name: "index_expense_budgets_on_center_user_active"
+    t.index ["cost_center_id"], name: "index_expense_budgets_on_cost_center_id"
+    t.index ["user_id"], name: "index_expense_budgets_on_user_id"
+  end
+
   create_table "expense_ratios", force: :cascade do |t|
     t.date "creation_date"
     t.integer "user_report_id"
@@ -458,9 +486,28 @@ ActiveRecord::Schema.define(version: 2026_04_05_000001) do
     t.string "identification"
     t.integer "last_user_edited_id"
     t.boolean "is_acepted", default: false
+    t.integer "expense_budget_id"
+    t.string "budget_status", default: "sin_presupuesto", null: false
+    t.string "budget_reason"
+    t.string "receipt_file"
+    t.string "currency", default: "COP", null: false
+    t.decimal "foreign_value", precision: 15, scale: 2
+    t.decimal "foreign_tax", precision: 15, scale: 2
+    t.decimal "foreign_total", precision: 15, scale: 2
+    t.decimal "exchange_rate", precision: 18, scale: 6
+    t.date "exchange_rate_date"
+    t.string "exchange_rate_source"
+    t.boolean "accounting_approved", default: false, null: false
+    t.integer "accounting_approved_by_id"
+    t.datetime "accounting_approved_at"
+    t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
+    t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
     t.index ["created_at"], name: "index_report_expenses_on_created_at"
+    t.index ["currency"], name: "index_report_expenses_on_foreign_currency", where: "((currency)::text <> 'COP'::text)"
+    t.index ["expense_budget_id"], name: "index_report_expenses_on_expense_budget_id"
     t.index ["invoice_date"], name: "index_report_expenses_on_invoice_date"
+    t.index ["invoice_number", "identification"], name: "index_report_expenses_on_invoice_number_and_identification"
     t.index ["is_acepted"], name: "index_report_expenses_on_is_acepted"
     t.index ["payment_type_id"], name: "index_report_expenses_on_payment_type_id"
     t.index ["type_identification_id"], name: "index_report_expenses_on_type_identification_id"
