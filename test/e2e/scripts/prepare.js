@@ -82,7 +82,11 @@ function prepare({ skipDb = false } = {}) {
   } else if (packsAreFresh()) {
     console.log("[prepare] 2/3 webpack saltado: packs-test mas nuevo que app/javascript");
   } else {
-    console.log("[prepare] 2/3 bin/webpack (paso lento: 1-3 min la primera vez)");
+    // Medido en esta maquina (M-series, node_modules ya instalado) con
+    // public/packs-test y tmp/cache/webpacker borrados: 6,4 s para los 29 packs.
+    // El diseno original preveia 1-3 min; se deja el salto por mtime igual,
+    // porque en maquinas frias o con el cache de webpacker vacio si duele.
+    console.log("[prepare] 2/3 bin/webpack (compilando los packs de test)");
     const inicio = Date.now();
     run("bin/webpack", [], {
       NODE_ENV: "development",

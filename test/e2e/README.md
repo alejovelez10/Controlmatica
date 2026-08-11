@@ -17,6 +17,16 @@ npm run report                # abre el reporte HTML de la ultima corrida
 
 `npm test` levanta solo el server de test en el 3001; no hay que arrancarlo a mano.
 
+## Tiempos reales medidos
+
+| Paso | Tiempo |
+|---|---|
+| `npm install` | ~3 s |
+| `npm run install:browsers` (una vez) | ~40 s, 95 MB |
+| `bin/webpack` en frio (packs-test y cache borrados, 29 packs) | **6,4 s** |
+| `bin/webpack` saltado por mtime | 0 s |
+| `npm run test:smoke` completo (incluye levantar el server) | **~12 s**, 6 tests |
+
 ## Cosas que cuestan horas si no se saben
 
 - **`config.cache_classes = true` en test**: el server NO recarga codigo. Tras
