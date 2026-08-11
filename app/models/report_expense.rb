@@ -63,14 +63,74 @@ class ReportExpense < ApplicationRecord
   belongs_to :payment_type, class_name: "ReportExpenseOption", :optional => true
   belongs_to :last_user_edited, :class_name => "User", optional: :true
   belongs_to :user, optional: :true
+  include RegisterAuditable
+
+  # edit_values se declara ANTES de audit_register para preservar el orden de
+  # callbacks del legado: primero el edit_values del modelo, despues el
+  # before_update de auditoria.
   before_update :edit_values
-  before_update :create_edit_register
-  after_create :create_create_register
-  before_destroy :create_destroy_register
 
   def edit_values
     self.last_user_edited_id = current_actor_id
   end
+
+  # LOS 13 CAMPOS AUDITADOS. Los formatos son literales del legado, con sus
+  # rarezas incluidas: `</b>` huerfanos, `<b >` con espacio, "Descripcion" sin
+  # tilde solo en edicion, el ">" de sobra en Nombre. Los 14 golden de
+  # test/models/report_expense_audit_legacy_test.rb los verifican byte a byte.
+  # OJO: varios formatos terminan en ESPACIO; un editor que recorte espacios
+  # finales rompe el contrato de forma invisible.
+  audit_field :cost_center_id,         label: "Centro de costo", kind: :association,
+              assoc_class: "CostCenter", assoc_attr: :code
+  audit_field :user_invoice_id,        label: "Usuario", kind: :association,
+              assoc_class: "User", assoc_attr: :names
+  audit_field :type_identification_id, label: "Tipo de gasto", kind: :association,
+              assoc_class: "ReportExpenseOption", assoc_attr: :name,
+              create_format: "<p>%{label}: <b>%{value}</b> </p>"
+  audit_field :payment_type_id,        label: "Medio de pago", kind: :association,
+              assoc_class: "ReportExpenseOption", assoc_attr: :name,
+              create_format: "<p>%{label}: <b>%{value}</b> </p>"
+  audit_field :invoice_date,           label: "Fecha",
+              create_format: "<p>%{label}:%{value}</b> </p>"
+  audit_field :invoice_name,           label: "Nombre",
+              create_format: "<p>%{label}: %{value}</b></p> ",
+              edit_format:   "<p>>%{label}: <b class='color-true'>%{left}</b> / <b class='color-false'>%{right}</b></p>"
+  audit_field :description,            label: "Descripción",
+              create_format: "<p>%{label}: %{value}</b></p>",
+              edit_format:   "<p>Descripcion: <b class='color-true'>%{left}</b> / <b class='color-false'>%{right}</b></p>"
+  audit_field :identification,         label: "NIT/IDENTIFICACIÓN",
+              create_format: "<p>%{label}: %{value}</b></p> "
+  audit_field :invoice_number,         label: "Numero de factura",
+              create_format: "<p>%{label}:%{value}</b></p> "
+  audit_field :invoice_value,          label: "Valor",
+              create_format: "<p>%{label}: <b >%{value}</b></p>"
+  audit_field :invoice_tax,            label: "IVA",
+              create_format: "<p>%{label}: <b >%{value}</b> "
+  audit_field :invoice_total,          label: "Total",
+              create_format: "<p>%{label}: <b >%{value}</b> </p>"
+  audit_field :type_identification,    label: "Tipo de identificacion"   # columna string, solo edicion
+
+  # create_fields repite `identification` a proposito: en creacion y borrado el
+  # NIT sale DOS veces. Las dos listas no tienen ni el mismo orden ni los mismos
+  # elementos (type_identification solo en edicion): son copia literal del
+  # legado, no un error de transcripcion.
+  audit_register(
+    module_name:   "Gatos",                                                     # typo historico, se conserva
+    create_header: "<p><p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p>",
+    edit_header:   "<p><p><strong>(SE EDITO EL SIGUIENTE REGISTRO)</strong></p>",
+    create_fields: %i[cost_center_id user_invoice_id type_identification_id payment_type_id
+                      invoice_date invoice_name description identification invoice_number
+                      invoice_value invoice_tax invoice_total identification],
+    create_no_joiner_after: %i[cost_center_id],
+    edit_fields:   %i[cost_center_id user_invoice_id type_identification_id payment_type_id
+                      invoice_date invoice_name description type_identification invoice_number
+                      invoice_value invoice_tax invoice_total identification],
+    create_min_length: 5,
+    # 59 NO es arbitrario: es el largo exacto del encabezado de edicion. Si
+    # alguien lo "redondea", cada save sin cambios (el controller hace uno en
+    # cada create) empieza a producir un RegisterEdit fantasma.
+    edit_min_length:   59
+  )
 
   # Lista canonica de filtros de la pantalla de Gastos. Todo filtro nuevo tiene
   # que agregarse AQUI ademas de en el builder: el controller hace
@@ -189,221 +249,6 @@ class ReportExpense < ApplicationRecord
 
 
   
-  def create_edit_register
-    self.last_user_edited_id = current_actor_id
-    if self.cost_center_id_changed?
-      names = []
-      cost_center = CostCenter.where(id: self.cost_center_id_change)
-      cost_center.each do |centro|
-        names << centro.code
-      end
-      centro = "<p>Centro de costo: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
-    else
-      centro = ""
-    end
-
-
-    if self.user_invoice_id_changed?
-      names = []
-      users = User.where(id: self.user_invoice_id_change)
-      users.each do |user|
-        names << user.names
-      end
-      user = "<p>Usuario: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
-    else
-      user = ""
-    end
-
-
-    if self.type_identification_id_changed?
-      names = []
-      reports = ReportExpenseOption.where(id: self.type_identification_id_change)
-      reports.each do |report|
-        names << report.name
-      end
-      type_expense = "<p>Tipo de gasto: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
-    else
-      type_expense = ""
-    end
-
-    if self.payment_type_id_changed?
-      names = []
-      reports = ReportExpenseOption.where(id: self.payment_type_id_change)
-      puts reports
-      puts "asfadsfasfdsfdsfdasdfadsfsadfasfsdasfdasfsda"
-      reports.each do |report|
-        names << report.name
-      end
-      type_pay = "<p>Medio de pago: <b class='color-true'>#{names[1]}</b> / <b class='color-false'>#{names[0]}</b></p>"
-    else
-      type_pay = ""
-    end
-
-    date = self.invoice_date_changed? == true ? ("<p>Fecha: <b class='color-true'>#{self.invoice_date_change[0]}</b> / <b class='color-false'>#{self.invoice_date_change[1]}</b></p>") : ""
-    name = self.invoice_name_changed? == true ? ("<p>>Nombre: <b class='color-true'>#{self.invoice_name_change[0]}</b> / <b class='color-false'>#{self.invoice_name_change[1]}</b></p>") : ""
-    description = self.description_changed? == true ? ("<p>Descripcion: <b class='color-true'>#{self.description_change[0]}</b> / <b class='color-false'>#{self.description_change[1]}</b></p>") : ""
-    type_identification =  self.type_identification_changed? == true ? ("<p>Tipo de identificacion: <b class='color-true'>#{self.type_identification_change[0]}</b> / <b class='color-false'>#{self.type_identification_change[1]}</b></p>") : ""
-    identificacion = self.identification_changed? == true ? ("<p>NIT/IDENTIFICACIÓN: <b class='color-true'>#{self.identification_change[0]}</b> / <b class='color-false'>#{self.identification_change[1]}</b></p>") : ""
-    invoice_number =  self.invoice_number_changed? == true ? ("<p>Numero de factura: <b class='color-true'>#{self.invoice_number_change[0]}</b> / <b class='color-false'>#{self.invoice_number_change[1]}</b></p>") : ""
-    invoice_value =  self.invoice_value_changed? == true ? ("<p>Valor: <b class='color-true'>#{self.invoice_value_change[0]}</b> / <b class='color-false'>#{self.invoice_value_change[1]}</b></p>") : ""
-    invoice_tax =  self.invoice_tax_changed? == true ? ("<p>IVA: <b class='color-true'>#{self.invoice_tax_change[0]}</b> / <b class='color-false'>#{self.invoice_tax_change[1]}</b></p>") : ""
-    invoice_total =  self.invoice_total_changed? == true ? ("<p>Total: <b class='color-true'>#{self.invoice_total_change[0]}</b> / <b class='color-false'>#{self.invoice_total_change[1]}</b></p>") : ""
-
-
-    str = "#{centro}#{user}#{type_expense}#{type_pay}#{date}#{name}#{description}#{type_identification}#{invoice_number}#{invoice_value}#{invoice_tax}#{invoice_total}#{identificacion}"
-  
-    str = "<p><p><strong>(SE EDITO EL SIGUIENTE REGISTRO)</strong></p>" + str
-    if str.length > 59
-      RegisterEdit.create(
-        user_id: current_actor_id,
-        register_user_id: self.id,
-        state: "pending",
-        date_update: Time.now,
-        module: "Gatos",
-        description: str,
-      )
-    end
-  end
-
-
-
-    def create_create_register
-      if self.cost_center_id?
-      
-        cost_center = CostCenter.where(id: self.cost_center_id).take
-        centro = "<p>Centro de costo: <b>#{cost_center.code}</b></p>"
-      else
-        centro = ""
-      end
-      
-      
-      if self.user_invoice_id?
-        user= User.where(id: self.user_invoice_id).take
-        user = "<p>Usuario: <b>#{user.names}</b></p>"
-      else
-        user = ""
-      end
-      
-      
-      if self.type_identification_id?
-        report = ReportExpenseOption.where(id: self.type_identification_id).take
-        type_expense = "<p>Tipo de gasto: <b>#{report.name}</b> </p>"
-      else
-        type_expense = ""
-      end
-      
-      if self.payment_type_id?
-        report = ReportExpenseOption.where(id: self.payment_type_id).take
-        type_pay = "<p>Medio de pago: <b>#{report.name}</b> </p>"
-      else
-        type_pay = ""
-      end
-
-      
-      puts centro 
-      date = "<p>Fecha:#{self.invoice_date}</b> </p>"
-      name = "<p>Nombre: #{self.invoice_name}</b></p> "
-      description = "<p>Descripción: #{self.description}</b></p>"
-      identificacion = "<p>NIT/IDENTIFICACIÓN: #{self.identification}</b></p> "
-      invoice_number =  "<p>Numero de factura:#{self.invoice_number}</b></p> "
-      invoice_value =  "<p>Valor: <b >#{self.invoice_value}</b></p>"
-      invoice_tax = "<p>IVA: <b >#{self.invoice_tax}</b> "
-      invoice_total =  "<p>Total: <b >#{self.invoice_total}</b> </p>"
-  
-      
-      str = "#{centro }#{user} #{type_expense} #{type_pay} #{date} #{name} #{description} #{identificacion} #{invoice_number} #{invoice_value} #{invoice_tax} #{invoice_total} #{identificacion}"
-      str = "<p><p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p>" + str
-      puts str  
-      if str.length > 5
-        RegisterEdit.create(
-          user_id: current_actor_id,
-          register_user_id: self.id,
-          state: "pending",
-          date_update: Time.now,
-          module: "Gatos",
-          description: str,
-          type_edit: "creo"
-        )
-      end
-      
-  end
-
-
-  def create_destroy_register
-    if self.cost_center_id?
-    
-      cost_center = CostCenter.where(id: self.cost_center_id).take
-      centro = "<p>Centro de costo: <b>#{cost_center.code}</b></p>"
-    else
-      centro = ""
-    end
-    
-    
-    if self.user_invoice_id?
-      user= User.where(id: self.user_invoice_id).take
-      user = "<p>Usuario: <b>#{user.names}</b></p>"
-    else
-      user = ""
-    end
-    
-    
-    if self.type_identification_id?
-      report = ReportExpenseOption.where(id: self.type_identification_id).take
-      type_expense = "<p>Tipo de gasto: <b>#{report.name}</b> </p>"
-    else
-      type_expense = ""
-    end
-    
-    if self.payment_type_id?
-      report = ReportExpenseOption.where(id: self.payment_type_id).take
-      type_pay = "<p>Medio de pago: <b>#{report.name}</b> </p>"
-    else
-      type_pay = ""
-    end
-
-    
-    puts centro 
-    date = "<p>Fecha:#{self.invoice_date}</b> </p>"
-    name = "<p>Nombre: #{self.invoice_name}</b></p> "
-    description = "<p>Descripción: #{self.description}</b></p>"
-    identificacion = "<p>NIT/IDENTIFICACIÓN: #{self.identification}</b></p> "
-    invoice_number =  "<p>Numero de factura:#{self.invoice_number}</b></p> "
-    invoice_value =  "<p>Valor: <b >#{self.invoice_value}</b></p>"
-    invoice_tax = "<p>IVA: <b >#{self.invoice_tax}</b> "
-    invoice_total =  "<p>Total: <b >#{self.invoice_total}</b> </p>"
-
-    
-    str = "#{centro }#{user} #{type_expense} #{type_pay} #{date} #{name} #{description} #{identificacion} #{invoice_number} #{invoice_value} #{invoice_tax} #{invoice_total} #{identificacion}"
-    str = "<p><p><strong>(SE CREO EL SIGUIENTE REGISTRO)</strong></p>" + str
-    puts str  
-    if str.length > 5
-      RegisterEdit.create(
-        user_id: current_actor_id,
-        register_user_id: self.id,
-        state: "pending",
-        date_update: Time.now,
-        module: "Gatos",
-        description: str,
-        type_edit: "elimino"
-      )
-    end
-    
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   def self.open_spreadsheet(file)
     case File.extname(file.original_filename)
     when ".csv" then Roo::CSV.new(file.path, nil, :ignore)
@@ -426,8 +271,10 @@ end
   # Frontera: cuando el paquete 03 extraiga el concern RegisterAuditable, este
   # metodo pasa a ser `def current_actor_id = audit_actor_id`. Ese cambio lo hace
   # el 03, no este paquete.
+  # Una sola implementacion del actor: la del concern. Se conserva el nombre
+  # porque edit_values lo usa y porque el paquete 01 lo dejo documentado asi.
   def current_actor_id
-    User.current&.id || user_id || user_invoice_id || last_user_edited_id
+    audit_actor_id
   end
 end
 
