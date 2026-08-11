@@ -46,7 +46,54 @@ var EMPTY_FORM = {
   invoice_total: "",
   type_identification_id: "",
   payment_type_id: "",
+  // Moneda. `currency` arranca en COP porque es el default de la columna y
+  // porque el bloque extranjero del modal se decide por este valor.
+  currency: "COP",
+  foreign_value: "",
+  foreign_tax: "",
+  foreign_total: "",
+  exchange_rate: "",
+  exchange_rate_date: "",
+  exchange_rate_source: "",
+  // Bandera que le prohibe al servidor recalcular el COP. Viaja SIEMPRE en el
+  // FormData: sin ella, cada save recalcula desde foreign_* x TRM y pisa en
+  // silencio el valor que la persona ajusto a mano.
+  cop_manual_override: false,
 };
+
+// Espejo exacto de components/ShowConstCenter/ExpensesTable.jsx. Los dos
+// formularios de gasto de la plataforma son del mismo paquete y todo campo nuevo
+// va DOS veces; si uno se queda atras, el usuario ve columnas de moneda y estado
+// presupuestal que no puede llenar desde esta pantalla.
+var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [], violations: [] };
+var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
+var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
+
+var EXTENSIONES_COMPROBANTE = ["jpg", "jpeg", "png", "pdf", "webp", "heic"];
+var TAMANO_MAXIMO_COMPROBANTE = 10 * 1024 * 1024;
+
+// Estado del comprobante y de sus dos acompanantes, para resetearlo de una sola
+// vez al abrir el modal. Que este junto no es cosmetico: olvidar uno solo de
+// estos campos hace que el comprobante del gasto anterior se suba al siguiente.
+function estadoComprobanteVacio() {
+  return {
+    receiptFile: null,
+    receiptFileName: "",
+    receiptExistingId: null,
+    receiptError: null,
+    extraction: Object.assign({}, EXTRACTION_VACIA),
+    exchange: Object.assign({}, EXCHANGE_VACIO),
+    budgetAvailability: Object.assign({}, DISPONIBLE_VACIO),
+  };
+}
+
+// KILL SWITCH de la captura asistida. Arranca APAGADO: el endpoint
+// POST /extract_receipt/report_expenses todavia no existe (la llamada al modelo
+// de vision la completa Taimes). Encenderlo es una linea en layouts/user.html.erb,
+// archivo con dueno por bloque, asi que no se escribe desde aqui.
+function receiptExtractionEnabled() {
+  return window.CM_RECEIPT_EXTRACTION_ENABLED === true;
+}
 
 var selectStyles = {
   control: function(base, state) {
@@ -280,6 +327,13 @@ class ReportExpenseIndex extends React.Component {
     this.loadData();
   }
 
+  componentWillUnmount() {
+    // El debounce del disponible presupuestal sobrevive al desmontaje y su
+    // callback hace setState: sin este clear, React avisa por consola y el
+    // fetch sale igual con el formulario ya cerrado.
+    if (this._availTimer) clearTimeout(this._availTimer);
+  }
+
   // UNICA fuente de los parametros de filtro. Antes la lista estaba copiada en
   // cuatro sitios (loadData, acceptFilteredExpenses, getExportUrl y
   // EMPTY_FILTERS) y agregar un filtro en tres de los cuatro produce el peor bug
@@ -420,19 +474,26 @@ class ReportExpenseIndex extends React.Component {
 
   openNewModal = function() {
     var self = this;
-    this.setState({
-      modal: true, modeEdit: false, editId: null, ErrorValues: true,
+    // El estado del comprobante se limpia AL ABRIR y no solo al cerrar: si el
+    // usuario edito antes un gasto con PDF, sin esto el archivo anterior se
+    // subiria al gasto nuevo sin que nada lo advierta.
+    this.setState(Object.assign({
+      modal: true, modeEdit: false, editId: null, ErrorValues: true, saving: false,
       form: Object.assign({}, EMPTY_FORM, { user_invoice_id: self.props.current_user.id }),
       selectedCostCenter: null, formCostCenterOptions: [],
       selectedUser: { value: self.props.current_user.id, label: self.props.current_user.names },
       selectedType: null, selectedPayment: null,
-    });
+      selectedCurrency: self.currencyOption("COP"),
+    }, estadoComprobanteVacio()));
   }.bind(this);
 
   openEditModal = function(row) {
+    var self = this;
     var costCenterOption = row.cost_center ? { value: row.cost_center.id, label: row.cost_center.code } : null;
-    this.setState({
-      modal: true, modeEdit: true, editId: row.id, ErrorValues: true,
+    var moneda = row.currency || "COP";
+
+    this.setState(Object.assign({
+      modal: true, modeEdit: true, editId: row.id, ErrorValues: true, saving: false,
       form: {
         cost_center_id: row.cost_center_id || "",
         user_invoice_id: row.user_invoice_id || "",
@@ -447,30 +508,313 @@ class ReportExpenseIndex extends React.Component {
         invoice_total: row.invoice_total || "",
         type_identification_id: row.type_identification_id || "",
         payment_type_id: row.payment_type_id || "",
+        currency: moneda,
+        foreign_value: row.foreign_value || "",
+        foreign_tax: row.foreign_tax || "",
+        foreign_total: row.foreign_total || "",
+        exchange_rate: row.exchange_rate || "",
+        exchange_rate_date: row.exchange_rate_date || "",
+        exchange_rate_source: row.exchange_rate_source || "",
+        cop_manual_override: !!row.cop_manual_override,
       },
       selectedCostCenter: costCenterOption,
       formCostCenterOptions: costCenterOption ? [costCenterOption] : [],
       selectedUser: row.user_invoice ? { value: row.user_invoice.id, label: row.user_invoice.names } : null,
       selectedType: row.type_identification ? { value: row.type_identification.id, label: row.type_identification.name } : null,
       selectedPayment: row.payment_type ? { value: row.payment_type.id, label: row.payment_type.name } : null,
-    });
+      selectedCurrency: self.currencyOption(moneda),
+    }, estadoComprobanteVacio(), {
+      // Se guarda el ID DEL GASTO, nunca `row.receipt_file.url`: esa URL esta
+      // firmada y caduca a los 600 s. El destino se arma siempre contra
+      // /download_receipt/report_expenses/:id.
+      receiptExistingId: row.receipt_file && row.receipt_file.url ? row.id : null,
+    }));
+
+    this.loadBudgetAvailability(row.user_invoice_id, row.id);
+  }.bind(this);
+
+  currencyOption = function(code) {
+    var encontrada = (this.currencyOptions || []).filter(function(o) { return o.value === code; })[0];
+    return encontrada || { value: code, label: code };
   }.bind(this);
 
   closeModal = function() { this.setState({ modal: false }); }.bind(this);
 
   handleFormChange = function(e) {
+    var self = this;
     var name = e.target.name;
     var value = e.target.value;
-    this.setState({ form: Object.assign({}, this.state.form, { [name]: value }) });
+    this.setState({ form: Object.assign({}, this.state.form, { [name]: value }) }, function() {
+      // La TRM depende de la fecha de la factura: cambiarla con moneda
+      // extranjera obliga a volver a consultar, o se guardaria la tasa de otro
+      // dia.
+      if (name === "invoice_date" && self.state.form.currency !== "COP") self.fetchExchangeRate();
+    });
   }.bind(this);
 
+  // Los TRES campos en COP. Siguen editables con moneda extranjera (§1.3), y si
+  // el usuario los toca se marcan LAS DOS banderas: sin `cop_manual_override` el
+  // servidor recalcula desde foreign_* x TRM y pisa el ajuste en silencio.
   handleFormChangeMoney = function(e) {
     var self = this;
     var value = e.target.value.replace(/\$|,/g, "");
     var newForm = Object.assign({}, this.state.form, { [e.target.name]: value });
+    if (newForm.currency && newForm.currency !== "COP") {
+      newForm.cop_manual_override = true;
+      newForm.exchange_rate_source = "manual";
+    }
     var total = (Number(newForm.invoice_value) || 0) + (Number(newForm.invoice_tax) || 0);
     newForm.invoice_total = total;
-    this.setState({ form: newForm });
+    this.setState({ form: newForm }, self.refreshBudgetAvailability);
+  }.bind(this);
+
+  // --- Moneda extranjera -----------------------------------------------------
+
+  handleChangeCurrency = function(opt) {
+    var self = this;
+    var code = opt ? opt.value : "COP";
+    var f = Object.assign({}, this.state.form, { currency: code });
+    if (code === "COP") {
+      // Volver a COP limpia TODO lo extranjero: un foreign_value colgando con
+      // currency COP haria que la tabla y los exportables muestren un valor
+      // extranjero de una moneda que ya no es.
+      f.foreign_value = ""; f.foreign_tax = ""; f.foreign_total = "";
+      f.exchange_rate = ""; f.exchange_rate_date = ""; f.exchange_rate_source = "";
+      f.cop_manual_override = false;
+    }
+    this.setState(
+      { selectedCurrency: opt, form: f, exchange: Object.assign({}, EXCHANGE_VACIO) },
+      code === "COP" ? undefined : self.fetchExchangeRate
+    );
+  }.bind(this);
+
+  handleFormChangeForeignMoney = function(e) {
+    var self = this;
+    var v = e.target.value.replace(/\$|,/g, "");
+    this.setState({ form: Object.assign({}, this.state.form, { [e.target.name]: v }) }, self.recomputeConversion);
+  }.bind(this);
+
+  handleChangeRate = function(e) {
+    var self = this;
+    var v = e.target.value.replace(/\$|,/g, "");
+    this.setState({ form: Object.assign({}, this.state.form, { exchange_rate: v, exchange_rate_source: "manual" }) }, self.recomputeConversion);
+  }.bind(this);
+
+  handleToggleCopManual = function(e) {
+    var on = !!e.target.checked;
+    this.setState({ form: Object.assign({}, this.state.form, {
+      cop_manual_override: on,
+      exchange_rate_source: on ? "manual" : this.state.form.exchange_rate_source,
+    }) });
+  }.bind(this);
+
+  // INVARIANTE: invoice_value / invoice_tax / invoice_total SIEMPRE en COP. El
+  // valor extranjero jamas se escribe en esos tres campos; si se rompe,
+  // recalculate_cost_center corrompe el % de viaticos de todos los centros en
+  // silencio.
+  recomputeConversion = function() {
+    var self = this;
+    var f = this.state.form;
+    if (f.currency === "COP") return;
+    if (f.cop_manual_override) return;   // el usuario fijo el COP a mano: no se pisa
+
+    var rate = parseFloat(f.exchange_rate) || 0;
+    var fv = parseFloat(f.foreign_value) || 0;
+    var ft = parseFloat(f.foreign_tax) || 0;
+    var round2 = function(x) { return Math.round(x * 100) / 100; };
+
+    this.setState({ form: Object.assign({}, this.state.form, {
+      foreign_total: round2(fv + ft),
+      invoice_value: round2(fv * rate),
+      invoice_tax: round2(ft * rate),
+      invoice_total: round2(fv * rate) + round2(ft * rate),
+    }) }, self.refreshBudgetAvailability);
+  }.bind(this);
+
+  fetchExchangeRate = function() {
+    var self = this;
+    var f = this.state.form;
+    if (f.currency === "COP" || !f.invoice_date) return;
+
+    this.setState({ exchange: { status: "loading", message: null, rate_date: null, requested_date: f.invoice_date, source: null } });
+
+    fetch("/get_exchange_rate?currency=" + encodeURIComponent(f.currency) + "&date=" + encodeURIComponent(f.invoice_date),
+          { headers: { "X-CSRF-Token": csrfToken() } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.type === "error") {
+          // NO se inventa una tasa: el usuario la escribe a mano y el guardado
+          // no se bloquea.
+          self.setState({ exchange: { status: "error", message: (d.message || []).join(" "), rate_date: null, requested_date: f.invoice_date, source: null } });
+          return;
+        }
+        self.setState({
+          form: Object.assign({}, self.state.form, {
+            exchange_rate: d.rate_to_cop, exchange_rate_date: d.rate_date, exchange_rate_source: d.source,
+          }),
+          exchange: { status: "ok", message: null, rate_date: d.rate_date, requested_date: d.requested_date, source: d.source },
+        }, self.recomputeConversion);
+      })
+      .catch(function() {
+        self.setState({ exchange: { status: "error", message: "No se pudo consultar la tasa. Ingrésela manualmente.", rate_date: null, requested_date: f.invoice_date, source: null } });
+      });
+  }.bind(this);
+
+  // --- Comprobante -----------------------------------------------------------
+
+  handleFileReceipt = function(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) { this.setState({ receiptFile: null, receiptFileName: "", receiptError: null }); return; }
+
+    var ext = (file.name.split(".").pop() || "").toLowerCase();
+    if (EXTENSIONES_COMPROBANTE.indexOf(ext) === -1) {
+      this.setState({ receiptFile: null, receiptFileName: "", receiptError: "Formato no permitido. Use JPG, PNG, WEBP, HEIC o PDF." });
+      return;
+    }
+    if (file.size > TAMANO_MAXIMO_COMPROBANTE) {
+      this.setState({ receiptFile: null, receiptFileName: "", receiptError: "El archivo supera los 10 MB permitidos." });
+      return;
+    }
+    this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null });
+  }.bind(this);
+
+  handleDeleteReceipt = function() {
+    var self = this;
+    if (!this.state.modeEdit || !this.state.receiptExistingId) return;
+
+    Swal.fire({
+      title: "¿Quitar el comprobante?",
+      text: "El archivo se eliminará del gasto.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2a3f53",
+      cancelButtonColor: "#dc3545",
+      confirmButtonText: "Sí, quitar",
+      cancelButtonText: "Cancelar",
+    }).then(function(result) {
+      if (!result.value) return;
+      fetch("/delete_receipt/report_expenses/" + self.state.editId, {
+        method: "DELETE",
+        headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.type !== "success") {
+            Swal.fire({ icon: "error", title: "No se pudo quitar el comprobante", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+            return;
+          }
+          self.setState({ receiptExistingId: null });
+          self.loadData();
+        })
+        .catch(function() {
+          Swal.fire({ icon: "error", title: "No se pudo quitar el comprobante", confirmButtonColor: "#2a3f53" });
+        });
+    });
+  }.bind(this);
+
+  // openReceiptPreview / closeReceiptPreview los define ESTE paquete y viven
+  // FUERA del constructor: la columna "Comprobante" de this.columns (paquete 09)
+  // llama a openReceiptPreview(id) por nombre. Renombrarlos obliga a actualizar
+  // la Tarea 2 del 09 en el mismo PR.
+  openReceiptPreview = function(id, name) {
+    this.setState({ receiptPreview: { open: true, id: id, name: name || "" }, receiptPreviewError: false });
+  }.bind(this);
+
+  closeReceiptPreview = function() {
+    this.setState({ receiptPreview: { open: false, id: null, name: "" }, receiptPreviewError: false });
+  }.bind(this);
+
+  // --- Captura asistida ------------------------------------------------------
+
+  handleExtract = function() {
+    var self = this;
+    if (!(this.state.receiptFile instanceof File)) {
+      this.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "error", message: "Primero seleccione el archivo del comprobante." }) });
+      return;
+    }
+
+    var fd = new FormData();
+    fd.append("file", this.state.receiptFile);
+    if (this.state.form.cost_center_id) fd.append("cost_center_id", this.state.form.cost_center_id);
+
+    this.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "loading" }) });
+
+    fetch("/extract_receipt/report_expenses", { method: "POST", body: fd, headers: { "X-CSRF-Token": csrfToken() } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.type === "error") {
+          // El registro manual NUNCA se bloquea por un fallo de la lectura.
+          self.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "error", message: (d.message || []).join(" ") }) });
+          return;
+        }
+        // WHITELIST de 15 claves. `budget_status`, `accounting_*`,
+        // `expense_budget_id`, `is_acepted`, `cost_center_id` y
+        // `user_invoice_id` no se sobreescriben jamas desde la extraccion.
+        var allowed = ["invoice_name", "identification", "invoice_number", "invoice_date", "description",
+                       "currency", "foreign_value", "foreign_tax", "foreign_total",
+                       "exchange_rate", "exchange_rate_date", "exchange_rate_source",
+                       "invoice_value", "invoice_tax", "invoice_total"];
+        var f = Object.assign({}, self.state.form);
+        var filled = [];
+        allowed.forEach(function(k) {
+          var v = d.fields ? d.fields[k] : null;
+          // null deja el input VACIO: no se rellena con "—", "N/A" ni con el
+          // valor previo.
+          if (v === null || v === undefined || v === "") return;
+          f[k] = v; filled.push(k);
+        });
+
+        var newState = {
+          form: f,
+          extraction: { status: "done", message: null, filled: filled,
+                        confidence: d.confidence || {}, warnings: d.warnings || [],
+                        violations: d.rule_violations || [] },
+        };
+        if (f.currency && f.currency !== "COP") newState.selectedCurrency = self.currencyOption(f.currency);
+        // NADA SE GUARDA SOLO: la extraccion precarga y la persona pulsa Guardar.
+        self.setState(newState);
+      })
+      .catch(function() {
+        self.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "error", message: "No se pudo leer el comprobante. Complete los datos manualmente." }) });
+      });
+  }.bind(this);
+
+  // --- Disponible presupuestal (informativo, nunca bloquea) ------------------
+
+  refreshBudgetAvailability = function() {
+    this.loadBudgetAvailability(this.state.form.user_invoice_id, this.state.modeEdit ? this.state.editId : null);
+  }.bind(this);
+
+  loadBudgetAvailability = function(userId, excludeExpenseId) {
+    var self = this;
+    if (this._availTimer) clearTimeout(this._availTimer);
+
+    if (!userId || !this.state.form.cost_center_id) {
+      this.setState({ budgetAvailability: Object.assign({}, DISPONIBLE_VACIO) });
+      return;
+    }
+
+    this.setState({ budgetAvailability: Object.assign({}, this.state.budgetAvailability || DISPONIBLE_VACIO, { loading: true, error: null }) });
+
+    this._availTimer = setTimeout(function() {
+      var qs = "cost_center_id=" + self.state.form.cost_center_id + "&user_id=" + userId;
+      // exclude_expense_id en modo edicion: sin el, el gasto que se esta
+      // editando se cuenta a si mismo y el disponible sale rebajado dos veces.
+      if (excludeExpenseId) qs += "&exclude_expense_id=" + excludeExpenseId;
+
+      fetch("/get_expense_budget_available?" + qs, { headers: { "X-CSRF-Token": csrfToken() } })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.type === "error") {
+            self.setState({ budgetAvailability: Object.assign({}, DISPONIBLE_VACIO, { error: (d.message || []).join(" ") }) });
+            return;
+          }
+          self.setState({ budgetAvailability: { loading: false, error: null, has_budget: !!d.has_budget, assigned: d.assigned, spent: d.spent, available: d.available } });
+        })
+        .catch(function() {
+          self.setState({ budgetAvailability: Object.assign({}, DISPONIBLE_VACIO, { error: "No se pudo consultar el disponible" }) });
+        });
+    }, 400);
   }.bind(this);
 
   handleFormCostCenterSearch = function(inputValue) {
@@ -500,16 +844,43 @@ class ReportExpenseIndex extends React.Component {
     var url = isEdit ? "/report_expenses/" + this.state.editId : "/report_expenses";
     var method = isEdit ? "PATCH" : "POST";
 
-    fetch(url, {
-      method: method,
-      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    })
+    // FormData y no JSON, porque ahora el gasto puede llevar un archivo.
+    // `fd.append(k, "")` para los vacios: FormData convierte undefined en el
+    // string "undefined", que un to_f en el servidor lee como 0.0.
+    var fd = new FormData();
+    ["cost_center_id", "user_invoice_id", "invoice_name", "invoice_date", "description", "invoice_number",
+     "identification", "invoice_type", "invoice_value", "invoice_tax", "invoice_total",
+     "type_identification_id", "payment_type_id",
+     "currency", "foreign_value", "foreign_tax", "foreign_total",
+     "exchange_rate", "exchange_rate_date", "exchange_rate_source", "cop_manual_override"
+    ].forEach(function(k) { fd.append(k, form[k] === null || form[k] === undefined ? "" : form[k]); });
+
+    // Solo si es un File: hacer el append siempre manda el string
+    // "[object Object]" cuando no hay archivo.
+    if (this.state.receiptFile instanceof File) fd.append("receipt_file", this.state.receiptFile);
+
+    this.setState({ saving: true });
+
+    // NUNCA se fija Content-Type con FormData: el navegador tiene que escribir
+    // el boundary. Si se pone a mano, Rails recibe el body como basura y el
+    // gasto se crea SIN comprobante y sin error visible.
+    fetch(url, { method: method, headers: { "X-CSRF-Token": csrfToken() }, body: fd })
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        self.setState({ modal: false });
+        // `type === "error"` con HTTP 200 es la convencion del proyecto: el
+        // modal no se cierra y el mensaje del servidor se muestra tal cual.
+        if (data.type === "error") {
+          self.setState({ saving: false });
+          Swal.fire({ icon: "error", title: "¡Ocurrió un error!", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+          return;
+        }
+        self.setState({ modal: false, saving: false });
         self.loadData();
-        Swal.fire({ position: "center", icon: data.type || "success", title: data.success || (isEdit ? "Actualizado" : "Creado"), showConfirmButton: false, timer: 1500 });
+        Swal.fire({ position: "center", icon: "success", title: data.success || (isEdit ? "Actualizado" : "Creado"), showConfirmButton: false, timer: 1500 });
+      })
+      .catch(function() {
+        self.setState({ saving: false });
+        Swal.fire({ icon: "error", title: "No se pudo guardar el gasto", confirmButtonColor: "#2a3f53" });
       });
   }.bind(this);
 
@@ -721,6 +1092,274 @@ class ReportExpenseIndex extends React.Component {
     );
   }.bind(this);
 
+  // Aviso de disponible presupuestal. INFORMATIVO: nunca deshabilita Guardar.
+  // Un gasto que excede el cupo se guarda igual y queda marcado como "Excedido"
+  // (§2.1); bloquearlo aqui seria un defecto, no una mejora.
+  renderBudgetHint = function() {
+    var a = this.state.budgetAvailability;
+    if (!a || a.loading || a.error) return null;
+
+    if (!a.has_budget) {
+      return React.createElement("div", { className: "cm-field-hint", "data-testid": "expense-budget-none" },
+        "Esta persona no tiene presupuesto asignado en este centro de costos.");
+    }
+
+    var disponible = parseFloat(a.available || 0);
+    var valor = parseFloat(this.state.form.invoice_value || 0);
+
+    if (valor <= disponible) {
+      return React.createElement("div", { className: "cm-field-hint", "data-testid": "expense-budget-ok" },
+        "Disponible: ",
+        React.createElement(NumberFormat, { value: disponible, displayType: "text", thousandSeparator: true, prefix: "$" }));
+    }
+
+    return React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-budget-warning" },
+      "Este gasto excede el disponible en ",
+      React.createElement(NumberFormat, { value: valor - disponible, displayType: "text", thousandSeparator: true, prefix: "$" }),
+      ". Se guardará marcado como ",
+      React.createElement("strong", null, "Excedido"), ".");
+  }.bind(this);
+
+  // Estados de la consulta de TRM. Un fallo es ADVERTENCIA, no bloqueo: la
+  // persona escribe la tasa a mano y `exchange_rate_source` pasa a "manual".
+  renderRateStatus = function() {
+    var e = this.state.exchange || EXCHANGE_VACIO;
+    var f = this.state.form;
+
+    if (f.exchange_rate_source === "manual" && e.status !== "loading") {
+      return React.createElement("div", { className: "cm-field-hint" }, "Tasa ingresada manualmente");
+    }
+    if (e.status === "loading") {
+      return React.createElement("div", { className: "cm-field-hint", "data-testid": "expense-rate-loading" },
+        React.createElement("i", { className: "fa fa-spinner fa-spin" }), " Consultando la tasa…");
+    }
+    if (e.status === "error") {
+      return React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-rate-error" }, e.message);
+    }
+    if (e.status === "ok" && e.rate_date !== e.requested_date) {
+      return React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-rate-shifted" },
+        "No hay tasa para el " + e.requested_date + "; se aplicó la del " + e.rate_date + ".");
+    }
+    if (e.status === "ok") {
+      return React.createElement("div", { className: "cm-field-hint", "data-testid": "expense-rate-ok" },
+        "Tasa de " + e.rate_date + " (" + e.source + ")");
+    }
+    return null;
+  }.bind(this);
+
+  renderForeignBlock = function() {
+    var self = this;
+    var f = this.state.form;
+    if (!f || !f.currency || f.currency === "COP") return null;
+
+    return React.createElement("div", { className: "cm-budget-foreign", "data-testid": "expense-foreign-block" },
+      React.createElement("div", { className: "cm-form-grid-2" },
+        React.createElement("div", { className: "cm-form-group" },
+          React.createElement("label", { className: "cm-label" },
+            React.createElement("i", { className: "fas fa-money-bill" }), " Valor en " + f.currency),
+          React.createElement(NumberFormat, { name: "foreign_value", thousandSeparator: true, className: "cm-input",
+            value: f.foreign_value || "", onChange: self.handleFormChangeForeignMoney, placeholder: "0",
+            "data-testid": "expense-foreign-value" })
+        ),
+        React.createElement("div", { className: "cm-form-group" },
+          React.createElement("label", { className: "cm-label" },
+            React.createElement("i", { className: "fas fa-percent" }), " IVA en " + f.currency),
+          React.createElement(NumberFormat, { name: "foreign_tax", thousandSeparator: true, className: "cm-input",
+            value: f.foreign_tax || "", onChange: self.handleFormChangeForeignMoney, placeholder: "0",
+            "data-testid": "expense-foreign-tax" })
+        ),
+        React.createElement("div", { className: "cm-form-group" },
+          React.createElement("label", { className: "cm-label" },
+            React.createElement("i", { className: "fas fa-calculator" }), " Total en " + f.currency),
+          React.createElement(NumberFormat, { thousandSeparator: true, className: "cm-input", disabled: true,
+            style: { background: "#e9ecef" }, value: f.foreign_total || "",
+            "data-testid": "expense-foreign-total" })
+        ),
+        React.createElement("div", { className: "cm-form-group" },
+          React.createElement("label", { className: "cm-label" },
+            React.createElement("i", { className: "fas fa-exchange-alt" }), " TRM"),
+          React.createElement(NumberFormat, { name: "exchange_rate", thousandSeparator: true, decimalScale: 6,
+            className: "cm-input", value: f.exchange_rate || "", onChange: self.handleChangeRate, placeholder: "0",
+            "data-testid": "expense-rate" })
+        ),
+        React.createElement("div", { className: "cm-form-group" },
+          React.createElement("label", { className: "cm-label" },
+            React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha de la tasa"),
+          React.createElement("input", { type: "date", name: "exchange_rate_date", className: "cm-input",
+            disabled: true, readOnly: true, style: { background: "#e9ecef" }, value: f.exchange_rate_date || "",
+            "data-testid": "expense-rate-date" })
+        ),
+        React.createElement("div", { className: "cm-form-group" },
+          React.createElement("label", { className: "cm-label" }, " "),
+          React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
+            onClick: self.fetchExchangeRate, "data-testid": "expense-fetch-rate-btn" },
+            React.createElement("i", { className: "fa fa-sync" }), " Consultar TRM")
+        )
+      ),
+
+      self.renderRateStatus(),
+
+      React.createElement("div", { className: "cm-info-row", "data-testid": "expense-cop-preview" },
+        React.createElement("span", { className: "cm-info-label" }, "Equivalente en COP"),
+        React.createElement(NumberFormat, { value: f.invoice_total || 0, displayType: "text",
+          thousandSeparator: true, prefix: "$", className: "cm-info-value" })
+      ),
+
+      // Marcar esta casilla escribe LAS DOS banderas. Sin `cop_manual_override`
+      // el servidor recalcula el COP en cada save y pisa el ajuste en silencio.
+      React.createElement("label", { className: "cm-label", style: { marginTop: 8 } },
+        React.createElement("input", { type: "checkbox", checked: !!f.cop_manual_override,
+          onChange: self.handleToggleCopManual, "data-testid": "expense-cop-manual-toggle" }),
+        " Ajusté el valor en COP a mano (no recalcular)")
+    );
+  }.bind(this);
+
+  renderExtraction = function() {
+    var self = this;
+    // KILL SWITCH: sin el flag el boton no se pinta. El endpoint de extraccion
+    // lo completa Taimes; mientras tanto el formulario se llena a mano.
+    if (!receiptExtractionEnabled()) return null;
+
+    var x = this.state.extraction || EXTRACTION_VACIA;
+
+    return React.createElement("div", { style: { marginTop: 8 } },
+      React.createElement("button", {
+        type: "button", className: "cm-btn cm-btn-pastel cm-btn-pastel--blue cm-btn-sm",
+        onClick: self.handleExtract,
+        disabled: !self.state.receiptFileName || x.status === "loading",
+        "data-testid": "expense-extract-btn",
+      }, React.createElement("i", { className: "fa fa-magic" }), " Extraer datos del comprobante"),
+
+      x.status === "loading" ? React.createElement("div", { className: "cm-alert cm-alert-info", "data-testid": "expense-extract-loading" },
+        React.createElement("i", { className: "fa fa-spinner fa-spin" }), " Leyendo el comprobante… Esto puede tardar hasta 20 segundos.") : null,
+
+      x.status === "error" ? React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-extract-error" },
+        (x.message || "") + " Complete los datos manualmente.") : null,
+
+      x.status === "done" ? React.createElement("div", null,
+        React.createElement("div", { className: "cm-alert cm-alert-success", "data-testid": "expense-extract-done" },
+          "Se precargaron " + x.filled.length + " campos. ",
+          React.createElement("strong", null, "Revíselos antes de guardar.")),
+        (x.warnings || []).length > 0
+          ? React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-extract-warnings" }, x.warnings.join(" "))
+          : null,
+        // Una violacion blocking:true INFORMA pero no deshabilita Guardar: la
+        // puerta de bloqueo es del servidor.
+        (x.violations || []).map(function(v, i) {
+          return React.createElement("div", {
+            key: i,
+            className: v.blocking ? "cm-alert cm-alert-danger" : "cm-alert cm-alert-warning",
+            "data-testid": "expense-rule-violation",
+          }, v.message || v.rule || "");
+        }),
+        Object.keys(x.confidence || {}).filter(function(k) { return x.confidence[k] < 0.8; }).map(function(k) {
+          return React.createElement("div", { key: k, className: "cm-field-hint", "data-testid": "expense-low-confidence-" + k },
+            React.createElement("i", { className: "fa fa-exclamation-triangle" }), " Verifique este dato: " + k);
+        })
+      ) : null
+    );
+  }.bind(this);
+
+  renderReceiptBlock = function() {
+    var self = this;
+
+    return React.createElement("div", { className: "cm-form-group", style: { marginTop: 12 } },
+      React.createElement("label", { className: "cm-label" },
+        React.createElement("i", { className: "fas fa-paperclip" }), " Comprobante"),
+      // La clase que existe es .cm-file-input (design_system.css:1741);
+      // .cm-input-file NO existe.
+      React.createElement("input", {
+        type: "file", className: "cm-input cm-file-input",
+        accept: ".jpg,.jpeg,.png,.webp,.heic,.pdf,image/*,application/pdf",
+        onChange: self.handleFileReceipt,
+        "data-testid": "expense-receipt-input",
+      }),
+
+      self.state.receiptFileName
+        ? React.createElement("div", { className: "cm-field-hint", "data-testid": "expense-receipt-name" },
+            React.createElement("i", { className: "fa fa-file" }), " " + self.state.receiptFileName)
+        : null,
+
+      self.state.receiptExistingId
+        ? React.createElement("div", { className: "cm-field-hint", style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } },
+            // El destino es SIEMPRE /download_receipt/report_expenses/:id: la
+            // URL firmada de S3 caduca a los 600 s.
+            React.createElement("a", { href: "/download_receipt/report_expenses/" + self.state.receiptExistingId, target: "_blank", rel: "noopener noreferrer" },
+              React.createElement("i", { className: "fa fa-download" }), " Ver comprobante actual"),
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
+              onClick: function() { self.openReceiptPreview(self.state.receiptExistingId, self.state.receiptFileName); } },
+              React.createElement("i", { className: "fa fa-eye" }), " Previsualizar"),
+            self.state.modeEdit
+              ? React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
+                  onClick: self.handleDeleteReceipt, "data-testid": "expense-receipt-delete" },
+                  React.createElement("i", { className: "fa fa-trash" }), " Quitar")
+              : null
+          )
+        : null,
+
+      self.state.receiptError
+        ? React.createElement("div", { className: "cm-alert cm-alert-danger", "data-testid": "expense-receipt-error" }, self.state.receiptError)
+        : null,
+
+      self.renderExtraction()
+    );
+  }.bind(this);
+
+  // Modal de previsualizacion. SIEMPRE contra /download_receipt/report_expenses/:id,
+  // nunca contra la URL firmada. Si no carga (403, archivo borrado) degrada a un
+  // aviso: la previsualizacion nunca bloquea la descarga.
+  renderReceiptPreview = function() {
+    var self = this;
+    var p = this.state.receiptPreview;
+    if (!p || !p.open) return null;
+
+    var src = "/download_receipt/report_expenses/" + p.id;
+    // <img> solo cuando el nombre dice claramente que es una imagen. En
+    // cualquier otro caso —incluido "no se conoce el nombre", que es lo normal
+    // desde la tabla porque el serializer solo expone `url`— se usa <iframe>,
+    // que sirve para PDF y para imagen.
+    var esImagen = /\.(jpe?g|png|webp|heic|gif)$/.test((p.name || "").toLowerCase());
+
+    return React.createElement(Modal, { isOpen: true, toggle: self.closeReceiptPreview, className: "modal-dialog-centered modal-lg" },
+      React.createElement("div", { className: "cm-modal-container" },
+        React.createElement("div", { className: "cm-modal-header" },
+          React.createElement("div", { className: "cm-modal-header-content" },
+            React.createElement("div", { className: "cm-modal-icon" }, React.createElement("i", { className: "fas fa-file" })),
+            React.createElement("div", null,
+              React.createElement("h2", { className: "cm-modal-title" }, "Comprobante del gasto #" + p.id),
+              React.createElement("p", { className: "cm-modal-subtitle" }, "Previsualización del archivo adjunto")
+            )
+          ),
+          React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeReceiptPreview },
+            React.createElement("i", { className: "fa fa-times" })
+          )
+        ),
+        React.createElement(ModalBody, { className: "cm-modal-body" },
+          React.createElement("div", { "data-testid": "receipt-preview-modal" },
+            self.state.receiptPreviewError
+              ? React.createElement("div", { className: "cm-alert cm-alert-warning" },
+                  React.createElement("i", { className: "fa fa-exclamation-triangle" }),
+                  " No se pudo previsualizar el comprobante. Intente descargarlo.")
+              : esImagen
+                ? React.createElement("img", { src: src, alt: "Comprobante", style: { maxWidth: "100%" },
+                    onError: function() { self.setState({ receiptPreviewError: true }); } })
+                : React.createElement("iframe", { src: src, title: "Comprobante", style: { width: "100%", height: "70vh", border: 0 },
+                    onError: function() { self.setState({ receiptPreviewError: true }); } })
+          )
+        ),
+        React.createElement("div", { className: "cm-modal-footer" },
+          // Sin data-testid: `expense-receipt-link-{id}` ya lo emite la fila de
+          // la tabla (columna del paquete 09). Repetirlo aqui daria dos nodos
+          // con el mismo selector justo con el modal abierto.
+          React.createElement("a", { className: "cm-btn cm-btn-cancel", href: src, target: "_blank", rel: "noopener noreferrer" },
+            React.createElement("i", { className: "fa fa-download" }), " Descargar"),
+          React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.closeReceiptPreview },
+            React.createElement("i", { className: "fa fa-times" }), " Cerrar")
+        )
+      )
+    );
+  }.bind(this);
+
   renderModal = function() {
     var self = this;
     var form = this.state.form;
@@ -750,24 +1389,30 @@ class ReportExpenseIndex extends React.Component {
           React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
             self.state.copyMessage ? React.createElement("div", { className: "alert alert-warning", style: { marginBottom: "12px" } }, self.state.copyMessage) : null,
             React.createElement("div", { className: "cm-form-grid-2" },
-              // Centro de costo
+              // Centro de costo. El data-testid va en un DIV envolvente:
+              // react-select no propaga atributos sueltos al DOM.
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
                   React.createElement("i", { className: "fas fa-building" }),
                   " Centro de costo ", React.createElement("span", { className: "cm-hint" }, "(3 letras)")
                 ),
-                React.createElement(Select, {
-                  options: self.state.formCostCenterOptions,
-                  value: self.state.selectedCostCenter,
-                  onChange: function(opt) { self.setState({ selectedCostCenter: opt, form: Object.assign({}, form, { cost_center_id: opt ? opt.value : "" }) }); },
-                  onInputChange: self.handleFormCostCenterSearch,
-                  isLoading: self.state.formCostCenterLoading,
-                  placeholder: "Buscar centro de costo...",
-                  noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
-                  styles: selectStyles,
-                  menuPortalTarget: document.body,
-                  className: hasError("cost_center_id") ? "cm-select-error" : "",
-                })
+                React.createElement("div", { "data-testid": "expense-cost-center-select" },
+                  React.createElement(Select, {
+                    options: self.state.formCostCenterOptions,
+                    value: self.state.selectedCostCenter,
+                    onChange: function(opt) {
+                      self.setState({ selectedCostCenter: opt, form: Object.assign({}, form, { cost_center_id: opt ? opt.value : "" }) },
+                                    self.refreshBudgetAvailability);
+                    },
+                    onInputChange: self.handleFormCostCenterSearch,
+                    isLoading: self.state.formCostCenterLoading,
+                    placeholder: "Buscar centro de costo...",
+                    noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
+                    styles: selectStyles,
+                    menuPortalTarget: document.body,
+                    className: hasError("cost_center_id") ? "cm-select-error" : "",
+                  })
+                )
               ),
               // Usuario
               React.createElement("div", { className: "cm-form-group" },
@@ -775,15 +1420,41 @@ class ReportExpenseIndex extends React.Component {
                   React.createElement("i", { className: "fas fa-user" }),
                   " Responsable"
                 ),
-                React.createElement(Select, {
-                  options: self.userOptions,
-                  value: self.state.selectedUser,
-                  onChange: function(opt) { self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }); },
-                  placeholder: "Seleccionar...",
-                  styles: selectStyles,
-                  menuPortalTarget: document.body,
-                  className: hasError("user_invoice_id") ? "cm-select-error" : "",
-                })
+                React.createElement("div", { "data-testid": "expense-user-select" },
+                  React.createElement(Select, {
+                    options: self.userOptions,
+                    value: self.state.selectedUser,
+                    onChange: function(opt) {
+                      self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }, function() {
+                        self.loadBudgetAvailability(opt ? opt.value : null, self.state.modeEdit ? self.state.editId : null);
+                      });
+                    },
+                    placeholder: "Seleccionar...",
+                    styles: selectStyles,
+                    menuPortalTarget: document.body,
+                    className: hasError("user_invoice_id") ? "cm-select-error" : "",
+                  })
+                ),
+                self.renderBudgetHint()
+              ),
+              // Moneda. Visible SIEMPRE, tambien en COP: es lo que le dice al
+              // usuario en que moneda esta el gasto. El sub-bloque extranjero es
+              // el condicional.
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  React.createElement("i", { className: "fas fa-coins" }),
+                  " Moneda"
+                ),
+                React.createElement("div", { "data-testid": "expense-currency-select" },
+                  React.createElement(Select, {
+                    options: self.currencyOptions,
+                    value: self.state.selectedCurrency || self.currencyOption(form.currency || "COP"),
+                    onChange: self.handleChangeCurrency,
+                    placeholder: "Moneda...",
+                    styles: selectStyles,
+                    menuPortalTarget: document.body,
+                  })
+                )
               ),
               // Nombre
               React.createElement("div", { className: "cm-form-group" },
@@ -891,6 +1562,9 @@ class ReportExpenseIndex extends React.Component {
               )
             ),
 
+            self.renderForeignBlock(),
+            self.renderReceiptBlock(),
+
             self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
               React.createElement("i", { className: "fas fa-exclamation-circle" }),
               React.createElement("span", null, "Debe completar todos los campos requeridos")
@@ -900,8 +1574,10 @@ class ReportExpenseIndex extends React.Component {
             React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
               React.createElement("i", { className: "fa fa-times" }), " Cancelar"
             ),
-            React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit },
-              React.createElement("i", { className: "fa fa-save" }), isEdit ? " Actualizar" : " Crear"
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit, disabled: !!self.state.saving },
+              self.state.saving
+                ? React.createElement("span", null, React.createElement("i", { className: "fa fa-spinner fa-spin" }), " Guardando…")
+                : React.createElement("span", null, React.createElement("i", { className: "fa fa-save" }), isEdit ? " Actualizar" : " Crear")
             )
           )
         )
@@ -1042,7 +1718,8 @@ class ReportExpenseIndex extends React.Component {
       }),
 
       this.renderModal(),
-      this.renderImportModal()
+      this.renderImportModal(),
+      this.renderReceiptPreview()
     );
   }
 }
