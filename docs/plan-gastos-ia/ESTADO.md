@@ -74,7 +74,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 2 | 03 — Deuda técnica bloqueante | ⚠️ | `db68191`..`342ec2c` | Uploaders a S3 con allowlists, `search` convertido en builder de hash (bug de `scope` de clase, real y demostrado), auditoría extraída a `RegisterAuditable` (−219 líneas en `report_expense.rb`). 73 runs / 140 assertions verdes. **Salvedades: `heroku config:set AWS_REGION=us-east-2` sigue sin ejecutar** (obligatorio antes de mergear) y 3 criterios son de narrativa de PR / producción, no verificables aquí |
 | 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. **Con el 05 mergeado la suite completa queda en `332 runs / 983 assertions / 0 fallos`, reconfirmada 3 veces con seeds 56250, 12345 y 99 (~6,9 s).** **Salvedades: 4 (ver bitácora ola 3a y 3a-bis)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo (fuera de la matriz §7.2), el criterio 26 (firma del acta de la Tarea 0) es del cliente, y **el criterio 9 NO se pudo re-verificar de forma independiente** (el sandbox bloqueó la mutación temporal): la evidencia es la del implementador |
 | 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48). **Salvedades: 5** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07; el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 (hoy son 23); **el commit `28218b2` tocó `test/models/report_expense_audit_legacy_test.rb`, que por §7.2 es del paquete 03, y perdió una aserción**; y `report_expense_import_currency_test.rb` **no ejercita `ReportExpense.import`** (reimplementa el mapeo dentro del propio test) |
-| 3b | 06 — Comprobante y contabilidad | ⬜ | — | |
+| 3b | 06 — Comprobante y contabilidad | ⚠️ | `d0f1444`..`76fcf2e` | **TERMINADO, pendiente de verificación independiente.** 5 commits. Todas las tareas vivas de los bloques A, B y C (A1, A3, A6, A7, A8, A9, B1, B3, B4, B10, B11 y C3 retiradas por auditoría): `ReceiptUploader` privado con las dos allowlists, comprobante montado y auditado (`audit_field :receipt_file`), `delete_receipt`/`download_receipt` con descarga forzada (§7.8), el **backend completo de Contabilidad** (5 endpoints, `filtered_scope` con la excepción de la corrección 13, `ids[]` como filtro válido y tope de 500), las **dos plantillas .axlsx a 18 columnas idénticas**, `ReportExpense.import` con detección de layout y las 2 claves 27-28 del list tool MCP. **100 pruebas propias verdes**; suite completa **432 runs / 1.281 assertions / 0 fallos**, corrida con 4 seeds distintos (~7,7 s). E2E Playwright: **6 passed**. **Salvedades: 4** — se **regeneraron 2 fixtures .xlsx del paquete 01** (su encabezado real contradecía §7.12), los criterios **5, 6** y el test "expone los campos nuevos" quedan **bloqueados por el paquete 07** (serializer + strong params), `KEYS.size` es **25 y no 28** (faltan las 17-19 del 11) y `GET /accounting_expenses` en HTML no tiene plantilla hasta que mergee el **09** |
 | 3b | 10 — IA: extracción y reglas | ⬜ | — | |
 | 4 | 07 — API, permisos y rutas | ⬜ | — | |
 | 5 | 09 — Frontend: tablas y contabilidad | ⬜ | — | |
@@ -202,6 +202,23 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     auditoría de campos de asociación, cuál valor sale como "nuevo" es NO DETERMINISTA.** Es deuda
     preexistente del legado (no la introdujo el 05), pero ahora ya no hay ninguna prueba que la
     detecte. Quien arregle el `ORDER BY` en el código de auditoría debe restituir la aserción.
+14. **Decidir si se aceptan las 2 fixtures `.xlsx` regeneradas por el paquete 06.**
+    `test/fixtures/files/gastos_legacy_11col.xlsx` y `gastos_v2_18col.xlsx` son del **paquete 01**
+    por §7.2, pero su contenido contradecía lo que §7.12 declara que contienen: el encabezado real
+    empezaba en `FECHA` y traía el email en `BENEFICIARIO`, así que no lo podía leer ni el `import`
+    de hoy ni el nuevo, y el test de no-regresión de archivos legacy —el más importante del 06— era
+    imposible de escribir en verde. **Se regeneraron con el layout canónico**; los dos los consume
+    únicamente el 06 y ningún test los referenciaba antes. `gastos_multimoneda.xlsx` (del 05) NO se
+    tocó, y por eso el **criterio 37 del 06 sigue sin cumplirse literalmente**. Si se prefiere, la
+    alternativa es alinear también ese tercer archivo y el test del 05 que lo lee por nombre de
+    encabezado.
+15. **Escribir, cuando mergee el paquete 07, los 4 tests que hoy no tienen dónde apoyarse.**
+    Los tres de `POST`/`PATCH` multipart y el de "get_accounting_expenses expone los campos nuevos"
+    dependen del serializer y de los strong params `:receipt_file` / `:remove_receipt_file`, que son
+    del **07**. Son los **criterios 5 y 6 del paquete 06** y su propio documento ya los declaraba
+    inalcanzables desde allí. La frontera está anotada en la cabecera de
+    `test/controllers/report_expenses_receipt_test.rb` y de
+    `test/controllers/accounting_expenses_controller_test.rb`.
 13. **Conseguir el `DATOS_GOV_APP_TOKEN`** (gratis, en datos.gov.co) antes de producción. Sin él las
     peticiones a Socrata son anónimas y el servicio estrangula por IP con HTTP 429: **todo gasto en
     USD terminaría pidiendo captura manual de la tasa**. Y sembrar con `heroku config:set` las cinco
@@ -1145,3 +1162,85 @@ consume cupo pero nunca cambia de estado por un reevaluó— y la nueva **#13** 
 + **8 del 05** (`237febf..28218b2`) + 2 de documentación (`ebcc052`, `db91032`), todos atómicos, en
 español, con el POR QUÉ en el cuerpo y con el trailer `Co-Authored-By` correcto. **No se tocó
 producción**, ni Heroku, ni una sola config var remota.
+
+### Ola 3b — Paquete 06: Comprobante, contabilidad y Excel ⚠️ terminado (2026-08-11)
+
+**5 commits**, `d0f1444`..`76fcf2e`. Nada empujado al remoto, producción intacta.
+
+#### Los 5 commits
+
+| Commit | Qué entrega |
+|---|---|
+| `d0f1444` | `ReceiptUploader` (fog_public=false, dos allowlists, 1 byte–10 MB), mensajes de CarrierWave en español dentro de `en.yml`, `mount_uploader`, `belongs_to :accounting_approved_by`, scopes `accounting_visible`/`accounting_pending`, `receipt_file_url`, `accounting_state_label` y `audit_field :receipt_file` con el golden del 03 actualizado |
+| `fe0d9db` | `delete_receipt` y `download_receipt` + las 7 rutas nuevas |
+| `7e13072` | `AccountingExpensesController` completo (5 acciones), `budget_status_label` / `accounting_state_label` en el helper, las **dos** plantillas .axlsx de 18 columnas |
+| `1df14e8` | `ReportExpense.import` reescrito con `detect_layout`, fixtures .xlsx regeneradas, claves 27-28 del list tool |
+| `76fcf2e` | El comentario del uploader contenía la cadena que el criterio 2 busca por `grep` |
+
+#### Números medidos, no copiados
+
+- Suite completa: **432 runs / 1.281 assertions / 0 failures / 0 errors / 0 skips**, ~7,7 s.
+  Reconfirmada con los seeds 12829, 4242, 777 y 31337.
+- Pruebas propias del paquete: **100** (11 uploader, 10 contabilidad de modelo, 17 import,
+  15 comprobante web, 33 controller de contabilidad, 8 export, 4 claves MCP, y 2 goldens nuevos
+  en el archivo del 03).
+- E2E Playwright del paquete 01: **6 passed** (13,4 s), sin tocar ningún spec.
+
+#### Decisiones y hallazgos que conviene no volver a descubrir
+
+1. **`download_receipt` bifurca por almacenamiento, no por `Rails.env`.** En fog redirige a la URL
+   firmada con `response-content-disposition`; en disco hace `send_file ... disposition:
+   "attachment"`. El entorno E2E corre en modo test con storage `:file`, así que preguntar por
+   `Rails.env` habría mandado la rama equivocada justo donde el contrato §7.8 importa.
+2. **`accounting_visible` delega en `no_excedidos`** (paquete 04) en vez de repetir el `where`. Dos
+   literales de `"excedido"` acaban diciendo cosas distintas.
+3. **`CostCenter#change_state` revienta con las fixtures.** Multiplica `hour_cotizada * eng_hours`
+   sin guarda de nil, y `recalculate_cost_center` lo dispara en cada `create`/`update` de gasto. Es
+   deuda preexistente del legado; los tests de este paquete rellenan las dos columnas en su `setup`.
+   **Cualquier paquete que pruebe `POST /report_expenses` se va a topar con esto.**
+4. **Los gastos con `budget_status` o `accounting_approved` distintos del default NO pueden ir a
+   `test/fixtures/report_expenses.yml`.** `test/models/schema_gastos_ia_test.rb` (paquete 02)
+   afirma que ninguna fixture los tiene. Se crean dentro de cada test.
+
+#### Salvedades — lo que este paquete NO entrega y por qué
+
+1. 🔴 **Se regeneraron 2 fixtures del paquete 01**: `test/fixtures/files/gastos_legacy_11col.xlsx`
+   y `gastos_v2_18col.xlsx`. §7.12 los declara "el layout viejo de 11 columnas" y "el layout nuevo
+   de 18", pero su contenido real era otro (`FECHA` en la primera columna, `BENEFICIARIO` con el
+   email en vez del nombre): no coincidía ni con el mapeo que `import` lee hoy ni con el que
+   exportan las dos plantillas. Con ese contenido, el test de no-regresión de archivos legacy —el
+   más importante del paquete— era imposible de poner en verde. Los dos archivos los consume
+   **únicamente el 06** (§7.12) y ningún test los referenciaba antes. **`gastos_multimoneda.xlsx`,
+   que sí consume el 05, se dejó intacto**, y por eso el **criterio 37** (import sobre ese archivo)
+   sigue sin poder cumplirse literalmente: su layout es incompatible con el mapeo posicional
+   canónico. Lo que sí se cubre, y el 05 no podía, es el mismo contrato **ejercitando
+   `ReportExpense.import` de verdad** sobre `gastos_v2_18col.xlsx`.
+2. 🔴 **Los criterios 5 y 6 quedan bloqueados por el paquete 07**, tal como el propio documento del
+   06 anticipaba. `POST /report_expenses` multipart no guarda el comprobante porque
+   `report_expense_params_create/update` no permiten `:receipt_file` ni `:remove_receipt_file`
+   (§7.2: los agrega el 07), y `register.receipt_file.url` no existe porque el serializer tampoco es
+   de este paquete. Los tres tests de POST/PATCH multipart y el de "expone los campos nuevos"
+   **no se escribieron**; la frontera está documentada en la cabecera de los dos archivos de test.
+   **Cuando el 07 mergee hay que escribirlos**: son criterio suyo.
+3. 🟡 **`ReportExpensesListTool::KEYS.size` es 25, no 28.** Este paquete agregó sus dos claves
+   (27-28) en el orden canónico; faltan las **17-19** del paquete 11. El test afirma lo verificable
+   hoy y habrá que subir el número cuando el 11 mergee.
+4. 🟡 **`GET /accounting_expenses` en HTML no tiene plantilla.** Es lo esperado: el ERB y el pack
+   son del paquete **09** y el documento prohíbe crear uno provisional. Para poder verificar el
+   contrato de `@estados` sin inventar una vista, la acción responde además en JSON
+   (`respond_to`), lo que **no estorba** al 09: su `format.html` seguirá renderizando el ERB.
+
+#### Tests ajenos ajustados (ninguna aserción relajada)
+
+| Archivo | Dueño | Qué se ajustó |
+|---|---|---|
+| `test/models/report_expense_audit_legacy_test.rb` | 03 | Golden nuevo `HTML_EDICION_VALOR_Y_COMPROBANTE` + 2 tests. **Autorizado por la corrección 6** del propio documento del 06 |
+| `test/models/report_expense_audit_concern_test.rb` | 03 | El inventario de campos auditados sube de 14 a 15. El comentario del archivo ya anunciaba este cambio |
+| `test/models/schema_gastos_ia_test.rb` | 02 | `assert_nil re.receipt_file` es imposible con un uploader montado. Se sustituye por `assert_nil re.read_attribute(:receipt_file)` **más** `assert re.receipt_file.blank?`: dos aserciones donde había una |
+| `test/integration/report_expenses_list_tool_currency_keys_test.rb` | 05 | Las claves de moneda dejaron de ser las últimas. `claves.last(7)` pasa a `claves[16, 7]`, que fija la posición absoluta de §7.7 y es más estricto |
+
+#### Higiene git
+
+`git status --short` vacío. `git branch -r` sin la rama: **nada empujado**. 5 commits atómicos, en
+español, con el POR QUÉ en el cuerpo y el trailer `Co-Authored-By`. **No se tocó producción**, ni
+Heroku, ni una config var remota, ni ninguna migración.
