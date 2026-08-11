@@ -133,7 +133,43 @@
 > `create_config.rake`) **pesa ahora más que antes**, porque ya hay una pantalla que depende de ese
 > permiso.
 >
-> ➡️ **Lo que sigue es la ola 7: paquete 12 (E2E).** Ya no queda pendiente la pantalla de reglas.
+> ✅ **ESTADO AL 2026-08-11 (cierre de la ola 7): el paquete 12 está TERMINADO.** 11 commits atómicos
+> (`f93c81f`..`ac334a7`). **48 tests E2E: 45 passed, 3 skipped, 0 failed**, en 1,5 min, corrida **dos
+> veces seguidas** terminando en 0 y con `git status --porcelain` limpio. Minitest completa:
+> **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con
+> cifras idénticas.
+>
+> 🟢 **Y esto es lo que de verdad cambia: por primera vez la superficie de usuario se EJECUTA en un
+> navegador, no se verifica leyendo código.** Los 9 flujos del brief más los 4 de reglas corren de
+> punta a punta contra un Puma real, con la base sembrada y sin una sola llamada a internet.
+>
+> 🔴 **Correr de verdad encontró CINCO defectos que ninguna lectura de código había detectado**, todos
+> corregidos en esta ola salvo donde se indica:
+> 1. **`recalculate_cost_center` revienta con `Alert.last` nil**: ese helper corre al crear, editar y
+>    borrar CUALQUIER gasto, y en una base sin fila en `alerts` el primer gasto creado por la web
+>    responde **500**. Se siembra la fila.
+> 2. **Resembrar invalidaba la sesión**: el seed reasignaba la contraseña en cada corrida, y Devise
+>    valida la sesión contra el `authenticatable_salt`. Todo spec que resembrara aterrizaba en el
+>    login. Ahora solo se reasigna si `valid_password?` falla.
+> 3. **`/cost_centers/:id` sin `?tab=home` muestra el CALENDARIO, no la ficha**, y con
+>    `allow_forgery_protection = false` el layout no emite `<meta csrf-token>`, que
+>    `Shifts/Calendar.jsx` lee con `.content` sin guarda de nil ⇒ **React desmontaba la pantalla
+>    entera en test**. Se emite el meta desde el initializer de E2E, sin encender la verificación de
+>    CSRF y sin tocar `app/`.
+> 4. **Cargar el initializer de stubs dentro de Minitest rompía la suite**: el `prepend` sobre el
+>    singleton_class es irreversible y la restauración de `Minitest#stub` copia el método dentro del
+>    singleton, dejando su `super` apuntándose a sí mismo ⇒ `SystemStackError` intermitente en
+>    `exchange_rate_service_test.rb`. El contrato del stub se prueba ahora en un subproceso.
+> 5. **El flash de "no tiene permiso" no se pinta en ningún layout**: el usuario expulsado de
+>    Contabilidad es redirigido sin explicación. **NO corregido** (el layout no es de este paquete):
+>    pendiente #38.
+>
+> 🟡 **El paquete queda en ⚠️, no en ✅.** Las salvedades son los pendientes **#36 a #41**, y la que
+> más pesa es la **#36**: los 3 tests de captura asistida por IA quedan en `fixme` porque no existe
+> la ruta `POST /extract_receipt/report_expenses` y el kill switch arranca apagado. Es la frontera de
+> alcance acordada con el cliente, no un olvido.
+>
+> ➡️ **Lo que sigue es la ola 8: paquete 13 (cierre, documentación y puesta en marcha).**
 
 ---
 
@@ -199,7 +235,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 5 | 09 — Frontend: tablas y contabilidad | ⚠️ | `3d96073`..`d6b182d` | **TERMINADO y reverificado por un agente independiente (ola 5).** 7 commits. Todas las tareas vivas: helpers de presentación de los estados nuevos, las **6 columnas nuevas** en el índice de Gastos y las mismas en la tabla del centro de costo, un **único `filterParams()`** (un solo `cost_center_id=` en todo el pack, con 3 consumidores), 3 filtros nuevos + confirmación de la aceptación masiva con `meta.total`, **columna de selección opt-in en `CmDataTable`** (`indeterminate` por `ref`, `colSpan` que suma la columna) y la **pantalla de Contabilidad con selección múltiple** (`packs/AccountingExpenseIndex.js`, 813 líneas, `views/accounting_expenses/index.html.erb` y `generalcomponents/expenseIndicators.js`). **23 pruebas propias verdes recontadas una a una** por el verificador (`accounting_expenses_view_test` 10, `application_helper_menu_test` 7, `expense_menu_test` 6 → 23 runs / 56 assertions / 0 fallos); suite completa **853 runs / 2.652 assertions / 0 fallos**. **De los 51 criterios cumplen 50.** **Salvedades: 4** — (1) el **criterio 21** (`./bin/webpack` compila sin error) **falla en la letra**: revienta con `ERR_OSSL_EVP_UNSUPPORTED` en Node 22 (problema de entorno **preexistente**, pendiente #5); con `NODE_OPTIONS=--openssl-legacy-provider` compila limpio y emite `AccountingExpenseIndex-05d8b2ed2d16558b532f.js`; (2) se tocó **`generalcomponents/ui/CmPageActions.jsx`** (compartido por ~20 pantallas) para añadirle la prop `testId`, y ese archivo **no está en la tabla del paquete ni en §7.2** (pendiente #25); (3) **~30 criterios de comportamiento puramente de cliente (4-8, 11, 12, 16-18, 27, 28, 31-42) no los ejercita ninguna prueba automática**: no hay runner de JS en el repo y los specs son del 12 — se verificaron **leyendo el código línea por línea** y todos coinciden, pero es inspección, no ejecución; (4) **sus 3 archivos de prueba viven en un commit rotulado "MCP"** (pendiente #23) |
 | 5 | 11 — MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | **TERMINADO y REVERIFICADO por un agente independiente (ola 5).** 12 commits (incluidos los 2 de documentación y el del tablero). Todas las tareas vivas (1 y 2 ya estaban; la 5 retirada por auditoría): actor por teléfono estricto en `ApplicationTool` (`actor_phone`, `actor_user_by_phone`, `actor_user_strict`, `as_actor_strict` con el `ensure` en `begin` interno), `X-Actor-Phone` en `McpController` y `ALWAYS_EXPOSED` con 6 nombres, las 3 claves 17-19 de `ReportExpensesListTool::KEYS` (**ahora 28, criterio compartido cumplido**) + 5 filtros, `report_expenses_create` con actor estricto + guard de `ExpenseRuleService` + `persist_with_evaluation!` + los 6 campos de moneda + `exchange_rate_source` de servidor, el mismo criterio estricto en `expense_ratios_create`, y **8 tools nuevas**: `expense_budgets_list/available`, `exchange_rates_get`, `expense_rules_validate`, `expense_rules_list` (cierra la Tarea 7 del 14), `report_expenses_receipt_url_get/attach_receipt`, `users_find_by_phone`, más `Mcp::S3DirectUpload` y las 2 entidades nuevas de `records_search`. **191 pruebas propias verdes** (contra las ~120 nominadas), suite completa **853 runs / 2.652 assertions / 0 fallos**, corrida 3 veces con seeds distintos. `tools/list` real devuelve **62 tools**. **Salvedades: 4** — (1) **el guard de reglas usa `confirm_rule_violations`** en vez de rechazar siempre: el documento del 11 (criterio 35) y el del 14 ("una violación nunca impide guardar") se contradicen, y se resolvió exigiendo confirmación explícita de la persona, que es lo mismo que hace la web; (2) `report_expenses_attach_receipt` trae el binario por `fog` (`fetch_body`) y **no** con `remote_receipt_file_url=`, porque en CarrierWave 3 esa descarga pasa por `SsrfFilter`; (3) se tocaron **dos tests ajenos** (`report_expenses_list_tool_{currency,accounting}_keys_test.rb`, de los paquetes 05 y 06) para subir sus aserciones de 25 a 28 claves y de índice 16 a 19, que es lo que sus propios comentarios anunciaban; (4) los criterios **27 y 28** (S3 y `heroku restart` en staging) **no se verificaron**: son del paquete 13 y requieren `users.phone` poblado. **La reverificación independiente confirmó las 191 pruebas** (191 runs / 569 assertions / 0 fallos en `test/tools` + `mcp_protocol_test` + `mcp_controller_exposure_test` + `user_phone_test`, exactamente lo prometido), el conteo real de **62 tools** aplicando `exposed?`, `ALWAYS_EXPOSED` con 6 nombres, `KEYS.size == 28` sin repetidos, `ExchangeRatesGetTool::KEYS` con 7 claves y **cero `require_relative`** en las pruebas; y añadió **3 salvedades nuevas**: (5) el **criterio 35** ("un gasto con violación bloqueante es rechazado") **solo se cumple en el camino por defecto**: con `confirm_rule_violations: true` el gasto **sí se crea**, y hay un test que lo consagra — el criterio, tal como está escrito, no admite excepciones (pendiente **#26**); (6) `app/tools/expense_rules_list_tool.rb` (52 líneas, 4 pruebas) **no figura en la tabla "A crear"** del paquete: es alcance extra no declarado; (7) la **segunda mitad del criterio 38** (`db:rollback STEP=1` revierte la migración del teléfono) **NO se verificó de forma independiente** — se comprobó que la migración define `up`/`down` y no `change`, pero **el rollback no se ejecutó** |
 | 6 | 08 — Frontend: presupuesto y formulario | ⚠️ | `9d327e4`..`35570a9` | **TERMINADO.** 5 commits. Todas las tareas vivas (la 1 y los 4 specs Playwright están retirados por auditoría): la **pestaña Presupuesto** completa (`BudgetsTable` + `BudgetSummaryBoard` + `BudgetFormCreate`, tablero de 6 cifras, tabla server-side con las 5 columnas ordenables que el servidor acepta y las 4 con `sortable:false`, alta/edición/anulación y **validación en vivo del tope que deshabilita Guardar**), `users_select` propagado hasta el select de beneficiario, y **los DOS formularios de gasto** (`ReportExpense/FormCreate.jsx` + `renderModal()` del pack) con comprobante, bloque de moneda extranjera con conversión y TRM en vivo, aviso de disponible presupuestal, modal de previsualización y envío por **`FormData`**. Se borró el `estados` hardcodeado en `true` de `ExpensesTable.jsx`. **26 pruebas propias verdes** (5 + 4 + 9 + 8); suite completa **879 runs / 2.956 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas. E2E Playwright: **6 passed** (los smokes del 01). `./bin/webpack` compila con **0 errores y 0 warnings** y `package.json` no cambió. **Verificado a mano en el navegador contra desarrollo** (ver "Ola 6"): la pestaña aparece, el tablero pinta, el bloqueo por tope funciona, la tolerancia de 0,005 deja asignar el disponible exacto, y la conversión USD→COP consulta la TRM real y avisa del desfase de fecha. **Cifras al cierre de la ola (con el 14-ui dentro): 912 runs / 3.037 assertions / 0 failures / 0 errors / 0 skips en 10,5 s**, repetida con `--seed=1337` con cifras idénticas. **Verificación final independiente sobre `5b4b8e9`**: los 3 componentes existen con contenido real (510 + 166 + 197 líneas), los 4 archivos de prueba tienen los nombres exactos del documento, las 26 pruebas traen 21+16+36+28 aserciones reales, los 5 commits tocan **exactamente 13 archivos** y `cost_centers_controller.rb` **no aparece en el diff** (criterio 48 OK); los criterios 6-27, 30, 38-45 y 47-49 se revisaron **uno por uno leyendo el código** y cumplen, incluidos los 63 `data-testid` contados a mano. **Salvedades: 6** — los pendientes **#28 a #30**, **#32** (ningún E2E ejercita esta superficie) y **#33** (la captura asistida es código muerto en pantalla: el flag no está cableado de punta a punta). El **#31** (servidor de desarrollo obsoleto) era de entorno y se resuelve reiniciando |
-| 7 | 12 — Suite E2E Playwright | ⬜ | — | |
+| 7 | 12 — Suite E2E Playwright | ⚠️ | `f93c81f`..`ac334a7` | **TERMINADO.** 11 commits atómicos. Los 9 escenarios del documento más los 4 del paquete 14: `budget` (6), `receipt` (4), `currency` (3), `accounting` (11), `permissions` (5), `pagination` (4), `rules` (4), `ai-capture` (3 en `fixme`), más el `smoke` del 01 (5) y los 3 setups de sesión. **48 tests: 45 passed, 3 skipped, 0 failed**, en 1,5 min, corrida **dos veces seguidas** con exit 0 y `git status --porcelain` limpio. Minitest: **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas (baseline real medido antes de este paquete: 920 runs / 3.055 assertions, no las 912 que decía este tablero). Se entrega además `config/initializers/e2e_stubs.rb` (los dos bordes de red stubeados con doble guarda y bitácora auditable en `tmp/e2e/stub_calls.log`), el seed ampliado a 8 centros / 6 usuarios / 3 roles / `seed-ids.json`, 5 helpers de `support/`, `global-teardown.js`, los 2 proyectos de Playwright con sus sesiones restringidas y 19 pruebas Minitest nuevas (11 de contrato del stub + 8 del seed). **Esta es la primera vez que la superficie de usuario del proyecto se ejecuta en un navegador de verdad**, y encontró 5 defectos que ninguna lectura de código había visto (ver "Ola 7"). **Salvedades: 6** — los pendientes **#36 a #41** |
 | 6 | 14-ui — Reglas de gastos: pantalla (Tarea 6) | ⚠️ | `ffb303b`..`5b4b8e9` | **TERMINADA. Cierra el hueco que la ola 4 dejó abierto: ya NO es cierto que las reglas solo se administren por JSON.** 4 commits (`ffb303b` superficie Ruby + ítem de menú, `9d35236` pantalla React, `0afc600` pruebas, `5b4b8e9` mensajes de error legibles). Existe `app/javascript/components/ExpenseRule/index.jsx` (460 l.) + `FormCreate.jsx` (283 l.) + `packs/ExpenseRuleIndex.js` + `views/expense_rules/index.html.erb` + la ruta `index` + el gate `require_rules_module!` (**redirect HTML, no 403 JSON**) + el ítem bajo Configuración + `config/locales/expense_rule.en.yml`. El formulario trae los **7 campos** del documento (nombre, activa, por defecto, antigüedad máxima numérica, tope de valor en moneda, switch de duplicados y textarea de instrucciones con su ayuda visible) y el **multi-select de usuarios con el aviso permanente de que vacío = NADIE** (`rule-users-empty-warning`), más la columna "Aplica a" que dice "Nadie" / "Todos (por defecto)". Los vacíos viajan como `null` explícito, `user_ids` viaja siempre, el body es JSON plano y la discriminación por `type` se hace con el modal abierto. **33 pruebas nuevas verdes** (15 de vista + 7 de menú + 11 de helpers), con nombres y aserciones reales; suite completa **912 runs / 3.037 assertions / 0 failures / 0 errors / 0 skips** (10,5 s), repetida con `--seed=1337`. `./bin/webpack` emite `ExpenseRuleIndex` entre los packs. **Salvedades: 4** — (1) **ningún E2E la ejecuta**: los 4 escenarios del 14 y los specs del 12 no existen, así que la pantalla se verificó **leyendo código** (pendiente **#32**); (2) el pendiente **#21** sigue abierto y ahora pesa más: "Reglas de gastos" **no está sembrado en `create_config.rake`**, así que en una instalación limpia el módulo no nace y a esta pantalla solo llega el rol Administrador, que entra por el bypass (hay una prueba que lo consagra: *"admin entra aunque el rol no tenga el permiso explícito"*); (3) `rule_violations` sigue **sin exponerse** en `ReportExpenseSerializer` (pendiente **#19**); (4) `ffb303b` escribió en **3 archivos compartidos** de §7.2 (`application_helper.rb`, `layouts/user.html.erb`, `routes.rb`) en bloques que el reparto no contempla, incluida la línea compartida `authorization_config` (pendiente **#35**) |
 | 4 | 14 — Reglas de gastos configurables (backend) | ⚠️ | `6dac5f9`..`e34111e` | **Backend TERMINADO y reverificado en verde por un agente independiente (ola 4-bis).** *(La Tarea 6, el frontend, se completó después en la ola 6: ver la fila `14-ui` arriba. Lo que sigue describe el estado de la ola 4.)* 4 commits. Tareas 1 a 5 completas: las 2 migraciones (con el índice único **parcial** `WHERE (is_default AND active)` y `report_expenses.rule_violations` jsonb), el modelo `ExpenseRule` con la resolución de 3 ramas (`aplicables_a`), `ExpenseRuleService` con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en `ReportExpense` (`before_save`, que corre **después** del `evaluate!` del presupuesto y por eso puede pisarle el "aprobado"), y `ExpenseRulesController` + rutas + `ExpenseRuleSerializer` + rake de permisos propia. **65 pruebas propias verdes recontadas por el verificador independiente** (15 modelo + 26 servicio + 24 controller, contra las **30 pedidas**: los 30 casos nominados en el documento están todos presentes por nombre); suite completa **656 runs / 2.050 assertions / 0 fallos**. **De los 8 criterios de aceptación cumplen los 6 de backend** (varias reglas, gana la más restrictiva, fallback a la default, deterministas en servidor vía `before_save` —así aplica igual a web, MCP e import—, el semántico no se evalúa, y una violación no bloquea el guardado pero fuerza `sin_presupuesto` con auditoría en `RegisterEdit`); **incumplen 2 por alcance no ejecutado**: no hay pantalla (Tarea 6) ni los 4 escenarios E2E. **Salvedades: 5** — (1) ~~la Tarea 6 (pantalla React bajo Configuración) NO está hecha~~ **RESUELTA en la ola 6 (`ffb303b`..`5b4b8e9`)**: la pantalla existe y las reglas ya se administran desde la interfaz; (2) la **Tarea 7 (tool MCP `expense_rules_for_user`) tampoco**, porque `app/tools/*` es del paquete **11** (§7.2) — el endpoint HTTP que necesita ya existe; (3) los **4 escenarios E2E** son del paquete **12** por §7.2, igual que los del 07 que la auditoría retiró; (4) `rule_violations` **no se expone en `ReportExpenseSerializer`**: ese archivo es dueño único del 07 y agregarle un atributo del 14 rompería §7.2 — hace falta decidir quién lo agrega antes de que el 08/09 pinten la advertencia; **(5) el módulo de permisos "Reglas de gastos" NO está sembrado en `lib/tasks/create_config.rake`** (hallazgo nuevo de la ola 4-bis, pendiente **#21**): existe `lib/tasks/permissions_expense_rules.rake` para instalaciones ya montadas, pero una **instalación limpia nace sin el módulo**, mientras que "Presupuesto" y "Contabilidad" del 07 sí están replicados en `create_config.rake` (líneas 275 y 285) |
 | 8 | 13 — Cierre, documentación y puesta en marcha | ⬜ | — | |
@@ -551,6 +587,44 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     treeview. La suite completa se corrió después (912 verdes), que es lo que §7.2 exige a quien
     toque el layout. **No hay conflicto abierto hoy**; lo que hace falta es que alguien lo bendiga o
     pida moverlo.
+36. **Los 3 escenarios de captura asistida por IA quedan en `test.fixme`, no ejecutados.** No es una
+    omisión del paquete 12: no existe la ruta `POST /extract_receipt/report_expenses` (el paquete 10
+    la dejó "declarada y no construida") y el kill switch `RECEIPT_EXTRACTION_ENABLED` arranca
+    apagado porque el seam `call_vision_model` lo implementa el agente de Taimes. El cuerpo de las
+    tres pruebas está escrito contra los `data-testid` canónicos y contra los valores exactos del
+    stub, con las instrucciones de encendido en la cabecera del archivo. **Lo que sí está probado y
+    verde son los 11 casos de contrato del stub de extracción.**
+37. **`config/initializers/e2e_stubs.rb` emite el `<meta name="csrf-token">` que el entorno de test
+    no emite.** `allow_forgery_protection = false` hace que `csrf_meta_tags` devuelva nil, y
+    `components/Shifts/Calendar.jsx` lo lee con `.content` sin guarda de nil: React desmontaba la
+    pantalla del centro de costos ENTERA, que es donde corren 3 de los 8 specs. Se emite el meta y
+    **nada más** —la verificación de CSRF sigue apagada— para no cambiar el comportamiento de
+    `page.request.*`. En producción y desarrollo el meta existe, así que el defecto solo se ve en
+    test. **Lo correcto a futuro es la guarda de nil en `Calendar.jsx`**, que no es de este paquete.
+38. **El flash de "No tiene permiso para ingresar al módulo de Contabilidad" no se pinta en ningún
+    layout.** `grep -rn flash app/views/layouts` no devuelve una sola línea: el usuario sin permiso
+    es redirigido a la raíz **sin ninguna explicación**. El spec de permisos comprueba el redirect y
+    el 403 del endpoint, pero **no afirma sobre el mensaje**, porque afirmar sobre algo que la
+    aplicación no emite habría sido inventar cobertura. Arreglarlo es del layout, no de este paquete.
+39. **El rol `Contable E2E` lleva "Ver todos" además de "Ingreso al modulo".** El plan pedía "solo
+    Ingreso al modulo", pero sin "Ver todos" `filtered_scope` acota la bandeja a los gastos propios,
+    ese usuario ve **cero filas** y los 3 escenarios negativos del encargo del 09 se quedan sin
+    control positivo: un 500 daría exactamente el mismo `toHaveCount(0)` que la ausencia de permisos.
+    Lo que el encargo exige —**ni aprobar ni exportar**— queda intacto y las pruebas del seed lo
+    afirman explícitamente.
+40. **Se modificaron dos archivos del paquete 01: `smoke.spec.js` y `global-setup.js`.** El primero
+    porque el índice de Gastos lista todos los centros y "exactamente 2 filas" dejó de ser cierto en
+    cuanto el seed funcional sembró 69 gastos más; la aserción quedó **más estricta** (compara las
+    filas del DOM contra el JSON y comprueba que el buscador del servidor devuelve exactamente los 2
+    del smoke). El segundo, para añadir la verificación de la cabecera `X-E2E-Stubs: on`, que el
+    propio documento del 12 declara **obligatoria** (riesgo 1) y sin la cual una corrida contra un
+    servidor reutilizado saldría a internet de verdad.
+41. **Dos defectos reales del sistema quedan anotados y NO corregidos, por ser de otros paquetes:**
+    `rule_violations` no lo expone `ReportExpenseSerializer` (el detalle estructurado de una
+    violación de regla no llega al navegador, solo la frase resumida de `budget_reason`), y la
+    columna de estado presupuestal solo pinta el motivo cuando el estado es `excedido`, así que un
+    gasto rechazado **por reglas** muestra la etiqueta "Sin presupuesto" sin decir por qué. Los dos
+    están anotados dentro de `rules.spec.js`, junto a la aserción que sí se pudo escribir.
 
 ---
 
@@ -2288,6 +2362,44 @@ se relajó.**
 
 ➡️ **Lo que sigue es la ola 7: el paquete 12 (E2E)** — que es, precisamente, el que convierte "el
 código dice lo que debe decir" en "la pantalla funciona".
+
+---
+
+### Ola 7 — Suite E2E completa con Playwright (paquete 12)
+
+**Estado honesto: verde, y por primera vez el verde viene de un navegador de verdad.**
+11 commits atómicos (`f93c81f`..`ac334a7`).
+
+**Los números, medidos y repetidos:**
+
+| Qué | Resultado |
+|---|---|
+| `cd test/e2e && npx playwright test` | **45 passed, 3 skipped, 0 failed** en 1,5 min, **dos corridas seguidas** con exit 0 |
+| `bin/rails test` | **939 runs / 3.311 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas |
+| Baseline real antes de esta ola | **920 runs / 3.055 assertions** (el tablero decía 912/3.037: estaba desactualizado) |
+| `git status --porcelain` tras la corrida | **limpio** |
+| `tmp/e2e/stub_calls.log` | 7 líneas JSON, todas de `ExchangeRateService`/`ReceiptExtractionService`, **ninguna con `COP`** |
+
+**Cobertura por flujo** (los 9 del brief + los 4 de reglas): partidas y bloqueo por tope (6),
+comprobante adjunto con descarga verificada por bytes `%PDF-` (4), moneda extranjera contra el stub
+de TRM (3), Contabilidad completa incluidos los 3 negativos que encargó el 09 (11), permisos (5),
+regresión de paginación (4), reglas de gasto (4), captura asistida por IA (3, **en `fixme`**), más
+los 5 smokes del 01 y 3 setups de sesión.
+
+**Los cinco defectos que encontró correr de verdad**, y que ninguna de las seis olas anteriores
+había visto porque se verificaban leyendo código: el 500 de `Alert.last` al crear cualquier gasto,
+la sesión invalidada al resembrar (salt de Devise), la pantalla del centro de costos en blanco por
+el `<meta csrf-token>` ausente en test, el `SystemStackError` intermitente que provocaba cargar el
+initializer de stubs dentro de Minitest, y el flash de "no tiene permiso" que ningún layout pinta.
+Los cuatro primeros están corregidos; el quinto queda como pendiente **#38** por no ser de este
+paquete.
+
+**Higiene del encargo.** Rama `feature/gastos-presupuesto-ia`, **nada empujado al remoto**,
+**producción intacta**. Los 11 commits son atómicos, en español y con el trailer correcto. **Ninguna
+prueba se borró, se marcó `skip` ni se relajó**: la única aserción que cambió es la del `smoke.spec.js`
+del 01, y quedó **más estricta** (pendiente **#40**). El PR **no toca**
+`config/initializers/carrierwave.rb` ni ningún archivo de `test/fixtures/files/`, como exige la
+matriz de propiedad.
 
 ---
 
