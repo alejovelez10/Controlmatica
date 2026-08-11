@@ -30,19 +30,10 @@ class ReportExpensesController < ApplicationController
     # Filtrar por usuario si no tiene permiso de ver todos
     base_query = base_query.where(user_invoice_id: current_user.id) unless show_all
 
-    # Aplicar filtros de búsqueda si hay parámetros
-    has_filters = params[:cost_center_id].present? || params[:user_invoice_id].present? || params[:invoice_name].present? ||
-                  params[:invoice_date].present? || params[:identification].present? || params[:description].present? ||
-                  params[:invoice_number].present? || params[:type_identification_id].present? || params[:payment_type_id].present? ||
-                  params[:invoice_value].present? || params[:invoice_tax].present? || params[:invoice_total].present? ||
-                  params[:start_date].present? || params[:end_date].present? || params[:is_acepted].present?
-
-    if has_filters
-      base_query = base_query.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date],
-                                      params[:identification], params[:description], params[:invoice_number], params[:type_identification_id],
-                                      params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total],
-                                      params[:start_date], params[:end_date], params[:is_acepted])
-    end
+    # Aplicar filtros de búsqueda. Ya no hace falta la guarda previa de "¿hay
+    # algún filtro?": con un hash vacío el builder devuelve `all`, que es
+    # exactamente lo que hacía ese `if`.
+    base_query = base_query.search(report_expense_search_filters)
 
     # Obtener total antes de paginar (una sola query con count)
     total = base_query.count
@@ -73,19 +64,10 @@ class ReportExpensesController < ApplicationController
     base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user)
                               .where(cost_center_id: params[:id])
 
-    # Aplicar filtros de búsqueda si hay parámetros
-    has_filters = params[:cost_center_id].present? || params[:user_invoice_id].present? || params[:invoice_name].present? ||
-                  params[:invoice_date].present? || params[:identification].present? || params[:description].present? ||
-                  params[:invoice_number].present? || params[:type_identification_id].present? || params[:payment_type_id].present? ||
-                  params[:invoice_value].present? || params[:invoice_tax].present? || params[:invoice_total].present? ||
-                  params[:start_date].present? || params[:end_date].present? || params[:is_acepted].present?
-
-    if has_filters
-      base_query = base_query.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date],
-                                      params[:identification], params[:description], params[:invoice_number], params[:type_identification_id],
-                                      params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total],
-                                      params[:start_date], params[:end_date], params[:is_acepted])
-    end
+    # Aplicar filtros de búsqueda. Ya no hace falta la guarda previa de "¿hay
+    # algún filtro?": con un hash vacío el builder devuelve `all`, que es
+    # exactamente lo que hacía ese `if`.
+    base_query = base_query.search(report_expense_search_filters)
 
     # Búsqueda libre del buscador de la tabla
     if params[:q].present?
@@ -157,9 +139,9 @@ class ReportExpensesController < ApplicationController
     show_all = is_admin? || has_menu_permission?("Gastos", "Ver todos")
 
     if show_all
-      report_expenses = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
+      report_expenses = ReportExpense.search(report_expense_search_filters).order(invoice_date: :desc)
     else
-      report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
+      report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters).order(invoice_date: :desc)
     end
 
     update_status = report_expenses.update(is_acepted: true)
@@ -225,13 +207,13 @@ class ReportExpensesController < ApplicationController
     validate = is_admin? || has_menu_permission?("Gastos", "Ver todos")
     if validate
       if params[:type] == "filtro"
-        @items = ReportExpense.search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
+        @items = ReportExpense.search(report_expense_search_filters).order(invoice_date: :desc)
       else
         @items = ReportExpense.all.order(invoice_date: :desc)
       end
     else
       if params[:type] == "filtro"
-        @items = ReportExpense.where(user_invoice_id: current_user.id).search(params[:cost_center_id], params[:user_invoice_id], params[:invoice_name], params[:invoice_date], params[:identification], params[:description], params[:invoice_number], params[:type_identification_id], params[:payment_type_id], params[:invoice_value], params[:invoice_tax], params[:invoice_total], params[:start_date], params[:end_date], params[:is_acepted]).order(invoice_date: :desc)
+        @items = ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters).order(invoice_date: :desc)
       else
         @items = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
       end
@@ -345,6 +327,12 @@ class ReportExpensesController < ApplicationController
 
   def report_expense_find
     @report_expense = ReportExpense.find(params[:id])
+  end
+
+  # Filtros de la pantalla de Gastos. La lista canonica vive en el modelo
+  # (ReportExpense::SEARCH_KEYS); lo que no este ahi se descarta en silencio.
+  def report_expense_search_filters
+    params.permit(*ReportExpense::SEARCH_KEYS).to_h.symbolize_keys
   end
 
   def report_expense_params_create
