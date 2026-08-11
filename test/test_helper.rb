@@ -1,10 +1,39 @@
-ENV['RAILS_ENV'] ||= 'test'
-require_relative '../config/environment'
-require 'rails/test_help'
+ENV["RAILS_ENV"] ||= "test"
+require_relative "../config/environment"
+require "rails/test_help"
+
+# Autoload de dobles y helpers. CONVENCION DEL PROYECTO (00-ARQUITECTURA.md 7.2):
+# todo doble o helper de test vive en test/support/ y se carga desde aqui.
+# Esta PROHIBIDO el require_relative dentro de un test para cargar un doble.
+Dir[Rails.root.join("test/support/**/*.rb")].sort.each { |file| require file }
 
 class ActiveSupport::TestCase
   # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
   fixtures :all
 
-  # Add more helper methods to be used by all tests here...
+  # SIN parallelize: la suite corre en serie mientras ReportExpense.search siga
+  # definiendo scopes de CLASE en runtime (arquitectura, invariante 6). Con
+  # procesos paralelos esos scopes se pisan entre si y producen fallos
+  # intermitentes indistinguibles de bugs reales.
+
+  include AuthenticationHelpers
+  include PermissionHelpers
+  include JsonHelpers
+  include UploadHelpers
+
+  teardown do
+    # User.current es Thread.current[:user] y SOBREVIVE entre tests del mismo
+    # hilo. Sin este teardown, un test que lo deja seteado hace pasar (o fallar)
+    # al siguiente por accidente, y como Minitest randomiza el orden el fallo es
+    # intermitente.
+    User.current = nil
+  end
+end
+
+class ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+end
+
+class ActionController::TestCase
+  include Devise::Test::ControllerHelpers
 end
