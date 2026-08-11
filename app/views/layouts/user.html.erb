@@ -56,7 +56,7 @@
       <%# Helper para detectar si un item del menu está activo %>
       <% config_controllers = %w[providers customers parameterizations users rols module_controls alerts report_expense_options] %>
       <% commission_controllers = %w[commissions commission_relations] %>
-      <% expense_controllers = %w[report_expenses expense_ratios] %>
+      <% expense_controllers = %w[report_expenses expense_ratios accounting_expenses] %>
 
       <% if authorization_config %>
         <li class="treeview <%= 'is-expanded' if config_controllers.include?(controller_name) %>">
@@ -160,7 +160,7 @@
         </li>
       <% end %>
 
-      <% if authorization_report_expenses || authorization_expense_ratios || current_user.rol.name == "Administrador" %>
+      <% if authorization_report_expenses || authorization_expense_ratios || authorization_accounting_expenses || current_user.rol.name == "Administrador" %>
         <li class="treeview <%= 'is-expanded' if expense_controllers.include?(controller_name) %>">
           <a class="app-menu__item" href="#" data-toggle="treeview">
             <i class="app-menu__icon fas fa-wallet"></i>
@@ -180,6 +180,18 @@
               <li>
                 <%= link_to expense_ratios_path, class: "app-menu__item #{'active' if controller_name == 'expense_ratios'}" do %>
                   <i class="app-menu__icon fas fa-calculator"></i><span class="app-menu__label">Relación de gastos</span>
+                <% end -%>
+              </li>
+            <% end %>
+
+            <%# `accounting_expenses_path` se evalua en ESTE layout, que renderiza
+                TODAS las pantallas: si la ruta no existiera, cada pagina del
+                sistema caeria con NoMethodError. La ruta la declaro el paquete
+                06, que va en una ola anterior. %>
+            <% if authorization_accounting_expenses || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to accounting_expenses_path, class: "app-menu__item #{'active' if controller_name == 'accounting_expenses'}", data: { testid: "nav-contabilidad" } do %>
+                  <i class="app-menu__icon fas fa-file-invoice-dollar"></i><span class="app-menu__label">Contabilidad</span>
                 <% end -%>
               </li>
             <% end %>

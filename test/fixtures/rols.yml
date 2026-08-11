@@ -45,8 +45,13 @@ ingeniero:
 contador:
   name: Contador
   description: Solo contabilidad
-  accion_modules: contabilidad_ingreso, contabilidad_aprobar, contabilidad_ver_todos,
-                  reportes_ingreso
+  # `contabilidad_exportar` lo AGREGA el paquete 09 (no reescribe la etiqueta):
+  # sus tests de vista afirman que `@estados` llega con las tres claves en true
+  # para este rol, que es el usuario canonico de la pantalla de Contabilidad.
+  # Los tests del 06 que prueban el gate de exportacion lo revocan a mano con
+  # `revoke_permission!`, asi que no dependen de este default.
+  accion_modules: contabilidad_ingreso, contabilidad_aprobar, contabilidad_exportar,
+                  contabilidad_ver_todos, reportes_ingreso
 
 sin_permisos:
   name: Sin permisos

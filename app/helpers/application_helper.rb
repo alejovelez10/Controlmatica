@@ -36,6 +36,10 @@ module ApplicationHelper
       card = "<h1>" + " <i class='fas fa-receipt'></i> Control de gastos " + "</h1>" + "<p>" + "Gestiona tus gastos" + "</p>"
     elsif controller == "report_expenses" && action == "indicators_expenses"
       card = "<h1>" + " <i class='fas fa-receipt'></i> Informe de control de gastos " + "</h1>" + "<p>" + "Gestiona de informes" + "</p>"
+    # Sin este branch el encabezado de la pantalla de Contabilidad dice
+    # literalmente "Proyectos": es el `else` del final de la cadena.
+    elsif controller == "accounting_expenses" && action == "index"
+      card = "<h1>" + " <i class='fas fa-file-invoice-dollar'></i> Contabilidad " + "</h1>" + "<p>" + "Aprobación contable de gastos" + "</p>"
     elsif controller == "shifts" && action == "index"
       card = "<h1>" + " <i class='fas fa-calendar-alt'></i> Turnos " + "</h1>" + "<p>" + "Gestiona tus turnos" + "</p>"
     elsif controller == "shifts" && action == "calendar"
@@ -684,5 +688,13 @@ module ApplicationHelper
   # y no siempre tiene el objeto a mano.
   def accounting_state_label(value)
     value ? "Aprobado" : "Pendiente"
+  end
+
+  # === MENU DE CONTABILIDAD (paquete 09) ===================================
+  # El nombre del modulo es un STRING LITERAL: `has_menu_permission?` lo busca
+  # tal cual en module_controls. Si no coincide devuelve nil (no false), asi que
+  # quien lo consuma debe tratarlo como falsy y nunca compararlo con `== false`.
+  def authorization_accounting_expenses
+    has_menu_permission?("Contabilidad")
   end
 end

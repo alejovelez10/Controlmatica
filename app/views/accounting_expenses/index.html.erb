@@ -1,0 +1,2 @@
+<%= javascript_pack_tag 'AccountingExpenseIndex' %>
+<%= react_component('AccountingExpenseIndex', current_user: get_current_user, estados: @estados, users: get_users, report_expense_options: get_report_expense_options, currencies: get_currencies) %>
