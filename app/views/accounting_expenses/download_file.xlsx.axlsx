@@ -1,17 +1,16 @@
-# Export de Gastos — 18 columnas (paquete 06, tarea C1).
+# Export de Contabilidad — 18 columnas (paquete 06, tarea B9).
 #
-# Este archivo y app/views/accounting_expenses/download_file.xlsx.axlsx son
-# COPIAS byte a byte salvo el nombre. No es casualidad: es lo que permite que un
-# solo mapeo de `ReportExpense.import` lea los dos archivos y que un Excel
-# bajado de cualquiera de las dos pantallas se pueda reimportar.
+# Este archivo y app/views/report_expenses/download_file.xlsx.axlsx son COPIAS
+# byte a byte salvo el nombre. No es casualidad: es lo que permite que un solo
+# mapeo de `ReportExpense.import` lea los dos archivos y que un Excel bajado de
+# cualquiera de las dos pantallas se pueda reimportar.
 #
-# CAMBIOS RESPECTO DE LA VERSION ANTERIOR (12 columnas):
-#  - `ID` pasa a ser la primera columna. Es la referencia contable que pedia el
-#    cliente y la llave con la que el import ACTUALIZA en vez de duplicar.
-#  - `column_widths` pasa de 11 valores a 18. Declaraba 11 para 12 columnas.
-#  - `task.user_invoice.names` va con guarda: db/schema.rb no tiene ni un
-#    `add_foreign_key`, asi que una FK colgante tumbaba el export completo con
-#    NoMethodError.
+# `column_widths` lleva 18 valores para 18 columnas. La plantilla de gastos
+# declaraba 11 anchos para 12 columnas; ese bug NO se replica.
+#
+# Las guardas `present?` sobre `user_invoice` no son defensivas por gusto:
+# db/schema.rb no tiene ni un `add_foreign_key`, asi que una sola FK colgante
+# convierte el export entero en un 500.
 wb = xlsx_package.workbook
 
 wb.add_worksheet(name: "Items") do |sheet|

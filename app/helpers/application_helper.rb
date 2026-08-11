@@ -667,4 +667,22 @@ module ApplicationHelper
   def get_currencies
     Currency.options
   end
+
+  # === CONTABILIDAD Y EXCEL (paquete 06) ===================================
+  # Las dos plantillas .axlsx (Gastos y Contabilidad) tienen que escribir las
+  # MISMAS etiquetas legibles, porque un archivo exportado desde cualquiera de
+  # las dos pantallas se puede reimportar. Duplicar el hash en cada plantilla
+  # garantiza que en algun momento digan cosas distintas.
+  #
+  # El diccionario vive en ReportExpense::BUDGET_STATUS_LABELS (paquete 04,
+  # dueño de la columna): aqui solo se consume, SIN fallback.
+  def budget_status_label(value)
+    ReportExpense::BUDGET_STATUS_LABELS[value.to_s] || value.to_s
+  end
+
+  # Recibe el booleano, no el registro: la plantilla de Excel itera sobre filas
+  # y no siempre tiene el objeto a mano.
+  def accounting_state_label(value)
+    value ? "Aprobado" : "Pendiente"
+  end
 end

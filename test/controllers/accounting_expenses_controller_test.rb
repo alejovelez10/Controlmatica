@@ -1,0 +1,459 @@
+require "test_helper"
+
+# Los cinco endpoints de Contabilidad (paquete 06, bloque B).
+#
+# Los gastos con `budget_status` y `accounting_approved` distintos del default se
+# crean AQUI y no en test/fixtures/report_expenses.yml: ese archivo es del
+# paquete 01 (§7.2) y `test/models/schema_gastos_ia_test.rb` (paquete 02) afirma
+# que ninguna fixture tiene budget_status != "sin_presupuesto" ni
+# accounting_approved = true.
+#
+# ⚠️ FRONTERA CON EL PAQUETE 07. El test "get_accounting_expenses expone los
+# campos nuevos" del documento del 06 (claves `accounting_approved`,
+# `accounting_approved_at`, `receipt_file`, `budget_status`, `currency` en la
+# primera fila) NO se escribe aqui: `app/serializers/report_expense_serializer.rb`
+# tiene dueño unico **07** (§7.2) y hoy no emite ninguna de las cinco. Es el
+# mismo hueco que el paquete 05 dejo documentado para sus 7 campos de moneda. El
+# scope, los filtros, los gates y la auditoria —que es lo que este paquete si
+# posee— quedan cubiertos abajo.
+class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @admin = users(:admin)
+    @contador = users(:contador)
+    @ingeniero = users(:ingeniero)
+    @centro = cost_centers(:centro_con_viaticos)
+  end
+
+  def crear_gasto(**overrides)
+    as_user(@admin) do
+      ReportExpense.create!({
+        user: @admin,
+        cost_center: @centro,
+        user_invoice: @ingeniero,
+        invoice_name: "Hotel Contable",
+        invoice_date: Date.new(2026, 6, 1),
+        description: "Alojamiento",
+        invoice_number: "FE-K#{SecureRandom.hex(3)}",
+        identification: "900111222",
+        invoice_value: 100_000.0,
+        invoice_tax: 19_000.0,
+        invoice_total: 119_000.0
+      }.merge(overrides))
+    end
+  end
+
+  # Contador con acceso al modulo pero SIN "Aprobar" ni "Exportar a excel":
+  # es el usuario con el que se prueban los gates de accion.
+  def contador_solo_ingreso
+    grant_permission!(rols(:contador), "Contabilidad", "Ingreso al modulo")
+    grant_permission!(rols(:contador), "Contabilidad", "Ver todos")
+    revoke_permission!(rols(:contador), "Contabilidad", "Aprobar")
+    revoke_permission!(rols(:contador), "Contabilidad", "Exportar a excel")
+    @contador
+  end
+
+  def contador_aprobador
+    grant_permission!(rols(:contador), "Contabilidad", "Ingreso al modulo")
+    grant_permission!(rols(:contador), "Contabilidad", "Ver todos")
+    grant_permission!(rols(:contador), "Contabilidad", "Aprobar")
+    @contador
+  end
+
+  # --- index ----------------------------------------------------------------
+
+  test "index sin permiso redirige a root" do
+    sign_in_as users(:sin_permisos)
+
+    get accounting_expenses_path
+
+    assert_redirected_to root_path
+    assert_equal "No tiene permiso para ingresar al módulo de Contabilidad", flash[:alert]
+  end
+
+  test "index con permiso arma los tres estados" do
+    # La plantilla HTML es del paquete 09. Se consulta en JSON para poder
+    # verificar el contrato de `@estados` sin inventar un ERB provisional.
+    sign_in_as @admin
+
+    get accounting_expenses_path, as: :json
+
+    assert_response :success
+    assert_equal %w[approve export show_all], json_body["estados"].keys.sort
+    assert_equal [true, true, true], json_body["estados"].values_at("approve", "export", "show_all")
+  end
+
+  test "index en JSON tambien responde 403 sin permiso de modulo" do
+    sign_in_as users(:sin_permisos)
+
+    get accounting_expenses_path, as: :json
+
+    assert_json_forbidden
+  end
+
+  # --- get_accounting_expenses ---------------------------------------------
+
+  test "get_accounting_expenses devuelve data y total" do
+    crear_gasto
+    sign_in_as @admin
+
+    get get_accounting_expenses_path
+
+    assert_json_list
+    assert_equal %w[data total], json_body.keys.sort
+  end
+
+  test "get_accounting_expenses nunca devuelve un excedido" do
+    excedido = crear_gasto(budget_status: "excedido")
+    sign_in_as @admin
+
+    get get_accounting_expenses_path
+
+    refute_includes assert_json_list.map { |r| r["id"] }, excedido.id
+  end
+
+  test "un aprobado empujado a excedido no sale por defecto" do
+    # CORRECCION 13 / hueco de la tabla de verdad §2.4.
+    gasto = crear_gasto(budget_status: "excedido")
+    gasto.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
+    sign_in_as @admin
+
+    get get_accounting_expenses_path
+
+    refute_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  test "un aprobado empujado a excedido si sale con el filtro Aprobados por contabilidad" do
+    # Segunda mitad de la correccion 13: contabilidad no puede perder de vista
+    # algo que ella misma aprobo.
+    gasto = crear_gasto(budget_status: "excedido")
+    gasto.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { accounting_approved: "true" }
+
+    assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  test "get_accounting_expenses incluye sin_presupuesto" do
+    # Sin esto la pantalla vendida al cliente sale vacia: los 5.008 gastos
+    # historicos estan todos en sin_presupuesto.
+    gasto = crear_gasto(budget_status: "sin_presupuesto")
+    sign_in_as @admin
+
+    get get_accounting_expenses_path
+
+    assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  test "sin Ver todos solo devuelve los gastos propios" do
+    crear_gasto(user_invoice: @ingeniero)
+    propio = crear_gasto(user_invoice: @contador)
+    contador = contador_solo_ingreso
+    revoke_permission!(rols(:contador), "Contabilidad", "Ver todos")
+    sign_in_as contador
+
+    get get_accounting_expenses_path
+
+    filas = assert_json_list
+    assert_includes filas.map { |r| r["id"] }, propio.id
+    assert filas.all? { |r| r["user_invoice_id"] == contador.id },
+           "un contador sin 'Ver todos' no puede ver los gastos de otros"
+  end
+
+  test "q busca por id de registro" do
+    gasto = crear_gasto
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { q: gasto.id.to_s }
+
+    assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  test "q busca por numero de factura" do
+    gasto = crear_gasto(invoice_number: "FE-BUSCAME-9")
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { q: "buscame" }
+
+    assert_equal [gasto.id], assert_json_list.map { |r| r["id"] }
+  end
+
+  test "sort no permitido no revienta y ordena por invoice_date" do
+    # Test de inyeccion: params[:sort] entra a un Arel.sql, que no escapa nada.
+    viejo = crear_gasto(invoice_date: Date.new(2026, 1, 1))
+    nuevo = crear_gasto(invoice_date: Date.new(2026, 12, 1))
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { sort: "encrypted_password; DROP TABLE users" }
+
+    ids = assert_json_list.map { |r| r["id"] }
+    assert_operator ids.index(nuevo.id), :<, ids.index(viejo.id),
+                    "el orden por defecto es invoice_date DESC"
+  end
+
+  test "per_page tope en 100" do
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { per_page: 500 }
+
+    assert_operator assert_json_list.length, :<=, 100
+  end
+
+  test "get_accounting_expenses sin permiso de modulo responde 403" do
+    sign_in_as users(:sin_permisos)
+
+    get get_accounting_expenses_path
+
+    assert_json_forbidden
+  end
+
+  # --- update_accounting_state ---------------------------------------------
+
+  test "update_accounting_state sin permiso Aprobar responde 403" do
+    gasto = crear_gasto
+    sign_in_as contador_solo_ingreso
+
+    patch "/update_accounting_state/#{gasto.id}/true"
+
+    assert_json_forbidden
+    refute gasto.reload.accounting_approved
+  end
+
+  test "update_accounting_state true setea by_id y at" do
+    gasto = crear_gasto
+    sign_in_as @admin
+
+    patch "/update_accounting_state/#{gasto.id}/true"
+
+    assert_json_success(mensaje: "¡El gasto fue aprobado por contabilidad!")
+    gasto.reload
+    assert gasto.accounting_approved
+    assert_equal @admin.id, gasto.accounting_approved_by_id
+    assert_not_nil gasto.accounting_approved_at
+  end
+
+  test "update_accounting_state false limpia by_id y at" do
+    gasto = crear_gasto
+    gasto.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id,
+                         accounting_approved_at: Time.now)
+    sign_in_as @admin
+
+    patch "/update_accounting_state/#{gasto.id}/false"
+
+    assert_json_success(mensaje: "¡Se retiró la aprobación contable!")
+    gasto.reload
+    refute gasto.accounting_approved
+    assert_nil gasto.accounting_approved_by_id
+    assert_nil gasto.accounting_approved_at
+  end
+
+  test "update_accounting_state sobre un excedido responde error" do
+    excedido = crear_gasto(budget_status: "excedido")
+    sign_in_as @admin
+
+    patch "/update_accounting_state/#{excedido.id}/true"
+
+    mensajes = assert_json_error
+    assert_equal ["No se puede aprobar contablemente un gasto que excede el presupuesto"], mensajes
+    refute excedido.reload.accounting_approved
+  end
+
+  test "update_accounting_state deja RegisterEdit del modulo Contabilidad" do
+    gasto = crear_gasto
+    sign_in_as @admin
+
+    assert_difference "RegisterEdit.count", 1 do
+      patch "/update_accounting_state/#{gasto.id}/true"
+    end
+
+    registro = RegisterEdit.last
+    assert_equal "Contabilidad", registro.module
+    refute_equal "Gatos", registro.module
+    assert_match "APROBACIÓN CONTABLE", registro.description
+  end
+
+  # --- update_accounting_filter_values (masiva) ----------------------------
+
+  test "update_accounting_filter_values sin filtros no aprueba nada" do
+    # EL test que corrige el bug de report_expenses_controller.rb#update_filter_values:
+    # sin guarda, un clic aprueba la tabla entera.
+    crear_gasto
+    crear_gasto
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path
+
+    assert_json_error(incluye: "Debe aplicar al menos un filtro")
+    assert_equal 0, ReportExpense.where(accounting_approved: true).count
+  end
+
+  test "update_accounting_filter_values con accounting_approved como unico parametro no cuenta como filtro" do
+    # Caso borde no obvio: `accounting_approved=false` es "toda la tabla".
+    crear_gasto
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { accounting_approved: "false" }
+
+    assert_json_error(incluye: "Debe aplicar al menos un filtro")
+    assert_equal 0, ReportExpense.where(accounting_approved: true).count
+  end
+
+  test "update_accounting_filter_values con filtro aprueba y devuelve el conteo" do
+    ReportExpense.delete_all
+    a = crear_gasto
+    b = crear_gasto
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
+
+    assert_equal 2, json_body["count"]
+    assert_equal "2 gastos aprobados por contabilidad", json_body["success"]
+    assert a.reload.accounting_approved
+    assert b.reload.accounting_approved
+  end
+
+  test "update_accounting_filter_values nunca aprueba un excedido" do
+    excedido = crear_gasto(budget_status: "excedido")
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
+
+    assert_equal "success", json_body["type"]
+    refute excedido.reload.accounting_approved
+  end
+
+  test "update_accounting_filter_values escribe un solo RegisterEdit" do
+    3.times { crear_gasto }
+    sign_in_as @admin
+
+    assert_difference "RegisterEdit.count", 1 do
+      patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
+    end
+
+    assert_equal "Contabilidad", RegisterEdit.last.module
+    assert_match "APROBACIÓN CONTABLE MASIVA", RegisterEdit.last.description
+  end
+
+  test "update_accounting_filter_values escribe last_user_edited_id y updated_at" do
+    # `update_all` no dispara `edit_values` ni `touch`: si no se escriben a mano,
+    # los registros quedan sin trazabilidad de quien los toco.
+    gasto = crear_gasto
+    gasto.update_columns(last_user_edited_id: nil, updated_at: 2.years.ago)
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
+
+    gasto.reload
+    assert_equal @admin.id, gasto.last_user_edited_id
+    assert_operator gasto.updated_at, :>, 1.hour.ago
+  end
+
+  test "update_accounting_filter_values con mas de MAX_BULK responde error" do
+    ReportExpense.delete_all
+    2.times { crear_gasto }
+    sign_in_as @admin
+
+    con_max_bulk(1) do
+      patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
+    end
+
+    assert_json_error(incluye: "más de 1 gastos")
+    assert_equal 0, ReportExpense.where(accounting_approved: true).count
+  end
+
+  test "ids cuenta como filtro y aprueba solo esos gastos" do
+    # CORRECCION 5: es el backend de la aprobacion por seleccion multiple del
+    # paquete 09. Sin `ids` en FILTER_KEYS, la seleccion no tendria endpoint.
+    a = crear_gasto
+    b = crear_gasto
+    c = crear_gasto
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { ids: [a.id, b.id] }
+
+    assert_equal "success", json_body["type"]
+    assert_equal 2, json_body["count"]
+    assert a.reload.accounting_approved
+    assert b.reload.accounting_approved
+    refute c.reload.accounting_approved
+  end
+
+  test "ids con un excedido no lo aprueba y el count lo refleja" do
+    ok = crear_gasto
+    excedido = crear_gasto(budget_status: "excedido")
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { ids: [ok.id, excedido.id] }
+
+    assert_equal 1, json_body["count"], "el count es de filas actualizadas, no de ids recibidos"
+    assert ok.reload.accounting_approved
+    refute excedido.reload.accounting_approved
+  end
+
+  test "ids con mas de MAX_BULK responde error" do
+    a = crear_gasto
+    b = crear_gasto
+    sign_in_as @admin
+
+    con_max_bulk(1) do
+      patch update_accounting_filter_values_path, params: { ids: [a.id, b.id] }
+    end
+
+    assert_json_error(incluye: "Afine el filtro")
+    refute a.reload.accounting_approved
+    refute b.reload.accounting_approved
+  end
+
+  test "update_accounting_filter_values sin permiso Aprobar responde 403" do
+    gasto = crear_gasto
+    sign_in_as contador_solo_ingreso
+
+    patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
+
+    assert_json_forbidden
+    refute gasto.reload.accounting_approved
+  end
+
+  # --- download_file --------------------------------------------------------
+
+  test "download_file sin permiso Exportar responde 403" do
+    sign_in_as contador_solo_ingreso
+
+    get "/download_file/accounting_expenses/todos"
+
+    assert_json_forbidden
+  end
+
+  test "download_file con permiso responde xlsx" do
+    crear_gasto
+    sign_in_as @admin
+
+    get "/download_file/accounting_expenses/todos"
+
+    assert_response :success
+    assert_equal "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                 response.media_type
+  end
+
+  test "download_file sin permiso de modulo responde 403" do
+    sign_in_as users(:sin_permisos)
+
+    get "/download_file/accounting_expenses/todos"
+
+    assert_json_forbidden
+  end
+
+  private
+
+  # Baja MAX_BULK para probar el desborde sin crear 501 gastos. La constante se
+  # restaura siempre, incluso si el bloque lanza.
+  def con_max_bulk(valor)
+    original = AccountingExpensesController::MAX_BULK
+    AccountingExpensesController.send(:remove_const, :MAX_BULK)
+    AccountingExpensesController.const_set(:MAX_BULK, valor)
+    yield
+  ensure
+    AccountingExpensesController.send(:remove_const, :MAX_BULK)
+    AccountingExpensesController.const_set(:MAX_BULK, original)
+  end
+end
