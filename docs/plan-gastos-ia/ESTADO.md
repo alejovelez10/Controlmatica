@@ -4,15 +4,17 @@
 > **Rama de trabajo: `feature/gastos-presupuesto-ia`** (creada desde `feature/ui-modernization`).
 > Nada se ha empujado al remoto ni desplegado. Todo es local y reversible.
 
-> ✅ **ESTADO AL 2026-08-11: el paquete 04 quedó TERMINADO y commiteado.** La ola 3a ya no está a
-> mitad por el lado del presupuesto: las Tareas 8–15 se completaron, se agregaron los 2 archivos de
-> prueba que faltaban y la suite completa está en **254 runs / 753 assertions / 0 fallos**, corrida
-> 4 veces con seeds distintos.
+> ✅ **ESTADO AL 2026-08-11 (noche): la ola 3a está CERRADA.** Los paquetes 04 (presupuesto) y 05
+> (multimoneda) están terminados, commiteados y **reverificados por un agente independiente** que no
+> podía arreglar nada. Suite completa: **332 runs / 983 assertions / 0 failures / 0 errors / 0
+> skips**, corrida 3 veces con seeds distintos (~6,9 s). E2E Playwright: 6 passed. `git status`
+> limpio y **nada empujado al remoto**.
 >
-> 🟡 **Lo que SÍ sigue sin commitear**: `app/models/currency.rb` y `test/models/currency_test.rb`,
-> que son del **paquete 05** y su agente los debe cerrar. Siguen valiendo la advertencia de no
-> hacer `git checkout`/`git stash` a la ligera y el **pendiente #0**, ahora reducido a esos 2
-> archivos.
+> 🟡 **Los dos paquetes quedan en ⚠️, no en ✅**, y no por la suite: hay salvedades de alcance y de
+> criterios que **decide una persona**. Las nuevas son los pendientes **#10 a #13**. Lee la entrada
+> "Ola 3a-bis" al final antes de dar la ola por buena.
+>
+> ➡️ **Lo que sigue es la ola 3b: paquete 06, y después el esqueleto del 10.**
 
 ---
 
@@ -70,8 +72,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 runs / 47 assertions verdes, verificado aparte |
 | 2 | 02 — Migraciones y esquema | ⚠️ | `aed1a89`..`0e52d05` | Las 6 migraciones escritas, aplicadas en dev y test, `schema.rb` regenerado, 33 pruebas nuevas y `rake gastos_ia_schema:check`. **Reverificado por un agente independiente contra la BD con `psql`: los 10 índices, las 14 columnas y los 5.008 gastos intactos.** **Salvedades: staging y producción NO se tocaron** (Tareas 14/15, runbook abajo) y el **drill de rollback (criterio 30) no se pudo reejecutar** en la verificación final |
 | 2 | 03 — Deuda técnica bloqueante | ⚠️ | `db68191`..`342ec2c` | Uploaders a S3 con allowlists, `search` convertido en builder de hash (bug de `scope` de clase, real y demostrado), auditoría extraída a `RegisterAuditable` (−219 líneas en `report_expense.rb`). 73 runs / 140 assertions verdes. **Salvedades: `heroku config:set AWS_REGION=us-east-2` sigue sin ejecutar** (obligatorio antes de mergear) y 3 criterios son de narrativa de PR / producción, no verificables aquí |
-| 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO.** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. Criterio 9 verificado a mano: comentando el `CostCenter.lock.find` fallan exactamente los 2 guardianes de SQL. **Salvedades: 3 (ver bitácora ola 3a)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo para que el mensaje de tope salga sin prefijo en inglés, y el criterio 26 (firma del acta de la Tarea 0) es del cliente |
-| 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO.** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48); la suite corre sin red. **Salvedades: 3** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07, y el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 |
+| 3a | 04 — Presupuesto y aprobación | ⚠️ | `a2a7c43`..`13751ad` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 10 commits. Las 13 tareas vivas (1 y 2 retiradas por auditoría): modelo `ExpenseBudget` con tope por centro y auditoría propia, `ExpenseBudgetService` completo (`available_for`, `summary_for_center`, `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, reevaluó FIFO, CRUD de partidas, `validate_cap!`) y el contrato de cableado de la Tarea 15. **99 pruebas propias verdes** (92 en los 7 archivos que el plan exige, contra los 85 pedidos, + 7 de la superficie presupuestal de `ReportExpense`); suite completa **254 runs / 753 assertions / 0 fallos**, corrida 4 veces con seeds distintos. **Con el 05 mergeado la suite completa queda en `332 runs / 983 assertions / 0 fallos`, reconfirmada 3 veces con seeds 56250, 12345 y 99 (~6,9 s).** **Salvedades: 4 (ver bitácora ola 3a y 3a-bis)** — el criterio 7 choca con la Tarea 15, se tocó `config/application.rb` + un locale nuevo (fuera de la matriz §7.2), el criterio 26 (firma del acta de la Tarea 0) es del cliente, y **el criterio 9 NO se pudo re-verificar de forma independiente** (el sandbox bloqueó la mutación temporal): la evidencia es la del implementador |
+| 3a | 05 — Multimoneda y TRM | ⚠️ | `237febf`..`28218b2` | **TERMINADO y reverificado por un agente independiente (ola 3a-bis, `db91032`).** 8 commits. Las 12 tareas vivas (1, 2, 9, 10, 13, 14, 15, 17 y 18 retiradas por auditoría): `Currency`, `ExchangeRate` + fixture, `ExchangeRateClient` (única clase que abre sockets), `ExchangeRateService` (caché → fuente → fallback, `Result` canónico, seam `fetch_remote`), conversión y `cop_manual_override` en `ReportExpense`, `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES`, las 7 claves de moneda del list tool y las 5 variables de entorno. **83 pruebas propias verdes** (contra las 66 pedidas); suite completa **332 runs / 983 assertions / 0 fallos**, corrida **46 veces seguidas con seeds distintos**. Verificado a mano una vez contra las fuentes reales (TRM 3.125,47 y EUR 3.611,48). **Salvedades: 5** — la Tarea 16 (Excel) y el test de contrato del serializer quedan como criterio del 06/07; el criterio 29 (`KEYS.size == 28`) no se puede afirmar hasta que mergeen el 11 y el 06 (hoy son 23); **el commit `28218b2` tocó `test/models/report_expense_audit_legacy_test.rb`, que por §7.2 es del paquete 03, y perdió una aserción**; y `report_expense_import_currency_test.rb` **no ejercita `ReportExpense.import`** (reimplementa el mapeo dentro del propio test) |
 | 3b | 06 — Comprobante y contabilidad | ⬜ | — | |
 | 3b | 10 — IA: extracción y reglas | ⬜ | — | |
 | 4 | 07 — API, permisos y rutas | ⬜ | — | |
@@ -177,6 +179,34 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
    entornos Heroku), el resultado de `heroku config:set AWS_REGION=us-east-2`, la URL de S3 del
    round-trip tras `heroku restart` y la frase sobre los archivos históricos subidos a disco efímero,
    que **no son recuperables**. Son 5 criterios de aceptación que ningún agente puede cerrar.
+10. **Firmar el acta de la Tarea 0 del paquete 04** con las decisiones **0.1** ("los históricos
+    consumen presupuesto") y **0.2** ("sin IVA, `invoice_value`"). Es el **criterio 26** del paquete
+    y su propio documento lo declara **condición de merge**. Los defaults ya están implementados y
+    probados, pero nadie los ha firmado. Es un subconjunto del pendiente #4, separado porque este sí
+    bloquea el merge.
+11. **Aceptar o revertir la desviación de alcance del paquete 04**: se modificó
+    `config/application.rb` (`config.active_model.i18n_customize_full_message = true`, un ajuste
+    **global** de Rails) y se creó `config/locales/expense_budget.en.yml`. **Ninguno de los dos
+    archivos está en la tabla "A crear / A modificar" del paquete**, así que es una desviación de la
+    matriz §7.2, aunque esté razonada en comentarios. Sirve para que el mensaje de tope salga sin el
+    prefijo `"Amount "`. Si el cliente prefiere no tocar `config/application.rb`, se revierte y el
+    paquete 07 tendrá que renderizar `errors[:amount]` en vez de `Result#errors`.
+12. **Decidir qué hacer con el no-determinismo del HTML de auditoría de asociaciones.** El commit
+    `28218b2` (paquete 05) modificó `test/models/report_expense_audit_legacy_test.rb`, que por §7.2
+    es **del paquete 03** y para el que el 05 **no tenía autorización** (el 04 sí la tenía, para
+    extender el golden). El arreglo es correcto y ataca una intermitencia real —
+    `CostCenter.where(id: [...])` **sin `ORDER BY`**, luego el orden depende del plan de Postgres —
+    pero **se perdió una aserción**: la que fijaba que el centro **nuevo** cae en `color-true`. Los
+    dos `assert_includes` que la reemplazan son tautológicos respecto al `assert_equal` de la línea
+    168, que ya usa el mismo `orden`. **Consecuencia de producto viva y sin arreglar: en el HTML de
+    auditoría de campos de asociación, cuál valor sale como "nuevo" es NO DETERMINISTA.** Es deuda
+    preexistente del legado (no la introdujo el 05), pero ahora ya no hay ninguna prueba que la
+    detecte. Quien arregle el `ORDER BY` en el código de auditoría debe restituir la aserción.
+13. **Conseguir el `DATOS_GOV_APP_TOKEN`** (gratis, en datos.gov.co) antes de producción. Sin él las
+    peticiones a Socrata son anónimas y el servicio estrangula por IP con HTTP 429: **todo gasto en
+    USD terminaría pidiendo captura manual de la tasa**. Y sembrar con `heroku config:set` las cinco
+    variables de §7.9 cuando se despliegue la ola 3 (hoy solo están en `config/application.yml`,
+    que está gitignoreado).
 
 ---
 
@@ -978,3 +1008,140 @@ con el POR QUÉ en el cuerpo y el trailer `Co-Authored-By`. **No se tocó produc
 una sola config var remota. Sigue en pie la regla del punto 6: esta verificación la hizo el mismo
 agente que implementó, así que el 05 también merece una verificación independiente antes de cerrar
 la ola.
+
+---
+
+### Ola 3a-bis — Verificación final independiente de los paquetes 04 y 05 (2026-08-11)
+
+Un verificador que **no puede arreglar nada** volvió a correr todos los comandos él mismo y comprobó
+los criterios de aceptación uno por uno. **Ninguna cifra de esta sección viene de la documentación
+de los implementadores.** **Resultado: VERDE. Cero fallos, cero errores, cero skips. Los dos
+paquetes quedan en ⚠️ — verdes de software, con salvedades de alcance, de redacción de criterios y
+de cosas que este sandbox no dejó comprobar.** **NO SE ARREGLÓ NADA**: la única escritura fue una
+mutación temporal de verificación en `app/services/expense_budget_service.rb`, revertida en el acto;
+el árbol quedó limpio (`git status` y `git diff` vacíos).
+
+#### Qué se construyó en la ola — confirmado archivo por archivo, todos existen
+
+- **Paquete 04**: `app/models/expense_budget.rb`, `app/services/expense_budget_service.rb` con los
+  **11 métodos públicos** que exige el criterio 4 (`available_for`, `summary_for_center`,
+  `evaluate!`, `persist_with_evaluation!`, `on_expense_destroyed!`, `reevaluate_center_user!`,
+  `create_budget!`, `update_budget!`, `destroy_budget!`, `validate_cap!`, `money`),
+  `test/fixtures/expense_budgets.yml` con las **5 etiquetas exactas**, y los 7 archivos de prueba
+  **con casos reales, no clases vacías**.
+- **Paquete 05**: `currency.rb`, `exchange_rate.rb`, `exchange_rate_client.rb`,
+  `exchange_rate_service.rb`, `exchange_rates_controller.rb`, la fixture con sus 4 filas y
+  `effective_date`, la ruta `GET /get_exchange_rate`, `get_currencies` + `window.CM_CURRENCIES` y
+  las 7 claves de moneda en el list tool.
+
+#### Cuántas pruebas hay y cuánto tardan — medido, no copiado
+
+| Suite | Comando | Resultado literal | Tiempo |
+|---|---|---|---|
+| **Suite completa**, seed 56250 | `bin/rails test` | `332 runs, 983 assertions, 0 failures, 0 errors, 0 skips` | **~6,9 s** (con Spring) |
+| Suite completa, seed 12345 | idem | idéntico | ~6,9 s |
+| Suite completa, seed 99 | idem | idéntico | ~6,9 s |
+| Subconjunto paquete 04 (los 7 archivos del plan) | — | `92 runs, 309 assertions, 0F/0E/0S` (el plan pedía 85) | — |
+| Subconjunto paquete 05 (8 archivos del plan + 1 de contrato MCP) | — | `83 runs, 249 assertions, 0F/0E/0S` (el plan pedía 66) | — |
+| E2E Playwright | `cd test/e2e && npm run test:smoke` | `6 passed` | **13,1 s** |
+
+**Total hoy: 332 casos Minitest + 6 specs Playwright**, contra los 254 + 6 con que cerró el paquete
+04 y los 148 + 6 con que cerró la ola 2. Los tres números coinciden **exactamente** con lo que este
+tablero ya declaraba: la documentación no exagera.
+
+Además del subconjunto del plan, el 04 aporta `test/models/report_expense_budget_test.rb` (7 casos)
+para la superficie presupuestal de `ReportExpense`. **El E2E se corrió a propósito** aunque ningún
+paquete de la ola escriba specs: el 05 modifica `app/views/layouts/user.html.erb`, que renderiza
+**todas** las pantallas. Quedó verde. **Los specs funcionales de presupuesto y moneda no existen
+todavía y eso es por diseño**: son del paquete 12, y los dos paquetes declaran "no escribo E2E".
+
+#### Criterios de aceptación verificados uno por uno
+
+- **Paquete 04 — PASAN**: 3, 4, 5, 6, 8 (incluidos los dos nombres obligatorios
+  `test_evaluate_es_idempotente` y
+  `test_gasto_aprobado_contablemente_empujado_a_excedido_conserva_la_aprobacion`), 10, 11–18,
+  **19** (el diff no toca `db/migrate`, `db/schema.rb`, controllers, routes, serializers,
+  `app/javascript`, tools ni `test/e2e`), **20** (`search` / `SEARCH_KEYS` / `import` intactos),
+  21 (cabeceras `annotate`), 22, **23** (`audit_fields` = 14 con `:budget_status`, golden
+  `HTML_EDICION` extendido y los golden del 03 siguen verdes), 24 y **25**
+  (`summary_for_center` con totales anidados; la forma plana no aparece en ningún sitio).
+- **Paquete 05 — PASAN**: 5, 6, 7, 8, 9, 10, 11, 12, **12b** (`Result.members == [:ok, :value,
+  :errors]`, `fetch_remote` público, la cadena `client:` no aparece), 13–19, 20, 21 y 22.
+
+#### Lo que quedó frágil, pendiente o asumido — sin adornos
+
+1. 🟡 **[04, criterio 7] El grep prohibido SÍ devuelve una línea.**
+   `grep -rn "recalculate_cost_center|HTTParty|Net::HTTP" app/services/expense_budget_service.rb`
+   da resultado en la **línea 486**. Está **dentro del comentario `CONTRATO DE CABLEADO`** que la
+   Tarea 15 obliga a copiar literal. Es una contradicción del propio documento consigo mismo, no un
+   defecto de código: **no hay ninguna llamada real**. Ya estaba confesado; queda confirmado.
+2. 🟡 **[04, fuera de la matriz §7.2] `config/application.rb` y `config/locales/expense_budget.en.yml`
+   no pertenecen al paquete 04** y aun así se modificó el primero (con un ajuste **global** de Rails,
+   `i18n_customize_full_message`) y se creó el segundo. Está razonado y declarado, pero **es una
+   desviación de alcance** y la decide una persona → pendiente **#11**.
+3. 🔴 **[04, criterio 9] NO SE PUDO RE-VERIFICAR.** El criterio pide comentar el
+   `CostCenter.lock.find` y comprobar que fallan los dos guardianes de SQL. **El sandbox bloqueó
+   tanto la mutación por bash como la corrida de tests después de mutar**; se revirtió el archivo y
+   se confirmó con `git status` / `git diff` que el árbol quedó limpio. La única evidencia de este
+   criterio es **la del propio implementador**. Por inspección de código sí se sostiene:
+   `test_create_budget_emite_select_for_update_sobre_cost_centers` y
+   `test_persist_with_evaluation_emite_select_for_update` capturan el SQL real vía
+   `ActiveSupport::Notifications` y fallarían sin el `.lock`. **Pero ojo con el tercero**:
+   `test_el_lock_bloquea_a_una_segunda_conexion` **no pasa por el servicio** — llama
+   `CostCenter.lock.find` directamente desde el test, o sea prueba que **Postgres** bloquea, no que
+   **el servicio** tome el lock. Es exactamente lo que el documento especifica, pero conviene
+   saberlo antes de confiar en él como red de seguridad.
+4. 🔴 **[04, criterio 26] La firma del acta de la Tarea 0 sigue sin existir y es CONDICIÓN DE
+   MERGE** según el propio documento del paquete (decisiones 0.1 "los históricos consumen
+   presupuesto" y 0.2 "sin IVA"). Es del cliente → pendiente **#10**.
+5. 🟡 **[05, criterio 29] NO SE CUMPLE literalmente**: `ReportExpensesListTool::KEYS.size` es **23**,
+   no 28. Está documentado y justificado (las claves 17–19 son del paquete 11 y las 27–28 del 06,
+   ninguno mergeado todavía) y el test afirma lo que sí es comprobable hoy: las 7 de moneda
+   contiguas al final, las 16 originales intactas, `uniq` y `frozen`.
+6. 🟡 **[05] `test/models/report_expense_import_currency_test.rb` NO ejercita `ReportExpense.import`.**
+   **Reimplementa el mapeo dentro del propio test** (método `construir`). El plan decía que esos 4
+   casos eran un contrato que solo se pondría verde con el paquete 06. Tal como están, validan las
+   reglas de moneda **del modelo** contra el `.xlsx` real, pero **no son una prueba de regresión del
+   import**: si el 06 escribe el mapeo de otra forma, estos tests seguirán en verde igual. Está
+   explicado en la cabecera del archivo.
+7. 🔴 **[05] El commit `28218b2` tocó un archivo que no le pertenece y perdió una aserción.**
+   `test/models/report_expense_audit_legacy_test.rb` es **del paquete 03** por §7.2 (el 04 tenía
+   autorización explícita para extender el golden; **el 05 no la tenía**). El arreglo ataca una
+   intermitencia **real y bien diagnosticada** — `CostCenter.where(id: [...])` sin `ORDER BY`, luego
+   el orden depende del plan de Postgres — pero **se perdió la aserción que fijaba que el centro
+   NUEVO cae en `color-true`**: los dos `assert_includes` que la reemplazan son tautológicos
+   respecto al `assert_equal` de la línea 168, que ya usaba el mismo `orden`. **Consecuencia de
+   producto viva y sin arreglar: en el HTML de auditoría de campos de asociación, cuál valor sale
+   como "nuevo" es NO DETERMINISTA.** Es deuda preexistente del legado —no la introdujo el 05—, pero
+   ahora **ninguna prueba la detecta**. → pendiente **#12**.
+8. 🟡 **[05, criterio 31] "La suite corre sin internet" no se pudo verificar desconectando la red.**
+   La evidencia es indirecta y consistente: ningún test referencia `Net::HTTP`, `HTTParty` ni
+   `URI.open` (grep vacío), los tests de servicio stubean `fetch_remote`, los del cliente solo
+   ejercitan parsers puros, y la suite completa tarda 6,9 s. El implementador sí lo demostró
+   apuntando las URLs a `http://127.0.0.1:1/nope`; esta verificación no pudo repetirlo.
+9. 🟡 **[05, criterios 1–4] No se re-auditaron aquí**: son precondiciones del **paquete 02**
+   (esquema). `test/models/schema_gastos_ia_test.rb` corre y pasa dentro de la suite completa, que
+   es la evidencia disponible.
+10. **Sigue en pie lo de siempre: verde no es lo mismo que probado.** Los 332 casos cubren esquema,
+    deuda técnica, presupuesto y multimoneda **a nivel de dominio**. La vía web **no está cableada**:
+    mientras el paquete 07 no toque `report_expenses_controller.rb`, `budget_status` no se calcula
+    al crear un gasto por la aplicación y la pantalla sigue mostrando "Sin presupuesto" en todo.
+    Los paquetes 06 a 14 están **todos** pendientes.
+
+#### Decisiones que el cliente debe confirmar tras esta ola
+
+Las tres nuevas están en la lista de pendientes de arriba: **#10** (firmar el acta de la Tarea 0 —
+bloquea el merge del 04), **#11** (aceptar o revertir el cambio global en `config/application.rb`) y
+**#12** (qué hacer con el no-determinismo del HTML de auditoría y la aserción perdida). Siguen vivas
+las tres decisiones de implementación que ya declaró el paquete 04 —`invoice_value` negativo se trata
+como 0, un gasto `excedido` se guarda igual (se informa, no se bloquea), y un gasto histórico
+consume cupo pero nunca cambia de estado por un reevaluó— y la nueva **#13** (el
+`DATOS_GOV_APP_TOKEN`, sin el cual todo gasto en USD acabaría pidiendo la tasa a mano).
+
+#### Higiene git verificada
+
+`git status --short` **vacío**: nada sin commitear. `git branch -r --list "*gastos-presupuesto-ia*"`
+**vacío** ⇒ la rama **nunca se empujó al remoto**. **10 commits del paquete 04** (`a2a7c43..13751ad`)
++ **8 del 05** (`237febf..28218b2`) + 2 de documentación (`ebcc052`, `db91032`), todos atómicos, en
+español, con el POR QUÉ en el cuerpo y con el trailer `Co-Authored-By` correcto. **No se tocó
+producción**, ni Heroku, ni una sola config var remota.
