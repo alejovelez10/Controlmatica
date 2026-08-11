@@ -86,6 +86,50 @@ class ReportExpense < ApplicationRecord
 
   validates :budget_status, inclusion: { in: %w[sin_presupuesto aprobado excedido] }
 
+  # === MULTIMONEDA (paquete 05) ============================================
+  #
+  # INVARIANTE DURA: invoice_value / invoice_tax / invoice_total estan SIEMPRE
+  # en pesos. El valor tal como aparece en el comprobante vive en foreign_*.
+  # Guardar el valor extranjero en invoice_value es el unico error de este
+  # paquete que corrompe datos en silencio y a escala: recalculate_cost_center
+  # suma invoice_value y de ahi se propaga a aiu, aiu_percent, aiu_real y
+  # aiu_percent_real del centro de costos.
+  #
+  # Parametro VIRTUAL (no es columna, no hay migracion). Sin el, el servidor
+  # tendria que adivinar en cada save si el invoice_value que llego es un
+  # ajuste manual del usuario o el calculo del navegador, comparandolo contra
+  # el calculado; si el usuario ajusta a un numero que casualmente coincide, o
+  # si el redondeo del navegador difiere en un centavo, adivina mal y le borra
+  # el ajuste. Lo permiten los strong params del paquete 07 y lo envia el 08.
+  attr_accessor :cop_manual_override
+
+  before_validation :normalize_currency
+  before_validation :backfill_foreign_total
+  before_validation :apply_currency_conversion
+
+  validates :currency, presence: true,
+            inclusion: { in: Currency::CODES, message: "no es una moneda soportada" }
+  validates :exchange_rate, numericality: { greater_than: 0 }, allow_nil: true
+  validates :foreign_value, :foreign_tax, :foreign_total,
+            numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :exchange_rate_source, inclusion: { in: ExchangeRate::SOURCES }, allow_nil: true
+  validate :foreign_fields_required_when_foreign_currency
+
+  # BigDecimal en toda la aritmetica y `.to_f` SOLO despues del round: en Float,
+  # 120 * 4120.5 da 494459.99999999994. invoice_* son columnas float por el
+  # legado (invariante 2), asi que el float es inevitable, pero entra ya
+  # redondeado a dos decimales.
+  def self.to_cop(amount, rate)
+    return nil if amount.nil? || rate.nil?
+
+    (amount.to_d * rate.to_d).round(2).to_f
+  end
+
+  def foreign_currency? = Currency.foreign?(currency)
+
+  def cop_manual_override? = ActiveModel::Type::Boolean.new.cast(cop_manual_override).present?
+  # === FIN MULTIMONEDA =====================================================
+
   # edit_values se declara ANTES de audit_register para preservar el orden de
   # callbacks del legado: primero el edit_values del modelo, despues el
   # before_update de auditoria.
@@ -303,6 +347,62 @@ class ReportExpense < ApplicationRecord
   # porque edit_values lo usa y porque el paquete 01 lo dejo documentado asi.
   def current_actor_id
     audit_actor_id
+  end
+
+  # === MULTIMONEDA (paquete 05): callbacks privados ========================
+
+  # La moneda llega de un <select>, de una celda de Excel y de la tool MCP.
+  # `presence ||` cubre el caso de la columna vacia: sin default explicito, un
+  # gasto sin moneda quedaria en "" y fallaria la inclusion en vez de asumir
+  # pesos, que es lo que el 100% de los gastos historicos son.
+  def normalize_currency
+    self.currency = Currency.normalize(currency).presence || Currency::DEFAULT
+  end
+
+  def backfill_foreign_total
+    return unless foreign_currency?
+
+    # La fecha de la tasa por defecto es la del gasto: es la regla contable
+    # colombiana (TRM vigente en la fecha de la operacion).
+    self.exchange_rate_date ||= invoice_date
+    # Espeja lo que ya hacen los dos formularios: el usuario escribe valor e
+    # IVA y el total se completa solo.
+    self.foreign_total ||= (foreign_value.to_d + foreign_tax.to_d) if foreign_value.present?
+  end
+
+  def apply_currency_conversion
+    unless foreign_currency?
+      # Volver a COP LIMPIA los seis campos. Dejar residuos de moneda
+      # extranjera en un gasto en pesos produce filas del Excel que se leen
+      # como conversiones falsas.
+      self.foreign_value = self.foreign_tax = self.foreign_total = nil
+      self.exchange_rate = self.exchange_rate_date = self.exchange_rate_source = nil
+      return
+    end
+
+    return if exchange_rate.blank?
+
+    if cop_manual_override?
+      self.exchange_rate_source = "manual"
+      return # el servidor respeta los COP que mando el cliente
+    end
+
+    # Sin override, el servidor SIEMPRE tiene la ultima palabra y pisa lo que
+    # haya llegado en invoice_*.
+    self.invoice_value = self.class.to_cop(foreign_value, exchange_rate)
+    self.invoice_tax   = self.class.to_cop(foreign_tax,   exchange_rate)
+    # invoice_total es la conversion del TOTAL del comprobante, no la suma de
+    # los dos COP anteriores: es el numero que contabilidad quiere ver. La
+    # diferencia maxima por redondeo es de un centavo de peso y ningun calculo
+    # del centro de costos usa invoice_total.
+    self.invoice_total = self.class.to_cop(foreign_total, exchange_rate)
+  end
+
+  def foreign_fields_required_when_foreign_currency
+    return unless foreign_currency?
+
+    errors.add(:foreign_value, "es obligatorio cuando la moneda no es COP") if foreign_value.blank?
+    errors.add(:exchange_rate, "es obligatoria cuando la moneda no es COP") if exchange_rate.blank?
   end
 end
 
