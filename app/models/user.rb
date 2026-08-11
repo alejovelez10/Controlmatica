@@ -37,6 +37,13 @@
 #
 
 class User < ApplicationRecord
+  # Minimo de digitos para considerar que un telefono es un telefono y no basura
+  # (un fijo colombiano sin indicativo tiene 7).
+  PHONE_MIN_DIGITS = 7
+  # Longitud de la llave de busqueda: los ultimos 10 digitos absorben el
+  # indicativo (+57) y los prefijos que anteponen los gateways (whatsapp:).
+  PHONE_KEY_LENGTH = 10
+
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   has_many :customer_reports
@@ -58,6 +65,14 @@ class User < ApplicationRecord
   has_many :sales_orders, dependent: :destroy
   
   before_update :create_edit_register
+  # before_save y NO before_validation: User ya tiene before_update
+  # :create_edit_register y no conviene meterse en el orden de validaciones de
+  # Devise.
+  before_save :set_phone_normalized
+
+  # Busqueda del usuario por la llave normalizada del telefono (la usa el
+  # agente de WhatsApp para saber quien reporta).
+  scope :by_normalized_phone, ->(key) { where(phone_normalized: key) }
 
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
@@ -72,6 +87,15 @@ class User < ApplicationRecord
 
   def self.current=(user)
     Thread.current[:user] = user
+  end
+
+  # Deja el telefono en una llave comparable de hasta 10 digitos.
+  # "+57 (300) 123-4567" -> "3001234567" ; "300 12" -> nil
+  def self.normalize_phone(raw)
+    digits = raw.to_s.gsub(/\D/, "")
+    return nil if digits.length < PHONE_MIN_DIGITS
+
+    digits.length > PHONE_KEY_LENGTH ? digits.last(PHONE_KEY_LENGTH) : digits
   end
 
  
@@ -107,6 +131,16 @@ class User < ApplicationRecord
       )
     end
 
+  end
+
+  private
+
+  # Mantiene phone_normalized sincronizado con phone. La segunda condicion
+  # rellena los registros viejos que todavia no tienen la llave calculada.
+  def set_phone_normalized
+    return unless will_save_change_to_phone? || phone_normalized.blank?
+
+    self.phone_normalized = self.class.normalize_phone(phone)
   end
 
 end
