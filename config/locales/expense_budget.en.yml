@@ -1,0 +1,29 @@
+# Los mensajes de error del monto de una partida se publican TAL CUAL.
+#
+# POR QUE EXISTE ESTE ARCHIVO: la regla de tope de ExpenseBudget produce frases
+# completas que van directo a pantalla y que el contrato A.5 de
+# 00-ARQUITECTURA.md fija palabra por palabra:
+#
+#   "La suma de las partidas ($3.700.000) supera el valor de viáticos del centro
+#    de costos ($3.500.000). Disponible para asignar: $300.000"
+#
+# `errors.full_messages` de Rails le antepone el nombre del atributo en ingles y
+# devolveria "Amount La suma de las partidas...". Como el servicio entrega
+# `full_messages` en `Result#errors` y el controller del paquete 07 los renderiza
+# tal cual, sin este override el usuario veria Spanglish y el E2E del paquete 12
+# no encontraria el texto que busca.
+#
+# ALCANCE: solo `expense_budget.amount`. Ningun otro modelo ni atributo de la
+# aplicacion cambia de comportamiento, porque nadie mas define la clave `format`.
+#
+# POR QUE VA BAJO `en:` y no bajo `es:`: la app corre con `default_locale = :en`
+# (config/application.rb no lo cambia) aunque toda la copy de negocio este en
+# espanol. Ponerlo bajo `es:` no lo cargaria nunca.
+en:
+  activerecord:
+    errors:
+      models:
+        expense_budget:
+          attributes:
+            amount:
+              format: "%{message}"
