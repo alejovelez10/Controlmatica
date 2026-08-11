@@ -6,8 +6,14 @@ require "test_helper"
 #
 # Este test cubre SOLO esa aportacion. El criterio compartido final
 # (KEYS.size == 28) no se puede afirmar todavia: las claves 17-19 las agrega el
-# paquete 11 y las 27-28 el 06, y los dos se mergean despues de este. Afirmar
-# 28 aqui fallaria siempre y no probaria nada.
+# paquete 11, que se mergea despues. Afirmar 28 aqui fallaria siempre y no
+# probaria nada.
+#
+# ACTUALIZADO POR EL PAQUETE 06: al agregar el 06 sus claves 27-28
+# (accounting_approved, receipt_file_url), las de moneda dejaron de ser las
+# ultimas. La asercion pasa a fijar su POSICION ABSOLUTA (17-23 de 7.7), que es
+# mas estricta que `last(7)`: ahora tambien detecta que alguien las mueva hacia
+# el final.
 class ReportExpensesListToolCurrencyKeysTest < ActiveSupport::TestCase
   CLAVES_DE_MONEDA = %i[currency foreign_value foreign_tax foreign_total
                         exchange_rate exchange_rate_date exchange_rate_source].freeze
@@ -20,7 +26,7 @@ class ReportExpensesListToolCurrencyKeysTest < ActiveSupport::TestCase
   test "las 7 claves de moneda estan y en el orden canonico de 7.7" do
     claves = ReportExpensesListTool::KEYS
 
-    assert_equal CLAVES_DE_MONEDA, claves.last(7)
+    assert_equal CLAVES_DE_MONEDA, claves[16, 7]
     # Contiguas: si otro paquete intercala una clave suya en medio, el orden
     # canonico de 7.7 deja de cumplirse y este test lo dice.
     posiciones = CLAVES_DE_MONEDA.map { |k| claves.index(k) }

@@ -22,11 +22,17 @@ class ReportExpensesListTool < ApplicationTool
   #
   # Cuando este paquete se mergea, el 11 y el 06 todavia no estan: las claves
   # 17-19 se insertan DELANTE de las de moneda al resolver ese merge.
+  #
+  # PAQUETE 06: agrega SOLO las claves 27 y 28. `receipt_file_url` es un metodo
+  # del modelo, no una columna, y devuelve la URL firmada de CarrierWave; para el
+  # agente eso basta, y a diferencia del navegador no deja el enlace abierto once
+  # minutos hasta que caduca.
   KEYS = %i[id cost_center_id user_invoice_id invoice_name invoice_date invoice_number invoice_type
             invoice_value invoice_tax invoice_total description identification
             type_identification_id payment_type_id is_acepted created_at
             currency foreign_value foreign_tax foreign_total
-            exchange_rate exchange_rate_date exchange_rate_source].freeze
+            exchange_rate exchange_rate_date exchange_rate_source
+            accounting_approved receipt_file_url].freeze
 
   def self.call(server_context:, cost_center_id: nil, user_invoice_id: nil, q: nil, limit: 50)
     tenant = current_tenant(server_context)

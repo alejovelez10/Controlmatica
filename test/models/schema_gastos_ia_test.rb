@@ -394,7 +394,12 @@ class SchemaGastosIaTest < ActiveSupport::TestCase
     assert_equal "COP", re.currency
     assert_equal false, re.accounting_approved
     assert_nil re.expense_budget_id
-    assert_nil re.receipt_file
+    # AJUSTADO POR EL PAQUETE 06: al montar ReceiptUploader, `receipt_file`
+    # devuelve SIEMPRE un uploader, nunca nil. Se afirma sobre la COLUMNA, que es
+    # lo que este test de esquema quiere verificar, y ademas que el uploader
+    # viene vacio: las dos juntas son mas estrictas que el `assert_nil` anterior.
+    assert_nil re.read_attribute(:receipt_file)
+    assert re.receipt_file.blank?
   end
 
   test "un ReportExpense guardado persiste los defaults" do
@@ -420,7 +425,9 @@ class SchemaGastosIaTest < ActiveSupport::TestCase
     assert_equal "COP", releido.currency
     assert_equal false, releido.accounting_approved
     assert_nil releido.expense_budget_id
-    assert_nil releido.receipt_file
+    # Ver la nota del test anterior (paquete 06).
+    assert_nil releido.read_attribute(:receipt_file)
+    assert releido.receipt_file.blank?
   end
 
   # --- estado migratorio ----------------------------------------------------

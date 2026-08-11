@@ -310,46 +310,71 @@ class ReportExpense < ApplicationRecord
     scope
   end
 
+  # === IMPORTACION DE EXCEL (paquete 06, tarea C2) ==========================
+  #
+  # POR QUE HAY DOS LAYOUTS Y NO UNO. El export y el import de esta aplicacion
+  # YA estaban desalineados antes de este paquete: la plantilla vieja escribia 12
+  # columnas con "Estado" en la posicion 9 y el import esperaba `invoice_value`
+  # ahi. O sea, el archivo que la aplicacion exportaba no se podia reimportar.
+  # Con solo "correr las posiciones" se romperian ademas los archivos legacy que
+  # los usuarios tienen guardados en el disco. Por eso el layout se DETECTA.
+  #
+  # 18 posiciones, 13 campos escribibles. Cinco columnas son de SOLO LECTURA:
+  # `ID` es la llave y no un atributo, y `Estado operativo`, `Estado presupuestal`
+  # y `Motivo presupuestal` los escribe unicamente el sistema (§2.1). Aceptarlas
+  # permitiria fabricarse una aprobacion presupuestal desde un Excel.
+  LEGACY_HEADER_KEYS = %w[cost_center_id user_invoice_id invoice_date invoice_name identification
+                          description invoice_number type_identification_id payment_type_id
+                          invoice_value invoice_tax].freeze
+
+  # Las tres claves con guion bajo delante se leen y se TIRAN a proposito: estan
+  # en la lista para que el mapeo posicional cuadre, no para asignarse.
+  V2_HEADER_KEYS = %w[id cost_center_id user_invoice_id invoice_date invoice_name identification
+                      description invoice_number type_identification_id payment_type_id
+                      _estado_operativo _budget_status _budget_reason currency foreign_value
+                      exchange_rate invoice_value invoice_tax].freeze
+
+  # Un archivo es v2 si tiene 18 columnas o mas Y su primera celda dice "ID".
+  # Las dos condiciones son necesarias: un legacy de 11 columnas nunca empieza en
+  # "ID", y un archivo de 18 columnas al que le borraron la columna ID debe
+  # tratarse como lo que es, un archivo que CREA gastos nuevos.
+  def self.detect_layout(raw_header)
+    first = raw_header[0].to_s.strip.downcase
+    raw_header.compact.length >= 18 && first == "id" ? :v2 : :v1
+  end
+
   def self.import(file, user)
     success_records = []
     fail_records = []
     spreadsheet = Roo::Spreadsheet.open(file.path)
-    puts spreadsheet.row(2)
-    header = spreadsheet.row(1)
 
-    header[0] = "cost_center_id"
-    header[1] = "user_invoice_id"
-    header[2] = "invoice_date"
-    header[3] = "invoice_name"
-    header[4] = "identification"
-    header[5] = "description"
-    header[6] = "invoice_number"
-    header[7] = "type_identification_id"
-    header[8] = "payment_type_id"
-    header[9] = "invoice_value"
-    header[10] = "invoice_tax"
+    raw_header = spreadsheet.row(1)
+    layout = detect_layout(raw_header)
+    header = raw_header.dup
+    (layout == :v2 ? V2_HEADER_KEYS : LEGACY_HEADER_KEYS).each_with_index { |clave, i| header[i] = clave }
+
+    # `Rails.logger.debug` y no `puts`: los ocho puts anteriores volcaban los
+    # datos de CADA factura al log de produccion.
+    Rails.logger.debug { "ReportExpense.import: layout #{layout}, #{spreadsheet.last_row - 1} filas" }
 
     (2..spreadsheet.last_row).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
 
       begin
+        # Llave de actualizacion. En v1 no existe la columna, asi que `row["id"]`
+        # es nil y siempre se crea, exactamente como hoy.
         report_expense = find_by(id: row["id"]) || new
-
-        puts "=== FILA #{i} ==="
-        puts "  Centro de costo (Excel): '#{row["cost_center_id"]}'"
-        puts "  Responsable (Excel): '#{row["user_invoice_id"]}'"
-        puts "  Tipo (Excel): '#{row["type_identification_id"]}'"
-        puts "  Medio de pago (Excel): '#{row["payment_type_id"]}'"
 
         user_invoice = User.where("LOWER(TRIM(names)) = ?", row["user_invoice_id"].to_s.strip.downcase).first
         cost_center = CostCenter.where("LOWER(TRIM(code)) = ?", row["cost_center_id"].to_s.strip.downcase).first
         type_identification = ReportExpenseOption.where("LOWER(TRIM(name)) = ?", row["type_identification_id"].to_s.strip.downcase).first
         payment_type = ReportExpenseOption.where("LOWER(TRIM(name)) = ?", row["payment_type_id"].to_s.strip.downcase).first
 
-        puts "  Usuario encontrado: #{user_invoice.present? ? "SI (id: #{user_invoice.id})" : "NO"}"
-        puts "  Centro encontrado: #{cost_center.present? ? "SI (id: #{cost_center.id})" : "NO"}"
-        puts "  Tipo encontrado: #{type_identification.present? ? "SI (id: #{type_identification.id}, name: #{type_identification.name})" : "NO"}"
-        puts "  Medio pago encontrado: #{payment_type.present? ? "SI (id: #{payment_type.id}, name: #{payment_type.name})" : "NO"}"
+        Rails.logger.debug do
+          "ReportExpense.import fila #{i}: centro=#{cost_center&.id.inspect} " \
+          "responsable=#{user_invoice&.id.inspect} tipo=#{type_identification&.id.inspect} " \
+          "medio=#{payment_type&.id.inspect}"
+        end
 
         report_expense.invoice_date = row["invoice_date"]
         report_expense.invoice_name = row["invoice_name"]
@@ -366,15 +391,44 @@ class ReportExpense < ApplicationRecord
         report_expense.type_identification_id = type_identification.present? ? type_identification.id : nil
         report_expense.payment_type_id = payment_type.present? ? payment_type.id : nil
 
+        apply_currency_from_row(report_expense, row) if layout == :v2
+
         report_expense.save!
-        puts "  GUARDADO OK"
         success_records << 1
       rescue => e
-        puts "  ERROR en fila #{i}: #{e.message}"
+        # Una fila mala NO aborta el archivo: el usuario recibe la lista de
+        # filas que hay que corregir y las demas quedan importadas.
+        Rails.logger.debug { "ReportExpense.import fila #{i} fallo: #{e.message}" }
         fail_records << i
       end
     end
-    return [success_records, fail_records]
+
+    [success_records, fail_records]
+  end
+
+  # Reglas de moneda del import. Son las dos que el paquete 05 dejo escritas como
+  # contrato (test/models/report_expense_import_currency_test.rb) y que este
+  # paquete absorbio al quedarse como dueño unico de `import`.
+  def self.apply_currency_from_row(report_expense, row)
+    moneda = Currency.normalize(row["currency"])
+    # Una moneda que no esta en el catalogo cae a COP en vez de tumbar la fila:
+    # el archivo lo escribe una persona y "usd " o "Dolares" son mas probables
+    # que un ataque.
+    moneda = Currency::DEFAULT unless Currency.valid?(moneda)
+    report_expense.currency = moneda
+    return unless Currency.foreign?(moneda)
+
+    report_expense.foreign_value = row["foreign_value"].present? ? row["foreign_value"].to_d : nil
+    report_expense.exchange_rate = row["exchange_rate"].present? ? row["exchange_rate"].to_d : nil
+    # El Excel no trae la procedencia de la tasa y la fecha contable es la del
+    # gasto (TRM vigente el dia de la operacion).
+    report_expense.exchange_rate_date = row["invoice_date"]
+    report_expense.exchange_rate_source = "manual"
+    # INVARIANTE #3: si el archivo trae los pesos, se respetan como verdad; son
+    # el cuadre que ya hizo contabilidad. Si la columna viene vacia, el modelo
+    # los calcula desde foreign_value x exchange_rate. En NINGUN caso se
+    # recalcula encima de un valor que el usuario escribio.
+    report_expense.cop_manual_override = row["invoice_value"].present?
   end
 
 
