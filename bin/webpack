@@ -7,6 +7,27 @@ require "pathname"
 ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../../Gemfile",
   Pathname.new(__FILE__).realpath)
 
+# Webpacker 5.4.4 localiza el binario de webpack ejecutando `yarn bin`
+# (lib/webpacker/runner.rb:13). Yarn 1.22 antepone a esa salida la secuencia
+# ANSI "\e[2K\e[1G" (borra la linea y devuelve el cursor a la columna 1) cuando
+# su stdout es una tuberia y no una terminal: es justo el caso cuando quien
+# lanza esto es el webServer de Playwright o el compilador on-demand de
+# Webpacker. Con esa basura pegada al inicio de la ruta, el File.exist? del
+# runner da falso y webpacker se va a su plan B, `yarn webpack`. Ahi muere:
+# package.json fija engines.node "16.x" (contrato con Heroku) y las maquinas de
+# desarrollo corren Node 22, asi que yarn aborta con "The engine node is
+# incompatible with this module" y el E2E ni siquiera arranca.
+#
+# Fijando aqui la ruta por la variable que el propio webpacker respeta, ni se
+# ejecuta `yarn bin` ni existe el plan B. Se respeta un valor externo si ya
+# venia puesto, y si no hay node_modules se deja el comportamiento original.
+node_modules_bin = File.expand_path("../../node_modules/.bin",
+  Pathname.new(__FILE__).realpath)
+if ENV["WEBPACKER_NODE_MODULES_BIN_PATH"].nil? &&
+   File.exist?(File.join(node_modules_bin, "webpack"))
+  ENV["WEBPACKER_NODE_MODULES_BIN_PATH"] = node_modules_bin
+end
+
 require "rubygems"
 require "bundler/setup"
 

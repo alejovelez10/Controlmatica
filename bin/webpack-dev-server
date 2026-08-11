@@ -7,6 +7,17 @@ require "pathname"
 ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../../Gemfile",
   Pathname.new(__FILE__).realpath)
 
+# Mismo motivo que en bin/webpack (ver el comentario largo de ese archivo): el
+# `yarn bin` de webpacker devuelve la ruta ensuciada con codigos ANSI cuando su
+# stdout es una tuberia, webpacker cae a `yarn webpack-dev-server` y yarn aborta
+# por el engines.node "16.x" del package.json.
+node_modules_bin = File.expand_path("../../node_modules/.bin",
+  Pathname.new(__FILE__).realpath)
+if ENV["WEBPACKER_NODE_MODULES_BIN_PATH"].nil? &&
+   File.exist?(File.join(node_modules_bin, "webpack-dev-server"))
+  ENV["WEBPACKER_NODE_MODULES_BIN_PATH"] = node_modules_bin
+end
+
 require "rubygems"
 require "bundler/setup"
 
