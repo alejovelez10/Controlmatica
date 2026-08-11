@@ -45,6 +45,11 @@
 # CarrierWave a la carga de `fixtures :all`.
 <% digest = Devise::Encryptor.digest(User, "password123") %>
 
+# TELEFONOS (paquete 11): las fixtures se insertan por SQL directo y NO ejecutan
+# el callback `set_phone_normalized`, asi que `phone_normalized` va explicito y
+# tiene que ser coherente con `User.normalize_phone(phone)` (ultimos 10 digitos).
+# Si alguien cambia uno sin el otro, los tests de actor por telefono resuelven a
+# nadie y el fallo no dice por que.
 admin:
   email: admin@controlmatica.test
   encrypted_password: <%= digest %>
@@ -55,6 +60,8 @@ admin:
   number_document: 100000001
   menu: nav-sm
   sign_in_count: 0
+  phone: "+57 310 555 0000"
+  phone_normalized: "3105550000"
 
 gerente:
   email: gerente@controlmatica.test
@@ -77,6 +84,8 @@ ingeniero:
   number_document: 100000003
   menu: nav-sm
   sign_in_count: 0
+  phone: "+57 300 123 4567"
+  phone_normalized: "3001234567"
 
 ingeniero_dos:
   email: ingeniero2@controlmatica.test
@@ -140,3 +149,34 @@ ingeniero_sin_permisos:
   number_document: 100000008
   menu: nav-sm
   sign_in_count: 0
+
+# LOS DOS DEL MISMO TELEFONO (paquete 11). No son relleno: son el caso real de
+# jefe y asistente compartiendo linea. Con ellos, `actor_user_by_phone` y
+# `users_find_by_phone` tienen que devolver NINGUN actor, no el primero por id.
+# Si alguien "arregla" el dato dandoles numeros distintos, el test de ambiguedad
+# pasa a verde sin probar nada.
+telefono_repetido_a:
+  email: repetidoa@controlmatica.test
+  encrypted_password: <%= digest %>
+  names: Sofia
+  last_names: Quintero
+  rol: ingeniero
+  document_type: CC
+  number_document: 100000009
+  menu: nav-sm
+  sign_in_count: 0
+  phone: "+57 300 999 9999"
+  phone_normalized: "3009999999"
+
+telefono_repetido_b:
+  email: repetidob@controlmatica.test
+  encrypted_password: <%= digest %>
+  names: Tomas
+  last_names: Quintero
+  rol: ingeniero
+  document_type: CC
+  number_document: 100000010
+  menu: nav-sm
+  sign_in_count: 0
+  phone: "3009999999"
+  phone_normalized: "3009999999"

@@ -3,6 +3,7 @@ import NumberFormat from "react-number-format";
 import Swal from "sweetalert2";
 import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable } from '../../generalcomponents/ui';
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber } from '../../generalcomponents/expenseIndicators';
 
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
@@ -39,6 +40,10 @@ class ExpensesTable extends Component {
     };
 
     this.columns = [
+      // Mismo prefijo `expense-*` que el indice de Gastos a proposito: es la
+      // misma entidad y los E2E distinguen la pantalla por la URL, no por el
+      // testid.
+      { key: "id", label: "ID", width: "80px", render: (r) => <span data-testid={"expense-ref-" + r.id} style={{ fontWeight: 600, color: "#6c757d" }}>{"#" + r.id}</span> },
       { key: "user_invoice_name", label: "Responsable", render: (r) => r.user_invoice ? r.user_invoice.names : "" },
       { key: "invoice_name", label: "Nombre" },
       { key: "invoice_date", label: "Fecha factura" },
@@ -50,7 +55,57 @@ class ExpensesTable extends Component {
       { key: "invoice_value", label: "Valor", render: (r) => <NumberFormat value={r.invoice_value} displayType="text" thousandSeparator={true} prefix="$" /> },
       { key: "invoice_tax", label: "IVA", render: (r) => <NumberFormat value={r.invoice_tax} displayType="text" thousandSeparator={true} prefix="$" /> },
       { key: "invoice_total", label: "Total", render: (r) => <NumberFormat value={r.invoice_total} displayType="text" thousandSeparator={true} prefix="$" /> },
+      { key: "budget_status", label: "Estado presupuestal", width: "190px", render: (r) => {
+        const badge = budgetStatusBadge(r.budget_status);
+        return (
+          <div data-testid={"expense-budget-status-" + r.id}>
+            <span className={badge.className}>{badge.label}</span>
+            {r.budget_status === "excedido" && r.budget_reason && (
+              <div className="cm-cell-truncate" data-tooltip={r.budget_reason}>
+                <span className="cm-cell-truncate-text">{r.budget_reason}</span>
+              </div>
+            )}
+          </div>
+        );
+      } },
+      { key: "currency", label: "Moneda", width: "90px", render: (r) => <span data-testid={"expense-currency-" + r.id}>{r.currency || "COP"}</span> },
+      // sortable: false — `foreign_total` no esta en la allowlist de orden que
+      // usa get_cost_center_report_expenses (F.2 solo agrego id, currency y
+      // budget_status). Con sortable true el servidor ordenaria por el default
+      // y la flecha del header mentiria.
+      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: (r) => {
+        const total = toNumber(r.foreign_total);
+        if (r.currency === "COP" || total === null) return "—";
+
+        const rate = toNumber(r.exchange_rate);
+        return (
+          <span>
+            <NumberFormat value={total} displayType="text" thousandSeparator={true} suffix={" " + r.currency} />
+            {rate !== null && (
+              <span className="cm-hint" style={{ display: "block" }}>
+                {"TRM "}
+                <NumberFormat value={rate} displayType="text" thousandSeparator={true} />
+              </span>
+            )}
+          </span>
+        );
+      } },
       { key: "is_acepted", label: "Estado", render: (r) => r.is_acepted ? "Aceptado" : "Creado" },
+      // sortable: false por la misma razon que foreign_total: F.2 no agrego
+      // `accounting_approved` a la allowlist de este endpoint.
+      { key: "accounting_approved", label: "Contabilidad", width: "170px", sortable: false, render: (r) => {
+        const badge = accountingBadge(r.accounting_approved);
+        return (
+          <div data-testid={"expense-accounting-status-" + r.id}>
+            <span className={badge.className}>{badge.label}</span>
+            {r.accounting_approved && (
+              <span className="cm-hint" style={{ display: "block" }}>
+                {shortDate(r.accounting_approved_at) + (r.accounting_approved_by ? " · " + r.accounting_approved_by.names : "")}
+              </span>
+            )}
+          </div>
+        );
+      } },
     ];
   }
 
