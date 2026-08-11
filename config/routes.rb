@@ -89,6 +89,20 @@ Rails.application.routes.draw do
   # Multimoneda (paquete 05). Contrato en 00-ARQUITECTURA E.1: responde 200
   # tanto en exito como en error y el frontend discrimina por `type`.
   get "get_exchange_rate", to: "exchange_rates#get_exchange_rate"
+  # Comprobante adjunto (paquete 06). `download_receipt` existe porque con
+  # fog_public = false la URL de CarrierWave se firma al SERIALIZAR y expira a
+  # los 600 s: la tabla apunta aqui para que la firma se genere en el clic, y de
+  # paso hay un gate de permiso real sobre el binario.
+  delete "delete_receipt/report_expenses/:id", to: "report_expenses#delete_receipt"
+  get "download_receipt/report_expenses/:id", to: "report_expenses#download_receipt"
+
+  # Contabilidad (paquete 06). El backend completo es de este paquete; la
+  # pantalla React (`accounting_expenses/index.html.erb` + su pack) es del 09.
+  get "accounting_expenses", to: "accounting_expenses#index"
+  get "get_accounting_expenses", to: "accounting_expenses#get_accounting_expenses"
+  patch "update_accounting_state/:id/:state", to: "accounting_expenses#update_accounting_state"
+  patch "update_accounting_filter_values", to: "accounting_expenses#update_accounting_filter_values"
+  get "download_file/accounting_expenses/:type", to: "accounting_expenses#download_file"
   resources :notification_alerts, :only => [:index]
 
   get "get_expense_ratios", to: "expense_ratios#get_expense_ratios"

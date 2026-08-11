@@ -1,6 +1,6 @@
 class ReportExpensesController < ApplicationController
   before_action :authenticate_user!
-  before_action :report_expense_find, only: [:update, :destroy]
+  before_action :report_expense_find, only: [:update, :destroy, :delete_receipt, :download_receipt]
   skip_before_action :verify_authenticity_token, only: [:upload_file]
   include ApplicationHelper
 
@@ -186,6 +186,73 @@ class ReportExpensesController < ApplicationController
     end
   end
 
+  # === COMPROBANTE ADJUNTO (paquete 06) =====================================
+  #
+  # Este archivo tiene dueño unico 07 (strong params, filtros, orden y cableado
+  # presupuestal). El paquete 06 aporta SOLO estas dos acciones, por la excepcion
+  # documentada de §7.2. Los strong params `:receipt_file` y
+  # `:remove_receipt_file` los agrega el 07: aqui solo se consumen.
+
+  def delete_receipt
+    unless is_admin? || has_menu_permission?("Gastos", "Editar")
+      return render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
+                    status: :forbidden
+    end
+
+    if @report_expense.receipt_file.blank?
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["El gasto no tiene comprobante adjunto"] }
+    end
+
+    # `remove_receipt_file = true` + `save`, y NO `remove_receipt_file!`: el
+    # segundo salta las validaciones y la auditoria, asi que borraria el archivo
+    # sin dejar rastro de quien lo hizo.
+    @report_expense.remove_receipt_file = true
+
+    if @report_expense.save
+      render json: { success: "¡El comprobante fue eliminado!", type: "success",
+                     register: ActiveModelSerializers::SerializableResource.new(@report_expense, each_serializer: ReportExpenseSerializer) }
+    else
+      render json: { success: "¡Ocurrió un error!", type: "error",
+                     message: @report_expense.errors.full_messages }
+    end
+  end
+
+  def download_receipt
+    unless is_admin? || has_menu_permission?("Gastos", "Ver todos") || @report_expense.user_invoice_id == current_user.id
+      return render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
+                    status: :forbidden
+    end
+
+    if @report_expense.receipt_file.blank?
+      return render json: { type: "error", message: ["El gasto no tiene comprobante adjunto"] },
+                    status: :not_found
+    end
+
+    # CONTRATO CON EL PAQUETE 12 (§7.8): la descarga se FUERZA.
+    #
+    # `redirect_to receipt_file.url` a secas NAVEGA en Chromium en vez de
+    # descargar —la URL firmada de S3 no lleva Content-Disposition— y el
+    # `page.waitForEvent("download")` del escenario E4.3 se cuelga 60 s.
+    #
+    # Rails 6.1 NO acepta `allow_other_host:` (se agrego en Rails 7): no se pone.
+    disposicion = "attachment; filename=\"#{@report_expense.receipt_file.file.filename}\""
+
+    if remote_receipt_storage?
+      redirect_to @report_expense.receipt_file.url(query: { "response-content-disposition" => disposicion })
+    else
+      # Almacenamiento local (desarrollo, test y el entorno E2E con
+      # E2E_UPLOAD_ROOT=public): el equivalente exacto es `send_file` con la
+      # misma cabecera. El Content-Type se conserva visualizable
+      # (application/pdf, image/*) para que el modal de previsualizacion del
+      # paquete 08 pueda montarse sobre esta misma URL.
+      send_file @report_expense.receipt_file.path,
+                filename: @report_expense.receipt_file.file.filename,
+                type: @report_expense.receipt_file.content_type.presence || "application/octet-stream",
+                disposition: "attachment"
+    end
+  end
+
   def upload_file
     status_upload = ReportExpense.import(params[:file], current_user.id)
     if status_upload
@@ -327,6 +394,14 @@ class ReportExpensesController < ApplicationController
 
   def report_expense_find
     @report_expense = ReportExpense.find(params[:id])
+  end
+
+  # Paquete 06. En produccion el comprobante vive en S3 y hay que redirigir a una
+  # URL firmada; en desarrollo, test y E2E vive en disco y hay que servirlo con
+  # `send_file`. Se pregunta por el uploader y no por `Rails.env` para que el
+  # entorno E2E (que corre en modo test con storage :file) tome la rama correcta.
+  def remote_receipt_storage?
+    ReceiptUploader.storage.to_s.include?("Fog")
   end
 
   # Filtros de la pantalla de Gastos. La lista canonica vive en el modelo
