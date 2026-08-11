@@ -138,7 +138,8 @@ dueno_centro:
   sign_in_count: 0
 
 # Lo usa el paquete 09 en sus tests de 403 de la pantalla de Contabilidad.
-# OJO: users(:contable) NO existe y no se crea; el 09 usa users(:contador).
+# OJO: la etiqueta "contable" NO existe y no se crea; el 09 usa la canonica del
+# paquete 01, que es `contador`.
 ingeniero_sin_permisos:
   email: ingsinpermisos@controlmatica.test
   encrypted_password: <%= digest %>

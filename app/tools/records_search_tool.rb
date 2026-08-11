@@ -18,16 +18,22 @@ class RecordsSearchTool < ApplicationTool
     - fields: array de columnas a devolver (por defecto un set representativo por entidad).
     Ej: entity="cost_centers", filters={"code":"CC-0099"}; entity="customer_invoices",
     filters={"invoice_value":{"gte":1000000}}, sort="-invoice_value".
+    Entidades de gastos IA: "expense_budgets" (partidas presupuestales) y "exchange_rates"
+    (tasas de cambio ya consultadas). Para "¿cuánto me queda?" usa expense_budgets_available,
+    que hace la aritmética; esta tool solo lee filas.
   DESC
   input_schema(
     properties: {
       entity: {
         type: "string",
         description: "Módulo a buscar",
+        # SI UNA ENTIDAD NO ESTA EN ESTE ENUM, el propio protocolo MCP rechaza el
+        # argumento antes de llegar a la tool: agregarla al registry no basta.
         enum: %w[cost_centers customers contacts providers materials contractors reports
                  sales_orders customer_invoices material_invoices report_expenses shifts
                  expense_ratios customer_reports commissions quotations users
-                 notification_alerts parameterizations rols report_expense_options]
+                 notification_alerts parameterizations rols report_expense_options
+                 expense_budgets exchange_rates]
       },
       filters:    { type: "object", description: "Campo:condición (valor, array=IN, u objeto de operadores)" },
       q:          { type: "string", description: "Texto libre sobre todas las columnas de texto" },
@@ -63,7 +69,9 @@ class RecordsSearchTool < ApplicationTool
       "notification_alerts"    => [NotificationAlert,    NotificationAlertsListTool::KEYS],
       "parameterizations"      => [Parameterization,     ParameterizationsListTool::KEYS],
       "rols"                   => [Rol,                  RolsListTool::KEYS],
-      "report_expense_options" => [ReportExpenseOption,  ReportExpenseOptionsListTool::KEYS]
+      "report_expense_options" => [ReportExpenseOption,  ReportExpenseOptionsListTool::KEYS],
+      "expense_budgets"        => [ExpenseBudget,        ExpenseBudgetsListTool::KEYS],
+      "exchange_rates"         => [ExchangeRate,         ExchangeRatesGetTool::KEYS]
     }
   end
 
