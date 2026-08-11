@@ -69,6 +69,258 @@ class FormCreate extends Component {
     }
   }
 
+  // Aviso de disponible presupuestal. Es INFORMATIVO: nunca deshabilita el boton
+  // Guardar. Un gasto que excede el cupo se guarda igual y queda marcado como
+  // "Excedido" (requisito explicito §2.1/§3.2); bloquearlo aqui seria un defecto,
+  // no una mejora.
+  renderBudgetHint = () => {
+    const a = this.props.budgetAvailability;
+    if (!a || a.loading || a.error) return null;
+
+    if (!a.has_budget) {
+      return (
+        <div className="cm-field-hint" data-testid="expense-budget-none">
+          Esta persona no tiene presupuesto asignado en este centro de costos.
+        </div>
+      );
+    }
+
+    const disponible = parseFloat(a.available || 0);
+    const valor = parseFloat(this.props.formValues.invoice_value || 0);
+
+    if (valor <= disponible) {
+      return (
+        <div className="cm-field-hint" data-testid="expense-budget-ok">
+          Disponible: <NumberFormat value={disponible} displayType="text" thousandSeparator={true} prefix="$" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="cm-alert cm-alert-warning" data-testid="expense-budget-warning">
+        Este gasto excede el disponible en{" "}
+        <NumberFormat value={valor - disponible} displayType="text" thousandSeparator={true} prefix="$" />.
+        {" "}Se guardará marcado como <strong>Excedido</strong>.
+      </div>
+    );
+  };
+
+  // Estados de la consulta de TRM. Un fallo es ADVERTENCIA, no bloqueo: el
+  // usuario escribe la tasa a mano y `exchange_rate_source` pasa a "manual".
+  renderRateStatus = () => {
+    const e = this.props.exchange || {};
+
+    if (this.props.formValues.exchange_rate_source === "manual" && e.status !== "loading") {
+      return <div className="cm-field-hint">Tasa ingresada manualmente</div>;
+    }
+    if (e.status === "loading") {
+      return <div className="cm-field-hint" data-testid="expense-rate-loading"><i className="fa fa-spinner fa-spin"></i> Consultando la tasa…</div>;
+    }
+    if (e.status === "error") {
+      return <div className="cm-alert cm-alert-warning" data-testid="expense-rate-error">{e.message}</div>;
+    }
+    if (e.status === "ok" && e.rate_date !== e.requested_date) {
+      return (
+        <div className="cm-alert cm-alert-warning" data-testid="expense-rate-shifted">
+          No hay tasa para el {e.requested_date}; se aplicó la del {e.rate_date}.
+        </div>
+      );
+    }
+    if (e.status === "ok") {
+      return <div className="cm-field-hint" data-testid="expense-rate-ok">Tasa de {e.rate_date} ({e.source})</div>;
+    }
+    return null;
+  };
+
+  renderForeignBlock = () => {
+    const f = this.props.formValues;
+    if (!f || f.currency === "COP" || !f.currency) return null;
+
+    return (
+      <div className="cm-budget-foreign" data-testid="expense-foreign-block">
+        <div className="cm-form-grid-3">
+          <div className="cm-form-group">
+            <label className="cm-label"><i className="fa fa-money-bill"></i> Valor en {f.currency}</label>
+            <NumberFormat
+              name="foreign_value" thousandSeparator={true} className="cm-input"
+              value={f.foreign_value} onChange={this.props.onChangeForeignMoney}
+              placeholder="0" data-testid="expense-foreign-value"
+            />
+          </div>
+          <div className="cm-form-group">
+            <label className="cm-label"><i className="fa fa-percent"></i> IVA en {f.currency}</label>
+            <NumberFormat
+              name="foreign_tax" thousandSeparator={true} className="cm-input"
+              value={f.foreign_tax} onChange={this.props.onChangeForeignMoney}
+              placeholder="0" data-testid="expense-foreign-tax"
+            />
+          </div>
+          <div className="cm-form-group">
+            <label className="cm-label"><i className="fa fa-calculator"></i> Total en {f.currency}</label>
+            <NumberFormat
+              thousandSeparator={true} className="cm-input cm-input-disabled"
+              value={f.foreign_total} disabled data-testid="expense-foreign-total"
+            />
+          </div>
+        </div>
+
+        <div className="cm-form-grid-3">
+          <div className="cm-form-group">
+            <label className="cm-label"><i className="fa fa-exchange-alt"></i> TRM</label>
+            <NumberFormat
+              name="exchange_rate" thousandSeparator={true} decimalScale={6} className="cm-input"
+              value={f.exchange_rate} onChange={this.props.onChangeRate}
+              placeholder="0" data-testid="expense-rate"
+            />
+          </div>
+          <div className="cm-form-group">
+            <label className="cm-label"><i className="fa fa-calendar"></i> Fecha de la tasa</label>
+            <input type="date" name="exchange_rate_date" className="cm-input cm-input-disabled"
+                   disabled value={f.exchange_rate_date || ""} readOnly
+                   data-testid="expense-rate-date" />
+          </div>
+          <div className="cm-form-group">
+            <label className="cm-label">&nbsp;</label>
+            <button type="button" className="cm-btn cm-btn-outline cm-btn-sm"
+                    onClick={this.props.onFetchRate} data-testid="expense-fetch-rate-btn">
+              <i className="fa fa-sync"></i> Consultar TRM
+            </button>
+          </div>
+        </div>
+
+        {this.renderRateStatus()}
+
+        <div className="cm-info-row" data-testid="expense-cop-preview">
+          <span className="cm-info-label">Equivalente en COP</span>
+          <NumberFormat value={f.invoice_total} displayType="text" thousandSeparator={true} prefix="$" className="cm-info-value" />
+        </div>
+
+        {/* Marcar esta casilla escribe LAS DOS banderas (`cop_manual_override` y
+            `exchange_rate_source = "manual"`). Sin la primera, el servidor
+            recalcula el COP en cada save desde foreign_* x TRM y pisa en
+            silencio lo que el usuario ajusto a mano. */}
+        <label className="cm-label" style={{ marginTop: 8 }}>
+          <input type="checkbox" checked={!!f.cop_manual_override}
+                 onChange={this.props.onToggleCopManual} data-testid="expense-cop-manual-toggle" />
+          {" "}Ajusté el valor en COP a mano (no recalcular)
+        </label>
+      </div>
+    );
+  };
+
+  renderExtraction = () => {
+    // KILL SWITCH: sin el flag, el boton no se pinta. El endpoint de extraccion
+    // lo completa Taimes (ver ESTADO.md, "Frontera de alcance"), asi que arranca
+    // apagado y el formulario se llena a mano, que es lo que se hace hoy.
+    if (!this.props.extractionEnabled) return null;
+
+    const x = this.props.extraction || { status: "idle", filled: [], confidence: {}, warnings: [], violations: [] };
+
+    return (
+      <div style={{ marginTop: 8 }}>
+        <button type="button" className="cm-btn cm-btn-pastel cm-btn-pastel--blue cm-btn-sm"
+                onClick={this.props.onExtract}
+                disabled={!this.props.receiptFileName || x.status === "loading"}
+                data-testid="expense-extract-btn">
+          <i className="fa fa-magic"></i> Extraer datos del comprobante
+        </button>
+
+        {x.status === "loading" && (
+          <div className="cm-alert cm-alert-info" data-testid="expense-extract-loading">
+            <i className="fa fa-spinner fa-spin"></i> Leyendo el comprobante… Esto puede tardar hasta 20 segundos.
+          </div>
+        )}
+
+        {x.status === "error" && (
+          <div className="cm-alert cm-alert-warning" data-testid="expense-extract-error">
+            {x.message} Complete los datos manualmente.
+          </div>
+        )}
+
+        {x.status === "done" && (
+          <React.Fragment>
+            <div className="cm-alert cm-alert-success" data-testid="expense-extract-done">
+              Se precargaron {x.filled.length} campos. <strong>Revíselos antes de guardar.</strong>
+            </div>
+            {(x.warnings || []).length > 0 && (
+              <div className="cm-alert cm-alert-warning" data-testid="expense-extract-warnings">
+                {x.warnings.join(" ")}
+              </div>
+            )}
+            {/* Una violacion blocking:true INFORMA pero no deshabilita Guardar:
+                la puerta de bloqueo es del servidor. */}
+            {(x.violations || []).map(function(v, i) {
+              return (
+                <div key={i} className={v.blocking ? "cm-alert cm-alert-danger" : "cm-alert cm-alert-warning"}
+                     data-testid="expense-rule-violation">
+                  {v.message || v.rule || ""}
+                </div>
+              );
+            })}
+            {Object.keys(x.confidence || {}).filter(function(k) { return x.confidence[k] < 0.8; }).map(function(k) {
+              return (
+                <div key={k} className="cm-field-hint" data-testid={"expense-low-confidence-" + k}>
+                  <i className="fa fa-exclamation-triangle"></i> Verifique este dato: {k}
+                </div>
+              );
+            })}
+          </React.Fragment>
+        )}
+      </div>
+    );
+  };
+
+  renderReceiptBlock = () => (
+    <div className="cm-form-grid-1">
+      <div className="cm-form-group">
+        <label className="cm-label">
+          <i className="fa fa-paperclip"></i> Comprobante
+        </label>
+        {/* La clase que existe es .cm-file-input (design_system.css:1741).
+            .cm-input-file NO existe: la arquitectura la nombra al reves. */}
+        <input type="file" className="cm-input cm-file-input"
+               accept=".jpg,.jpeg,.png,.webp,.heic,.pdf,image/*,application/pdf"
+               onChange={this.props.onChangeFile}
+               data-testid="expense-receipt-input" />
+
+        {this.props.receiptFileName ? (
+          <div className="cm-field-hint" data-testid="expense-receipt-name">
+            <i className="fa fa-file"></i> {this.props.receiptFileName}
+          </div>
+        ) : null}
+
+        {this.props.receiptExistingId ? (
+          <div className="cm-field-hint" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {/* El destino es SIEMPRE /download_receipt/report_expenses/:id.
+                La URL firmada de S3 caduca a los 600 s. */}
+            <a href={"/download_receipt/report_expenses/" + this.props.receiptExistingId}
+               target="_blank" rel="noopener noreferrer">
+              <i className="fa fa-download"></i> Ver comprobante actual
+            </a>
+            <button type="button" className="cm-btn cm-btn-outline cm-btn-sm"
+                    onClick={this.props.onPreviewReceipt}>
+              <i className="fa fa-eye"></i> Previsualizar
+            </button>
+            {this.props.onDeleteReceipt ? (
+              <button type="button" className="cm-btn cm-btn-outline cm-btn-sm"
+                      onClick={this.props.onDeleteReceipt} data-testid="expense-receipt-delete">
+                <i className="fa fa-trash"></i> Quitar
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {this.props.receiptError ? (
+          <div className="cm-alert cm-alert-danger" data-testid="expense-receipt-error">
+            {this.props.receiptError}
+          </div>
+        ) : null}
+
+        {this.renderExtraction()}
+      </div>
+    </div>
+  );
+
   render() {
     const costCenterOptions = this.props.costCenterOptions || this.props.cost_centers || [];
     const costCenterLoading = this.props.costCenterLoading || false;
@@ -89,8 +341,10 @@ class FormCreate extends Component {
             <CmButton variant="outline" onClick={() => this.props.toggle()}>
               <i className="fa fa-times"></i> Cancelar
             </CmButton>
-            <CmButton variant="accent" onClick={this.props.submitForm}>
-              <i className="fa fa-save"></i> {this.props.nameBnt}
+            <CmButton variant="accent" onClick={this.props.submitForm} disabled={!!this.props.saving}>
+              {this.props.saving
+                ? <span><i className="fa fa-spinner fa-spin"></i> Guardando…</span>
+                : <span><i className="fa fa-save"></i> {this.props.nameBnt}</span>}
             </CmButton>
           </div>
         }
@@ -113,6 +367,11 @@ class FormCreate extends Component {
                     <label className="cm-label">
                       <i className="fa fa-building"></i> Centro de costo
                     </label>
+                    {/* react-select no propaga atributos sueltos al DOM: el
+                        data-testid va en un div envolvente. Solo se agrega el
+                        div; ni el isDisabled, ni las opciones, ni el onChange
+                        se tocan. */}
+                    <div data-testid="expense-cost-center-select">
                     <Select
                       onChange={this.props.handleChangeAutocompleteCostCenter}
                       options={costCenterOptions}
@@ -136,6 +395,7 @@ class FormCreate extends Component {
                           : "Sin resultados"
                       }
                     />
+                    </div>
                   </div>
                 )}
 
@@ -148,6 +408,7 @@ class FormCreate extends Component {
                   <label className="cm-label">
                     <i className="fa fa-user"></i> Usuario
                   </label>
+                  <div data-testid="expense-user-select">
                   <Select
                     onChange={this.props.handleChangeAutocompleteUser}
                     options={this.props.users}
@@ -164,6 +425,8 @@ class FormCreate extends Component {
                     isDisabled={!this.props.estados.show_user}
                     placeholder="Seleccionar usuario..."
                   />
+                  </div>
+                  {this.renderBudgetHint()}
                 </div>
 
                 <div className="cm-form-group">
@@ -332,6 +595,25 @@ class FormCreate extends Component {
               <div className="cm-form-grid-3">
                 <div className="cm-form-group">
                   <label className="cm-label">
+                    <i className="fa fa-coins"></i> Moneda
+                  </label>
+                  {/* El select de moneda esta SIEMPRE visible, tambien en COP:
+                      es lo que le dice al usuario en que moneda esta el gasto
+                      que ya existe. El sub-bloque extranjero es el condicional. */}
+                  <div data-testid="expense-currency-select">
+                    <Select
+                      options={this.props.currencyOptions || []}
+                      value={this.props.selectedOptionCurrency}
+                      onChange={this.props.onChangeCurrency}
+                      styles={selectStyles}
+                      menuPortalTarget={document.body}
+                      placeholder="Moneda..."
+                    />
+                  </div>
+                </div>
+
+                <div className="cm-form-group">
+                  <label className="cm-label">
                     <i className="fa fa-dollar-sign"></i> Valor del pago
                   </label>
                   <NumberFormat
@@ -372,6 +654,11 @@ class FormCreate extends Component {
                   />
                 </div>
 
+              </div>
+
+              {this.renderForeignBlock()}
+
+              <div className="cm-form-grid-3">
                 <div className="cm-form-group">
                   <label className="cm-label">
                     <i className="fa fa-calculator"></i> Total
@@ -390,6 +677,8 @@ class FormCreate extends Component {
                   />
                 </div>
               </div>
+
+              {this.renderReceiptBlock()}
 
               {!this.props.errorValues && (
                 <div className="cm-error-message">
