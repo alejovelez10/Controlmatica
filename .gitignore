@@ -50,3 +50,11 @@ yarn-debug.log*
 /test/e2e/test-results
 /test/e2e/playwright-report
 /test/e2e/blob-report
+
+# Artefactos de la suite E2E funcional (paquete 12).
+# `public/uploads` NO se puede ignorar entero: tiene 78 archivos trackeados de
+# customer_invoice, sales_order y user. Solo el subarbol de comprobantes, que
+# hoy tiene 0 archivos trackeados y lo llena la corrida de Playwright con
+# E2E_UPLOAD_ROOT=public.
+/public/uploads/report_expense/
+/tmp/e2e

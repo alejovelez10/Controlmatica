@@ -18,6 +18,7 @@ module.exports = defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { open: "never" }]],
   globalSetup: require.resolve("./global-setup.js"),
+  globalTeardown: require.resolve("./global-teardown.js"),
 
   use: {
     // SIEMPRE baseURL, NUNCA los helpers *_url de Rails: config/routes.rb fija
@@ -31,11 +32,25 @@ module.exports = defineConfig({
   },
 
   projects: [
-    { name: "setup", testMatch: /.*\.setup\.js/ },
+    // El testMatch del proyecto `setup` esta CERRADO a auth.setup.js a
+    // proposito. Con el generico /.*\.setup\.js/ del paquete 01, este proyecto
+    // ejecutaria tambien auth-restricted.setup.js y sobrescribiria
+    // storageState.json con la sesion del usuario limitado: TODA la suite
+    // correria como usuario restringido y fallaria en cascada de forma
+    // incomprensible. Es la trampa mas dificil de diagnosticar del paquete.
+    { name: "setup", testMatch: /auth\.setup\.js/ },
+    { name: "setup-restricted", testMatch: /auth-restricted\.setup\.js/ },
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], storageState: "./.auth/storageState.json" },
-      dependencies: ["setup"],
+      dependencies: ["setup", "setup-restricted"],
+      testIgnore: /permissions\.spec\.js/,
+    },
+    {
+      name: "chromium-restricted",
+      use: { ...devices["Desktop Chrome"], storageState: "./.auth/storageState-restricted.json" },
+      dependencies: ["setup", "setup-restricted"],
+      testMatch: /permissions\.spec\.js/,
     },
   ],
 
@@ -64,6 +79,16 @@ module.exports = defineConfig({
     reuseExistingServer: !process.env.CI,
     stdout: "pipe",
     stderr: "pipe",
-    env: { RAILS_ENV: "test" },
+    env: {
+      RAILS_ENV: "test",
+      // E2E_STUBS enciende config/initializers/e2e_stubs.rb: ninguna llamada a
+      // datos.gov.co ni al modelo de vision sale de esta maquina.
+      E2E_STUBS: "1",
+      // E2E_UPLOAD_ROOT lo LEE config/initializers/carrierwave.rb (dueño:
+      // paquete 03). Sin el, CarrierWave guarda en tmp/uploads pero emite URLs
+      // /uploads/..., que Rails sirve desde public/ => la descarga del
+      // escenario 4 daria 404.
+      E2E_UPLOAD_ROOT: "public",
+    },
   },
 });

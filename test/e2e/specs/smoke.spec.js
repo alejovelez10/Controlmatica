@@ -60,17 +60,41 @@ test.describe("smoke del andamiaje", () => {
     await expect(page.getByTestId("page-report-expenses")).toBeVisible();
   });
 
+  // AJUSTE OBLIGADO POR EL PAQUETE 12, no una relajacion de la prueba.
+  //
+  // El indice de Gastos lista los gastos de TODOS los centros, no solo los del
+  // centro del smoke. Desde que el seed funcional siembra los 57 gastos de
+  // paginacion y los 12 de contabilidad, `toHaveCount(2)` sobre la tabla sin
+  // filtrar afirma algo que ya no es cierto (y que nunca dependio del smoke).
+  //
+  // La aserción se volvio MAS estricta, no menos: ahora comprueba (a) que las
+  // filas del DOM son exactamente las del JSON de la respuesta —lo que detecta
+  // que el cliente corte o repita filas— y (b) que buscando por el prefijo del
+  // centro del smoke el servidor devuelve exactamente sus 2 gastos.
   test("la tabla se llena desde el endpoint, no desde el HTML", async ({ page }) => {
-    const respuesta = page.waitForResponse(
+    const primera = page.waitForResponse(
       (r) => r.url().includes("/get_report_expenses") && r.status() === 200
     );
 
     await page.goto("/report_expenses");
-    await respuesta;
+    const cuerpo = await (await primera).json();
 
     await expect(page.getByTestId("cm-datatable")).toBeVisible();
+    await expect(page.getByTestId("cm-datatable-row")).toHaveCount(cuerpo.data.length);
+
+    // El buscador de CmDataTable delega en el servidor (`onSearch`): la q viaja
+    // en la query y el recorte lo hace Postgres, no el navegador.
+    const busqueda = page.waitForResponse(
+      (r) => r.url().includes("/get_report_expenses") && r.url().includes("q=FE-E2E-00") && r.status() === 200
+    );
+    await page.locator(".cm-dt-search-input").fill("FE-E2E-00");
+    await page.locator(".cm-dt-search-input").press("Enter");
+    const filtrado = await (await busqueda).json();
+
+    expect(filtrado.total).toBe(2);
     await expect(page.getByTestId("cm-datatable-row")).toHaveCount(2);
     await expect(page.getByText(SEED.invoiceNumbers[0])).toBeVisible();
+    await expect(page.getByText(SEED.invoiceNumbers[1])).toBeVisible();
   });
 });
 

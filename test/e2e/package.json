@@ -14,6 +14,13 @@
     "seed": "node ./scripts/seed.js",
     "test": "playwright test",
     "test:smoke": "playwright test specs/smoke.spec.js",
+    "test:budget": "playwright test specs/budget.spec.js",
+    "test:receipt": "playwright test specs/receipt.spec.js",
+    "test:ai": "playwright test specs/ai-capture.spec.js",
+    "test:currency": "playwright test specs/currency.spec.js",
+    "test:accounting": "playwright test specs/accounting.spec.js",
+    "test:permissions": "playwright test specs/permissions.spec.js",
+    "test:pagination": "playwright test specs/pagination.spec.js",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report"
