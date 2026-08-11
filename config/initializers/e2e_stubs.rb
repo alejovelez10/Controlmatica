@@ -209,5 +209,37 @@ if ENV["E2E_STUBS"] == "1"
     )
   end
 
+  # --- Meta csrf-token en el layout ------------------------------------------
+  #
+  # DEFECTO DE ENTORNO, REAL Y BLOQUEANTE, encontrado al correr los E2E:
+  # `config.action_controller.allow_forgery_protection = false` (test.rb) hace
+  # que `csrf_meta_tags` devuelva NIL, asi que el layout no emite
+  # <meta name="csrf-token">. Y `components/Shifts/Calendar.jsx:15` —que se monta
+  # dentro de la pantalla del centro de costos— hace
+  # `document.querySelector("[name='csrf-token']").content` SIN guarda de nil.
+  # Resultado: TypeError en el constructor, React 16 desmonta el arbol entero y
+  # /cost_centers/:id queda en blanco. Los escenarios 1, 2, 3, 4 y 9 corren todos
+  # sobre esa pantalla.
+  #
+  # En produccion y en desarrollo el meta existe, asi que el defecto NO se ve
+  # fuera de test: por eso la verificacion manual del paquete 08, hecha contra el
+  # servidor de desarrollo, no lo detecto.
+  #
+  # Se emite el meta y NADA MAS: la verificacion de CSRF sigue apagada. Encender
+  # `allow_forgery_protection` cambiaria el comportamiento de toda la suite
+  # (`page.request.*` sin token pasaria a 422) y es una decision que no le toca a
+  # este paquete. Con esto el navegador recibe exactamente lo que recibe en
+  # produccion —incluido el token que todos los `fetch` mandan en X-CSRF-Token— y
+  # el arreglo no toca ni un archivo de app/.
+  ActionView::Base.prepend(Module.new do
+    def csrf_meta_tags
+      super || safe_join(
+        [tag("meta", name: "csrf-param", content: request_forgery_protection_token),
+         tag("meta", name: "csrf-token", content: form_authenticity_token)],
+        "\n"
+      )
+    end
+  end)
+
   Rails.logger.warn("[E2E] Stubs de IA y TRM ACTIVOS. Ninguna llamada externa saldra.")
 end
