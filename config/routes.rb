@@ -94,10 +94,13 @@ Rails.application.routes.draw do
   get "get_expense_budgets/:cost_center_id", to: "expense_budgets#get_expense_budgets"
   get "get_expense_budget_summary/:cost_center_id", to: "expense_budgets#get_expense_budget_summary"
   get "get_expense_budget_available", to: "expense_budgets#get_expense_budget_available"
-  # Reglas de gastos configurables (paquete 14). Sin `index`, `show`, `new` ni
-  # `edit`: la pantalla es un React y el listado entra por `get_expense_rules`,
-  # igual que el resto de las tablas de esta aplicacion.
-  resources :expense_rules, :except => [:show, :new, :edit, :index]
+  # Reglas de gastos configurables (paquete 14). Sin `show`, `new` ni `edit`: el
+  # alta y la edicion son un modal de React, y el LISTADO de datos entra por
+  # `get_expense_rules`, igual que el resto de las tablas de esta aplicacion.
+  #
+  # `index` SI existe (tarea 6): es la pantalla, o sea el ERB que monta el pack.
+  # No devuelve reglas, devuelve HTML.
+  resources :expense_rules, :except => [:show, :new, :edit]
   get "get_expense_rules", to: "expense_rules#get_expense_rules"
   # Los limites YA RESUELTOS de una persona: los consume el formulario de gastos
   # para avisar antes de guardar, y la tool MCP para que el agente sepa las

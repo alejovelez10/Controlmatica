@@ -10,6 +10,7 @@
 # el permiso, y punto.
 class ExpenseRulesController < ApplicationController
   before_action :authenticate_user!
+  before_action :require_rules_module!, only: [:index]
   before_action :set_expense_rule, only: [:update, :destroy]
   include ApplicationHelper
 
@@ -17,6 +18,28 @@ class ExpenseRulesController < ApplicationController
 
   SORT_COLUMNS = %w[name active is_default max_invoice_age_days max_invoice_value
                     created_at updated_at].freeze
+
+  # La PANTALLA (tarea 6). Solo monta el pack de React y le pasa que puede hacer
+  # quien la abre; los datos los pide el propio pack a `get_expense_rules`.
+  #
+  # `@estados` viaja como prop y no se recalcula en el cliente a proposito: los
+  # permisos se resuelven UNA vez en el servidor, que es el unico que manda. Los
+  # botones que oculta son cortesia visual; el gate de verdad esta en cada
+  # accion de este mismo controller.
+  def index
+    @estados = {
+      create: rule_permission?("Crear"),
+      edit: rule_permission?("Editar"),
+      delete: rule_permission?("Eliminar")
+    }
+
+    respond_to do |format|
+      format.html
+      # Mismo `@estados` como JSON: deja verificar los permisos de la pantalla
+      # sin ejecutar React, igual que hace la pantalla de Contabilidad.
+      format.json { render json: { estados: @estados } }
+    end
+  end
 
   # Listado completo. No se pagina en el servidor: son decenas de reglas como
   # mucho (una politica por perfil de empleado), y la pantalla necesita el
@@ -122,6 +145,19 @@ class ExpenseRulesController < ApplicationController
 
   def deny!(message = "No tiene permiso para realizar esta acción")
     render json: { type: "error", message: [message] }, status: :forbidden
+  end
+
+  # Gate de la PANTALLA. No responde 403 con JSON como los endpoints: quien
+  # llega aqui es un navegador pidiendo HTML, y un cuerpo JSON en pantalla es
+  # peor experiencia que volver al inicio con el aviso. Mismo criterio que la
+  # pantalla de Contabilidad del paquete 06.
+  def require_rules_module!
+    return if rule_permission?
+
+    respond_to do |format|
+      format.html { redirect_to root_path, alert: "No tiene permiso para ingresar al módulo de Reglas de gastos" }
+      format.json { deny! }
+    end
   end
 
   def validation_error(messages)

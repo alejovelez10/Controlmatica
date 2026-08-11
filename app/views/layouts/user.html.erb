@@ -54,7 +54,10 @@
       <ul class="app-menu">
 
       <%# Helper para detectar si un item del menu está activo %>
-      <% config_controllers = %w[providers customers parameterizations users rols module_controls alerts report_expense_options] %>
+      <%# `expense_rules` lo agrega el paquete 14: sin el, el treeview de
+          Configuración se renderiza CERRADO al entrar a la pantalla de reglas
+          y el usuario no ve donde esta parado. %>
+      <% config_controllers = %w[providers customers parameterizations users rols module_controls alerts report_expense_options expense_rules] %>
       <% commission_controllers = %w[commissions commission_relations] %>
       <% expense_controllers = %w[report_expenses expense_ratios accounting_expenses] %>
 
@@ -126,6 +129,17 @@
               <li>
                 <%= link_to report_expense_options_path, class: "app-menu__item #{'active' if controller_name == 'report_expense_options'}" do %>
                   <i class="app-menu__icon fas fa-tags"></i><span class="app-menu__label">Tipos de Gastos</span>
+                <% end -%>
+              </li>
+            <% end %>
+
+            <%# Reglas de gastos (paquete 14). El item se muestra con el permiso
+                del modulo o por rol Administrador, igual que sus vecinos; el
+                gate real de la pantalla vive en ExpenseRulesController. %>
+            <% if authorization_expense_rules || current_user.rol.name == "Administrador" %>
+              <li>
+                <%= link_to expense_rules_path, class: "app-menu__item #{'active' if controller_name == 'expense_rules'}", data: { testid: "nav-reglas-gastos" } do %>
+                  <i class="app-menu__icon fas fa-gavel"></i><span class="app-menu__label">Reglas de gastos</span>
                 <% end -%>
               </li>
             <% end %>

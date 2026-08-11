@@ -40,6 +40,10 @@ module ApplicationHelper
     # literalmente "Proyectos": es el `else` del final de la cadena.
     elsif controller == "accounting_expenses" && action == "index"
       card = "<h1>" + " <i class='fas fa-file-invoice-dollar'></i> Contabilidad " + "</h1>" + "<p>" + "Aprobación contable de gastos" + "</p>"
+    # Idem para Reglas de gastos (paquete 14): sin este branch el encabezado
+    # dice "Proyectos", que es el `else` del final de la cadena.
+    elsif controller == "expense_rules" && action == "index"
+      card = "<h1>" + " <i class='fas fa-gavel'></i> Reglas de gastos " + "</h1>" + "<p>" + "Antigüedad, tope, duplicados e instrucciones para el agente" + "</p>"
     elsif controller == "shifts" && action == "index"
       card = "<h1>" + " <i class='fas fa-calendar-alt'></i> Turnos " + "</h1>" + "<p>" + "Gestiona tus turnos" + "</p>"
     elsif controller == "shifts" && action == "calendar"
@@ -400,8 +404,12 @@ module ApplicationHelper
     has_menu_permission?("Tablero de Ingenieros", "Ver todos")
   end
 
+  # OJO: `authorization_expense_rules` (paquete 14) se agrega a esta lista a
+  # proposito. El treeview "Configuración" solo se renderiza si esto es verdad,
+  # asi que un rol cuyo UNICO permiso de configuracion fuera "Reglas de gastos"
+  # no veria el treeview y su pantalla quedaria inalcanzable desde el menu.
   def authorization_config
-    if authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador" || authorization_report_expense_options
+    if authorization_providers || authorization_customers || authorization_parameterizations || authorization_users || authorization_rols || authorization_modules || current_user.rol.name == "Administrador" || authorization_report_expense_options || authorization_expense_rules
       true
     end
   end
@@ -696,5 +704,14 @@ module ApplicationHelper
   # quien lo consuma debe tratarlo como falsy y nunca compararlo con `== false`.
   def authorization_accounting_expenses
     has_menu_permission?("Contabilidad")
+  end
+
+  # === MENU DE REGLAS DE GASTOS (paquete 14) ===============================
+  # Mismo contrato que el de arriba: el nombre del modulo es un STRING LITERAL
+  # que tiene que coincidir con `module_controls.name` y con la constante
+  # `ExpenseRulesController::MODULO`. Devuelve nil (no false) cuando el rol no
+  # tiene el modulo, asi que se consume como falsy.
+  def authorization_expense_rules
+    has_menu_permission?("Reglas de gastos")
   end
 end
