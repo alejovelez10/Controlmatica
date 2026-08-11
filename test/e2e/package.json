@@ -1,0 +1,21 @@
+{
+  "name": "controlmatica-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  },
+  "scripts": {
+    "install:browsers": "playwright install --with-deps chromium",
+    "prepare:app": "node ./scripts/prepare.js",
+    "seed": "node ./scripts/seed.js",
+    "test": "playwright test",
+    "test:smoke": "playwright test specs/smoke.spec.js",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  }
+}
