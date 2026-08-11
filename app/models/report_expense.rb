@@ -50,7 +50,7 @@ class ReportExpense < ApplicationRecord
   before_destroy :create_destroy_register
 
   def edit_values
-    self.last_user_edited_id = User.current.id
+    self.last_user_edited_id = current_actor_id
   end
 
   def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9, search10, search11, search12, search13, search14, search15)
@@ -146,7 +146,7 @@ class ReportExpense < ApplicationRecord
 
   
   def create_edit_register
-    self.last_user_edited_id = User.current.id
+    self.last_user_edited_id = current_actor_id
     if self.cost_center_id_changed?
       names = []
       cost_center = CostCenter.where(id: self.cost_center_id_change)
@@ -211,7 +211,7 @@ class ReportExpense < ApplicationRecord
     str = "<p><p><strong>(SE EDITO EL SIGUIENTE REGISTRO)</strong></p>" + str
     if str.length > 59
       RegisterEdit.create(
-        user_id: User.current.id,
+        user_id: current_actor_id,
         register_user_id: self.id,
         state: "pending",
         date_update: Time.now,
@@ -272,7 +272,7 @@ class ReportExpense < ApplicationRecord
       puts str  
       if str.length > 5
         RegisterEdit.create(
-          user_id: User.current.id,
+          user_id: current_actor_id,
           register_user_id: self.id,
           state: "pending",
           date_update: Time.now,
@@ -334,7 +334,7 @@ class ReportExpense < ApplicationRecord
     puts str  
     if str.length > 5
       RegisterEdit.create(
-        user_id: User.current.id,
+        user_id: current_actor_id,
         register_user_id: self.id,
         state: "pending",
         date_update: Time.now,
@@ -367,6 +367,23 @@ end
     when ".xlsx" then Roo::Excelx.new(file.path, nil, :ignore)
     else raise "Unknown file type: #{file.original_filename}"
     end
+  end
+
+  private
+
+  # Actor de auditoria. User.current solo existe dentro de un request web
+  # (ApplicationController#set_current_user); en tests, jobs, rake tasks, consola
+  # y MCP es nil, y las 5 llamadas directas a User.current.id reventaban con
+  # NoMethodError.
+  #
+  # create_create_register es after_create, asi que cuando corre ya tiene
+  # user_id / user_invoice_id disponibles como respaldo.
+  #
+  # Frontera: cuando el paquete 03 extraiga el concern RegisterAuditable, este
+  # metodo pasa a ser `def current_actor_id = audit_actor_id`. Ese cambio lo hace
+  # el 03, no este paquete.
+  def current_actor_id
+    User.current&.id || user_id || user_invoice_id || last_user_edited_id
   end
 end
 
