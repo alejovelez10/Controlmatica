@@ -1704,3 +1704,18 @@ se saltó ni se relajó en toda la rama, y los 0 skips de la suite lo confirman.
 (`ce818d8..8efb65a`), todos en español explicando el porqué y con el trailer `Co-Authored-By`. Rama
 `feature/gastos-presupuesto-ia`. **Nada empujado al remoto** (verificado: no se ejecutó ningún
 `push`) y **producción intacta**.
+
+---
+
+## PENDIENTE IDENTIFICADO — pantalla de Reglas de gastos (paquete 14)
+
+La ola 4 dejó el **backend del paquete 14 completo y verde** (modelo `ExpenseRule`,
+`ExpenseRuleService`, controlador, migraciones y 65 pruebas), pero **NO construyó la Tarea 6: la
+pantalla de administración**. Sin ella, las reglas existen y se evalúan, pero nadie puede crearlas
+desde la interfaz.
+
+Falta: la pantalla bajo Configuración con `CmDataTable`, el formulario con antigüedad máxima, tope
+de valor, switch de duplicados, textarea de instrucciones para el agente y el multi-select de
+usuarios — con la advertencia visible de que **vacío significa ningún usuario, no todos**.
+
+**Programado para la ola 6**, junto con el paquete 08. Son archivos distintos, no chocan.
