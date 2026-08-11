@@ -26,6 +26,7 @@
 #  is_acepted                :boolean          default(FALSE)
 #  payment_type              :string
 #  receipt_file              :string
+#  rule_violations           :jsonb            not null
 #  type_identification       :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
@@ -55,15 +56,45 @@
 #  index_report_expenses_on_user_invoice_id                    (user_invoice_id)
 #
 
+# Contrato B.1 de 00-ARQUITECTURA.md. DUENO UNICO: paquete 07 (§7.2).
+#
+# POR QUE ESTE ARCHIVO TIENE UN SOLO DUENO Y NO TRES: los 13 atributos nuevos
+# son la union exacta de lo que necesitaban el 05 (los 7 de moneda) y el 06 (los
+# 3 contables + el belongs_to del aprobador). Con tres duenos, el segundo en
+# mergear sobrescribia la lista de `attributes` del primero y el frontend perdia
+# columnas sin que ninguna prueba lo notara.
 class ReportExpenseSerializer < ActiveModel::Serializer
-  attributes :id, :invoice_name, :invoice_date, :identification, :description, :invoice_number, :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total, :cost_center_id, :user_invoice_id, :user_invoice, :type_identification_id, :payment_type_id, :updated_at, :is_acepted, :created_at
+  # Los 19 primeros son los originales y NO se reordenan: el orden de
+  # `attributes` es el orden de las claves del JSON, y el 09 arma columnas por
+  # posicion en algunas tablas.
+  attributes :id, :invoice_name, :invoice_date, :identification, :description, :invoice_number,
+             :invoice_type, :payment_type, :invoice_value, :invoice_tax, :invoice_total,
+             :cost_center_id, :user_invoice_id, :user_invoice, :type_identification_id,
+             :payment_type_id, :updated_at, :is_acepted, :created_at,
+             # --- presupuesto (paquete 04, expuesto aqui) ---
+             :budget_status, :budget_reason, :expense_budget_id,
+             # --- contabilidad (paquete 06, expuesto aqui) ---
+             :accounting_approved, :accounting_approved_at,
+             # --- comprobante (paquete 06, expuesto aqui) ---
+             :receipt_file,
+             # --- multimoneda (paquete 05, expuesto aqui) ---
+             :currency, :foreign_value, :foreign_tax, :foreign_total,
+             :exchange_rate, :exchange_rate_date, :exchange_rate_source
+
   belongs_to :cost_center, serializer: CostCenterSerializer
 
   belongs_to :type_identification, serializer: ReportExpenseOptionSerializer
   belongs_to :payment_type, serializer: ReportExpenseOptionSerializer
   belongs_to :last_user_edited, serializer: UserSerializer
   belongs_to :user, serializer: UserSerializer
-  
+  belongs_to :accounting_approved_by, serializer: UserSerializer
+
+  # PROHIBIDO agregar `belongs_to :expense_budget` (§4.3): colisionaria con el
+  # atributo `expense_budget_id`, y este archivo ya arrastra una colision
+  # preexistente (`attributes :payment_type` + `belongs_to :payment_type`) que la
+  # arquitectura prohibe empeorar. Si la UI necesita el nombre de la partida, se
+  # trae aparte desde el paquete de frontend.
+
   def user_invoice
     return nil unless object.user_invoice.present?
     {
@@ -71,5 +102,13 @@ class ReportExpenseSerializer < ActiveModel::Serializer
       names: object.user_invoice.names
     }
   end
-  
+
+  # SIN ESTE METODO CarrierWave serializa `{"url": null}` cuando no hay archivo,
+  # y el contrato B.1 dice `null` a secas. El frontend hace
+  # `gasto.receipt_file && gasto.receipt_file.url`: con el hash vacio el boton de
+  # "ver comprobante" aparece para gastos que no tienen ninguno.
+  def receipt_file
+    return nil unless object.receipt_file.present?
+    { url: object.receipt_file.url }
+  end
 end
