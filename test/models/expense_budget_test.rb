@@ -15,12 +15,18 @@ class ExpenseBudgetTest < ActiveSupport::TestCase
     @centro_solo = cost_centers(:centro_ajeno)          # viatic_value 1.000.000, sin partidas
   end
 
-  # Centro limpio con el tope que pida el test. `update_column` a proposito: los
-  # callbacks de CostCenter recalculan agregados y escriben auditoria, y aqui
-  # solo interesa el numero.
+  # Centro limpio con el tope que pida el test, cambiado SOLO EN MEMORIA.
+  #
+  # No se hace `update_column`: escribir en `cost_centers` deja tuplas muertas,
+  # el autovacuum analiza la tabla de forma asincrona y el planificador puede
+  # pasar de seq scan a index scan. Eso cambia el orden de los `where(id: [...])`
+  # sin ORDER BY que hay en los golden de auditoria del paquete 03 (que dependen
+  # del orden de la consulta a proposito) y los pone a fallar de forma
+  # intermitente, con el mismo seed. La regla del tope solo LEE viatic_value, asi
+  # que el cambio en memoria alcanza y la tabla no se toca.
   def centro_con_tope(valor)
-    @centro_solo.update_column(:viatic_value, valor)
-    @centro_solo.reload
+    @centro_solo.viatic_value = valor
+    @centro_solo
   end
 
   def nueva_partida(**overrides)
@@ -156,20 +162,20 @@ class ExpenseBudgetTest < ActiveSupport::TestCase
   end
 
   def test_tope_excluye_la_propia_partida_al_editar
-    centro = centro_con_tope(500_000)
+    # Partida que llena EXACTAMENTE el tope del centro (1.000.000).
     partida = as_user(@admin) do
-      ExpenseBudget.create!(cost_center: centro, user: @ingeniero, amount: 500_000)
+      ExpenseBudget.create!(cost_center: @centro_solo, user: @ingeniero, amount: 1_000_000)
     end
 
     # Sin el exclude_id, la partida se contaria contra si misma y hasta un
     # guardado sin cambios seria invalido.
-    partida.amount = 500_000
+    partida.amount = 1_000_000
     assert_predicate partida, :valid?
 
-    partida.amount = 499_999
+    partida.amount = 999_999
     assert_predicate partida, :valid?
 
-    partida.amount = 500_001
+    partida.amount = 1_000_001
     assert_not partida.valid?
   end
 
