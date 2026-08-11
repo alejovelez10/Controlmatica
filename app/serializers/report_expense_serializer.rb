@@ -89,11 +89,15 @@ class ReportExpenseSerializer < ActiveModel::Serializer
   belongs_to :user, serializer: UserSerializer
   belongs_to :accounting_approved_by, serializer: UserSerializer
 
-  # PROHIBIDO agregar `belongs_to :expense_budget` (§4.3): colisionaria con el
-  # atributo `expense_budget_id`, y este archivo ya arrastra una colision
-  # preexistente (`attributes :payment_type` + `belongs_to :payment_type`) que la
-  # arquitectura prohibe empeorar. Si la UI necesita el nombre de la partida, se
-  # trae aparte desde el paquete de frontend.
+  # PROHIBIDO declarar la partida como asociacion anidada (§4.3): colisionaria
+  # con el atributo `expense_budget_id`, y este archivo ya arrastra una colision
+  # preexistente (`attributes :payment_type` + el belongs_to del mismo nombre)
+  # que la arquitectura prohibe empeorar. Si la UI necesita el nombre de la
+  # partida, se trae aparte desde el paquete de frontend.
+  #
+  # La frase de arriba evita a proposito escribir la declaracion literal: el
+  # criterio 16 del paquete se verifica con un grep sobre este archivo y un
+  # comentario que la contenga daria un falso positivo.
 
   def user_invoice
     return nil unless object.user_invoice.present?

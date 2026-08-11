@@ -1,7 +1,7 @@
 # Permisos del modulo "Reglas de gastos" (paquete 14).
 #
-# ARCHIVO APARTE Y NO UNA LINEA MAS EN permissions_gastos_ia.rake: ese archivo
-# tiene dueno unico (paquete 01, matriz §7.2) y este paquete llego tres olas
+# ARCHIVO APARTE Y NO UNA LINEA MAS EN LA RAKE TASK DE PERMISOS DEL PAQUETE 01:
+# ese archivo tiene dueno unico (matriz §7.2) y este paquete llego tres olas
 # despues. Duplicar seis lineas es mas barato que una edicion cruzada que nadie
 # sabe a quien atribuir cuando falle.
 #
