@@ -168,10 +168,24 @@ class ReportExpenseAuditLegacyTest < ActiveSupport::TestCase
     assert_equal "<p>Centro de costo: <b class='color-true'>#{orden[1]}</b> / " \
                  "<b class='color-false'>#{orden[0]}</b></p>",
                  html.sub(ENCABEZADO_EDICION, "")
-    # Y la demostracion de la rareza: el que aparece en color-true es el NUEVO,
-    # justo al reves que en los campos escalares.
-    assert_includes html, "<b class='color-true'>#{otro.code}</b>"
-    assert_includes html, "<b class='color-false'>#{@centro.code}</b>"
+    # Y la demostracion de la rareza: los dos centros salen, pero cual cae en
+    # color-true lo decide EL ORDEN DE LA CONSULTA, no viejo/nuevo.
+    #
+    # ESTAS DOS LINEAS FIJABAN LA DIRECCION (`otro` en color-true) y eran
+    # INTERMITENTES: `CostCenter.where(id: [...])` no lleva ORDER BY, asi que el
+    # orden depende del plan que elija PostgreSQL. Con seq scan devuelve las
+    # filas en orden fisico (el de las fixtures) y con bitmap index scan sobre
+    # la PK las devuelve por id, que en las fixtures es un hash de la etiqueta y
+    # va al reves. En cuanto la tabla acumula tuplas muertas —cualquier test que
+    # actualice un centro, por ejemplo el de multimoneda— el planificador cambia
+    # y este test fallaba una de cada ~15 corridas.
+    #
+    # La asercion NO se relaja: se afirma exactamente lo mismo que el comentario
+    # del encabezado dice, contra el orden real de la consulta.
+    assert_includes html, "<b class='color-true'>#{orden[1]}</b>"
+    assert_includes html, "<b class='color-false'>#{orden[0]}</b>"
+    assert_equal [@centro.code, otro.code].sort, orden.sort,
+                 "los dos centros deben aparecer, en el orden que devuelva la consulta"
   end
 
   def test_edicion_sin_cambios_no_crea_register_edit
