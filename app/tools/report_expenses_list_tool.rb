@@ -14,9 +14,19 @@ class ReportExpensesListTool < ApplicationTool
     required: []
   )
 
+  # LISTA CANONICA de 00-ARQUITECTURA 7.7. Tres paquetes la amplian y el ORDEN
+  # esta fijado ahi: 1-16 las actuales, 17-19 (budget_*) las agrega el 11,
+  # 20-26 (moneda) este paquete, 27-28 (contabilidad) el 06. Cada uno agrega
+  # SOLO las suyas, sin borrar ni reordenar las ajenas; el criterio compartido
+  # final es KEYS.size == 28 y KEYS.uniq == KEYS.
+  #
+  # Cuando este paquete se mergea, el 11 y el 06 todavia no estan: las claves
+  # 17-19 se insertan DELANTE de las de moneda al resolver ese merge.
   KEYS = %i[id cost_center_id user_invoice_id invoice_name invoice_date invoice_number invoice_type
             invoice_value invoice_tax invoice_total description identification
-            type_identification_id payment_type_id is_acepted created_at].freeze
+            type_identification_id payment_type_id is_acepted created_at
+            currency foreign_value foreign_tax foreign_total
+            exchange_rate exchange_rate_date exchange_rate_source].freeze
 
   def self.call(server_context:, cost_center_id: nil, user_invoice_id: nil, q: nil, limit: 50)
     tenant = current_tenant(server_context)
