@@ -51,3 +51,24 @@ contador:
 sin_permisos:
   name: Sin permisos
   description: Rol vacio, para probar los gates de 403
+
+# --- Roles del paquete 07 (API de presupuesto) ------------------------------
+# Los agrega el 07 sobre el set del 01; no renombra ni reescribe nada anterior.
+#
+# La diferencia entre los dos es UNA sola accion, "Ver todos", y es la que
+# separa "administro las partidas de todo el centro" de "solo veo las mias".
+# Sin dos roles distintos no hay forma de probar que el filtro por
+# `user_id: current_user.id` de get_expense_budgets existe: con un rol que lo
+# tiene todo, el test pasaria igual aunque el filtro no estuviera.
+
+presupuesto_pleno:
+  name: Presupuesto pleno
+  description: Todas las acciones de Presupuesto, incluida Ver todos
+  accion_modules: presupuesto_ingreso, presupuesto_crear, presupuesto_editar,
+                  presupuesto_eliminar, presupuesto_ver_todos
+
+presupuesto_limitado:
+  name: Presupuesto limitado
+  description: Acciones de Presupuesto SIN Ver todos (solo administra lo propio o lo de su centro)
+  accion_modules: presupuesto_ingreso, presupuesto_crear, presupuesto_editar,
+                  presupuesto_eliminar

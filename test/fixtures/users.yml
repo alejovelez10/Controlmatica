@@ -115,14 +115,14 @@ sin_permisos:
 # propiedad del centro): este paquete es dueno de users.yml Y de cost_centers.yml,
 # asi que escribe las dos mitades del par en la misma ola.
 # Nace con rol: gerente porque presupuesto_limitado lo declara el 07 tres olas
-# despues; el 07 cambia esta linea en su propio PR.
+# despues; el 07 cambia esta linea en su propio PR (hecho: `rol:` de abajo).
 # Es el user_owner de cost_centers(:centro_con_viaticos).
 dueno_centro:
   email: duenocentro@controlmatica.test
   encrypted_password: <%= digest %>
   names: Elena
   last_names: Vargas
-  rol: gerente
+  rol: presupuesto_limitado
   document_type: CC
   number_document: 100000007
   menu: nav-sm
