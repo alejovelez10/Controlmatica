@@ -60,7 +60,7 @@ test.describe("escenario 1 — partidas presupuestales", () => {
     expect(await importe(page, "budget-summary-viatic")).toBe(5000000);
     expect(await importe(page, "budget-summary-assigned")).toBe(0);
 
-    await crearPartida(page, { beneficiario: "Ana", monto: 3000000, notas: "Viaticos Ana semana 1" });
+    await crearPartida(page, { beneficiario: "Ana E2E", monto: 3000000, notas: "Viaticos Ana semana 1" });
 
     const [res] = await Promise.all([
       page.waitForResponse(
@@ -83,7 +83,7 @@ test.describe("escenario 1 — partidas presupuestales", () => {
 
   test("crea una segunda partida para Bruno y el disponible del centro baja", async ({ page }) => {
     await abrirPestanaPresupuesto(page);
-    await crearPartida(page, { beneficiario: "Bruno", monto: 1500000, notas: "Viaticos Bruno semana 1" });
+    await crearPartida(page, { beneficiario: "Bruno E2E", monto: 1500000, notas: "Viaticos Bruno semana 1" });
 
     const [res] = await Promise.all([
       page.waitForResponse(
@@ -106,7 +106,7 @@ test.describe("escenario 1 — partidas presupuestales", () => {
 
   test("la tercera partida se bloquea por exceder el valor de viaticos y el sistema dice cuanto queda", async ({ page }) => {
     await abrirPestanaPresupuesto(page);
-    await crearPartida(page, { beneficiario: "Carla", monto: 1000000, notas: "Viaticos Carla" });
+    await crearPartida(page, { beneficiario: "Carla E2E", monto: 1000000, notas: "Viaticos Carla" });
 
     // EL BLOQUEO ES DE LAS DOS CAPAS, y por eso este test las comprueba las dos.
     //
@@ -149,7 +149,7 @@ test.describe("escenarios 2 y 3 — gastos contra la partida", () => {
     await abrirModalGasto(page);
 
     await elegirCentro(page, CODIGO);
-    await elegirSelect(page, "expense-user-select", "Ana");
+    await elegirSelect(page, "expense-user-select", "Ana E2E");
 
     // El disponible en vivo llega por GET /get_expense_budget_available con 400 ms
     // de debounce: sin esperarlo, el hint todavia no existe.
@@ -179,7 +179,7 @@ test.describe("escenarios 2 y 3 — gastos contra la partida", () => {
     await abrirModalGasto(page);
 
     await elegirCentro(page, CODIGO);
-    await elegirSelect(page, "expense-user-select", "Ana");
+    await elegirSelect(page, "expense-user-select", "Ana E2E");
 
     // Disponible tras el gasto anterior: 3.000.000 - 1.000.000 = 2.000.000.
     await expect(page.getByTestId("expense-budget-ok")).toBeVisible();

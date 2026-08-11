@@ -280,6 +280,13 @@ def rol_e2e!(nombre, definicion, admin)
   rol
 end
 
+# OJO CON `names`: los tres selects de persona del proyecto (el responsable del
+# gasto, el beneficiario de la partida y el filtro) etiquetan cada opcion con
+# `user.names` A SECAS, sin apellido. Las fixtures del paquete 01 ya tienen una
+# usuaria llamada "Ana", asi que un beneficiario llamado tambien "Ana" produce
+# dos opciones IDENTICAS en el desplegable y el spec selecciona la que el orden
+# de la base decida ese dia. Por eso los tres beneficiarios llevan el sufijo
+# dentro de `names`: la etiqueta tiene que ser unica.
 def usuario_e2e!(email:, names:, last_names:, rol:, documento:)
   u = User.find_or_initialize_by(email: email)
   u.names           = names
@@ -301,15 +308,15 @@ rol_contable  = rol_e2e!("Contable E2E",  ROLES_E2E["Contable E2E"],  admin)
 
 usuarios_e2e = {
   "owner"           => usuario,
-  "benef_a"         => usuario_e2e!(email: "e2e-a@controlmatica.test", names: "Ana", last_names: "E2E",
+  "benef_a"         => usuario_e2e!(email: "e2e-a@controlmatica.test", names: "Ana E2E", last_names: "Beneficiaria",
                                     rol: rol_ingeniero, documento: 100_000_601),
-  "benef_b"         => usuario_e2e!(email: "e2e-b@controlmatica.test", names: "Bruno", last_names: "E2E",
+  "benef_b"         => usuario_e2e!(email: "e2e-b@controlmatica.test", names: "Bruno E2E", last_names: "Beneficiario",
                                     rol: rol_ingeniero, documento: 100_000_602),
-  "benef_c"         => usuario_e2e!(email: "e2e-c@controlmatica.test", names: "Carla", last_names: "E2E",
+  "benef_c"         => usuario_e2e!(email: "e2e-c@controlmatica.test", names: "Carla E2E", last_names: "Beneficiaria",
                                     rol: rol_ingeniero, documento: 100_000_603),
-  "restringido"     => usuario_e2e!(email: "e2e-limitado@controlmatica.test", names: "Limitado", last_names: "E2E",
+  "restringido"     => usuario_e2e!(email: "e2e-limitado@controlmatica.test", names: "Limitado E2E", last_names: "Restringido",
                                     rol: rol_limitado, documento: 100_000_604),
-  "contab_limitado" => usuario_e2e!(email: "e2e-contab@controlmatica.test", names: "Contable", last_names: "E2E",
+  "contab_limitado" => usuario_e2e!(email: "e2e-contab@controlmatica.test", names: "Contable E2E", last_names: "Limitado",
                                     rol: rol_contable, documento: 100_000_605)
 }
 
