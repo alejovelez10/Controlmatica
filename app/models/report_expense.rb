@@ -72,25 +72,50 @@ class ReportExpense < ApplicationRecord
     self.last_user_edited_id = current_actor_id
   end
 
-  def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9, search10, search11, search12, search13, search14, search15)
-    search1.present? ? (scope :centro, -> { where(cost_center_id: search1) }) : (scope :centro, -> { where.not(id: nil) })
-    search2.present? ? (scope :user, -> { where(user_invoice_id: search2) }) : (scope :user, -> { where.not(id: nil) })
-    search3.present? ? (scope :name_gasto, -> { where("LOWER(invoice_name) LIKE ?", "%#{search3.downcase}%") }) : (scope :name_gasto, -> { where.not(id: nil) })
-    search4.present? ? (scope :date, -> { where(invoice_date: search4) }) : (scope :date, -> { where.not(id: nil) })
-    search5.present? ? (scope :indetificacion, -> { where(identification: search5) }) : (scope :indetificacion, -> { where.not(id: nil) })
-    search6.present? ? (scope :descripcion, -> { where("LOWER(description) LIKE ?", "%#{search6.downcase}%") }) : (scope :descripcion, -> { where.not(id: nil) })
-    search7.present? ? (scope :numero_factura, -> { where(invoice_number: search7) }) : (scope :numero_factura, -> { where.not(id: nil) })
-    search8.present? ? (scope :tipo_identificacion, -> { where(type_identification_id: search8) }) : (scope :tipo_identificacion, -> { where.not(id: nil) })
-    search9.present? ? (scope :tipo_pago, -> { where(payment_type_id: search9) }) : (scope :tipo_pago, -> { where.not(id: nil) })
-    search10.present? ? (scope :valor_factura, -> { where(invoice_value: search10) }) : (scope :valor_factura, -> { where.not(id: nil) })
-    search11.present? ? (scope :inpuesto_factura, -> { where(invoice_tax: search11) }) : (scope :inpuesto_factura, -> { where.not(id: nil) })
-    search12.present? ? (scope :total_factura, -> { where(invoice_total: search12) }) : (scope :total_factura, -> { where.not(id: nil) })
+  # Lista canonica de filtros de la pantalla de Gastos. Todo filtro nuevo tiene
+  # que agregarse AQUI ademas de en el builder: el controller hace
+  # params.permit(*SEARCH_KEYS) y lo que no este listado se descarta en silencio.
+  # La reutiliza AccountingExpensesController (paquete de Contabilidad).
+  SEARCH_KEYS = %i[
+    cost_center_id user_invoice_id invoice_name invoice_date identification description
+    invoice_number type_identification_id payment_type_id invoice_value invoice_tax
+    invoice_total start_date end_date is_acepted
+  ].freeze
 
-    search13.present? ? (scope :fdesdep, -> { where("invoice_date >= ?", search13) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search14.present? ? (scope :fhastap, -> { where("invoice_date <= ?", search14) }) : (scope :fhastap, -> { where.not(id: nil) })
-    search15.present? ? (scope :estado, -> { where(is_acepted: search15) }) : (scope :estado, -> { where.not(id: nil) })
-
-    centro.user.name_gasto.date.indetificacion.descripcion.numero_factura.tipo_identificacion.tipo_pago.valor_factura.inpuesto_factura.total_factura.fdesdep.fhastap.estado
+  # Builder de filtros con firma de hash. Mismo patron que CostCenter.search, que
+  # es el precedente correcto del repo.
+  #
+  # POR QUE NO ES UN CAMBIO COSMETICO: la version anterior definia 15 scopes de
+  # CLASE en runtime en cada llamada. Un scope vive en la clase, no en la
+  # llamada, asi que dos peticiones simultaneas se pisaban los filtros y un
+  # usuario podia recibir los gastos filtrados por los criterios de otro.
+  #
+  # `scope = all` (y NO `unscoped` ni `where(nil)`) es lo que preserva el
+  # receptor: ActiveRecord::Delegation ejecuta este metodo dentro de `scoping`,
+  # asi que ReportExpense.where(user_invoice_id: x).search(...) sigue respetando
+  # esa condicion. Con `unscoped` devolveria los gastos de todos los usuarios.
+  #
+  # `.present?` como guarda en los 15 (no `.nil?`): params[:is_acepted] == "false"
+  # es present? y debe filtrar; los "" no deben filtrar.
+  def self.search(filters = {})
+    f = filters.symbolize_keys
+    scope = all
+    scope = scope.where(cost_center_id: f[:cost_center_id])                 if f[:cost_center_id].present?
+    scope = scope.where(user_invoice_id: f[:user_invoice_id])               if f[:user_invoice_id].present?
+    scope = scope.where("LOWER(invoice_name) LIKE ?", "%#{f[:invoice_name].to_s.downcase}%") if f[:invoice_name].present?
+    scope = scope.where(invoice_date: f[:invoice_date])                     if f[:invoice_date].present?
+    scope = scope.where(identification: f[:identification])                 if f[:identification].present?
+    scope = scope.where("LOWER(description) LIKE ?", "%#{f[:description].to_s.downcase}%")   if f[:description].present?
+    scope = scope.where(invoice_number: f[:invoice_number])                 if f[:invoice_number].present?
+    scope = scope.where(type_identification_id: f[:type_identification_id]) if f[:type_identification_id].present?
+    scope = scope.where(payment_type_id: f[:payment_type_id])               if f[:payment_type_id].present?
+    scope = scope.where(invoice_value: f[:invoice_value])                   if f[:invoice_value].present?
+    scope = scope.where(invoice_tax: f[:invoice_tax])                       if f[:invoice_tax].present?
+    scope = scope.where(invoice_total: f[:invoice_total])                   if f[:invoice_total].present?
+    scope = scope.where("invoice_date >= ?", f[:start_date])                if f[:start_date].present?
+    scope = scope.where("invoice_date <= ?", f[:end_date])                  if f[:end_date].present?
+    scope = scope.where(is_acepted: f[:is_acepted])                         if f[:is_acepted].present?
+    scope
   end
 
   def self.import(file, user)
