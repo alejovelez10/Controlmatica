@@ -291,6 +291,26 @@ namespace :create_config do
             AccionModule.create(name: "Ver todos", module_control_id: accounting.id, user_id: user.id)
         end
 
+        # Mismo caso que los dos de arriba, pero replicando
+        # lib/tasks/permissions_expense_rules.rake (paquete 14). Sin esta replica
+        # el modulo NO NACE en una base nueva y a la pantalla de Reglas de gastos
+        # solo llega el Administrador, por su bypass `is_admin?`: cualquier otro
+        # rol se queda sin poder recibir el permiso porque el ModuleControl no
+        # existe para asignarselo.
+        #
+        # El nombre es un STRING LITERAL que tiene que coincidir exactamente con
+        # ExpenseRulesController::MODULO y con el helper
+        # authorization_expense_rules; las cuatro acciones son las que consulta
+        # `rule_permission?`.
+        expense_rules = ModuleControl.create(name: "Reglas de gastos", user_id: user.id)
+
+        if expense_rules
+            AccionModule.create(name: "Ingreso al modulo", module_control_id: expense_rules.id, user_id: user.id)
+            AccionModule.create(name: "Crear", module_control_id: expense_rules.id, user_id: user.id)
+            AccionModule.create(name: "Editar", module_control_id: expense_rules.id, user_id: user.id)
+            AccionModule.create(name: "Eliminar", module_control_id: expense_rules.id, user_id: user.id)
+        end
+
 
 
 
