@@ -177,7 +177,7 @@ implemente lo sepa; no lo implementa este paquete):
 | `test/tools/users_find_by_phone_tool_test.rb` | Match, sin match, ambiguo, sin campos sensibles. |
 | `test/controllers/mcp_controller_exposure_test.rb` | Politica `exposed?` unitaria: las 7 nuevas expuestas, `*_update` / `*_delete` no. |
 | `test/integration/mcp_protocol_test.rb` | JSON-RPC real contra `POST /mcp`: `tools/list`, `tools/call`, auth por header y por query param, `X-Actor-Phone`. |
-| `test/models/user_phone_test.rb` | `User.normalize_phone` y el callback `set_phone_normalized`. |
+| ~~`test/models/user_phone_test.rb`~~ | ✅ **YA CREADO** en `feature/gastos-presupuesto-ia` (17 casos, verdes). `User.normalize_phone`, el callback `set_phone_normalized` y el scope `by_normalized_phone`. Este paquete no lo reescribe; si necesita casos nuevos, los **agrega**. |
 | `docs/TAIMES-AGENTE-GASTOS.md` | Especificacion del agente del lado Taimes: skills, orden de tools, flujo por foto y por voz, confirmacion, manejo de fallos. Es un **entregable al cliente** (plan interno Fase 8: "guia de configuracion de las reglas del agente"). |
 
 **Archivos de prueba que este paquete NO crea** (dueño unico = paquete 01, §7.2 y §7.12); solo se
@@ -190,7 +190,7 @@ del archivo prohibido es **`malicioso.exe`**, no `comprobante.exe`.
 
 | Ruta | Que se hace |
 |---|---|
-| `app/models/user.rb` | `self.normalize_phone(raw)`, callback `before_save :set_phone_normalized`, scope `by_normalized_phone`. |
+| ~~`app/models/user.rb`~~ (`normalize_phone`) | ✅ **YA HECHO** en `feature/gastos-presupuesto-ia` (ver el banner de la Tarea 2). `self.normalize_phone(raw)`, callback `before_save :set_phone_normalized` y scope `by_normalized_phone` ya estan en el modelo. Este paquete solo los **consume**. |
 | ~~`app/models/report_expense.rb`~~ | **Este paquete NO lo modifica.** `receipt_file_url` (metodo publico, no columna) **ya lo creo el 06**: esta en su tabla "A modificar", el 06 es dependencia declarada de este paquete (§7.1) y §7.7 le asigna la clave 28. Aqui **solo se consume**. La condicional *"solo si el 06 no lo creo ya"* era una bifurcacion en tiempo de ejecucion —prohibida por §7.10 y por el README §8— cuya condicion **nunca puede ser verdadera**, y solo podia inducir a duplicar el metodo. |
 | `app/tools/application_tool.rb` | `actor_phone`, `actor_user_by_phone`, `actor_user_strict`, `as_actor_strict`, `NO_ACTOR_MESSAGE`; `actor_user` pasa a considerar telefono antes del fallback. |
 | `app/controllers/mcp_controller.rb` | `actor_phone` en `server_context`; `ALWAYS_EXPOSED` pasa de 2 a 6 nombres. |
@@ -247,6 +247,19 @@ end
   `app/serializers/user_serializer.rb` (si existe) y `test/fixtures/users.yml`.
 
 ### Tarea 2 — `User.normalize_phone` + callback
+
+> ✅ **HECHA — NO REPETIR.** Se implemento en la rama `feature/gastos-presupuesto-ia` junto con el
+> pedido del cliente de habilitar el telefono en el formulario de usuario (el campo de UI necesita
+> la normalizacion para que la llave sirva). Lo que ya esta en `app/models/user.rb`, exactamente
+> como lo especifica esta tarea: `PHONE_MIN_DIGITS`, `PHONE_KEY_LENGTH`, `self.normalize_phone`,
+> el scope `by_normalized_phone` y el callback `before_save :set_phone_normalized` (privado).
+> Los tests viven en `test/models/user_phone_test.rb` (17 casos, cubren la tabla de este documento
+> mas los 10 digitos exactos, el numero mas largo y el scope).
+>
+> **El paquete 11 NO vuelve a tocar nada de esta tarea.** Lo que sigue pendiente para el 11 son las
+> fixtures de telefono (`telefono_repetido_a/b`, `phone` de `admin` e `ingeniero` en
+> `test/fixtures/users.yml`) que consumen las Tareas 3 y siguientes: este trabajo **no** las creo,
+> para no reescribir un archivo cuyo dueño es el paquete 01.
 
 En `app/models/user.rb`:
 
