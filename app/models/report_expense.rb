@@ -26,6 +26,7 @@
 #  is_acepted                :boolean          default(FALSE)
 #  payment_type              :string
 #  receipt_file              :string
+#  rule_violations           :jsonb            not null
 #  type_identification       :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
@@ -263,6 +264,30 @@ class ReportExpense < ApplicationRecord
     # cada create) empieza a producir un RegisterEdit fantasma.
     edit_min_length:   59
   )
+
+  # === REGLAS DE GASTOS (paquete 14) ========================================
+  #
+  # POR QUE UN CALLBACK DEL MODELO Y NO UNA LLAMADA EN EL CONTROLLER: las tres
+  # reglas deterministas tienen que aplicar IGUAL a un gasto que entra por la
+  # web, a uno que entra por WhatsApp y a uno que entra por el import de Excel.
+  # Puesto en el controller cubriria un solo canal y la asimetria no la notaria
+  # nadie hasta la auditoria contable.
+  #
+  # Corre en `before_save` y no en `validate` a proposito: una violacion NO
+  # impide guardar. Bloquear al usuario en campo, con la factura en la mano,
+  # solo consigue que no reporte. Lo que si hace es impedir que el gasto quede
+  # APROBADO presupuestalmente.
+  #
+  # Va DESPUES del `evaluate!` de ExpenseBudgetService —que corre sobre el objeto
+  # en memoria antes del save— justamente para poder pisarle el `aprobado`.
+  before_save :apply_expense_rules
+
+  # Etiqueta de conveniencia para la pantalla y para el agente.
+  def rule_violations_messages
+    Array(rule_violations).map { |v| v.is_a?(Hash) ? (v["message"] || v[:message]) : v.to_s }.compact
+  end
+
+  def rule_violations? = Array(rule_violations).any?
 
   # Lista canonica de filtros de la pantalla de Gastos. Todo filtro nuevo tiene
   # que agregarse AQUI ademas de en el builder: el controller hace
@@ -517,6 +542,38 @@ class ReportExpense < ApplicationRecord
 
     errors.add(:foreign_value, "es obligatorio cuando la moneda no es COP") if foreign_value.blank?
     errors.add(:exchange_rate, "es obligatoria cuando la moneda no es COP") if exchange_rate.blank?
+  end
+
+  # Evalua las reglas del paquete 14 y deja la foto en `rule_violations`.
+  #
+  # SE PERSISTE Y NO SE RECALCULA AL LEER: una violacion es una foto del momento
+  # en que se registro el gasto. Si el administrador afloja la regla manana, el
+  # gasto de hoy no deberia dejar de estar marcado de forma retroactiva; y al
+  # reves, endurecerla no puede convertir en infractores a 5.000 gastos
+  # historicos.
+  def apply_expense_rules
+    resultado = ExpenseRuleService.validate(self)
+    violaciones = resultado.value[:violations]
+
+    # `.map(&:stringify_keys)` porque jsonb devuelve siempre claves String: sin
+    # esto, el objeto en memoria y el releido de la base tendrian formas
+    # distintas y cualquier comparacion en un test seria un falso negativo.
+    self.rule_violations = violaciones.map(&:stringify_keys)
+
+    return if violaciones.empty?
+    # UNA VIOLACION NUNCA IMPIDE GUARDAR, PERO IMPIDE QUE QUEDE APROBADO.
+    # No se pasa a `excedido`: eso lo sacaria de la vista de contabilidad
+    # (scope accounting_visible) y contabilidad tiene que verlo justamente para
+    # decidir. `sin_presupuesto` consume cupo igual, asi que tampoco libera
+    # plata que en realidad esta comprometida.
+    return unless budget_status == ExpenseBudgetService::STATUS_APROBADO
+
+    self.budget_status = ExpenseBudgetService::STATUS_SIN_PRESUPUESTO
+    motivo = violaciones.map { |v| v[:message] }.join(" ")
+    # `budget_reason` es un string de 255: con tres violaciones largas el texto
+    # se pasa y Postgres corta la escritura entera. El detalle completo queda en
+    # `rule_violations`, que es jsonb y no tiene ese limite.
+    self.budget_reason = "No se aprueba por incumplir las reglas de gasto: #{motivo}".truncate(250)
   end
 end
 
