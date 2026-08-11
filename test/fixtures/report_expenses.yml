@@ -24,46 +24,46 @@
 #  user_id                :integer
 #  user_invoice_id        :integer
 #
-# Indexes
-#
-#  index_report_expenses_on_cost_center_id          (cost_center_id)
-#  index_report_expenses_on_created_at              (created_at)
-#  index_report_expenses_on_invoice_date            (invoice_date)
-#  index_report_expenses_on_is_acepted              (is_acepted)
-#  index_report_expenses_on_payment_type_id         (payment_type_id)
-#  index_report_expenses_on_type_identification_id  (type_identification_id)
-#  index_report_expenses_on_user_id                 (user_id)
-#  index_report_expenses_on_user_invoice_id         (user_invoice_id)
-#
 
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# TRAMPA: la tabla tiene columnas string legacy `type_identification` y
+# `payment_type` ADEMAS de las `_id`, y las asociaciones se llaman IGUAL que las
+# columnas string. Poner `type_identification: opcion_tipo` hace que Rails no
+# sepa si resolver la asociacion o escribir la columna string y falla de forma
+# confusa. Por eso se usan las claves `_id` con FixtureSet.identify y se BORRAN
+# las claves string.
+#
+# Las FKs eran enteros `1` colgantes: db/schema.rb no tiene ni un add_foreign_key,
+# asi que insertaban sin error y el test fallaba mucho despues con
+# "NoMethodError: undefined method `id' for nil" dentro de create_create_register.
 
 one:
-  user_id: 1
-  cost_center_id: 1
-  user_invoice_id: 1
-  invoice_name: MyString
-  invoice_date: 2021-06-05
-  type_identification: MyString
-  description: MyText
-  invoice_number: MyString
-  invoice_type: MyString
-  payment_type: MyString
-  invoice_value: 1.5
-  invoice_tax: 1.5
-  invoice_total: 1.5
+  user: admin
+  cost_center: centro_con_viaticos
+  user_invoice: ingeniero
+  invoice_name: Hotel Uno
+  invoice_date: 2026-06-01
+  description: Alojamiento de comision
+  invoice_number: FE-001
+  invoice_type: Factura
+  identification: 900111222
+  type_identification_id: <%= ActiveRecord::FixtureSet.identify(:opcion_tipo) %>
+  payment_type_id: <%= ActiveRecord::FixtureSet.identify(:opcion_pago) %>
+  invoice_value: 100000.0
+  invoice_tax: 19000.0
+  invoice_total: 119000.0
 
 two:
-  user_id: 1
-  cost_center_id: 1
-  user_invoice_id: 1
-  invoice_name: MyString
-  invoice_date: 2021-06-05
-  type_identification: MyString
-  description: MyText
-  invoice_number: MyString
-  invoice_type: MyString
-  payment_type: MyString
-  invoice_value: 1.5
-  invoice_tax: 1.5
-  invoice_total: 1.5
+  user: admin
+  cost_center: centro_con_viaticos
+  user_invoice: ingeniero
+  invoice_name: Hotel Dos
+  invoice_date: 2026-06-02
+  description: Alojamiento de comision
+  invoice_number: FE-002
+  invoice_type: Factura
+  identification: 900111222
+  type_identification_id: <%= ActiveRecord::FixtureSet.identify(:opcion_tipo) %>
+  payment_type_id: <%= ActiveRecord::FixtureSet.identify(:opcion_pago) %>
+  invoice_value: 100000.0
+  invoice_tax: 19000.0
+  invoice_total: 119000.0

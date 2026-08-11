@@ -1,0 +1,40 @@
+# == Schema Information
+#
+# Table name: customers
+#
+#  id         :bigint           not null, primary key
+#  address    :string
+#  client     :string
+#  email      :string
+#  name       :string
+#  nit        :string
+#  phone      :string
+#  web        :string
+#  code       :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  user_id    :integer
+#
+# Indexes
+#
+#  index_customers_on_code        (code)
+#  index_customers_on_created_at  (created_at)
+#  index_customers_on_name        (name)
+#
+
+# OJO: Customer NO declara `belongs_to :user` (app/models/customer.rb solo tiene
+# has_many y scopes). Por eso `user: admin` NO sirve: Rails intentaria escribir
+# una columna `user` inexistente y `fixtures :all` tumbaria la suite entera.
+# Se usa user_id con FixtureSet.identify, igual que en parameterizations.yml.
+
+cliente_uno:
+  name: ACME S.A.S
+  code: CLI0001
+  nit: 900123456-1
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
+
+cliente_dos:
+  name: BETA LTDA
+  code: CLI0002
+  nit: 900654321-2
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>

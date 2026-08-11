@@ -28,8 +28,10 @@
 
 one:
   ammount: 1.5
-  cost_center_id: 1
+  cost_center: centro_con_viaticos
+  user: admin
 
 two:
   ammount: 1.5
-  cost_center_id: 1
+  cost_center: centro_con_viaticos
+  user: admin

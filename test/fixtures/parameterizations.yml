@@ -1,0 +1,51 @@
+# == Schema Information
+#
+# Table name: parameterizations
+#
+#  id           :bigint           not null, primary key
+#  money_value  :integer
+#  name         :string
+#  number_value :integer
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  user_id      :integer
+#
+# Indexes
+#
+#  index_parameterizations_on_created_at  (created_at)
+#  index_parameterizations_on_name        (name)
+#
+
+# Parametros del motor de reglas. Los valores los decide el paquete 10 (su
+# consumidor); este paquete solo garantiza que la fixture cargue. El 10 AGREGA
+# etiquetas si necesita mas, sin reescribir las existentes.
+#
+# user_id: y NUNCA `user: admin`. app/models/parameterization.rb NO declara
+# `belongs_to :user` (solo scopes y self.search), asi que la forma de asociacion
+# hace que Rails intente escribir una columna `user` inexistente y lance
+# Fixture::FixtureError; con `fixtures :all` eso tumba TODA la suite.
+# Hay un test guardian de esto en test/models/fixtures_integrity_test.rb.
+
+antiguedad:
+  name: "GASTOS IA - ANTIGUEDAD MAXIMA (DIAS)"
+  number_value: 30
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
+
+tope:
+  name: "GASTOS IA - TOPE VALOR POR GASTO"
+  money_value: 2000000
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
+
+tolerancia:
+  name: "GASTOS IA - TOLERANCIA COHERENCIA (%)"
+  number_value: 5
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
+
+ventana_duplicados:
+  name: "GASTOS IA - VENTANA DUPLICADOS (DIAS)"
+  number_value: 365
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
+
+concepto_licor:
+  name: "GASTOS IA - CONCEPTO NO PERMITIDO - LICOR"
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>

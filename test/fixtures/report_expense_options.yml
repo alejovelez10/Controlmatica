@@ -3,21 +3,25 @@
 # Table name: report_expense_options
 #
 #  id         :bigint           not null, primary key
-#  name       :string
 #  category   :string
-#  user_id    :integer
+#  name       :string
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
+#  user_id    :integer
 #
 
-# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Las categorias son literales: packs/ReportExpenseIndex.js filtra por
+# "Tipo" y "Medio de pago". Un MyString aqui deja los dos selects vacios.
+#
+# ReportExpenseOption NO declara `belongs_to :user`, asi que va user_id con
+# FixtureSet.identify y no `user: admin`.
 
-one:
-  name: MyString
-  category: MyString
-  user_id: 1
+opcion_tipo:
+  name: Alimentacion
+  category: Tipo
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
 
-two:
-  name: MyString
-  category: MyString
-  user_id: 1
+opcion_pago:
+  name: Efectivo
+  category: Medio de pago
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>

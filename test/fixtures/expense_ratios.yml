@@ -25,18 +25,20 @@
 
 one:
   creation_date: 2021-06-22
-  user_report_id: 1
+  user_report: admin
   start_date: 2021-06-22
   end_date: 2021-06-22
   area: MyString
   observations: MyText
-  user_direction_id: 1
+  user_direction: admin
+  user: admin
 
 two:
   creation_date: 2021-06-22
-  user_report_id: 1
+  user_report: admin
   start_date: 2021-06-22
   end_date: 2021-06-22
   area: MyString
   observations: MyText
-  user_direction_id: 1
+  user_direction: admin
+  user: admin

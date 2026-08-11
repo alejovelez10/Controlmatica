@@ -1,0 +1,63 @@
+# == Schema Information (parcial: la tabla tiene ~70 columnas de agregados)
+#
+# Table name: cost_centers
+#
+#  id                  :bigint           not null, primary key
+#  code                :string
+#  description         :text
+#  end_date            :date
+#  engineering_value   :float
+#  execution_state     :string
+#  service_type        :string
+#  start_date          :date
+#  viatic_value        :float
+#  customer_id         :integer
+#  last_user_edited_id :integer
+#  user_id             :integer
+#  user_owner_id       :integer
+#
+
+# CostCenter tiene `before_create :create_code`, que las fixtures NO ejecutan
+# (se insertan por SQL directo). Por eso `code` va explicito y determinista.
+#
+# centro_con_viaticos.user_owner = dueno_centro es el VALOR DEFINITIVO fijado en
+# 00-ARQUITECTURA.md 7.2: sin el, los tests de autorizacion por propiedad del
+# paquete 07 no tienen fixture que los soporte.
+
+centro_con_viaticos:
+  code: CM-ACME-01-2026
+  description: Centro con tope de viaticos, caso normal de presupuesto
+  viatic_value: 5000000.0
+  customer: cliente_uno
+  user: admin
+  user_owner: dueno_centro
+  start_date: 2026-01-15
+  end_date: 2026-12-31
+  execution_state: EN EJECUCION
+  service_type: PROYECTO
+  engineering_value: 20000000.0
+
+centro_sin_viaticos:
+  code: CM-ACME-02-2026
+  description: Centro sin viatic_value (nil) para probar el tope 0
+  customer: cliente_uno
+  user: admin
+  user_owner: gerente
+  start_date: 2026-01-15
+  end_date: 2026-12-31
+  execution_state: EN EJECUCION
+  service_type: PROYECTO
+  engineering_value: 20000000.0
+
+centro_ajeno:
+  code: CM-BETA-01-2026
+  description: Centro de otro dueno, para el guard de propiedad
+  viatic_value: 1000000.0
+  customer: cliente_dos
+  user: contador
+  user_owner: contador
+  start_date: 2026-01-15
+  end_date: 2026-12-31
+  execution_state: EN EJECUCION
+  service_type: PROYECTO
+  engineering_value: 20000000.0

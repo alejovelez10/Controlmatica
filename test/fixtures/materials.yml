@@ -36,7 +36,8 @@ one:
   description: MyText
   provider_invoice_number: MyString
   provider_invoice_value: 1.5
-  cost_center_id: 1
+  cost_center: centro_con_viaticos
+  user: admin
 
 two:
   provider_id: 1
@@ -45,4 +46,5 @@ two:
   description: MyText
   provider_invoice_number: MyString
   provider_invoice_value: 1.5
-  cost_center_id: 1
+  cost_center: centro_con_viaticos
+  user: admin
