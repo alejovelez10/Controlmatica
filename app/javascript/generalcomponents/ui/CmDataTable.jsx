@@ -240,7 +240,7 @@ class CmDataTable extends React.Component {
     }
 
     return (
-      <div className="cm-dt">
+      <div className="cm-dt" data-testid="cm-datatable">
         {/* Toolbar */}
         <div className="cm-dt-toolbar">
           <div className="cm-dt-search-group">
@@ -317,7 +317,7 @@ class CmDataTable extends React.Component {
             <tbody>
               {rows.length > 0 ? (
                 rows.map((row, i) => (
-                  <tr key={row.id || i}>
+                  <tr key={row.id || i} data-testid="cm-datatable-row">
                     {actions && (
                       <td className="cm-dt-actions-cell" style={{ padding: "8px 4px" }}>{actions(row)}</td>
                     )}

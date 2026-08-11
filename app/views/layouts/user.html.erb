@@ -170,7 +170,7 @@
           <ul class="treeview-menu">
             <% if authorization_report_expenses || current_user.rol.name == "Administrador" %>
               <li>
-                <%= link_to report_expenses_path, class: "app-menu__item #{'active' if controller_name == 'report_expenses'}" do %>
+                <%= link_to report_expenses_path, class: "app-menu__item #{'active' if controller_name == 'report_expenses'}", data: { testid: "nav-gastos" } do %>
                   <i class="app-menu__icon fas fa-receipt"></i><span class="app-menu__label">Gastos</span>
                 <% end -%>
               </li>

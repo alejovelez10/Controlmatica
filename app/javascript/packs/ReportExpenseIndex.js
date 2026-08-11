@@ -870,7 +870,7 @@ class ReportExpenseIndex extends React.Component {
   }.bind(this);
 
   render() {
-    return React.createElement("div", { className: "cm-page" },
+    return React.createElement("div", { className: "cm-page", "data-testid": "page-report-expenses" },
       React.createElement(CmPageActions, {
         onNew: this.props.estados.create ? this.openNewModal : null,
         label: "Crear gasto",
