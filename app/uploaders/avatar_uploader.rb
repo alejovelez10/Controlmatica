@@ -54,11 +54,20 @@ class AvatarUploader < CarrierWave::Uploader::Base
   #   process resize_to_fit: [50, 50]
   # end
 
-  # Add a white list of extensions which are allowed to be uploaded.
-  # For images you might use something like this:
-  # def extension_whitelist
-  #   %w(jpg jpeg gif png)
-  # end
+  # Allowlists (CarrierWave 3.x). Los metodos con el nombre viejo (los de la
+  # 2.x, con "white" en vez de "allow") ya NO existen en la 3.1.2 instalada:
+  # declararlos seria codigo muerto. El avatar es restrictivo a proposito: solo imagenes.
+  def extension_allowlist
+    %w[jpg jpeg png gif webp]
+  end
+
+  def content_type_allowlist
+    ["image/jpeg", "image/png", "image/gif", "image/webp"]
+  end
+
+  def size_range
+    1.byte..5.megabytes
+  end
 
   # Override the filename of the uploaded files:
   # Avoid using model.id or version_name here, see uploader/store.rb for details.

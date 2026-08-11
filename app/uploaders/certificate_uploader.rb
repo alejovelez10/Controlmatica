@@ -32,11 +32,29 @@ class CertificateUploader < CarrierWave::Uploader::Base
   #   process resize_to_fit: [50, 50]
   # end
 
-  # Add a white list of extensions which are allowed to be uploaded.
-  # For images you might use something like this:
-  # def extension_whitelist
-  #   %w(jpg jpeg gif png)
-  # end
+  # Allowlists (CarrierWave 3.x). Los metodos con el nombre viejo (los de la
+  # 2.x, con "white" en vez de "allow") ya NO existen en la 3.1.2 instalada:
+  # declararlos seria codigo muerto.
+  #
+  # La lista es deliberadamente permisiva (PDF + imagenes + Office) porque el
+  # cliente hoy sube certificados, informes y ordenes de compra sin restriccion
+  # alguna: una lista corta convertiria esto en una interrupcion de servicio.
+  def extension_allowlist
+    %w[pdf jpg jpeg png gif webp doc docx xls xlsx]
+  end
+
+  def content_type_allowlist
+    ["application/pdf",
+     "image/jpeg", "image/png", "image/gif", "image/webp",
+     "application/msword",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+     "application/vnd.ms-excel",
+     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+  end
+
+  def size_range
+    1.byte..10.megabytes
+  end
 
   # Override the filename of the uploaded files:
   # Avoid using model.id or version_name here, see uploader/store.rb for details.
