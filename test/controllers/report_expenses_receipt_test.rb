@@ -127,12 +127,22 @@ class ReportExpensesReceiptTest < ActionDispatch::IntegrationTest
     # §2.1: budget_status lo escribe UNICAMENTE el servicio de consumo. Si el
     # endpoint lo aceptara, cualquiera podria fabricarse una aprobacion
     # presupuestal desde el navegador.
+    #
+    # SE MANDA UN VALOR IMPOSIBLE y no "aprobado". Desde que el paquete 07 cableo
+    # ExpenseBudgetService en `update` (tarea 23), un PATCH sobre este gasto
+    # queda LEGITIMAMENTE en "aprobado": el centro tiene partida vigente y cupo.
+    # Con "aprobado" en el body el test no distinguia mass-assignment de calculo
+    # correcto y pasaba por la razon equivocada. Con un centinela que el servicio
+    # jamas escribe, lo unico que puede producirlo es el mass-assignment.
     gasto = crear_gasto
     sign_in_as @admin
 
-    patch report_expense_path(gasto), as: :json, params: { budget_status: "aprobado" }
+    patch report_expense_path(gasto), as: :json, params: { budget_status: "valor_inventado" }
 
-    assert_equal "sin_presupuesto", gasto.reload.budget_status
+    assert_includes ExpenseBudgetService::MANAGED_STATUSES + [ExpenseBudgetService::STATUS_SIN_PRESUPUESTO],
+                    gasto.reload.budget_status,
+                    "budget_status quedo en un valor que el servicio no puede escribir: llego por mass-assignment"
+    refute_equal "valor_inventado", gasto.budget_status
   end
 
   # --- delete_receipt -------------------------------------------------------

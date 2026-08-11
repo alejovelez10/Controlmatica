@@ -4,6 +4,17 @@ class ReportExpensesController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:upload_file]
   include ApplicationHelper
 
+  # Columnas por las que se puede ordenar cualquiera de las dos tablas de gastos.
+  # Es una ALLOWLIST y no una denylist porque `params[:sort]` termina dentro de un
+  # `Arel.sql`, que no escapa nada: cualquier cosa fuera de esta lista cae al
+  # orden por defecto (`created_at desc`).
+  #
+  # Los alias `cost_center_code` y `user_invoice_name` NO estan aqui: no son
+  # columnas de `report_expenses` y se resuelven aparte, con su join.
+  EXPENSE_SORT_COLUMNS = %w[id invoice_name invoice_date identification description invoice_number
+                            invoice_value invoice_tax invoice_total is_acepted currency
+                            budget_status accounting_approved created_at updated_at].freeze
+
   def index
     # Usar helpers memoizados - evita query de ModuleControl y accion_modules (785ms -> ~0ms)
     @estados = {
@@ -24,8 +35,10 @@ class ReportExpensesController < ApplicationController
     # Usar helper memoizado para evitar queries de permisos (581ms -> ~0ms)
     show_all = is_admin? || has_menu_permission?("Gastos", "Ver todos")
 
-    # Base query con includes para evitar N+1
-    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user)
+    # Base query con includes para evitar N+1. `accounting_approved_by` entra al
+    # includes porque el serializer lo emite desde que el paquete 07 lo agrego:
+    # sin el, una pagina de 50 gastos aprobados cuesta 50 consultas de mas.
+    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by)
 
     # Filtrar por usuario si no tiene permiso de ver todos
     base_query = base_query.where(user_invoice_id: current_user.id) unless show_all
@@ -34,24 +47,13 @@ class ReportExpensesController < ApplicationController
     # algún filtro?": con un hash vacío el builder devuelve `all`, que es
     # exactamente lo que hacía ese `if`.
     base_query = base_query.search(report_expense_search_filters)
+    base_query = apply_expense_filters(base_query)
+    base_query = apply_free_text(base_query)
 
     # Obtener total antes de paginar (una sola query con count)
     total = base_query.count
 
-    # Ordenamiento dinámico con validación
-    sort_dir = params[:dir] == "asc" ? "ASC" : "DESC"
-    direct_columns = %w[invoice_name invoice_date identification description invoice_number invoice_value invoice_tax invoice_total is_acepted created_at updated_at]
-
-    if direct_columns.include?(params[:sort])
-      sort_order = "report_expenses.#{params[:sort]} #{sort_dir}"
-      report_expenses = base_query.order(Arel.sql(sort_order)).paginate(page: params[:page], per_page: params[:per_page] || 50)
-    elsif params[:sort] == "cost_center_code"
-      report_expenses = base_query.joins(:cost_center).order(Arel.sql("cost_centers.code #{sort_dir}")).paginate(page: params[:page], per_page: params[:per_page] || 50)
-    elsif params[:sort] == "user_invoice_name"
-      report_expenses = base_query.joins(:user_invoice).order(Arel.sql("users.names #{sort_dir}")).paginate(page: params[:page], per_page: params[:per_page] || 50)
-    else
-      report_expenses = base_query.order(created_at: :desc).paginate(page: params[:page], per_page: params[:per_page] || 50)
-    end
+    report_expenses = order_expenses(base_query).paginate(page: params[:page], per_page: params[:per_page] || 50)
 
     render json: {
              data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),
@@ -61,41 +63,24 @@ class ReportExpensesController < ApplicationController
 
   def get_cost_center_report_expenses
     # Base query con includes para evitar N+1
-    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user)
+    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by)
                               .where(cost_center_id: params[:id])
 
     # Aplicar filtros de búsqueda. Ya no hace falta la guarda previa de "¿hay
     # algún filtro?": con un hash vacío el builder devuelve `all`, que es
     # exactamente lo que hacía ese `if`.
     base_query = base_query.search(report_expense_search_filters)
-
-    # Búsqueda libre del buscador de la tabla
-    if params[:q].present?
-      term = "%#{params[:q].to_s.downcase}%"
-      base_query = base_query.where(
-        "LOWER(report_expenses.invoice_name) LIKE :t OR LOWER(report_expenses.description) LIKE :t OR " \
-        "LOWER(report_expenses.invoice_number) LIKE :t OR LOWER(report_expenses.identification) LIKE :t",
-        t: term
-      )
-    end
+    base_query = apply_expense_filters(base_query)
+    # Misma busqueda libre que la tabla general, y con el `id::text` que a esta
+    # le faltaba: el usuario pega el numero del gasto en el buscador y esperaba
+    # encontrarlo.
+    base_query = apply_free_text(base_query)
 
     # Obtener total antes de paginar
     total = base_query.count
 
-    # Ordenamiento dinámico con validación
-    sort_dir = params[:dir] == "asc" ? "ASC" : "DESC"
-    direct_columns = %w[invoice_name invoice_date identification description invoice_number invoice_value invoice_tax invoice_total is_acepted created_at updated_at]
-
-    ordered_query = if direct_columns.include?(params[:sort])
-        base_query.order(Arel.sql("report_expenses.#{params[:sort]} #{sort_dir}"))
-      elsif params[:sort] == "user_invoice_name"
-        base_query.joins(:user_invoice).order(Arel.sql("users.names #{sort_dir}"))
-      else
-        base_query.order(created_at: :desc)
-      end
-
     # Paginar
-    report_expenses = ordered_query.paginate(page: params[:page], per_page: params[:per_page] || 100)
+    report_expenses = order_expenses(base_query).paginate(page: params[:page], per_page: params[:per_page] || 100)
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(report_expenses, each_serializer: ReportExpenseSerializer),
@@ -116,19 +101,36 @@ class ReportExpensesController < ApplicationController
     end
   end
 
+  # CABLEADO PRESUPUESTAL (tarea 23 del paquete 07, §7.4).
+  #
+  # `persist_with_evaluation!` es el PUNTO DE ENTRADA UNICO para guardar un
+  # gasto: toma el lock del centro, evalua el cupo, guarda y reevalua el par en
+  # FIFO. Aqui NO se llama a `evaluate!` ni se hace `save` por cuenta propia, y
+  # no se abren transacciones (§4.2: el lock vive en el servicio).
+  #
+  # Sin esto `budget_status` NUNCA se calcula por la via web y todo gasto queda
+  # en `sin_presupuesto`: el tablero del 08, las columnas del 09 y la vista de
+  # contabilidad del 06 muestran datos falsos con total confianza.
+  #
+  # Nota sobre el `ReportExpense.create` + `.save` que habia antes (doble
+  # escritura): desaparece como efecto del cableado, no como refactor aparte.
   def create
-    report_expense = ReportExpense.create(report_expense_params_create)
-    if report_expense.save
-      recalculate_cost_center(report_expense.cost_center_id, "reportes")
+    report_expense = ReportExpense.new(report_expense_params_create)
+    result = ExpenseBudgetService.persist_with_evaluation!(report_expense, actor: current_user)
+
+    if result.ok?
+      # DESPUES y FUERA del servicio: `recalculate_cost_center` depende de la
+      # ivar @cost_center del helper y no puede correr dentro del lock.
+      recalculate_cost_center(report_expense.cost_center_id, "reportes") if report_expense.cost_center_id.present?
       render :json => {
                success: "El Registro fue creado con exito!",
-               register: ActiveModelSerializers::SerializableResource.new(report_expense, each_serializer: ReportExpenseSerializer),
+               register: ActiveModelSerializers::SerializableResource.new(result.value, each_serializer: ReportExpenseSerializer),
                type: "success",
              }
     else
       render :json => {
                success: "El Registro No se creo!",
-               message: report_expense.errors.full_messages,
+               message: result.errors,
                type: "error",
              }
     end
@@ -160,28 +162,67 @@ class ReportExpensesController < ApplicationController
   end
 
   def update
-    update_status = @report_expense.update(report_expense_params_update)
-    if update_status
-      recalculate_cost_center(@report_expense.cost_center_id, "reportes")
+    # LOS DOS `previous_*` SE CAPTURAN ANTES DEL assign_attributes. Si se leen
+    # despues ya cambiaron, y el par (centro, responsable) de ORIGEN nunca se
+    # reevalua: un gasto que estaba excedido alli se queda excedido para siempre
+    # aunque el cupo se haya liberado.
+    prev_cost_center_id  = @report_expense.cost_center_id
+    prev_user_invoice_id = @report_expense.user_invoice_id
+
+    @report_expense.assign_attributes(report_expense_params_update)
+    result = ExpenseBudgetService.persist_with_evaluation!(
+      @report_expense, actor: current_user,
+      previous_cost_center_id: prev_cost_center_id,
+      previous_user_invoice_id: prev_user_invoice_id
+    )
+
+    if result.ok?
+      recalculate_cost_center(@report_expense.cost_center_id, "reportes") if @report_expense.cost_center_id.present?
+      # Mover un gasto de centro deja MAL el centro viejo: sus agregados siguen
+      # contando un gasto que ya no le pertenece.
+      if prev_cost_center_id.present? && prev_cost_center_id != @report_expense.cost_center_id
+        recalculate_cost_center(prev_cost_center_id, "reportes")
+      end
       render :json => {
                success: "El Registro fue actualizado con exito!",
-               register: ActiveModelSerializers::SerializableResource.new(@report_expense, each_serializer: ReportExpenseSerializer),
+               register: ActiveModelSerializers::SerializableResource.new(result.value, each_serializer: ReportExpenseSerializer),
                type: "success",
              }
     else
       render :json => {
                success: "El Registro No se creo!",
-               message: @report_expense.errors.full_messages,
+               message: result.errors,
                type: "error",
              }
     end
   end
 
+  # Tarea 20 del paquete 07: corrige el bug preexistente de §2.7. El `destroy`
+  # no reevaluaba el presupuesto NI recalculaba el centro, asi que borrar un
+  # gasto dejaba `viat_costo_real` inflado y a los gastos posteriores marcados
+  # como `excedido` contra un cupo que ya estaba libre.
   def destroy
+    # Se capturan ANTES de destruir: despues el objeto sigue en memoria pero
+    # depender de eso es fragil, y `recalculate_cost_center` hace
+    # `CostCenter.find(cost)` y reventaria con nil.
+    cost_center_id  = @report_expense.cost_center_id
+    user_invoice_id = @report_expense.user_invoice_id
+
     if @report_expense.destroy
+      ExpenseBudgetService.on_expense_destroyed!(cost_center_id: cost_center_id,
+                                                 user_id: user_invoice_id,
+                                                 actor: current_user)
+      # DESPUES y FUERA del servicio (lee current_user y la ivar @cost_center).
+      recalculate_cost_center(cost_center_id, "reportes") if cost_center_id.present?
       render :json => {
                success: "El Registro fue eliminado con exito!",
                type: "success",
+             }
+    else
+      render :json => {
+               success: "El Registro No se elimino!",
+               message: @report_expense.errors.full_messages,
+               type: "error",
              }
     end
   end
@@ -274,13 +315,15 @@ class ReportExpensesController < ApplicationController
     validate = is_admin? || has_menu_permission?("Gastos", "Ver todos")
     if validate
       if params[:type] == "filtro"
-        @items = ReportExpense.search(report_expense_search_filters).order(invoice_date: :desc)
+        # Mismos filtros que la tabla: el Excel tiene que exportar exactamente lo
+        # que el usuario esta viendo, incluidos los cuatro filtros nuevos.
+        @items = apply_free_text(apply_expense_filters(ReportExpense.search(report_expense_search_filters))).order(invoice_date: :desc)
       else
         @items = ReportExpense.all.order(invoice_date: :desc)
       end
     else
       if params[:type] == "filtro"
-        @items = ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters).order(invoice_date: :desc)
+        @items = apply_free_text(apply_expense_filters(ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters))).order(invoice_date: :desc)
       else
         @items = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
       end
@@ -410,12 +453,86 @@ class ReportExpensesController < ApplicationController
     params.permit(*ReportExpense::SEARCH_KEYS).to_h.symbolize_keys
   end
 
+  # Los CUATRO filtros nuevos (moneda, estado presupuestal, aprobacion contable
+  # y partida) se aplican AQUI y no dentro de `ReportExpense.search`.
+  #
+  # POR QUE: `ReportExpense.search` y `SEARCH_KEYS` tienen dueno unico paquete 03
+  # (§7.2) y sus 6 call sites dependen de esa lista. Meterle cuatro columnas
+  # nuevas obligaria a reabrir el refactor del 03. Es ademas el mismo camino que
+  # ya tomo `AccountingExpensesController#filtered_scope` (paquete 06), que filtra
+  # por `currency` y `budget_status` en el controller.
+  #
+  # `.present?` y NO `.nil?`: el string "false" es present?, asi que
+  # `accounting_approved=false` (el filtro "pendientes por aprobar") sigue
+  # llegando. Con `.reject(&:blank?)` sobre booleanos ese caso se pierde en
+  # silencio y la pantalla muestra todo.
+  def apply_expense_filters(scope)
+    scope = scope.where(currency: params[:currency])                       if params[:currency].present?
+    scope = scope.where(budget_status: params[:budget_status])             if params[:budget_status].present?
+    scope = scope.where(accounting_approved: params[:accounting_approved]) if params[:accounting_approved].present?
+    scope = scope.where(expense_budget_id: params[:expense_budget_id])     if params[:expense_budget_id].present?
+    scope
+  end
+
+  # Buscador libre de las dos tablas de gastos. Incluye `id::text` para que pegar
+  # el numero del registro en la caja de busqueda lo encuentre.
+  def apply_free_text(scope)
+    return scope if params[:q].blank?
+
+    term = "%#{params[:q].to_s.downcase.strip}%"
+    scope.where(
+      "LOWER(report_expenses.invoice_name) LIKE :t OR LOWER(report_expenses.description) LIKE :t OR " \
+      "LOWER(report_expenses.invoice_number) LIKE :t OR LOWER(report_expenses.identification) LIKE :t OR " \
+      "CAST(report_expenses.id AS TEXT) LIKE :t",
+      t: term
+    )
+  end
+
+  # Orden con allowlist. `params[:sort]` entra a un `Arel.sql` sin escapar: todo
+  # lo que no este en EXPENSE_SORT_COLUMNS ni sea uno de los dos alias con join
+  # cae al orden por defecto.
+  def order_expenses(scope)
+    direction = params[:dir] == "asc" ? "ASC" : "DESC"
+
+    if EXPENSE_SORT_COLUMNS.include?(params[:sort])
+      scope.order(Arel.sql("report_expenses.#{params[:sort]} #{direction}"))
+    elsif params[:sort] == "cost_center_code"
+      scope.joins(:cost_center).order(Arel.sql("cost_centers.code #{direction}"))
+    elsif params[:sort] == "user_invoice_name"
+      scope.joins(:user_invoice).order(Arel.sql("users.names #{direction}"))
+    else
+      scope.order(created_at: :desc)
+    end
+  end
+
+  # Campos que el USUARIO puede escribir.
+  #
+  # 🔴 PROHIBIDO agregar, ni ahora ni nunca: :budget_status, :budget_reason,
+  # :expense_budget_id, :accounting_approved, :accounting_approved_by_id,
+  # :accounting_approved_at. Los escribe el servidor (ExpenseBudgetService y
+  # AccountingExpensesController). Permitirlos deja fabricarse una aprobacion
+  # presupuestal o contable desde el body de la peticion.
+  #
+  # `:receipt_file` y `:remove_receipt_file` son de ESTE paquete (§7.2): sin
+  # ellos el POST multipart no guarda el comprobante que monto el paquete 06.
+  # `:cop_manual_override` tambien: sin el, el ajuste manual del COP que el
+  # usuario hace en el formulario se sobrescribe en silencio en cada save
+  # (regla D2 del paquete 05).
+  EXPENSE_WRITABLE_PARAMS = [
+    :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description,
+    :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax,
+    :invoice_total, :type_identification_id, :payment_type_id,
+    :receipt_file, :remove_receipt_file,
+    :currency, :foreign_value, :foreign_tax, :foreign_total,
+    :exchange_rate, :exchange_rate_date, :exchange_rate_source, :cop_manual_override
+  ].freeze
+
   def report_expense_params_create
     defaults = { user_id: current_user.id }
-    params.permit(:user_id, :cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description, :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax, :invoice_total, :type_identification_id, :payment_type_id).reverse_merge(defaults)
+    params.permit(:user_id, *EXPENSE_WRITABLE_PARAMS).reverse_merge(defaults)
   end
 
   def report_expense_params_update
-    params.permit(:cost_center_id, :user_invoice_id, :invoice_name, :invoice_date, :description, :invoice_number, :invoice_type, :identification, :invoice_value, :invoice_tax, :invoice_total, :type_identification_id, :payment_type_id)
+    params.permit(*EXPENSE_WRITABLE_PARAMS)
   end
 end
