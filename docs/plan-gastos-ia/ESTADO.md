@@ -2323,3 +2323,37 @@ Suite al cierre de la ola 6: **912 runs, 3037 assertions, 0 failures**, reproduc
 - **Cero cobertura E2E de todo lo construido en las olas 5 y 6.** Los specs funcionales son del
   paquete 12, que aún no corre. Toda la superficie de usuario se verificó **leyendo código**, no
   ejecutándola en un navegador.
+
+---
+
+## ✅ PAQUETE 07-fix (2026-08-11) — manda sobre TODO lo anterior de este documento
+
+Tres de los huecos que las olas 5 y 6 dejaron abiertos **están cerrados**. Donde el resto del
+documento —incluida la sección "Lo que NO está" de aquí arriba— diga lo contrario, **gana esto**.
+
+**1. El kill switch de la captura asistida ya está cableado de punta a punta** (cierra los
+pendientes **#28** y **#33**). `layouts/user.html.erb` publica
+`window.CM_RECEIPT_EXTRACTION_ENABLED` desde el helper `receipt_extraction_enabled?`, que lee
+`ReceiptExtractionService.enabled?` y por tanto el ENV `RECEIPT_EXTRACTION_ENABLED`. Ya **no** es
+cierto que poner el flag en `true` no encienda nada: ahora el botón "Extraer datos del comprobante"
+aparece. Ojo con lo que eso implica: **el flag sigue en `false` por defecto y debe quedarse así**
+hasta que Taimes implemente `call_vision_model`; encendido hoy, el botón se pinta y el endpoint
+todavía no existe. Blindado por `test/integration/receipt_extraction_flag_test.rb` (5 pruebas: false
+por ENV, true por ENV, el global también en la pestaña del centro de costos, el default apagado sin
+variable, y el helper devolviendo booleanos y nunca `nil`).
+
+**2. "Reglas de gastos" ya nace en una instalación limpia** (cierra el pendiente **#21**).
+`lib/tasks/create_config.rake` crea el `ModuleControl` con sus 4 acciones, junto a "Presupuesto" y
+"Contabilidad". Blindado por `test/models/create_config_task_test.rb`, que **corre la rake task de
+verdad dos veces** para comprobar que no duplica nada.
+
+**3. La suite ya no escupe ruido por stdout** (cierra el punto 5 de las salvedades de la ola 3b).
+Se borraron los `puts` de depuración del código legado en `SalesOrder`, `Contractor`, `Material`,
+`MaterialInvoice`, `CustomerReportsController`, `SalesOrdersController` y `application_helper.rb`.
+**Solo se quitaron las impresiones**: ni una condición, asignación ni orden de ejecución cambió.
+Siguen —y seguirán— los 2 `DEPRECATION WARNING` de axlsx y los avisos de `PG::Coder`, que son del
+framework y de la gema, no del código de la aplicación.
+
+**Suite completa tras los tres arreglos: `bin/rails test` → 920 runs, 3055 assertions, 0 failures,
+0 errors, 0 skips**, con la salida limpia. Tres commits atómicos; nada empujado al remoto y
+producción intacta.
