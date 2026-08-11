@@ -147,6 +147,20 @@ class CmDataTable extends React.Component {
     );
   };
 
+  // --- Seleccion multiple (opt-in, paquete 09) ------------------------------
+  //
+  // REGLA: si `selectable` no viene, el DOM renderizado tiene que ser identico
+  // al de siempre. Esta tabla la comparten ~20 pantallas (Materiales,
+  // Tableristas, Turnos, Ordenes de compra...) y cualquier nodo que no este
+  // detras de `if (selectable)` las rompe todas a la vez.
+  //
+  // Estado CONTROLADO: la tabla no guarda seleccion propia. El ciclo de vida de
+  // `selectedIds` (que se conserva al paginar y se limpia al filtrar) es una
+  // decision de la pantalla, no del componente generico.
+  selectionKey = (row) => row[this.props.rowKey || "id"];
+
+  isRowSelected = (row) => (this.props.selectedIds || []).indexOf(this.selectionKey(row)) !== -1;
+
   renderSkeleton = () => {
     const { columns } = this.props;
     const allVisible = columns.filter((c) =>
@@ -166,6 +180,11 @@ class CmDataTable extends React.Component {
           <table className="cm-dt-table">
             <thead>
               <tr>
+                {this.props.selectable && (
+                  <th className="cm-dt-select-header" style={{ width: 42 }}>
+                    <div className="cm-dt-skeleton-bar" style={{ width: "15px", height: "15px", margin: "0 auto" }} />
+                  </th>
+                )}
                 {this.props.actions && (
                   <th style={{ width: "50px" }}>
                     <div className="cm-dt-skeleton-bar" style={{ width: "28px", height: "14px", margin: "0 auto" }} />
@@ -181,6 +200,11 @@ class CmDataTable extends React.Component {
             <tbody>
               {Array.from({ length: rows }).map((_, i) => (
                 <tr key={i}>
+                  {this.props.selectable && (
+                    <td className="cm-dt-select-cell">
+                      <div className="cm-dt-skeleton-bar" style={{ width: "15px", height: "15px", margin: "0 auto" }} />
+                    </td>
+                  )}
                   {this.props.actions && (
                     <td style={{ textAlign: "center" }}>
                       <div className="cm-dt-skeleton-circle" />
@@ -207,7 +231,7 @@ class CmDataTable extends React.Component {
   };
 
   render() {
-    const { columns, data, actions, loading, emptyMessage, emptyAction, headerActions, searchPlaceholder, serverPagination, serverMeta, stickyActions } = this.props;
+    const { columns, data, actions, loading, emptyMessage, emptyAction, headerActions, searchPlaceholder, serverPagination, serverMeta, stickyActions, selectable, onToggleRow, onToggleAllPage } = this.props;
     const { search, activeSearch, visibleColumns, showColumnPicker } = this.state;
 
     if (loading) {
@@ -238,6 +262,13 @@ class CmDataTable extends React.Component {
       start = total > 0 ? (page - 1) * perPage + 1 : 0;
       end_ = Math.min(page * perPage, total);
     }
+
+    // El checkbox del encabezado se refiere SIEMPRE a las filas de la pagina
+    // visible, nunca al resultado completo del filtro: en modo servidor la tabla
+    // solo conoce esta pagina, y un checkbox que marcara invisiblemente miles de
+    // registros seria el camino directo a una aprobacion masiva accidental.
+    const allPageSelected = selectable && rows.length > 0 && rows.every((r) => this.isRowSelected(r));
+    const somePageSelected = selectable && rows.some((r) => this.isRowSelected(r));
 
     return (
       <div className="cm-dt" data-testid="cm-datatable">
@@ -300,6 +331,21 @@ class CmDataTable extends React.Component {
           <table className="cm-dt-table">
             <thead>
               <tr>
+                {selectable && (
+                  <th className="cm-dt-select-header" style={{ width: 42 }}>
+                    <input
+                      type="checkbox"
+                      checked={allPageSelected}
+                      onChange={(e) => onToggleAllPage && onToggleAllPage(rows, e.target.checked)}
+                      title={"Seleccionar los " + rows.length + " de esta página"}
+                      data-testid="cm-dt-select-all"
+                      // `indeterminate` NO es un atributo de React: escrito como
+                      // prop se ignora en silencio. Solo se puede asignar sobre
+                      // el nodo del DOM, y por eso va por ref.
+                      ref={(el) => { if (el) { el.indeterminate = somePageSelected && !allPageSelected; } }}
+                    />
+                  </th>
+                )}
                 {actions && <th className="cm-dt-actions-header" style={{ width: 50, padding: "8px 4px" }}></th>}
                 {visibleCols.map((col) => (
                   <th
@@ -318,6 +364,20 @@ class CmDataTable extends React.Component {
               {rows.length > 0 ? (
                 rows.map((row, i) => (
                   <tr key={row.id || i} data-testid="cm-datatable-row">
+                    {selectable && (
+                      <td className="cm-dt-select-cell">
+                        <input
+                          type="checkbox"
+                          checked={this.isRowSelected(row)}
+                          onChange={() => onToggleRow && onToggleRow(row)}
+                          // stopPropagation porque varias pantallas cuelgan un
+                          // onClick de la fila entera: sin esto, marcar la
+                          // casilla abriria tambien el detalle del registro.
+                          onClick={(e) => e.stopPropagation()}
+                          data-testid={"cm-dt-select-" + this.selectionKey(row)}
+                        />
+                      </td>
+                    )}
                     {actions && (
                       <td className="cm-dt-actions-cell" style={{ padding: "8px 4px" }}>{actions(row)}</td>
                     )}
@@ -331,7 +391,7 @@ class CmDataTable extends React.Component {
               ) : (
                 <tr>
                   <td
-                    colSpan={visibleCols.length + (actions ? 1 : 0)}
+                    colSpan={visibleCols.length + (actions ? 1 : 0) + (selectable ? 1 : 0)}
                     className="cm-dt-empty"
                   >
                     <div className="cm-dt-empty-content">
@@ -435,6 +495,19 @@ CmDataTable.propTypes = {
   onSort: PropTypes.func,
   onPageChange: PropTypes.func,
   onPerPageChange: PropTypes.func,
+  // Seleccion multiple: TODAS opcionales. Sin `selectable` no se renderiza ni un
+  // nodo nuevo.
+  selectable: PropTypes.bool,
+  selectedIds: PropTypes.arrayOf(PropTypes.number),
+  onToggleRow: PropTypes.func,
+  onToggleAllPage: PropTypes.func,
+  rowKey: PropTypes.string,
+};
+
+CmDataTable.defaultProps = {
+  selectable: false,
+  selectedIds: [],
+  rowKey: "id",
 };
 
 export default CmDataTable;
