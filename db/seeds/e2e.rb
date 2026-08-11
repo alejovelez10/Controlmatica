@@ -106,9 +106,32 @@ end
   Parameterization.find_or_create_by!(name: nombre) { |p| p.money_value = valor }
 end
 
+# --- 3 bis. Fila de umbrales de alerta -----------------------------------
+# `ApplicationHelper#recalculate_cost_center` hace `Alert.last` SIN guarda de nil
+# y compara con `alert.ing_costo_med`. Ese helper corre en el `create`, el
+# `update` y el `destroy` de todo gasto, asi que sin una fila en `alerts` el
+# primer gasto que se crea por la web responde 500 ("Puma caught this error:
+# undefined method `ing_costo_med' for nil"). En desarrollo y en produccion la
+# fila existe desde siempre; en una BD de test recien preparada, no.
+#
+# Las columnas de umbral traen default en el esquema, asi que basta con crearla.
+Alert.first || Alert.create!(name: "Umbrales E2E", user_id: admin.id,
+                             ing_costo_med: 30, via_med: 100, desp_med: 100,
+                             tab_costo_med: 30, mat_med: 30)
+
 # --- 4. Usuario E2E ------------------------------------------------------
-# find_or_initialize + asignar password SIEMPRE, para que un cambio en
-# test/e2e/support/env.js se propague sin tener que borrar la BD a mano.
+# find_or_initialize + la password SOLO si hace falta.
+#
+# TRAMPA QUE COSTO UNA HORA (paquete 12): reasignar la password en cada corrida
+# regenera el hash de bcrypt, y Devise guarda en la sesion el
+# `authenticatable_salt` (los primeros 29 caracteres de encrypted_password) para
+# validarla. Consecuencia: cualquier spec que resembrara en `beforeAll`
+# INVALIDABA su propio storageState y el siguiente `page.goto` aterrizaba en
+# "Iniciar Sesión", con un fallo que no menciona ni la sesion ni el seed.
+#
+# La intencion original se conserva: si alguien cambia la clave en
+# test/e2e/support/env.js, `valid_password?` falla y la password se reescribe
+# sin tener que borrar la BD a mano.
 usuario = User.find_or_initialize_by(email: EMAIL_E2E)
 usuario.names           = "Ingeniero"
 usuario.last_names      = "E2E"
@@ -116,7 +139,7 @@ usuario.rol_id          = rol_admin.id
 usuario.document_type   = "CC"
 usuario.number_document = 100_000_500
 usuario.menu            = "nav-sm"
-usuario.password        = PASSWORD_E2E
+usuario.password        = PASSWORD_E2E unless usuario.persisted? && usuario.valid_password?(PASSWORD_E2E)
 usuario.save!
 
 # --- 5. Cliente ----------------------------------------------------------
@@ -265,7 +288,9 @@ def usuario_e2e!(email:, names:, last_names:, rol:, documento:)
   u.document_type   = "CC"
   u.number_document = documento
   u.menu            = "nav-sm"
-  u.password        = PASSWORD_E2E
+  # Misma trampa del paso 4: reescribir la password en cada corrida cambia el
+  # salt de Devise e invalida los storageState de los usuarios restringidos.
+  u.password        = PASSWORD_E2E unless u.persisted? && u.valid_password?(PASSWORD_E2E)
   u.save!
   u
 end
