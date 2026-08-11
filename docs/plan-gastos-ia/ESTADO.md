@@ -23,7 +23,7 @@ mismo y no podía arreglar nada.
 | `cd test/e2e && npm test` | **48 tests: 45 passed, 3 skipped, 0 failed** en 1,5 min, exit 0 |
 | Los 3 `skipped` | Los `test.fixme()` declarados de captura asistida. Motivo escrito en el título |
 | `git status --porcelain` | **Limpio** |
-| Commits por delante de `origin/master` | **160** en la rama `feature/gastos-presupuesto-ia` |
+| Commits por delante de `origin/master` | **161** en la rama `feature/gastos-presupuesto-ia` |
 | Empujado al remoto | **Nada.** La rama no tiene upstream |
 | Producción | **Intacta.** No se ejecutó un solo comando de Heroku |
 
@@ -34,7 +34,7 @@ mismo y no podía arreglar nada.
    [`docs/RUNBOOK-DESPLIEGUE-GASTOS-IA.md`](../RUNBOOK-DESPLIEGUE-GASTOS-IA.md).
 2. **Todo lo que le habla a un modelo de IA queda fuera por decisión del cliente**, y lo completa
    Taimes. Aquí se dejó el hueco exacto, cableado y apagado. Ver §5.
-3. **Hay 5 decisiones de producto tomadas por defecto que nadie ha firmado** y **25 pendientes
+3. **Hay 5 decisiones de producto tomadas por defecto que nadie ha firmado** y **29 pendientes
    que requieren a una persona**, de los que **5 bloquean la puesta en marcha**. Ver §3 y §4.
 
 ---
@@ -56,7 +56,7 @@ mismo y no podía arreglar nada.
 | **10** | IA: extracción | ⚠️ | `41c8bbc`..`1ae2af0` | **Solo el esqueleto**, por la frontera de alcance: contrato, `Result`, esquema JSON de salida, mapeo de errores y el seam `call_vision_model` como `NotImplementedError` documentado, más 49 pruebas de contrato **sin una sola llamada de red**. **3 criterios incumplidos a propósito**, ver §5 |
 | **11** | MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | Actor por teléfono en modo estricto, `X-Actor-Phone`, las claves nuevas del listado, creación de gasto con actor estricto + guard de reglas + persistencia evaluada + los 6 campos de moneda, y **8 herramientas nuevas**. **191 pruebas propias** contra las ~120 nominadas. `tools/list` real devuelve **62 herramientas**. **Salvedades**: la puerta de escape `confirm_rule_violations` contradice un criterio (pendiente **P-17**) y los criterios 27/28 dependen de que se carguen los teléfonos (**P-03**) |
 | **12** | Suite E2E Playwright | ⚠️ | `f93c81f`..`ac334a7` | Los 9 escenarios del brief más los 4 de reglas, con los dos bordes de red stubeados con doble guarda y bitácora auditable, el seed ampliado a 8 centros / 6 usuarios / 3 roles, 5 helpers y 19 pruebas Minitest del stub y del seed. **Es la primera vez que la superficie de usuario se EJECUTA en un navegador**, y eso encontró 5 defectos que ninguna lectura de código había visto (§6.1). **Salvedades**: el criterio 12 está incumplido (**P-19**) y el 27 no se ejecuta (**P-20**) |
-| **13** | Cierre, documentación y puesta en marcha | ⚠️ | `611f95c`..`a944735` + este | Manual de usuario, guía de reglas, instructivo de campo, runbook con los valores reales, plantilla de acta, `rake users:import_phones` con 23 pruebas, el arreglo del flash con 18 pruebas y este documento. **Falta lo que no se puede hacer sin una persona y sin acceso a producción**: ejecutar el runbook, recolectar los teléfonos, configurar el agente y dar la capacitación |
+| **13** | Cierre, documentación y puesta en marcha | ⚠️ | `611f95c`..`c0dae3a` (8 commits) | Manual de usuario (552 l), guía de reglas (349 l), instructivo de campo (169 l), runbook con los valores reales (602 l), plantilla de acta (199 l), `rake users:import_phones` (253 l) con 23 pruebas, el arreglo del flash con 18 pruebas y este documento. **41 pruebas propias, 156 assertions, 0 fallos.** **Falta lo que no se puede hacer sin una persona y sin acceso a producción**: ejecutar el runbook, recolectar los teléfonos, configurar el agente y dar la capacitación. **Salvedades halladas por la verificación independiente**: el entregable "a modificar" no se hizo (**P-26**), tocó el layout sin ser dueño (**P-27**), su criterio 3 no cierra por diseño (**P-28**) y el arreglo del flash no tiene cobertura de navegador (**P-29**) |
 | **14** | Reglas de gastos (backend) | ⚠️ | `6dac5f9`..`e34111e` | Las 2 migraciones (con índice único **parcial**), el modelo con resolución de 3 ramas, el servicio con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en el gasto y el controlador con su rake de permisos. **65 pruebas propias** contra las 30 pedidas. **Salvedad**: el detalle de la violación no se expone al navegador (pendiente **P-18**) |
 | **14‑ui** | Reglas de gastos (pantalla) | ⚠️ | `ffb303b`..`5b4b8e9` | La pantalla bajo Configuración con sus 7 campos, la columna "Aplica a" que dice *Nadie* / *Todos (por defecto)* y **el aviso permanente de que el multi-select vacío significa NADIE**. 33 pruebas nuevas. **Salvedad**: escribió en 3 archivos compartidos en bloques que el reparto no contempla (pendiente **P-22**) |
 
@@ -127,6 +127,7 @@ falta es que alguien las bendiga o pida moverlas.
 | **P-12** | Un test del paquete 03, que perdió una aserción | El **05**, arreglando una intermitencia real (`WHERE ... IN` sin `ORDER BY`). El arreglo es correcto, pero **se perdió la aserción que fijaba cuál valor sale como "nuevo"**. 🔴 **Consecuencia viva y sin arreglar: en el HTML de auditoría de campos de asociación, cuál valor sale como "nuevo" es NO DETERMINISTA.** Es deuda preexistente del legado, pero ya no hay ninguna prueba que la detecte |
 | **P-13** | Dos fixtures `.xlsx` del paquete 01, reescritas por completo | El **06**. Su contenido contradecía lo que el inventario declaraba: el encabezado real no lo podía leer ni la importación vieja ni la nueva. Se regeneraron con el layout canónico. El tercer `.xlsx` **no** se tocó, y por eso un criterio del 06 sigue sin cumplirse literalmente |
 | **P-16** | `CmPageActions.jsx`, componente compartido por unas **20 pantallas**, al que se le añadió una prop | El **09**. El cambio es aditivo y retrocompatible, pero es un archivo de otro dueño |
+| **P-27** | `app/views/layouts/user.html.erb` (un cuarto bloque) y un bloque borrado de `home/index_user.html.erb` | El **13**, al arreglar el flash (`6d04d85`). La matriz (§7.2 de la arquitectura, línea 1813) reparte ese layout **por bloques entre tres dueños**: 01, 05 y 09. El 13 no es ninguno de ellos y le añadió el `render "layouts/flash"` dentro de `<main>`. Además el propio documento del 13 se declara "no escribe código de negocio; su única pieza de código es una rake task", y aquí escribió una vista nueva, un cambio de layout y un borrado. **El arreglo es correcto y está probado (18 pruebas), pero la desviación no se declaró cuando se hizo**: hay que bendecirla o mover el bloque a su dueño |
 | **P-22** | 3 archivos compartidos (`application_helper.rb`, el layout y `routes.rb`) | El **14-ui**. Se respetó la convención de agregar solo métodos al final, salvo en una línea compartida de configuración de autorización que **se modificó en su sitio** — y sin eso, un rol cuyo único permiso de configuración fuera "Reglas de gastos" no vería el menú. La suite completa se corrió después, que es lo que exige la matriz a quien toque el layout |
 
 ### 4.4 🟡 Criterios de aceptación que no cierran
@@ -137,6 +138,8 @@ falta es que alguien las bendiga o pida moverlas.
 | **P-15** | Regla inviolable del encargo: commits atómicos | 🔴 **Los commits de la ola 5 NO son atómicos.** Los paquetes 09 y 11 se ejecutaron en paralelo y **cuatro commits mezclan archivos de los dos**. Consecuencias concretas: **ningún commit del 09 contiene sus propias pruebas**, y **revertir cualquiera de los tres commits del 09 citados rompería el servidor MCP**. No se reescribió la historia por cuenta propia: son 19 commits encadenados y reescribir commits ya revisados es decisión de quien revisa. Las opciones son aceptarlo con esta nota, o rehacer la ola en una rama limpia |
 | **P-17** | Criterio 35 del **11** vs. el documento del **14** | Se contradicen: el 11 dice *"un gasto con violación bloqueante es rechazado por MCP"* y el 14 dice *"una violación nunca impide guardar"*. Se implementó un punto medio: se rechaza **salvo** que llegue confirmación explícita de la persona, que es exactamente lo que hace la web, y el gasto confirmado **nunca queda aprobado**. Pero el criterio, tal como está escrito, no admite excepciones. Hay que decidir: se corrige el criterio, o se quita la puerta de escape y el agente deja de poder registrar gastos que violan una regla |
 | **P-19** | Criterio 12 del **12** | Exige que la bitácora de bordes de red tenga **≥5 líneas** tras la corrida. Medido hoy, otra vez: **3 líneas**, todas de tasas de cambio. Es coherente con que los 3 escenarios de IA estén sin ejecutar y por tanto nunca toquen el stub de extracción. **No es un test en rojo.** Decisión: recalibrar el criterio a 3, o exigir que crezca cuando se enciendan los 3 escenarios |
+| **P-26** | Entregable del **13** que **no se hizo** | El paquete prometía en su tabla "a modificar" agregarle a [`TAIMES-AGENTE-GASTOS.md`](../TAIMES-AGENTE-GASTOS.md) una sección **"Estado de la configuración en staging/producción"** con el resultado de las tareas B5/B6. **La sección no existe**: `grep -i "estado de la configuraci" docs/*.md` no devuelve nada y el último commit que tocó ese archivo es `ea98dad`, del paquete 11. Ningún commit del 13 lo modificó. **En rigor no se podía escribir**: su contenido es el resultado de ejecutar el runbook en los entornos reales, que es P-02/P-03/P-05 y nadie lo ha hecho. Hay que escribirla el día del despliegue, o dar el entregable por retirado |
+| **P-28** | Criterio 3 del **13** | Exige que la guía de reglas "nombre cada fila de `parameterizations` con su nombre exacto, incluidos el prefijo de conceptos y el sentinela (NINGUNO)". [`GUIA-REGLAS-NEGOCIO.md`](../GUIA-REGLAS-NEGOCIO.md) **no lo hace, a propósito**: documenta la pantalla y la tabla propia de reglas del paquete 14, y su Anexo declara obsoleta la especificación basada en `parameterizations`. **Verificado y cierto**: no existe `lib/tasks/parameterizations*` ni la tarea `parameterizations_gastos_ia:install`, y sí existen `app/models/expense_rule.rb` y `app/services/expense_rule_service.rb`. **Se corrige el criterio, no la guía** |
 | **P-20** | Criterio 27 del **12** (captura asistida) | El test **existe, está escrito completo** contra los identificadores canónicos y verifica lo que el criterio pide, pero vive en `test.fixme()` y sale como *skipped*. Misma causa raíz que §5: no existe la ruta de extracción y el interruptor está apagado. **Se cierra solo, sin escribir una línea, el día que Taimes implemente su parte** |
 
 ### 4.5 🟡 Defectos conocidos y no corregidos
@@ -147,6 +150,7 @@ falta es que alguien las bendiga o pida moverlas.
 | **P-21** | ⚠️ **La suite ensucia la salida**: **76 líneas** de `warning: already initialized constant` y **8** volcados `== seed E2E ==` por corrida | El seed E2E se carga varias veces en el mismo proceso y redefine constantes de nivel superior. **No afecta a ningún resultado** (980/3.467/0/0/0), pero tapa los avisos que sí importan. Arreglo obvio y barato: envolver las constantes en un módulo y silenciar la impresión salvo con una variable de entorno. Es dueño único del paquete 12 |
 | **P-23** | **Dos endpoints de lectura responden 200 a cualquier usuario autenticado, sin verificar permiso de módulo** (el cupo disponible de un centro y las reglas que le aplican a un usuario) | En el del cupo es **deliberado y está probado** (el formulario de gasto necesita saber el disponible aunque quien lo llena no administre presupuesto), pero filtra el cupo de cualquier centro a cualquier empleado con sesión. Ninguno permite escribir. Acotarlos **cambia un criterio de aceptación ya aprobado**, así que no se hizo por cuenta propia |
 | **P-24** | El modal de previsualización de comprobante **degrada a "descárguelo"** en varios navegadores | La acción de descarga fuerza `Content-Disposition: attachment` por contrato con la suite E2E, así que el visor incrustado descarga en vez de mostrar. **La descarga nunca se bloquea**: la funcionalidad no está rota, está degradada. La salida limpia es una segunda ruta `inline`, en un archivo de otro dueño |
+| **P-29** | ⚠️ **El arreglo del flash no lo comprueba ningún navegador.** `test/e2e/specs/permissions.spec.js:74-82` sigue con el comentario de la ola 7 —"NINGÚN layout de la aplicación pinta flash… queda anotado como pendiente para el 13"— y su aserción sigue midiendo la denegación por el 403 del endpoint, no por el aviso en pantalla | El 13 arregló el layout pero **no actualizó la spec ni el comentario**, así que hoy el documento se contradice con el código y nada verifica en un navegador que "No tiene permiso" se vea. Está cubierto por 18 pruebas Minitest (helper + integración que atraviesa el redirect real de los dos gates), o sea **no es un hueco de comportamiento, es un hueco de la capa que encontró el defecto en primer lugar** — justo la lección de §6.1. Arreglo: borrar el comentario caduco y afirmar sobre el flash en esa spec. Es del dueño del paquete 12 |
 | **P-25** | Un componente de calendario lee la etiqueta CSRF **sin guarda de nil** | En el entorno de pruebas eso desmontaba la pantalla del centro de costos entera. Se resolvió emitiendo la etiqueta desde el inicializador de E2E, **sin encender la verificación de CSRF y sin tocar `app/`**. En producción y desarrollo la etiqueta existe, así que el defecto solo se ve en test. **Lo correcto a futuro es la guarda de nil en el componente** |
 
 ---
@@ -216,7 +220,9 @@ navegador de verdad por primera vez, y encontró **5 defectos que ninguna lectur
 4. Cargar el inicializador de stubs dentro de Minitest producía un `SystemStackError`
    intermitente.
 5. **El flash de "no tiene permiso" no lo pintaba ningún layout**: el usuario expulsado era
-   redirigido sin explicación. ✅ **Corregido en el paquete 13** (`6d04d85`), con 18 pruebas.
+   redirigido sin explicación. ✅ **Corregido en el paquete 13** (`6d04d85`), con 18 pruebas
+   Minitest. ⚠️ **Pero ninguna prueba de navegador lo comprueba todavía** (P-29), y el comentario
+   de la spec que lo denunció quedó caduco y hoy dice lo contrario de lo que hace el código.
 
 **La lección, y es la parte frágil**: cuatro de esos cinco defectos eran de comportamiento en
 producción, no de test, y las 900+ pruebas unitarias no los vieron. **Cualquier pantalla nueva
@@ -257,11 +263,11 @@ Para que nadie las "arregle":
 
 | Regla | Estado |
 |---|---|
-| Nunca `git push` | ✅ **Nada empujado.** La rama no tiene upstream; 160 commits locales |
+| Nunca `git push` | ✅ **Nada empujado.** La rama no tiene upstream; 161 commits locales |
 | Nunca tocar producción | ✅ **Ni un solo comando de Heroku ejecutado** |
 | Commits atómicos, en español, explicando el porqué, con el trailer correcto | ✅ En todas las olas **salvo la 5** (pendiente **P-15**, el único incumplimiento de una regla inviolable en toda la rama) |
 | Prohibido borrar pruebas, marcarlas `skip` o relajar aserciones | ✅ **Ninguna prueba borrada, ninguna marcada `skip` para tapar un rojo, ninguna aserción relajada.** Los 3 `skipped` son `test.fixme()` declarados con el motivo en el título. Las dos aserciones que cambiaron quedaron **más estrictas** |
-| Respetar la matriz de propiedad de archivos | ⚠️ 5 desviaciones, todas listadas en §4.3 con su justificación |
+| Respetar la matriz de propiedad de archivos | ⚠️ **6 desviaciones**, todas listadas en §4.3 con su justificación. La sexta (P-27, el layout tocado por el 13) la encontró la verificación de la ola 8; el paquete no la había declarado |
 
 ---
 
@@ -274,7 +280,7 @@ Para que nadie las "arregle":
 | [`INSTRUCTIVO-WHATSAPP-CAMPO.md`](../INSTRUCTIVO-WHATSAPP-CAMPO.md) | Personal de campo | ✅ Completo, **marcado como no distribuible** hasta que el canal esté conectado |
 | [`RUNBOOK-DESPLIEGUE-GASTOS-IA.md`](../RUNBOOK-DESPLIEGUE-GASTOS-IA.md) | Quien despliegue | ✅ Completo con los valores reales. 🔴 **NO EJECUTADO** |
 | [`ACTA-CAPACITACION.md`](../ACTA-CAPACITACION.md) | Cierre del proyecto | ⬜ **Plantilla sin firmar.** Es el criterio de cierre |
-| [`TAIMES-AGENTE-GASTOS.md`](../TAIMES-AGENTE-GASTOS.md) | Quien configure el agente | ✅ Completo (paquete 11) |
+| [`TAIMES-AGENTE-GASTOS.md`](../TAIMES-AGENTE-GASTOS.md) | Quien configure el agente | ⚠️ Completo como contrato (paquete 11), pero **le falta la sección "Estado de la configuración en staging/producción"** que el 13 prometía y no escribió (**P-26**) |
 | [`TAIMES-MCP-INTEGRATION.md`](../TAIMES-MCP-INTEGRATION.md) | Integración MCP | ✅ Completo |
 | [`BITACORA-OLAS.md`](BITACORA-OLAS.md) | Histórico | ℹ️ Referencia. **No manda sobre este documento** |
 
@@ -287,7 +293,7 @@ Para que nadie las "arregle":
 3. **Arrancar la recolección de teléfonos** (P-03). Es lo que más tiempo de calendario toma y no
    depende de nadie técnico.
 4. **Rotar la llave de AWS** (P-01) y **sacar el token de datos.gov.co** (P-05).
-5. **Decidir cómo llega el código al remoto**: PR contra `master` para que alguien lea los 160
+5. **Decidir cómo llega el código al remoto**: PR contra `master` para que alguien lea los 161
    commits, o push directo a Heroku.
 6. **Ejecutar el runbook en staging**, fase por fase.
 7. **Agendar la capacitación.** No la deje para el final: es el criterio de cierre y el proyecto
@@ -295,5 +301,88 @@ Para que nadie las "arregle":
 
 ---
 
-*Última actualización: 2026-08-11, cierre de la ola 8 (paquete 13). Todas las cifras de este
-documento se midieron ejecutando los comandos, no se reportaron de memoria.*
+## 10. Bitácora
+
+El histórico crudo, ola por ola, está en [`BITACORA-OLAS.md`](BITACORA-OLAS.md). Aquí solo queda
+la entrada de cierre.
+
+### Ola 8 — Paquete 13: cierre, documentación y puesta en marcha ⚠️ (2026-08-11)
+
+**Qué se construyó**, en 8 commits atómicos `611f95c`..`c0dae3a`, todos en español, todos con el
+trailer `Co-Authored-By` exacto:
+
+| Commit | Entregable |
+|---|---|
+| `611f95c` | `.gitignore` para `.playwright-mcp/`, que ensuciaba el árbol |
+| `6d04d85` | **El layout pinta el flash**: el quinto defecto de la ola 7, el único que había quedado sin arreglar |
+| `e5107b7` | `lib/tasks/users_phones.rake` (253 l): `users:phones_report` e `users:import_phones` |
+| `924853a` | `docs/MANUAL-USUARIO-GASTOS.md` (552 l) |
+| `b4aa13e` | `docs/GUIA-REGLAS-NEGOCIO.md` (349 l) |
+| `252a4f6` | `docs/INSTRUCTIVO-WHATSAPP-CAMPO.md` (169 l) |
+| `a944735` | `docs/RUNBOOK-DESPLIEGUE-GASTOS-IA.md` (602 l) + `docs/ACTA-CAPACITACION.md` (199 l) |
+| `c0dae3a` | Este documento, consolidado desde 2.605 líneas contradictorias |
+
+Los 7 archivos "a crear" del paquete **existen y tienen contenido real**, verificado. El único
+archivo "a modificar" **no se tocó** (P-26).
+
+**Cuántas pruebas hay y cuánto tardan** — medido corriendo los comandos, no de memoria:
+
+| Suite | Resultado |
+|---|---|
+| `bin/rails test` | **980 runs / 3.467 assertions / 0 failures / 0 errors / 0 skips** en **16,19 s**, exit 0 |
+| Pruebas propias del 13 | **41 runs / 156 assertions / 0 fallos**: `test/lib/users_phones_rake_test.rb` (23 casos) + `test/helpers/flash_partial_test.rb` (12) + `test/integration/flash_layout_test.rb` (6) |
+| `cd test/e2e && npm test` | **48 tests: 45 passed, 3 skipped, 0 failed** en **1,5 min**. Se corrió aunque el paquete sea de documentación, porque el flash se pinta en **todas** las pantallas autenticadas |
+| Los 3 `skipped` | `ai-capture.spec.js`, `test.fixme()` declarados del paquete 12. **No los introdujo el 13** |
+
+Las 41 pruebas del 13 son reales, no clases vacías: cubren los 4 formatos de teléfono,
+idempotencia comprobando que **no crece `RegisterEdit`**, duplicado dentro del CSV, colisión
+contra la base, `FORCE=1` que **no** relaja duplicados, correo inexistente, teléfono ilegible, la
+tarea real con `Tempfile`, el `abort` si falta el archivo y `User.current` en nil al terminar.
+
+**Qué quedó frágil, pendiente o asumido — sin adornos:**
+
+1. 🔴 **De los 13 criterios de aceptación del paquete, cierra 1.** El 6 (idempotencia y reporte de
+   no encontrados/duplicados) está probado y cerrado. El 3 no cierra **por diseño**, con
+   justificación verificada (P-28). Los otros 11 no cierran porque **dependen de trabajo humano o
+   de acceso a producción**: ejecutar el runbook, tomar las capturas del manual, probar el
+   instructivo con dos personas de campo, dar la capacitación y firmar el acta.
+2. 🔴 **El runbook está escrito pero NO EJECUTADO**, y así está marcado en su propia cabecera.
+   Ninguna variable sembrada, ninguna migración corrida, ningún permiso asignado en ningún
+   entorno remoto. La puesta en marcha sigue íntegra por delante.
+3. ⚠️ **Un entregable prometido no se hizo** (P-26): la sección de estado de configuración en
+   `TAIMES-AGENTE-GASTOS.md`. En rigor no se podía escribir sin haber ejecutado el runbook, pero
+   estaba prometida y no está.
+4. ⚠️ **Desviación de matriz no declarada** (P-27): el paquete se define a sí mismo como "no
+   escribe código de negocio, su única pieza de código es una rake task", y sin embargo tocó
+   `app/views/layouts/user.html.erb` —que la matriz reparte por bloques entre los paquetes 01, 05
+   y 09—, creó una vista nueva y borró un bloque de `home/index_user.html.erb`. El arreglo es
+   correcto y está probado; lo que falta es que alguien lo bendiga.
+5. ⚠️ **El arreglo del flash no lo ve ningún navegador** (P-29). El comentario de
+   `permissions.spec.js:74-82` sigue diciendo que ningún layout pinta flash: quedó caduco y hoy
+   contradice al código. Está cubierto por Minitest, pero es exactamente la capa que no encontró
+   ninguno de los 5 defectos de la ola 7.
+6. ⚠️ **El ruido de la suite sigue** (P-21): decenas de `warning: already initialized constant` y
+   varios volcados `== seed E2E ==`. No afecta a ningún resultado, pero tapa lo que sí importa.
+
+**Lo que se verificó en vez de creerlo.** Las afirmaciones técnicas de los documentos nuevos se
+comprobaron contra el repo: (a) el anexo de la guía de reglas dice que la configuración **no** vive
+en `parameterizations` y que no existe `parameterizations_gastos_ia:install` — cierto, no hay
+`lib/tasks/parameterizations*` y sí existen el modelo y el servicio de reglas del 14; (b) las
+otras 4 rake tasks que nombra el criterio 11 existen: `permissions_gastos_ia`, `storage:check`,
+`gastos_ia_schema:check`, `users:import_phones`; (c) el runbook lista **15** variables con valores
+reales (apps `controlmatica` / `controlmatica-staging`, bucket `controlmatica`, `us-east-2`).
+
+**Higiene.** `git status` limpio. 161 commits por delante de `master`, **cero empujados**: la rama
+no tiene upstream. Ningún comando de Heroku ni de producción. Ninguna prueba borrada, marcada
+`skip` ni con aserciones relajadas por este paquete.
+
+**Conclusión honesta.** El paquete 13 entrega lo que un agente puede entregar —documentación, la
+rake task y el arreglo del flash—, la suite y los E2E están verdes y este tablero declara lo que
+falta. **Pero el proyecto no está en marcha**: está listo para ponerse en marcha, que no es lo
+mismo, y el trabajo que queda es humano (§4.1) y de campo (§9).
+
+---
+
+*Última actualización: 2026-08-11, cierre de la ola 8 (paquete 13) con la verificación
+independiente incorporada. Todas las cifras de este documento se midieron ejecutando los comandos,
+no se reportaron de memoria.*
