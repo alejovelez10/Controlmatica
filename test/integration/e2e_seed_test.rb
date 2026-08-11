@@ -53,8 +53,8 @@ class E2eSeedTest < ActionDispatch::IntegrationTest
       2.times do |vuelta|
         load SEED
 
-        assert_equal 7, CostCenter.where("code LIKE 'CM-E2E-%'").count,
-                     "vuelta #{vuelta + 1}: deben quedar exactamente 7 centros E2E"
+        assert_equal 8, CostCenter.where("code LIKE 'CM-E2E-%'").count,
+                     "vuelta #{vuelta + 1}: deben quedar exactamente 8 centros E2E"
         assert_equal 6, User.where(email: EMAILS_E2E).count,
                      "vuelta #{vuelta + 1}: deben quedar exactamente 6 usuarios E2E"
 
@@ -89,7 +89,7 @@ class E2eSeedTest < ActionDispatch::IntegrationTest
     as_user(users(:admin)) { load SEED }
 
     %w[CM-E2E-01-2026 CM-E2E-BUD-2026 CM-E2E-REC-2026 CM-E2E-FX-2026
-       CM-E2E-ACC-2026 CM-E2E-PERM-2026 CM-E2E-PAG-2026].each do |code|
+       CM-E2E-ACC-2026 CM-E2E-PERM-2026 CM-E2E-PAG-2026 CM-E2E-RULE-2026].each do |code|
       assert_not_nil CostCenter.find_by(code: code),
                      "#{code} no existe: before_create :create_code sobrescribio el codigo"
     end

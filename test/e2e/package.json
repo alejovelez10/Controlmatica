@@ -21,6 +21,7 @@
     "test:accounting": "playwright test specs/accounting.spec.js",
     "test:permissions": "playwright test specs/permissions.spec.js",
     "test:pagination": "playwright test specs/pagination.spec.js",
+    "test:rules": "playwright test specs/rules.spec.js",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report"

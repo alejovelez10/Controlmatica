@@ -55,7 +55,12 @@ E2E_SCOPES = {
   "FX"    => { code: "CM-E2E-FX-2026",   viatic: 9_000_000.0 },
   "ACC"   => { code: "CM-E2E-ACC-2026",  viatic: 4_000_000.0 },
   "PERM"  => { code: "CM-E2E-PERM-2026", viatic: 1_000_000.0 },
-  "PAG"   => { code: "CM-E2E-PAG-2026",  viatic: 8_000_000.0 }
+  "PAG"   => { code: "CM-E2E-PAG-2026",  viatic: 8_000_000.0 },
+  # Octavo scope, para los 4 escenarios de reglas de gasto del paquete 14. El
+  # documento del 12 no los contemplaba (llegaron con el encargo), y meterlos en
+  # un centro ajeno habria roto el aislamiento: una regla asignada a un
+  # beneficiario que otro spec usa cambia el budget_status de SUS gastos.
+  "RULE"  => { code: "CM-E2E-RULE-2026", viatic: 3_000_000.0 }
 }.freeze
 
 SCOPE = ENV.fetch("E2E_SCOPE", "ALL").upcase
@@ -383,6 +388,11 @@ end
 # el stub de red no se ejercitaria, que es justo lo que currency.spec.js afirma.
 ExchangeRate.where(currency: %w[USD EUR]).delete_all if centros_e2e.key?("FX")
 
+# Las reglas que crea rules.spec.js por la UI llevan el prefijo "E2E " en el
+# nombre. `destroy_all` y no `delete_all`: hay que soltar las filas de
+# expense_rules_users y dejar el registro de auditoria.
+ExpenseRule.where("name LIKE 'E2E %'").destroy_all if centros_e2e.key?("RULE")
+
 # --- 12. Datos por escenario ---------------------------------------------
 partidas_e2e = {}
 gastos_e2e   = {}
@@ -465,6 +475,15 @@ if centros_e2e["PERM"]
                                       numero: "FE-E2E-PERM-001", nombre: "Gasto de permisos",
                                       valor: 120_000.0, fecha: Date.new(2026, 6, 10),
                                       tipo: tipo, pago: pago).id
+end
+
+if centros_e2e["RULE"]
+  # La partida es de Bruno (benef_b) y no del dueño: los escenarios de reglas
+  # necesitan un beneficiario que ningun otro spec use para registrar gastos.
+  partidas_e2e["RULE"] = ExpenseBudget.create!(
+    cost_center_id: centros_e2e["RULE"].id, user_id: usuarios_e2e["benef_b"].id,
+    amount: 1_000_000.0, notes: "Partida E2E reglas", active: true, created_by_id: admin.id
+  )
 end
 
 if centros_e2e["PAG"]
