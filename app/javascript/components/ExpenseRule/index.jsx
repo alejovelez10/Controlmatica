@@ -19,6 +19,21 @@ function csrfToken() {
   return meta ? meta.getAttribute("content") : "";
 }
 
+// Junta los mensajes del servidor en una frase presentable.
+//
+// La mayuscula inicial es cosmetica pero no es un capricho: los mensajes de
+// `errors.full_messages` de este modelo estan traducidos con `format:
+// "%{message}"` (config/locales/expense_rule.en.yml) para que no salga el
+// nombre del atributo en ingles, y como el modelo escribe la frase sin sujeto,
+// llegan empezando en minuscula. Se arregla al PINTAR y no en el modelo: el
+// texto del modelo lo afirman las pruebas del backend, que no son de este
+// paquete.
+function mensajeServidor(mensajes) {
+  var texto = (mensajes || []).join(" ").trim();
+  if (!texto) return null;
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
 // Copiado de ShowConstCenter/BudgetsTable.jsx:16-23 para que las fechas de
 // todas las tablas del modulo de gastos se lean igual.
 function formatDate(fecha) {
@@ -147,7 +162,7 @@ class ExpenseRuleIndex extends Component {
         // 403 formateado: el servidor responde { type: "error", message: [...] }
         // con cuerpo JSON justamente para poder pintarlo.
         if (data.type === "error") {
-          self.setState({ loading: false, data: [], error: (data.message || []).join(" ") });
+          self.setState({ loading: false, data: [], error: mensajeServidor(data.message) });
           return;
         }
         self.setState({ data: data.data || [], loading: false, error: null, searchTerm: term });
@@ -202,8 +217,12 @@ class ExpenseRuleIndex extends Component {
         // `null` se convierte a "" y no a "null": el input mostraria el texto.
         max_invoice_age_days: row.max_invoice_age_days === null || row.max_invoice_age_days === undefined
           ? "" : String(row.max_invoice_age_days),
+        // `parseFloat` y no `String` a secas: el serializer manda el decimal
+        // como "1500000.0" y el campo mostraria "$1,500,000.0", con un decimal
+        // suelto que el usuario lee como un error de la pantalla. parseFloat
+        // conserva los decimales reales (1500.5 sigue siendo 1500.5).
         max_invoice_value: row.max_invoice_value === null || row.max_invoice_value === undefined
-          ? "" : String(row.max_invoice_value),
+          ? "" : String(parseFloat(row.max_invoice_value)),
         check_duplicates: !!row.check_duplicates,
         agent_instructions: row.agent_instructions || "",
       },
@@ -295,7 +314,7 @@ class ExpenseRuleIndex extends Component {
         // "ya existe otra regla marcada como regla por defecto" sin cerrar el
         // modal, para que el usuario pueda corregir sin volver a escribirlo todo.
         if (data.type === "error") {
-          self.setState({ saving: false, formError: (data.message || []).join(" ") });
+          self.setState({ saving: false, formError: mensajeServidor(data.message) });
           return;   // el modal NO se cierra
         }
         self.setState({ modal: false, saving: false });
@@ -328,7 +347,7 @@ class ExpenseRuleIndex extends Component {
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.type === "error") {
-            Swal.fire({ icon: "error", title: "¡Ocurrió un error!", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+            Swal.fire({ icon: "error", title: "¡Ocurrió un error!", text: mensajeServidor(data.message), confirmButtonColor: "#2a3f53" });
             return;
           }
           self.loadData();

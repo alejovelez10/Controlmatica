@@ -1,0 +1,44 @@
+# Mensajes de error de ExpenseRule, para que lleguen a pantalla en español.
+#
+# POR QUE EXISTE ESTE ARCHIVO: el controller renderiza `errors.full_messages`
+# tal cual, y Rails le antepone el nombre del atributo EN INGLES. Sin esto, el
+# caso que el paquete 14 identifica como el mas probable de la pantalla —crear
+# una segunda regla por defecto— le muestra al administrador:
+#
+#   "Is default ya existe otra regla marcada como regla por defecto…"
+#
+# que es exactamente el Spanglish que el archivo hermano expense_budget.en.yml
+# ya resolvio para las partidas. Este sigue su mismo patron.
+#
+# CRITERIO DE CADA CLAVE:
+#   * `name` e `is_default`: el modelo ya escribe FRASES COMPLETAS, asi que el
+#     formato se reduce a `%{message}` y solo se traducen los mensajes que Rails
+#     genera por su cuenta (`blank`).
+#   * los dos limites numericos: el modelo NO escribe el mensaje (lo pone
+#     `numericality`, en ingles), asi que aqui se escribe entero.
+#
+# POR QUE VA BAJO `en:` y no bajo `es:`: la app corre con `default_locale = :en`
+# (config/application.rb no lo cambia) aunque toda la copy de negocio este en
+# español. Ponerlo bajo `es:` no lo cargaria nunca.
+#
+# ALCANCE: solo el modelo `expense_rule`. Ningun otro modelo cambia.
+en:
+  activerecord:
+    errors:
+      models:
+        expense_rule:
+          attributes:
+            name:
+              format: "%{message}"
+              blank: "La regla necesita un nombre"
+            is_default:
+              format: "%{message}"
+            max_invoice_age_days:
+              format: "La antigüedad máxima %{message}"
+              greater_than: "debe ser mayor a %{count} días, o déjela vacía para no tener límite"
+              not_an_integer: "debe ser un número entero de días"
+              not_a_number: "debe ser un número de días"
+            max_invoice_value:
+              format: "El tope de valor %{message}"
+              greater_than: "debe ser mayor a %{count}, o déjelo vacío para no tener tope"
+              not_a_number: "debe ser un valor numérico"
