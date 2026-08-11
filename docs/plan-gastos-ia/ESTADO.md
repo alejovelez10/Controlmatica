@@ -84,7 +84,27 @@
 > 🟡 **Los dos paquetes quedan en ⚠️, no en ✅.** Las salvedades nuevas son los pendientes **#23 a
 > #27**. Lee la entrada "Ola 5" al final antes de dar la ola por buena.
 >
-> ➡️ **Lo que sigue es la ola 6: paquete 08 (y la pantalla de reglas del 14).**
+> ✅ **ESTADO AL 2026-08-11 (cierre de la ola 6): el paquete 08 está TERMINADO.** 5 commits
+> atómicos (`9d327e4`..`35570a9`). Suite completa: **879 runs / 2.956 assertions / 0 failures /
+> 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas. E2E Playwright: **6 passed**
+> en 18,8 s. `./bin/webpack` compila con **0 errores y 0 warnings** (con
+> `NODE_OPTIONS=--openssl-legacy-provider`, pendiente #24) y `package.json` no cambió.
+> `git status` limpio y **nada empujado al remoto**.
+>
+> 🟢 **Y esta vez hay verificación en un navegador de verdad**, no solo lectura de código: se levantó
+> un servidor aparte contra la base de desarrollo y se comprobó a mano que la pestaña aparece, que el
+> tablero pinta las seis cifras, que el bloqueo por tope deshabilita el botón con su mensaje exacto,
+> que asignar el disponible exacto **no** se bloquea (la tolerancia de 0,005 hace su trabajo) y que la
+> conversión USD→COP consulta la TRM real y avisa del desfase de fecha. Esa verificación **encontró un
+> defecto que ninguna prueba habría visto** y que ya está corregido en `35570a9`: el total en COP se
+> pintaba como `$374.152,66000000003`.
+>
+> 🟡 **El paquete queda en ⚠️, no en ✅**, y otra vez no por la suite: son 4 salvedades de alcance y
+> de entorno, los pendientes **#28 a #31**. La que más pesa es la **#31**: el `rails server` de
+> desarrollo que está corriendo lleva 14 h obsoleto y devuelve **500 en todo el módulo de
+> presupuesto** hasta que se reinicie. No es el código.
+>
+> ➡️ **Lo que sigue es la ola 7: paquete 12 (E2E). Sigue pendiente la pantalla de reglas del 14.**
 
 ---
 
@@ -149,7 +169,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | 4 | 07 — API, permisos y rutas | ⚠️ | `ce818d8`..`b886632` | **TERMINADO tras un arreglo de verificación en rojo, y REVERIFICADO en verde por un agente independiente (ola 4-bis).** 7 commits. Las 8 tareas vivas (1–4, 21 y los 6 criterios retirados por auditoría no aplican): las 10 claves canónicas de `@estados`, las rutas, `ExpenseBudgetSerializer`, el `ExpenseBudgetsController` completo (6 endpoints, doble capa de autorización, `preload_amounts!` en 2 queries fijas), el `ReportExpenseSerializer` con los **13 atributos nuevos** + `belongs_to :accounting_approved_by` + `receipt_file`, el bloque 6 de `ReportExpensesController` (`q` con `id::text`, los 4 filtros nuevos, `EXPENSE_SORT_COLUMNS`, strong params con comprobante/moneda/`cop_manual_override`, `destroy` con recálculo) y **el cableado presupuestal de la tarea 23**, que era la corrección bloqueante de la auditoría. **110 pruebas propias verdes recontadas una por una por el verificador independiente** en los 5 archivos del paquete (`expense_budgets_controller_test` 60, `report_expenses_controller_test` 28, `report_expenses_budget_wiring_test` 9, `report_expense_serializer_test` 8, `expense_budget_serializer_test` 5), contra las **93 pedidas**: están las 93 nominadas por nombre, más extras; suite completa **656 runs / 2.050 assertions / 0 fallos** (8,5 s con Spring), reconfirmada con `--seed=4242` con cifras idénticas. Subconjunto del criterio 24 (`test/controllers test/serializers`): **198 runs / 730 assertions / 0 fallos**. E2E Playwright: **6 passed**. **Los 33 criterios verificados uno a uno: cumplen 32.** **Salvedades: 3** — el criterio 1 pide `grep -c expense_budget == 6` y da **7** (la línea alias `PUT` que genera `resources`; los 6 endpoints y la ausencia del `index` sí son correctos: criterio mal calibrado, no el código); los 4 filtros nuevos se aplican **en el controller y no en `ReportExpense.search`**, porque ese método es del paquete 03 y tiene 6 call sites (mismo camino que ya tomó `AccountingExpensesController#filtered_scope`); y los tests usan `users(:gerente)` como "pleno" y `users(:ingeniero_dos)` con rol reasignado en caliente como "limitado", porque `users(:pleno)`/`users(:limitado)` **no existen** y `users.yml` es del paquete 01 (criterio 33) |
 | 5 | 09 — Frontend: tablas y contabilidad | ⚠️ | `3d96073`..`d6b182d` | **TERMINADO y reverificado por un agente independiente (ola 5).** 7 commits. Todas las tareas vivas: helpers de presentación de los estados nuevos, las **6 columnas nuevas** en el índice de Gastos y las mismas en la tabla del centro de costo, un **único `filterParams()`** (un solo `cost_center_id=` en todo el pack, con 3 consumidores), 3 filtros nuevos + confirmación de la aceptación masiva con `meta.total`, **columna de selección opt-in en `CmDataTable`** (`indeterminate` por `ref`, `colSpan` que suma la columna) y la **pantalla de Contabilidad con selección múltiple** (`packs/AccountingExpenseIndex.js`, 813 líneas, `views/accounting_expenses/index.html.erb` y `generalcomponents/expenseIndicators.js`). **23 pruebas propias verdes recontadas una a una** por el verificador (`accounting_expenses_view_test` 10, `application_helper_menu_test` 7, `expense_menu_test` 6 → 23 runs / 56 assertions / 0 fallos); suite completa **853 runs / 2.652 assertions / 0 fallos**. **De los 51 criterios cumplen 50.** **Salvedades: 4** — (1) el **criterio 21** (`./bin/webpack` compila sin error) **falla en la letra**: revienta con `ERR_OSSL_EVP_UNSUPPORTED` en Node 22 (problema de entorno **preexistente**, pendiente #5); con `NODE_OPTIONS=--openssl-legacy-provider` compila limpio y emite `AccountingExpenseIndex-05d8b2ed2d16558b532f.js`; (2) se tocó **`generalcomponents/ui/CmPageActions.jsx`** (compartido por ~20 pantallas) para añadirle la prop `testId`, y ese archivo **no está en la tabla del paquete ni en §7.2** (pendiente #25); (3) **~30 criterios de comportamiento puramente de cliente (4-8, 11, 12, 16-18, 27, 28, 31-42) no los ejercita ninguna prueba automática**: no hay runner de JS en el repo y los specs son del 12 — se verificaron **leyendo el código línea por línea** y todos coinciden, pero es inspección, no ejecución; (4) **sus 3 archivos de prueba viven en un commit rotulado "MCP"** (pendiente #23) |
 | 5 | 11 — MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | **TERMINADO y REVERIFICADO por un agente independiente (ola 5).** 12 commits (incluidos los 2 de documentación y el del tablero). Todas las tareas vivas (1 y 2 ya estaban; la 5 retirada por auditoría): actor por teléfono estricto en `ApplicationTool` (`actor_phone`, `actor_user_by_phone`, `actor_user_strict`, `as_actor_strict` con el `ensure` en `begin` interno), `X-Actor-Phone` en `McpController` y `ALWAYS_EXPOSED` con 6 nombres, las 3 claves 17-19 de `ReportExpensesListTool::KEYS` (**ahora 28, criterio compartido cumplido**) + 5 filtros, `report_expenses_create` con actor estricto + guard de `ExpenseRuleService` + `persist_with_evaluation!` + los 6 campos de moneda + `exchange_rate_source` de servidor, el mismo criterio estricto en `expense_ratios_create`, y **8 tools nuevas**: `expense_budgets_list/available`, `exchange_rates_get`, `expense_rules_validate`, `expense_rules_list` (cierra la Tarea 7 del 14), `report_expenses_receipt_url_get/attach_receipt`, `users_find_by_phone`, más `Mcp::S3DirectUpload` y las 2 entidades nuevas de `records_search`. **191 pruebas propias verdes** (contra las ~120 nominadas), suite completa **853 runs / 2.652 assertions / 0 fallos**, corrida 3 veces con seeds distintos. `tools/list` real devuelve **62 tools**. **Salvedades: 4** — (1) **el guard de reglas usa `confirm_rule_violations`** en vez de rechazar siempre: el documento del 11 (criterio 35) y el del 14 ("una violación nunca impide guardar") se contradicen, y se resolvió exigiendo confirmación explícita de la persona, que es lo mismo que hace la web; (2) `report_expenses_attach_receipt` trae el binario por `fog` (`fetch_body`) y **no** con `remote_receipt_file_url=`, porque en CarrierWave 3 esa descarga pasa por `SsrfFilter`; (3) se tocaron **dos tests ajenos** (`report_expenses_list_tool_{currency,accounting}_keys_test.rb`, de los paquetes 05 y 06) para subir sus aserciones de 25 a 28 claves y de índice 16 a 19, que es lo que sus propios comentarios anunciaban; (4) los criterios **27 y 28** (S3 y `heroku restart` en staging) **no se verificaron**: son del paquete 13 y requieren `users.phone` poblado. **La reverificación independiente confirmó las 191 pruebas** (191 runs / 569 assertions / 0 fallos en `test/tools` + `mcp_protocol_test` + `mcp_controller_exposure_test` + `user_phone_test`, exactamente lo prometido), el conteo real de **62 tools** aplicando `exposed?`, `ALWAYS_EXPOSED` con 6 nombres, `KEYS.size == 28` sin repetidos, `ExchangeRatesGetTool::KEYS` con 7 claves y **cero `require_relative`** en las pruebas; y añadió **3 salvedades nuevas**: (5) el **criterio 35** ("un gasto con violación bloqueante es rechazado") **solo se cumple en el camino por defecto**: con `confirm_rule_violations: true` el gasto **sí se crea**, y hay un test que lo consagra — el criterio, tal como está escrito, no admite excepciones (pendiente **#26**); (6) `app/tools/expense_rules_list_tool.rb` (52 líneas, 4 pruebas) **no figura en la tabla "A crear"** del paquete: es alcance extra no declarado; (7) la **segunda mitad del criterio 38** (`db:rollback STEP=1` revierte la migración del teléfono) **NO se verificó de forma independiente** — se comprobó que la migración define `up`/`down` y no `change`, pero **el rollback no se ejecutó** |
-| 6 | 08 — Frontend: presupuesto y formulario | ⬜ | — | |
+| 6 | 08 — Frontend: presupuesto y formulario | ⚠️ | `9d327e4`..`35570a9` | **TERMINADO.** 5 commits. Todas las tareas vivas (la 1 y los 4 specs Playwright están retirados por auditoría): la **pestaña Presupuesto** completa (`BudgetsTable` + `BudgetSummaryBoard` + `BudgetFormCreate`, tablero de 6 cifras, tabla server-side con las 5 columnas ordenables que el servidor acepta y las 4 con `sortable:false`, alta/edición/anulación y **validación en vivo del tope que deshabilita Guardar**), `users_select` propagado hasta el select de beneficiario, y **los DOS formularios de gasto** (`ReportExpense/FormCreate.jsx` + `renderModal()` del pack) con comprobante, bloque de moneda extranjera con conversión y TRM en vivo, aviso de disponible presupuestal, modal de previsualización y envío por **`FormData`**. Se borró el `estados` hardcodeado en `true` de `ExpensesTable.jsx`. **26 pruebas propias verdes** (5 + 4 + 9 + 8); suite completa **879 runs / 2.956 assertions / 0 failures / 0 errors / 0 skips**, repetida con `--seed=4242` con cifras idénticas. E2E Playwright: **6 passed** (los smokes del 01). `./bin/webpack` compila con **0 errores y 0 warnings** y `package.json` no cambió. **Verificado a mano en el navegador contra desarrollo** (ver "Ola 6"): la pestaña aparece, el tablero pinta, el bloqueo por tope funciona, la tolerancia de 0,005 deja asignar el disponible exacto, y la conversión USD→COP consulta la TRM real y avisa del desfase de fecha. **Salvedades: 4** — los pendientes **#28 a #31** |
 | 7 | 12 — Suite E2E Playwright | ⬜ | — | |
 | 4 | 14 — Reglas de gastos configurables | ⚠️ | `6dac5f9`..`e34111e` | **Backend TERMINADO y reverificado en verde por un agente independiente (ola 4-bis); el frontend NO.** 4 commits. Tareas 1 a 5 completas: las 2 migraciones (con el índice único **parcial** `WHERE (is_default AND active)` y `report_expenses.rule_violations` jsonb), el modelo `ExpenseRule` con la resolución de 3 ramas (`aplicables_a`), `ExpenseRuleService` con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en `ReportExpense` (`before_save`, que corre **después** del `evaluate!` del presupuesto y por eso puede pisarle el "aprobado"), y `ExpenseRulesController` + rutas + `ExpenseRuleSerializer` + rake de permisos propia. **65 pruebas propias verdes recontadas por el verificador independiente** (15 modelo + 26 servicio + 24 controller, contra las **30 pedidas**: los 30 casos nominados en el documento están todos presentes por nombre); suite completa **656 runs / 2.050 assertions / 0 fallos**. **De los 8 criterios de aceptación cumplen los 6 de backend** (varias reglas, gana la más restrictiva, fallback a la default, deterministas en servidor vía `before_save` —así aplica igual a web, MCP e import—, el semántico no se evalúa, y una violación no bloquea el guardado pero fuerza `sin_presupuesto` con auditoría en `RegisterEdit`); **incumplen 2 por alcance no ejecutado**: no hay pantalla (Tarea 6) ni los 4 escenarios E2E. **Salvedades: 5** — (1) **la Tarea 6 (pantalla React bajo Configuración) NO está hecha**: hoy las reglas solo se administran por JSON; (2) la **Tarea 7 (tool MCP `expense_rules_for_user`) tampoco**, porque `app/tools/*` es del paquete **11** (§7.2) — el endpoint HTTP que necesita ya existe; (3) los **4 escenarios E2E** son del paquete **12** por §7.2, igual que los del 07 que la auditoría retiró; (4) `rule_violations` **no se expone en `ReportExpenseSerializer`**: ese archivo es dueño único del 07 y agregarle un atributo del 14 rompería §7.2 — hace falta decidir quién lo agrega antes de que el 08/09 pinten la advertencia; **(5) el módulo de permisos "Reglas de gastos" NO está sembrado en `lib/tasks/create_config.rake`** (hallazgo nuevo de la ola 4-bis, pendiente **#21**): existe `lib/tasks/permissions_expense_rules.rake` para instalaciones ya montadas, pero una **instalación limpia nace sin el módulo**, mientras que "Presupuesto" y "Contabilidad" del 07 sí están replicados en `create_config.rake` (líneas 275 y 285) |
 | 8 | 13 — Cierre, documentación y puesta en marcha | ⬜ | — | |
@@ -408,6 +428,51 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
     specs— aún no está escrito, así que **~30 criterios del 09 se verificaron leyendo el código, no
     ejecutándolo**. Todos coinciden con lo especificado, pero conviene saber que **la parte de la ola
     5 que ve el usuario no tiene ni una sola prueba que la ejecute**.
+28. 🔴 **Encender la captura asistida cuando Taimes complete la extracción: falta UNA línea, y no la
+    puede escribir el paquete 08.** El botón "Extraer datos del comprobante" y sus cuatro estados
+    están construidos en los dos formularios, pero **detrás de `window.CM_RECEIPT_EXTRACTION_ENABLED`,
+    que hoy nadie publica**, así que el botón no se pinta. Es lo correcto —el endpoint
+    `POST /extract_receipt/report_expenses` **no existe** (pendiente #16) y el flag de servidor
+    `RECEIPT_EXTRACTION_ENABLED` arranca en `false`—, pero hay que saber cómo se enciende:
+    ```erb
+    window.CM_RECEIPT_EXTRACTION_ENABLED = <%= ReceiptExtractionService.enabled? %>;
+    ```
+    en el bloque `<script>` de `app/views/layouts/user.html.erb`, junto a `window.CM_CURRENCIES`.
+    **Ese archivo tiene dueño por bloque** (§7.2: paquetes 01, 05 y 09) y el 08 no figura, así que
+    **no se escribió por cuenta propia**. Hay que decidir quién la agrega: el 13 (puesta en marcha)
+    es el candidato natural, porque es quien enciende los kill switches.
+29. **Decidir si el modal de previsualización de comprobante necesita una ruta propia.**
+    `receipt-preview-modal` está implementado en las dos pantallas y apunta, como manda la corrección
+    4, a `/download_receipt/report_expenses/:id`. **Pero esa acción fuerza
+    `Content-Disposition: attachment`** (contrato §7.8 del paquete 06, que existe para que el
+    `waitForEvent("download")` del paquete 12 no se cuelgue). Consecuencia previsible: en varios
+    navegadores el `<iframe>`/`<img>` sobre esa URL **descargará el archivo en vez de mostrarlo**, y
+    el modal caerá a su estado degradado *"No se pudo previsualizar el comprobante. Intente
+    descargarlo."*, que es exactamente lo que la tarea 18.4 pide para ese caso. **No es un fallo del
+    frontend y no se puede arreglar desde aquí**: la salida limpia es una segunda ruta `inline`
+    (`?disposition=inline`) en `report_expenses_controller.rb`, archivo de otro dueño. La descarga
+    nunca se bloquea, así que la funcionalidad no está rota, solo degradada.
+30. **Dos criterios del paquete 08 se cumplen en sustancia pero no en la letra, y fue deliberado.**
+    (a) El criterio 43 pide `budget-new-btn` también en el `emptyAction` de la tabla de partidas; se
+    emite **solo en `headerActions`**, que se pinta siempre, porque con la tabla vacía —el escenario
+    con el que arrancan los specs del 12— los dos aparecerían a la vez y el locator fallaría por
+    *strict mode*. Lo mismo con `expense-receipt-link-{id}` en el footer del modal de
+    previsualización, que duplicaría el de la fila justo con el modal abierto. (b) El test *"show
+    deja `budget_module` en false"* asierta **falsedad** y no `== false`: `has_menu_permission?`
+    devuelve `nil` (no `false`) cuando el módulo no está en el hash, así que la clave viaja como
+    `null`. Para React es idéntico —los dos son *falsy*— pero el criterio, tal como está escrito, no
+    describe lo que el servidor emite hoy.
+31. ⚠️ **El servidor de desarrollo que estaba corriendo lleva 14 h obsoleto y devuelve 500 en todo el
+    módulo nuevo.** Hallazgo de la verificación manual, **no es un bug del código**: el proceso de
+    `rails server` en el puerto 3000 arrancó el **10-ago a las 22:17**, y `app/services/` se creó el
+    **11-ago a la 01:29**. Rails calcula `autoload_paths` a partir de los directorios de `app/*` que
+    existen **al arrancar**, así que ese proceso no tiene `app/services` en sus rutas de autocarga y
+    revienta con `NameError (uninitialized constant ExpenseBudgetsController::ExpenseBudgetService)`
+    en `get_expense_budget_summary` —y haría lo mismo con cualquier servicio del proyecto—. **Se
+    reproduce con un solo request y desaparece reiniciando el servidor**: la verificación se hizo
+    levantando uno nuevo en el puerto 3010 (ya apagado) para no tocar el del usuario. **Hay que
+    reiniciar el `rails server` de desarrollo antes de mirar nada**, o parecerá que el presupuesto
+    está roto cuando lo que está roto es el proceso.
 
 ---
 
@@ -1933,3 +1998,99 @@ de valor, switch de duplicados, textarea de instrucciones para el agente y el mu
 usuarios — con la advertencia visible de que **vacío significa ningún usuario, no todos**.
 
 **Programado para la ola 6**, junto con el paquete 08. Son archivos distintos, no chocan.
+
+---
+
+### Ola 6 — Paquete 08: pestaña de Presupuesto y los dos formularios de gasto (2026-08-11, tarde)
+
+**Estado honesto: verde, y esta vez verificado en un navegador de verdad.**
+
+**Qué se hizo** (5 commits atómicos, `9d327e4`..`35570a9`, ninguno empujado al remoto):
+
+1. `9d327e4` — la **pestaña Presupuesto** completa: `BudgetSummaryBoard.jsx` (tablero
+   presentacional, sin fetch), `BudgetFormCreate.jsx` (modal presentacional, no valida) y
+   `BudgetsTable.jsx` (el contenedor, único que habla con el servidor y único que calcula el tope),
+   más la pestaña en `TabContentShow.jsx`, la propagación de `users_select` desde
+   `ConstCenter/show.jsx` y las tres clases `cm-budget-*` al final de `design_system.css`.
+2. `409c046` — comprobante, moneda extranjera, disponible presupuestal y **`FormData`** en el
+   formulario de la pestaña de Gastos (`ExpensesTable.jsx` + `ReportExpense/FormCreate.jsx`), más la
+   columna Comprobante y el borrado del `estados` hardcodeado en `true`.
+3. `280b7d8` — **lo mismo, otra vez**, en el modal del módulo de Gastos
+   (`renderModal()` de `packs/ReportExpenseIndex.js`), respetando la regla anticolisión con el 09.
+4. `401041d` — las **26 pruebas** de contrato.
+5. `35570a9` — el arreglo del redondeo encontrado a mano (abajo).
+
+**Los semáforos, con la salida real:**
+
+```
+bin/rails test        → 879 runs, 2956 assertions, 0 failures, 0 errors, 0 skips   (11,7 s)
+bin/rails test --seed=4242 → 879 runs, 2956 assertions, 0 failures, 0 errors, 0 skips
+npm run test:smoke    → 6 passed (18,8 s)
+./bin/webpack         → exit 0, 0 "ERROR in", 0 "WARNING in", package.json sin cambios
+```
+
+(El `./bin/webpack` necesita `NODE_OPTIONS=--openssl-legacy-provider` en Node 22; es el pendiente
+**#24**, preexistente y ajeno a este paquete. Sin esa variable revienta con `ERR_OSSL_EVP_UNSUPPORTED`
+antes de compilar una sola línea.)
+
+**La verificación manual, que es lo que distingue esta ola.** Los ~35 criterios de comportamiento de
+cliente de este paquete no los ejercita ninguna prueba automática —no hay runner de JS y los specs
+son del 12—, así que en vez de declararlos verificados "por lectura" se abrió la aplicación contra la
+base de desarrollo y se comprobaron uno a uno los que se pueden ver:
+
+- La pestaña **"Presupuesto" aparece** después de "Gastos" y antes de "Ordenes de Compra".
+- El tablero pinta las seis cifras del centro CC-0300: Cotizado `$570.383`, Asignado `$0`, Sin
+  asignar `$570.383`, Gastado `$0`, Disponible `$0`, Excedidos `0`, con el vacío
+  *"Todavía no hay partidas asignadas en este centro de costos."*
+- La tabla muestra flecha de orden **solo** en Beneficiario, Asignado, Estado y Actualizada: las
+  cuatro columnas que el servidor no sabe ordenar salen sin ella, como se pidió.
+- El select de beneficiario trae **29 usuarios**: es `users_select`, no `get_users_json`.
+- Con el modal recién abierto: *"Seleccione el beneficiario de la partida"* y **Crear deshabilitado**.
+- Con `$600.000` sobre un disponible de `$570.383`: *"El valor supera lo disponible para asignar en
+  este centro. Disponible: $570.383"* y **Crear sigue deshabilitado**.
+- Con **exactamente** `$570.383` —el disponible al último peso, que sale de restar un decimal a un
+  float— **Crear se habilita**: la tolerancia de 0,005 hace justo lo que tenía que hacer.
+- El disponible de una persona sin partida dice **"Sin presupuesto asignado"**, nunca `$0`.
+- En el módulo de Gastos: el select de Moneda sale de `window.CM_CURRENCIES`, elegir **USD** abre el
+  bloque extranjero, y poner la fecha `2026-08-03` dispara la consulta de TRM sola y devuelve
+  **3.144,14 con el aviso `expense-rate-shifted`**: *"No hay tasa para el 2026-08-03; se aplicó la
+  del 2026-08-01."*
+- El botón de captura asistida **no aparece**, que es lo correcto: está detrás del kill switch
+  (pendiente #28).
+
+**El defecto que encontró la verificación manual y que ninguna prueba habría visto.** Con USD 100 +
+IVA 19 a TRM 3.144,14, el campo Total mostraba **`$374.152,66000000003`**. La fórmula del plan
+—`round2(fv*rate) + round2(ft*rate)`— redondea los dos sumandos pero no la suma, y sumar dos
+flotantes ya redondeados vuelve a ensuciar el binario. Ese valor no solo se veía: **viajaba así en el
+`FormData` hacia una columna de dinero**. Arreglado en `35570a9` con un `round2` exterior en los dos
+formularios. Es la única diferencia deliberada respecto de la fórmula del documento.
+
+**Decisiones de diseño que conviene conocer antes de auditar:**
+
+- **El bloqueo vive en un solo sitio.** `blockReason()` está en `BudgetsTable` y el modal solo lo
+  pinta y lo usa para deshabilitar el botón. Duplicar la regla en el modal habría dado dos
+  definiciones que se desincronizan en la primera corrección.
+- **Se bloquea la PARTIDA, se informa en el GASTO.** El gasto excedido se guarda igual y queda
+  marcado como "Excedido": es requisito explícito de la propuesta, no un olvido.
+- **Ningún `href` de comprobante usa `receipt_file.url`.** Esa URL está firmada y caduca a los 600 s;
+  todos apuntan a `/download_receipt/report_expenses/:id`. `receipt_file.url` aparece cuatro veces en
+  el diff y las cuatro son condición de existencia.
+- **`clearValues()` se llama también AL ABRIR "Nuevo Gasto"**, no solo al cerrar. Era el bug más
+  probable del paquete: editar un gasto con PDF y abrir después uno nuevo subía el PDF anterior.
+- **`openReceiptPreview` / `closeReceiptPreview` viven fuera del constructor** del pack, porque la
+  columna "Comprobante" que dejó el 09 los invoca por nombre. Hasta hoy el botón existía y el método
+  no.
+
+**Lo que este paquete NO hizo, a propósito:**
+
+- **No tocó `app/controllers/cost_centers_controller.rb`** (dueño: 07). El diff de la ola son 13
+  archivos y ese no está.
+- **No tocó el constructor de `packs/ReportExpenseIndex.js`, ni el panel de filtros, ni
+  `loadData`/`getExportUrl`/`acceptFilteredExpenses`** (dueño: 09). Las únicas líneas borradas de ese
+  archivo están dentro de `EMPTY_FORM`, los handlers del formulario, `renderModal()` y una línea de
+  `render()`.
+- **No escribió ni un spec de Playwright** (retirados por la corrección 8): su obligación con el
+  paquete 12 era **emitir los `data-testid`**, y los 63 de la tabla canónica §7.6 están, con los
+  `expense-*` de formulario **dos veces**, uno por formulario.
+- **No tocó `layouts/user.html.erb`** para publicar el flag de la captura asistida, aunque le venía
+  bien: ese archivo tiene dueño por bloque y el 08 no figura. Es el pendiente **#28**.
