@@ -58,7 +58,7 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | — | Migración `users.phone` (Tarea 1 del 11, adelantada) | ✅ | `653e312` | Columna creada y aplicada en dev. **El dato no existe**: 0 de 29 usuarios |
 | 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`b8f46c4` | **Verde reconfirmado por una segunda verificación independiente sobre `b8f46c4`.** Minitest 42 runs / 97 assertions / 0 fallos (2,16 s con Spring; 1,96 s sin Spring); Playwright 6 passed dos veces (14,2 s y 12,9 s). Los 25 criterios verificables PASAN (el 13 está RETIRADO por auditoría); 3 salvedades son de redacción del criterio, no del software |
 | 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 runs / 47 assertions verdes, verificado aparte |
-| 2 | 02 — Migraciones y esquema | ⬜ | — | |
+| 2 | 02 — Migraciones y esquema | ⚠️ | `aed1a89`..`24dc5e9` | Las 6 migraciones escritas, aplicadas en dev y test, `schema.rb` regenerado, 33 pruebas nuevas y `rake gastos_ia_schema:check`. Minitest 75 runs / 251 assertions / 0 fallos. **Salvedad: staging y producción NO se tocaron** (Tareas 14 y 15) — quedan como runbook escrito abajo |
 | 2 | 03 — Deuda técnica bloqueante | ⬜ | — | Uploaders a S3, refactor de `search`, concern de auditoría |
 | 3a | 04 — Presupuesto y aprobación | ⬜ | — | |
 | 3a | 05 — Multimoneda y TRM | ⬜ | — | |
@@ -239,6 +239,142 @@ del tablero):
 **Higiene**: `git status --porcelain` vacío, los 22 commits en español con el POR QUÉ en el cuerpo y
 el trailer `Co-Authored-By`. `git branch -r --contains HEAD` vacío y la rama sin upstream: **nada
 salió al remoto**. No se tocó producción.
+
+---
+
+### Ola 2 — Paquete 02: migraciones, esquema y datos históricos
+
+**Estado honesto: verde en local, sin desplegar.** 9 commits atómicos, `aed1a89..24dc5e9`.
+Nada se empujó al remoto y **no se tocó ni staging ni producción**.
+
+**Qué se hizo**
+
+- Las **6 migraciones** del proyecto (`20260401000001` … `20260404000001`), todas con `def up` /
+  `def down` explícitos y guardas de idempotencia. Ninguna define `def change`.
+- `db/schema.rb` regenerado por `bin/rails db:migrate` en **development**, que es lo que dispara
+  `annotate`. Los 4 bloques `# == Schema Information` de `report_expense.rb`, su serializer, su test
+  y su fixture quedaron al día; **ni una línea de código Ruby, JS o YAML de datos cambió** en ellos.
+- `test/models/schema_gastos_ia_test.rb`: **33 casos**, 11 de ellos de fallo o de borde.
+- `lib/tasks/verify_gastos_ia_schema.rake`: `gastos_ia_schema:check`, solo lectura, 10 bloques de
+  verificación, sale con código 1 si algo falla.
+
+**Números reales medidos**
+
+| Comprobación | Comando | Resultado |
+|---|---|---|
+| Suite completa | `bin/rails test` | `75 runs, 251 assertions, 0 failures, 0 errors, 0 skips` (2,09 s) |
+| Solo el esquema | `bin/rails test test/models/schema_gastos_ia_test.rb` | `33 runs, 154 assertions, 0 failures, 0 errors` (0,45 s) |
+| Esquema de test | `RAILS_ENV=test bin/rails db:test:prepare` | exit 0 |
+| Verificación en dev | `bin/rails gastos_ia_schema:check` | exit 0, 0 FALLA |
+| Verificación en test | `RAILS_ENV=test bin/rails gastos_ia_schema:check` | exit 0, 0 FALLA |
+| Drill de rollback | bajar las 6 → `db:migrate` → `git diff --exit-code db/schema.rb` | exit **0**: los `down` están bien escritos |
+| El check falla cuando debe | `gastos_ia_schema:check` con las 6 abajo | exit **1**, 12 FALLA |
+
+**Datos históricos en desarrollo (5.008 gastos)**: `currency IS NULL` = 0, `currency <> 'COP'` = 0,
+`budget_status <> 'sin_presupuesto'` = 0, con partida = 0, con motivo = 0, aprobados por
+contabilidad = 0, con comprobante = 0, con cualquier dato de conversión = 0. `expense_budgets` y
+`exchange_rates` quedaron con **0 filas**. La fotografía de importes es **idéntica** antes y después
+de migrar: `total 5008 · aceptados 2471 · suma_valor 5056730950.99 · suma_iva 960606139.8599986 ·
+suma_total 6017409590.850028`.
+
+**Preflight (Tarea 1), lo que se pudo medir y lo que no**
+
+1. Estado migratorio local: **limpio**. Ni un `down`, ni un `********** NO FILE **********`.
+2. Versión de PostgreSQL: **local 16.3**. En Heroku **no se midió** (ver salvedad de abajo). Con PG
+   16 en local se usó la **Variante A**; la Variante B (`CONCURRENTLY`) no hizo falta y **no se
+   escribió**.
+3. Tamaño de `report_expenses`: **5.008 filas / 1.632 kB en desarrollo**, muy por debajo del umbral
+   de 100.000 de la Variante B. **El tamaño en producción no se midió.**
+4. Fotografía previa: la de arriba, tomada en desarrollo.
+5. Colisión de nombres: `to_regclass` devolvió **NULL** para `expense_budgets`, `exchange_rates` y
+   `currencies`. Sin colisiones, y la decisión de que el catálogo de monedas sea una constante Ruby
+   queda blindada por el test 29 y la verificación 10 de la rake.
+
+**Tres desviaciones respecto del texto del plan — todas por errores del plan, no del código**
+
+1. **El criterio 7 pide `version: 2026_04_04_000001` y el archivo dice `2026_04_05_000001`.** No es
+   un fallo: la migración del teléfono (paquete 11) tiene timestamp posterior y **ya estaba aplicada**
+   antes de arrancar este paquete, así que ella fija el máximo. Es coherente con la corrección 4 de
+   auditoría, que declara legítima esa migración. El criterio quedó escrito antes de que se
+   adelantara.
+2. **El criterio 30 pide `db:rollback STEP=6` y eso aquí hace lo contrario de lo que promete.** Por
+   la misma razón: `STEP=6` baja las 6 migraciones de versión más alta, que son
+   `20260405000001` (teléfono, ajena) más las cinco últimas mías, y **dejaría `20260401000001`
+   arriba**. El drill se hizo bajando las 6 propias por `db:migrate:down VERSION=…` en orden inverso
+   exacto, que es lo que el criterio realmente quiere probar, y se comprobó a mano que no quedó
+   ningún índice ni columna huérfana y que `is_acepted` y su índice siguen intactos.
+   **Para staging y producción, el comando correcto es `STEP=7` o los seis `db:migrate:down`, no
+   `STEP=6`.**
+3. **El caso 9 del test pedía "14 enteros entra, 15 revienta" y es aritméticamente imposible**: en
+   `numeric(15,2)` los 15 dígitos incluyen los 2 decimales, luego la parte entera admite 13 y el tope
+   real es `9_999_999_999_999.99`. El test prueba el límite verdadero, que es **más estricto** que el
+   pedido. Si el cupo de una partida debía llegar a 14 dígitos enteros, la que está mal es la
+   precisión de la columna y hay que decidirlo: **es una pregunta para el cliente**, no algo que se
+   arregle solo.
+
+**Un efecto colateral que conviene conocer**: cada `bin/rails db:migrate` en development reescribe
+también `test/fixtures/cost_centers.yml`, porque ese archivo tiene una cabecera *parcial* escrita a
+mano por el paquete 01 y `annotate` la expande a las ~70 columnas reales. Se revirtió las dos veces
+que pasó — es archivo ajeno y ruido puro —, pero **le va a volver a pasar a quien migre**. Arreglarlo
+de raíz es decisión del dueño del archivo (paquete 01): o se acepta la cabecera completa, o se
+excluye esa fixture de `annotate`.
+
+#### Runbook pendiente: staging y producción (Tareas 14 y 15) — lo ejecuta una persona
+
+**Por qué está pendiente y no hecho.** El encargo prohíbe explícitamente tocar producción, y el
+entorno de ejecución bloqueó incluso el `heroku pg:info` de solo lectura. Por eso **no hay número de
+versión de PostgreSQL ni conteo de filas de los dos entornos Heroku**, y por eso las Tareas 14 y 15
+quedan escritas en vez de ejecutadas. No se asumió nada: si en producción `report_expenses` tuviera
+≥ 100.000 filas o PostgreSQL < 11, **hay que reescribir las dos migraciones con la Variante B antes
+de migrar allí** (índices `CONCURRENTLY` y `currency` en tres pasos). Ese chequeo es el paso 0.
+
+```bash
+# 0. PREFLIGHT — decide Variante A (lo escrito) o Variante B (hay que reescribir)
+heroku pg:info -a controlmatica-staging | grep -i version
+heroku pg:info -a controlmatica          | grep -i version   # PG >= 11 -> Variante A
+heroku pg:psql -a controlmatica -c "SELECT count(*), pg_size_pretty(pg_total_relation_size('report_expenses')) FROM report_expenses;"
+# < 100.000 filas -> Variante A. >= 100.000 -> Variante B.
+
+# 1. FOTOGRAFÍA PREVIA (guardar la salida; se compara al final)
+heroku pg:psql -a controlmatica -c "SELECT count(*) AS total, count(*) FILTER (WHERE is_acepted) AS aceptados, sum(invoice_value) AS suma_valor, sum(invoice_tax) AS suma_iva, sum(invoice_total) AS suma_total FROM report_expenses;"
+
+# 2. STAGING
+heroku pg:backups:capture -a controlmatica-staging          # backup ANTES de migrar, siempre
+git push staging feature/gastos-presupuesto-ia:master
+heroku run rake db:migrate -a controlmatica-staging
+heroku run rake gastos_ia_schema:check -a controlmatica-staging   # debe pasar
+
+# 2b. DRILL DE ROLLBACK, SOLO EN STAGING, contra datos reales
+#     OJO: STEP=6 arrastraría la migración del teléfono. Son 7, o los seis down por VERSION.
+heroku run rake db:rollback STEP=7 -a controlmatica-staging
+heroku run rake gastos_ia_schema:check -a controlmatica-staging   # debe FALLAR: eso es lo que se busca
+heroku run rake db:migrate -a controlmatica-staging
+heroku run rake gastos_ia_schema:check -a controlmatica-staging   # debe volver a pasar
+
+# 2c. SMOKE MANUAL en staging (5 min): abrir Gastos, listar, filtrar, exportar el Excel,
+#     crear y editar un gasto. Este paquete no cambia una línea de código de aplicación,
+#     así que cualquier regresión aquí es un problema de esquema.
+
+# 3. PRODUCCIÓN — el orden no es negociable
+heroku pg:backups:capture -a controlmatica                  # 1. backup ANTES
+heroku pg:psql -a controlmatica -c "<la fotografía del paso 1>"
+git push heroku feature/gastos-presupuesto-ia:master        # deploy sin cambios funcionales
+heroku run "PGOPTIONS='-c lock_timeout=5000' rake db:migrate" -a controlmatica
+heroku run rake gastos_ia_schema:check -a controlmatica
+heroku pg:psql -a controlmatica -c "<la fotografía de nuevo>"  # total, aceptados y las 3 sumas
+                                                               # deben ser IDÉNTICOS. Si no, abortar.
+```
+
+- **No hay `Procfile` ni release phase**: `git push heroku` **no** migra. Hay que correr
+  `db:migrate` a mano y a nadie se le puede olvidar. Si se despliega cualquier paquete posterior sin
+  haber migrado, producción revienta con `PG::UndefinedColumn` en cada request de gastos.
+- El `lock_timeout=5000` hace que el `ALTER TABLE` **falle en 5 segundos** si una consulta larga
+  bloquea la tabla, en vez de encolarse y colgar la aplicación entera detrás. Si falla por timeout,
+  se reintenta en horario de baja carga. **No se sube el timeout.**
+- **Punto de no retorno**: en cuanto exista el primer `ExpenseBudget` en producción, el rollback
+  deja de ser una opción — borra las dos tablas y las 14 columnas con todo su contenido. A partir de
+  ahí el mecanismo de reversión es **revocar los `AccionModule` de Presupuesto/Contabilidad**
+  (kill switch) y el único remedio de datos es `heroku pg:backups:restore`.
 
 ---
 
