@@ -86,6 +86,14 @@ Rails.application.routes.draw do
   post "upload_file/report_expenses", to: "report_expenses#upload_file"
   get "indicators_expenses", to: "report_expenses#indicators_expenses"
   get "get_report_expenses", to: "report_expenses#get_report_expenses"
+  # Presupuesto de viaticos (partidas, paquete 07). Contrato en
+  # 00-ARQUITECTURA A.1. El `index` de resources esta excluido A PROPOSITO: una
+  # partida no tiene sentido fuera de su centro de costos, asi que el listado
+  # entra siempre por `get_expense_budgets/:cost_center_id`.
+  resources :expense_budgets, :except => [:show, :new, :edit, :index]
+  get "get_expense_budgets/:cost_center_id", to: "expense_budgets#get_expense_budgets"
+  get "get_expense_budget_summary/:cost_center_id", to: "expense_budgets#get_expense_budget_summary"
+  get "get_expense_budget_available", to: "expense_budgets#get_expense_budget_available"
   # Multimoneda (paquete 05). Contrato en 00-ARQUITECTURA E.1: responde 200
   # tanto en exito como en error y el frontend discrimina por `type`.
   get "get_exchange_rate", to: "exchange_rates#get_exchange_rate"
