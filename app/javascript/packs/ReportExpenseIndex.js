@@ -27,6 +27,9 @@ var EMPTY_FILTERS = {
   start_date: "",
   end_date: "",
   is_acepted: "",
+  budget_status: "",
+  currency: "",
+  accounting_approved: "",
 };
 
 var EMPTY_FORM = {
@@ -116,6 +119,14 @@ class ReportExpenseIndex extends React.Component {
     this.paymentOptions = (props.report_expense_options || []).filter(function(o) { return o.category === "Medio de pago"; }).map(function(o) {
       return { label: o.name, value: o.id };
     });
+
+    // Triple guarda obligatoria. La prop la pasa la vista con `get_currencies`
+    // (helper del paquete 05), pero si la vista se renderiza sin ella el
+    // fallback es window.CM_CURRENCIES —la fuente unica del layout— y, si
+    // tampoco esta, un array vacio. Sin el `|| []`, el `.map` del select de
+    // moneda revienta el render COMPLETO de la pantalla de Gastos: no se cae un
+    // filtro, se cae la tabla entera.
+    this.currencyOptions = props.currencies || window.CM_CURRENCIES || [];
 
     this.columns = [
       // El ID de referencia va PRIMERO: es lo que el usuario copia al chat de
@@ -282,6 +293,9 @@ class ReportExpenseIndex extends React.Component {
     if (f.start_date) out.push("start_date=" + f.start_date);
     if (f.end_date) out.push("end_date=" + f.end_date);
     if (f.is_acepted) out.push("is_acepted=" + f.is_acepted);
+    if (f.budget_status) out.push("budget_status=" + f.budget_status);
+    if (f.currency) out.push("currency=" + f.currency);
+    if (f.accounting_approved) out.push("accounting_approved=" + f.accounting_approved);
     return out;
   }.bind(this);
 
@@ -360,19 +374,38 @@ class ReportExpenseIndex extends React.Component {
     this.setState({ filters: Object.assign({}, EMPTY_FILTERS), filterCostCenter: null, filterUser: null, filterCostCenterOptions: [], isFiltering: false }, this.loadData.bind(this, 1));
   }.bind(this);
 
+  // La confirmacion es el UNICO freno de esta accion: /update_filter_values NO
+  // verifica en el servidor que hubiera filtros (deuda documentada en §3.9, que
+  // este proyecto no corrige). Con los tres filtros nuevos el riesgo sube: si el
+  // backend todavia no soportara uno de ellos, el usuario veria tres filas y
+  // aceptaria miles. El conteo del texto sale de meta.total —el total del filtro
+  // que el servidor ya devolvio— y no del largo de la pagina.
   acceptFilteredExpenses = function() {
     var self = this;
     var params = this.filterParams();
 
-    fetch("/update_filter_values?" + params.join("&"), {
-      method: "PATCH",
-      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
-    })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        self.loadData();
-        Swal.fire({ position: "center", icon: data.type || "success", title: data.success || "Gastos aceptados", showConfirmButton: false, timer: 1500 });
-      });
+    Swal.fire({
+      title: "¿Aceptar " + this.state.meta.total + " gastos?",
+      text: "Se marcarán como Aceptados todos los gastos que coinciden con el filtro actual, no solo los de esta página.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2a3f53",
+      cancelButtonColor: "#dc3545",
+      confirmButtonText: "Sí, aceptar",
+      cancelButtonText: "Cancelar",
+    }).then(function(result) {
+      if (!result.value) return;
+
+      fetch("/update_filter_values?" + params.join("&"), {
+        method: "PATCH",
+        headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          self.loadData();
+          Swal.fire({ position: "center", icon: data.type || "success", title: data.success || "Gastos aceptados", showConfirmButton: false, timer: 1500 });
+        });
+    });
   }.bind(this);
 
   openImportModal = function() { this.setState({ modalImport: true }); }.bind(this);
@@ -638,9 +671,44 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("option", { value: "false" }, "No aceptado")
             )
           ),
-          React.createElement("div", null),
-          React.createElement("div", null),
-          React.createElement("div", { style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },
+          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-coins", style: { marginRight: 6, opacity: 0.5 } }),
+              "Estado presupuestal"
+            ),
+            React.createElement("select", { name: "budget_status", className: "cm-input", value: f.budget_status, onChange: self.handleFilterChange, "data-testid": "filter-budget-status" },
+              React.createElement("option", { value: "" }, "Todos"),
+              React.createElement("option", { value: "aprobado" }, "Aprobado"),
+              React.createElement("option", { value: "excedido" }, "Excedido"),
+              React.createElement("option", { value: "sin_presupuesto" }, "Sin presupuesto")
+            )
+          ),
+          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-money-bill-wave", style: { marginRight: 6, opacity: 0.5 } }),
+              "Moneda"
+            ),
+            React.createElement("select", { name: "currency", className: "cm-input", value: f.currency, onChange: self.handleFilterChange, "data-testid": "filter-currency" },
+              [React.createElement("option", { key: "", value: "" }, "Todas")].concat(
+                self.currencyOptions.map(function(c) {
+                  return React.createElement("option", { key: c.value, value: c.value }, c.label);
+                })
+              )
+            )
+          ),
+          // Fila 3
+          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fas fa-file-invoice-dollar", style: { marginRight: 6, opacity: 0.5 } }),
+              "Aprobado por contabilidad"
+            ),
+            React.createElement("select", { name: "accounting_approved", className: "cm-input", value: f.accounting_approved, onChange: self.handleFilterChange, "data-testid": "filter-accounting-approved" },
+              React.createElement("option", { value: "" }, "Todos"),
+              React.createElement("option", { value: "true" }, "Aprobado"),
+              React.createElement("option", { value: "false" }, "Pendiente")
+            )
+          ),
+          React.createElement("div", { style: { gridColumn: "1 / -1", display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },
             React.createElement("button", { className: "cm-btn cm-btn-outline cm-btn-sm", type: "button", onClick: self.clearFilters },
               React.createElement("i", { className: "fas fa-eraser" }), " Limpiar"
             ),
