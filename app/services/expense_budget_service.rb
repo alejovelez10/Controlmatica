@@ -355,8 +355,13 @@ class ExpenseBudgetService
   # `user_id` es el BENEFICIARIO. JAMAS se le pasa el actor: el actor va en
   # `created_by_id` y solo ahi. Confundirlos le daria a cada jefe el presupuesto
   # de todo su equipo.
-  def self.create_budget!(cost_center_id:, user_id:, amount:, notes: nil, actor:)
-    with_center_lock(cost_center_id) do
+  #
+  # `lock_timeout_ms` existe SOLO para que el test de concurrencia pueda esperar
+  # 300 ms en vez de 5 s por un lock que sabe que esta tomado. Ningun llamador de
+  # produccion lo pasa: el default es el LOCK_TIMEOUT_MS del servicio.
+  def self.create_budget!(cost_center_id:, user_id:, amount:, notes: nil, actor:,
+                          lock_timeout_ms: LOCK_TIMEOUT_MS)
+    with_center_lock(cost_center_id, lock_timeout_ms: lock_timeout_ms) do
       budget = ExpenseBudget.new(cost_center_id: cost_center_id, user_id: user_id,
                                  amount: amount, notes: notes, active: true,
                                  created_by_id: actor&.id)
