@@ -4,7 +4,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   respond_to :html, :js, :only => [:new, :update, :create]
   skip_before_action :verify_authenticity_token, :only => [:delete_user, :create_user, :update_user, :get_users]
 
-  SORTABLE_COLUMNS = %w[names email number_document document_type].freeze
+  SORTABLE_COLUMNS = %w[names email number_document document_type phone].freeze
 
   def edit
   end
@@ -42,7 +42,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     render json: {
       data: paginated.map do |user|
         user.as_json(
-          only: [:id, :names, :email, :document_type, :number_document, :rol_id],
+          only: [:id, :names, :email, :document_type, :number_document, :phone, :rol_id],
           include: { rol: { only: [:id, :name] } }
         ).merge(
           avatar: user.avatar.present? ? { url: user.avatar.url } : nil
@@ -95,10 +95,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
   end
 
   def user_update_params
-    params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user, :actual_user)
+    params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :phone, :rol_user, :actual_user)
   end
 
   def user_params
-    params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :rol_user, :actual_user)
+    params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :phone, :rol_user, :actual_user)
   end
 end
