@@ -58,8 +58,8 @@ prompt: sin ellos los agentes los redescubren y pierden horas.
 | — | Migración `users.phone` (Tarea 1 del 11, adelantada) | ✅ | `653e312` | Columna creada y aplicada en dev. **El dato no existe**: 0 de 29 usuarios |
 | 1 | 01 — Infraestructura de pruebas | ✅ | `0b37a40`..`b8f46c4` | **Verde reconfirmado por una segunda verificación independiente sobre `b8f46c4`.** Minitest 42 runs / 97 assertions / 0 fallos (2,16 s con Spring; 1,96 s sin Spring); Playwright 6 passed dos veces (14,2 s y 12,9 s). Los 25 criterios verificables PASAN (el 13 está RETIRADO por auditoría); 3 salvedades son de redacción del criterio, no del software |
 | 1 | Extra — Teléfono en el formulario de usuario | ✅ | `0a718cb`, `b8ef25f`, `b58927a` | Normalización + backend + campo en el formulario vivo. 24 runs / 47 assertions verdes, verificado aparte |
-| 2 | 02 — Migraciones y esquema | ⚠️ | `aed1a89`..`24dc5e9` | Las 6 migraciones escritas, aplicadas en dev y test, `schema.rb` regenerado, 33 pruebas nuevas y `rake gastos_ia_schema:check`. Minitest 75 runs / 251 assertions / 0 fallos. **Salvedad: staging y producción NO se tocaron** (Tareas 14 y 15) — quedan como runbook escrito abajo |
-| 2 | 03 — Deuda técnica bloqueante | ⬜ | — | Uploaders a S3, refactor de `search`, concern de auditoría |
+| 2 | 02 — Migraciones y esquema | ⚠️ | `aed1a89`..`0e52d05` | Las 6 migraciones escritas, aplicadas en dev y test, `schema.rb` regenerado, 33 pruebas nuevas y `rake gastos_ia_schema:check`. **Reverificado por un agente independiente contra la BD con `psql`: los 10 índices, las 14 columnas y los 5.008 gastos intactos.** **Salvedades: staging y producción NO se tocaron** (Tareas 14/15, runbook abajo) y el **drill de rollback (criterio 30) no se pudo reejecutar** en la verificación final |
+| 2 | 03 — Deuda técnica bloqueante | ⚠️ | `db68191`..`342ec2c` | Uploaders a S3 con allowlists, `search` convertido en builder de hash (bug de `scope` de clase, real y demostrado), auditoría extraída a `RegisterAuditable` (−219 líneas en `report_expense.rb`). 73 runs / 140 assertions verdes. **Salvedades: `heroku config:set AWS_REGION=us-east-2` sigue sin ejecutar** (obligatorio antes de mergear) y 3 criterios son de narrativa de PR / producción, no verificables aquí |
 | 3a | 04 — Presupuesto y aprobación | ⬜ | — | |
 | 3a | 05 — Multimoneda y TRM | ⬜ | — | |
 | 3b | 06 — Comprobante y contabilidad | ⬜ | — | |
@@ -149,6 +149,21 @@ Nada más del sistema se rompe por eso: sin extracción, el formulario simplemen
    **No se editaron por cuenta propia**: son el criterio contra el que el cliente juzga el trabajo y
    cambiarlos sin permiso parecería mover la portería. Decisión de una persona: se corrigen o se
    dejan como están con esta nota.
+7. **Decidir la precisión de `expense_budgets.amount`** (ola 2, paquete 02). Está en
+   `numeric(15,2)`, y en `numeric` los 15 dígitos **incluyen los 2 decimales**: el cupo máximo real
+   de una partida es `9.999.999.999.999,99` (13 dígitos enteros), no 14. Si algún presupuesto debe
+   superar los ~10 billones de pesos, hay que **ampliar la columna a `numeric(17,2)` con una
+   migración nueva**; si no, no hay nada que hacer y basta con confirmarlo.
+8. **Ejecutar el drill de rollback del paquete 02 en staging** (criterio 30 del plan). En la
+   verificación final el comando `db:rollback` fue **bloqueado por el clasificador de permisos** del
+   entorno de ejecución, así que la evidencia que hay es la de la implementación, no la de la
+   verificación independiente. **Ojo con el número de pasos: son `STEP=7`, no `STEP=6`** — ver el
+   runbook del paquete 02.
+9. **Redactar la descripción del PR de los paquetes 02 y 03** con las evidencias que solo existen
+   fuera de este repo: los 5 números de la Tarea 1 (versión de PG y tamaño de tabla en los dos
+   entornos Heroku), el resultado de `heroku config:set AWS_REGION=us-east-2`, la URL de S3 del
+   round-trip tras `heroku restart` y la frase sobre los archivos históricos subidos a disco efímero,
+   que **no son recuperables**. Son 5 criterios de aceptación que ningún agente puede cerrar.
 
 ---
 
@@ -533,3 +548,116 @@ sin trailer (`62f8f6b`, `45d8f3e`, `eecf7fe`) son preexistentes de la rama base
 
 **No se tocó producción.** Las únicas escrituras fueron el rake en `RAILS_ENV=test` (base
 `controlmatica_test`, desechable) y `public/packs-test`, artefacto gitignoreado.
+
+---
+
+### Ola 2 — Cierre: verificación final independiente de los paquetes 02 y 03
+
+Un verificador que **no puede arreglar nada** corrió él mismo todos los comandos y comprobó los
+criterios uno por uno, incluida la consulta directa a la base con `psql`. **Resultado: los dos
+paquetes quedan en ⚠️ — verdes de software, con salvedades que son de producción y de redacción de
+criterios, ninguna de código.** No hay un solo fallo de la suite.
+
+**Qué se construyó en la ola** (13 commits del paquete 03, `db68191..342ec2c`, sobre los 9 del
+paquete 02, `aed1a89..0e52d05`; 22 commits en total desde `aed1a89`, todos con el trailer
+`Co-Authored-By`, verificados uno por uno, **ninguno empujado al remoto**):
+
+- **Paquete 02** — las 6 migraciones del proyecto, `db/schema.rb` regenerado, `gastos_ia_schema:check`
+  y 33 pruebas de esquema. Ya descrito en la entrada anterior.
+- **Paquete 03, bloque A (almacenamiento)** — los 4 uploaders pasan a **una sola** declaración
+  `storage(Rails.env.production? ? :fog : :file)`: se acabaron los `storage :file` que mandaban los
+  archivos de producción al disco efímero de Heroku. Se les añadió `extension_allowlist`,
+  `content_type_allowlist` y `size_range` a los cuatro, y se migró de la nomenclatura `*_whitelist`
+  (0 ocurrencias restantes). `config/initializers/carrierwave.rb` fija la región desde
+  `ENV.fetch("AWS_REGION", "us-east-1")` y, bajo `Rails.env.test?`, apaga el procesamiento y aísla
+  las subidas en `E2E_UPLOAD_ROOT` / `tmp/uploads_test`. Nuevo `lib/tasks/storage_check.rake`.
+- **Paquete 03, bloque B (`search`)** — `ReportExpense.search` pasa de 15 argumentos posicionales a
+  `def self.search(filters = {})` con `SEARCH_KEYS` congelada de 15 símbolos. **El bug era real y
+  está demostrado**: el commit `778f11a` deja pegada la salida roja de la red de seguridad
+  (27 runs, 2 failures, 1 error, **183 lecturas contaminadas**) porque el `search` viejo definía
+  `scope :centro`, `scope :name_gasto`, etc. **en tiempo de ejecución**, contaminando la clase entre
+  peticiones. Hoy quedan **cero** macros `scope :` en el modelo y los 6 call sites del controlador
+  pasan un hash construido por un helper privado.
+- **Paquete 03, bloque C (auditoría)** — nace `app/models/concerns/register_auditable.rb` con
+  `audit_field` / `audit_register` / `audit_actor_id`. `report_expense.rb` pierde **219 líneas**
+  (66 insertadas) y sus tres callbacks artesanales; declara sus **13 campos auditados** de forma
+  declarativa. Los `puts` bajan de 18 a 12. **El HTML generado es idéntico byte a byte**: se
+  escribieron primero 14 golden (`518bcc8`, un único commit, sin tocar después del refactor) y son
+  los que lo garantizan.
+
+**Cuántas pruebas hay y cuánto tardan**
+
+| Suite | Comando | Resultado literal | Tiempo |
+|---|---|---|---|
+| Minitest completo | `bin/rails test` | `148 runs, 391 assertions, 0 failures, 0 errors, 0 skips` | **2,84 s** |
+| Esquema (pkg 02) | `test/models/schema_gastos_ia_test.rb` | `33 runs, 154 assertions, 0F/0E/0S` | — |
+| Uploaders (pkg 03) | `test/uploaders/` (2 archivos) | `21 runs, 41 assertions, 0F/0E/0S` | — |
+| `search` + auditoría + uploaders | los 5 archivos del pkg 03 | `73 runs, 140 assertions, 0F/0E/0S` (27+14+11+21) | — |
+| E2E Playwright | `cd test/e2e && npm run test:smoke` | `6 passed`, exit 0 | **12,8 s** |
+
+Total hoy: **148 casos Minitest + 6 specs Playwright**, contra los 42 + 6 con que cerró la ola 1.
+Los casos son reales, no clases vacías: se leyeron uno por uno (33 + 27 + 14 + 11 + 12 + 9 con
+aserciones concretas). **Los paquetes 02 y 03 no aportan ni un spec E2E**: los 6 de Playwright
+siguen siendo los del paquete 01, y `git` confirma que `test/e2e/` no se tocó en toda la ola.
+La corrección 9 del paquete 03 borró el spec que sí traía.
+
+**Lo que quedó frágil, pendiente o asumido — sin adornos**
+
+1. **Nada de esto ha tocado staging ni producción, y eso es lo más grave de la ola.** El runbook del
+   paquete 02 sigue **escrito, no ejecutado**: no hay número de versión de PostgreSQL de Heroku, no
+   hay conteo de filas de producción y **no se comparó la fotografía de importes antes/después allí**
+   (criterios 28 y 33 del paquete 02). Solo hay verde en `development` y `test`. Si producción
+   tuviera ≥ 100.000 filas o PG < 11, **las migraciones hay que reescribirlas con la Variante B antes
+   de migrar**. Ese chequeo es el paso 0 y no lo ha hecho nadie.
+2. **`heroku config:set AWS_REGION=us-east-2` sigue pendiente** (pendiente #2). El paquete 03 hizo
+   que la región se lea de `ENV` con `us-east-1` como valor por defecto: **si se mergea sin setear la
+   config var, las subidas a S3 apuntarán a la región equivocada**. Antes fallaba de forma
+   intermitente; ahora falla de forma consistente contra el bucket incorrecto. Es un bloqueante de
+   merge, no una nota al pie.
+3. **El drill de rollback (criterio 30 del paquete 02) no se pudo reejecutar en la verificación
+   final**: `db:rollback STEP=7` fue **denegado por el clasificador de permisos de Claude Code**, no
+   por la aplicación. La evidencia que existe es la que dejó la implementación, no una comprobación
+   independiente. Pasa a ser el pendiente #8.
+4. **Los archivos ya subidos en producción no son recuperables.** Hasta este paquete, los uploaders
+   guardaban en el disco efímero de Heroku; ese disco se borra en cada reinicio de dyno. El arreglo
+   evita el problema **hacia adelante**; lo que se perdió, se perdió. Hay que decirlo en el PR y a
+   quien pregunte por un adjunto viejo.
+5. **La verificación de S3 se hizo en local, y en local se salta lo importante.** `storage:check`
+   sale con 0, pero **omite por diseño el round-trip real contra S3 fuera de producción**: nadie ha
+   comprobado desde este repo que subir y volver a leer un archivo funcione de verdad en Heroku.
+   La evidencia del protocolo A7 (URL de S3 + captura tras `heroku restart`) sigue sin existir.
+6. **`db/schema.rb` declara `version: 2026_04_05_000001`, no `2026_04_04_000001`** como pide el
+   criterio 7. **No es un fallo**: la migración del teléfono (paquete 11, adelantada) tiene timestamp
+   posterior y fija el máximo. El criterio se escribió antes de que se adelantara. Se confirma la
+   explicación que ya daba la entrada del paquete 02.
+7. **Dos desviaciones literales de criterios del paquete 03, ambas de redacción**: el criterio 12
+   pide que `search` "no contenga la palabra `scope`" y el nuevo builder usa una **variable local**
+   llamada `scope` (`scope = all`, luego `scope = scope.where(...)`); lo que el criterio quiere
+   prohibir —los `scope :` de clase— está en **cero**, y hay un test (`test_search_no_define_scopes_de_clase`)
+   que compara `singleton_methods` antes y después y hace `refute_respond_to` sobre los 7 nombres
+   viejos. El criterio 14 espera 6 líneas de `grep '.search('` en el controlador y salen **8**: las
+   6 reales son correctas (líneas 36, 70, 142, 144, 210, 216), y las 2 sobrantes son **código
+   comentado** con las llamadas posicionales viejas. Ese comentario muerto conviene borrarlo en el
+   próximo paquete que toque el controlador.
+8. **El criterio 27 del paquete 03 (que añadir un campo auditado cueste una sola línea) no se
+   ejecutó.** La afirmación descansa en el diseño del concern y en el test que cuenta 13
+   `audit_field`, no en un experimento en una rama descartable. Es plausible, pero no está probado.
+9. **`bin/rake` con el binstub de Spring se cuelga.** `timeout 240 bin/rake gastos_ia_schema:check`
+   quedó colgado sin emitir una sola línea y hubo que matarlo a los 5 minutos (exit 143). El mismo
+   rake pasa con `bin/rails`. **Súmalo a los gotchas**: junto con `rails runner`, Spring es la fuente
+   recurrente de cuelgues en esta app.
+10. **Sigue vigente lo de siempre**: verde no es lo mismo que probado. Los 148 casos cubren esquema,
+    almacenamiento, `search` y auditoría — es decir, infraestructura y deuda técnica. **La lógica de
+    negocio de presupuesto, multimoneda y contabilidad no existe todavía**: los paquetes 04 a 14
+    están **todos** pendientes.
+
+**Decisiones que el cliente debe confirmar** (nuevas o vivas tras esta ola): la **precisión de
+`expense_budgets.amount`** (pendiente #7 — el cupo máximo real es de 13 dígitos enteros, no 14) y
+que se acepte **`us-east-1` como valor por defecto de `AWS_REGION`** en el initializer, que es lo
+que convierte el `heroku config:set` en un bloqueante de merge en vez de en una mejora opcional.
+
+**Higiene git verificada**: rama `feature/gastos-presupuesto-ia`, HEAD `342ec2c`,
+`git status --porcelain` **vacío**. Sin `push`: el remoto no se tocó. Los 22 commits desde `aed1a89`
+son atómicos, en español, con el POR QUÉ en el cuerpo y el trailer `Co-Authored-By`. El paquete 03
+respetó la matriz §7.2 a rajatabla: **0** archivos de `db/migrate/`, `app/javascript/`,
+`test/fixtures/`, `test/test_helper.rb`, `test/support/` y `test/e2e/` tocados.
