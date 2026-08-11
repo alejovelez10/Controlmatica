@@ -65,6 +65,20 @@ class ReportExpenseAuditLegacyTest < ActiveSupport::TestCase
     "<p>Estado presupuestal: <b class='color-true'>sin_presupuesto</b> / " \
     "<b class='color-false'>aprobado</b></p>"
 
+  # PAQUETE 06 — segmento de `receipt_file`, AGREGADO AL FINAL, despues del de
+  # `budget_status` (correccion 6 de 06-comprobante-y-contabilidad.md, que
+  # autoriza a este paquete a actualizar el golden en el mismo PR).
+  #
+  # Los 14 golden originales y el del 04 siguen intactos: `receipt_file` es el
+  # ultimo elemento de `edit_fields`, asi que mientras no cambie renderiza "".
+  #
+  # El valor que sale es el NOMBRE DEL ARCHIVO (la columna string), no el
+  # uploader: es lo unico legible para un auditor.
+  HTML_EDICION_VALOR_Y_COMPROBANTE =
+    HTML_EDICION_VALOR +
+    "<p>Comprobante: <b class='color-true'></b> / " \
+    "<b class='color-false'>comprobante.pdf</b></p>"
+
   setup do
     @actor = users(:admin)
     # Centro de costo con el code exacto del contrato.
@@ -233,6 +247,30 @@ class ReportExpenseAuditLegacyTest < ActiveSupport::TestCase
 
     as_user(@actor) { gasto.destroy }
     refute_includes RegisterEdit.last.description, "Estado presupuestal"
+  end
+
+  # PAQUETE 06. Mismo trato que el 04: complementa, no relaja. Fija que el
+  # segmento del comprobante aterriza DESPUES del de Valor y que el orden de
+  # merge (04 antes que 06) queda preservado.
+  def test_html_de_edicion_incluye_el_comprobante_al_final
+    gasto = crear_gasto
+    as_user(@actor) do
+      gasto.receipt_file = upload_fixture("comprobante.pdf")
+      gasto.invoice_value = 2000.0
+      gasto.save!
+    end
+
+    assert_equal HTML_EDICION_VALOR_Y_COMPROBANTE, RegisterEdit.last.description
+  end
+
+  # El otro lado del contrato: `receipt_file` NO se audita en creacion ni en
+  # borrado, asi que HTML_CREACION y HTML_BORRADO no cambian.
+  def test_el_comprobante_no_aparece_en_creacion_ni_en_borrado
+    gasto = crear_gasto
+    refute_includes RegisterEdit.last.description, "Comprobante"
+
+    as_user(@actor) { gasto.destroy }
+    refute_includes RegisterEdit.last.description, "Comprobante"
   end
 
   def test_creacion_repite_nit_dos_veces

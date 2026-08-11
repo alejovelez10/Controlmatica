@@ -31,3 +31,16 @@
 
 en:
   hello: "Hello world"
+
+  # Mensajes de CarrierWave EN ESPANOL bajo la clave inglesa, a proposito
+  # (paquete 06, tarea A2). El `default_locale` del repo es `:en`: un `es.yml`
+  # no lo cargaria nadie y el usuario veria "You are not allowed to upload exe
+  # files" en una aplicacion que esta entera en espanol.
+  errors:
+    messages:
+      extension_allowlist_error: "No se permiten archivos %{extension}. Tipos permitidos: %{allowed_types}"
+      content_type_allowlist_error: "No se permiten archivos de tipo %{content_type}. Tipos permitidos: %{allowed_types}"
+      max_size_error: "El archivo es demasiado grande (máximo %{max_size})"
+      min_size_error: "El archivo está vacío"
+      carrierwave_integrity_error: "El archivo no es un tipo permitido"
+      carrierwave_processing_error: "No se pudo procesar el archivo"

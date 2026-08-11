@@ -67,7 +67,22 @@ class ReportExpense < ApplicationRecord
   # gasto historico o uno sin partida vigente no apunta a ninguna, y porque
   # `dependent: :nullify` de ExpenseBudget lo deja en NULL al anular la partida.
   belongs_to :expense_budget, optional: true
+  # Quien aprobo contablemente el gasto. Opcional porque el 99% de los gastos
+  # nunca pasa por contabilidad y porque desaprobar lo vuelve a dejar en NULL.
+  belongs_to :accounting_approved_by, class_name: "User", optional: true
   include RegisterAuditable
+
+  # COMPROBANTE ADJUNTO (paquete 06).
+  #
+  # `mount_uploader` instala por si solo el borrado del archivo al destruir el
+  # gasto (`after_commit :remove_receipt_file!, on: :destroy`): NO hay que
+  # escribir codigo de limpieza, solo probarlo.
+  #
+  # Va DESPUES de los belongs_to y ANTES de audit_register para que su
+  # `before_save :write_receipt_file_identifier` corra antes que el
+  # `before_update` de la auditoria; si no, `receipt_file_changed?` seria false
+  # y el cambio de comprobante no quedaria registrado.
+  mount_uploader :receipt_file, ReceiptUploader
 
   # Etiquetas legibles de budget_status. Viven AQUI, en el dueño de la columna,
   # y no en cada consumidor: las leen la plantilla axlsx de contabilidad
@@ -85,6 +100,36 @@ class ReportExpense < ApplicationRecord
   scope :no_excedidos,         -> { where.not(budget_status: "excedido") }
 
   validates :budget_status, inclusion: { in: %w[sin_presupuesto aprobado excedido] }
+
+  # === CONTABILIDAD (paquete 06) ===========================================
+  #
+  # `accounting_visible` es LA UNICA definicion de la base de la pantalla de
+  # Contabilidad: ni el controller ni la plantilla axlsx pueden reescribir ese
+  # `where`. Delega en `no_excedidos` (paquete 04, dueño de la columna) en vez
+  # de repetir la condicion: dos literales de "excedido" en el codigo terminan
+  # diciendo cosas distintas.
+  #
+  # UNICA EXCEPCION documentada (correccion 13 / §2.3): en las LECTURAS, con el
+  # filtro "Aprobados por contabilidad" se amplia la base para recuperar los
+  # gastos que alguien ya aprobo y un recalculo posterior empujo a `excedido`.
+  # Esa ampliacion vive una sola vez, en `AccountingExpensesController#filtered_scope`,
+  # y NUNCA en la aprobacion masiva.
+  scope :accounting_visible, -> { no_excedidos }
+  scope :accounting_pending, -> { accounting_visible.where(accounting_approved: false) }
+
+  def accounting_state_label
+    accounting_approved ? "Aprobado" : "Pendiente"
+  end
+
+  # La URL del comprobante tal cual la emite CarrierWave.
+  #
+  # OJO (Riesgo 2 del paquete 06): con `fog_public = false` esta URL viene
+  # FIRMADA y expira a los 600 s desde el momento de serializar. Sirve para el
+  # MCP y para saber si hay comprobante; la tabla del navegador debe usar
+  # /download_receipt/report_expenses/:id, que firma en el clic.
+  def receipt_file_url
+    receipt_file.present? ? receipt_file.url : nil
+  end
 
   # === MULTIMONEDA (paquete 05) ============================================
   #
@@ -178,6 +223,20 @@ class ReportExpense < ApplicationRecord
   # el orden de los segmentos del HTML es el orden de esta lista. Cada paquete
   # que audite un campo nuevo agrega el suyo al final y nunca reordena el ajeno.
   audit_field :budget_status,          label: "Estado presupuestal"
+  # PAQUETE 06. Igual que el 04: se agrega AL FINAL y solo a `edit_fields`.
+  # Adjuntar, reemplazar o borrar un comprobante es una EDICION del gasto; en la
+  # creacion el campo casi siempre viene vacio y auditarlo seria ruido.
+  #
+  # `kind: :scalar` a proposito aunque `receipt_file` sea un uploader montado:
+  # `receipt_file_change` lo resuelve ActiveRecord sobre la COLUMNA string, asi
+  # que el HTML muestra el nombre del archivo viejo y el del nuevo, que es
+  # exactamente lo que un auditor quiere leer.
+  #
+  # Los campos de CONTABILIDAD (accounting_approved*) NO se declaran aqui a
+  # proposito: su texto quedaria por debajo del umbral de 59 caracteres del
+  # concern y no registraria nada. Esa auditoria se escribe explicitamente en
+  # AccountingExpensesController con module "Contabilidad".
+  audit_field :receipt_file,           label: "Comprobante"
 
   # create_fields repite `identification` a proposito: en creacion y borrado el
   # NIT sale DOS veces. Las dos listas no tienen ni el mismo orden ni los mismos
@@ -196,7 +255,8 @@ class ReportExpense < ApplicationRecord
     # desaparece.
     edit_fields:   %i[cost_center_id user_invoice_id type_identification_id payment_type_id
                       invoice_date invoice_name description type_identification invoice_number
-                      invoice_value invoice_tax invoice_total identification budget_status],
+                      invoice_value invoice_tax invoice_total identification budget_status
+                      receipt_file],
     create_min_length: 5,
     # 59 NO es arbitrario: es el largo exacto del encabezado de edicion. Si
     # alguien lo "redondea", cada save sin cambios (el controller hace uno en
