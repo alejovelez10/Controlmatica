@@ -59,12 +59,29 @@ Todas salen de `00-ARQUITECTURA.md` §7.10, que ya traía el valor por defecto r
 
 ---
 
+## Frontera de alcance: qué es "IA" y qué no
+
+**Decisión del cliente (2026-08-10): todo lo que hable con un modelo lo hace Taimes.** Su agente
+entrará después al código de Controlmatica y lo implementará, siempre que se le deje el contrato
+escrito y el hueco listo. Aquí se hace **todo lo demás**.
+
+| Componente | ¿Lo hago yo? | Por qué |
+|---|---|---|
+| `ReceiptExtractionService#call_vision_model` | ❌ **No** — es de Taimes | Es la única pieza que le habla a un modelo de visión |
+| Esqueleto de `ReceiptExtractionService` (contrato, `Result`, JSON Schema de salida, mapeo de errores, seam) | ✅ Sí | Le deja el hueco exacto a Taimes: rellenar un método, no rediseñar |
+| `ExpenseRuleService` (antigüedad, licores, duplicados, topes) | ✅ Sí | **No es IA**: son reglas de negocio en Ruby plano. El MCP y el formulario dependen de él |
+| Endpoint de captura asistida + botón en el formulario | ✅ Sí, **detrás de `RECEIPT_EXTRACTION_ENABLED=false`** | Queda construido y apagado; se enciende cuando Taimes complete la extracción |
+| Herramientas MCP, actor por teléfono, política de exposición | ✅ Sí | Es fontanería Ruby, no IA. Es justamente "lo escrito" por donde entra el agente |
+| Agente de WhatsApp (conversación, voz, prompts) | ❌ No — es de Taimes | Vive fuera de este repo |
+| Especificación del contrato para el agente | ✅ Sí | El paquete 11 la deja escrita |
+
+Consecuencia: **el paquete 10 se parte**. Se implementa el motor de reglas y el esqueleto del
+servicio; la llamada al modelo queda como `NotImplementedError` documentado, con el flag apagado.
+Nada más del sistema se rompe por eso: sin extracción, el formulario simplemente se llena a mano.
+
 ## Lo que NO se va a hacer esta noche
 
-- **El agente de WhatsApp en Taimes** (parte de la Fase B). El cliente lo dejó explícitamente fuera.
-  Lo que sí se hace es todo su soporte del lado de Controlmatica: las herramientas MCP, la resolución
-  de actor por teléfono, el servicio de extracción y el motor de reglas. El paquete 11 deja escrita
-  la especificación para configurarlo.
+- **Todo lo que hable con un modelo de IA** (ver la tabla de arriba). Es de Taimes.
 - **Desplegar a Heroku ni tocar producción.** Requiere aprobación explícita.
 - **Setear las config vars de Heroku** (`AWS_REGION=us-east-2` entre otras). Queda documentado como
   paso manual en el paquete 13.
