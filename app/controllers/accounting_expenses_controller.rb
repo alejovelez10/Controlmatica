@@ -27,7 +27,9 @@ class AccountingExpensesController < ApplicationController
   # no un recorte. Aceptarlo dejaria pasar `accounting_approved=false`, que es
   # toda la tabla, y reproduciria exactamente el bug de
   # report_expenses_controller.rb#update_filter_values.
-  FILTER_KEYS = %i[cost_center_id user_invoice_id start_date end_date is_acepted currency
+  # Sin `is_acepted`: la pantalla solo muestra gastos aceptados operativamente
+  # (ver `filtered_scope`), asi que no hay nada que filtrar por ese campo.
+  FILTER_KEYS = %i[cost_center_id user_invoice_id start_date end_date currency
                    budget_status type_identification_id payment_type_id q ids].freeze
 
   def index
@@ -200,6 +202,16 @@ class AccountingExpensesController < ApplicationController
              ReportExpense.accounting_visible
            end
 
+    # CONTABILIDAD SOLO VE LO APROBADO OPERATIVAMENTE. `is_acepted` es la
+    # aceptacion del responsable del gasto; hasta que ocurre, el gasto todavia se
+    # puede editar o rechazar y no tiene por que llegar a contabilidad.
+    #
+    # Va en la base y no como filtro opcional a proposito: `filtered_scope` la
+    # comparten el listado, los valores de los filtros, el Excel y la APROBACION
+    # MASIVA. Ponerlo aqui garantiza que la aprobacion masiva tampoco pueda tocar
+    # un gasto sin aceptar, que es el caso peligroso.
+    base = base.where(is_acepted: true)
+
     scope = base.includes(:cost_center, :user_invoice, :type_identification, :payment_type,
                           :last_user_edited, :user, :accounting_approved_by, :expense_budget)
     scope = scope.where(user_invoice_id: current_user.id) unless ver_todos?
@@ -210,7 +222,10 @@ class AccountingExpensesController < ApplicationController
     scope = scope.where("report_expenses.invoice_date >= ?", params[:start_date]) if params[:start_date].present?
     scope = scope.where("report_expenses.invoice_date <= ?", params[:end_date])   if params[:end_date].present?
     scope = scope.where(accounting_approved: params[:accounting_approved])        if params[:accounting_approved].present?
-    scope = scope.where(is_acepted: params[:is_acepted])                          if params[:is_acepted].present?
+    # `is_acepted` YA NO SE FILTRA AQUI: la base lo fija en true, asi que este
+    # filtro solo podia repetir lo mismo o pedir un imposible (`false`) y
+    # devolver siempre cero filas. El selector "Estado operativo" se quito de la
+    # pantalla por lo mismo.
     scope = scope.where(currency: params[:currency])                              if params[:currency].present?
     scope = scope.where(budget_status: params[:budget_status])                    if params[:budget_status].present?
     scope = scope.where(type_identification_id: params[:type_identification_id])  if params[:type_identification_id].present?

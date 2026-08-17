@@ -24,12 +24,18 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     @centro = cost_centers(:centro_con_viaticos)
   end
 
+  # `is_acepted: true` por defecto: Contabilidad SOLO ve gastos aprobados
+  # operativamente (AccountingExpensesController#filtered_scope), asi que un gasto
+  # sin aceptar no es un caso valido de esta pantalla y dejaria todos los tests de
+  # filtros y orden trabajando sobre un listado vacio. Los tests que necesitan el
+  # caso contrario lo piden explicitamente con `crear_gasto(is_acepted: false)`.
   def crear_gasto(**overrides)
     as_user(@admin) do
       ReportExpense.create!({
         user: @admin,
         cost_center: @centro,
         user_invoice: @ingeniero,
+        is_acepted: true,
         invoice_name: "Hotel Contable",
         invoice_date: Date.new(2026, 6, 1),
         description: "Alojamiento",
@@ -132,6 +138,49 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     get get_accounting_expenses_path, params: { accounting_approved: "true" }
 
     assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  # --- Solo lo aprobado operativamente --------------------------------------
+  #
+  # `is_acepted` es la aceptacion del responsable del gasto. Hasta que ocurre, el
+  # gasto todavia se puede editar o rechazar y no tiene por que llegar a
+  # Contabilidad.
+
+  test "get_accounting_expenses NO devuelve gastos sin aceptar operativamente" do
+    sin_aceptar = crear_gasto(is_acepted: false)
+    aceptado    = crear_gasto(is_acepted: true)
+    sign_in_as @admin
+
+    get get_accounting_expenses_path
+
+    ids = assert_json_list.map { |r| r["id"] }
+    refute_includes ids, sin_aceptar.id
+    assert_includes ids, aceptado.id
+  end
+
+  test "un gasto sin aceptar tampoco sale con el filtro Aprobados por contabilidad" do
+    # El unico ensanche de la base (correccion 13) es para los excedidos ya
+    # aprobados; no debe convertirse en una puerta trasera para los no aceptados.
+    gasto = crear_gasto(is_acepted: false)
+    gasto.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { accounting_approved: "true" }
+
+    refute_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  test "la aprobacion masiva por ids NO toca un gasto sin aceptar" do
+    # Es el caso peligroso: sin el guard en la base, contabilidad podia aprobar
+    # en bloque hasta 500 gastos que el responsable no habia aceptado.
+    sin_aceptar = crear_gasto(is_acepted: false)
+    sign_in_as @admin
+
+    patch update_accounting_filter_values_path, params: { ids: [sin_aceptar.id] }
+
+    assert_equal 0, json_body["count"]
+    refute sin_aceptar.reload.accounting_approved,
+           "un gasto sin aceptar operativamente jamas puede quedar aprobado por contabilidad"
   end
 
   test "get_accounting_expenses incluye sin_presupuesto" do

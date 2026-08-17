@@ -31,7 +31,6 @@ var EMPTY_FILTERS = {
   accounting_approved: "",
   budget_status: "",
   currency: "",
-  is_acepted: "",
   type_identification_id: "",
   payment_type_id: "",
 };
@@ -200,7 +199,6 @@ class AccountingExpenseIndex extends React.Component {
     if (f.accounting_approved) out.push("accounting_approved=" + f.accounting_approved);
     if (f.budget_status) out.push("budget_status=" + f.budget_status);
     if (f.currency) out.push("currency=" + f.currency);
-    if (f.is_acepted) out.push("is_acepted=" + f.is_acepted);
     if (f.type_identification_id) out.push("type_identification_id=" + f.type_identification_id);
     if (f.payment_type_id) out.push("payment_type_id=" + f.payment_type_id);
     return out;
@@ -636,17 +634,10 @@ class AccountingExpenseIndex extends React.Component {
               )
             )
           ),
-          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-flag", style: { marginRight: 6, opacity: 0.5 } }),
-              "Estado operativo"
-            ),
-            React.createElement("select", { name: "is_acepted", className: "cm-input", value: f.is_acepted, onChange: self.handleFilterChange },
-              React.createElement("option", { value: "" }, "Todos"),
-              React.createElement("option", { value: "true" }, "Aceptado"),
-              React.createElement("option", { value: "false" }, "No aceptado")
-            )
-          ),
+          // El selector "Estado operativo" se retiro: la pantalla solo lista
+          // gastos aceptados operativamente (AccountingExpensesController#filtered_scope),
+          // asi que "Aceptado" repetia el listado y "No aceptado" devolvia
+          // siempre cero filas.
           // Fila 3
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
