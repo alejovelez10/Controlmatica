@@ -35,6 +35,12 @@ test.beforeAll(() => {
 async function abrirPestanaPresupuesto(page) {
   await page.goto(`/cost_centers/${cc("BUD")}?tab=home`);
 
+  // La pestana se llama "Presupuesto de gastos" y va SIEMPRE LA ULTIMA. Se
+  // afirma sobre la ultima .cm-tab-btn (no sobre "alguna que diga eso") porque
+  // el requisito es la posicion, no solo la existencia; el resto del spec entra
+  // por data-testid y no notaria un cambio de orden.
+  await expect(page.locator(".cm-tab-btn").last()).toHaveText(/Presupuesto de gastos/);
+
   await Promise.all([
     page.waitForResponse((r) => r.url().includes("/get_expense_budgets/") && r.status() === 200),
     page.getByTestId("budget-tab").click(),

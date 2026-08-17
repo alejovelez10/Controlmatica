@@ -19,13 +19,13 @@ const { cc, expense, user } = require("../support/seedIds");
 const OWNER_STATE = "./.auth/storageState.json";
 
 test.describe("permisos de presupuesto y contabilidad", () => {
-  test("un usuario sin permiso de presupuesto no ve la pestaña Presupuesto", async ({ page }) => {
+  test("un usuario sin permiso de presupuesto no ve la pestaña Presupuesto de gastos", async ({ page }) => {
     await page.goto(`/cost_centers/${cc("PERM")}?tab=home`);
 
     // Control positivo: la pagina cargo y sus pestanas se pintaron. Sin esto, un
     // 500 daria el mismo toHaveCount(0) y la prueba pasaria por la razon
     // equivocada.
-    await expect(page.locator(".cm-tab-btn", { hasText: "Gastos" })).toBeVisible();
+    await expect(page.locator(".cm-tab-btn", { hasText: /^\s*Gastos\s*$/ })).toBeVisible();
 
     await expect(page.getByTestId("budget-tab")).toHaveCount(0);
     await expect(page.getByTestId("budget-panel")).toHaveCount(0);

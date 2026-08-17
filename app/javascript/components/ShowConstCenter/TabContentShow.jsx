@@ -30,19 +30,6 @@ class TabContentShow extends React.Component {
       tabs.push({ id: String(tabIndex++), label: "Cotizaciones", icon: "fas fa-file-alt", key: "quotations" });
     }
     tabs.push({ id: String(tabIndex++), label: "Gastos", icon: "fas fa-receipt", key: "expenses" });
-    // La pestana de Presupuesto va DESPUES de Gastos y NUNCA antes. Los ids son
-    // correlativos y `activeTab` arranca en "1": insertarla al principio le
-    // quitaria el id "1" a Cotizaciones (o a Gastos) y cambiaria la pestana que
-    // se abre por defecto en todos los centros. Aqui solo se corren los ids de
-    // las pestanas posteriores, que nadie usa como valor inicial.
-    //
-    // `budget_module` se lee POR STRING LITERAL: es una de las 10 claves
-    // canonicas de @estados (00-ARQUITECTURA.md §4.4) que emite el paquete 07.
-    // Un nombre distinto deja esta pestana invisible para siempre sin que nada
-    // falle ni avise.
-    if (this.props.estados && this.props.estados.budget_module) {
-      tabs.push({ id: String(tabIndex++), label: "Presupuesto", icon: "fas fa-wallet", key: "budgets" });
-    }
     tabs.push({ id: String(tabIndex++), label: "Ordenes de Compra", icon: "fas fa-shopping-cart", key: "orders" });
 
     if (type === "SERVICIO" || type === "PROYECTO") {
@@ -53,6 +40,27 @@ class TabContentShow extends React.Component {
     }
     if (type === "PROYECTO") {
       tabs.push({ id: String(tabIndex++), label: "Tableristas", icon: "fas fa-hard-hat", key: "contractors" });
+    }
+
+    // "Presupuesto de gastos" se empuja LA ULTIMA, siempre. Cual queda justo
+    // antes depende del tipo de centro (Tableristas solo en PROYECTO, Materiales
+    // en VENTA, Reportes en SERVICIO, y Ordenes de Compra si no es ninguno), asi
+    // que este push tiene que quedarse al final del cuerpo del metodo.
+    //
+    // La regla que hay que respetar no es la posicion sino el id: los ids son
+    // correlativos y `activeTab` arranca en "1", asi que el id "1" tiene que
+    // seguir siendo el de la PRIMERA pestana (Cotizaciones, o Gastos cuando el
+    // centro no tiene cotizaciones). Al empujarla al final recibe el id mas alto
+    // y no corre el de ninguna otra, por eso la pestana que se abre por defecto
+    // no cambia ni con el modulo activo ni sin el. Lo unico prohibido sigue
+    // siendo insertarla ANTES de la primera pestana: eso si le robaria el "1".
+    //
+    // `budget_module` se lee POR STRING LITERAL: es una de las 10 claves
+    // canonicas de @estados (00-ARQUITECTURA.md §4.4) que emite el paquete 07.
+    // Un nombre distinto deja esta pestana invisible para siempre sin que nada
+    // falle ni avise.
+    if (this.props.estados && this.props.estados.budget_module) {
+      tabs.push({ id: String(tabIndex++), label: "Presupuesto de gastos", icon: "fas fa-wallet", key: "budgets" });
     }
 
     return tabs;

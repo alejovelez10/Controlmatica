@@ -43,7 +43,7 @@ async function abrirGastosDelCentro(page) {
 
   const [res] = await Promise.all([
     page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.status() === 200),
-    page.locator(".cm-tab-btn", { hasText: "Gastos" }).click(),
+    page.locator(".cm-tab-btn", { hasText: /^\s*Gastos\s*$/ }).click(),
   ]);
 
   await expect(page.getByTestId("cm-datatable")).toBeVisible();

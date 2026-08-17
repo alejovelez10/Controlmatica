@@ -32,7 +32,7 @@ async function abrirGastosDelCentro(page) {
 
   await Promise.all([
     page.waitForResponse((r) => r.url().includes("/get_cost_center_report_expenses/") && r.status() === 200),
-    page.locator(".cm-tab-btn", { hasText: "Gastos" }).click(),
+    page.locator(".cm-tab-btn", { hasText: /^\s*Gastos\s*$/ }).click(),
   ]);
 
   await expect(page.getByTestId("cm-datatable")).toBeVisible();
