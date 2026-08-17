@@ -388,10 +388,15 @@ class ExpensesTable extends Component {
   // donde salio la tasa, la segunda es la que le prohibe al servidor recalcular.
   handleToggleCopManual = (e) => {
     var on = !!e.target.checked;
+    // Recalcular DESPUES de cambiar la bandera, en los dos sentidos: al
+    // desmarcarla hay que devolver los COP a lo que dice la TRM (antes se
+    // quedaban con el valor manual hasta que el usuario tocara otro campo), y al
+    // marcarla hay que refrescar igual el total extranjero, que no depende de la
+    // tasa.
     this.setState({ formCreate: Object.assign({}, this.state.formCreate, {
       cop_manual_override: on,
       exchange_rate_source: on ? "manual" : this.state.formCreate.exchange_rate_source,
-    }) });
+    }) }, this.recomputeConversion);
   };
 
   // INVARIANTE: invoice_value / invoice_tax / invoice_total SIEMPRE en COP. El
@@ -401,29 +406,48 @@ class ExpensesTable extends Component {
   recomputeConversion = () => {
     var f = this.state.formCreate;
     if (f.currency === "COP") return;
-    if (f.cop_manual_override) return;   // el usuario fijo el COP a mano: no se pisa
 
     var rate = parseFloat(f.exchange_rate) || 0;
     var fv = parseFloat(f.foreign_value) || 0;
     var ft = parseFloat(f.foreign_tax) || 0;
     var round2 = function(x) { return Math.round(x * 100) / 100; };
 
-    this.setState({ formCreate: Object.assign({}, this.state.formCreate, {
-      foreign_total: round2(fv + ft),
-      invoice_value: round2(fv * rate),
-      invoice_tax: round2(ft * rate),
+    // EL TOTAL EXTRANJERO SE CALCULA SIEMPRE. Es aritmetica dentro de la misma
+    // moneda (valor + impuesto): no depende de la TRM ni del ajuste manual del
+    // COP. Antes vivia dentro del early return de `cop_manual_override`, asi que
+    // marcar la casilla dejaba el campo "Total en USD" vacio o desactualizado
+    // aunque el usuario siguiera editando el valor y el impuesto.
+    var cambios = { foreign_total: round2(fv + ft) };
+
+    // Lo unico que protege la casilla son los tres campos en COP.
+    if (!f.cop_manual_override) {
+      cambios.invoice_value = round2(fv * rate);
+      cambios.invoice_tax = round2(ft * rate);
       // El round2 EXTERIOR no sobra. Sumar dos numeros ya redondeados vuelve a
       // producir binario sucio: 314414 + 59738.66 da 374152.66000000003 en JS, y
       // ese valor se pinta tal cual en el campo Total y viaja asi en el
       // FormData. Verificado en pantalla contra USD 100 + 19 con TRM 3.144,14.
-      invoice_total: round2(round2(fv * rate) + round2(ft * rate)),
-    }) }, this.refreshBudgetAvailability);
+      cambios.invoice_total = round2(round2(fv * rate) + round2(ft * rate));
+    }
+
+    this.setState({ formCreate: Object.assign({}, this.state.formCreate, cambios) },
+                  this.refreshBudgetAvailability);
   };
 
   fetchExchangeRate = () => {
     var self = this;
     var f = this.state.formCreate;
-    if (f.currency === "COP" || !f.invoice_date) return;
+    if (f.currency === "COP") return;
+
+    // ANTES ESTO ERA UN `return` MUDO. Sin fecha del gasto el boton no hacia
+    // nada: ni spinner, ni error, ni mensaje. Desde fuera se veia como un boton
+    // roto. La TRM se pide SIEMPRE para una fecha concreta, asi que sin ella no
+    // hay consulta posible; lo que faltaba era decirlo.
+    if (!f.invoice_date) {
+      this.setState({ exchange: { status: "error", requested_date: null, rate_date: null, source: null,
+        message: "Indique primero la fecha del gasto: la TRM se consulta para esa fecha." } });
+      return;
+    }
 
     this.setState({ exchange: { status: "loading", message: null, rate_date: null, requested_date: f.invoice_date, source: null } });
 

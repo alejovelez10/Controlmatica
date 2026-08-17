@@ -110,14 +110,18 @@ class FormCreate extends Component {
   renderRateStatus = () => {
     const e = this.props.exchange || {};
 
-    if (this.props.formValues.exchange_rate_source === "manual" && e.status !== "loading") {
-      return <div className="cm-field-hint">Tasa ingresada manualmente</div>;
+    // EL ERROR VA PRIMERO. Con la tasa escrita a mano, `exchange_rate_source` es
+    // "manual", y esa rama devolvia antes de llegar aqui: el aviso de por que
+    // fallo la consulta quedaba tapado por el texto "Tasa ingresada manualmente"
+    // y el usuario no veia nada al pulsar el boton.
+    if (e.status === "error") {
+      return <div className="cm-alert cm-alert-warning" data-testid="expense-rate-error">{e.message}</div>;
     }
     if (e.status === "loading") {
       return <div className="cm-field-hint" data-testid="expense-rate-loading"><i className="fa fa-spinner fa-spin"></i> Consultando la tasa…</div>;
     }
-    if (e.status === "error") {
-      return <div className="cm-alert cm-alert-warning" data-testid="expense-rate-error">{e.message}</div>;
+    if (this.props.formValues.exchange_rate_source === "manual") {
+      return <div className="cm-field-hint">Tasa ingresada manualmente</div>;
     }
     if (e.status === "ok" && e.rate_date !== e.requested_date) {
       return (
