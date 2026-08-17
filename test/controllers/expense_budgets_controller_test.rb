@@ -638,13 +638,54 @@ class ExpenseBudgetsControllerTest < ActionDispatch::IntegrationTest
     refute_empty gasto.budget_reason.to_s
   end
 
-  test "update active false responde exito" do
+  # =========================================================================
+  # A.6 — anulacion (`active: false`), los tres casos de la regla de negocio
+  #
+  # No hay endpoint propio: el boton "Anular" de la tabla manda un PATCH al mismo
+  # update. Ojo con el tipo: en un request form-encoded `active` llega como el
+  # STRING "false", que sin castear es truthy en Ruby.
+  # =========================================================================
+
+  test "update active false sin gasto ejecutado anula la partida" do
     sign_in_as @pleno
+
+    # El contador no tiene gastos en el centro: su partida no tiene nada
+    # ejecutado y se anula entera.
+    patch expense_budget_path(@partida_contador), params: { active: false }
+
+    assert_json_success
+    refute @partida_contador.reload.active
+    assert_equal BigDecimal("300000"), @partida_contador.amount
+    assert_includes json_body["success"], "se liberaron $300.000"
+  end
+
+  test "update active false con gasto parcial recorta el monto y la deja activa" do
+    sign_in_as @pleno
+    # El par (centro_con_viaticos, ingeniero) tiene 200.000 gastados en fixtures.
 
     patch expense_budget_path(@partida), params: { active: false }
 
     assert_json_success
-    refute @partida.reload.active
+    @partida.reload
+    # ACTIVA a proposito: `cap_violation_for` suma solo partidas activas, asi que
+    # desactivarla sacaria del tope del centro los 200.000 ya ejecutados.
+    assert @partida.active, "Una partida con gasto ejecutado no se desactiva, se recorta"
+    assert_equal BigDecimal("200000"), @partida.amount
+    assert_includes json_body["success"], "se recortó de $500.000 a $200.000"
+  end
+
+  test "update active false sin saldo por liberar no cambia nada y lo informa" do
+    sign_in_as @pleno
+    # 200.000 asignados y 200.000 ya gastados por el par: no hay nada que liberar.
+
+    patch expense_budget_path(@partida_segunda), params: { active: false }
+
+    assert_response :success
+    assert_equal "error", json_body["type"]
+    assert_includes json_body["message"].join(" "), "no hay saldo por liberar"
+    @partida_segunda.reload
+    assert @partida_segunda.active
+    assert_equal BigDecimal("200000"), @partida_segunda.amount
   end
 
   test "update con id inexistente responde 404" do

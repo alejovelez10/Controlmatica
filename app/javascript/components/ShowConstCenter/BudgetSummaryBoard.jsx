@@ -1,9 +1,17 @@
 import React, { Component } from 'react';
 import NumberFormat from "react-number-format";
+import { CmModal } from '../../generalcomponents/ui';
 
 // Tablero de la pestana Presupuesto. PRESENTACIONAL PURO: no hace fetch, no
 // tiene estado propio y no calcula nada que el servidor no haya calculado ya.
 // Quien pide los datos y decide cuando recargar es BudgetsTable.
+//
+// El detalle por persona ya NO se pinta en linea: vive en un modal que abre el
+// boton "Resumen" de la barra de acciones de la tabla general. La apertura la
+// controla BudgetsTable por props (`showByUser` / `onCloseByUser`) para que este
+// componente siga sin estado propio. El modal NO pide datos: reusa el mismo
+// `summary` que ya alimenta las tarjetas, asi que abrirlo y cerrarlo no dispara
+// ni una peticion.
 //
 // TODOS LOS MONTOS LLEGAN COMO STRING. `assigned`, `spent`, `available` y los
 // `totals` son BigDecimal serializados por AMS ("500000.0"), asi que
@@ -25,6 +33,65 @@ class BudgetSummaryBoard extends Component {
       style={style}
     />
   );
+
+  // Contenido del modal. Las clases son las de CmDataTable
+  // (`cm-dt-table-wrapper` + `cm-dt-table`, datatable.css:188 y 213) y NO las de
+  // `cm-table`, cuyo thead es oscuro (design_system.css:276): dentro del modal
+  // esta tabla tiene que leerse igual que la tabla general de partidas. No se
+  // agrega CSS nuevo: las dos clases ya existen y traen encabezado claro,
+  // sticky, hover y separadores.
+  //
+  // Sin `cm-dt-sortable` a proposito: aqui no hay ordenamiento, y pintar la
+  // flecha de orden prometeria algo que no ocurre al hacer click.
+  renderByUser = (byUser) => {
+    var self = this;
+
+    if (byUser.length === 0) {
+      return (
+        <p className="cm-text-muted" data-testid="budget-summary-empty">
+          Todavía no hay partidas asignadas en este centro de costos.
+        </p>
+      );
+    }
+
+    return (
+      // `maxHeight` para que el scroll ocurra DENTRO del wrapper y no en el
+      // cuerpo del modal: asi el thead sticky de `.cm-dt-table` (datatable.css:220)
+      // sigue haciendo lo suyo y el pie del modal no se va de la vista.
+      <div className="cm-dt-table-wrapper" data-testid="budget-summary-by-user"
+           style={{ maxHeight: "60vh" }}>
+        <table className="cm-dt-table">
+          <thead>
+            <tr>
+              <th>Persona</th>
+              <th>Asignado</th>
+              <th>Gastado</th>
+              <th>Disponible</th>
+              <th>Partidas</th>
+              <th>Excedidos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byUser.map(function(u) {
+              var disp = self.n(u.available);
+              return (
+                <tr key={u.user_id} data-testid={"budget-summary-user-" + u.user_id}>
+                  <td>{u.user_name || "—"}</td>
+                  <td><NumberFormat value={self.n(u.assigned)} displayType="text" thousandSeparator={true} prefix="$" /></td>
+                  <td><NumberFormat value={self.n(u.spent)} displayType="text" thousandSeparator={true} prefix="$" /></td>
+                  <td style={disp < 0 ? { color: "#c82333" } : undefined}>
+                    <NumberFormat value={disp} displayType="text" thousandSeparator={true} prefix="$" />
+                  </td>
+                  <td>{u.budgets_count}</td>
+                  <td>{u.exceeded_expenses_count}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   render() {
     var summary = this.props.summary;
@@ -64,7 +131,6 @@ class BudgetSummaryBoard extends Component {
     var totals = summary.totals || {};
     var byUser = summary.by_user || [];
     var costCenter = summary.cost_center || {};
-    var self = this;
 
     // Los excedidos se suman en cliente porque `totals` no trae el dato: el
     // servicio lo devuelve por persona (`exceeded_expenses_count`) y sumar
@@ -121,42 +187,27 @@ class BudgetSummaryBoard extends Component {
           </div>
         </div>
 
-        {byUser.length === 0 ? (
-          <p className="cm-text-muted" data-testid="budget-summary-empty">
-            Todavía no hay partidas asignadas en este centro de costos.
-          </p>
-        ) : (
-          <div className="cm-table-wrapper" data-testid="budget-summary-by-user">
-            <table className="cm-table">
-              <thead>
-                <tr>
-                  <th>Persona</th>
-                  <th>Asignado</th>
-                  <th>Gastado</th>
-                  <th>Disponible</th>
-                  <th>Partidas</th>
-                  <th>Excedidos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byUser.map(function(u) {
-                  var disp = self.n(u.available);
-                  return (
-                    <tr key={u.user_id} data-testid={"budget-summary-user-" + u.user_id}>
-                      <td>{u.user_name || "—"}</td>
-                      <td><NumberFormat value={self.n(u.assigned)} displayType="text" thousandSeparator={true} prefix="$" /></td>
-                      <td><NumberFormat value={self.n(u.spent)} displayType="text" thousandSeparator={true} prefix="$" /></td>
-                      <td style={disp < 0 ? { color: "#c82333" } : undefined}>
-                        <NumberFormat value={disp} displayType="text" thousandSeparator={true} prefix="$" />
-                      </td>
-                      <td>{u.budgets_count}</td>
-                      <td>{u.exceeded_expenses_count}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+        {/* El modal solo se monta cuando esta abierto: cerrado no cuesta nada y
+            al abrirlo se pinta con el `summary` ya cargado, sin fetch. */}
+        {this.props.showByUser && (
+          <CmModal
+            isOpen={true}
+            toggle={this.props.onCloseByUser}
+            title={<span><i className="fas fa-users" /> Resumen por persona</span>}
+            size="lg"
+            footer={
+              <button className="cm-btn cm-btn-outline" onClick={this.props.onCloseByUser}
+                      data-testid="budget-summary-modal-close">
+                Cerrar
+              </button>
+            }
+          >
+            {/* El data-testid va aqui y no en CmModal: CmModal solo reenvia las
+                props que declara (CmModal.jsx:7) y cualquier otra se pierde. */}
+            <div data-testid="budget-summary-modal">
+              {this.renderByUser(byUser)}
+            </div>
+          </CmModal>
         )}
       </div>
     );

@@ -37,6 +37,10 @@ class BudgetsTable extends Component {
       meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
       searchTerm: "", sortKey: null, sortDir: "desc", onlyActive: "",
       summary: null, summaryLoading: true, summaryError: null,
+      // Apertura del modal "Resumen por persona". Vive aqui y no en
+      // BudgetSummaryBoard porque el boton que lo abre esta en la barra de
+      // acciones de la tabla general, que se arma en este componente.
+      summaryModal: false,
       modal: false, modeEdit: false, id: "", saving: false, formError: null,
       // La fila que se esta editando. Se guarda para devolverle su propio monto
       // al limite: al editar, esa partida YA esta contada dentro de `assigned`,
@@ -148,7 +152,11 @@ class BudgetsTable extends Component {
   // peticiones con estados independientes.
   loadSummary = () => {
     var self = this;
-    this.setState({ summaryLoading: true, summaryError: null });
+    // El modal se cierra al recargar el resumen. Mientras `summaryLoading` es
+    // true BudgetSummaryBoard pinta el esqueleto y desmonta el modal; si
+    // `summaryModal` siguiera en true, el modal volveria a aparecer solo cuando
+    // llegara la respuesta. Cerrarlo aqui evita ese parpadeo.
+    this.setState({ summaryLoading: true, summaryError: null, summaryModal: false });
 
     fetch("/get_expense_budget_summary/" + this.props.cost_center.id)
       .then(function(r) { if (!r.ok && r.status !== 403) throw new Error(r.status); return r.json(); })
@@ -288,6 +296,13 @@ class BudgetsTable extends Component {
 
   toggleModal = () => { this.setState({ modal: false }); };
 
+  // Abrir/cerrar el resumen por persona NO recarga nada: el modal se pinta con
+  // el `summary` que ya esta en estado. Si algun dia hace falta refrescarlo, se
+  // llama a loadSummary() explicitamente, no desde aqui.
+  openSummaryModal = () => { this.setState({ summaryModal: true }); };
+
+  closeSummaryModal = () => { this.setState({ summaryModal: false }); };
+
   handleChangeUser = (opt) => {
     var value = opt ? opt.value : "";
     this.setState({
@@ -353,6 +368,77 @@ class BudgetsTable extends Component {
       });
   };
 
+  // Texto de la confirmacion de anulacion. Se arma con las cifras de la fila
+  // (`spent` y `available` ya vienen en el JSON del listado) para que el usuario
+  // vea ANTES de confirmar cuanto se lleva gastado y cuanto se va a liberar.
+  //
+  // La ultima palabra la tiene el servidor: estas cifras pueden estar viejas si
+  // alguien registro un gasto mientras la tabla estaba abierta, asi que el
+  // dialogo describe lo que va a pasar pero no decide nada.
+  annulText = (row) => {
+    var monto = parseFloat(row.amount || 0);
+    var gastado = parseFloat(row.spent || 0);
+    var libera = Math.max(monto - gastado, 0);
+
+    if (gastado <= 0) {
+      return "Esta partida no tiene gastos ejecutados: se anulará por completo y se liberarán $" +
+             formatoCorto(monto) + " al centro de costos.";
+    }
+    if (gastado < monto) {
+      return "Esta partida tiene $" + formatoCorto(gastado) + " ejecutados de $" + formatoCorto(monto) +
+             ". No se puede anular del todo: el monto se recortará a $" + formatoCorto(gastado) +
+             " y la partida seguirá activa para respaldar ese gasto. Se liberarán $" +
+             formatoCorto(libera) + " al centro de costos.";
+    }
+    return "Esta partida ya tiene $" + formatoCorto(gastado) + " ejecutados sobre $" + formatoCorto(monto) +
+           " asignados: no hay saldo por liberar y no se realizará ningún cambio.";
+  };
+
+  // Anular NO tiene endpoint propio: es un PATCH con `active: false` al mismo
+  // update de siempre. Los tres casos (anulacion completa, recorte parcial o sin
+  // saldo que liberar) los resuelve el servicio y aqui solo se muestra su
+  // mensaje.
+  annul = (row) => {
+    var self = this;
+    Swal.fire({
+      title: "¿Anular esta partida?",
+      text: this.annulText(row),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#2a3f53",
+      cancelButtonColor: "#dc3545",
+      confirmButtonText: "Sí, anular",
+      cancelButtonText: "Cancelar",
+    }).then(function(result) {
+      if (!result.value) return;
+      fetch("/expense_budgets/" + row.id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken() },
+        body: JSON.stringify({ active: false }),
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.type === "error") {
+            // Icono de aviso y no de error: el caso "no hay saldo por liberar"
+            // no es una falla, es la regla de negocio explicandose. Un 403 o una
+            // validacion caen por aqui igual y se leen bien con este titulo.
+            Swal.fire({ icon: "warning", title: "No se anuló la partida",
+                        text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+            return;
+          }
+          self.loadData();
+          // El resumen cambia SIEMPRE tras una anulacion: se libera cupo del
+          // centro y los gastos del par se reevaluan.
+          self.loadSummary();
+          Swal.fire({ icon: "success", title: "Partida anulada", text: data.success,
+                      confirmButtonColor: "#2a3f53" });
+        })
+        .catch(function() {
+          Swal.fire({ icon: "error", title: "No se pudo anular la partida", confirmButtonColor: "#2a3f53" });
+        });
+    });
+  };
+
   destroy = (row) => {
     var self = this;
     Swal.fire({
@@ -405,6 +491,14 @@ class BudgetsTable extends Component {
               <i className="fas fa-pen" /> Editar
             </button>
           )}
+          {/* Solo sobre partidas ACTIVAS: anular una ya anulada no hace nada, y
+              el gate de permisos es el mismo de "Editar" porque anular ES una
+              edicion (el servidor lo revalida en el mismo endpoint). */}
+          {this.canEdit() && row.active && (
+            <button className="cm-dt-menu-item" onClick={() => this.annul(row)} data-testid={"budget-row-annul-" + row.id}>
+              <i className="fas fa-ban" /> Anular
+            </button>
+          )}
           {this.canDelete() && (
             <button className="cm-dt-menu-item cm-dt-menu-item--danger" onClick={() => this.destroy(row)} data-testid={"budget-row-delete-" + row.id}>
               <i className="fas fa-trash" /> Eliminar
@@ -423,6 +517,14 @@ class BudgetsTable extends Component {
         <option value="true">Solo activas</option>
         <option value="false">Solo anuladas</option>
       </select>
+      {/* Deshabilitado mientras no haya resumen en memoria (cargando o error):
+          el modal es PURAMENTE lector del estado, asi que abrirlo sin datos
+          mostraria un cuadro vacio sin explicar por que. El error ya se anuncia
+          arriba, con su boton de reintentar. */}
+      <button className="cm-btn cm-btn-outline cm-btn-sm" onClick={this.openSummaryModal}
+              disabled={!this.state.summary} data-testid="budget-summary-btn">
+        <i className="fas fa-users" /> Resumen
+      </button>
       {this.canCreate() && (
         <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={this.openNew} data-testid="budget-new-btn">
           <i className="fas fa-plus" /> Nueva partida
@@ -442,6 +544,8 @@ class BudgetsTable extends Component {
           loading={this.state.summaryLoading}
           error={this.state.summaryError}
           onRetry={this.loadSummary}
+          showByUser={this.state.summaryModal}
+          onCloseByUser={this.closeSummaryModal}
         />
 
         {this.state.modal && (

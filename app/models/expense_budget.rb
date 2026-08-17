@@ -73,6 +73,13 @@ class ExpenseBudget < ApplicationRecord
   # revienta con NoMethodError y la tabla de partidas cae en N+1.
   attr_writer :spent_amount, :available_amount
 
+  # Mensaje de la ANULACION, en memoria y sin columna detras. Lo escribe
+  # ExpenseBudgetService.anular_budget! ANTES de guardar y sirve para dos cosas:
+  # la auditoria distingue asi una anulacion de una edicion cualquiera (un
+  # recorte parcial se leeria si no como un simple cambio de monto) y el
+  # controller lo devuelve como mensaje de exito de la operacion.
+  attr_accessor :mensaje_anulacion
+
   # SUM(amount) de las partidas ACTIVAS del par (centro, beneficiario).
   def assigned_amount
     @assigned_amount ||= totales_del_par[:assigned]
@@ -174,6 +181,19 @@ class ExpenseBudget < ApplicationRecord
     # existe alli porque el encabezado mide exactamente 59 caracteres. En codigo
     # nuevo la condicion se escribe explicita.
     return if partes.empty?
+
+    # Encabezado propio para la anulacion. Sin el, el recorte parcial (el caso en
+    # que la partida se queda ACTIVA con el monto bajado a lo gastado) quedaria
+    # en el historial como un cambio de valor cualquiera y nadie podria
+    # reconstruir que alguien anulo esa partida.
+    #
+    # `type_edit` sigue en nil (default "edito" de la columna) a proposito: las
+    # pantallas de auditoria filtran por esos tres valores historicos y meter uno
+    # nuevo las dejaria sin mostrar el registro.
+    if mensaje_anulacion.present?
+      return escribir_register("<p><strong>(SE ANULO LA SIGUIENTE PARTIDA)</strong></p>" +
+                               partes.join + "<p>Detalle: <b>#{mensaje_anulacion}</b></p>", nil)
+    end
 
     escribir_register("<p><strong>(SE EDITO LA SIGUIENTE PARTIDA)</strong></p>" + partes.join, nil)
   end

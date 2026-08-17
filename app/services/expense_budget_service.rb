@@ -382,6 +382,9 @@ class ExpenseBudgetService
   # beneficiario cambiaria retroactivamente el cupo de DOS pares y dejaria
   # gastos imputados a una partida que ya no les corresponde: se anula y se crea
   # otra, que ademas deja rastro en la auditoria.
+  #
+  # La transicion activa -> inactiva NO es un update cualquiera: es una
+  # ANULACION y tiene su propia regla de negocio (ver anular_budget!).
   def self.update_budget!(budget, attrs, actor:)
     attrs = (attrs || {}).symbolize_keys
 
@@ -394,6 +397,10 @@ class ExpenseBudgetService
     permitidos = attrs.slice(:amount, :notes, :active)
 
     with_center_lock(budget.cost_center_id) do
+      # DENTRO del lock: la anulacion lee lo gastado y decide el monto con ese
+      # numero. Leerlo fuera permitiria que un gasto simultaneo la deje corta.
+      next anular_budget!(budget, permitidos, actor: actor) if anulacion?(budget, permitidos)
+
       guardado = with_actor(actor) { budget.update(permitidos) }
 
       next Result.new(ok: false, value: budget, errors: budget.errors.full_messages) unless guardado
@@ -406,6 +413,102 @@ class ExpenseBudgetService
       Result.new(ok: true, value: budget, errors: [])
     end
   end
+
+  # --- Anulacion de partidas -------------------------------------------------
+  #
+  # "Anular" NO es siempre `active = false`. Lo que se puede devolver al centro
+  # es unicamente lo que la partida todavia NO tiene ejecutado, asi que la regla
+  # mira lo GASTADO y se abre en tres casos:
+  #
+  #   gastado = 0            -> anulacion completa: active = false.
+  #   0 < gastado < monto    -> NO se desactiva. Se recorta `amount` a lo gastado,
+  #                             la partida SIGUE ACTIVA y el disponible del par
+  #                             queda en cero. Se libera al centro lo no usado.
+  #   gastado >= monto       -> no hay saldo que liberar: no se cambia nada y se
+  #                             informa.
+  #
+  # EL CASO DEL MEDIO ES EL QUE SOSTIENE EL TOPE, y por eso la partida no se
+  # desactiva: `ExpenseBudget.cap_violation_for` suma SOLO las partidas ACTIVAS
+  # del centro. Desactivar una partida con gasto ejecutado sacaria ese dinero del
+  # tope —el centro creeria tener mas margen del que tiene— y ademas dejaria sus
+  # gastos sin partida activa a la que imputarse.
+  #
+  # QUE SE ENTIENDE POR "GASTADO": el gastado del PAR (centro, beneficiario), que
+  # es la misma magnitud que la tabla muestra en la columna "Gastado" y la unica
+  # que el dominio calcula (2.6: no hay imputacion parcial entre partidas, asi
+  # que prorratear entre varias seria inventar un numero). Con varias partidas
+  # activas del mismo par la regla queda CONSERVADORA: puede recortar de mas o
+  # negarse a anular, pero nunca libera plata que ya se gasto, que es el unico
+  # error que rompe el tope del centro.
+  def self.anular_budget!(budget, permitidos, actor:)
+    monto   = budget.amount.to_d.round(2)
+    gastado = available_for(cost_center_id: budget.cost_center_id, user_id: budget.user_id)[:spent]
+
+    if gastado >= monto
+      return Result.new(ok: false, value: budget, errors: [mensaje_sin_saldo(gastado, monto)])
+    end
+
+    # El `amount` que venga en el body se DESCARTA: en una anulacion el monto no
+    # lo elige el usuario, lo decide lo ya ejecutado. `notes` si se respeta.
+    cambios = permitidos.except(:amount, :active)
+    cambios = gastado <= 0 ? cambios.merge(active: false) : cambios.merge(amount: gastado)
+
+    mensaje = gastado <= 0 ? mensaje_anulacion_total(monto) : mensaje_anulacion_parcial(gastado, monto)
+    # ANTES del save: el callback de auditoria del modelo lo lee para escribir el
+    # encabezado de anulacion en vez del de edicion.
+    budget.mensaje_anulacion = mensaje
+
+    guardado = with_actor(actor) { budget.update(cambios) }
+
+    unless guardado
+      # Se limpia para que un reintento sobre el mismo objeto en memoria no
+      # arrastre el mensaje de un intento que no llego a guardarse.
+      budget.mensaje_anulacion = nil
+      return Result.new(ok: false, value: budget, errors: budget.errors.full_messages)
+    end
+
+    # Anular libera cupo (o lo deja exacto): los gastos del par se reparten otra
+    # vez. Sin esto, un gasto que estaba excedido se quedaria excedido para
+    # siempre y uno aprobado seguiria apuntando a una partida ya anulada.
+    perform_reevaluation(budget.cost_center_id, budget.user_id)
+    Result.new(ok: true, value: budget, errors: [])
+  end
+  private_class_method :anular_budget!
+
+  # Solo es anulacion la transicion de ACTIVA a inactiva de una partida ya
+  # guardada. Reenviar `active: false` sobre una partida que ya esta anulada no
+  # vuelve a disparar la regla.
+  def self.anulacion?(budget, permitidos)
+    return false unless permitidos.key?(:active)
+    return false unless budget.persisted? && budget.active?
+
+    # El controller reenvia `params[:active]` crudo y en un form-encoded llega el
+    # STRING "false", que sin castear es truthy en Ruby y dejaria pasar la
+    # anulacion como una edicion normal.
+    ActiveModel::Type::Boolean.new.cast(permitidos[:active]) == false
+  end
+  private_class_method :anulacion?
+
+  # Los tres mensajes viven aqui, no en el controller ni en el frontend: la
+  # pantalla los muestra tal cual y los tests afirman el string exacto.
+  def self.mensaje_anulacion_total(monto)
+    "La partida fue anulada: no tenía gastos ejecutados, así que se liberaron " \
+      "#{money(monto)} al centro de costos"
+  end
+  private_class_method :mensaje_anulacion_total
+
+  def self.mensaje_anulacion_parcial(gastado, monto)
+    "La partida tenía #{money(gastado)} ejecutados: se recortó de #{money(monto)} a " \
+      "#{money(gastado)} y sigue activa para respaldar ese gasto. Se liberaron " \
+      "#{money(monto - gastado)} al centro de costos"
+  end
+  private_class_method :mensaje_anulacion_parcial
+
+  def self.mensaje_sin_saldo(gastado, monto)
+    "La partida ya tiene #{money(gastado)} ejecutados sobre #{money(monto)} asignados: " \
+      "no hay saldo por liberar y no se realizó ningún cambio"
+  end
+  private_class_method :mensaje_sin_saldo
 
   def self.destroy_budget!(budget, actor:)
     # Se capturan ANTES: despues del destroy el objeto ya no sirve para

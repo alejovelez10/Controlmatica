@@ -95,7 +95,27 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
     assert_nil gasto.reload.budget_reason
   end
 
-  def test_desactivar_partida_deja_los_gestionados_en_sin_presupuesto
+  # La anulacion COMPLETA (la partida no tiene nada ejecutado) es la unica que
+  # desactiva la partida, y ahi si los gastos se quedan sin cupo. Un gasto
+  # `excedido` no cuenta como ejecutado: no consume cupo, asi que no impide la
+  # anulacion total.
+  def test_desactivar_partida_sin_gasto_ejecutado_deja_los_gestionados_en_sin_presupuesto
+    partida = crear_partida(200_000)
+    excedido = crear_gasto(500_000, dia: 1)
+    reevaluar
+    assert_equal "excedido", excedido.reload.budget_status
+
+    ExpenseBudgetService.update_budget!(partida, { active: false }, actor: @admin)
+
+    assert_not partida.reload.active
+    assert_equal "sin_presupuesto", excedido.reload.budget_status
+    assert_nil excedido.reload.expense_budget_id
+  end
+
+  # Con gasto ejecutado la partida NO se desactiva: se recorta a lo gastado y
+  # sigue activa. Si se desactivara, ese dinero saldria del tope del centro y sus
+  # gastos quedarian sin partida activa.
+  def test_anular_partida_con_gasto_ejecutado_recorta_y_conserva_la_imputacion
     partida = crear_partida(200_000)
     aprobado = crear_gasto(100_000, dia: 1)
     excedido = crear_gasto(500_000, dia: 2)
@@ -104,10 +124,13 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
 
     ExpenseBudgetService.update_budget!(partida, { active: false }, actor: @admin)
 
-    assert_equal "sin_presupuesto", aprobado.reload.budget_status
-    assert_equal "sin_presupuesto", excedido.reload.budget_status
-    assert_nil aprobado.reload.expense_budget_id
-    assert_nil excedido.reload.expense_budget_id
+    partida.reload
+    assert partida.active
+    assert_equal BigDecimal("100000.0"), partida.amount
+    # El aprobado conserva su cupo y su partida; el excedido sigue sin caber.
+    assert_equal "aprobado", aprobado.reload.budget_status
+    assert_equal partida.id, aprobado.reload.expense_budget_id
+    assert_equal "excedido", excedido.reload.budget_status
   end
 
   def test_eliminar_partida_nulifica_y_reevalua
