@@ -2286,16 +2286,95 @@ select.cm-input {
    bloque no tiene scope y ya pisa .cm-input y .cm-label globalmente mientras el
    modal esta montado. Crecerlo agrava un problema que ya existe. */
 
+/* Panel de cupo en vivo del formulario de partidas.
+   TODO va scopeado bajo .cm-budget-live a proposito: .cm-info-row/-label/-value
+   son compartidas con ReportExpense/FormCreate, CommissionIndex y
+   ReportExpenseIndex, donde viven dentro de un aviso ambar. Sus colores marrones
+   y sus bordes naranjas vienen de ahi; aqui, sobre fondo gris neutro, dejaban las
+   tres filas con el mismo peso visual y sin jerarquia. */
 .cm-budget-live {
   background: #f8fafc;
   border: 1px solid var(--cm-border);
   border-radius: var(--cm-radius);
-  padding: 12px 14px;
+  padding: 2px 16px;
   margin-top: 12px;
 }
 
 .cm-budget-live .cm-info-row {
-  padding: 4px 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  /* Neutro, no el naranja del aviso: aqui no hay nada que advertir. */
+  border-bottom: 1px solid var(--cm-border);
+}
+
+.cm-budget-live .cm-info-row:last-child {
+  border-bottom: none;
+}
+
+.cm-budget-live .cm-info-label {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  color: var(--cm-text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.cm-budget-live .cm-info-label i {
+  color: var(--cm-text-light);
+  font-size: 12px;
+  width: 14px;
+  flex: none;
+  text-align: center;
+}
+
+.cm-budget-live .cm-info-value {
+  color: var(--cm-text);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+  /* Cifras de igual ancho: sin esto los montos bailan al teclear. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* La cifra que decide si el monto cabe. Es la unica que se destaca. */
+.cm-budget-live-main .cm-info-label {
+  color: var(--cm-text);
+  font-weight: 600;
+}
+
+.cm-budget-live-main .cm-info-label i {
+  color: var(--cm-accent);
+}
+
+.cm-budget-live-main .cm-info-value {
+  color: var(--cm-primary);
+  font-size: 20px;
+  letter-spacing: -0.01em;
+}
+
+/* Estados ("Calculando...", "Sin presupuesto asignado", "No disponible").
+   No son dinero, asi que no se pintan como dinero. */
+.cm-budget-live-status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--cm-radius-pill);
+  background: #eceff3;
+  color: var(--cm-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.cm-budget-live-status--error {
+  background: #fdecee;
+  color: var(--cm-danger);
 }
 
 .cm-budget-foreign {

@@ -44,12 +44,15 @@ class BudgetFormCreate extends Component {
     // Pintar "$0" cuando la persona no tiene partida es mentir: no es que se le
     // acabo el cupo, es que nunca tuvo (contrato A.4).
     var disponiblePersona;
+    // Los tres mensajes van con `cm-budget-live-status` y NO con `cm-info-value`:
+    // no son cifras de dinero y pintarlos en negrita a 16px como el resto hacia
+    // que "Sin presupuesto asignado" pesara mas que las cantidades reales.
     if (availability.loading) {
-      disponiblePersona = <span className="cm-info-value">Calculando...</span>;
+      disponiblePersona = <span className="cm-budget-live-status">Calculando…</span>;
     } else if (availability.error) {
-      disponiblePersona = <span className="cm-info-value">No disponible</span>;
+      disponiblePersona = <span className="cm-budget-live-status cm-budget-live-status--error">No disponible</span>;
     } else if (!availability.has_budget) {
-      disponiblePersona = <span className="cm-info-value">Sin presupuesto asignado</span>;
+      disponiblePersona = <span className="cm-budget-live-status">Sin presupuesto asignado</span>;
     } else {
       disponiblePersona = (
         <NumberFormat
@@ -157,23 +160,26 @@ class BudgetFormCreate extends Component {
 
         <div className="cm-budget-live" data-testid="budget-live-panel">
           <div className="cm-info-row">
-            <span className="cm-info-label">Cotizado del centro</span>
+            <span className="cm-info-label"><i className="fas fa-file-invoice-dollar" />Cotizado del centro</span>
             <NumberFormat value={p.viaticValue || 0} displayType="text" thousandSeparator={true} prefix="$" className="cm-info-value" />
           </div>
-          <div className="cm-info-row">
-            <span className="cm-info-label">Disponible para asignar</span>
+          {/* Fila destacada: es la cifra que decide si el monto que se escriba
+              cabe o no, o sea la unica que el usuario necesita para tomar la
+              decision. Las otras dos son contexto. */}
+          <div className="cm-info-row cm-budget-live-main">
+            <span className="cm-info-label"><i className="fas fa-coins" />Disponible para asignar</span>
             {/* `limite === null` significa "el resumen todavia no llego". Se
                 dice, no se pinta un 0 que el usuario leeria como "no hay cupo".
                 El data-testid va en el envolvente para que exista SIEMPRE: un
                 selector que aparece y desaparece produce specs intermitentes. */}
             <span className="cm-info-value" data-testid="budget-live-limit">
               {p.limite === null || p.limite === undefined
-                ? "Calculando..."
+                ? <span className="cm-budget-live-status">Calculando…</span>
                 : <NumberFormat value={p.limite} displayType="text" thousandSeparator={true} prefix="$" />}
             </span>
           </div>
           <div className="cm-info-row">
-            <span className="cm-info-label">Disponible actual de la persona</span>
+            <span className="cm-info-label"><i className="fas fa-user" />Disponible actual de la persona</span>
             {disponiblePersona}
           </div>
         </div>
