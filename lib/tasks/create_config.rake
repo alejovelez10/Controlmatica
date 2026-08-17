@@ -272,7 +272,7 @@ namespace :create_config do
         # CERO tambien los tenga. En un entorno con datos NO se corre esta task
         # (arranca borrando en bloque todos los ModuleControl): ahi se corre
         # permissions_gastos_ia:install, que es idempotente.
-        budget = ModuleControl.create(name: "Presupuesto", user_id: user.id)
+        budget = ModuleControl.create(name: "Presupuesto de gastos", user_id: user.id)
 
         if budget
             AccionModule.create(name: "Ingreso al modulo", module_control_id: budget.id, user_id: user.id)

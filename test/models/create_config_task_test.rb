@@ -71,7 +71,7 @@ class CreateConfigTaskTest < ActiveSupport::TestCase
   test "los tres modulos del proyecto de gastos nacen juntos" do
     correr_task
 
-    ["Presupuesto", "Contabilidad", "Reglas de gastos"].each do |nombre|
+    ["Presupuesto de gastos", "Contabilidad", "Reglas de gastos"].each do |nombre|
       assert ModuleControl.exists?(name: nombre),
              "Falta el modulo '#{nombre}' en una instalacion desde cero"
     end

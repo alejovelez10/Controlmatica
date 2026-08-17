@@ -122,9 +122,9 @@ class CostCentersControllerTest < ActionDispatch::IntegrationTest
 
   test "show responde 200 aunque el ModuleControl Presupuesto no exista" do
     as_user(@admin) do
-      ModuleControl.where(name: "Presupuesto").destroy_all
+      ModuleControl.where(name: "Presupuesto de gastos").destroy_all
     end
-    assert_equal 0, ModuleControl.where(name: "Presupuesto").count
+    assert_equal 0, ModuleControl.where(name: "Presupuesto de gastos").count
 
     # Con un usuario NO admin, que es el unico que llega a consultar el permiso:
     # `is_admin?` cortocircuita antes y no ejercitaria este camino.

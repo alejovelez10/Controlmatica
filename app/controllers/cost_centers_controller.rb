@@ -196,11 +196,11 @@ class CostCentersController < ApplicationController
     #
     # Todos los flags son COSMETICOS: el servidor revalida en cada endpoint.
     @estados = @estados.merge(
-      budget_module: is_admin? || has_menu_permission?("Presupuesto", "Ingreso al modulo"),
-      budget_create: is_admin? || has_menu_permission?("Presupuesto", "Crear"),
-      budget_edit: is_admin? || has_menu_permission?("Presupuesto", "Editar"),
-      budget_delete: is_admin? || has_menu_permission?("Presupuesto", "Eliminar"),
-      budget_show_all: is_admin? || has_menu_permission?("Presupuesto", "Ver todos"),
+      budget_module: has_menu_permission?("Presupuesto de gastos", "Ingreso al modulo"),
+      budget_create: has_menu_permission?("Presupuesto de gastos", "Crear"),
+      budget_edit: has_menu_permission?("Presupuesto de gastos", "Editar"),
+      budget_delete: has_menu_permission?("Presupuesto de gastos", "Eliminar"),
+      budget_show_all: has_menu_permission?("Presupuesto de gastos", "Ver todos"),
       is_center_owner: @cost_center.user_owner_id == current_user.id,
       expense_create: is_admin? || has_menu_permission?("Gastos", "Crear"),
       expense_edit: is_admin? || has_menu_permission?("Gastos", "Editar"),

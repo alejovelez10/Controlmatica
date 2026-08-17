@@ -144,7 +144,7 @@ class E2eSeedTest < ActionDispatch::IntegrationTest
     refute_includes contabilidad, "Exportar a excel"
     assert_equal 0,
                  rol.accion_modules.joins(:module_control)
-                    .where(module_controls: { name: "Presupuesto" }).count
+                    .where(module_controls: { name: "Presupuesto de gastos" }).count
   end
 
   test "el seed e2e exporta seed-ids.json con todas las claves" do

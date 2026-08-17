@@ -97,11 +97,22 @@ class FixturesIntegrityTest < ActiveSupport::TestCase
            "Sin este ModuleControl, after_sign_in_path_for revienta con NoMethodError"
   end
 
-  test "el rol administrador no tiene accion_modules asignados" do
-    # Blinda la decision de diseno de rols.yml: si alguien se los agrega, los
-    # tests de permisos dejan de distinguir is_admin? de has_menu_permission?
-    # y un bug en is_admin? queda oculto.
-    assert_empty rols(:administrador).accion_modules
+  test "el rol administrador solo tiene los accion_modules de Presupuesto de gastos" do
+    # Blinda la misma decision de diseno de siempre —que el admin acceda por
+    # is_admin? y no por permisos, para que un bug en is_admin? no quede oculto—
+    # con UNA excepcion deliberada: "Presupuesto de gastos" es el unico modulo
+    # donde is_admin? NO es un bypass (ver ExpenseBudgetsController#budget_permission?),
+    # asi que ahi el admin necesita las acciones de verdad.
+    #
+    # La asercion es mas estricta que la anterior `assert_empty`: fija el modulo
+    # Y el conjunto exacto de acciones, de modo que colar cualquier otro permiso
+    # al admin —incluido uno mas de presupuesto— pone este test en rojo.
+    asignados = rols(:administrador).accion_modules.includes(:module_control)
+
+    assert_equal ["Presupuesto de gastos"], asignados.map { |am| am.module_control.name }.uniq,
+                 "El admin no debe tener permisos de ningun otro modulo: en los demas pasa por is_admin?"
+    assert_equal ["Crear", "Editar", "Eliminar", "Ingreso al modulo", "Ver todos"],
+                 asignados.map(&:name).sort
   end
 
   test "parameterizations.yml asocia por user_id y no por asociacion" do

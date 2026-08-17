@@ -24,7 +24,13 @@
 
 administrador:
   name: Administrador   # literal y case-sensitive: is_admin? compara este string
-  description: Acceso total por rol, sin accion_modules asignados
+  description: Acceso total por rol; las acciones de Presupuesto de gastos SI son explicitas
+  # Presupuesto de gastos es el unico modulo donde `is_admin?` NO es un bypass
+  # (ver ExpenseBudgetsController#budget_permission?): sin estas 5 etiquetas el
+  # admin recibiria 403 en todos los endpoints de partidas. En los demas modulos
+  # sigue pasando por rol, y por eso este fixture no lista nada mas.
+  accion_modules: presupuesto_ingreso, presupuesto_crear, presupuesto_editar,
+                  presupuesto_eliminar, presupuesto_ver_todos
 
 gerente:
   name: Gerente

@@ -69,16 +69,16 @@ class TestHelpersTest < ActiveSupport::TestCase
 
   test "grant_permission! agrega el permiso y revoke_permission! lo quita" do
     rol = rols(:ingeniero)
-    mc = ModuleControl.find_by!(name: "Presupuesto")
+    mc = ModuleControl.find_by!(name: "Presupuesto de gastos")
 
-    grant_permission!(rol, "Presupuesto", "Crear")
+    grant_permission!(rol, "Presupuesto de gastos", "Crear")
     assert rol.reload.accion_modules.exists?(name: "Crear", module_control_id: mc.id)
 
     # Idempotente: dos veces no duplica la fila del HABTM.
-    grant_permission!(rol, "Presupuesto", "Crear")
+    grant_permission!(rol, "Presupuesto de gastos", "Crear")
     assert_equal 1, rol.reload.accion_modules.where(name: "Crear", module_control_id: mc.id).count
 
-    revoke_permission!(rol, "Presupuesto", "Crear")
+    revoke_permission!(rol, "Presupuesto de gastos", "Crear")
     assert_not rol.reload.accion_modules.exists?(name: "Crear", module_control_id: mc.id)
   end
 

@@ -9,7 +9,7 @@ module PermissionHelpers
   # Agrega un permiso a un rol en caliente. Idempotente: llamarlo dos veces no
   # duplica ni el AccionModule ni la fila del HABTM.
   #
-  # Firma: grant_permission!(rol, "Presupuesto", "Crear") -> AccionModule
+  # Firma: grant_permission!(rol, "Presupuesto de gastos", "Crear") -> AccionModule
   def grant_permission!(rol, module_name, action_name)
     mc = ModuleControl.find_by!(name: module_name)
     am = AccionModule.find_or_create_by!(name: action_name, module_control_id: mc.id) do |a|
@@ -19,7 +19,7 @@ module PermissionHelpers
     am
   end
 
-  # Firma: revoke_permission!(rol, "Presupuesto", "Crear") -> void
+  # Firma: revoke_permission!(rol, "Presupuesto de gastos", "Crear") -> void
   def revoke_permission!(rol, module_name, action_name)
     mc = ModuleControl.find_by(name: module_name)
     return if mc.nil?

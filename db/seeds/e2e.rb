@@ -85,7 +85,7 @@ MODULOS = {
   "Gastos" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Aceptar gasto",
                "Exportar a excel", "Ver todos", "Cambiar responsable"],
   "Centro de Costos" => ["Ingreso al modulo", "Editar"],
-  "Presupuesto" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
+  "Presupuesto de gastos" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
   "Contabilidad" => ["Ingreso al modulo", "Aprobar", "Exportar a excel", "Ver todos"],
   "Reportes de servicios" => ["Ingreso al modulo"],
   "Tablero de Ingenieros" => ["Ver tablero"]

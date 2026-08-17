@@ -9,7 +9,7 @@
 # viaticos del centro y nada lo detectara.
 #
 # AUTORIZACION EN DOS CAPAS, y las dos son necesarias:
-#   1. Permiso del modulo "Presupuesto" (Ingreso al modulo / Crear / Editar /
+#   1. Permiso del modulo "Presupuesto de gastos" (Ingreso al modulo / Crear / Editar /
 #      Eliminar), que es lo que administra el area de sistemas.
 #   2. Regla de negocio: el DUENO del centro (`cost_centers.user_owner_id`)
 #      administra las partidas de SU centro aunque no tenga "Ver todos".
@@ -169,6 +169,10 @@ class ExpenseBudgetsController < ApplicationController
   end
 
   # A.6 — editar partida. Solo amount / notes / active.
+  #
+  # `active: false` es ademas el UNICO camino para anular: no hay endpoint aparte
+  # y no hace falta, porque la regla de los tres casos (anulacion completa,
+  # recorte parcial o sin saldo que liberar) vive entera en el servicio.
   def update
     return deny! unless budget_permission?("Editar")
     return deny!(MENSAJE_NO_ES_DUENO) unless owner_or_show_all?(@expense_budget.cost_center)
@@ -177,7 +181,11 @@ class ExpenseBudgetsController < ApplicationController
     result = ExpenseBudgetService.update_budget!(@expense_budget, expense_budget_params_update, actor: current_user)
 
     if result.ok?
-      render json: { success: "¡La partida fue actualizada con exito!", type: "success",
+      # En una anulacion el mensaje lo pone el servicio, que es quien sabe cual de
+      # los tres casos ocurrio y con que cifras. Fuera de ese caso viene en nil y
+      # se responde el mensaje de edicion de siempre.
+      mensaje = result.value.mensaje_anulacion.presence || "¡La partida fue actualizada con exito!"
+      render json: { success: mensaje, type: "success",
                      register: ActiveModelSerializers::SerializableResource.new(result.value, serializer: ExpenseBudgetSerializer) }
     else
       validation_error(result.errors)
@@ -202,22 +210,23 @@ class ExpenseBudgetsController < ApplicationController
 
   private
 
-  # Memoizado, mismo patron que ReportExpensesController#is_admin?: sin el, cada
-  # lectura de permiso vuelve a consultar el rol.
-  def is_admin?
-    @_is_admin ||= current_user.rol.name == "Administrador"
-  end
-
+  # EL ADMINISTRADOR NO SE SALTA ESTOS PERMISOS A PROPOSITO. En el resto de la
+  # aplicacion `is_admin?` es un bypass, pero aqui no: si el admin pasa siempre,
+  # los permisos de presupuesto son inprobables desde la interfaz (quitarle una
+  # casilla al rol Administrador no cambiaria nada) y el unico modo de verificar
+  # el reparto seria crear un rol de mentira. El rol Administrador recibe las 5
+  # acciones al sembrar (`rake permissions_presupuesto:install`), asi que sigue
+  # teniendo acceso total; la diferencia es que ahora lo tiene POR PERMISO, y
+  # revocarselo se nota.
   def budget_permission?(action = "Ingreso al modulo")
-    is_admin? || has_menu_permission?("Presupuesto", action)
+    has_menu_permission?("Presupuesto de gastos", action)
   end
 
   # La autorizacion especial de negocio. El dueno del centro administra SUS
   # partidas sin necesidad de "Ver todos"; en un centro ajeno, no.
   def owner_or_show_all?(cost_center)
-    is_admin? ||
-      cost_center.user_owner_id == current_user.id ||
-      has_menu_permission?("Presupuesto", "Ver todos")
+    cost_center.user_owner_id == current_user.id ||
+      has_menu_permission?("Presupuesto de gastos", "Ver todos")
   end
 
   # 403 CON CUERPO JSON, siempre. Todo `fetch` del repo hace `.then(r => r.json())`

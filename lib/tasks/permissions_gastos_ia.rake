@@ -27,7 +27,7 @@ namespace :permissions_gastos_ia do
     end
 
     {
-      "Presupuesto"  => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
+      "Presupuesto de gastos"  => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
       "Contabilidad" => ["Ingreso al modulo", "Aprobar", "Exportar a excel", "Ver todos"]
     }.each do |module_name, actions|
       mc = ModuleControl.find_or_create_by!(name: module_name) { |m| m.user_id = admin.id }

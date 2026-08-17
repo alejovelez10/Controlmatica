@@ -34,7 +34,7 @@ centro_costos:
   user: admin
 
 presupuesto:
-  name: Presupuesto
+  name: Presupuesto de gastos
   description: Partidas presupuestales por centro y usuario
   user: admin
 
