@@ -229,6 +229,13 @@ Detalles que evitan horas perdidas:
   ruta del bucket se rechaza: es un control de seguridad, no un formato.
 - Alternativa sin S3 (o archivos pequeños): `file_base64` + `filename` + `content_type`,
   máximo 4 MB codificados. Si llegan los dos, gana `upload_key`.
+- **Camino recomendado para el agente de WhatsApp de Taimes (2026-08-17): `file_url`.** El
+  agente no puede hacer un PUT a S3; lo que sí tiene es la URL firmada de Google Cloud Storage
+  que mintea su tool `get_attachment_url` **en el mismo turno**. Se la pasa en `file_url`
+  (junto con `filename`) y el servidor la descarga: solo se aceptan hosts
+  `storage.googleapis.com` / `storage.cloud.google.com` (allowlist, SSRF), https, sin
+  redirects, máximo 10 MB. Precedencia: `upload_key` > `file_url` > `file_base64`. Si la URL
+  expiró, el error le pide al agente mintear una nueva con `get_attachment_url`.
 - `receipt_file_url` es una URL **firmada y de corta duración**. El agente no debe guardarla ni
   reenviarla de conversaciones viejas: cuando la necesite, vuelve a llamar a
   `report_expenses_get`.
@@ -845,17 +852,19 @@ Ver §5.2.
 
 #### `report_expenses_attach_receipt`
 
-Paso 2 de 2: asocia al gasto el comprobante ya subido. Alternativa para archivos pequeños:
-`file_base64` (máx 4 MB codificados) con `filename` y `content_type`. Si llegan los dos, gana
-`upload_key`. Reemplaza el comprobante anterior.
+Asocia al gasto su comprobante. Tres modos, en orden de precedencia: `upload_key` (flujo PUT de
+§5.2), `file_url` (URL https firmada de GCS emitida por `get_attachment_url` en el mismo turno;
+el servidor la descarga, máx 10 MB) y `file_base64` (máx 4 MB codificados, requiere `filename`
+y `content_type`). Reemplaza el comprobante anterior.
 
 | Parámetro | Tipo | Req. | Descripción |
 |---|---|:--:|---|
 | `report_expense_id` | integer | ✔ | ID del gasto |
 | `upload_key` | string |  | Clave devuelta por `report_expenses_receipt_url_get` |
+| `file_url` | string |  | URL https firmada de storage.googleapis.com o storage.cloud.google.com (`get_attachment_url`); máx 10 MB |
 | `file_base64` | string |  | Contenido del archivo en base64 |
-| `filename` | string |  | Nombre del archivo (requerido con file_base64) |
-| `content_type` | string |  | MIME (requerido con file_base64) |
+| `filename` | string |  | Nombre del archivo (requerido con file_base64; recomendado con file_url) |
+| `content_type` | string |  | MIME (requerido con file_base64; con file_url se deduce si falta) |
 
 
 ### Turnos / Agenda

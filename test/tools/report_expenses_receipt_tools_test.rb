@@ -314,4 +314,170 @@ class ReportExpensesReceiptToolsTest < ActiveSupport::TestCase
   test "attach sin api key devuelve unauthorized" do
     with_mcp_key { assert_tool_error adjuntar(ctx_args: { api_key: "mala" }, upload_key: @key), "Unauthorized" }
   end
+
+  # --- report_expenses_attach_receipt: modo file_url (agente de Taimes) -----
+
+  # Fragmento de streaming de HTTParty falsificado: un String que ademas
+  # responde a #code, que es lo unico que mira descargar_archivo_remoto.
+  class FragmentoFake < String
+    attr_accessor :code
+  end
+
+  URL_GCS = "https://storage.googleapis.com/bucket-taimes/media/factura-123.pdf?X-Goog-Signature=abc"
+
+  # Reemplaza el privado de red del modo file_url. Mismo criterio que con_s3:
+  # la suite no abre sockets.
+  def con_descarga(resultado, &bloque)
+    ReportExpensesAttachReceiptTool.stub(:descargar_archivo_remoto, ->(*_a) { resultado }, &bloque)
+  end
+
+  def descarga_ok(archivo = PDF, content_type: "application/pdf")
+    { ok: true, bytes: File.binread(archivo), content_type: content_type }
+  end
+
+  test "attach por file_url descarga y asocia el archivo" do
+    con_descarga(descarga_ok) do
+      with_mcp_key do
+        cuerpo = tool_json(adjuntar(file_url: URL_GCS))
+        refute_nil cuerpo["receipt_file_url"]
+      end
+    end
+    refute_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach por file_url deduce el filename del path sin el query string" do
+    con_descarga(descarga_ok) do
+      with_mcp_key { adjuntar(file_url: URL_GCS) }
+    end
+    assert_equal "factura-123.pdf", @gasto.reload.receipt_file.file.filename
+  end
+
+  test "attach por file_url rechaza http plano" do
+    with_mcp_key do
+      assert_tool_error adjuntar(file_url: "http://storage.googleapis.com/b/f.pdf"), "https"
+    end
+    assert_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach por file_url rechaza un host fuera de la allowlist" do
+    with_mcp_key do
+      assert_tool_error adjuntar(file_url: "https://atacante.example.com/f.pdf"),
+                        "storage.googleapis.com"
+    end
+    assert_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach por file_url acepta un host extra declarado por ENV" do
+    previo = ENV["MCP_FILE_URL_EXTRA_HOSTS"]
+    ENV["MCP_FILE_URL_EXTRA_HOSTS"] = "media.taimes.example"
+    con_descarga(descarga_ok) do
+      with_mcp_key do
+        cuerpo = tool_json(adjuntar(file_url: "https://media.taimes.example/f.pdf?firma=x"))
+        refute_nil cuerpo["receipt_file_url"]
+      end
+    end
+  ensure
+    previo.nil? ? ENV.delete("MCP_FILE_URL_EXTRA_HOSTS") : ENV["MCP_FILE_URL_EXTRA_HOSTS"] = previo
+  end
+
+  test "attach por file_url con URL invalida devuelve error legible" do
+    with_mcp_key do
+      assert_tool_error adjuntar(file_url: "ht!tp://%%no-es-url"), "no es una URL válida"
+    end
+  end
+
+  test "attach por file_url expirada pide regenerar con get_attachment_url" do
+    con_descarga({ ok: false, error: "la URL firmada expiró o no es válida. Genera una nueva " \
+                                     "con get_attachment_url y reintenta." }) do
+      with_mcp_key do
+        assert_tool_error adjuntar(file_url: URL_GCS), "get_attachment_url"
+      end
+    end
+    assert_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach por file_url con extension prohibida la rechaza el uploader" do
+    con_descarga(descarga_ok(EXE, content_type: "application/octet-stream")) do
+      with_mcp_key do
+        texto = tool_text(adjuntar(file_url: "https://storage.googleapis.com/b/malicioso.exe?f=x"))
+        assert texto.start_with?("Error:")
+      end
+    end
+    assert_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach por file_url sin actor identificado no adjunta" do
+    con_descarga(descarga_ok) do
+      with_mcp_key do
+        assert_tool_error adjuntar(ctx_args: {}, file_url: URL_GCS), "no se pudo identificar"
+      end
+    end
+    assert_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach con upload_key y file_url a la vez usa upload_key" do
+    descargas = 0
+    con_s3 do
+      ReportExpensesAttachReceiptTool.stub(:descargar_archivo_remoto, ->(*_a) { descargas += 1 }) do
+        with_mcp_key { adjuntar(upload_key: @key, file_url: URL_GCS) }
+      end
+    end
+    assert_equal 0, descargas
+    refute_nil @gasto.reload.receipt_file.file
+  end
+
+  test "attach con file_url y file_base64 a la vez usa file_url" do
+    con_descarga(descarga_ok) do
+      with_mcp_key do
+        adjuntar(file_url: URL_GCS,
+                 file_base64: Base64.strict_encode64("no me uses"),
+                 filename: "otro.pdf", content_type: "application/pdf")
+      end
+    end
+    # El contenido es el DESCARGADO de la URL, no el base64 ("no me uses").
+    assert_equal File.size(PDF), @gasto.reload.receipt_file.size
+  end
+
+  # --- descargar_archivo_remoto (el privado de red, con HTTParty stubeado) --
+
+  test "descargar_archivo_remoto corta al superar el tope de 10 MB" do
+    fragmento = FragmentoFake.new("A" * (Mcp::S3DirectUpload::MAX_BYTES + 1))
+    fragmento.code = 200
+
+    HTTParty.stub(:get, ->(*_a, **_k, &blk) { blk.call(fragmento) }) do
+      r = ReportExpensesAttachReceiptTool.send(:descargar_archivo_remoto, URL_GCS)
+      refute r[:ok]
+      assert_includes r[:error], "10 MB"
+    end
+  end
+
+  test "descargar_archivo_remoto convierte un timeout en error legible" do
+    HTTParty.stub(:get, ->(*_a, **_k) { raise Net::ReadTimeout }) do
+      r = ReportExpensesAttachReceiptTool.send(:descargar_archivo_remoto, URL_GCS)
+      refute r[:ok]
+      assert_includes r[:error], "Reintenta"
+    end
+  end
+
+  test "descargar_archivo_remoto con 403 pide una URL nueva" do
+    respuesta = Struct.new(:code, :headers).new(403, {})
+    HTTParty.stub(:get, ->(*_a, **_k, &_blk) { respuesta }) do
+      r = ReportExpensesAttachReceiptTool.send(:descargar_archivo_remoto, URL_GCS)
+      refute r[:ok]
+      assert_includes r[:error], "get_attachment_url"
+    end
+  end
+
+  test "descargar_archivo_remoto con 200 devuelve los bytes y el content type" do
+    fragmento = FragmentoFake.new(File.binread(PDF))
+    fragmento.code = 200
+    respuesta = Struct.new(:code, :headers).new(200, { "Content-Type" => "application/pdf" })
+
+    HTTParty.stub(:get, ->(*_a, **_k, &blk) { blk.call(fragmento); respuesta }) do
+      r = ReportExpensesAttachReceiptTool.send(:descargar_archivo_remoto, URL_GCS)
+      assert r[:ok]
+      assert_equal File.binread(PDF), r[:bytes]
+      assert_equal "application/pdf", r[:content_type]
+    end
+  end
 end
