@@ -238,7 +238,14 @@ class ReportExpenseIndex extends React.Component {
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
       { key: "user_invoice_name", label: "Responsable", width: "150px", render: function(row) { return row.user_invoice ? row.user_invoice.names : ""; } },
       { key: "invoice_name", label: "Nombre", width: "200px" },
-      { key: "invoice_total", label: "Total", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      // decimalScale: 2 NO es cosmetico. `invoice_value/tax/total` son columnas
+      // `float` en Postgres (db/schema.rb:504-506), asi que la aritmetica del
+      // gasto guarda ruido de coma flotante EN LA BASE: hay filas con
+      // 1006416.3200000001 guardado. El peso tiene dos decimales y punto, de modo
+      // que todo lo que venga detras es ruido por definicion y se corta al
+      // pintar. Esto arregla las 5.011 filas que ya existen; la causa raiz —el
+      // tipo de la columna— sigue ahi y no se toca desde el frontend.
+      { key: "invoice_total", label: "Total", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
       // El motivo del exceso va SIEMPRE dentro de .cm-cell-truncate con
       // data-tooltip: `budget_reason` lo escribe el servicio de presupuesto y
       // puede traer el nombre del centro, el cupo y lo disponible en una sola
@@ -330,8 +337,8 @@ class ReportExpenseIndex extends React.Component {
       // --- fila, no para encontrarla.
       { key: "type_name", label: "Tipo", width: "180px", render: function(row) { return row.type_identification ? row.type_identification.name : ""; } },
       { key: "payment_name", label: "Medio de pago", width: "150px", render: function(row) { return row.payment_type ? row.payment_type.name : ""; } },
-      { key: "invoice_value", label: "Valor", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
-      { key: "invoice_tax", label: "IVA", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      { key: "invoice_value", label: "Valor", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
+      { key: "invoice_tax", label: "IVA", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
       { key: "currency", label: "Moneda", width: "90px", render: function(row) {
         return React.createElement("span", { "data-testid": "expense-currency-" + row.id }, row.currency || "COP");
       }},
@@ -345,11 +352,11 @@ class ReportExpenseIndex extends React.Component {
 
         var rate = toNumber(row.exchange_rate);
         return React.createElement("span", null,
-          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, suffix: " " + row.currency }),
+          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, decimalScale: 2, suffix: " " + row.currency }),
           rate !== null
             ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
                 "TRM ",
-                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true }))
+                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true, decimalScale: 6 }))
             : null
         );
       }},

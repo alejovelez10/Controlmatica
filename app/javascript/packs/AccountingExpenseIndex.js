@@ -141,9 +141,12 @@ class AccountingExpenseIndex extends React.Component {
             : null
         );
       }},
-      { key: "invoice_value", label: "Valor (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
-      { key: "invoice_tax", label: "IVA (COP)", width: "110px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
-      { key: "invoice_total", label: "Total (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      // decimalScale: 2 — mismo motivo que en la tabla de Gastos: las columnas de
+      // dinero son `float` y hay ruido de coma flotante guardado en la base. Aqui
+      // importa mas todavia: esta pantalla es la que contabilidad exporta.
+      { key: "invoice_value", label: "Valor (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
+      { key: "invoice_tax", label: "IVA (COP)", width: "110px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
+      { key: "invoice_total", label: "Total (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
       // sortable: false. La especificacion pedia sortable aqui, pero
       // AccountingExpensesController::SORT_COLUMNS —ya mergeado, y de otro
       // paquete— NO incluye `budget_status`: activarlo haria que el servidor
