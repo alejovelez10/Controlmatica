@@ -1,40 +1,14 @@
 // Escenario 5 — captura asistida por IA. Centro CM-E2E-REC-2026.
 //
-// ══════════════════════════════════════════════════════════════════════════
-// LOS TRES TESTS ESTAN EN `test.fixme` Y NO SE PUEDEN EJECUTAR HOY.
-// No es una omision ni una prueba floja: es el estado real del sistema, y se
-// deja escrito para que el reporte de Playwright diga cuantos flujos faltan en
-// vez de esconderlo.
-//
-// Faltan DOS piezas, ninguna de este paquete:
-//
-// 1. NO EXISTE EL ENDPOINT. `POST /extract_receipt/report_expenses` no esta en
-//    config/routes.rb ni hay accion que lo atienda. El paquete 10 lo dejo
-//    "declarado y no construido" (ESTADO.md, salvedades del 10): los dos
-//    formularios ya hacen el fetch, pero contra una ruta que devuelve 404.
-// 2. EL BOTON NO SE PINTA. `renderExtraction()` sale por
-//    `if (!receiptExtractionEnabled()) return null`, y esa bandera es
-//    `window.CM_RECEIPT_EXTRACTION_ENABLED`, que el layout publica desde
-//    RECEIPT_EXTRACTION_ENABLED. El kill switch arranca APAGADO porque el seam
-//    `call_vision_model` levanta NotImplementedError: lo implementa el agente de
-//    Taimes, que es la frontera de alcance acordada con el cliente.
-//
-// LO QUE SI ESTA LISTO Y PROBADO, para que nadie lo rehaga:
-//   - El stub del borde de red (`config/initializers/e2e_stubs.rb`) responde a
-//     `call_vision_model` con los payloads de comprobante_ia.jpg y
-//     comprobante_ia_usd.pdf, y registra cada llamada en tmp/e2e/stub_calls.log.
-//     Su contrato con el servicio real esta cubierto por los 11 casos de
-//     test/models/e2e_stubs_test.rb, que SI corren y estan en verde.
-//   - El servicio real (parseo, `fields`, `confidence`, `warnings`, mapeo de
-//     errores) esta cubierto por las 49 pruebas del paquete 10.
-//
-// PARA ENCENDERLO cuando Taimes entregue el seam: implementar
-// `call_vision_model`, agregar la ruta y la accion `extract_receipt`, poner
-// RECEIPT_EXTRACTION_ENABLED=true en el webServer.env de playwright.config.js y
-// cambiar los tres `test.fixme` por `test`. El cuerpo de las pruebas ya esta
-// escrito contra los data-testid canonicos y contra los valores exactos que
-// devuelve el stub.
-// ══════════════════════════════════════════════════════════════════════════
+// ACTIVO desde 2026-08-17: el seam `call_vision_model` esta implementado (llama
+// al agente extractor de Taimes) y la ruta `POST /extract_receipt/report_expenses`
+// existe. En esta corrida NADA sale a internet:
+//   - el webServer corre con RECEIPT_EXTRACTION_ENABLED=true y TAIMES_* dummies
+//     (playwright.config.js) para que el boton se pinte y `configured?` pase;
+//   - el prepend de config/initializers/e2e_stubs.rb atiende `call_vision_model`
+//     ANTES de que el seam real abra un socket, eligiendo la fixture por el
+//     digesto del base64 del payload, y registra cada llamada en
+//     tmp/e2e/stub_calls.log (contrato cubierto por test/models/e2e_stubs_test.rb).
 const path = require("path");
 const { test, expect } = require("@playwright/test");
 const { reseedE2E } = require("../support/db");
@@ -59,8 +33,8 @@ test.beforeAll(() => {
 });
 
 test.describe("escenario 5 — captura asistida por IA", () => {
-  test.fixme(
-    "la IA precarga los campos del comprobante y la persona corrige uno antes de guardar (PENDIENTE: falta el endpoint extract_receipt y el kill switch esta apagado)",
+  test(
+    "la IA precarga los campos del comprobante y la persona corrige uno antes de guardar",
     async ({ page }) => {
       await page.goto("/report_expenses");
       await abrirModalGasto(page);
@@ -98,8 +72,8 @@ test.describe("escenario 5 — captura asistida por IA", () => {
     }
   );
 
-  test.fixme(
-    "la extraccion no sale a internet: la llamada la atendio el stub (PENDIENTE: depende del test anterior)",
+  test(
+    "la extraccion no sale a internet: la llamada la atendio el stub",
     async () => {
       const llamada = lastStubCall("ReceiptExtractionService");
       expect(llamada).not.toBeNull();
@@ -108,8 +82,8 @@ test.describe("escenario 5 — captura asistida por IA", () => {
     }
   );
 
-  test.fixme(
-    "si la IA no puede leer el comprobante el registro manual sigue funcionando (PENDIENTE: falta el endpoint extract_receipt)",
+  test(
+    "si la IA no puede leer el comprobante el registro manual sigue funcionando",
     async ({ page }) => {
       await page.goto("/report_expenses");
       await abrirModalGasto(page);

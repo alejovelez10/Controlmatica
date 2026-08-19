@@ -89,6 +89,16 @@ module.exports = defineConfig({
       // /uploads/..., que Rails sirve desde public/ => la descarga del
       // escenario 4 daria 404.
       E2E_UPLOAD_ROOT: "public",
+      // Captura asistida (escenario 5). El kill switch tiene que estar
+      // ENCENDIDO para que el boton se pinte, y las TAIMES_* son DUMMIES
+      // obligatorias: sin ellas `ReceiptExtractionService.configured?` da falso
+      // y el servicio corta en :not_configured ANTES de llegar al seam que el
+      // stub E2E reemplaza. Ningun request sale a Taimes: el prepend de
+      // e2e_stubs.rb atiende call_vision_model.
+      RECEIPT_EXTRACTION_ENABLED: "true",
+      TAIMES_INVOKE_URL: "http://e2e.invalid",
+      TAIMES_AGENT_ID: "e2e-extractor",
+      TAIMES_API_KEY: "kmz_e2e",
     },
   },
 });
