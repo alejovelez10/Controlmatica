@@ -4,30 +4,35 @@ require "test_helper"
 # asi que el require va aqui (mismo patron que exchange_rate_service_test.rb).
 require "minitest/mock"
 
-# NINGUN test de este archivo toca la red ni construye un cliente del SDK. El
-# unico seam es ReceiptExtractionService.call_vision_model (00-ARQUITECTURA 6.7),
-# que `with_fake_extractor` reemplaza con el doble de
+# NINGUN test de este archivo toca la red. El unico seam es
+# ReceiptExtractionService.call_vision_model (00-ARQUITECTURA 6.7), que
+# `with_fake_extractor` reemplaza con el doble de
 # test/support/fake_anthropic_client.rb.
 #
-# ALCANCE: el seam real lo implementa el agente de Taimes (ESTADO.md, "Frontera
-# de alcance"). Lo que se prueba aqui es TODO lo que rodea a esa llamada, que es
-# lo que este paquete entrega: contrato del Result, validacion de entrada, armado
+# ALCANCE: el seam real llama al agente extractor de Taimes (ver el bloque del
+# seam en el servicio); sus piezas internas se prueban en
+# test/services/receipt_extraction_seam_test.rb. Lo que se prueba aqui es TODO
+# lo que rodea a esa llamada: contrato del Result, validacion de entrada, armado
 # del payload, umbrales de confianza, normalizacion y mapeo de errores.
 class ReceiptExtractionServiceTest < ActiveSupport::TestCase
   include WithFakeExtractor
 
+  ENV_CLAVES = %w[TAIMES_INVOKE_URL TAIMES_AGENT_ID TAIMES_API_KEY
+                  RECEIPT_EXTRACTION_ENABLED RECEIPT_EXTRACTION_MODEL].freeze
+
   def setup
     # El servicio arranca APAGADO por defecto (kill switch). Los tests del camino
     # feliz lo encienden a proposito; los de configuracion lo vuelven a apagar.
-    @env_previo = ENV.to_hash.slice("ANTHROPIC_API_KEY", "RECEIPT_EXTRACTION_ENABLED",
-                                    "RECEIPT_EXTRACTION_MODEL")
-    ENV["ANTHROPIC_API_KEY"]          = "sk-de-mentira-no-se-usa"
+    @env_previo = ENV.to_hash.slice(*ENV_CLAVES)
+    ENV["TAIMES_INVOKE_URL"]          = "http://taimes.invalid"
+    ENV["TAIMES_AGENT_ID"]            = "agente-de-mentira"
+    ENV["TAIMES_API_KEY"]             = "kmz_de-mentira-no-se-usa"
     ENV["RECEIPT_EXTRACTION_ENABLED"] = "true"
     ENV.delete("RECEIPT_EXTRACTION_MODEL")
   end
 
   def teardown
-    %w[ANTHROPIC_API_KEY RECEIPT_EXTRACTION_ENABLED RECEIPT_EXTRACTION_MODEL].each do |clave|
+    ENV_CLAVES.each do |clave|
       @env_previo.key?(clave) ? ENV[clave] = @env_previo[clave] : ENV.delete(clave)
     end
     @grande&.close!
@@ -258,31 +263,31 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
     refute_respond_to ReceiptExtractionService, :reset_api_client!
   end
 
-  # Es la frontera de alcance hecha prueba: mientras Taimes no lo implemente,
-  # llamarlo directo tiene que decir en una linea quien lo completa.
-  test "call_vision_model sin implementar levanta NotImplementedError explicando quien lo completa" do
-    error = assert_raises(NotImplementedError) do
+  # El seam ya esta implementado (llama a Taimes): un payload sin bloque de
+  # documento se rechaza ANTES de abrir cualquier socket.
+  test "call_vision_model exige un payload con bloque de documento" do
+    error = assert_raises(ReceiptExtractionService::TaimesError) do
       ReceiptExtractionService.call_vision_model(model: "x")
     end
 
-    assert_includes error.message, "Taimes"
-    assert_includes error.message, ":refusal"
+    assert_includes error.message, "documento"
   end
 
-  # Y el servicio, en cambio, NO revienta: devuelve el error estandar. El
+  # Y a traves de `extract`, ese mismo fallo termina en el error estandar: el
   # contrato D.1 dice que extraer nunca puede impedir registrar a mano.
-  test "con el seam sin implementar el servicio devuelve not_configured y no revienta" do
-    resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
+  test "un fallo del seam se mapea a provider_error y no revienta" do
+    ReceiptExtractionService.stub(:call_vision_model, ->(_payload) { raise ReceiptExtractionService::TaimesError, "invoke HTTP 500" }) do
+      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
 
-    refute resultado.ok?
-    assert_equal :not_configured, resultado.error
-    assert resultado.not_configured?
+      refute resultado.ok?
+      assert_equal :provider_error, resultado.error
+    end
   end
 
   # ---- configuracion --------------------------------------------------------
 
-  test "sin api key devuelve not_configured y no revienta" do
-    ENV.delete("ANTHROPIC_API_KEY")
+  test "sin la api key de Taimes devuelve not_configured y no revienta" do
+    ENV.delete("TAIMES_API_KEY")
 
     with_fake_extractor(payload_modelo) do |fake|
       resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
@@ -441,6 +446,16 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
       resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
 
       refute resultado.ok?
+      assert_equal :timeout, resultado.error
+    end
+  end
+
+  # Excon es quien habla con S3 dentro del seam (fog-aws): su timeout tambien
+  # es un timeout, no un provider_error generico.
+  test "un timeout de Excon (S3) devuelve error timeout" do
+    with_fake_extractor(Excon::Error::Timeout.new("read timeout reached")) do
+      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
+
       assert_equal :timeout, resultado.error
     end
   end

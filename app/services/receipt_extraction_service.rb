@@ -3,28 +3,20 @@
 # Nunca guarda nada y nunca puede impedir el registro manual (00-ARQUITECTURA
 # Bloque D.1 y riesgo 12 del paquete 10): si esto falla, el usuario digita.
 #
-# ============ ESTADO: ESQUELETO COMPLETO. FALTA UNA SOLA COSA ============
-# Ya esta implementado y probado todo el contrato: validacion de entrada,
-# normalizacion del archivo, armado del payload, JSON Schema de salida, umbrales
-# de confianza, normalizacion de los campos leidos, mapeo de errores y Result.
+# ============ ESTADO: COMPLETO — LA EXTRACCION CORRE EN TAIMES ============
+# El contrato interno no cambio: validacion de entrada, normalizacion del
+# archivo, armado del payload, JSON Schema de salida, umbrales de confianza,
+# normalizacion de los campos leidos, mapeo de errores y Result son los mismos.
 #
-# Lo UNICO que falta es `self.call_vision_model(payload)` (mas abajo), que es la
-# unica pieza del sistema que le habla a un modelo de vision.
+# `call_vision_model` esta implementado (2026-08-17): sube el comprobante a un
+# S3 temporal, genera una URL firmada y se la manda al agente "Extractor de
+# Comprobantes" de Taimes por el endpoint invoke. Ver el bloque del seam.
 #
-# **Lo implementa el agente de Taimes**, por decision del cliente del 2026-08-10
-# (docs/plan-gastos-ia/ESTADO.md, seccion "Frontera de alcance": todo lo que
-# hable con un modelo de IA es de Taimes). Aqui se le deja el hueco exacto:
-# rellenar un metodo con una firma fija, no rediseñar el servicio.
-#
-# Mientras ese metodo no exista, el flag RECEIPT_EXTRACTION_ENABLED **arranca
-# apagado** y el servicio responde `:disabled` / `:not_configured` sin reventar.
-#
-# Tampoco existen todavia, y quedan solo DECLARADOS aqui:
-#   - el endpoint `POST /extract_receipt/report_expenses` (accion
-#     `ReportExpensesController#extract_receipt`, contrato D.1);
-#   - el boton "Leer comprobante" del formulario de gasto (paquete 08).
-# Se construyen cuando la extraccion exista; sin ella no tendrian nada que
-# orquestar.
+# Config: TAIMES_INVOKE_URL + TAIMES_AGENT_ID + TAIMES_API_KEY (sin ellas el
+# servicio responde `:not_configured`) y el kill switch
+# RECEIPT_EXTRACTION_ENABLED. La ruta `POST /extract_receipt/report_expenses`
+# (accion `ReportExpensesController#extract_receipt`, contrato D.1) es quien
+# orquesta esto desde el formulario de gasto.
 # ========================================================================
 class ReceiptExtractionService
   # 🟡 UNICA EXCEPCION DOCUMENTADA al Result canonico del proyecto
@@ -151,8 +143,16 @@ class ReceiptExtractionService
   # extraccion, se enciende con RECEIPT_EXTRACTION_ENABLED=true.
   def self.enabled? = ENV.fetch("RECEIPT_EXTRACTION_ENABLED", "false").to_s.strip.casecmp("true").zero?
 
-  def self.configured? = ENV["ANTHROPIC_API_KEY"].present?
+  # Las tres variables que apuntan al agente extractor de Taimes:
+  #   TAIMES_INVOKE_URL: base del gateway (sgi), p.ej. https://taimes.example.com
+  #   TAIMES_AGENT_ID:   uuid del agente "Extractor de Comprobantes"
+  #   TAIMES_API_KEY:    API key del tenant Controlmatica (kmz_...)
+  TAIMES_ENV_KEYS = %w[TAIMES_INVOKE_URL TAIMES_AGENT_ID TAIMES_API_KEY].freeze
 
+  def self.configured? = TAIMES_ENV_KEYS.all? { |clave| ENV[clave].present? }
+
+  # Solo informativo desde que la extraccion corre en Taimes: viaja en el payload
+  # y en Result.model para trazabilidad, pero el modelo real lo decide el agente.
   def self.model = ENV["RECEIPT_EXTRACTION_MODEL"].presence || DEFAULT_MODEL
 
   # ==========================================================================
@@ -162,70 +162,187 @@ class ReceiptExtractionService
   # `ReceiptExtractionService.stub(:call_vision_model, ...)` y el initializer de
   # E2E del paquete 12 le hace `prepend`. NO recibe el cliente por parametro.
   #
-  # ---------------- ESTO ES LO UNICO QUE FALTA DEL PAQUETE ------------------
-  # LO IMPLEMENTA EL AGENTE DE TAIMES. Nadie mas debe tocarlo: es la frontera de
-  # alcance acordada con el cliente (ESTADO.md, "Frontera de alcance").
+  # ---------------- IMPLEMENTADO: LA EXTRACCION CORRE EN TAIMES -------------
+  # Decision del usuario (2026-08-17): en vez del SDK de Anthropic, el seam le
+  # habla al agente "Extractor de Comprobantes" de Taimes por el endpoint invoke
+  # (POST {TAIMES_INVOKE_URL}/api/public/agents/{TAIMES_AGENT_ID}/invoke, header
+  # X-API-Key con la key kmz_ del tenant). El agente descarga el comprobante con
+  # su tool read_url desde una URL firmada de S3 y responde {resumen, datos,
+  # uso} con las claves del SCHEMA dentro de `datos`.
   #
-  # CONTRATO QUE DEBE CUMPLIR LA IMPLEMENTACION, sin margen:
-  #   1. Recibe `payload`, que ya viene armado (los kwargs de messages.create:
-  #      :model, :max_tokens, :system, :output_config con el JSON Schema de
-  #      arriba, y :messages con el bloque document/image en base64 estricto).
-  #   2. Construye el cliente con `timeout: 18` y `max_retries: 0` en un metodo
-  #      de clase PRIVADO (no otro seam). max_retries: 0 no es negociable: con
-  #      el default (2) un timeout deja un hilo de Puma bloqueado 54 s y Puma
-  #      tiene 5 hilos. Prohibido `Timeout.timeout` (interrumpe el hilo en un
-  #      punto arbitrario y puede dejar la conexion de AR inconsistente).
-  #   3. Devuelve UNA de estas tres cosas:
-  #      - el Hash CRUDO del modelo, ya parseado con JSON.parse, opcionalmente
-  #        con la clave "_usage" de metadatos;
-  #      - el simbolo :refusal si `stop_reason == "refusal"`;
-  #      - nil si la respuesta no trajo bloque de texto.
-  #   4. Puede lanzar: `call` de aqui rescata todo y lo mapea a un codigo de
-  #      error. No rescatar dentro del seam ni reintentar.
+  # El payload Anthropic-shaped que arma `payload_for` SE CONSERVA como interfaz
+  # interna (los tests de contrato y el digesto del stub E2E dependen de su
+  # forma); de el se extraen los bytes del documento y el hint del usuario.
   #
-  # EJEMPLO EXACTO del Hash que debe devolver (camino feliz):
+  # CONTRATO DE RETORNO (intacto respecto del plan original):
+  #   - el Hash CRUDO con las claves del SCHEMA, opcionalmente con "_usage";
+  #   - nil si Taimes no devolvio `datos` utilizables;
+  #   - puede lanzar: `call` rescata todo y lo mapea (Net::OpenTimeout /
+  #     Net::ReadTimeout -> :timeout; TaimesError y el resto -> :provider_error).
+  #   El simbolo :refusal sigue siendo un retorno valido del contrato, pero esta
+  #   implementacion no lo produce: un rechazo del agente llega como `datos`
+  #   vacio y termina en :provider_error.
   #
-  #   {
-  #     "is_invoice"     => true,
-  #     "unreadable"     => false,
-  #     "provider_name"  => "Distribuidora El Sol SAS",
-  #     "identification" => "900.123.456-7",
-  #     "invoice_number" => "FE-4821",
-  #     "invoice_date"   => "2026-07-14",
-  #     "currency"       => "COP",
-  #     "value"          => 420168.0,
-  #     "tax"            => 79831.92,
-  #     "total"          => 500000.0,
-  #     "description"    => "Papeleria y utiles de oficina",
-  #     "confidence"     => {
-  #       "provider_name"  => 0.96, "identification" => 0.93,
-  #       "invoice_number" => 0.90, "invoice_date"   => 0.98,
-  #       "currency"       => 0.99, "value"          => 0.95,
-  #       "tax"            => 0.91, "total"          => 0.97
-  #     },
-  #     "_usage" => { input_tokens: 1834, output_tokens: 212 }
-  #   }
+  # PRESUPUESTO DE TIEMPO: open 2 s + read 16 s = 18 s, el mismo techo del plan
+  # original (D.1 da 20 s totales y Puma tiene 5 hilos: no subirlo). Cero
+  # reintentos y prohibido `Timeout.timeout`, igual que siempre.
   #
-  # Implementacion de referencia (pseudocodigo del plan, paquete 10 tarea 7):
-  #
-  #   resp = vision_client.messages.create(**payload)
-  #   return :refusal if resp.stop_reason.to_s == "refusal"
-  #   text = Array(resp.content).find { |b| b.type.to_s == "text" }&.text
-  #   return nil if text.blank?
-  #   JSON.parse(text).merge("_usage" => { input_tokens:  resp.usage&.input_tokens,
-  #                                        output_tokens: resp.usage&.output_tokens })
-  #
-  # Antes de escribirlo hay que verificar la firma real de `Anthropic::Client.new`
-  # y de `client.messages.create` contra el SDK instalado y agregar
-  # `gem "anthropic"` al Gemfile con la version pineada: el gem NO esta instalado
-  # todavia, justamente porque nada de aqui abre una conexion.
+  # El objeto S3 temporal (uploads/tmp/extract/<uuid>/...) se borra en el ensure
+  # best-effort; la red de seguridad es la regla de lifecycle de 1 dia sobre el
+  # prefijo uploads/tmp/ (runbook de despliegue).
   # ==========================================================================
-  def self.call_vision_model(_payload)
-    raise NotImplementedError,
-          "ReceiptExtractionService.call_vision_model lo implementa el agente de Taimes: debe " \
-          "devolver el Hash crudo del modelo (JSON.parse del bloque de texto, con \"_usage\" " \
-          "opcional), :refusal si stop_reason == \"refusal\", o nil si no vino bloque de texto."
+  class TaimesError < StandardError; end
+
+  TMP_PREFIX          = "uploads/tmp/extract".freeze
+  TMP_URL_TTL_SECONDS = 600
+  INVOKE_OPEN_TIMEOUT = 2
+  INVOKE_READ_TIMEOUT = 16
+
+  EXTENSION_POR_TIPO = {
+    "image/jpeg" => ".jpg", "image/png" => ".png", "image/webp" => ".webp",
+    "image/gif" => ".gif", SUPPORTED_PDF_TYPE => ".pdf"
+  }.freeze
+
+  def self.call_vision_model(payload)
+    source = document_source_from(payload)
+    raise TaimesError, "payload sin bloque de documento" if source.nil?
+    raise TaimesError, "almacenamiento S3 sin configurar (AWS_BUCKET)" if ENV["AWS_BUCKET"].blank?
+
+    s3  = s3_connection
+    key = upload_temp_object(s3, source)
+    begin
+      url = presign_get(s3, key)
+      parse_invoke_response(taimes_invoke(
+        input: invoke_input(payload, url),
+        context: invoke_context(source),
+        # El JSON Schema del payload viaja al invoke: Taimes lo usa como
+        # output_type TIPADO (sin él, el modelo colapsa el dict libre — llegó a
+        # devolver la matriz de confianzas COMO datos, 2026-08-18).
+        esquema: payload.to_h.dig(:output_config, :format, :schema)
+      ))
+    ensure
+      delete_temp_object(s3, key)
+    end
   end
+
+  # Inversa exacta de `document_block`: bytes y media_type del payload, o nil.
+  def self.document_source_from(payload)
+    bloque = payload.to_h.dig(:messages, 0, :content, 0)
+    fuente = bloque.is_a?(Hash) ? bloque[:source] : nil
+    return nil unless fuente.is_a?(Hash) && fuente[:data].present?
+
+    { bytes: Base64.strict_decode64(fuente[:data]), media_type: fuente[:media_type].to_s }
+  end
+  private_class_method :document_source_from
+
+  # Timeouts cortos y UN solo intento (hallazgo del review 2026-08-17):
+  # fog-aws marca put_object/delete_object como idempotentes y con los defaults
+  # de Excon (connect/read/write 60 s x retry_limit 5) una degradacion de S3
+  # retendria un hilo de Puma VARIOS MINUTOS — con 5 hilos, cinco clicks en
+  # "Extraer" congelan la app entera, incluido el registro manual que D.1
+  # promete no bloquear. El comprobante pesa <=5 MB: si S3 no responde en
+  # segundos, se aborta y la persona captura a mano.
+  S3_CONNECTION_OPTIONS = {
+    connect_timeout: 2, read_timeout: 5, write_timeout: 5,
+    retry_limit: 1, retry_interval: 0
+  }.freeze
+
+  # Mismo patron que Mcp::S3DirectUpload.connection: no se memoiza entre
+  # requests (un socket muerto de Puma falla al primer uso); dentro de UNA
+  # llamada al seam si se reusa la misma conexion.
+  def self.s3_connection
+    Fog::Storage.new(
+      CarrierWave::Uploader::Base.fog_credentials.merge(connection_options: S3_CONNECTION_OPTIONS)
+    )
+  end
+  private_class_method :s3_connection
+
+  def self.upload_temp_object(s3, source)
+    extension = EXTENSION_POR_TIPO.fetch(source[:media_type], "")
+    key = "#{TMP_PREFIX}/#{SecureRandom.uuid}/comprobante#{extension}"
+    s3.put_object(ENV["AWS_BUCKET"], key, source[:bytes], "Content-Type" => source[:media_type])
+    key
+  end
+  private_class_method :upload_temp_object
+
+  # Firmar es local: no abre socket.
+  def self.presign_get(s3, key)
+    s3.get_object_url(ENV["AWS_BUCKET"], key, (Time.now + TMP_URL_TTL_SECONDS).to_i)
+  end
+  private_class_method :presign_get
+
+  # Best effort: un temporal huerfano (lo barre la regla de lifecycle) es
+  # preferible a convertir en error una extraccion que si funciono.
+  def self.delete_temp_object(s3, key)
+    s3.delete_object(ENV["AWS_BUCKET"], key)
+    true
+  rescue StandardError
+    false
+  end
+  private_class_method :delete_temp_object
+
+  def self.invoke_input(payload, url)
+    hint = payload.to_h.dig(:messages, 0, :content, 1, :text).presence ||
+           "Extrae los datos de este comprobante."
+    "#{hint}\nComprobante (URL firmada; descargala tal cual): #{url}"
+  end
+  private_class_method :invoke_input
+
+  def self.invoke_context(source)
+    { "proposito" => "extraccion_comprobante", "media_type" => source[:media_type] }
+  end
+  private_class_method :invoke_context
+
+  # Cero reintentos y sin `Timeout.timeout`. En el error NUNCA va el body ni la
+  # URL firmada (riesgo 13 del paquete: ahi viajan la factura y la firma).
+  def self.taimes_invoke(input:, context:, esquema: nil)
+    url = "#{ENV['TAIMES_INVOKE_URL'].to_s.chomp('/')}/api/public/agents/#{ENV['TAIMES_AGENT_ID']}/invoke"
+    respuesta = HTTParty.post(url,
+                              headers: { "X-API-Key" => ENV["TAIMES_API_KEY"],
+                                         "Content-Type" => "application/json" },
+                              body: { input: input, context: context,
+                                      esquema: esquema }.compact.to_json,
+                              open_timeout: INVOKE_OPEN_TIMEOUT,
+                              timeout: INVOKE_READ_TIMEOUT)
+    raise TaimesError, "invoke HTTP #{respuesta.code}" unless respuesta.code.to_i == 200
+
+    JSON.parse(respuesta.body.to_s)
+  end
+  private_class_method :taimes_invoke
+
+  # {resumen, datos, uso} -> el Hash crudo que espera `parse`, o nil. Se tolera
+  # {summary, data, usage} por si el gateway algun dia alinea sus claves con su
+  # doc en ingles.
+  def self.parse_invoke_response(body)
+    return nil unless body.is_a?(Hash)
+
+    datos = body["datos"] || body["data"]
+    if datos.is_a?(String)
+      begin
+        datos = JSON.parse(datos)
+      rescue JSON::ParserError
+        return nil
+      end
+    end
+    return nil unless datos.is_a?(Hash) && datos.present?
+
+    # Gemini a veces serializa el objeto ANIDADO como string JSON dentro del
+    # dict libre de `datos` (visto en vivo 2026-08-18). Se repara aquí para no
+    # perder las confianzas por campo; si no parsea, normalize_confidence lo
+    # degrada a {} y los campos igual llegan.
+    conf = datos["confidence"]
+    if conf.is_a?(String)
+      begin
+        datos = datos.merge("confidence" => JSON.parse(conf))
+      rescue JSON::ParserError
+        nil
+      end
+    end
+
+    uso = body["uso"] || body["usage"]
+    uso.is_a?(Hash) ? datos.merge("_usage" => uso) : datos
+  end
+  private_class_method :parse_invoke_response
 
   def initialize(file, context = {})
     @file    = file
@@ -246,16 +363,9 @@ class ReceiptExtractionService
     return failure(:provider_error) if raw.blank?
 
     parse(raw)
-  rescue NotImplementedError => e
-    # El seam todavia no existe (lo implementa Taimes). Se responde como "sin
-    # configurar" en vez de propagar: el contrato D.1 dice que extraer NUNCA
-    # puede tumbar el registro manual de un gasto. Queda en el log para que
-    # quien encienda el flag sin la implementacion sepa por que no funciona.
-    Rails.logger.error("[ReceiptExtractionService] seam sin implementar: #{e.message}")
-    failure(:not_configured)
   rescue StandardError => e
-    # Se loguea la clase y el mensaje, NUNCA el payload ni el cliente: ahi va la
-    # imagen del comprobante y la ANTHROPIC_API_KEY (riesgo 13 del paquete).
+    # Se loguea la clase y el mensaje, NUNCA el payload, el body ni la URL
+    # firmada: ahi van la imagen del comprobante y la firma (riesgo 13).
     Rails.logger.error("[ReceiptExtractionService] #{e.class}: #{e.message}")
     failure(error_code_for(e))
   end
@@ -270,6 +380,13 @@ class ReceiptExtractionService
   # La extraccion opera sobre los bytes EN MEMORIA: no necesita que el
   # comprobante este guardado en S3.
   def build_source
+    # El corte por tamaño va ANTES de leer (hallazgo del review 2026-08-17):
+    # `read` materializa el archivo entero en el heap, asi que un PDF de 2 GB
+    # subido por un usuario autenticado mataria el dyno por OOM antes de llegar
+    # al check de bytesize. El bytesize de abajo queda como respaldo para las
+    # entradas que no responden a `size` en bytes (p.ej. el Hash crudo).
+    return :too_large if oversized_before_read?
+
     bytes, declared_type, filename = read_file
     return :unsupported_format if bytes.blank?
     return :too_large          if bytes.bytesize > MAX_BYTES
@@ -280,6 +397,17 @@ class ReceiptExtractionService
     # strict_encode64 es OBLIGATORIO: encode64 mete un \n cada 60 caracteres y
     # la API rechaza el payload con un 400 que no explica nada.
     { data: Base64.strict_encode64(bytes), media_type: media_type, filename: filename }
+  end
+
+  # Tamaño declarado por el objeto ANTES de materializar los bytes. Un Hash se
+  # excluye (su `size` son claves, no bytes: lo cubre el bytesize de arriba).
+  def oversized_before_read?
+    return false if @file.nil? || @file.is_a?(Hash)
+    return false unless @file.respond_to?(:size)
+
+    @file.size.to_i > MAX_BYTES
+  rescue StandardError
+    false
   end
 
   def read_file
@@ -471,6 +599,7 @@ class ReceiptExtractionService
   TIMEOUT_ERROR_NAMES = %w[
     Anthropic::Errors::APIConnectionError
     Anthropic::Errors::APITimeoutError
+    Excon::Error::Timeout
     Net::OpenTimeout
     Net::ReadTimeout
     Timeout::Error
