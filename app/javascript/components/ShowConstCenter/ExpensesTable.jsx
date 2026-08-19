@@ -83,17 +83,14 @@ class ExpensesTable extends Component {
       // misma entidad y los E2E distinguen la pantalla por la URL, no por el
       // testid.
       { key: "id", label: "ID", width: "80px", render: (r) => <span data-testid={"expense-ref-" + r.id} style={{ fontWeight: 600, color: "#6c757d" }}>{"#" + r.id}</span> },
+      { key: "invoice_date", label: "Fecha factura" },
       { key: "user_invoice_name", label: "Responsable", render: (r) => r.user_invoice ? r.user_invoice.names : "" },
       { key: "invoice_name", label: "Nombre" },
-      { key: "invoice_date", label: "Fecha factura" },
-      { key: "identification", label: "NIT / Cédula" },
-      { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
-      { key: "invoice_number", label: "# Factura" },
-      { key: "type_identification_name", label: "Tipo", render: (r) => r.type_identification ? r.type_identification.name : "" },
-      { key: "payment_type_name", label: "Medio pago", render: (r) => r.payment_type ? r.payment_type.name : "" },
-      { key: "invoice_value", label: "Valor", render: (r) => <NumberFormat value={r.invoice_value} displayType="text" thousandSeparator={true} prefix="$" /> },
-      { key: "invoice_tax", label: "IVA", render: (r) => <NumberFormat value={r.invoice_tax} displayType="text" thousandSeparator={true} prefix="$" /> },
-      { key: "invoice_total", label: "Total", render: (r) => <NumberFormat value={r.invoice_total} displayType="text" thousandSeparator={true} prefix="$" /> },
+      { key: "invoice_total", label: "Total", render: (r) => <NumberFormat value={r.invoice_total} displayType="text" thousandSeparator={true} decimalScale={2} prefix="$" /> },
+      // El presupuestal se QUEDA, y va pegado al Total: en la pantalla de Gastos
+      // esta columna se oculto porque ahi es un adorno, pero aqui se entra
+      // justamente a ver como va el cupo del centro, y es lo que califica la
+      // cifra de al lado.
       { key: "budget_status", label: "Estado presupuestal", width: "190px", render: (r) => {
         const badge = budgetStatusBadge(r.budget_status);
         return (
@@ -107,29 +104,11 @@ class ExpensesTable extends Component {
           </div>
         );
       } },
-      { key: "currency", label: "Moneda", width: "90px", render: (r) => <span data-testid={"expense-currency-" + r.id}>{r.currency || "COP"}</span> },
-      // sortable: false — `foreign_total` no esta en la allowlist de orden que
-      // usa get_cost_center_report_expenses (F.2 solo agrego id, currency y
-      // budget_status). Con sortable true el servidor ordenaria por el default
-      // y la flecha del header mentiria.
-      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: (r) => {
-        const total = toNumber(r.foreign_total);
-        if (r.currency === "COP" || total === null) return "—";
-
-        const rate = toNumber(r.exchange_rate);
-        return (
-          <span>
-            <NumberFormat value={total} displayType="text" thousandSeparator={true} suffix={" " + r.currency} />
-            {rate !== null && (
-              <span className="cm-hint" style={{ display: "block" }}>
-                {"TRM "}
-                <NumberFormat value={rate} displayType="text" thousandSeparator={true} />
-              </span>
-            )}
-          </span>
-        );
-      } },
-      { key: "is_acepted", label: "Estado", render: (r) => r.is_acepted ? "Aceptado" : "Creado" },
+      { key: "is_acepted", label: "Estado", render: (r) => (
+        <span className={"cm-status-pill" + (r.is_acepted ? " cm-status-pill--ok" : "")}>
+          {r.is_acepted ? "Aceptado" : "Creado"}
+        </span>
+      ) },
       // sortable: false por la misma razon que foreign_total: F.2 no agrego
       // `accounting_approved` a la allowlist de este endpoint.
       { key: "accounting_approved", label: "Contabilidad", width: "170px", sortable: false, render: (r) => {
@@ -170,6 +149,38 @@ class ExpensesTable extends Component {
           </div>
         );
       } },
+
+      // --- A partir de aqui hay que arrastrar la barra: detalle de la factura y
+      // --- desglose del monto. Se consulta cuando ya se encontro la fila.
+      { key: "type_identification_name", label: "Tipo", render: (r) => r.type_identification ? r.type_identification.name : "" },
+      { key: "payment_type_name", label: "Medio pago", render: (r) => r.payment_type ? r.payment_type.name : "" },
+      { key: "invoice_value", label: "Valor", render: (r) => <NumberFormat value={r.invoice_value} displayType="text" thousandSeparator={true} decimalScale={2} prefix="$" /> },
+      { key: "invoice_tax", label: "IVA", render: (r) => <NumberFormat value={r.invoice_tax} displayType="text" thousandSeparator={true} decimalScale={2} prefix="$" /> },
+      { key: "currency", label: "Moneda", width: "90px", render: (r) => <span data-testid={"expense-currency-" + r.id}>{r.currency || "COP"}</span> },
+      // sortable: false — `foreign_total` no esta en la allowlist de orden que
+      // usa get_cost_center_report_expenses (F.2 solo agrego id, currency y
+      // budget_status). Con sortable true el servidor ordenaria por el default
+      // y la flecha del header mentiria.
+      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: (r) => {
+        const total = toNumber(r.foreign_total);
+        if (r.currency === "COP" || total === null) return "—";
+
+        const rate = toNumber(r.exchange_rate);
+        return (
+          <span>
+            <NumberFormat value={total} displayType="text" thousandSeparator={true} decimalScale={2} suffix={" " + r.currency} />
+            {rate !== null && (
+              <span className="cm-hint" style={{ display: "block" }}>
+                {"TRM "}
+                <NumberFormat value={rate} displayType="text" thousandSeparator={true} decimalScale={6} />
+              </span>
+            )}
+          </span>
+        );
+      } },
+      { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
+      { key: "identification", label: "NIT / Cédula" },
+      { key: "invoice_number", label: "# Factura" },
     ];
   }
 
