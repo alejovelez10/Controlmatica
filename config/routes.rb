@@ -115,6 +115,10 @@ Rails.application.routes.draw do
   # paso hay un gate de permiso real sobre el binario.
   delete "delete_receipt/report_expenses/:id", to: "report_expenses#delete_receipt"
   get "download_receipt/report_expenses/:id", to: "report_expenses#download_receipt"
+  # Captura asistida por IA (paquete 10, contrato D.1): recibe el comprobante
+  # multipart y devuelve campos sugeridos para PRE-CARGAR el formulario. No crea
+  # nada; ambos casos responden 200 y el frontend discrimina por `type`.
+  post "extract_receipt/report_expenses", to: "report_expenses#extract_receipt"
 
   # Contabilidad (paquete 06). El backend completo es de este paquete; la
   # pantalla React (`accounting_expenses/index.html.erb` + su pack) es del 09.

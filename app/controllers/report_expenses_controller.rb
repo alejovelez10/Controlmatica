@@ -294,6 +294,35 @@ class ReportExpensesController < ApplicationController
     end
   end
 
+  # === CAPTURA ASISTIDA POR IA (paquete 10, contrato D.1) ===================
+  #
+  # Excepcion documentada de dueño (§7.2): esta accion es del paquete 10; el
+  # resto del archivo sigue siendo del 07. Recibe el comprobante multipart, se
+  # lo pasa a ReceiptExtractionService (que llama al agente de Taimes) y
+  # devuelve los campos para PRE-CARGAR el formulario.
+  #
+  # NUNCA guarda nada: no instancia con save, no llama recalculate_cost_center.
+  # Ambos casos responden HTTP 200 y el frontend discrimina por `type`, igual
+  # que /get_exchange_rate; un fallo de la IA jamas bloquea el registro manual.
+  # CSRF SI aplica (el skip de arriba solo cubre :upload_file).
+  def extract_receipt
+    unless is_admin? || has_menu_permission?("Gastos", "Crear")
+      return render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
+                    status: :forbidden
+    end
+    if params[:file].blank?
+      return render json: { type: "error", message: ["Debe adjuntar un comprobante"] }
+    end
+
+    center = CostCenter.find_by(id: params[:cost_center_id])
+    result = ReceiptExtractionService.extract(params[:file], cost_center_code: center&.code)
+    return render json: { type: "error", message: [result.error_message] } unless result.ok?
+
+    fields, warnings = build_extraction_draft(result)
+    render json: { type: "success", fields: fields, confidence: result.confidence,
+                   warnings: warnings, rule_violations: extraction_rule_violations(fields) }
+  end
+
   def upload_file
     status_upload = ReportExpense.import(params[:file], current_user.id)
     if status_upload
@@ -445,6 +474,119 @@ class ReportExpensesController < ApplicationController
   # entorno E2E (que corre en modo test con storage :file) tome la rama correcta.
   def remote_receipt_storage?
     ReceiptUploader.storage.to_s.include?("Fog")
+  end
+
+  # --- Captura asistida (paquete 10): privados de extract_receipt -----------
+
+  # Etiquetas humanas para los avisos de baja confianza. Las claves son las del
+  # SERVICIO (provider_name, value...), no las del formulario: low_confidence
+  # viene con esos nombres.
+  EXTRACTION_FIELD_LABELS = {
+    "provider_name"  => "nombre del proveedor",
+    "identification" => "NIT o cédula",
+    "invoice_number" => "número de factura",
+    "invoice_date"   => "fecha de la factura",
+    "currency"       => "moneda",
+    "value"          => "valor",
+    "tax"            => "impuestos",
+    "total"          => "total",
+    "description"    => "descripción"
+  }.freeze
+
+  # Result del servicio -> [fields, warnings]. `fields` trae SIEMPRE las 15
+  # claves de la whitelist del frontend (ReportExpenseIndex.js, handleExtract):
+  # un nil deja el input vacio, una clave ausente no se pinta.
+  #
+  # Los COP SIEMPRE salen de multiplicar foreign * tasa (invariante 3 del
+  # paquete 05), jamas al reves.
+  def build_extraction_draft(result)
+    f        = result.fields
+    warnings = []
+    fields   = {
+      invoice_name:   f[:provider_name],
+      identification: f[:identification],
+      invoice_number: f[:invoice_number],
+      invoice_date:   f[:invoice_date]&.iso8601,
+      description:    f[:description],
+      currency:       f[:currency],
+      foreign_value: nil, foreign_tax: nil, foreign_total: nil,
+      exchange_rate: nil, exchange_rate_date: nil, exchange_rate_source: nil,
+      invoice_value: nil, invoice_tax: nil, invoice_total: nil
+    }
+
+    if f[:currency] == Currency::DEFAULT
+      fields[:invoice_value] = monto_float(f[:value])
+      fields[:invoice_tax]   = monto_float(f[:tax])
+      fields[:invoice_total] = monto_float(f[:total])
+    else
+      fields[:foreign_value] = monto_str(f[:value])
+      fields[:foreign_tax]   = monto_str(f[:tax])
+      fields[:foreign_total] = monto_str(f[:total])
+      aplicar_tasa_extraccion(fields, f, warnings)
+    end
+
+    f[:low_confidence].each do |clave|
+      warnings << "Verifique el campo #{EXTRACTION_FIELD_LABELS.fetch(clave, clave)}: la lectura no es confiable"
+    end
+
+    [fields, warnings]
+  end
+
+  # La tasa se resuelve AQUI, fuera de todo lock, con el MISMO servicio del
+  # boton manual: mismas fuentes, mismo cache y el mismo `source` literal
+  # (trm_oficial/bce) que guarda /get_exchange_rate. Si la fuente no responde,
+  # los COP quedan en nil y la persona captura la tasa a mano: nunca se inventa.
+  def aplicar_tasa_extraccion(fields, f, warnings)
+    fecha  = f[:invoice_date] || ExchangeRateService.today
+    result = ExchangeRateService.fetch(currency: f[:currency], date: fecha)
+
+    unless result.ok?
+      warnings << "No se pudo obtener la tasa de #{f[:currency]} para el #{fecha}. Ingrésela manualmente"
+      return
+    end
+
+    tasa = result.value
+    fields[:exchange_rate]        = format("%.6f", tasa.rate_to_cop)
+    fields[:exchange_rate_date]   = tasa.rate_date.iso8601
+    fields[:exchange_rate_source] = tasa.source
+    fields[:invoice_value]        = monto_cop(f[:value], tasa.rate_to_cop)
+    fields[:invoice_tax]          = monto_cop(f[:tax], tasa.rate_to_cop)
+    fields[:invoice_total]        = monto_cop(f[:total], tasa.rate_to_cop)
+
+    return if tasa.rate_date == fecha
+
+    warnings << "La tasa aplicada es la del #{tasa.rate_date} (último día hábil disponible)"
+  end
+
+  # Reglas evaluadas sobre un BORRADOR jamas guardado (ReportExpense.new no
+  # corre callbacks). El sujeto es current_user como aproximacion: al extraer
+  # aun no se eligio responsable. `blocking: false` siempre — aqui las
+  # violaciones INFORMAN; la puerta real corre al guardar.
+  def extraction_rule_violations(fields)
+    borrador = ReportExpense.new(
+      invoice_date:   fields[:invoice_date],
+      invoice_number: fields[:invoice_number],
+      identification: fields[:identification],
+      invoice_total:  fields[:invoice_total]
+    )
+    resultado = ExpenseRuleService.validate(borrador, user: current_user)
+    resultado.value[:violations].map { |v| { rule: v[:code], message: v[:message], blocking: false } }
+  rescue StandardError => e
+    # Un fallo del motor de reglas no puede tumbar la extraccion que si sirvio.
+    Rails.logger.error("[extract_receipt] reglas: #{e.class}: #{e.message}")
+    []
+  end
+
+  def monto_float(monto)
+    monto.present? ? monto.round(2).to_f : nil
+  end
+
+  def monto_str(monto)
+    monto.present? ? format("%.2f", monto) : nil
+  end
+
+  def monto_cop(monto, rate)
+    monto.present? ? (monto * rate).round(2).to_f : nil
   end
 
   # Filtros de la pantalla de Gastos. La lista canonica vive en el modelo
