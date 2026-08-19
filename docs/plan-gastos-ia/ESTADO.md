@@ -163,42 +163,42 @@ hizo **todo lo demás** y se dejó el hueco listo: rellenar un método, no redis
 | Componente | ¿Está hecho aquí? | Estado real |
 |---|---|---|
 | Esqueleto del servicio de extracción (contrato, `Result`, esquema JSON de salida, mapeo de errores, seam) | ✅ Sí | **Completo, con 49 pruebas de contrato y cero llamadas de red** |
-| `call_vision_model` — la única pieza que le habla a un modelo de visión | ❌ **De Taimes** | `NotImplementedError` **documentado**, con el comentario que explica cómo construir el cliente |
+| `call_vision_model` — la única pieza que le habla a un modelo de visión | ✅ **Hecho (2026-08-17)** | Implementado contra el **invoke de Taimes**: sube el comprobante a un S3 temporal, URL firmada, `POST /api/public/agents/{id}/invoke`, presupuesto 2+16 s, cero reintentos. 11 pruebas nuevas del seam (`receipt_extraction_seam_test.rb`) |
+| Ruta y acción `POST /extract_receipt/report_expenses` | ✅ **Hecho (2026-08-17)** | Contrato D.1 completo: permiso, 15 claves de la whitelist, conversión de moneda multiplicando, warnings, reglas informativas. 14 pruebas de controller |
 | Motor de reglas (antigüedad, tope, duplicados) | ✅ Sí | **No es IA**: son reglas de negocio en Ruby plano. Terminado y probado |
-| Interruptor de la captura asistida | ✅ Sí | **Cableado de punta a punta y probado** (5 pruebas). Arranca **apagado** y debe quedarse así |
-| Botón "Extraer datos del comprobante" y sus 4 estados en los dos formularios | ✅ Sí | Construido. **No se pinta** mientras el interruptor esté apagado |
-| Herramientas MCP, actor por teléfono, política de exposición | ✅ Sí | Es fontanería Ruby. 62 herramientas expuestas, 191 pruebas |
+| Interruptor de la captura asistida | ✅ Sí | Cableado de punta a punta. **En Heroku se despliega apagado y se enciende tras el smoke test** |
+| Botón "Extraer datos del comprobante" y sus 4 estados en los dos formularios | ✅ Sí | Construido y ejercitado por los 3 E2E del escenario 5 (ya sin `fixme`) |
+| Herramientas MCP, actor por teléfono, política de exposición | ✅ Sí | 62 herramientas expuestas. `report_expenses_attach_receipt` ganó el modo **`file_url`** (URL firmada GCS de `get_attachment_url`, allowlist de hosts, tope 10 MB) para el canal WhatsApp |
 | Especificación del contrato para el agente | ✅ Sí | `docs/TAIMES-AGENTE-GASTOS.md`, 295 líneas |
-| Agente de WhatsApp (conversación, voz, prompts) | ❌ **De Taimes** | Vive fuera de este repo |
+| Agente de WhatsApp (conversación, voz, prompts) | ❌ **De Taimes** | Vive fuera de este repo (skill + agente en la plataforma) |
 
-### 5.1 🔴 Las cuatro cosas que faltan de este lado, con nombre propio
+### 5.1 Lo que faltaba, con nombre propio — estado al 2026-08-17
 
-Esto es lo único del sistema que está **declarado y no construido**, y se dice sin rodeos porque
-es lo que puede sorprender al cliente:
+1. ✅ **`POST /extract_receipt/report_expenses` existe** (ruta, acción y sus pruebas).
+2. ✅ **El seam está implementado**, pero contra **Taimes**, no contra el SDK de Anthropic: la
+   decisión del 2026-08-17 reemplaza al plan del `vision_client`. Config = `TAIMES_INVOKE_URL` +
+   `TAIMES_AGENT_ID` + `TAIMES_API_KEY` (las tres en el runbook). `ANTHROPIC_API_KEY` quedó
+   retirada del diseño.
+3. ✅ **No se instala gema de proveedor**: no hace falta — Rails le habla a Taimes por HTTP
+   (HTTParty, ya en el Gemfile). Las clases `Anthropic::Errors::*` de los tests siguen siendo
+   dobles declarados localmente para el mapeo de timeouts.
+4. 🔴 **La transcripción de nota de voz sigue sin verificar.** El canal de WhatsApp de Taimes
+   transcribe audio nativamente, pero **hay que verificarlo con al menos 3 notas de voz reales**
+   contra el agente; si no funciona, documentarla como no disponible y renegociar por escrito.
 
-1. **La ruta `POST /extract_receipt/report_expenses` NO EXISTE.** Ni la ruta, ni la acción del
-   controlador, ni sus 16 pruebas. `grep extract_receipt` en las rutas y en el controlador
-   devuelve **cero**. Si se esperaba "el endpoint construido y apagado", **eso no está**: lo que
-   hay es el servicio con su seam.
-2. **`vision_client` no existe.** El criterio pedía un cliente con `timeout: 18, max_retries: 0`;
-   esa cadena solo aparece en un **comentario** que le dice a Taimes cómo construirlo.
-3. **No se instaló la gema del proveedor.** `grep anthropic Gemfile Gemfile.lock` devuelve nada.
-4. **La transcripción de nota de voz no la implementa ni la verifica nadie.** Es una promesa
-   comercial sobre una capacidad de un tercero. 🔴 **Hay que verificarla con al menos 3 notas de
-   voz reales, y si Taimes no la provee, documentarla como no disponible y renegociar por escrito
-   el punto correspondiente de la propuesta. No se deja abierto ni se promete.**
+**Nada del sistema se rompe si Taimes está caído**: el servicio devuelve el error estándar y el
+formulario se llena a mano, que es exactamente lo que pasa hoy.
 
-**Nada más del sistema se rompe por esto**: sin extracción, el formulario se llena a mano, que es
-exactamente lo que se hace hoy.
+### 5.2 Lo que falta del LADO TAIMES (plataforma), en orden
 
-### 5.2 Lo que Taimes tiene que hacer, en orden
-
-1. Implementar `call_vision_model` en el servicio de extracción (el seam está documentado).
-2. Construir la ruta y la acción de extracción, o adaptar el formulario a otra entrada.
-3. Encender `RECEIPT_EXTRACTION_ENABLED=true` — el cableado ya está hecho y probado.
-4. Quitar los 3 `test.fixme()` de la suite E2E. **Los tests ya están escritos**: se cierran los
-   pendientes P-19 y P-20 sin escribir una línea de spec.
-5. Conectar el canal de WhatsApp y cargar la habilidad con las 7 herramientas y el guion.
+1. Crear el agente "Extractor de Comprobantes" (skill platform con `read_url` + el prompt del
+   SCHEMA) y la API key `kmz_` del tenant → llenar las tres `TAIMES_*` de Heroku.
+2. Re-sincronizar el catálogo MCP en Taimes (54→62 tools + el schema nuevo de
+   `report_expenses_attach_receipt` con `file_url`) tras el deploy de esta rama.
+3. Reescribir el skill conversacional de gastos (presupuesto, reglas, TRM con
+   `exchange_rates_get` ANTES del create, adjunto vía `get_attachment_url` → `file_url`).
+4. Encender `RECEIPT_EXTRACTION_ENABLED=true` en Heroku tras el smoke test.
+5. Alta de usuarios de campo por teléfono en ambos lados.
    **Precondición inviolable: los teléfonos cargados y sin duplicados (P-03).**
 
 ---

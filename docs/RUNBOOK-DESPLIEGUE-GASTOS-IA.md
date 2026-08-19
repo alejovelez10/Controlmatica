@@ -135,25 +135,31 @@ leído el diff: son 160 commits.
 `config/application.yml` **está en `.gitignore` y no viaja al servidor**. Todo lo que la
 aplicación necesita se siembra con `heroku config:set`.
 
-### 2.1 La tabla completa: 15 variables
+### 2.1 La tabla completa: 17 variables
 
 | # | Variable | Valor | Obligatoria | Si falta |
 |---|---|---|---|---|
 | 1 | `AWS_ACCESS_KEY` | (de la llave IAM nueva, paso 0.1) | ✅ | No hay almacenamiento de archivos |
 | 2 | `AWS_SECRET_KEY` | ídem | ✅ | ídem |
 | 3 | `AWS_BUCKET` | `controlmatica` | ✅ | ídem |
-| 4 | **`AWS_REGION`** | **`us-east-2`** | ✅ | 🔴 **Ver 2.2. Es el fallo más traicionero de todo el despliegue** |
+| 4 | **`AWS_REGION`** | **`us-east-2`** | ✅ | 🔴 **Ver 2.2. Es el fallo más traicionero de todo el despliegue. Desde 2026-08-17 también firma el GET del temporal de extracción** |
 | 5 | `TRM_API_URL` | `https://www.datos.gov.co/resource/32sa-8pi3.json` | — | Hay default en código |
 | 6 | `DATOS_GOV_APP_TOKEN` | (el del paso 0.5) | Recomendada | HTTP 429: todo gasto en USD pide tasa a mano |
 | 7 | `ECB_API_URL` | `https://data-api.ecb.europa.eu/service/data/EXR` | — | Hay default en código |
 | 8 | `EXCHANGE_RATE_HTTP_TIMEOUT` | `5` | — | Default 5 s |
 | 9 | `EXCHANGE_RATE_OPEN_TIMEOUT` | `3` | — | Default 3 s |
-| 10 | `RECEIPT_EXTRACTION_MODEL` | `claude-opus-5` | — | Default en código |
-| 11 | **`RECEIPT_EXTRACTION_ENABLED`** | **`false`** | ✅ | 🔴 Ver 2.3. **Debe quedar en `false`** |
-| 12 | `ANTHROPIC_API_KEY` | — | ❌ **NO se setea todavía** | Ver 2.3 |
-| 13 | `MCP_API_KEY` | (ya existe en los dos entornos) | ✅ | El servidor MCP responde `unauthorized` |
-| 14 | `MCP_STRICT_EXPENSE_ACTOR` | `true` | ✅ | Válvula de reversión, ver 5.4 |
-| 15 | `E2E_UPLOAD_ROOT` | — | ❌ **NUNCA en producción** | Es solo para la suite de pruebas |
+| 10 | `RECEIPT_EXTRACTION_MODEL` | `claude-opus-5` | — | Solo informativo: el modelo real lo decide el agente de Taimes |
+| 11 | **`RECEIPT_EXTRACTION_ENABLED`** | **`false` al desplegar** | ✅ | Ver 2.3: se enciende **tras el smoke test** de extracción |
+| 12 | `TAIMES_INVOKE_URL` | (base del gateway de Taimes, p.ej. `https://<sgi>`) | ✅ para extracción | El servicio responde `not_configured`; el gasto se registra a mano |
+| 13 | `TAIMES_AGENT_ID` | (uuid del agente "Extractor de Comprobantes"; lo imprime el setup de ops/ de Taimes) | ✅ para extracción | ídem |
+| 14 | `TAIMES_API_KEY` | (API key `kmz_` del tenant Controlmatica en Taimes) | ✅ para extracción | ídem |
+| 15 | `MCP_API_KEY` | (ya existe en los dos entornos) | ✅ | El servidor MCP responde `unauthorized` |
+| 16 | `MCP_STRICT_EXPENSE_ACTOR` | `true` | ✅ | Válvula de reversión, ver 5.4 |
+| 17 | `E2E_UPLOAD_ROOT` | — | ❌ **NUNCA en producción** | Es solo para la suite de pruebas |
+
+(`ANTHROPIC_API_KEY` quedó **retirada del diseño** el 2026-08-17: Rails nunca le habla a
+Anthropic directo — la extracción corre por el agente de Taimes. Si aparece en el entorno,
+bórrela.)
 
 ### 2.2 🔴 `AWS_REGION=us-east-2` — léase esto entero
 
@@ -168,15 +174,25 @@ reporta como una falla del sistema: lo reportan como *"a mí no me deja adjuntar
 
 **Se setea aunque parezca redundante y aunque hoy "funcione".**
 
-### 2.3 🔴 `RECEIPT_EXTRACTION_ENABLED` se queda en `false`
+### 2.3 🔴 `RECEIPT_EXTRACTION_ENABLED`: se DESPLIEGA en `false` y se enciende tras el smoke
 
-La lectura automática del comprobante **no está implementada de este lado**: la completa el
-proveedor del asistente. El interruptor está cableado de punta a punta y probado, así que
-**ponerlo en `true` hoy PINTA EL BOTÓN en el formulario y el botón no lleva a ningún lado**: la
-dirección que consumiría todavía no existe.
+La extracción ya está implementada de punta a punta (2026-08-17): el seam llama al agente
+extractor de Taimes con una URL firmada de S3. El interruptor se despliega **apagado** porque
+encenderlo requiere que las tres `TAIMES_*` estén sembradas y que el agente exista en Taimes.
 
-`ANTHROPIC_API_KEY` **no se setea** mientras el interruptor esté apagado. Setearla no enciende
-nada y agrega un secreto de más en el entorno.
+**Secuencia para encenderlo** (después del deploy y de sembrar `TAIMES_*`):
+
+1. Subir un comprobante real desde el formulario de gasto en staging con el flag aún apagado →
+   el botón no se pinta y todo funciona como antes (línea base).
+2. `heroku config:set RECEIPT_EXTRACTION_ENABLED=true` + `heroku restart`.
+3. Botón "Extraer datos del comprobante" con una factura real → precarga en <20 s.
+4. Si falla: volver el flag a `false` (kill switch probado — el registro manual nunca se
+   bloquea) y revisar logs de `[ReceiptExtractionService]`.
+
+**Paso nuevo de S3 (una sola vez, consola AWS)**: regla de lifecycle de **1 día** sobre el
+prefijo `uploads/tmp/` del bucket `controlmatica` — es la red de seguridad de los temporales de
+extracción (`uploads/tmp/extract/`) y de los adjuntos MCP (`uploads/tmp/mcp_receipts/`), cuyos
+borrados en código son best-effort.
 
 ### 2.4 Comandos
 
@@ -195,21 +211,31 @@ heroku config:set -a controlmatica-staging \
 heroku config:set -a controlmatica-staging DATOS_GOV_APP_TOKEN='<el del paso 0.5>'
 heroku config:set -a controlmatica-staging AWS_ACCESS_KEY='<IAM nuevo>' AWS_SECRET_KEY='<IAM nuevo>'
 
+# Extraccion via Taimes (los tres valores los entrega la configuracion del
+# lado Taimes: el setup del agente extractor imprime el AGENT_ID y la kmz_ la
+# crea un admin del tenant en la UI de Taimes):
+heroku config:set -a controlmatica-staging \
+  TAIMES_INVOKE_URL='<base del gateway>' \
+  TAIMES_AGENT_ID='<uuid del extractor>' \
+  TAIMES_API_KEY='<kmz_...>'
+
 # PRODUCCION: identico, cambiando -a controlmatica-staging por -a controlmatica
 ```
 
 ### 2.5 🟢 Verificación
 
 ```bash
-heroku config -a controlmatica-staging | grep -E 'AWS_|TRM_|ECB_|EXCHANGE_RATE_|RECEIPT_|MCP_'
+heroku config -a controlmatica-staging | grep -E 'AWS_|TRM_|ECB_|EXCHANGE_RATE_|RECEIPT_|MCP_|TAIMES_'
 ```
 
-**Lo que hay que ver, y son cuatro cosas concretas:**
+**Lo que hay que ver, y son cinco cosas concretas:**
 
 1. `AWS_REGION` dice **`us-east-2`**, no `us-east-1` y no ausente.
 2. `AWS_BUCKET` dice `controlmatica`.
-3. `RECEIPT_EXTRACTION_ENABLED` dice **`false`**.
-4. **`E2E_UPLOAD_ROOT` NO aparece.** Si aparece en producción, bórrela ya:
+3. `RECEIPT_EXTRACTION_ENABLED` dice **`false`** recién desplegado (pasa a `true` solo tras el
+   smoke test del 2.3) y las tres `TAIMES_*` están sembradas.
+4. `ANTHROPIC_API_KEY` **NO aparece** (retirada del diseño).
+5. **`E2E_UPLOAD_ROOT` NO aparece.** Si aparece en producción, bórrela ya:
    `heroku config:unset E2E_UPLOAD_ROOT -a controlmatica`.
 
 ---
