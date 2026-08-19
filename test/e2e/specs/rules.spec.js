@@ -109,12 +109,14 @@ test.describe("escenarios del paquete 14 — reglas de gasto", () => {
     // al navegador: solo la frase resumida de `budget_reason`, truncada a 250
     // caracteres. La prueba afirma sobre lo que el sistema SI entrega hoy.
 
-    // HALLAZGO ANOTADO: la tabla pinta el estado ("Sin presupuesto") pero NO el
-    // motivo, porque la columna solo muestra `budget_reason` cuando el estado es
-    // "excedido". El motivo viaja en la respuesta y queda en la base; pintarlo
-    // tambien para este estado es del paquete 09 y no se toca desde aqui.
-    await expect(page.getByTestId(`expense-budget-status-${body.register.id}`))
-      .toContainText("Sin presupuesto");
+    // La columna "Estado presupuestal" se OCULTO de la tabla de Gastos por
+    // decision de producto (2026-08-18, COLUMNAS_OCULTAS en
+    // packs/ReportExpenseIndex.js): ya no hay badge que mirar, y con el se fue
+    // el hallazgo que estaba anotado aqui (la columna pintaba el estado pero no
+    // el motivo cuando era "sin_presupuesto"). Lo que importa —que la regla
+    // impide la aprobacion y deja el motivo— lo afirman las cuatro lineas de
+    // arriba contra la respuesta del servidor. Si la columna vuelve, vuelve esta
+    // asercion y vuelve el hallazgo.
   });
 
   test("un gasto de hace 5 dias que cabe en la partida queda aprobado y sin advertencias", async ({ page }) => {
@@ -139,7 +141,8 @@ test.describe("escenarios del paquete 14 — reglas de gasto", () => {
     expect(body.type).toBe("success");
     expect(body.register.budget_status).toBe("aprobado");
     expect(body.register.budget_reason == null || body.register.budget_reason === "").toBeTruthy();
-    await expect(page.getByTestId(`expense-budget-status-${body.register.id}`)).toContainText("Aprobado");
+    // Sin badge que mirar: la columna "Estado presupuestal" esta oculta (ver el
+    // test de la regla de antiguedad). Las dos lineas de arriba afirman la regla.
   });
 
   test("una segunda regla por defecto se rechaza con un mensaje entendible", async ({ page }) => {

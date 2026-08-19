@@ -72,6 +72,47 @@ var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigne
 var EXTENSIONES_COMPROBANTE = ["jpg", "jpeg", "png", "pdf", "webp", "heic"];
 var TAMANO_MAXIMO_COMPROBANTE = 10 * 1024 * 1024;
 
+// Nombres legibles de los campos que devuelve la extraccion. Son las claves DEL
+// SERVICIO (provider_name, value…), no las del formulario, porque asi llega la
+// matriz `confidence`. Espeja EXTRACTION_FIELD_LABELS de
+// report_expenses_controller.rb: si alla se agrega un campo, aqui tambien.
+var ETIQUETAS_EXTRACCION = {
+  provider_name: "el nombre del proveedor",
+  identification: "el NIT o cédula",
+  invoice_number: "el número de factura",
+  invoice_date: "la fecha de la factura",
+  currency: "la moneda",
+  value: "el valor",
+  tax: "los impuestos",
+  total: "el total",
+  description: "la descripción",
+};
+
+// Peso del comprobante para la zona de arrastre. Se corta en MB porque el tope
+// son 10 MB: no hay nada que decir por encima de eso.
+function pesoLegible(bytes) {
+  var n = Number(bytes);
+  if (!n || n <= 0) return "Archivo listo";
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return Math.round(n / 1024) + " KB";
+  return (n / (1024 * 1024)).toFixed(1).replace(".", ",") + " MB";
+}
+
+// Columnas que NO se pintan hoy, por decision de producto (2026-08-18).
+//
+// Se ocultan aqui en vez de borrarse porque el dato sigue existiendo de punta a
+// punta —el servicio lo calcula, el serializer lo emite y el FILTRO "Estado
+// presupuestal" de esta misma pantalla lo sigue usando—, y volver a mostrarlas
+// es quitar la clave de este objeto, no reescribir un render.
+//
+// 🔴 Consecuencia medida: al ocultar `budget_status` desaparece del DOM el
+// `data-testid="expense-budget-status-<id>"`, del que dependian 4 aserciones de
+// navegador (budget.spec.js x2, rules.spec.js x2). Esas pruebas verifican el
+// MISMO hecho contra la respuesta del servidor (`body.register.budget_status`),
+// que es donde vive la regla; lo que se perdio es la comprobacion de que el
+// badge se pinta. Si la columna vuelve, las aserciones vuelven con ella.
+var COLUMNAS_OCULTAS = { budget_status: true };
+
 // Estado del comprobante y de sus dos acompanantes, para resetearlo de una sola
 // vez al abrir el modal. Que este junto no es cosmetico: olvidar uno solo de
 // estos campos hace que el comprobante del gasto anterior se suba al siguiente.
@@ -79,6 +120,8 @@ function estadoComprobanteVacio() {
   return {
     receiptFile: null,
     receiptFileName: "",
+    receiptSize: 0,
+    receiptDragging: false,
     receiptExistingId: null,
     receiptError: null,
     extraction: Object.assign({}, EXTRACTION_VACIA),
@@ -175,6 +218,15 @@ class ReportExpenseIndex extends React.Component {
     // filtro, se cae la tabla entera.
     this.currencyOptions = props.currencies || window.CM_CURRENCIES || [];
 
+    // ORDEN POR RELEVANCIA (2026-08-18). La tabla mide ~2.900px y el viewport
+    // util son ~1.300px, asi que SIEMPRE hay scroll horizontal: lo unico que se
+    // puede decidir es que se ve sin arrastrar la barra. Las 9 primeras son las
+    // que caben en una pantalla y son las que el usuario mira a diario
+    // —referencia, cuando, de quien, cuanto y en que estado va—; el resto es
+    // detalle de la factura y auditoria, que se consulta cuando ya se encontro
+    // la fila. Antes el Total caia en la posicion 13 y habia que hacer scroll
+    // para ver la plata, que es justo el dato por el que se entra a esta
+    // pantalla.
     this.columns = [
       // El ID de referencia va PRIMERO: es lo que el usuario copia al chat de
       // soporte y lo que el buscador acepta desde que C.2/F.1 metieron
@@ -182,18 +234,11 @@ class ReportExpenseIndex extends React.Component {
       { key: "id", label: "ID", width: "80px", render: function(row) {
         return React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id);
       }},
+      { key: "invoice_date", label: "Fecha de factura", width: "120px" },
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
       { key: "user_invoice_name", label: "Responsable", width: "150px", render: function(row) { return row.user_invoice ? row.user_invoice.names : ""; } },
       { key: "invoice_name", label: "Nombre", width: "200px" },
-      { key: "invoice_date", label: "Fecha de factura", width: "120px" },
-      { key: "identification", label: "NIT / CEDULA", width: "120px" },
-      { key: "description", label: "Descripcion", width: "200px" },
-      { key: "invoice_number", label: "#Factura", width: "140px" },
-      { key: "type_name", label: "Tipo", width: "180px", render: function(row) { return row.type_identification ? row.type_identification.name : ""; } },
-      { key: "payment_name", label: "Medio de pago", width: "150px", render: function(row) { return row.payment_type ? row.payment_type.name : ""; } },
-      { key: "invoice_value", label: "Valor", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
-      { key: "invoice_tax", label: "IVA", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
-      { key: "invoice_total", label: "Total", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      { key: "invoice_total", label: "Total", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
       // El motivo del exceso va SIEMPRE dentro de .cm-cell-truncate con
       // data-tooltip: `budget_reason` lo escribe el servicio de presupuesto y
       // puede traer el nombre del centro, el cupo y lo disponible en una sola
@@ -208,59 +253,36 @@ class ReportExpenseIndex extends React.Component {
             : null
         );
       }},
-      { key: "currency", label: "Moneda", width: "90px", render: function(row) {
-        return React.createElement("span", { "data-testid": "expense-currency-" + row.id }, row.currency || "COP");
-      }},
-      // sortable: false A PROPOSITO. `foreign_total` NO esta en
-      // EXPENSE_SORT_COLUMNS (F.1): con sortable true el servidor cae al `else`
-      // y ordena por created_at, pero la flecha del header cambia igual. El
-      // usuario ve una tabla reordenada por el criterio equivocado y nada avisa.
-      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: function(row) {
-        var total = toNumber(row.foreign_total);
-        if (row.currency === "COP" || total === null) return "—";
-
-        var rate = toNumber(row.exchange_rate);
-        return React.createElement("span", null,
-          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, suffix: " " + row.currency }),
-          rate !== null
-            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
-                "TRM ",
-                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true }))
-            : null
-        );
-      }},
+      // EL DESPLEGABLE VA DIRECTO, sin el lapiz que antes lo precedia. Cambiar
+      // el estado eran dos clics (lapiz -> select) y el lapiz no decia que iba a
+      // pasar al pulsarlo. Con el select a la vista el estado se lee y se cambia
+      // en el mismo gesto, y de paso desaparece la equis de cancelar: no hay
+      // nada que cancelar si nunca se entro en un modo.
+      //
+      // `editingStatusId` y sus dos metodos quedan vivos a proposito: la tabla
+      // del centro de costos todavia usa el patron viejo.
       { key: "is_acepted", label: "Estado", width: "150px", sortable: false, render: function(row) {
-        var isEditing = self.state.editingStatusId === row.id;
-
-        if (isEditing) {
-          return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "6px" }},
-            React.createElement("select", {
-              value: row.is_acepted ? "true" : "false",
-              onChange: function(e) { self.updateStatus(e, row); },
-              onClick: function(e) { e.stopPropagation(); },
-              className: "cm-input",
-              style: { padding: "4px 8px", fontSize: "12px", minWidth: "90px" }
-            },
-              React.createElement("option", { value: "true" }, "Aceptado"),
-              React.createElement("option", { value: "false" }, "Creado")
-            ),
-            React.createElement("button", {
-              onClick: function(e) { e.stopPropagation(); self.closeStatusEdit(); },
-              style: { background: "none", border: "none", cursor: "pointer", color: "#dc3545", padding: "2px" }
-            }, React.createElement("i", { className: "fas fa-times", style: { fontSize: "12px" }}))
-          );
+        // Sin permiso de cierre el estado es SOLO LECTURA. Antes esto se notaba
+        // porque no aparecia el lapiz; ahora hay que pintar la pildora, o el
+        // usuario sin permiso veria un desplegable que el servidor le rechaza.
+        if (!props.estados.closed) {
+          return React.createElement("span", {
+            className: "cm-status-pill" + (row.is_acepted ? " cm-status-pill--ok" : ""),
+            "data-testid": "expense-status-" + row.id,
+          }, row.is_acepted ? "Aceptado" : "Creado");
         }
 
-        var badgeStyle = row.is_acepted
-          ? { background: "#d4edda", color: "#155724", padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "500" }
-          : { background: "#e9ecef", color: "#6c757d", padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "500" };
-
-        return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" }},
-          React.createElement("span", { style: badgeStyle }, row.is_acepted ? "Aceptado" : "Creado"),
-          props.estados.closed && React.createElement("button", {
-            onClick: function(e) { e.stopPropagation(); self.openStatusEdit(row.id); },
-            style: { background: "none", border: "none", cursor: "pointer", color: "#6c757d", padding: "4px" }
-          }, React.createElement("i", { className: "fas fa-pen", style: { fontSize: "12px" }}))
+        return React.createElement("select", {
+          className: "cm-status-select" + (row.is_acepted ? " cm-status-select--ok" : ""),
+          value: row.is_acepted ? "true" : "false",
+          onChange: function(e) { self.updateStatus(e, row); },
+          // stopPropagation SIGUE SIENDO OBLIGATORIO: el clic en la fila abre el
+          // detalle, y sin esto elegir un estado abriria el modal encima.
+          onClick: function(e) { e.stopPropagation(); },
+          "data-testid": "expense-status-select-" + row.id,
+        },
+          React.createElement("option", { value: "true" }, "Aceptado"),
+          React.createElement("option", { value: "false" }, "Creado")
         );
       }},
       { key: "accounting_approved", label: "Contabilidad", width: "170px", render: function(row) {
@@ -302,6 +324,38 @@ class ReportExpenseIndex extends React.Component {
           }, React.createElement("i", { className: "fas fa-eye" }))
         );
       }},
+
+      // --- A partir de aqui hay que arrastrar la barra: detalle de la factura,
+      // --- desglose del monto y auditoria. Se consulta cuando ya se encontro la
+      // --- fila, no para encontrarla.
+      { key: "type_name", label: "Tipo", width: "180px", render: function(row) { return row.type_identification ? row.type_identification.name : ""; } },
+      { key: "payment_name", label: "Medio de pago", width: "150px", render: function(row) { return row.payment_type ? row.payment_type.name : ""; } },
+      { key: "invoice_value", label: "Valor", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      { key: "invoice_tax", label: "IVA", width: "100px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, prefix: "$" }); } },
+      { key: "currency", label: "Moneda", width: "90px", render: function(row) {
+        return React.createElement("span", { "data-testid": "expense-currency-" + row.id }, row.currency || "COP");
+      }},
+      // sortable: false A PROPOSITO. `foreign_total` NO esta en
+      // EXPENSE_SORT_COLUMNS (F.1): con sortable true el servidor cae al `else`
+      // y ordena por created_at, pero la flecha del header cambia igual. El
+      // usuario ve una tabla reordenada por el criterio equivocado y nada avisa.
+      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: function(row) {
+        var total = toNumber(row.foreign_total);
+        if (row.currency === "COP" || total === null) return "—";
+
+        var rate = toNumber(row.exchange_rate);
+        return React.createElement("span", null,
+          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, suffix: " " + row.currency }),
+          rate !== null
+            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
+                "TRM ",
+                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true }))
+            : null
+        );
+      }},
+      { key: "description", label: "Descripcion", width: "200px" },
+      { key: "identification", label: "NIT / CEDULA", width: "120px" },
+      { key: "invoice_number", label: "#Factura", width: "140px" },
       {
         key: "created_at", label: "Creación", width: "220px",
         render: function(row) {
@@ -320,7 +374,7 @@ class ReportExpenseIndex extends React.Component {
           );
         }
       },
-    ];
+    ].filter(function(c) { return !COLUMNAS_OCULTAS[c.key]; });
   }
 
   componentDidMount() {
@@ -692,19 +746,58 @@ class ReportExpenseIndex extends React.Component {
   // --- Comprobante -----------------------------------------------------------
 
   handleFileReceipt = function(e) {
-    var file = e.target.files && e.target.files[0];
-    if (!file) { this.setState({ receiptFile: null, receiptFileName: "", receiptError: null }); return; }
+    this.aceptarComprobante(e.target.files && e.target.files[0]);
+  }.bind(this);
+
+  // UNICA puerta de entrada del comprobante: la usan el selector de archivos y
+  // el arrastre. Estaba escrita dentro de handleFileReceipt y el arrastre habria
+  // duplicado las dos validaciones —que es justo como se termina aceptando por
+  // arrastre un archivo que el boton rechaza.
+  aceptarComprobante = function(file) {
+    var vacio = { receiptFile: null, receiptFileName: "", receiptSize: 0 };
+    if (!file) { this.setState(Object.assign({}, vacio, { receiptError: null })); return; }
 
     var ext = (file.name.split(".").pop() || "").toLowerCase();
     if (EXTENSIONES_COMPROBANTE.indexOf(ext) === -1) {
-      this.setState({ receiptFile: null, receiptFileName: "", receiptError: "Formato no permitido. Use JPG, PNG, WEBP, HEIC o PDF." });
+      this.setState(Object.assign({}, vacio, { receiptError: "Formato no permitido. Use JPG, PNG, WEBP, HEIC o PDF." }));
       return;
     }
     if (file.size > TAMANO_MAXIMO_COMPROBANTE) {
-      this.setState({ receiptFile: null, receiptFileName: "", receiptError: "El archivo supera los 10 MB permitidos." });
+      this.setState(Object.assign({}, vacio, { receiptError: "El archivo supera los 10 MB permitidos." }));
       return;
     }
-    this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null });
+    this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null });
+  }.bind(this);
+
+  // --- Arrastrar y soltar ----------------------------------------------------
+  //
+  // preventDefault en dragOver es OBLIGATORIO: sin el, el navegador no considera
+  // la zona un destino valido, nunca dispara drop y ABRE EL ARCHIVO en la
+  // pestana, perdiendo el formulario a medio llenar.
+  handleReceiptDragOver = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!this.state.receiptDragging) this.setState({ receiptDragging: true });
+  }.bind(this);
+
+  handleReceiptDragLeave = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ receiptDragging: false });
+  }.bind(this);
+
+  handleReceiptDrop = function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ receiptDragging: false });
+    var dt = e.dataTransfer;
+    // Solo el primero: el gasto tiene UN comprobante, y aceptar en silencio el
+    // ultimo de tres arrastrados es peor que ignorar los otros dos.
+    this.aceptarComprobante(dt && dt.files && dt.files[0]);
+  }.bind(this);
+
+  abrirSelectorComprobante = function() {
+    if (this._receiptInput) this._receiptInput.click();
   }.bind(this);
 
   handleDeleteReceipt = function() {
@@ -1255,7 +1348,45 @@ class ReportExpenseIndex extends React.Component {
 
     var x = this.state.extraction || EXTRACTION_VACIA;
 
-    return React.createElement("div", { style: { marginTop: 8 } },
+    // TODOS los avisos van a UNA sola lista. Antes cada tipo abria su propia
+    // caja de alerta con su propio borde y su propio margen de 16px: una
+    // extraccion normal (un warning de tasa + dos reglas + tres campos dudosos)
+    // apilaba SEIS cajas debajo del boton y empujaba el formulario fuera de la
+    // pantalla, justo cuando lo que hay que hacer es revisar los campos de
+    // arriba.
+    var avisos = [];
+
+    (x.warnings || []).forEach(function(w, i) {
+      avisos.push({ key: "w" + i, tono: "warn", texto: w });
+    });
+
+    // Una violacion blocking:true INFORMA pero no deshabilita Guardar: la puerta
+    // de bloqueo es del servidor.
+    (x.violations || []).forEach(function(v, i) {
+      avisos.push({
+        key: "v" + i,
+        tono: v.blocking ? "danger" : "warn",
+        texto: v.message || v.rule || "",
+        testid: "expense-rule-violation",
+      });
+    });
+
+    // SOLO la franja 0,60–0,80. Por debajo de 0,60 el servidor ya manda su
+    // propio aviso redactado (CONFIDENCE_WARN en receipt_extraction_service.rb),
+    // asi que pintar todo lo menor que 0,80 mostraba el MISMO campo dos veces:
+    // una con texto entendible y otra con la clave cruda ("provider_name").
+    Object.keys(x.confidence || {}).forEach(function(k) {
+      var c = x.confidence[k];
+      if (!(c >= 0.6 && c < 0.8)) return;
+      avisos.push({
+        key: "c" + k,
+        tono: "info",
+        texto: "Revise " + (ETIQUETAS_EXTRACCION[k] || k) + ": la lectura no es del todo segura.",
+        testid: "expense-low-confidence-" + k,
+      });
+    });
+
+    return React.createElement("div", { className: "cm-extract" },
       React.createElement("button", {
         type: "button", className: "cm-btn cm-btn-pastel cm-btn-pastel--blue cm-btn-sm",
         onClick: self.handleExtract,
@@ -1263,33 +1394,45 @@ class ReportExpenseIndex extends React.Component {
         "data-testid": "expense-extract-btn",
       }, React.createElement("i", { className: "fa fa-magic" }), " Extraer datos del comprobante"),
 
-      x.status === "loading" ? React.createElement("div", { className: "cm-alert cm-alert-info", "data-testid": "expense-extract-loading" },
-        React.createElement("i", { className: "fa fa-spinner fa-spin" }), " Leyendo el comprobante… Esto puede tardar hasta 20 segundos.") : null,
+      // La barra indeterminada existe porque la espera llega a 20 s y un spinner
+      // quieto tanto rato se lee como "se colgo".
+      x.status === "loading"
+        ? React.createElement("div", { className: "cm-extract-progress", "data-testid": "expense-extract-loading" },
+            React.createElement("div", { className: "cm-extract-progress-bar" }),
+            React.createElement("span", { className: "cm-extract-progress-text" },
+              React.createElement("i", { className: "fa fa-spinner fa-spin" }),
+              " Leyendo el comprobante… Esto puede tardar hasta 20 segundos."))
+        : null,
 
-      x.status === "error" ? React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-extract-error" },
-        (x.message || "") + " Complete los datos manualmente.") : null,
+      x.status === "error"
+        ? React.createElement("div", { className: "cm-extract-note cm-extract-note--warn", "data-testid": "expense-extract-error" },
+            React.createElement("i", { className: "fa fa-exclamation-triangle cm-extract-note-icon" }),
+            React.createElement("span", null, (x.message || "") + " Complete los datos manualmente."))
+        : null,
 
-      x.status === "done" ? React.createElement("div", null,
-        React.createElement("div", { className: "cm-alert cm-alert-success", "data-testid": "expense-extract-done" },
-          "Se precargaron " + x.filled.length + " campos. ",
-          React.createElement("strong", null, "Revíselos antes de guardar.")),
-        (x.warnings || []).length > 0
-          ? React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-extract-warnings" }, x.warnings.join(" "))
-          : null,
-        // Una violacion blocking:true INFORMA pero no deshabilita Guardar: la
-        // puerta de bloqueo es del servidor.
-        (x.violations || []).map(function(v, i) {
-          return React.createElement("div", {
-            key: i,
-            className: v.blocking ? "cm-alert cm-alert-danger" : "cm-alert cm-alert-warning",
-            "data-testid": "expense-rule-violation",
-          }, v.message || v.rule || "");
-        }),
-        Object.keys(x.confidence || {}).filter(function(k) { return x.confidence[k] < 0.8; }).map(function(k) {
-          return React.createElement("div", { key: k, className: "cm-field-hint", "data-testid": "expense-low-confidence-" + k },
-            React.createElement("i", { className: "fa fa-exclamation-triangle" }), " Verifique este dato: " + k);
-        })
-      ) : null
+      x.status === "done"
+        ? React.createElement("div", { className: "cm-extract-result" },
+            React.createElement("div", { className: "cm-extract-head", "data-testid": "expense-extract-done" },
+              React.createElement("i", { className: "fa fa-check-circle cm-extract-head-icon" }),
+              React.createElement("span", null,
+                "Se precargaron " + x.filled.length + " campos. ",
+                React.createElement("strong", null, "Revíselos antes de guardar."))),
+
+            avisos.length > 0
+              ? React.createElement("ul", { className: "cm-extract-notes", "data-testid": "expense-extract-warnings" },
+                  avisos.map(function(a) {
+                    return React.createElement("li", {
+                        key: a.key,
+                        className: "cm-extract-note cm-extract-note--" + a.tono,
+                        "data-testid": a.testid,
+                      },
+                      React.createElement("i", {
+                        className: "cm-extract-note-icon fa " + (a.tono === "info" ? "fa-info-circle" : "fa-exclamation-triangle"),
+                      }),
+                      React.createElement("span", null, a.texto));
+                  }))
+              : null)
+        : null
     );
   }.bind(this);
 
@@ -1299,19 +1442,61 @@ class ReportExpenseIndex extends React.Component {
     return React.createElement("div", { className: "cm-form-group", style: { marginTop: 12 } },
       React.createElement("label", { className: "cm-label" },
         React.createElement("i", { className: "fas fa-paperclip" }), " Comprobante"),
-      // La clase que existe es .cm-file-input (design_system.css:1741);
-      // .cm-input-file NO existe.
-      React.createElement("input", {
-        type: "file", className: "cm-input cm-file-input",
-        accept: ".jpg,.jpeg,.png,.webp,.heic,.pdf,image/*,application/pdf",
-        onChange: self.handleFileReceipt,
-        "data-testid": "expense-receipt-input",
-      }),
 
-      self.state.receiptFileName
-        ? React.createElement("div", { className: "cm-field-hint", "data-testid": "expense-receipt-name" },
-            React.createElement("i", { className: "fa fa-file" }), " " + self.state.receiptFileName)
-        : null,
+      // ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que en cada
+      // navegador se pinta distinto ("Choose File" en ingles aunque la app este
+      // en espanol) y no admite soltar el archivo encima, que es como llega la
+      // foto de la factura desde el escritorio.
+      //
+      // El input sigue existiendo y conserva su data-testid: esta oculto por CSS
+      // pero presente en el DOM, que es lo unico que necesitan `setInputFiles`
+      // de Playwright y los lectores de pantalla.
+      React.createElement("div", {
+          className: "cm-dropzone"
+            + (self.state.receiptDragging ? " cm-dropzone--active" : "")
+            + (self.state.receiptFileName ? " cm-dropzone--filled" : ""),
+          onDragOver: self.handleReceiptDragOver,
+          onDragEnter: self.handleReceiptDragOver,
+          onDragLeave: self.handleReceiptDragLeave,
+          onDrop: self.handleReceiptDrop,
+          onClick: self.abrirSelectorComprobante,
+          onKeyDown: function(e) {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); self.abrirSelectorComprobante(); }
+          },
+          role: "button",
+          tabIndex: 0,
+          "data-testid": "expense-receipt-dropzone",
+        },
+        React.createElement("input", {
+          type: "file", className: "cm-dropzone-input",
+          ref: function(el) { self._receiptInput = el; },
+          accept: ".jpg,.jpeg,.png,.webp,.heic,.pdf,image/*,application/pdf",
+          onChange: self.handleFileReceipt,
+          // Sin esto el clic del input vuelve a burbujear al div, que llama otra
+          // vez a input.click(): el selector de archivos se abre en bucle.
+          onClick: function(e) { e.stopPropagation(); },
+          "data-testid": "expense-receipt-input",
+        }),
+
+        self.state.receiptFileName
+          ? React.createElement("div", { className: "cm-dropzone-file", "data-testid": "expense-receipt-name" },
+              React.createElement("i", { className: "fa fa-file-invoice cm-dropzone-file-icon" }),
+              React.createElement("div", { className: "cm-dropzone-file-body" },
+                React.createElement("span", { className: "cm-dropzone-file-name" }, self.state.receiptFileName),
+                React.createElement("span", { className: "cm-dropzone-file-meta" },
+                  pesoLegible(self.state.receiptSize) + " · Haga clic o suelte otro archivo para reemplazarlo")),
+              React.createElement("button", {
+                type: "button", className: "cm-dropzone-clear", title: "Quitar el archivo",
+                onClick: function(e) { e.stopPropagation(); self.aceptarComprobante(null); },
+                "data-testid": "expense-receipt-clear",
+              }, React.createElement("i", { className: "fa fa-times" })))
+          : React.createElement("div", { className: "cm-dropzone-empty" },
+              React.createElement("i", { className: "fa fa-cloud-upload-alt cm-dropzone-icon" }),
+              React.createElement("span", { className: "cm-dropzone-title" },
+                "Arrastre aquí su comprobante"),
+              React.createElement("span", { className: "cm-dropzone-hint" },
+                "o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 10 MB"))
+      ),
 
       self.state.receiptExistingId
         ? React.createElement("div", { className: "cm-field-hint", style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } },

@@ -177,7 +177,12 @@ test.describe("escenarios 2 y 3 — gastos contra la partida", () => {
     expect(body.register.budget_reason == null || body.register.budget_reason === "").toBeTruthy();
     creado.gastoCabe = body.register.id;
 
-    await expect(page.getByTestId(`expense-budget-status-${creado.gastoCabe}`)).toContainText("Aprobado");
+    // La columna "Estado presupuestal" se OCULTO de la tabla de Gastos por
+    // decision de producto (2026-08-18, COLUMNAS_OCULTAS en
+    // packs/ReportExpenseIndex.js), asi que ya no hay badge que mirar. La regla
+    // —que un gasto que cabe queda aprobado— la siguen afirmando las dos lineas
+    // de arriba contra la respuesta del servidor, que es donde vive.
+    // Si la columna vuelve, vuelve esta asercion.
   });
 
   test("un gasto que se pasa del disponible se guarda igual pero queda excedido con el motivo visible", async ({ page }) => {
@@ -213,9 +218,10 @@ test.describe("escenarios 2 y 3 — gastos contra la partida", () => {
     expect(body.register.id).toBeGreaterThan(0);
     creado.gastoExcede = body.register.id;
 
-    const badge = page.getByTestId(`expense-budget-status-${creado.gastoExcede}`);
-    await expect(badge).toContainText("Excedido");
-    await expect(badge).toContainText("Excede el presupuesto");
+    // El badge de la tabla ya no existe (columna oculta, ver el test anterior).
+    // El estado y el motivo se afirman arriba contra la respuesta del servidor:
+    // `budget_status === "excedido"` y el motivo con la cifra del exceso.
+    expect(body.register.budget_reason).toMatch(/[Ee]xcede el presupuesto/);
   });
 
   test("los gastos excedidos no consumen cupo de la partida", async ({ page }) => {

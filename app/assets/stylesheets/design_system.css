@@ -2384,3 +2384,380 @@ select.cm-input {
   padding: 12px 14px;
   margin-bottom: 16px;
 }
+
+/* ============================================
+   ESTADO EN LINEA (tabla de Gastos)
+   ============================================
+   El estado del gasto se cambiaba en dos pasos: un lapiz que abria un <select>
+   y una equis para salir. El lapiz no anunciaba lo que iba a pasar y el modo de
+   edicion no aportaba nada, asi que el desplegable pasa a estar siempre a la
+   vista. Para que 50 filas de desplegables no conviertan la tabla en un
+   formulario, el control se disfraza de pildora: mismo tamano, mismo color y
+   mismo peso que el badge que reemplaza. */
+
+.cm-status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--cm-radius-pill);
+  background: #e9ecef;
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.cm-status-pill--ok {
+  background: #d4edda;
+  color: #155724;
+}
+
+.cm-status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  max-width: 100%;
+  padding: 4px 26px 4px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--cm-radius-pill);
+  background-color: #e9ecef;
+  /* La flecha va como imagen porque `appearance: none` se lleva la nativa. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236c757d' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 9px 6px;
+  color: #6c757d;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cm-status-select--ok {
+  background-color: #d4edda;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23155724' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color: #155724;
+}
+
+.cm-status-select:hover {
+  border-color: rgba(0, 0, 0, 0.14);
+}
+
+.cm-status-select:focus {
+  outline: none;
+  border-color: var(--cm-accent, #e67e22);
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.18);
+}
+
+/* Sin esto las opciones heredan el fondo de la pildora en Windows y quedan
+   ilegibles sobre el verde. */
+.cm-status-select option {
+  background: #fff;
+  color: #333;
+  font-weight: 500;
+}
+
+/* ============================================
+   ZONA DE ARRASTRE DEL COMPROBANTE
+   ============================================
+   Sustituye al `<input type="file">` nativo, que cada navegador pinta a su
+   manera —en Chrome sale un boton "Choose File" en ingles dentro de una app en
+   espanol— y que no admite soltar el archivo encima. El input sigue en el DOM,
+   solo que oculto: es el que hace el trabajo real y el que ven Playwright y los
+   lectores de pantalla. */
+
+.cm-dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 108px;
+  padding: 18px 16px;
+  border: 2px dashed #d5dae1;
+  border-radius: var(--cm-radius, 10px);
+  background: #fbfcfd;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.cm-dropzone:hover {
+  border-color: var(--cm-accent, #e67e22);
+  background: #fffaf3;
+}
+
+.cm-dropzone:focus-visible {
+  outline: none;
+  border-color: var(--cm-accent, #e67e22);
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.18);
+}
+
+/* Mientras el archivo esta encima. El borde se vuelve continuo para que se lea
+   como un destino "armado" y no como una zona a la espera. */
+.cm-dropzone--active {
+  border-style: solid;
+  border-color: var(--cm-accent, #e67e22);
+  background: #fff3e2;
+}
+
+.cm-dropzone--filled {
+  min-height: 0;
+  padding: 12px 14px;
+  border-style: solid;
+  border-color: #cfe3d4;
+  background: #f6fbf7;
+  text-align: left;
+}
+
+/* Oculto pero PRESENTE: `display: none` lo sacaria del DOM accesible y romperia
+   el clic programatico en algunos navegadores. */
+.cm-dropzone-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cm-dropzone-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+/* La especificidad de dos clases es OBLIGATORIA: FontAwesome llega desde una
+   hoja externa que fija el tamano de los iconos, y con `.cm-dropzone-icon` a
+   secas el icono se quedaba en los 13px heredados del modal. */
+.cm-dropzone .cm-dropzone-icon {
+  font-size: 30px;
+  line-height: 1;
+  color: #b6bfca;
+}
+
+.cm-dropzone--active .cm-dropzone-icon,
+.cm-dropzone:hover .cm-dropzone-icon {
+  color: var(--cm-accent, #e67e22);
+}
+
+.cm-dropzone-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cm-text, #333);
+}
+
+.cm-dropzone-hint {
+  font-size: 12px;
+  color: var(--cm-text-muted, #7a828c);
+}
+
+/* --- Estado con archivo cargado --- */
+
+.cm-dropzone-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.cm-dropzone-file-icon {
+  flex: 0 0 auto;
+  font-size: 20px;
+  color: #2e7d4f;
+}
+
+.cm-dropzone-file-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* El nombre del archivo llega tal cual lo nombro el telefono y puede pasar de
+   los 80 caracteres: sin el truncado, estira el modal entero. */
+.cm-dropzone-file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cm-text, #333);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cm-dropzone-file-meta {
+  font-size: 12px;
+  color: var(--cm-text-muted, #7a828c);
+}
+
+.cm-dropzone-clear {
+  flex: 0 0 auto;
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cm-text-muted, #7a828c);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.cm-dropzone-clear:hover {
+  background: #fdecee;
+  color: var(--cm-danger, #dc3545);
+}
+
+/* ============================================
+   PANEL DE CAPTURA ASISTIDA (extraccion por IA)
+   ============================================
+   Los avisos de la extraccion eran cajas .cm-alert independientes, cada una con
+   su borde y sus 16px de margen inferior. Una extraccion normal apilaba media
+   docena y empujaba fuera de la pantalla los campos que hay que revisar. Aqui
+   son filas de una misma lista: se leen de un vistazo y ocupan un tercio. */
+
+.cm-extract {
+  margin-top: 10px;
+}
+
+/* --- Espera --- */
+
+.cm-extract-progress {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #cfe6ec;
+  border-radius: var(--cm-radius, 10px);
+  background: #f2fafc;
+}
+
+/* Barra INDETERMINADA: no sabemos cuanto falta, y fingir un porcentaje seria
+   mentir. Solo comunica que sigue vivo, que es lo que hace falta en una espera
+   que puede llegar a 20 s. */
+.cm-extract-progress-bar {
+  position: relative;
+  height: 3px;
+  margin-bottom: 8px;
+  border-radius: 3px;
+  background: #d7ecf2;
+  overflow: hidden;
+}
+
+.cm-extract-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  border-radius: 3px;
+  background: #117a8b;
+  animation: cm-extract-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes cm-extract-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+/* Quien active "reducir movimiento" ve una barra fija en vez de una animacion
+   que no puede detener. */
+@media (prefers-reduced-motion: reduce) {
+  .cm-extract-progress-bar::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
+.cm-extract-progress-text {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #117a8b;
+}
+
+/* --- Resultado --- */
+
+.cm-extract-result {
+  margin-top: 10px;
+}
+
+.cm-extract-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  border-radius: var(--cm-radius, 10px);
+  background: rgba(40, 167, 69, 0.09);
+  font-size: 13px;
+  color: #1e7e34;
+}
+
+.cm-extract-head-icon {
+  margin-top: 2px;
+  font-size: 14px;
+}
+
+.cm-extract-notes {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--cm-border, #e4e7ec);
+  border-radius: var(--cm-radius, 10px);
+  overflow: hidden;
+}
+
+.cm-extract-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  background: #fff;
+}
+
+.cm-extract-notes .cm-extract-note + .cm-extract-note {
+  border-top: 1px solid var(--cm-border, #e4e7ec);
+}
+
+.cm-extract-note-icon {
+  margin-top: 2px;
+  flex: 0 0 auto;
+  font-size: 13px;
+}
+
+/* La franja de color a la izquierda distingue el tono sin repintar la fila
+   entera: cinco filas de fondo ambar se leen como una alarma. */
+.cm-extract-note--warn {
+  box-shadow: inset 3px 0 0 #e0a800;
+  color: #8a6100;
+}
+
+.cm-extract-note--danger {
+  box-shadow: inset 3px 0 0 var(--cm-danger, #dc3545);
+  color: #a52834;
+}
+
+.cm-extract-note--info {
+  box-shadow: inset 3px 0 0 #6c8ea4;
+  color: #4c6a80;
+}
+
+/* Suelta (el error de extraccion no va dentro de la lista) necesita su marco. */
+.cm-extract > .cm-extract-note {
+  margin-top: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: var(--cm-radius, 10px);
+  background: rgba(255, 193, 7, 0.1);
+}

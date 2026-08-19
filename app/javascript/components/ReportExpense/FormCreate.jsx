@@ -23,6 +23,31 @@ const selectStyles = {
   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
 };
 
+// Nombres legibles de los campos que devuelve la extraccion. Son las claves DEL
+// SERVICIO (provider_name, value…), que es como llega la matriz `confidence`.
+// Espeja EXTRACTION_FIELD_LABELS de report_expenses_controller.rb.
+const ETIQUETAS_EXTRACCION = {
+  provider_name: "el nombre del proveedor",
+  identification: "el NIT o cédula",
+  invoice_number: "el número de factura",
+  invoice_date: "la fecha de la factura",
+  currency: "la moneda",
+  value: "el valor",
+  tax: "los impuestos",
+  total: "el total",
+  description: "la descripción",
+};
+
+// Peso del comprobante. Se corta en MB porque el tope son 10 MB: no hay nada
+// que decir por encima de eso.
+function pesoLegible(bytes) {
+  const n = Number(bytes);
+  if (!n || n <= 0) return "Archivo listo";
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return Math.round(n / 1024) + " KB";
+  return (n / (1024 * 1024)).toFixed(1).replace(".", ",") + " MB";
+}
+
 class FormCreate extends Component {
   constructor(props) {
     super(props);
@@ -30,9 +55,59 @@ class FormCreate extends Component {
       showMessage: false,
       message: "",
       costCenterInputValue: "",
+      // Zona de arrastre. `receiptDragging` es puramente visual y `receiptSize`
+      // se guarda AQUI —no en el padre— porque el padre solo expone el nombre
+      // del archivo por props y agregarle una prop nueva obligaria a tocar
+      // ExpensesTable, que es de otro dueno.
+      receiptDragging: false,
+      receiptSize: 0,
     };
     this.debounceTimer = null;
+    this.receiptInput = null;
   }
+
+  // --- Comprobante: seleccion y arrastre -------------------------------------
+  //
+  // El padre sigue siendo el que valida (extension y 10 MB) y el que guarda el
+  // File: aqui solo se le entrega el archivo con la forma que ya entiende,
+  // `{ target: { files } }`, para no duplicar las validaciones ni por el
+  // arrastre ni por el clic.
+  entregarArchivo = (files) => {
+    const file = files && files[0];
+    this.setState({ receiptSize: file ? file.size : 0 });
+    if (this.props.onChangeFile) this.props.onChangeFile({ target: { files: files } });
+  };
+
+  handleReceiptChange = (e) => {
+    this.entregarArchivo(e.target.files);
+  };
+
+  // preventDefault en dragOver es OBLIGATORIO: sin el, el navegador no considera
+  // la zona un destino valido, nunca dispara drop y ABRE EL ARCHIVO en la
+  // pestana, perdiendo el formulario a medio llenar.
+  handleReceiptDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!this.state.receiptDragging) this.setState({ receiptDragging: true });
+  };
+
+  handleReceiptDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ receiptDragging: false });
+  };
+
+  handleReceiptDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this.setState({ receiptDragging: false });
+    // Solo el primero: el gasto tiene UN comprobante.
+    this.entregarArchivo(e.dataTransfer && e.dataTransfer.files);
+  };
+
+  abrirSelectorComprobante = () => {
+    if (this.receiptInput) this.receiptInput.click();
+  };
 
   handleSubmit = (e) => {
     e.preventDefault();
@@ -220,8 +295,41 @@ class FormCreate extends Component {
 
     const x = this.props.extraction || { status: "idle", filled: [], confidence: {}, warnings: [], violations: [] };
 
+    // TODOS los avisos van a UNA sola lista. Antes cada tipo abria su propia
+    // caja .cm-alert con su borde y sus 16px de margen: una extraccion normal
+    // (un aviso de tasa + dos reglas + tres campos dudosos) apilaba SEIS cajas
+    // debajo del boton y empujaba fuera de la pantalla los campos que justamente
+    // hay que revisar.
+    const avisos = [];
+
+    (x.warnings || []).forEach((w, i) => avisos.push({ key: "w" + i, tono: "warn", texto: w }));
+
+    // Una violacion blocking:true INFORMA pero no deshabilita Guardar: la puerta
+    // de bloqueo es del servidor.
+    (x.violations || []).forEach((v, i) => avisos.push({
+      key: "v" + i,
+      tono: v.blocking ? "danger" : "warn",
+      texto: v.message || v.rule || "",
+      testid: "expense-rule-violation",
+    }));
+
+    // SOLO la franja 0,60–0,80. Por debajo de 0,60 el servidor ya manda su
+    // propio aviso redactado (CONFIDENCE_WARN en receipt_extraction_service.rb),
+    // asi que pintar todo lo menor que 0,80 mostraba el MISMO campo dos veces:
+    // una con texto entendible y otra con la clave cruda ("provider_name").
+    Object.keys(x.confidence || {}).forEach((k) => {
+      const c = x.confidence[k];
+      if (!(c >= 0.6 && c < 0.8)) return;
+      avisos.push({
+        key: "c" + k,
+        tono: "info",
+        texto: "Revise " + (ETIQUETAS_EXTRACCION[k] || k) + ": la lectura no es del todo segura.",
+        testid: "expense-low-confidence-" + k,
+      });
+    });
+
     return (
-      <div style={{ marginTop: 8 }}>
+      <div className="cm-extract">
         <button type="button" className="cm-btn cm-btn-pastel cm-btn-pastel--blue cm-btn-sm"
                 onClick={this.props.onExtract}
                 disabled={!this.props.receiptFileName || x.status === "loading"}
@@ -229,46 +337,45 @@ class FormCreate extends Component {
           <i className="fa fa-magic"></i> Extraer datos del comprobante
         </button>
 
+        {/* La barra indeterminada existe porque la espera llega a 20 s y un
+            spinner quieto tanto rato se lee como "se colgo". */}
         {x.status === "loading" && (
-          <div className="cm-alert cm-alert-info" data-testid="expense-extract-loading">
-            <i className="fa fa-spinner fa-spin"></i> Leyendo el comprobante… Esto puede tardar hasta 20 segundos.
+          <div className="cm-extract-progress" data-testid="expense-extract-loading">
+            <div className="cm-extract-progress-bar"></div>
+            <span className="cm-extract-progress-text">
+              <i className="fa fa-spinner fa-spin"></i> Leyendo el comprobante… Esto puede tardar hasta 20 segundos.
+            </span>
           </div>
         )}
 
         {x.status === "error" && (
-          <div className="cm-alert cm-alert-warning" data-testid="expense-extract-error">
-            {x.message} Complete los datos manualmente.
+          <div className="cm-extract-note cm-extract-note--warn" data-testid="expense-extract-error">
+            <i className="fa fa-exclamation-triangle cm-extract-note-icon"></i>
+            <span>{x.message} Complete los datos manualmente.</span>
           </div>
         )}
 
         {x.status === "done" && (
-          <React.Fragment>
-            <div className="cm-alert cm-alert-success" data-testid="expense-extract-done">
-              Se precargaron {x.filled.length} campos. <strong>Revíselos antes de guardar.</strong>
+          <div className="cm-extract-result">
+            <div className="cm-extract-head" data-testid="expense-extract-done">
+              <i className="fa fa-check-circle cm-extract-head-icon"></i>
+              <span>
+                Se precargaron {x.filled.length} campos. <strong>Revíselos antes de guardar.</strong>
+              </span>
             </div>
-            {(x.warnings || []).length > 0 && (
-              <div className="cm-alert cm-alert-warning" data-testid="expense-extract-warnings">
-                {x.warnings.join(" ")}
-              </div>
+
+            {avisos.length > 0 && (
+              <ul className="cm-extract-notes" data-testid="expense-extract-warnings">
+                {avisos.map((a) => (
+                  <li key={a.key} className={"cm-extract-note cm-extract-note--" + a.tono}
+                      data-testid={a.testid}>
+                    <i className={"cm-extract-note-icon fa " + (a.tono === "info" ? "fa-info-circle" : "fa-exclamation-triangle")}></i>
+                    <span>{a.texto}</span>
+                  </li>
+                ))}
+              </ul>
             )}
-            {/* Una violacion blocking:true INFORMA pero no deshabilita Guardar:
-                la puerta de bloqueo es del servidor. */}
-            {(x.violations || []).map(function(v, i) {
-              return (
-                <div key={i} className={v.blocking ? "cm-alert cm-alert-danger" : "cm-alert cm-alert-warning"}
-                     data-testid="expense-rule-violation">
-                  {v.message || v.rule || ""}
-                </div>
-              );
-            })}
-            {Object.keys(x.confidence || {}).filter(function(k) { return x.confidence[k] < 0.8; }).map(function(k) {
-              return (
-                <div key={k} className="cm-field-hint" data-testid={"expense-low-confidence-" + k}>
-                  <i className="fa fa-exclamation-triangle"></i> Verifique este dato: {k}
-                </div>
-              );
-            })}
-          </React.Fragment>
+          </div>
         )}
       </div>
     );
@@ -280,18 +387,62 @@ class FormCreate extends Component {
         <label className="cm-label">
           <i className="fa fa-paperclip"></i> Comprobante
         </label>
-        {/* La clase que existe es .cm-file-input (design_system.css:1741).
-            .cm-input-file NO existe: la arquitectura la nombra al reves. */}
-        <input type="file" className="cm-input cm-file-input"
-               accept=".jpg,.jpeg,.png,.webp,.heic,.pdf,image/*,application/pdf"
-               onChange={this.props.onChangeFile}
-               data-testid="expense-receipt-input" />
+        {/* ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que cada
+            navegador pinta a su manera ("Choose File" en ingles dentro de una app
+            en espanol) y que no admite soltar el archivo encima, que es como
+            llega la foto de la factura desde el escritorio.
 
-        {this.props.receiptFileName ? (
-          <div className="cm-field-hint" data-testid="expense-receipt-name">
-            <i className="fa fa-file"></i> {this.props.receiptFileName}
-          </div>
-        ) : null}
+            El input sigue en el DOM con su data-testid, solo que oculto: es lo
+            unico que necesitan `setInputFiles` de Playwright y los lectores de
+            pantalla. */}
+        <div className={"cm-dropzone"
+                        + (this.state.receiptDragging ? " cm-dropzone--active" : "")
+                        + (this.props.receiptFileName ? " cm-dropzone--filled" : "")}
+             onDragOver={this.handleReceiptDragOver}
+             onDragEnter={this.handleReceiptDragOver}
+             onDragLeave={this.handleReceiptDragLeave}
+             onDrop={this.handleReceiptDrop}
+             onClick={this.abrirSelectorComprobante}
+             onKeyDown={(e) => {
+               if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.abrirSelectorComprobante(); }
+             }}
+             role="button"
+             tabIndex={0}
+             data-testid="expense-receipt-dropzone">
+          <input type="file" className="cm-dropzone-input"
+                 ref={(el) => { this.receiptInput = el; }}
+                 accept=".jpg,.jpeg,.png,.webp,.heic,.pdf,image/*,application/pdf"
+                 onChange={this.handleReceiptChange}
+                 /* Sin esto el clic del input vuelve a burbujear al div, que
+                    llama otra vez a click(): el selector se abre en bucle. */
+                 onClick={(e) => e.stopPropagation()}
+                 data-testid="expense-receipt-input" />
+
+          {this.props.receiptFileName ? (
+            <div className="cm-dropzone-file" data-testid="expense-receipt-name">
+              <i className="fa fa-file-invoice cm-dropzone-file-icon"></i>
+              <div className="cm-dropzone-file-body">
+                <span className="cm-dropzone-file-name">{this.props.receiptFileName}</span>
+                <span className="cm-dropzone-file-meta">
+                  {pesoLegible(this.state.receiptSize)} · Haga clic o suelte otro archivo para reemplazarlo
+                </span>
+              </div>
+              <button type="button" className="cm-dropzone-clear" title="Quitar el archivo"
+                      onClick={(e) => { e.stopPropagation(); this.entregarArchivo(null); }}
+                      data-testid="expense-receipt-clear">
+                <i className="fa fa-times"></i>
+              </button>
+            </div>
+          ) : (
+            <div className="cm-dropzone-empty">
+              <i className="fa fa-cloud-upload-alt cm-dropzone-icon"></i>
+              <span className="cm-dropzone-title">Arrastre aquí su comprobante</span>
+              <span className="cm-dropzone-hint">
+                o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 10 MB
+              </span>
+            </div>
+          )}
+        </div>
 
         {this.props.receiptExistingId ? (
           <div className="cm-field-hint" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
