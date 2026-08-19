@@ -8,6 +8,7 @@ class CostCentersListTool < ApplicationTool
               "rango de fechas de inicio y número de cotización. Devuelve hasta `limit` resultados."
   input_schema(
     properties: {
+      code:             { type: "string",  description: "Código EXACTO del centro (ej. CC-0046, PRO-CPT-3-2026); es la forma correcta de resolver un código que dio la persona" },
       description:      { type: "string",  description: "Texto a buscar en la descripción" },
       customer_id:      { type: "integer", description: "ID del cliente" },
       execution_state:  { type: "string",  description: "Estado de ejecución (ej. EN EJECUCION, FINALIZADO)" },
@@ -21,15 +22,21 @@ class CostCentersListTool < ApplicationTool
     required: []
   )
 
-  def self.call(server_context:, description: nil, customer_id: nil, execution_state: nil,
-                invoiced_state: nil, service_type: nil, date_from: nil, date_to: nil,
-                quotation_number: nil, limit: 50)
+  def self.call(server_context:, code: nil, description: nil, customer_id: nil,
+                execution_state: nil, invoiced_state: nil, service_type: nil,
+                date_from: nil, date_to: nil, quotation_number: nil, limit: 50)
     tenant = current_tenant(server_context)
     return unauthorized! unless tenant
 
     limit = [[limit.to_i, 1].max, 200].min
     scope = CostCenter.search(description, customer_id, execution_state, invoiced_state,
                               nil, service_type, date_from, date_to, quotation_number)
+    # El código es la forma natural en que la gente nombra un centro ("CC-0046")
+    # y NO vive en la descripción (que dice "#46"): sin este filtro, un agente
+    # no puede resolver el código que le dan. Exacto e insensible a mayúsculas;
+    # puede devolver más de uno (códigos repetidos existen) — el llamador
+    # desambigua por estado.
+    scope = scope.where("LOWER(code) = ?", code.to_s.strip.downcase) if code.present?
     records = scope.includes(:customer).order(created_at: :desc).limit(limit)
 
     json(records.map { |cc| Mcp::CostCenterSerializer.summary(cc) })
