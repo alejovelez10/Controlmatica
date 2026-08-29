@@ -3,7 +3,7 @@ import NumberFormat from "react-number-format";
 import Swal from "sweetalert2";
 import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable, CmModal, CmButton } from '../../generalcomponents/ui';
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber } from '../../generalcomponents/expenseIndicators';
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon } from '../../generalcomponents/expenseIndicators';
 
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
@@ -34,11 +34,37 @@ function receiptExtractionEnabled() {
 }
 
 var EXTENSIONES_COMPROBANTE = ["jpg", "jpeg", "png", "pdf", "webp", "heic"];
-var TAMANO_MAXIMO_COMPROBANTE = 10 * 1024 * 1024;
+var TAMANO_MAXIMO_COMPROBANTE = 20 * 1024 * 1024;
 
-var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [], violations: [] };
+// Sin `violations`: LAS REGLAS YA NO SE EVALUAN EN LA EXTRACCION. Se informan al
+// guardar, que es el unico punto por el que pasan tanto el gasto leido del
+// comprobante como el escrito a mano. Aqui, ademas, `violations` nunca se pinto:
+// se guardaba en el estado y no lo leia nadie.
+// El mensaje de una regla lo escribe un administrador en la tabla de reglas y se
+// pinta con `html:` en SweetAlert, asi que se escapa. No es paranoia: el nombre
+// del proveedor y el numero de factura entran en el texto del duplicado.
+function escaparHtml(texto) {
+  return String(texto).replace(/[&<>"']/g, function(c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [] };
 var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
 var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
+
+// Columnas que NO se pintan hoy, por decision de producto (2026-08-29).
+//
+// Se ocultan aqui en vez de borrarse —peticion explicita: "escondelas por si en
+// algun momento las necesitamos"—: el dato sigue existiendo de punta a punta (el
+// servicio lo calcula, el serializer lo emite y el `!` del estado lo lee), y
+// volver a mostrarlas es quitar la clave de este objeto, no reescribir un render.
+//
+// `budget_status` deja de ser columna porque su senal se mudo al `!` que
+// acompaña al estado del gasto: la pildora repetia en una tercera columna algo
+// que el icono dice sin ocupar 190px, y el motivo —que antes no se leia en
+// ninguna parte— ahora vive en su tooltip.
+const COLUMNAS_OCULTAS = { budget_status: true };
 
 class ExpensesTable extends Component {
   constructor(props) {
@@ -104,10 +130,17 @@ class ExpensesTable extends Component {
           </div>
         );
       } },
+      // El `!` al lado del estado: senal de que el gasto se paso del presupuesto
+      // o de que no tiene partida. Su tooltip es el unico sitio donde se lee
+      // `budget_reason`, ahora que la columna "Estado presupuestal" esta oculta.
+      // Aqui el estado es de SOLO LECTURA (se cambia desde el modulo de Gastos).
       { key: "is_acepted", label: "Estado", render: (r) => (
-        <span className={"cm-status-pill" + (r.is_acepted ? " cm-status-pill--ok" : "")}>
-          {r.is_acepted ? "Aceptado" : "Creado"}
-        </span>
+        <div className="cm-status-cell">
+          <span className={"cm-status-pill" + (r.is_acepted ? " cm-status-pill--ok" : "")}>
+            {r.is_acepted ? "Aceptado" : "Creado"}
+          </span>
+          {budgetWarningIcon(r)}
+        </div>
       ) },
       // sortable: false por la misma razon que foreign_total: F.2 no agrego
       // `accounting_approved` a la allowlist de este endpoint.
@@ -181,7 +214,7 @@ class ExpensesTable extends Component {
       { key: "description", label: "Descripción", render: (r) => <div className="cm-cell-truncate" data-tooltip={r.description || ""}><span className="cm-cell-truncate-text">{r.description || "—"}</span></div> },
       { key: "identification", label: "NIT / Cédula" },
       { key: "invoice_number", label: "# Factura" },
-    ];
+    ].filter((c) => !COLUMNAS_OCULTAS[c.key]);
   }
 
   componentDidMount() {
@@ -488,7 +521,7 @@ class ExpensesTable extends Component {
 
   // Espejo en cliente de las dos allowlists del uploader (4.8). No sustituye la
   // validacion del servidor: la adelanta para no gastarle al usuario una subida
-  // de 10 MB que va a terminar en error.
+  // de 20 MB que va a terminar en error.
   handleFileReceipt = (e) => {
     var file = e.target.files && e.target.files[0];
     if (!file) { this.setState({ receiptFile: null, receiptFileName: "", receiptError: null }); return; }
@@ -499,7 +532,7 @@ class ExpensesTable extends Component {
       return;
     }
     if (file.size > TAMANO_MAXIMO_COMPROBANTE) {
-      this.setState({ receiptFile: null, receiptFileName: "", receiptError: "El archivo supera los 10 MB permitidos." });
+      this.setState({ receiptFile: null, receiptFileName: "", receiptError: "El archivo supera los 20 MB permitidos." });
       return;
     }
     this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null });
@@ -595,8 +628,7 @@ class ExpensesTable extends Component {
         var newState = {
           formCreate: f,
           extraction: { status: "done", message: null, filled: filled,
-                        confidence: d.confidence || {}, warnings: d.warnings || [],
-                        violations: d.rule_violations || [] },
+                        confidence: d.confidence || {}, warnings: d.warnings || [] },
         };
         if (f.currency && f.currency !== "COP") {
           var opcion = currencyOptions().filter(function(o) { return o.value === f.currency; })[0];
@@ -694,6 +726,25 @@ class ExpensesTable extends Component {
         self.setState({ modal: false, saving: false });
         self.loadData(isEdit ? undefined : 1);
         self.clearValues();
+
+        // Mismo aviso que en el modulo de Gastos, y a proposito: es el mismo
+        // gasto y las mismas reglas, asi que no puede leerse distinto segun por
+        // cual de las dos pantallas se registre.
+        var violaciones = data.rule_violations || [];
+        if (violaciones.length > 0) {
+          Swal.fire({
+            icon: "warning",
+            title: isEdit ? "Gasto actualizado, pero no queda aprobado" : "Gasto creado, pero no queda aprobado",
+            html: "<p>Incumple " + (violaciones.length === 1 ? "una regla de gasto" : violaciones.length + " reglas de gasto") + ":</p>" +
+                  "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
+                  violaciones.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
+                  "</ul>",
+            confirmButtonColor: "#2a3f53",
+            confirmButtonText: "Entendido",
+          });
+          return;
+        }
+
         Swal.fire({ position: "center", icon: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
       })
       .catch(function() {

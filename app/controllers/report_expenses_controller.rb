@@ -126,6 +126,12 @@ class ReportExpensesController < ApplicationController
                success: "El Registro fue creado con exito!",
                register: ActiveModelSerializers::SerializableResource.new(result.value, each_serializer: ReportExpenseSerializer),
                type: "success",
+               # AL NIVEL DE LA RESPUESTA Y NO DENTRO DE `register`: no es un
+               # atributo del gasto que la tabla pinte, es el resultado de ESTE
+               # guardado. Meterlo en ReportExpenseSerializer obligaria, por el
+               # invariante #7, a arrastrar un jsonb hasta el Excel de export y
+               # el mapeo del import, donde no significa nada.
+               rule_violations: reglas_incumplidas(result.value),
              }
     else
       render :json => {
@@ -187,6 +193,7 @@ class ReportExpensesController < ApplicationController
                success: "El Registro fue actualizado con exito!",
                register: ActiveModelSerializers::SerializableResource.new(result.value, each_serializer: ReportExpenseSerializer),
                type: "success",
+               rule_violations: reglas_incumplidas(result.value),
              }
     else
       render :json => {
@@ -318,9 +325,22 @@ class ReportExpensesController < ApplicationController
     result = ReceiptExtractionService.extract(params[:file], cost_center_code: center&.code)
     return render json: { type: "error", message: [result.error_message] } unless result.ok?
 
+    # LA EXTRACCION YA NO EVALUA REGLAS (decision de producto, 2026-08-29). Era
+    # el momento equivocado por dos motivos:
+    #
+    #   1. Un gasto escrito A MANO no pasa por aqui, asi que las reglas solo se
+    #      veian si ademas se usaba la lectura del comprobante. Las dos formas de
+    #      crear un gasto mostraban cosas distintas.
+    #   2. En este punto todavia no se eligio responsable, asi que se evaluaban
+    #      las reglas de `current_user` —quien captura— y no las de la persona por
+    #      la que responde el gasto. Con reglas asignadas por persona, eso puede
+    #      dar un resultado distinto del real.
+    #
+    # Las reglas se evaluan y se informan al GUARDAR, que es el unico punto por
+    # el que pasan los dos caminos y donde ya se conoce el responsable.
     fields, warnings = build_extraction_draft(result)
     render json: { type: "success", fields: fields, confidence: result.confidence,
-                   warnings: warnings, rule_violations: extraction_rule_violations(fields) }
+                   warnings: warnings }
   end
 
   def upload_file
@@ -464,6 +484,16 @@ class ReportExpensesController < ApplicationController
     @_is_admin ||= current_user.rol.name == "Administrador"
   end
 
+  # Las violaciones que dejo el `before_save` del modelo, en el formato plano que
+  # consume el formulario. Es LECTURA: no vuelve a evaluar nada, porque
+  # `apply_expense_rules` ya lo hizo sobre el objeto que se guardo. Reevaluar
+  # aqui podria dar un resultado distinto del que quedo en la base.
+  def reglas_incumplidas(expense)
+    Array(expense&.rule_violations).map do |v|
+      { code: v["code"] || v[:code], message: v["message"] || v[:message] }
+    end
+  end
+
   def report_expense_find
     @report_expense = ReportExpense.find(params[:id])
   end
@@ -558,24 +588,6 @@ class ReportExpensesController < ApplicationController
     warnings << "La tasa aplicada es la del #{tasa.rate_date} (último día hábil disponible)"
   end
 
-  # Reglas evaluadas sobre un BORRADOR jamas guardado (ReportExpense.new no
-  # corre callbacks). El sujeto es current_user como aproximacion: al extraer
-  # aun no se eligio responsable. `blocking: false` siempre — aqui las
-  # violaciones INFORMAN; la puerta real corre al guardar.
-  def extraction_rule_violations(fields)
-    borrador = ReportExpense.new(
-      invoice_date:   fields[:invoice_date],
-      invoice_number: fields[:invoice_number],
-      identification: fields[:identification],
-      invoice_total:  fields[:invoice_total]
-    )
-    resultado = ExpenseRuleService.validate(borrador, user: current_user)
-    resultado.value[:violations].map { |v| { rule: v[:code], message: v[:message], blocking: false } }
-  rescue StandardError => e
-    # Un fallo del motor de reglas no puede tumbar la extraccion que si sirvio.
-    Rails.logger.error("[extract_receipt] reglas: #{e.class}: #{e.message}")
-    []
-  end
 
   def monto_float(monto)
     monto.present? ? monto.round(2).to_f : nil

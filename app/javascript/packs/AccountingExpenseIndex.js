@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable } from "../generalcomponents/ui";
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber } from "../generalcomponents/expenseIndicators";
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon } from "../generalcomponents/expenseIndicators";
 
 // Pantalla de Contabilidad (paquete 09, bloque 4). El backend completo —las
 // cinco rutas, `@estados` y el tope de la aprobacion masiva— es del paquete 06:
@@ -55,6 +55,20 @@ var selectStyles = {
   },
   menuPortal: function(base) { return Object.assign({}, base, { zIndex: 9999 }); },
 };
+
+// Columnas que NO se pintan hoy, por decision de producto (2026-08-29).
+//
+// Se ocultan aqui en vez de borrarse —peticion explicita: "escondelas por si en
+// algun momento las necesitamos"—: el dato sigue existiendo de punta a punta (el
+// servicio lo calcula, el serializer lo emite, el filtro de la pantalla lo usa y
+// el `!` del estado lo lee), y volver a mostrarlas es quitar la clave de este
+// objeto, no reescribir un render.
+//
+// `budget_status` deja de ser columna porque su senal se mudo al `!` que
+// acompaña al estado del gasto: la pildora repetia en una tercera columna algo
+// que el icono dice sin ocupar 170px, y el motivo —que antes no se leia en
+// ninguna parte— ahora vive en su tooltip.
+var COLUMNAS_OCULTAS = { budget_status: true };
 
 class AccountingExpenseIndex extends React.Component {
   constructor(props) {
@@ -108,44 +122,25 @@ class AccountingExpenseIndex extends React.Component {
     // TODAS las columnas se declaran AQUI, en el constructor: CmDataTable
     // congela `visibleColumns` en el suyo y no lo resincroniza nunca, asi que
     // una columna armada despues del mount no se pinta y nada lo avisa.
+    //
+    // EL ORDEN ES EL MISMO DE LA TABLA DE GASTOS (commit 21f86f3) y por el mismo
+    // motivo: la tabla mide mas que el viewport, asi que lo unico que se decide
+    // aqui es que se ve sin arrastrar la barra. Antes el Total caia en la
+    // posicion 14 —detras del NIT, la factura, el tipo, el medio de pago y la
+    // moneda— y "Contabilidad", que es la columna por la que se entra a esta
+    // pantalla, quedaba de ultima. Ahora las ocho primeras caben en una pantalla
+    // y detras queda el detalle de la factura.
     this.columns = [
       { key: "id", label: "ID", width: "80px", render: function(row) {
         return React.createElement("span", { "data-testid": "accounting-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id);
       }},
+      { key: "invoice_date", label: "Fecha de factura", width: "120px" },
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
       { key: "user_invoice_name", label: "Responsable", width: "150px", render: function(row) { return row.user_invoice ? row.user_invoice.names : ""; } },
-      { key: "invoice_date", label: "Fecha de factura", width: "120px" },
       { key: "invoice_name", label: "Nombre", width: "200px" },
-      { key: "identification", label: "NIT / CEDULA", width: "120px" },
-      { key: "invoice_number", label: "#Factura", width: "140px" },
-      // type_name y payment_name van con sortable: false porque no estan en
-      // AccountingExpensesController::SORT_COLUMNS. El indice de Gastos si las
-      // marca sortable y es un bug preexistente (ordena por invoice_date en
-      // silencio); no se replica.
-      { key: "type_name", label: "Tipo", width: "160px", sortable: false, render: function(row) { return row.type_identification ? row.type_identification.name : ""; } },
-      { key: "payment_name", label: "Medio de pago", width: "150px", sortable: false, render: function(row) { return row.payment_type ? row.payment_type.name : ""; } },
-      { key: "currency", label: "Moneda", width: "90px", render: function(row) {
-        return React.createElement("span", { "data-testid": "expense-currency-" + row.id }, row.currency || "COP");
-      }},
-      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: function(row) {
-        var total = toNumber(row.foreign_total);
-        if (row.currency === "COP" || total === null) return "—";
-
-        var rate = toNumber(row.exchange_rate);
-        return React.createElement("span", null,
-          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, suffix: " " + row.currency }),
-          rate !== null
-            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
-                "TRM ",
-                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true }))
-            : null
-        );
-      }},
       // decimalScale: 2 — mismo motivo que en la tabla de Gastos: las columnas de
       // dinero son `float` y hay ruido de coma flotante guardado en la base. Aqui
       // importa mas todavia: esta pantalla es la que contabilidad exporta.
-      { key: "invoice_value", label: "Valor (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
-      { key: "invoice_tax", label: "IVA (COP)", width: "110px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
       { key: "invoice_total", label: "Total (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_total, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
       // sortable: false. La especificacion pedia sortable aqui, pero
       // AccountingExpensesController::SORT_COLUMNS —ya mergeado, y de otro
@@ -153,7 +148,17 @@ class AccountingExpenseIndex extends React.Component {
       // cayera al orden por defecto mientras la flecha del header cambia igual.
       // Se prefiere no ofrecer el orden a ofrecerlo mintiendo. (El indice de
       // Gastos SI lo ordena: alli EXPENSE_SORT_COLUMNS si lo lista.)
-      { key: "budget_status", label: "Estado presupuestal", width: "190px", sortable: false, render: function(row) {
+      //
+      // A DIFERENCIA DE GASTOS, esta columna NO se oculta: alla es un adorno
+      // (COLUMNAS_OCULTAS) y aqui es lo que califica la cifra de al lado, ademas
+      // de ser uno de los filtros de la pantalla.
+      //
+      // 170px y no 190: son 20px que se le devuelven a "Contabilidad", que es la
+      // columna por la que se entra a esta pantalla y que a 190 empezaba fuera del
+      // viewport. No se baja mas: a 150 —el ancho que ocupa `is_acepted` en la
+      // septima posicion de Gastos— la pildora "Sin presupuesto" parte en dos
+      // lineas y la fila entera crece.
+      { key: "budget_status", label: "Estado presupuestal", width: "170px", sortable: false, render: function(row) {
         var badge = budgetStatusBadge(row.budget_status);
         return React.createElement("div", { "data-testid": "expense-budget-status-" + row.id },
           React.createElement("span", { className: badge.className }, badge.label),
@@ -164,13 +169,25 @@ class AccountingExpenseIndex extends React.Component {
         );
       }},
       // Badge de SOLO LECTURA, sin lapiz: cambiar `is_acepted` es del modulo de
-      // Gastos. Aqui es contexto para decidir la aprobacion contable, no una
-      // accion (invariante #1: `is_acepted` no se reutiliza para nada nuevo).
-      { key: "is_acepted", label: "Estado operativo", width: "140px", render: function(row) {
-        var badgeStyle = row.is_acepted
-          ? { background: "#d4edda", color: "#155724", padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "500" }
-          : { background: "#e9ecef", color: "#6c757d", padding: "4px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: "500" };
-        return React.createElement("span", { style: badgeStyle }, row.is_acepted ? "Aceptado" : "Creado");
+      // Gastos. Aqui es contexto para decidir la aprobacion contable.
+      //
+      // VUELVE A LA ZONA VISIBLE —ocupa la misma posicion que en Gastos— porque
+      // ya no es decoracion: lleva pegado el `!` del aviso presupuestal. En esta
+      // bandeja todas las filas dicen "Aceptado" (`filtered_scope` hace
+      // `where(is_acepted: true)`, accounting_expenses_controller.rb:213), asi
+      // que lo que aporta la columna es justamente el icono: marca el gasto que
+      // alguien acepto A MANO pese a estar excedido o sin presupuesto, que es el
+      // que contabilidad tiene que mirar dos veces antes de aprobar.
+      //
+      // Los 140px salen de la columna "Estado presupuestal", que quedo oculta.
+      { key: "is_acepted", label: "Estado", width: "140px", render: function(row) {
+        return React.createElement("div", { className: "cm-status-cell" },
+          React.createElement("span", {
+            className: "cm-status-pill" + (row.is_acepted ? " cm-status-pill--ok" : ""),
+            "data-testid": "expense-status-" + row.id,
+          }, row.is_acepted ? "Aceptado" : "Creado"),
+          budgetWarningIcon(row)
+        );
       }},
       { key: "accounting_approved", label: "Contabilidad", width: "180px", render: function(row) {
         var badge = accountingBadge(row.accounting_approved);
@@ -182,7 +199,41 @@ class AccountingExpenseIndex extends React.Component {
             : null
         );
       }},
-    ];
+
+      // --- A partir de aqui hay que arrastrar la barra: detalle de la factura y
+      // --- desglose del monto. Se consulta cuando ya se encontro la fila, no
+      // --- para encontrarla.
+      // type_name y payment_name van con sortable: false porque no estan en
+      // AccountingExpensesController::SORT_COLUMNS. El indice de Gastos si las
+      // marca sortable y es un bug preexistente (ordena por invoice_date en
+      // silencio); no se replica.
+      { key: "type_name", label: "Tipo", width: "160px", sortable: false, render: function(row) { return row.type_identification ? row.type_identification.name : ""; } },
+      { key: "payment_name", label: "Medio de pago", width: "150px", sortable: false, render: function(row) { return row.payment_type ? row.payment_type.name : ""; } },
+      { key: "invoice_value", label: "Valor (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
+      { key: "invoice_tax", label: "IVA (COP)", width: "110px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_tax, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
+      { key: "currency", label: "Moneda", width: "90px", render: function(row) {
+        return React.createElement("span", { "data-testid": "expense-currency-" + row.id }, row.currency || "COP");
+      }},
+      // Los decimalScale faltaban aqui: el commit f2931be los anuncio para las dos
+      // tablas —2 para el dinero, 6 para la TRM, que es la precision con que se
+      // guarda— y solo llego a la de Gastos.
+      { key: "foreign_total", label: "Valor extranjero", width: "150px", sortable: false, render: function(row) {
+        var total = toNumber(row.foreign_total);
+        if (row.currency === "COP" || total === null) return "—";
+
+        var rate = toNumber(row.exchange_rate);
+        return React.createElement("span", null,
+          React.createElement(NumberFormat, { value: total, displayType: "text", thousandSeparator: true, decimalScale: 2, suffix: " " + row.currency }),
+          rate !== null
+            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
+                "TRM ",
+                React.createElement(NumberFormat, { value: rate, displayType: "text", thousandSeparator: true, decimalScale: 6 }))
+            : null
+        );
+      }},
+      { key: "identification", label: "NIT / CEDULA", width: "120px" },
+      { key: "invoice_number", label: "#Factura", width: "140px" },
+    ].filter(function(c) { return !COLUMNAS_OCULTAS[c.key]; });
   }
 
   componentDidMount() {

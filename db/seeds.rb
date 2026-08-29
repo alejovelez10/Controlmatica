@@ -203,30 +203,8 @@ puts "✓ #{CostCenter.count} centros de costo creados."
 
 puts "Creando tipos de gastos..."
 
-expense_types = [
-  { name: "Transporte terrestre", category: "Tipo" },
-  { name: "Transporte aéreo", category: "Tipo" },
-  { name: "Hospedaje", category: "Tipo" },
-  { name: "Alimentación", category: "Tipo" },
-  { name: "Peajes", category: "Tipo" },
-  { name: "Combustible", category: "Tipo" },
-  { name: "Parqueadero", category: "Tipo" },
-  { name: "Papelería", category: "Tipo" },
-  { name: "Herramientas", category: "Tipo" },
-  { name: "EPP", category: "Tipo" },
-  { name: "Efectivo", category: "Medio de pago" },
-  { name: "Tarjeta débito", category: "Medio de pago" },
-  { name: "Tarjeta crédito", category: "Medio de pago" },
-  { name: "Transferencia", category: "Medio de pago" },
-  { name: "Caja menor", category: "Medio de pago" },
-]
-
-expense_records = expense_types.map do |et|
-  et.merge(user_id: 1, created_at: Time.now, updated_at: Time.now)
-end
-
-ReportExpenseOption.insert_all(expense_records)
-puts "✓ #{ReportExpenseOption.count} tipos de gastos creados."
+require_relative "seeds/report_expense_options"
+seed_report_expense_options!
 
 # ============================================
 # Seed: Ordenes de Compra (SalesOrder)

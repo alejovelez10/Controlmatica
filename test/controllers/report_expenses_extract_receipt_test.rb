@@ -120,7 +120,8 @@ class ReportExpensesExtractReceiptTest < ActionDispatch::IntegrationTest
       assert_nil fields["foreign_value"]
       assert_nil fields["exchange_rate"]
       assert_equal [], body["warnings"]
-      assert_equal [], body["rule_violations"]
+      # Sin `rule_violations`: la extraccion ya no evalua reglas (ver abajo).
+      refute body.key?("rule_violations")
       assert_kind_of Hash, body["confidence"]
     end
   end
@@ -226,7 +227,18 @@ class ReportExpensesExtractReceiptTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "un duplicado se informa en rule_violations sin bloquear" do
+  # LA EXTRACCION YA NO EVALUA REGLAS (decision de producto, 2026-08-29). Esta
+  # prueba afirmaba que un duplicado se informaba aqui; ahora afirma lo
+  # contrario, que es el punto: era el momento equivocado.
+  #
+  #   1. Un gasto escrito A MANO no pasa por este endpoint, asi que las reglas
+  #      solo se veian si ademas se usaba la lectura del comprobante.
+  #   2. Aqui todavia no hay responsable elegido, asi que se evaluaban las reglas
+  #      de quien captura y no las de la persona por la que responde el gasto.
+  #
+  # La cobertura no se pierde: el duplicado se prueba al GUARDAR, en
+  # report_expenses_budget_wiring_test.rb ("regla de DUPLICADOS...").
+  test "la extraccion no evalua reglas ni aunque el gasto sea un duplicado" do
     sign_in_as(@admin)
 
     as_user(@admin) do
@@ -244,12 +256,8 @@ class ReportExpensesExtractReceiptTest < ActionDispatch::IntegrationTest
     with_fake_extractor(payload_modelo) do
       post_extraccion
 
-      violaciones = json_body["rule_violations"]
-
-      assert_equal 1, violaciones.size, "body: #{response.body[0, 400]}"
-      assert_equal ExpenseRuleService::CODE_DUPLICATE, violaciones.first["rule"]
-      assert_equal false, violaciones.first["blocking"]
-      assert_includes violaciones.first["message"], "Ya existe el gasto"
+      refute json_body.key?("rule_violations"),
+             "la extraccion no debe devolver reglas: body #{response.body[0, 300]}"
     end
   end
 

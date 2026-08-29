@@ -13,7 +13,7 @@ module Mcp
     # 15 minutos: suficiente para un adjunto de WhatsApp con mala señal, corto
     # para una URL que da permiso de escritura en el bucket.
     TTL_SECONDS = 900
-    MAX_BYTES   = 10 * 1024 * 1024
+    MAX_BYTES   = 20 * 1024 * 1024
 
     # Los nombres de ENV son los del initializer de CarrierWave de este proyecto
     # (AWS_ACCESS_KEY / AWS_SECRET_KEY), NO los canónicos de AWS.

@@ -423,9 +423,9 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
     end
   end
 
-  # El archivo de 6 MB NO se commitea (7.12): se genera y se borra en el propio
+  # El archivo grande NO se commitea (7.12): se genera y se borra en el propio
   # test.
-  test "un archivo de mas de 5 MB se rechaza sin llamar al modelo" do
+  test "un archivo de mas de 20 MB se rechaza sin llamar al modelo" do
     @grande = Tempfile.new(["comprobante_gigante", ".jpg"])
     @grande.binmode
     @grande.write("0" * (ReceiptExtractionService::MAX_BYTES + 1))

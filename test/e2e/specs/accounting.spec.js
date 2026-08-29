@@ -60,18 +60,23 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
     reseedE2E("ACC");
   });
 
-  test("la bandeja de contabilidad no muestra los gastos excedidos", async ({ page }) => {
+  // LA REGLA SE INVIRTIO (2026-08-29). Esta prueba se llamaba "no muestra los
+  // gastos excedidos" y afirmaba total 11 y `toHaveCount(0)` sobre el excedido.
+  // El recorte por estado presupuestal se retiro: a contabilidad llega todo lo
+  // que esta aceptado operativamente, exceso incluido, porque ese es justamente
+  // el gasto que hay que mirar y la factura hay que pagarla igual.
+  test("la bandeja de contabilidad muestra tambien los gastos excedidos", async ({ page }) => {
     await abrirBandeja(page);
     await filtrarPorCentro(page);
     const { body } = await aplicarFiltros(page);
 
-    // 12 sembrados - 1 excedido.
-    expect(body.total).toBe(11);
-    expect(body.data.every((e) => e.budget_status !== "excedido")).toBeTruthy();
-    await expect(page.getByTestId(`accounting-ref-${expense("ACC_EXCEDIDO")}`)).toHaveCount(0);
+    // Los 12 sembrados: ninguno se recorta por presupuesto.
+    expect(body.total).toBe(12);
+    expect(body.data.some((e) => e.budget_status === "excedido")).toBeTruthy();
+    await expect(page.getByTestId(`accounting-ref-${expense("ACC_EXCEDIDO")}`)).toHaveCount(1);
 
-    // REFUERZO IMPRESCINDIBLE: que no aparezca en la primera pagina no prueba
-    // que este excluido. Que no aparezca BUSCANDOLO por su numero, si.
+    // REFUERZO: que salga en la primera pagina podria ser casualidad del orden.
+    // Que salga BUSCANDOLO por su numero prueba que esta en la base de la vista.
     const [busqueda] = await Promise.all([
       page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.url().includes("q=FE-E2E-ACC-012")),
       (async () => {
@@ -80,8 +85,7 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
       })(),
     ]);
 
-    expect((await busqueda.json()).total).toBe(0);
-    await expect(page.locator(".cm-dt-empty")).toBeVisible();
+    expect((await busqueda.json()).total).toBe(1);
   });
 
   test("aprueba en masa el filtro y los aprobados salen de la bandeja de pendientes", async ({ page }) => {
@@ -91,7 +95,7 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
 
     // 10 por pagina y no 50: el boton "aprobar los N del filtro completo" solo
     // se pinta cuando la pagina entera esta seleccionada Y el filtro tiene MAS
-    // registros que la pagina. Con las 11 filas en una sola pagina no habria
+    // registros que la pagina. Con las 12 filas en una sola pagina no habria
     // nada que distinguir entre "la seleccion" y "el filtro", que es justo lo
     // que este test separa.
     await aplicarFiltros(page);
@@ -115,18 +119,20 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
     expect(req.method()).toBe("PATCH");
     const body = await res.json();
     expect(body.type).toBe("success");
-    expect(body.count).toBe(11);
-    await expect(page.locator(".swal2-title")).toContainText("11");
+    // 12 y no 11: el excedido ya no se salta. Antes el masivo lo excluia en
+    // silencio, que era ademas incoherente con el boton "Aprobar" de la fila.
+    expect(body.count).toBe(12);
+    await expect(page.locator(".swal2-title")).toContainText("12");
 
     // La mitad que de verdad falla en integracion: la bandeja de pendientes
     // queda VACIA tras el refresco automatico.
     await expect(page.getByTestId("cm-datatable-row")).toHaveCount(0);
     await expect(page.locator(".cm-dt-empty")).toBeVisible();
 
-    // Y al pedir los aprobados vuelven los 11, con quien aprobo.
+    // Y al pedir los aprobados vuelven los 12, con quien aprobo.
     await page.getByTestId("accounting-filter-approved").selectOption("true");
     const aprobados = await aplicarFiltros(page);
-    expect(aprobados.body.total).toBe(11);
+    expect(aprobados.body.total).toBe(12);
 
     const primero = aprobados.body.data[0].id;
     await expect(page.getByTestId(`accounting-status-${primero}`)).toContainText("Aprobado");
@@ -134,20 +140,27 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
     // `names` es "Ingeniero" (la columna pinta names, no el correo).
     await expect(page.getByTestId(`accounting-status-${primero}`)).toContainText("Ingeniero");
 
-    // REGLA DE NEGOCIO 2.3: el excedido SIGUE sin aprobar y el servidor se niega
-    // a aprobarlo aunque se le pida directamente.
-    const sinExcedido = await page.request.get(
+    // LA REGLA SE INVIRTIO (2026-08-29). Este bloque afirmaba lo contrario: que
+    // el excedido quedaba sin aprobar y que el servidor RECHAZABA aprobarlo
+    // ("No se puede aprobar contablemente un gasto que excede el presupuesto").
+    // Ese candado se retiro: el exceso es informacion para quien decide, no una
+    // prohibicion. Se conserva la prueba invertida para que no vuelva solo.
+    const conExcedido = await page.request.get(
       `${ENDPOINT}?cost_center_id=${cc("ACC")}&accounting_approved=true&per_page=100`
     );
-    const idsAprobados = (await sinExcedido.json()).data.map((e) => e.id);
-    expect(idsAprobados).not.toContain(expense("ACC_EXCEDIDO"));
+    const idsAprobados = (await conExcedido.json()).data.map((e) => e.id);
+    expect(idsAprobados).toContain(expense("ACC_EXCEDIDO"));
 
-    const rechazo = await page.request.patch(
+    // Y aprobarlo directamente tampoco se rechaza. Se desaprueba primero para
+    // que el PATCH pruebe la transicion y no un no-op sobre algo ya aprobado.
+    await page.request.patch(`/update_accounting_state/${expense("ACC_EXCEDIDO")}/false`);
+    const aceptado = await page.request.patch(
       `/update_accounting_state/${expense("ACC_EXCEDIDO")}/true`
     );
-    const cuerpo = await rechazo.json();
-    expect(cuerpo.type).toBe("error");
-    expect(cuerpo.message[0]).toContain("excede el presupuesto");
+    const cuerpo = await aceptado.json();
+    expect(cuerpo.type).toBe("success");
+    // El exceso NO se borra al aprobar: sigue ahi para el historico.
+    expect(cuerpo.register.budget_status).toBe("excedido");
   });
 
   test("la aprobacion masiva sin ningun filtro se rechaza y no toca la base", async ({ page }) => {
@@ -229,7 +242,7 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
     await page.getByTestId("accounting-filter-approved").selectOption("false");
     const pendientes = await aplicarFiltros(page);
 
-    expect(pendientes.body.total).toBe(11);
+    expect(pendientes.body.total).toBe(12);
     await expect(page.getByTestId(`accounting-ref-${id}`)).toBeVisible();
   });
 
@@ -248,10 +261,10 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
     });
 
     const filas = await page.getByTestId("cm-datatable-row").count();
-    expect(filas).toBe(11);
+    expect(filas).toBe(12);
 
     await page.getByTestId("cm-dt-select-all").check();
-    await expect(page.getByTestId("accounting-selection-count")).toHaveText("11");
+    await expect(page.getByTestId("accounting-selection-count")).toHaveText("12");
 
     const [res] = await Promise.all([
       page.waitForResponse((r) => r.url().includes("/update_accounting_filter_values")),
@@ -263,10 +276,10 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
 
     const body = await res.json();
     expect(body.type).toBe("success");
-    expect(body.count).toBe(11);
+    expect(body.count).toBe(12);
 
     expect(peticiones.length).toBe(1);
-    expect((peticiones[0].match(/ids%5B%5D=|ids\[\]=/g) || []).length).toBe(11);
+    expect((peticiones[0].match(/ids%5B%5D=|ids\[\]=/g) || []).length).toBe(12);
   });
 
   test("los filtros de la bandeja se aplican y se limpian sin recargar la pagina", async ({ page }) => {
@@ -277,17 +290,24 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
     await filtrarPorCentro(page);
     const conFiltro = await aplicarFiltros(page);
     expect(conFiltro.url).toContain(`cost_center_id=${cc("ACC")}`);
-    expect(conFiltro.body.total).toBe(11);
+    expect(conFiltro.body.total).toBe(12);
 
     const [limpio] = await Promise.all([
       page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.status() === 200),
       page.getByTestId("accounting-filter-clear").click(),
     ]);
 
-    // Sin filtro de centro la bandeja trae ademas los gastos de los otros
-    // centros E2E, asi que el total solo puede ser MAYOR.
+    // Sin filtro de centro la bandeja trae, como minimo, lo mismo que traia con
+    // el: quitar un filtro no puede reducir el resultado.
+    //
+    // `toBeGreaterThanOrEqual` y no `toBeGreaterThan`: la asercion original
+    // asumia que los otros centros E2E aportan filas, y NO aportan ninguna
+    // —sus gastos no estan aceptados operativamente, que es el unico filtro que
+    // le queda a esta bandeja—, asi que el total sin filtro es exactamente 12.
+    // Estuvo mal desde que se escribio; nunca se noto porque un test anterior de
+    // la cadena serial abortaba la corrida antes de llegar aqui.
     expect(limpio.url()).not.toContain("cost_center_id=");
-    expect((await limpio.json()).total).toBeGreaterThan(11);
+    expect((await limpio.json()).total).toBeGreaterThanOrEqual(12);
 
     // Y nada de esto recargo la pagina.
     expect(navegaciones.length).toBe(0);
@@ -327,7 +347,7 @@ test.describe("Contabilidad — negativos de permisos y de render", () => {
 
     // Control positivo: la tabla TIENE datos. Sin esto, un 500 daria los mismos
     // toHaveCount(0) y el test pasaria por la razon equivocada.
-    expect(body.total).toBe(11);
+    expect(body.total).toBe(12);
     await expect(page.getByTestId(`accounting-ref-${body.data[0].id}`)).toBeVisible();
 
     await expect(page.locator(".cm-dt-select-header")).toHaveCount(0);

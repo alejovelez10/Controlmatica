@@ -43,7 +43,7 @@ class ReceiptExtractionService
   # Codigos que significan "sin configurar". Ver Result#not_configured?.
   NOT_CONFIGURED_ERRORS = %i[not_configured disabled].freeze
 
-  MAX_BYTES             = 5.megabytes
+  MAX_BYTES             = 20.megabytes
   SUPPORTED_IMAGE_TYPES = %w[image/jpeg image/png image/webp image/gif].freeze
   SUPPORTED_PDF_TYPE    = "application/pdf"
   SUPPORTED_TYPES       = (SUPPORTED_IMAGE_TYPES + [SUPPORTED_PDF_TYPE]).freeze
@@ -75,7 +75,7 @@ class ReceiptExtractionService
     not_configured:     "La lectura automatica de comprobantes no esta configurada. Complete los datos manualmente",
     disabled:           "La lectura automatica de comprobantes esta deshabilitada. Complete los datos manualmente",
     unsupported_format: "El formato del archivo no se puede leer automaticamente. Adjunte un JPG, PNG o PDF, o complete los datos manualmente",
-    too_large:          "El archivo supera los 5 MB permitidos para lectura automatica. Complete los datos manualmente",
+    too_large:          "El archivo supera los 20 MB permitidos para lectura automatica. Complete los datos manualmente",
     unreadable:         "No se pudo leer el comprobante. Complete los datos manualmente",
     not_an_invoice:     "El archivo adjunto no parece ser una factura o comprobante. Complete los datos manualmente",
     timeout:            "La lectura del comprobante tardo demasiado. Complete los datos manualmente",
@@ -240,7 +240,7 @@ class ReceiptExtractionService
   # de Excon (connect/read/write 60 s x retry_limit 5) una degradacion de S3
   # retendria un hilo de Puma VARIOS MINUTOS — con 5 hilos, cinco clicks en
   # "Extraer" congelan la app entera, incluido el registro manual que D.1
-  # promete no bloquear. El comprobante pesa <=5 MB: si S3 no responde en
+  # promete no bloquear. El comprobante pesa <=20 MB: si S3 no responde en
   # segundos, se aborta y la persona captura a mano.
   S3_CONNECTION_OPTIONS = {
     connect_timeout: 2, read_timeout: 5, write_timeout: 5,

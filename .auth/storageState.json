@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "_graph_app_session",
+      "value": "6b88b012247bbcf628f519c421f86b88",
+      "domain": "127.0.0.1",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

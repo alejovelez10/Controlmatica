@@ -32,10 +32,16 @@ class ReportExpenseAccountingTest < ActiveSupport::TestCase
     end
   end
 
-  test "accounting_visible excluye excedido" do
+  # LA REGLA SE INVIRTIO (2026-08-29): el estado presupuestal ya no recorta la
+  # vista de Contabilidad. Antes esta prueba afirmaba `refute_includes`, y esa
+  # exclusion era justamente el problema: escondia de contabilidad el gasto que
+  # mas necesita mirar, y la plata hay que pagarla igual. El exceso se informa
+  # —`budget_reason` viaja en el JSON y el aviso de la tabla lo muestra—, no se
+  # esconde.
+  test "accounting_visible incluye tambien los excedidos" do
     excedido = crear_gasto(budget_status: "excedido")
 
-    refute_includes ReportExpense.accounting_visible, excedido
+    assert_includes ReportExpense.accounting_visible, excedido
   end
 
   test "accounting_visible incluye sin_presupuesto y aprobado" do
@@ -58,10 +64,12 @@ class ReportExpenseAccountingTest < ActiveSupport::TestCase
     assert_includes ReportExpense.accounting_visible, gasto
   end
 
-  test "accounting_pending tampoco incluye un excedido sin aprobar" do
+  # Contraparte de la anterior: un excedido sin aprobar es, precisamente, trabajo
+  # pendiente para contabilidad.
+  test "accounting_pending incluye un excedido sin aprobar" do
     excedido = crear_gasto(budget_status: "excedido")
 
-    refute_includes ReportExpense.accounting_pending, excedido
+    assert_includes ReportExpense.accounting_pending, excedido
   end
 
   test "accounting_state_label" do

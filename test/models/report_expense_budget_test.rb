@@ -86,6 +86,48 @@ class ReportExpenseBudgetTest < ActiveSupport::TestCase
 
   private
 
+  # --- Aceptacion automatica (before_create) ---------------------------------
+  #
+  # Cambia la semantica de `is_acepted`, que el invariante #1 del proyecto daba
+  # por intocable. Por eso las cuatro reglas se prueban una por una: es la parte
+  # del sistema donde una regresion silenciosa cambia QUIEN ve que gasto, porque
+  # `is_acepted` es lo unico que deja pasar un gasto a la bandeja de Contabilidad.
+
+  def test_un_gasto_aprobado_nace_aceptado
+    gasto = crear_gasto(ExpenseBudgetService::STATUS_APROBADO)
+
+    assert gasto.is_acepted, "el gasto que cabe en el presupuesto no deberia necesitar que nadie lo toque"
+  end
+
+  def test_un_gasto_excedido_nace_sin_aceptar
+    gasto = crear_gasto(ExpenseBudgetService::STATUS_EXCEDIDO)
+
+    assert_not gasto.is_acepted, "el gasto que se pasa tiene que quedar detenido hasta que alguien lo revise"
+  end
+
+  def test_un_gasto_sin_presupuesto_nace_sin_aceptar
+    gasto = crear_gasto(ExpenseBudgetService::STATUS_SIN_PRESUPUESTO)
+
+    assert_not gasto.is_acepted
+  end
+
+  # LA REGLA MAS FACIL DE ROMPER. El callback es `before_create` justamente para
+  # esto: el estado se sigue cambiando a mano desde el desplegable de la tabla, y
+  # en `before_save` cada guardado posterior lo devolveria a "Aceptado" solo. El
+  # usuario veria el desplegable rebotar sin explicacion.
+  def test_poner_en_creado_a_mano_un_gasto_aprobado_no_se_deshace_al_guardar
+    gasto = crear_gasto(ExpenseBudgetService::STATUS_APROBADO)
+    assert gasto.is_acepted
+
+    as_user(@admin) do
+      gasto.update!(is_acepted: false)
+      gasto.update!(invoice_name: "Otro nombre")
+    end
+
+    assert_not gasto.reload.is_acepted,
+               "el cambio manual de estado tiene que sobrevivir a los guardados siguientes"
+  end
+
   def nuevo_gasto(**overrides)
     ReportExpense.new({ user_id: @admin.id, cost_center_id: @centro.id,
                         user_invoice_id: @ingeniero.id, invoice_name: "Gasto",

@@ -294,31 +294,8 @@ puts "✓ #{Contact.count} contactos"
 
 puts "Creando tipos de gastos..."
 
-expense_types = [
-  { name: "Transporte terrestre", category: "Tipo" },
-  { name: "Transporte aéreo", category: "Tipo" },
-  { name: "Hospedaje", category: "Tipo" },
-  { name: "Alimentación", category: "Tipo" },
-  { name: "Peajes", category: "Tipo" },
-  { name: "Combustible", category: "Tipo" },
-  { name: "Parqueadero", category: "Tipo" },
-  { name: "Papelería", category: "Tipo" },
-  { name: "Herramientas", category: "Tipo" },
-  { name: "EPP", category: "Tipo" },
-  { name: "Efectivo", category: "Medio de pago" },
-  { name: "Tarjeta débito", category: "Medio de pago" },
-  { name: "Tarjeta crédito", category: "Medio de pago" },
-  { name: "Transferencia", category: "Medio de pago" },
-  { name: "Caja menor", category: "Medio de pago" },
-]
-
-expense_types.each do |et|
-  ReportExpenseOption.find_or_create_by!(name: et[:name]) do |r|
-    r.category = et[:category]
-    r.user_id = user_id
-  end
-end
-puts "✓ #{ReportExpenseOption.count} tipos de gastos"
+require_relative "seeds/report_expense_options"
+seed_report_expense_options!
 
 # ============================================
 # 7. CENTROS DE COSTO - 10,000
@@ -747,7 +724,8 @@ if existing_expenses < 5000
         invoice_tax: tax,
         invoice_total: valor + tax,
         invoice_type: ["Factura", "Cuenta de cobro", "Recibo"].sample,
-        payment_type: ["Efectivo", "Tarjeta", "Transferencia"].sample,
+        type_identification_id: pick_weighted(REPORT_EXPENSE_TYPE_WEIGHTS),
+        payment_type_id: pick_weighted(REPORT_EXPENSE_PAYMENT_WEIGHTS),
         description: ["Transporte a obra", "Hospedaje en proyecto", "Alimentación equipo",
                       "Peajes autopista", "Combustible vehículo", "Parqueadero",
                       "Papelería oficina", "EPP personal", "Herramientas"].sample,

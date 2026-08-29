@@ -70,10 +70,16 @@ class AccountingExpensesController < ApplicationController
     expense = ReportExpense.find(params[:id])
     approve = params[:state].to_s == "true"
 
-    if approve && expense.budget_status == "excedido"
-      return render json: { success: "¡Ocurrió un error!", type: "error",
-                            message: ["No se puede aprobar contablemente un gasto que excede el presupuesto"] }
-    end
+    # AQUI HABIA UN CANDADO: un gasto excedido no se podia aprobar contablemente.
+    # Se retira por decision de producto (2026-08-29). El razonamiento del dueño
+    # del producto: "eso lo puede aprobar alguien" —el exceso presupuestal es
+    # informacion para quien decide, no una prohibicion—. La factura existe y hay
+    # que pagarla; negar la aprobacion no la hacia desaparecer, solo dejaba al
+    # contador sin forma de cerrar el gasto y sin explicacion en pantalla.
+    #
+    # El exceso se sigue viendo: `budget_status` y `budget_reason` viajan en el
+    # JSON y el aviso de la tabla los muestra. Se informa, no se bloquea, que es
+    # la misma regla que ya seguia el guardado del gasto.
 
     ok = expense.update(
       accounting_approved: approve,
@@ -109,8 +115,9 @@ class AccountingExpensesController < ApplicationController
                             message: ["Debe aplicar al menos un filtro antes de aprobar masivamente"] }
     end
 
-    # SIN `include_approved_exceeded`: la excepcion de lectura de la correccion
-    # 13 no puede abrir la puerta a aprobar un excedido.
+    # La aprobacion masiva alcanza lo mismo que ve la pantalla, excedidos
+    # incluidos: seria incoherente que el boton de "Aprobar" de una fila acepte
+    # un excedido y el masivo del mismo filtro lo salte en silencio.
     #
     # `.limit(MAX_BULK + 1)` detecta el desborde con UNA query sin traer 10.000
     # ids a memoria.
@@ -190,17 +197,12 @@ class AccountingExpensesController < ApplicationController
   # `include_approved_exceeded:` solo lo usan las LECTURAS. La aprobacion masiva
   # lo deja en false para no tocar NUNCA un excedido.
   def filtered_scope(include_approved_exceeded: false)
-    base = if include_approved_exceeded && params[:accounting_approved].to_s == "true"
-             # CORRECCION 13 / §2.3: un gasto ya aprobado por contabilidad que un
-             # recalculo posterior empujo a `excedido` sale de la vista por
-             # defecto, pero se recupera con el filtro "Aprobados por
-             # contabilidad". Si no, contabilidad pierde de vista algo que ella
-             # misma aprobo.
-             ReportExpense.where("report_expenses.budget_status <> ? OR report_expenses.accounting_approved = ?",
-                                 "excedido", true)
-           else
-             ReportExpense.accounting_visible
-           end
+    # `include_approved_exceeded` quedo SIN EFECTO y se conserva solo para no
+    # cambiarle la firma a los cuatro llamadores. Existia para recuperar los
+    # gastos que alguien aprobo y un recalculo posterior empujo a `excedido`,
+    # porque la vista los escondia; desde que `accounting_visible` no recorta por
+    # estado presupuestal no hay nada que recuperar: ya estaban todos.
+    base = ReportExpense.accounting_visible
 
     # CONTABILIDAD SOLO VE LO APROBADO OPERATIVAMENTE. `is_acepted` es la
     # aceptacion del responsable del gasto; hasta que ocurre, el gasto todavia se

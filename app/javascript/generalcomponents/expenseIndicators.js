@@ -2,10 +2,14 @@
 // Contabilidad (paquete 09, Tarea 1). DUEÑO UNICO: 09 (§7.2); el paquete 08 los
 // CONSUME desde `renderModal()` y `ExpensesTable.jsx` sin modificarlos.
 //
-// Cuatro funciones PURAS y sin JSX a proposito: este archivo lo importa tanto un
-// pack (`packs/ReportExpenseIndex.js`, `React.createElement` sin JSX) como un
-// `.jsx`. Si aqui hubiera JSX, el pack seguiria compilando pero cualquier futuro
-// consumidor sin loader de JSX no.
+// Funciones PURAS y sin JSX a proposito: este archivo lo importa tanto un pack
+// (`packs/ReportExpenseIndex.js`, `React.createElement` sin JSX) como un `.jsx`.
+// Si aqui hubiera JSX, el pack seguiria compilando pero cualquier futuro
+// consumidor sin loader de JSX no. `budgetWarningIcon` devuelve un elemento de
+// React, pero lo arma con `createElement`, que es justamente lo que la regla
+// permite: la restriccion es sobre la SINTAXIS, no sobre devolver markup.
+
+import React from "react";
 
 // Badge del estado presupuestal. Devuelve { label, className }.
 //
@@ -70,4 +74,75 @@ export function toNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   var n = Number(value);
   return isNaN(n) ? null : n;
+}
+
+// --- Aviso presupuestal --------------------------------------------------
+//
+// EL ESTADO PRESUPUESTAL YA NO ES UNA COLUMNA. Se decidio que la pildora
+// (Aprobado / Sin presupuesto / Excedido) no le aporta al usuario una tercera
+// columna de estado, asi que se oculta en las tres tablas y `budget_status`
+// pasa a manejar dos cosas invisibles: la aceptacion automatica del gasto
+// (`ReportExpense#auto_accept_if_within_budget`) y este aviso.
+//
+// EL AVISO ES EL UNICO SITIO DONDE SE PUEDE LEER `budget_reason`. Antes el
+// motivo se guardaba y no lo mostraba nadie: las tres tablas lo pintaban bajo
+// la condicion `budget_status === "excedido"`, de modo que el motivo de las
+// reglas de gasto —que deja el gasto en `sin_presupuesto`, no en `excedido`—
+// no se veia NUNCA, en ninguna pantalla. Aqui se muestra siempre que exista.
+//
+// => String con el motivo, o null si el gasto esta aprobado y no hay nada que
+//    advertir.
+export function budgetWarning(row) {
+  if (!row) return null;
+
+  switch (row.budget_status) {
+    case "excedido":
+      // El fallback cubre la fila que quedo excedida antes de que el servicio
+      // escribiera motivos; hoy `budget_reason` siempre viene.
+      return row.budget_reason || "Se pasó del presupuesto asignado";
+    case "sin_presupuesto":
+      // DOS CAUSAS DISTINTAS bajo el mismo estado: no hay partida para el par
+      // (centro, responsable), o el gasto incumplio una regla y
+      // `apply_expense_rules` lo bajo de `aprobado`. Se distinguen por si hay
+      // motivo escrito: solo el segundo caso lo trae.
+      return row.budget_reason || "No tiene presupuesto asignado";
+    default:
+      // `aprobado`, y tambien null/undefined (dato anterior a la migracion del
+      // paquete 02). No se alarma por un dato viejo.
+      return null;
+  }
+}
+
+// El `!` que acompaña al estado del gasto. Devuelve null cuando no hay nada que
+// advertir, para que el llamador lo pueda meter directo en un array de hijos.
+//
+// Vive AQUI y no en cada tabla porque son tres pantallas —Gastos, la pestaña del
+// centro de costos y Contabilidad— y la senal tiene que leerse igual en las
+// tres. Esa fue exactamente la falla del motivo que este aviso viene a corregir.
+export function budgetWarningIcon(row) {
+  if (!row) return null;
+
+  // UN GASTO ACEPTADO NO LLEVA AVISO, aunque el motivo siga ahi. El triangulo
+  // responde "¿esto necesita que alguien lo mire?", y en cuanto el gasto esta
+  // aceptado —solo, porque cabia en el presupuesto, o a mano, porque una persona
+  // lo reviso y lo dio por bueno— la respuesta es no. Pintarlo igual producia
+  // filas que se contradicen a si mismas: "Aceptado" con una advertencia al
+  // lado, sin nada que hacer al respecto.
+  //
+  // El motivo NO se pierde: `budgetWarning` lo sigue devolviendo y
+  // `budget_reason` sigue en la base y en el JSON. Lo que se decide aqui es solo
+  // cuando vale la pena interrumpir al que lee la tabla.
+  if (row.is_acepted) return null;
+
+  var motivo = budgetWarning(row);
+  if (!motivo) return null;
+
+  return React.createElement("i", {
+    className: "fas fa-exclamation-triangle cm-warn-icon",
+    "data-tooltip": motivo,
+    // `title` ademas del tooltip de CSS: el ::after no existe para un lector de
+    // pantalla ni sobrevive a un scroll horizontal con overflow hidden.
+    title: motivo,
+    "data-testid": "expense-budget-warning-" + (row.id || ""),
+  });
 }

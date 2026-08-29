@@ -197,10 +197,37 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
     end
   end
 
+  # El gasto se pide con un valor que NO cabe en la partida, a proposito.
+  #
+  # Antes bastaba con crear el gasto normal y afirmar `false`, porque nada en el
+  # sistema ponia `is_acepted` en true. Desde que existe la aceptacion automatica
+  # (`ReportExpense#auto_accept_if_within_budget`) un gasto que cabe nace
+  # aceptado, y esa version del test pasaba a medir otra cosa: no distinguia "el
+  # argumento se ignoro" de "la regla de presupuesto lo acepto". Con un valor que
+  # se pasa del cupo, la regla dice NO y el unico que podria poner `true` es el
+  # argumento: si el assert falla, es porque el argumento colo.
   test "no se puede setear is_acepted desde los argumentos" do
     with_mcp_key do
-      res = crear({ actor_phone: "+57 300 123 4567" }, is_acepted: true)
-      assert_equal false, ReportExpense.find(tool_json(res)["id"]).is_acepted
+      res = crear({ actor_phone: "+57 300 123 4567" },
+                  is_acepted: true, invoice_value: 999_999_999, invoice_tax: 0,
+                  invoice_total: 999_999_999)
+      gasto = ReportExpense.find(tool_json(res)["id"])
+
+      assert_equal ExpenseBudgetService::STATUS_EXCEDIDO, gasto.budget_status,
+                   "el gasto tenia que quedar excedido para que este test mida lo que dice medir"
+      assert_equal false, gasto.is_acepted
+    end
+  end
+
+  # La contraparte del anterior: sin pasar `is_acepted` por argumento, un gasto
+  # que SI cabe nace aceptado solo.
+  test "un gasto que cabe en el presupuesto nace aceptado sin que nadie lo toque" do
+    with_mcp_key do
+      res = crear({ actor_phone: "+57 300 123 4567" })
+      gasto = ReportExpense.find(tool_json(res)["id"])
+
+      assert_equal ExpenseBudgetService::STATUS_APROBADO, gasto.budget_status
+      assert gasto.is_acepted, "un gasto aprobado presupuestalmente debe nacer aceptado"
     end
   end
 

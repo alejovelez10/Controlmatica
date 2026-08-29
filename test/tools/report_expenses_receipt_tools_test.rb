@@ -98,9 +98,9 @@ class ReportExpensesReceiptToolsTest < ActiveSupport::TestCase
     end
   end
 
-  test "url_get rechaza un tamano mayor a 10 MB" do
+  test "url_get rechaza un tamano mayor a 20 MB" do
     con_s3 do
-      with_mcp_key { assert_tool_error url_get(byte_size: 11_000_000), "10 MB" }
+      with_mcp_key { assert_tool_error url_get(byte_size: 21_000_000), "20 MB" }
     end
   end
 
@@ -152,9 +152,9 @@ class ReportExpensesReceiptToolsTest < ActiveSupport::TestCase
   end
 
   test "attach con un archivo mayor al maximo es rechazado" do
-    con_s3(head: { content_length: 11_000_000, content_type: "application/pdf" }) do
+    con_s3(head: { content_length: 21_000_000, content_type: "application/pdf" }) do
       with_mcp_key do
-        assert_tool_error adjuntar(upload_key: @key), "10 MB"
+        assert_tool_error adjuntar(upload_key: @key), "20 MB"
         assert_nil @gasto.reload.receipt_file.file
       end
     end
@@ -282,11 +282,11 @@ class ReportExpensesReceiptToolsTest < ActiveSupport::TestCase
     end
   end
 
-  test "attach por base64 rechaza mayor a 4 MB" do
+  test "attach por base64 rechaza mayor a 20 MB" do
     with_mcp_key do
-      assert_tool_error adjuntar(file_base64: "A" * (5 * 1024 * 1024), filename: "x.pdf",
+      assert_tool_error adjuntar(file_base64: "A" * (ReportExpensesAttachReceiptTool::MAX_BASE64_BYTES + 1), filename: "x.pdf",
                                  content_type: "application/pdf"),
-                        "4 MB"
+                        "20 MB"
     end
   end
 
@@ -440,14 +440,14 @@ class ReportExpensesReceiptToolsTest < ActiveSupport::TestCase
 
   # --- descargar_archivo_remoto (el privado de red, con HTTParty stubeado) --
 
-  test "descargar_archivo_remoto corta al superar el tope de 10 MB" do
+  test "descargar_archivo_remoto corta al superar el tope de 20 MB" do
     fragmento = FragmentoFake.new("A" * (Mcp::S3DirectUpload::MAX_BYTES + 1))
     fragmento.code = 200
 
     HTTParty.stub(:get, ->(*_a, **_k, &blk) { blk.call(fragmento) }) do
       r = ReportExpensesAttachReceiptTool.send(:descargar_archivo_remoto, URL_GCS)
       refute r[:ok]
-      assert_includes r[:error], "10 MB"
+      assert_includes r[:error], "20 MB"
     end
   end
 

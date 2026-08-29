@@ -84,10 +84,10 @@ class ReceiptUploaderTest < ActiveSupport::TestCase
     assert_includes gasto.errors[:receipt_file].join(" "), "No se permiten archivos de tipo"
   end
 
-  test "rechaza archivo mayor a 10 MB" do
+  test "rechaza archivo mayor a 20 MB" do
     gasto = crear_gasto
 
-    archivo_temporal("grande.pdf", 10.5.megabytes.to_i) do |tmp|
+    archivo_temporal("grande.pdf", 20.5.megabytes.to_i) do |tmp|
       gasto.receipt_file = Rack::Test::UploadedFile.new(tmp.path, "application/pdf",
                                                         original_filename: "grande.pdf")
       refute as_user(@actor) { gasto.save }

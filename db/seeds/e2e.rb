@@ -458,7 +458,12 @@ if centros_e2e["ACC"]
              end
     g.update_column(:budget_status, estado)
     g.update_column(:budget_reason, "Excede el presupuesto disponible en $200.000") if estado == "excedido"
-    g.update_column(:is_acepted, n.even?)
+    # LOS 12 ACEPTADOS OPERATIVAMENTE, no la mitad. `n.even?` dejaba 6, y como
+    # `AccountingExpensesController#filtered_scope` solo deja pasar los aceptados,
+    # la bandeja traia 5 o 6 filas mientras los specs del escenario 7 afirmaban
+    # 11 y seleccionaban 10: nunca pudieron pasar. Nada mas en la suite depende de
+    # que estos gastos alternen de estado (es el unico uso en todo el repo).
+    g.update_column(:is_acepted, true)
 
     acc_ids << g.id
   end

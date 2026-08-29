@@ -38,7 +38,7 @@ const ETIQUETAS_EXTRACCION = {
   description: "la descripción",
 };
 
-// Peso del comprobante. Se corta en MB porque el tope son 10 MB: no hay nada
+// Peso del comprobante. Se corta en MB porque el tope son 20 MB: no hay nada
 // que decir por encima de eso.
 function pesoLegible(bytes) {
   const n = Number(bytes);
@@ -68,7 +68,7 @@ class FormCreate extends Component {
 
   // --- Comprobante: seleccion y arrastre -------------------------------------
   //
-  // El padre sigue siendo el que valida (extension y 10 MB) y el que guarda el
+  // El padre sigue siendo el que valida (extension y 20 MB) y el que guarda el
   // File: aqui solo se le entrega el archivo con la forma que ya entiende,
   // `{ target: { files } }`, para no duplicar las validaciones ni por el
   // arrastre ni por el clic.
@@ -438,7 +438,7 @@ class FormCreate extends Component {
               <i className="fa fa-cloud-upload-alt cm-dropzone-icon"></i>
               <span className="cm-dropzone-title">Arrastre aquí su comprobante</span>
               <span className="cm-dropzone-hint">
-                o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 10 MB
+                o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 20 MB
               </span>
             </div>
           )}

@@ -1256,6 +1256,71 @@ select.cm-input {
 }
 
 /* ============================================
+   AVISO PRESUPUESTAL (el `!` al lado del estado)
+   ============================================
+   El estado presupuestal dejo de ser columna: la senal de que un gasto se paso
+   del presupuesto —o de que no tiene— es este icono al lado del estado
+   operativo, y su tooltip es el UNICO sitio de la aplicacion donde se lee
+   `budget_reason`.
+
+   Tooltip propio y no el de .cm-cell-truncate: aquel se posiciona contra una
+   celda de texto de 280px y aqui el ancla es un icono de 14px. */
+
+/* Contenedor del estado + su aviso. `inline-flex` y no `flex`: la celda no debe
+   estirarse al ancho de la columna, o el icono se despega de la pildora. */
+.cm-status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.cm-warn-icon {
+  position: relative;
+  color: #b8860b;
+  font-size: 13px;
+  cursor: help;
+  flex: 0 0 auto;
+}
+
+.cm-warn-icon[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  /* Anclado a la DERECHA del icono y no a la izquierda: la columna de estado
+     vive en el borde del viewport y un tooltip de 320px alineado a `left: 0`
+     se sale de la pantalla. */
+  right: 0;
+  /* SE ABRE HACIA ARRIBA, y esto no es una preferencia estetica. La tabla vive
+     dentro de un contenedor con `overflow-x: auto`, que recorta tambien en
+     vertical: con `top: 100%` el aviso de la ULTIMA fila se dibujaba fuera del
+     contenedor y quedaba cortado a la mitad —justo la fila donde mas se mira,
+     porque las tablas cortas tienen una sola pagina—. Hacia arriba siempre hay
+     contenido dentro del contenedor contra el que dibujarse: las filas
+     anteriores, o la cabecera si es la primera. */
+  bottom: 100%;
+  z-index: 9999;
+  background: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  font-family: inherit;
+  line-height: 1.4;
+  max-width: 320px;
+  width: max-content;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin-bottom: 6px;
+  pointer-events: none;
+}
+
+.cm-warn-icon[data-tooltip=""]:hover::after {
+  display: none;
+}
+
+/* ============================================
    FIELD HINT (copyable text below selects)
    ============================================ */
 

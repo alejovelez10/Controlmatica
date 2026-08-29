@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber } from "../generalcomponents/expenseIndicators";
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon } from "../generalcomponents/expenseIndicators";
 import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
@@ -65,12 +65,24 @@ var EMPTY_FORM = {
 // formularios de gasto de la plataforma son del mismo paquete y todo campo nuevo
 // va DOS veces; si uno se queda atras, el usuario ve columnas de moneda y estado
 // presupuestal que no puede llenar desde esta pantalla.
-var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [], violations: [] };
+// Sin `violations`: LAS REGLAS YA NO SE EVALUAN EN LA EXTRACCION. Se informan al
+// guardar, que es el unico punto por el que pasan tanto el gasto leido del
+// comprobante como el escrito a mano.
+// El mensaje de una regla lo escribe un administrador en la tabla de reglas y se
+// pinta con `html:` en SweetAlert, asi que se escapa. No es paranoia: el nombre
+// del proveedor y el numero de factura entran en el texto del duplicado.
+function escaparHtml(texto) {
+  return String(texto).replace(/[&<>"']/g, function(c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [] };
 var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
 var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
 
 var EXTENSIONES_COMPROBANTE = ["jpg", "jpeg", "png", "pdf", "webp", "heic"];
-var TAMANO_MAXIMO_COMPROBANTE = 10 * 1024 * 1024;
+var TAMANO_MAXIMO_COMPROBANTE = 20 * 1024 * 1024;
 
 // Nombres legibles de los campos que devuelve la extraccion. Son las claves DEL
 // SERVICIO (provider_name, value…), no las del formulario, porque asi llega la
@@ -89,7 +101,7 @@ var ETIQUETAS_EXTRACCION = {
 };
 
 // Peso del comprobante para la zona de arrastre. Se corta en MB porque el tope
-// son 10 MB: no hay nada que decir por encima de eso.
+// son 20 MB: no hay nada que decir por encima de eso.
 function pesoLegible(bytes) {
   var n = Number(bytes);
   if (!n || n <= 0) return "Archivo listo";
@@ -272,14 +284,24 @@ class ReportExpenseIndex extends React.Component {
         // Sin permiso de cierre el estado es SOLO LECTURA. Antes esto se notaba
         // porque no aparecia el lapiz; ahora hay que pintar la pildora, o el
         // usuario sin permiso veria un desplegable que el servidor le rechaza.
+        // EL `!` ACOMPAÑA AL ESTADO EN LAS DOS RAMAS. Es la senal de que el
+        // gasto se paso del presupuesto o no tiene partida, y su tooltip es el
+        // unico sitio donde se lee el motivo. Va envuelto en un flex para que
+        // el icono no empuje la pildora ni el desplegable.
+        var aviso = budgetWarningIcon(row);
+
         if (!props.estados.closed) {
-          return React.createElement("span", {
-            className: "cm-status-pill" + (row.is_acepted ? " cm-status-pill--ok" : ""),
-            "data-testid": "expense-status-" + row.id,
-          }, row.is_acepted ? "Aceptado" : "Creado");
+          return React.createElement("div", { className: "cm-status-cell" },
+            React.createElement("span", {
+              className: "cm-status-pill" + (row.is_acepted ? " cm-status-pill--ok" : ""),
+              "data-testid": "expense-status-" + row.id,
+            }, row.is_acepted ? "Aceptado" : "Creado"),
+            aviso
+          );
         }
 
-        return React.createElement("select", {
+        return React.createElement("div", { className: "cm-status-cell" },
+        React.createElement("select", {
           className: "cm-status-select" + (row.is_acepted ? " cm-status-select--ok" : ""),
           value: row.is_acepted ? "true" : "false",
           onChange: function(e) { self.updateStatus(e, row); },
@@ -290,6 +312,8 @@ class ReportExpenseIndex extends React.Component {
         },
           React.createElement("option", { value: "true" }, "Aceptado"),
           React.createElement("option", { value: "false" }, "Creado")
+        ),
+          aviso
         );
       }},
       { key: "accounting_approved", label: "Contabilidad", width: "170px", render: function(row) {
@@ -770,7 +794,7 @@ class ReportExpenseIndex extends React.Component {
       return;
     }
     if (file.size > TAMANO_MAXIMO_COMPROBANTE) {
-      this.setState(Object.assign({}, vacio, { receiptError: "El archivo supera los 10 MB permitidos." }));
+      this.setState(Object.assign({}, vacio, { receiptError: "El archivo supera los 20 MB permitidos." }));
       return;
     }
     this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null });
@@ -896,8 +920,7 @@ class ReportExpenseIndex extends React.Component {
         var newState = {
           form: f,
           extraction: { status: "done", message: null, filled: filled,
-                        confidence: d.confidence || {}, warnings: d.warnings || [],
-                        violations: d.rule_violations || [] },
+                        confidence: d.confidence || {}, warnings: d.warnings || [] },
         };
         if (f.currency && f.currency !== "COP") newState.selectedCurrency = self.currencyOption(f.currency);
         // NADA SE GUARDA SOLO: la extraccion precarga y la persona pulsa Guardar.
@@ -1005,6 +1028,29 @@ class ReportExpenseIndex extends React.Component {
         }
         self.setState({ modal: false, saving: false });
         self.loadData();
+
+        // LAS REGLAS SE INFORMAN AQUI. El gasto SE GUARDA igual —una violacion
+        // nunca impide registrar: bloquear a quien tiene la factura en la mano
+        // solo consigue que no la reporte—, pero queda SIN APROBAR, y hasta
+        // ahora eso ocurria en silencio: el usuario veia un toast verde de exito
+        // durante 1,5 segundos y nada mas.
+        //
+        // Sin `timer`: este mensaje hay que leerlo, no verlo pasar.
+        var violaciones = data.rule_violations || [];
+        if (violaciones.length > 0) {
+          Swal.fire({
+            icon: "warning",
+            title: isEdit ? "Gasto actualizado, pero no queda aprobado" : "Gasto creado, pero no queda aprobado",
+            html: "<p>Incumple " + (violaciones.length === 1 ? "una regla de gasto" : violaciones.length + " reglas de gasto") + ":</p>" +
+                  "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
+                  violaciones.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
+                  "</ul>",
+            confirmButtonColor: "#2a3f53",
+            confirmButtonText: "Entendido",
+          });
+          return;
+        }
+
         Swal.fire({ position: "center", icon: "success", title: data.success || (isEdit ? "Actualizado" : "Creado"), showConfirmButton: false, timer: 1500 });
       })
       .catch(function() {
@@ -1289,35 +1335,35 @@ class ReportExpenseIndex extends React.Component {
       React.createElement("div", { className: "cm-form-grid-2" },
         React.createElement("div", { className: "cm-form-group" },
           React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-money-bill" }), " Valor en " + f.currency),
+            "Valor en " + f.currency),
           React.createElement(NumberFormat, { name: "foreign_value", thousandSeparator: true, className: "cm-input",
             value: f.foreign_value || "", onChange: self.handleFormChangeForeignMoney, placeholder: "0",
             "data-testid": "expense-foreign-value" })
         ),
         React.createElement("div", { className: "cm-form-group" },
           React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-percent" }), " IVA en " + f.currency),
+            "IVA en " + f.currency),
           React.createElement(NumberFormat, { name: "foreign_tax", thousandSeparator: true, className: "cm-input",
             value: f.foreign_tax || "", onChange: self.handleFormChangeForeignMoney, placeholder: "0",
             "data-testid": "expense-foreign-tax" })
         ),
         React.createElement("div", { className: "cm-form-group" },
           React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-calculator" }), " Total en " + f.currency),
+            "Total en " + f.currency),
           React.createElement(NumberFormat, { thousandSeparator: true, className: "cm-input", disabled: true,
             style: { background: "#e9ecef" }, value: f.foreign_total || "",
             "data-testid": "expense-foreign-total" })
         ),
         React.createElement("div", { className: "cm-form-group" },
           React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-exchange-alt" }), " TRM"),
+            "TRM"),
           React.createElement(NumberFormat, { name: "exchange_rate", thousandSeparator: true, decimalScale: 6,
             className: "cm-input", value: f.exchange_rate || "", onChange: self.handleChangeRate, placeholder: "0",
             "data-testid": "expense-rate" })
         ),
         React.createElement("div", { className: "cm-form-group" },
           React.createElement("label", { className: "cm-label" },
-            React.createElement("i", { className: "fas fa-calendar-alt" }), " Fecha de la tasa"),
+            "Fecha de la tasa"),
           React.createElement("input", { type: "date", name: "exchange_rate_date", className: "cm-input",
             disabled: true, readOnly: true, style: { background: "#e9ecef" }, value: f.exchange_rate_date || "",
             "data-testid": "expense-rate-date" })
@@ -1326,7 +1372,7 @@ class ReportExpenseIndex extends React.Component {
           React.createElement("label", { className: "cm-label" }, " "),
           React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
             onClick: self.fetchExchangeRate, "data-testid": "expense-fetch-rate-btn" },
-            React.createElement("i", { className: "fa fa-sync" }), " Consultar TRM")
+            "Consultar TRM")
         )
       ),
 
@@ -1365,17 +1411,6 @@ class ReportExpenseIndex extends React.Component {
 
     (x.warnings || []).forEach(function(w, i) {
       avisos.push({ key: "w" + i, tono: "warn", texto: w });
-    });
-
-    // Una violacion blocking:true INFORMA pero no deshabilita Guardar: la puerta
-    // de bloqueo es del servidor.
-    (x.violations || []).forEach(function(v, i) {
-      avisos.push({
-        key: "v" + i,
-        tono: v.blocking ? "danger" : "warn",
-        texto: v.message || v.rule || "",
-        testid: "expense-rule-violation",
-      });
     });
 
     // SOLO la franja 0,60–0,80. Por debajo de 0,60 el servidor ya manda su
@@ -1448,7 +1483,7 @@ class ReportExpenseIndex extends React.Component {
 
     return React.createElement("div", { className: "cm-form-group", style: { marginTop: 12 } },
       React.createElement("label", { className: "cm-label" },
-        React.createElement("i", { className: "fas fa-paperclip" }), " Comprobante"),
+        "Comprobante"),
 
       // ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que en cada
       // navegador se pinta distinto ("Choose File" en ingles aunque la app este
@@ -1502,7 +1537,7 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("span", { className: "cm-dropzone-title" },
                 "Arrastre aquí su comprobante"),
               React.createElement("span", { className: "cm-dropzone-hint" },
-                "o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 10 MB"))
+                "o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 20 MB"))
       ),
 
       self.state.receiptExistingId
@@ -1598,9 +1633,6 @@ class ReportExpenseIndex extends React.Component {
       React.createElement("div", { className: "cm-modal-container" },
         React.createElement("div", { className: "cm-modal-header" },
           React.createElement("div", { className: "cm-modal-header-content" },
-            React.createElement("div", { className: "cm-modal-icon" },
-              React.createElement("i", { className: "fas fa-receipt" })
-            ),
             React.createElement("div", null,
               React.createElement("h2", { className: "cm-modal-title" }, title),
               React.createElement("p", { className: "cm-modal-subtitle" }, "Complete los campos para gestionar el gasto")
@@ -1618,8 +1650,7 @@ class ReportExpenseIndex extends React.Component {
               // react-select no propaga atributos sueltos al DOM.
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-building" }),
-                  " Centro de costo ", React.createElement("span", { className: "cm-hint" }, "(3 letras)")
+                  "Centro de costo ", React.createElement("span", { className: "cm-hint" }, "(3 letras)")
                 ),
                 React.createElement("div", { "data-testid": "expense-cost-center-select" },
                   React.createElement(Select, {
@@ -1642,8 +1673,7 @@ class ReportExpenseIndex extends React.Component {
               // Usuario
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-user" }),
-                  " Responsable"
+                  "Responsable"
                 ),
                 React.createElement("div", { "data-testid": "expense-user-select" },
                   React.createElement(Select, {
@@ -1667,8 +1697,7 @@ class ReportExpenseIndex extends React.Component {
               // el condicional.
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-coins" }),
-                  " Moneda"
+                  "Moneda"
                 ),
                 React.createElement("div", { "data-testid": "expense-currency-select" },
                   React.createElement(Select, {
@@ -1684,40 +1713,35 @@ class ReportExpenseIndex extends React.Component {
               // Nombre
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-file-alt" }),
-                  " Nombre"
+                  "Nombre"
                 ),
                 React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: "Nombre del gasto", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
               ),
               // Fecha
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-calendar-alt" }),
-                  " Fecha de factura"
+                  "Fecha de factura"
                 ),
                 React.createElement("input", { type: "date", name: "invoice_date", value: form.invoice_date || "", onChange: self.handleFormChange, className: hasError("invoice_date") ? "cm-input cm-input-error" : "cm-input" })
               ),
               // NIT/Cedula
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-id-card" }),
-                  " NIT / Cédula"
+                  "NIT / Cédula"
                 ),
                 React.createElement("input", { type: "text", name: "identification", value: form.identification || "", onChange: self.handleFormChange, placeholder: "NIT o cédula", className: "cm-input" })
               ),
               // # Factura
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-hashtag" }),
-                  " # Factura"
+                  "# Factura"
                 ),
                 React.createElement("input", { type: "text", name: "invoice_number", value: form.invoice_number || "", onChange: self.handleFormChange, placeholder: "Número de factura", className: "cm-input" })
               ),
               // Tipo
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-tag" }),
-                  " Tipo"
+                  "Tipo"
                 ),
                 React.createElement(Select, {
                   options: self.typeOptions,
@@ -1731,13 +1755,12 @@ class ReportExpenseIndex extends React.Component {
                 self.state.selectedType && self.state.selectedType.label ? React.createElement("div", {
                   className: "cm-field-hint cm-field-hint--copyable",
                   onClick: function() { navigator.clipboard.writeText(self.state.selectedType.label); self.setState({ copyMessage: "Tipo copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
-                }, React.createElement("i", { className: "fas fa-copy" }), " ", self.state.selectedType.label) : null
+                }, self.state.selectedType.label) : null
               ),
               // Medio de pago
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-credit-card" }),
-                  " Medio de pago"
+                  "Medio de pago"
                 ),
                 React.createElement(Select, {
                   options: self.paymentOptions,
@@ -1751,37 +1774,33 @@ class ReportExpenseIndex extends React.Component {
                 self.state.selectedPayment && self.state.selectedPayment.label ? React.createElement("div", {
                   className: "cm-field-hint cm-field-hint--copyable",
                   onClick: function() { navigator.clipboard.writeText(self.state.selectedPayment.label); self.setState({ copyMessage: "Medio de pago copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
-                }, React.createElement("i", { className: "fas fa-copy" }), " ", self.state.selectedPayment.label) : null
+                }, self.state.selectedPayment.label) : null
               ),
               // Valor
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-dollar-sign" }),
-                  " Valor"
+                  "Valor"
                 ),
                 React.createElement(NumberFormat, { name: "invoice_value", thousandSeparator: true, prefix: "$", value: form.invoice_value || "", onChange: self.handleFormChangeMoney, placeholder: "$0", className: "cm-input" })
               ),
               // IVA
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-percent" }),
-                  " IVA"
+                  "IVA"
                 ),
                 React.createElement(NumberFormat, { name: "invoice_tax", thousandSeparator: true, prefix: "$", value: form.invoice_tax || "", onChange: self.handleFormChangeMoney, placeholder: "$0", className: "cm-input" })
               ),
               // Total
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-calculator" }),
-                  " Total"
+                  "Total"
                 ),
                 React.createElement(NumberFormat, { name: "invoice_total", thousandSeparator: true, prefix: "$", value: form.invoice_total || "", displayType: "input", className: "cm-input", disabled: true, style: { background: "#e9ecef" } })
               ),
               // Descripcion
               React.createElement("div", { className: "cm-form-group cm-full-width" },
                 React.createElement("label", { className: "cm-label" },
-                  React.createElement("i", { className: "fas fa-align-left" }),
-                  " Descripción"
+                  "Descripción"
                 ),
                 React.createElement("textarea", { name: "description", rows: "3", value: form.description || "", onChange: self.handleFormChange, placeholder: "Descripción del gasto...", className: "cm-input", style: { resize: "vertical", minHeight: "80px" } })
               )
@@ -1797,12 +1816,12 @@ class ReportExpenseIndex extends React.Component {
           ),
           React.createElement("div", { className: "cm-modal-footer" },
             React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
-              React.createElement("i", { className: "fa fa-times" }), " Cancelar"
+              "Cancelar"
             ),
             React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit, disabled: !!self.state.saving },
               self.state.saving
                 ? React.createElement("span", null, React.createElement("i", { className: "fa fa-spinner fa-spin" }), " Guardando…")
-                : React.createElement("span", null, React.createElement("i", { className: "fa fa-save" }), isEdit ? " Actualizar" : " Crear")
+                : isEdit ? "Actualizar" : "Crear"
             )
           )
         )

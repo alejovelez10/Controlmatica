@@ -106,16 +106,23 @@ class ReportExpense < ApplicationRecord
   #
   # `accounting_visible` es LA UNICA definicion de la base de la pantalla de
   # Contabilidad: ni el controller ni la plantilla axlsx pueden reescribir ese
-  # `where`. Delega en `no_excedidos` (paquete 04, dueño de la columna) en vez
-  # de repetir la condicion: dos literales de "excedido" en el codigo terminan
-  # diciendo cosas distintas.
+  # `where`.
   #
-  # UNICA EXCEPCION documentada (correccion 13 / §2.3): en las LECTURAS, con el
-  # filtro "Aprobados por contabilidad" se amplia la base para recuperar los
-  # gastos que alguien ya aprobo y un recalculo posterior empujo a `excedido`.
-  # Esa ampliacion vive una sola vez, en `AccountingExpensesController#filtered_scope`,
-  # y NUNCA en la aprobacion masiva.
-  scope :accounting_visible, -> { no_excedidos }
+  # EL ESTADO PRESUPUESTAL YA NO RECORTA ESTA VISTA (decision de producto,
+  # 2026-08-29: "a contabilidad debe llegar todo lo que esta aprobado, no importa
+  # si es exceso"). Antes delegaba en `no_excedidos` y un gasto excedido no
+  # entraba nunca; el problema es que ESE es justamente el gasto que contabilidad
+  # necesita mirar, y ademas la plata existe y hay que pagarla igual. El exceso
+  # se informa —con el aviso de la tabla y con `budget_reason`—, no se esconde.
+  #
+  # El unico filtro que queda es el operativo, y vive en
+  # `AccountingExpensesController#filtered_scope`: `where(is_acepted: true)`.
+  # Un gasto llega a contabilidad cuando alguien lo dio por bueno, y punto.
+  #
+  # Se deja como scope, y no se borra reemplazandolo por `all` en los llamadores,
+  # porque sigue siendo el sitio unico donde se define esa base: si manana vuelve
+  # a haber un recorte, se cambia aqui y no en cuatro consultas.
+  scope :accounting_visible, -> { all }
   scope :accounting_pending, -> { accounting_visible.where(accounting_approved: false) }
 
   def accounting_state_label
@@ -281,6 +288,35 @@ class ReportExpense < ApplicationRecord
   # Va DESPUES del `evaluate!` de ExpenseBudgetService —que corre sobre el objeto
   # en memoria antes del save— justamente para poder pisarle el `aprobado`.
   before_save :apply_expense_rules
+
+  # ACEPTACION AUTOMATICA. Un gasto que cabe en el presupuesto nace aceptado y
+  # nadie tiene que tocarlo; el que se pasa, o el que no tiene partida, nace en
+  # "Creado" y se queda ahi hasta que una persona lo revise.
+  #
+  # ROMPE EL INVARIANTE #1 del proyecto ("`is_acepted` no se toca, ni su
+  # semantica"), a peticion explicita del dueño del producto. La consecuencia
+  # real esta un nivel mas abajo y conviene tenerla escrita: `is_acepted` es lo
+  # UNICO que deja pasar un gasto a la bandeja de Contabilidad
+  # (accounting_expenses_controller.rb:213). Con esto, los gastos que caben
+  # llegan solos a contabilidad y los anomalos quedan retenidos, que es
+  # justamente el filtro que se buscaba.
+  #
+  # VA EN `before_create` Y NO EN `before_save`, y esto NO es un detalle: el
+  # estado se sigue cambiando a mano desde la tabla. Si corriera en cada
+  # guardado, poner un gasto aprobado en "Creado" se desharia solo en el
+  # siguiente save y el desplegable de la tabla no serviria para nada.
+  # Automatico al nacer, manual desde ahi.
+  #
+  # El orden tambien importa: `before_create` corre DESPUES de los `before_save`,
+  # asi que `apply_expense_rules` ya bajo de `aprobado` a `sin_presupuesto` los
+  # gastos que incumplen una regla. Un gasto que rompe una regla NO se acepta
+  # solo, aunque le sobre cupo.
+  #
+  # El import de Excel no se ve afectado: no pasa por ExpenseBudgetService, asi
+  # que sus gastos quedan en `sin_presupuesto` y nunca cumplen la condicion
+  # (test/models/report_expense_import_test.rb, "archivo v2 ignora estado
+  # operativo").
+  before_create :auto_accept_if_within_budget
 
   # Etiqueta de conveniencia para la pantalla y para el agente.
   def rule_violations_messages
@@ -542,6 +578,12 @@ class ReportExpense < ApplicationRecord
 
     errors.add(:foreign_value, "es obligatorio cuando la moneda no es COP") if foreign_value.blank?
     errors.add(:exchange_rate, "es obligatoria cuando la moneda no es COP") if exchange_rate.blank?
+  end
+
+  def auto_accept_if_within_budget
+    return unless budget_status == ExpenseBudgetService::STATUS_APROBADO
+
+    self.is_acepted = true
   end
 
   # Evalua las reglas del paquete 14 y deja la foto en `rule_violations`.

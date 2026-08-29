@@ -45,6 +45,6 @@ class ReceiptUploader < CarrierWave::Uploader::Base
   # El minimo de 1 byte no es cosmetico: un archivo de 0 bytes se sube sin error
   # y el usuario cree que adjunto el comprobante.
   def size_range
-    1.byte..10.megabytes
+    1.byte..20.megabytes
   end
 end

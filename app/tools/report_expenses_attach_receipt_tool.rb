@@ -5,7 +5,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
   description "Asocia al gasto su comprobante. Tres modos, en orden de precedencia: " \
               "(1) upload_key de report_expenses_receipt_url_get; " \
               "(2) file_url: URL https firmada de Google Cloud Storage emitida por " \
-              "get_attachment_url en este mismo turno (el servidor la descarga; máx 10 MB; " \
+              "get_attachment_url en este mismo turno (el servidor la descarga; máx 20 MB; " \
               "manda también filename); " \
               "(3) file_base64 (máx 4 MB codificados), que requiere filename y content_type. " \
               "Reemplaza el comprobante anterior si el gasto ya tenía uno."
@@ -13,7 +13,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
     properties: {
       report_expense_id: { type: "integer", description: "ID del gasto (requerido)" },
       upload_key:        { type: "string",  description: "Clave devuelta por report_expenses_receipt_url_get" },
-      file_url:          { type: "string",  description: "URL https firmada de storage.googleapis.com o storage.cloud.google.com (get_attachment_url). El servidor descarga el archivo; máx 10 MB" },
+      file_url:          { type: "string",  description: "URL https firmada de storage.googleapis.com o storage.cloud.google.com (get_attachment_url). El servidor descarga el archivo; máx 20 MB" },
       file_base64:       { type: "string",  description: "Contenido del archivo en base64 (solo si no usas upload_key ni file_url; máx 4 MB)" },
       filename:          { type: "string",  description: "Nombre del archivo (requerido con file_base64; recomendado con file_url)" },
       content_type:      { type: "string",  description: "MIME (requerido con file_base64; con file_url se deduce de la respuesta si falta)" }
@@ -21,7 +21,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
     required: %w[report_expense_id]
   )
 
-  MAX_BASE64_BYTES = 4 * 1024 * 1024
+  MAX_BASE64_BYTES = 20 * 1024 * 1024
 
   def self.call(report_expense_id:, server_context:, upload_key: nil, file_url: nil,
                 file_base64: nil, filename: nil, content_type: nil)

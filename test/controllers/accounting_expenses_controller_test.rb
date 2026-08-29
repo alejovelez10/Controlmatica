@@ -108,24 +108,31 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[data total], json_body.keys.sort
   end
 
-  test "get_accounting_expenses nunca devuelve un excedido" do
+  # LA REGLA SE INVIRTIO (2026-08-29): "a contabilidad debe llegar todo lo que
+  # esta aprobado, no importa si es exceso". Las dos pruebas de abajo afirmaban
+  # `refute_includes` y protegian el recorte por estado presupuestal, que es lo
+  # que se quito. El unico filtro que queda es el operativo (`is_acepted`).
+  test "get_accounting_expenses tambien devuelve los excedidos" do
     excedido = crear_gasto(budget_status: "excedido")
     sign_in_as @admin
 
     get get_accounting_expenses_path
 
-    refute_includes assert_json_list.map { |r| r["id"] }, excedido.id
+    assert_includes assert_json_list.map { |r| r["id"] }, excedido.id
   end
 
-  test "un aprobado empujado a excedido no sale por defecto" do
-    # CORRECCION 13 / hueco de la tabla de verdad §2.4.
+  # Antes se llamaba "un aprobado empujado a excedido no sale por defecto" y era
+  # media correccion 13: el gasto se escondia y habia que rescatarlo con el
+  # filtro "Aprobados por contabilidad". Ya no se esconde, asi que no hay nada
+  # que rescatar; la prueba se queda para fijar que sale POR DEFECTO, sin filtro.
+  test "un aprobado empujado a excedido sigue saliendo por defecto" do
     gasto = crear_gasto(budget_status: "excedido")
     gasto.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
     sign_in_as @admin
 
     get get_accounting_expenses_path
 
-    refute_includes assert_json_list.map { |r| r["id"] }, gasto.id
+    assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
   end
 
   test "un aprobado empujado a excedido si sale con el filtro Aprobados por contabilidad" do
@@ -296,15 +303,25 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_nil gasto.accounting_approved_at
   end
 
-  test "update_accounting_state sobre un excedido responde error" do
+  # EL CANDADO SE RETIRO (2026-08-29). Antes esta prueba afirmaba el error "No se
+  # puede aprobar contablemente un gasto que excede el presupuesto". El exceso es
+  # informacion para quien decide, no una prohibicion: la factura existe y hay que
+  # pagarla, y negar la aprobacion solo dejaba al contador sin forma de cerrar el
+  # gasto. La prueba se conserva invertida para que el candado no vuelva por
+  # accidente.
+  test "update_accounting_state aprueba tambien un excedido" do
     excedido = crear_gasto(budget_status: "excedido")
     sign_in_as @admin
 
     patch "/update_accounting_state/#{excedido.id}/true"
 
-    mensajes = assert_json_error
-    assert_equal ["No se puede aprobar contablemente un gasto que excede el presupuesto"], mensajes
-    refute excedido.reload.accounting_approved
+    assert_json_success(mensaje: "¡El gasto fue aprobado por contabilidad!")
+    excedido.reload
+    assert excedido.accounting_approved
+    assert_equal @admin.id, excedido.accounting_approved_by_id
+    # El exceso NO se borra al aprobar: el motivo sigue disponible para el
+    # historico y para la pantalla.
+    assert_equal "excedido", excedido.budget_status
   end
 
   test "update_accounting_state deja RegisterEdit del modulo Contabilidad" do
@@ -361,14 +378,17 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert b.reload.accounting_approved
   end
 
-  test "update_accounting_filter_values nunca aprueba un excedido" do
+  # Coherencia entre el boton de una fila y el masivo: si "Aprobar" acepta un
+  # excedido, el masivo del mismo filtro no puede saltarselo en silencio. Antes
+  # esta prueba afirmaba lo contrario.
+  test "update_accounting_filter_values tambien aprueba un excedido" do
     excedido = crear_gasto(budget_status: "excedido")
     sign_in_as @admin
 
     patch update_accounting_filter_values_path, params: { cost_center_id: @centro.id }
 
     assert_equal "success", json_body["type"]
-    refute excedido.reload.accounting_approved
+    assert excedido.reload.accounting_approved
   end
 
   test "update_accounting_filter_values escribe un solo RegisterEdit" do
@@ -427,16 +447,16 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     refute c.reload.accounting_approved
   end
 
-  test "ids con un excedido no lo aprueba y el count lo refleja" do
+  test "ids con un excedido lo aprueba y el count lo refleja" do
     ok = crear_gasto
     excedido = crear_gasto(budget_status: "excedido")
     sign_in_as @admin
 
     patch update_accounting_filter_values_path, params: { ids: [ok.id, excedido.id] }
 
-    assert_equal 1, json_body["count"], "el count es de filas actualizadas, no de ids recibidos"
+    assert_equal 2, json_body["count"], "el count es de filas actualizadas, no de ids recibidos"
     assert ok.reload.accounting_approved
-    refute excedido.reload.accounting_approved
+    assert excedido.reload.accounting_approved
   end
 
   test "ids con mas de MAX_BULK responde error" do

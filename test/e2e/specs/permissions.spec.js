@@ -15,6 +15,11 @@
 // No resiembra: solo lee.
 const { test, expect } = require("@playwright/test");
 const { cc, expense, user } = require("../support/seedIds");
+// BASE_URL y no "http://127.0.0.1:3001" a mano: el puerto lo decide
+// `support/env` (E2E_BASE_URL). Con el literal, estos dos contextos salian a
+// pedirle JSON a lo que hubiera en el 3001 —en esta maquina, otra aplicacion— y
+// el spec fallaba con un error de parseo que no tiene nada que ver con permisos.
+const { BASE_URL } = require("../support/env");
 
 const OWNER_STATE = "./.auth/storageState.json";
 
@@ -50,7 +55,7 @@ test.describe("permisos de presupuesto y contabilidad", () => {
     // Un 403 que igual escribio es PEOR que no tener el gate: se comprueba el
     // efecto con la sesion del dueño, que si puede leer las partidas del centro.
     const contextoDueno = await playwright.request.newContext({
-      baseURL: page.context()._options?.baseURL || "http://127.0.0.1:3001",
+      baseURL: page.context()._options?.baseURL || BASE_URL,
       storageState: OWNER_STATE,
     });
     const lectura = await contextoDueno.get(`/get_expense_budgets/${cc("PERM")}`);
@@ -91,7 +96,7 @@ test.describe("permisos de presupuesto y contabilidad", () => {
     expect(r.status()).toBe(403);
 
     const contextoDueno = await playwright.request.newContext({
-      baseURL: "http://127.0.0.1:3001",
+      baseURL: BASE_URL,
       storageState: OWNER_STATE,
     });
     const lectura = await contextoDueno.get(
