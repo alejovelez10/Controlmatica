@@ -70,21 +70,63 @@ test.describe("escenario 4 — comprobante adjunto", () => {
     creado.urlComprobante = body.register.receipt_file.url;
   });
 
-  test("el comprobante se previsualiza sin salir de la pantalla", async ({ page }) => {
+  // EL COMPORTAMIENTO CAMBIO. Antes el ojo abria SIEMPRE un modal, con un
+  // <iframe> para el PDF y dos botones (Descargar / Cerrar). Ahora el modal es
+  // solo para lo que se puede mirar —imagenes—; lo demas se descarga de una,
+  // que era el clic de mas. El <iframe> ademas nunca llego a pintar nada: la
+  // ruta responde con Content-Disposition: attachment y el modal salia vacio.
+  test("el comprobante PDF se descarga directo, sin abrir modal", async ({ page }) => {
     await abrirGastosDelCentro(page);
 
-    await page.getByTestId(`expense-receipt-preview-${creado.conComprobante}`).click();
+    const [descarga] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByTestId(`expense-receipt-preview-${creado.conComprobante}`).click(),
+    ]);
+
+    expect(descarga.suggestedFilename()).toBe("comprobante.pdf");
+    await expect(page.getByTestId("receipt-preview-modal")).toHaveCount(0);
+  });
+
+  test("el comprobante de imagen si se previsualiza, y con un solo boton", async ({ page }) => {
+    await abrirGastosDelCentro(page);
+    await abrirModalGastoCentro(page);
+
+    await llenarGasto(page, {
+      invoice_name: "Peaje E2E",
+      invoice_date: "2026-06-17",
+      identification: "900777889",
+      invoice_number: "FE-E2E-REC-003",
+      invoice_value: 12000,
+      invoice_tax: 0,
+    });
+
+    await page.setInputFiles('[data-testid="expense-receipt-input"]', path.join(FIXTURES, "comprobante.png"));
+    const { body } = await guardarGasto(page);
+    const idImagen = body.register.id;
+
+    await page.getByTestId(`expense-receipt-preview-${idImagen}`).click();
     const modal = page.getByTestId("receipt-preview-modal");
     await expect(modal).toBeVisible();
 
-    // Un PDF se previsualiza en un iframe cuyo src es la misma URL de descarga
-    // del gasto: nunca la URL firmada, que caduca a los 600 s.
-    const visor = modal.locator("iframe, embed, object");
-    await expect(visor).toHaveCount(1);
-    await expect(visor).toHaveAttribute(
+    // Se pinta con <img>, NO con <iframe>, y contra la ruta de descarga del
+    // gasto (nunca la URL firmada, que caduca a los 600 s) pidiendo el modo
+    // inline: sin ese parametro la respuesta es attachment y no se ve nada.
+    await expect(modal.locator("iframe")).toHaveCount(0);
+    const imagen = modal.locator("img");
+    await expect(imagen).toHaveCount(1);
+    await expect(imagen).toHaveAttribute(
       "src",
-      new RegExp(`/download_receipt/report_expenses/${creado.conComprobante}`)
+      new RegExp(`/download_receipt/report_expenses/${idImagen}\\?disposition=inline`)
     );
+
+    // Y la imagen CARGO de verdad: un src correcto sobre un 404 dejaria
+    // naturalWidth en 0 y la asercion de arriba no lo notaria.
+    await expect
+      .poll(() => imagen.evaluate((el) => el.complete && el.naturalWidth > 0))
+      .toBe(true);
+
+    // Un solo boton en el pie: el de "Descargar" se quito.
+    await expect(page.locator(".cm-modal-footer .cm-btn, .modal-footer .cm-btn")).toHaveCount(1);
   });
 
   test("el comprobante se descarga desde la tabla", async ({ page }) => {

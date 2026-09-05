@@ -218,6 +218,45 @@ class ReportExpensesReceiptTest < ActionDispatch::IntegrationTest
     assert_equal "application/pdf", response.media_type
   end
 
+  test "GET download_receipt con disposition=inline sirve el archivo para pintarlo" do
+    # EL BUG QUE ESTO EVITA: el modal de previsualizacion salia EN BLANCO porque
+    # el endpoint respondia siempre "attachment" y el navegador descarga en vez
+    # de pintar. El modo inline es opt-in; el default sigue siendo la descarga
+    # (lo fija el test de arriba, del que depende el escenario E4.3 del 12).
+    gasto = gasto_con_comprobante
+    sign_in_as @admin
+
+    get "/download_receipt/report_expenses/#{gasto.id}", params: { disposition: "inline" }
+
+    assert_response :success
+    assert_includes response.headers["Content-Disposition"], "inline"
+    refute_includes response.headers["Content-Disposition"], "attachment"
+    assert_equal "application/pdf", response.media_type
+  end
+
+  test "GET download_receipt con un disposition cualquiera sigue forzando la descarga" do
+    # La comparacion es contra la cadena exacta "inline": cualquier otro valor
+    # —incluido uno inventado por quien manipule la URL— cae al default.
+    gasto = gasto_con_comprobante
+    sign_in_as @admin
+
+    get "/download_receipt/report_expenses/#{gasto.id}", params: { disposition: "cualquier-cosa" }
+
+    assert_includes response.headers["Content-Disposition"], "attachment"
+  end
+
+  test "la url firmada tambien propaga el modo inline" do
+    gasto = gasto_con_comprobante
+    sign_in_as @admin
+
+    con_almacenamiento_remoto do
+      get "/download_receipt/report_expenses/#{gasto.id}", params: { disposition: "inline" }
+    end
+
+    assert_response :redirect
+    assert_includes CGI.unescape(response.location), 'inline; filename="comprobante.pdf"'
+  end
+
   test "GET download_receipt redirige a la url firmada cuando el almacenamiento es remoto" do
     # En produccion el comprobante vive en S3: la accion tiene que REDIRIGIR a
     # una URL recien firmada, no servir el binario desde Rails.
