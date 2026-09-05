@@ -1268,6 +1268,16 @@ select.cm-input {
 
 /* Contenedor del estado + su aviso. `inline-flex` y no `flex`: la celda no debe
    estirarse al ancho de la columna, o el icono se despega de la pildora. */
+/* Celda sin dato. Un guion centrado y tenue: no es un error ni una accion, es
+   ausencia. Antes se pintaba una equis, que se lee como "fallo" o como un boton
+   de quitar y hacia dudar de una fila que estaba perfectamente bien. */
+.cm-celda-vacia {
+  display: flex;
+  justify-content: center;
+  color: #adb5bd;
+  user-select: none;
+}
+
 .cm-status-cell {
   display: inline-flex;
   align-items: center;

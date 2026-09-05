@@ -146,3 +146,21 @@ export function budgetWarningIcon(row) {
     "data-testid": "expense-budget-warning-" + (row.id || ""),
   });
 }
+
+// --- Comprobante ----------------------------------------------------------
+
+// Decide si el comprobante se puede PINTAR en un modal o hay que entregarselo al
+// navegador. La PISTA puede ser un nombre o una URL: el serializer de
+// CarrierWave emite solo `{ url: ... }` —NO hay `name`—, y ese fue un bug real:
+// `p.name` llegaba undefined, se montaba un <iframe> sobre una respuesta con
+// Content-Disposition: attachment y el modal salia en blanco.
+//
+// Se recorta la query porque la URL firmada de S3 la lleva pegada detras.
+//
+// VIVE AQUI y no en cada tabla porque las dos pantallas que muestran
+// comprobantes —Gastos y la pestaña del centro de costos— tienen que decidir lo
+// mismo para el mismo archivo.
+export function esComprobanteImagen(pista) {
+  var limpia = String(pista || "").split("?")[0].split("#")[0].toLowerCase();
+  return /\.(jpe?g|png|webp|heic|gif)$/.test(limpia);
+}

@@ -63,3 +63,9 @@ yarn-debug.log*
 # navegador desde el agente (capturas, trazas, perfil temporal). Es ruido de
 # desarrollo, no artefacto del proyecto.
 /.playwright-mcp
+
+# Estado de sesion de las pruebas E2E ejecutadas desde la raiz del repo. Cambia
+# en cada corrida y no aporta nada al historial; el de test/e2e/.auth ya estaba.
+/.auth
+# Temporales de subida de comprobantes.
+/public/uploads/tmp

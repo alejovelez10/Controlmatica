@@ -81,6 +81,21 @@ var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: 
 var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
 var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
 
+// Decide si el comprobante se puede pintar en pantalla.
+//
+// La PISTA puede ser un nombre de archivo o una URL: el serializer de
+// CarrierWave solo emite `{ url: ... }` —NO hay `name`, y ese fue justo el
+// bug: `p.name` llegaba undefined, la deteccion daba falso, se montaba un
+// <iframe> sobre una respuesta con Content-Disposition: attachment y el modal
+// salia en blanco. La URL si trae la extension, asi que sirve de pista.
+//
+// Se recorta la query porque la URL firmada de S3 llega con `?X-Amz-...`
+// pegado detras de la extension.
+function esComprobanteImagen(pista) {
+  var limpia = String(pista || "").split("?")[0].split("#")[0].toLowerCase();
+  return /\.(jpe?g|png|webp|heic|gif)$/.test(limpia);
+}
+
 var EXTENSIONES_COMPROBANTE = ["jpg", "jpeg", "png", "pdf", "webp", "heic"];
 var TAMANO_MAXIMO_COMPROBANTE = 20 * 1024 * 1024;
 
@@ -135,6 +150,10 @@ function estadoComprobanteVacio() {
     receiptSize: 0,
     receiptDragging: false,
     receiptExistingId: null,
+    // La URL del comprobante YA GUARDADO. Se necesita aparte de
+    // `receiptFileName` —que solo se llena cuando el usuario acaba de elegir
+    // un archivo— para saber si lo adjuntado es una imagen al EDITAR un gasto.
+    receiptExistingUrl: "",
     receiptError: null,
     extraction: Object.assign({}, EXTRACTION_VACIA),
     exchange: Object.assign({}, EXCHANGE_VACIO),
@@ -194,6 +213,10 @@ class ReportExpenseIndex extends React.Component {
       // Modal
       modal: false,
       modalImport: false,
+      importFileName: "",
+      importSize: 0,
+      importDragging: false,
+      importing: false,
       modeEdit: false,
       editId: null,
       ErrorValues: true,
@@ -326,33 +349,44 @@ class ReportExpenseIndex extends React.Component {
             : null
         );
       }},
-      // El enlace apunta SIEMPRE a /download_receipt/report_expenses/:id y nunca
-      // a `row.receipt_file.url`: esa es la URL firmada de S3 y expira a los 600
+      // El destino es SIEMPRE /download_receipt/report_expenses/:id y nunca
+      // `row.receipt_file.url`: esa es la URL firmada de S3 y expira a los 600
       // segundos, asi que una tabla abierta desde hace diez minutos entregaria
       // 403 al hacer clic.
       //
-      // `openReceiptPreview` lo define el paquete 08 FUERA del constructor. Este
-      // paquete se mergea antes, asi que hasta entonces el boton existe y el
-      // metodo no; esta anotado en el PR y no se implementa aqui "por si acaso"
-      // para no dejar dos definiciones del mismo modal.
+      // UN SOLO CONTROL, no dos. Habia una descarga y un ojo, pero la eleccion
+      // entre mirar y guardar no la hace el usuario: la hace el archivo. Una
+      // foto se mira en el modal —y desde ahi se descarga—; un PDF se lo queda
+      // el navegador, que ya sabe mostrarlo, imprimirlo y guardarlo.
       { key: "receipt_file", label: "Comprobante", width: "120px", sortable: false, render: function(row) {
-        if (!row.receipt_file || !row.receipt_file.url) return "—";
+        // Guion centrado y NO una equis: la equis se lee como "fallo" o como un
+        // boton de quitar. Aqui no hay error ni accion, solo ausencia de dato,
+        // que es lo que dice un guion en el resto de la tabla.
+        if (!row.receipt_file || !row.receipt_file.url) {
+          return React.createElement("div", { className: "cm-celda-vacia" }, "—");
+        }
 
-        return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "6px" } },
-          React.createElement("a", {
-            href: "/download_receipt/report_expenses/" + row.id,
-            target: "_blank",
-            rel: "noopener noreferrer",
-            title: "Descargar comprobante",
-            "data-testid": "expense-receipt-link-" + row.id
-          }, React.createElement("i", { className: "fas fa-download" })),
+        // CON ETIQUETA, no solo un icono. Un boton mudo obliga a adivinar o a
+        // parar el raton encima; con dos letras se sabe sin tocarlo. Y el verbo
+        // cambia con el archivo, porque no hacen lo mismo: la imagen se VE aqui
+        // dentro, el resto se ABRE en una pestana del navegador.
+        //
+        // Iconos de FontAwesome 5 (layouts/user.html.erb carga la 5.15.4):
+        // `fa-receipt` y `fa-external-link-alt` existen ahi. Ojo con los nombres
+        // de la 6 —`fa-file-arrow-down`, `fa-arrow-up-right-from-square`—: no
+        // fallan, simplemente no pintan nada.
+        var imagen = esComprobanteImagen(row.receipt_file.url);
+        return React.createElement("div", { style: { display: "flex", justifyContent: "center" } },
           React.createElement("button", {
             type: "button",
             className: "cm-btn cm-btn-outline cm-btn-sm",
-            title: "Previsualizar comprobante",
-            onClick: function() { self.openReceiptPreview(row.id); },
+            title: imagen ? "Ver el comprobante" : "Abrir el comprobante en otra pestaña",
+            onClick: function(e) { e.stopPropagation(); self.abrirComprobante(row.id, row.receipt_file.url); },
             "data-testid": "expense-receipt-preview-" + row.id
-          }, React.createElement("i", { className: "fas fa-eye" }))
+          },
+            React.createElement("i", { className: imagen ? "fas fa-receipt" : "fas fa-external-link-alt" }),
+            imagen ? " Ver" : " Abrir"
+          )
         );
       }},
 
@@ -548,7 +582,7 @@ class ReportExpenseIndex extends React.Component {
   }.bind(this);
 
   openImportModal = function() { this.setState({ modalImport: true }); }.bind(this);
-  closeImportModal = function() { this.setState({ modalImport: false }); }.bind(this);
+  closeImportModal = function() { this.aceptarArchivoImport(null); this.setState({ modalImport: false }); }.bind(this);
 
   getExportUrl = function() {
     if (!this.state.isFiltering) {
@@ -613,6 +647,7 @@ class ReportExpenseIndex extends React.Component {
       // firmada y caduca a los 600 s. El destino se arma siempre contra
       // /download_receipt/report_expenses/:id.
       receiptExistingId: row.receipt_file && row.receipt_file.url ? row.id : null,
+      receiptExistingUrl: row.receipt_file && row.receipt_file.url ? row.receipt_file.url : "",
     }));
 
     this.loadBudgetAvailability(row.user_invoice_id, row.id);
@@ -856,7 +891,7 @@ class ReportExpenseIndex extends React.Component {
             Swal.fire({ icon: "error", title: "No se pudo quitar el comprobante", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
             return;
           }
-          self.setState({ receiptExistingId: null });
+          self.setState({ receiptExistingId: null, receiptExistingUrl: "" });
           self.loadData();
         })
         .catch(function() {
@@ -869,6 +904,17 @@ class ReportExpenseIndex extends React.Component {
   // FUERA del constructor: la columna "Comprobante" de this.columns (paquete 09)
   // llama a openReceiptPreview(id) por nombre. Renombrarlos obliga a actualizar
   // la Tarea 2 del 09 en el mismo PR.
+  // UNICO punto de entrada al comprobante desde la tabla y desde el formulario.
+  //
+  // Imagen -> modal (se puede mirar sin salir de la pantalla).
+  // Cualquier otra cosa (PDF, etc.) -> descarga directa, SIN modal: un visor
+  // de PDF embebido no aporta nada sobre el del navegador, y abrir un modal
+  // para que el usuario tenga que pulsar "Descargar" es un clic de mas.
+  abrirComprobante = function(id, pista) {
+    if (esComprobanteImagen(pista)) { this.openReceiptPreview(id, pista); return; }
+    window.open("/download_receipt/report_expenses/" + id, "_blank", "noopener");
+  }.bind(this);
+
   openReceiptPreview = function(id, name) {
     this.setState({ receiptPreview: { open: true, id: id, name: name || "" }, receiptPreviewError: false });
   }.bind(this);
@@ -1023,33 +1069,31 @@ class ReportExpenseIndex extends React.Component {
         // modal no se cierra y el mensaje del servidor se muestra tal cual.
         if (data.type === "error") {
           self.setState({ saving: false });
+
+          // LAS REGLAS DE GASTO SON DURAS: el servidor RECHAZA el gasto y este
+          // modal se queda abierto con los datos puestos, para corregir sin
+          // volver a escribirlo todo. Se separa del error generico porque no es
+          // un fallo del sistema sino una decision de negocio, y el usuario
+          // necesita leer QUE regla incumplio, no "ocurrió un error".
+          var violaciones = data.rule_violations || [];
+          if (violaciones.length > 0) {
+            Swal.fire({
+              icon: "warning",
+              title: "No se puede guardar: incumple las reglas de gasto",
+              html: "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
+                    violaciones.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
+                    "</ul>",
+              confirmButtonColor: "#2a3f53",
+              confirmButtonText: "Corregir",
+            });
+            return;
+          }
+
           Swal.fire({ icon: "error", title: "¡Ocurrió un error!", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
           return;
         }
         self.setState({ modal: false, saving: false });
         self.loadData();
-
-        // LAS REGLAS SE INFORMAN AQUI. El gasto SE GUARDA igual —una violacion
-        // nunca impide registrar: bloquear a quien tiene la factura en la mano
-        // solo consigue que no la reporte—, pero queda SIN APROBAR, y hasta
-        // ahora eso ocurria en silencio: el usuario veia un toast verde de exito
-        // durante 1,5 segundos y nada mas.
-        //
-        // Sin `timer`: este mensaje hay que leerlo, no verlo pasar.
-        var violaciones = data.rule_violations || [];
-        if (violaciones.length > 0) {
-          Swal.fire({
-            icon: "warning",
-            title: isEdit ? "Gasto actualizado, pero no queda aprobado" : "Gasto creado, pero no queda aprobado",
-            html: "<p>Incumple " + (violaciones.length === 1 ? "una regla de gasto" : violaciones.length + " reglas de gasto") + ":</p>" +
-                  "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
-                  violaciones.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
-                  "</ul>",
-            confirmButtonColor: "#2a3f53",
-            confirmButtonText: "Entendido",
-          });
-          return;
-        }
 
         Swal.fire({ position: "center", icon: "success", title: data.success || (isEdit ? "Actualizado" : "Creado"), showConfirmButton: false, timer: 1500 });
       })
@@ -1547,7 +1591,9 @@ class ReportExpenseIndex extends React.Component {
             React.createElement("a", { href: "/download_receipt/report_expenses/" + self.state.receiptExistingId, target: "_blank", rel: "noopener noreferrer" },
               React.createElement("i", { className: "fa fa-download" }), " Ver comprobante actual"),
             React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
-              onClick: function() { self.openReceiptPreview(self.state.receiptExistingId, self.state.receiptFileName); } },
+              // La pista es el archivo recien elegido si lo hay, y si no la URL
+              // del ya guardado: al editar, `receiptFileName` esta vacio.
+              onClick: function() { self.abrirComprobante(self.state.receiptExistingId, self.state.receiptFileName || self.state.receiptExistingUrl); } },
               React.createElement("i", { className: "fa fa-eye" }), " Previsualizar"),
             self.state.modeEdit
               ? React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
@@ -1573,12 +1619,13 @@ class ReportExpenseIndex extends React.Component {
     var p = this.state.receiptPreview;
     if (!p || !p.open) return null;
 
-    var src = "/download_receipt/report_expenses/" + p.id;
-    // <img> solo cuando el nombre dice claramente que es una imagen. En
-    // cualquier otro caso —incluido "no se conoce el nombre", que es lo normal
-    // desde la tabla porque el serializer solo expone `url`— se usa <iframe>,
-    // que sirve para PDF y para imagen.
-    var esImagen = /\.(jpe?g|png|webp|heic|gif)$/.test((p.name || "").toLowerCase());
+    // `?disposition=inline` para PINTAR. Sin el, el endpoint responde con
+    // Content-Disposition: attachment y la vista previa sale VACIA: ese era el
+    // sintoma. La descarga usa la misma ruta sin el parametro, donde el default
+    // sigue forzando el guardado.
+    var src = "/download_receipt/report_expenses/" + p.id + "?disposition=inline";
+    var descarga = "/download_receipt/report_expenses/" + p.id;
+
 
     return React.createElement(Modal, { isOpen: true, toggle: self.closeReceiptPreview, className: "modal-dialog-centered modal-lg" },
       React.createElement("div", { className: "cm-modal-container" },
@@ -1599,20 +1646,30 @@ class ReportExpenseIndex extends React.Component {
             self.state.receiptPreviewError
               ? React.createElement("div", { className: "cm-alert cm-alert-warning" },
                   React.createElement("i", { className: "fa fa-exclamation-triangle" }),
-                  " No se pudo previsualizar el comprobante. Intente descargarlo.")
-              : esImagen
-                ? React.createElement("img", { src: src, alt: "Comprobante", style: { maxWidth: "100%" },
-                    onError: function() { self.setState({ receiptPreviewError: true }); } })
-                : React.createElement("iframe", { src: src, title: "Comprobante", style: { width: "100%", height: "70vh", border: 0 },
-                    onError: function() { self.setState({ receiptPreviewError: true }); } })
+                  " No se pudo previsualizar el comprobante. ",
+                  React.createElement("a", { href: descarga, target: "_blank", rel: "noopener noreferrer" }, "Descargarlo"),
+                  ".")
+              // Solo <img>: `abrirComprobante` ya desvio a descarga todo lo que
+              // no sea imagen, asi que el <iframe> para PDF sobra. Era ademas
+              // el que dejaba el modal en blanco.
+              : React.createElement("img", { src: src, alt: "Comprobante",
+                  style: { maxWidth: "100%", display: "block", margin: "0 auto" },
+                  onError: function() { self.setState({ receiptPreviewError: true }); } })
           )
         ),
-        React.createElement("div", { className: "cm-modal-footer" },
-          // Sin data-testid: `expense-receipt-link-{id}` ya lo emite la fila de
-          // la tabla (columna del paquete 09). Repetirlo aqui daria dos nodos
-          // con el mismo selector justo con el modal abierto.
-          React.createElement("a", { className: "cm-btn cm-btn-cancel", href: src, target: "_blank", rel: "noopener noreferrer" },
-            React.createElement("i", { className: "fa fa-download" }), " Descargar"),
+        React.createElement("div", { className: "cm-modal-footer", style: { justifyContent: "space-between" } },
+          // VUELVE "Descargar". El comentario anterior era cierto mientras la
+          // fila tenia dos controles —un enlace de descarga y un ojo—; ahora
+          // tiene uno solo, asi que este modal es el UNICO sitio desde donde se
+          // puede guardar la imagen.
+          //
+          // Sin `?disposition=inline`: el default del endpoint fuerza el
+          // guardado, que es justo lo que se quiere aqui.
+          React.createElement("a", {
+            href: descarga, target: "_blank", rel: "noopener noreferrer",
+            className: "cm-btn cm-btn-outline",
+            "data-testid": "receipt-preview-download",
+          }, React.createElement("i", { className: "fa fa-download" }), " Descargar"),
           React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.closeReceiptPreview },
             React.createElement("i", { className: "fa fa-times" }), " Cerrar")
         )
@@ -1829,6 +1886,96 @@ class ReportExpenseIndex extends React.Component {
     );
   }.bind(this);
 
+  // Punto UNICO por el que entra un archivo al modal de importar: lo usan el
+  // selector, el arrastre y el boton de quitar. Tenerlo suelto en tres sitios es
+  // como se produce el estado a medias (nombre puesto y archivo no, o al reves).
+  aceptarArchivoImport = function(archivo) {
+    this._importFile = archivo || null;
+    this.setState({
+      importFileName: archivo ? archivo.name : "",
+      importSize: archivo ? archivo.size : 0,
+      importDragging: false,
+    });
+    // El input se limpia para que elegir DOS VECES el mismo archivo vuelva a
+    // disparar onChange (el navegador no lo emite si el value no cambia).
+    if (!archivo && this._importInput) this._importInput.value = "";
+  }.bind(this);
+
+  handleImportDragOver = function(e) {
+    e.preventDefault();
+    if (!this.state.importDragging) this.setState({ importDragging: true });
+  }.bind(this);
+
+  handleImportDragLeave = function(e) {
+    e.preventDefault();
+    // `relatedTarget` dentro de la zona significa que se paso a un hijo, no que
+    // se salio: sin esta guarda el borde parpadea al mover el mouse por dentro.
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    this.setState({ importDragging: false });
+  }.bind(this);
+
+  handleImportDrop = function(e) {
+    e.preventDefault();
+    var archivo = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (archivo) this.aceptarArchivoImport(archivo);
+    else this.setState({ importDragging: false });
+  }.bind(this);
+
+  handleImportSubmit = function(e) {
+    e.preventDefault();
+    var self = this;
+
+    var archivo = self._importFile;
+    if (!archivo) return;
+
+    var fd = new FormData();
+    fd.append("file", archivo);
+
+    self.setState({ importing: true });
+
+    fetch("/upload_file/report_expenses", {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrfToken() },
+      body: fd,
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        self.setState({ importing: false });
+
+        if (data.type === "error") {
+          Swal.fire({ icon: "error", title: "No se pudo importar",
+                      text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+          return;
+        }
+
+        // `data.data` es [filas_ok, filas_con_error]. Las filas malas se listan
+        // por NUMERO DE FILA DEL EXCEL, que es lo unico que le sirve a quien
+        // tiene que corregirlas.
+        var fallidas = (data.data && data.data[1]) || [];
+        self.aceptarArchivoImport(null);
+        self.setState({ modalImport: false });
+        self.loadData();
+
+        if (fallidas.length > 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "Importado con errores",
+            html: "<p>" + escaparHtml(data.success || "") + "</p>" +
+                  "<p class=\"cm-hint\">Revise las filas: " + fallidas.join(", ") + "</p>",
+            confirmButtonColor: "#2a3f53",
+          });
+          return;
+        }
+
+        Swal.fire({ position: "center", icon: "success", title: data.success || "Importado",
+                    showConfirmButton: false, timer: 2500 });
+      })
+      .catch(function() {
+        self.setState({ importing: false });
+        Swal.fire({ icon: "error", title: "No se pudo importar el archivo", confirmButtonColor: "#2a3f53" });
+      });
+  }.bind(this);
+
   renderImportModal = function() {
     var self = this;
     if (!this.state.modalImport) return null;
@@ -1849,23 +1996,96 @@ class ReportExpenseIndex extends React.Component {
             React.createElement("i", { className: "fa fa-times" })
           )
         ),
-        React.createElement("form", { action: "/upload_file/report_expenses", method: "POST", encType: "multipart/form-data" },
+        React.createElement("form", {
+          // `onSubmit` y no un POST nativo del formulario: con el POST nativo el
+          // navegador ABANDONA la pagina y pinta el JSON crudo de la respuesta,
+          // tanto al importar bien como al fallar. Con fetch, el resultado se
+          // cuenta en el mismo modal y la tabla se refresca sola.
+          onSubmit: self.handleImportSubmit,
+        },
           React.createElement(ModalBody, { className: "cm-modal-body" },
-            React.createElement("input", { type: "hidden", name: "authenticity_token", value: csrfToken() }),
-            React.createElement("div", { className: "cm-form-group" },
-              React.createElement("label", { className: "cm-label" },
-                React.createElement("i", { className: "fas fa-file-excel" }),
-                " Seleccionar archivo"
-              ),
-              React.createElement("input", { type: "file", name: "file", accept: ".xlsx,.xls", className: "cm-input", style: { padding: "8px" } })
+            // LA PLANTILLA VA ARRIBA DEL SELECTOR, no debajo: es el primer paso,
+            // no una nota al pie. Quien abre este modal sin plantilla sube un
+            // archivo con las columnas en otro orden y los datos entran al campo
+            // equivocado sin un solo error.
+            // LA ZONA DE ARRASTRE, la misma del comprobante en el formulario de
+            // gastos (.cm-dropzone). El `<input type="file">` nativo se pinta
+            // distinto en cada navegador —"Choose File" en ingles aunque la app
+            // este en castellano— y no admite soltar el archivo encima. El input
+            // sigue en el DOM, oculto por CSS: es lo que necesitan Playwright y
+            // los lectores de pantalla.
+            React.createElement("div", {
+                className: "cm-dropzone"
+                  + (self.state.importDragging ? " cm-dropzone--active" : "")
+                  + (self.state.importFileName ? " cm-dropzone--filled" : ""),
+                onDragOver: self.handleImportDragOver,
+                onDragEnter: self.handleImportDragOver,
+                onDragLeave: self.handleImportDragLeave,
+                onDrop: self.handleImportDrop,
+                onClick: function() { if (self._importInput) self._importInput.click(); },
+                onKeyDown: function(e) {
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (self._importInput) self._importInput.click(); }
+                },
+                role: "button",
+                tabIndex: 0,
+                "data-testid": "expense-import-dropzone",
+              },
+              React.createElement("input", {
+                type: "file", className: "cm-dropzone-input",
+                ref: function(el) { self._importInput = el; },
+                accept: ".xlsx,.xls",
+                onChange: function(e) { self.aceptarArchivoImport(e.target.files[0]); },
+                // Sin esto el clic del input vuelve a burbujear al div, que llama
+                // otra vez a input.click(): el selector se abre en bucle.
+                onClick: function(e) { e.stopPropagation(); },
+                "data-testid": "expense-import-file",
+              }),
+
+              self.state.importFileName
+                ? React.createElement("div", { className: "cm-dropzone-file", "data-testid": "expense-import-name" },
+                    React.createElement("i", { className: "fa fa-file-excel cm-dropzone-file-icon" }),
+                    React.createElement("div", { className: "cm-dropzone-file-body" },
+                      React.createElement("span", { className: "cm-dropzone-file-name" }, self.state.importFileName),
+                      React.createElement("span", { className: "cm-dropzone-file-meta" },
+                        pesoLegible(self.state.importSize) + " · Haga clic o suelte otro archivo para reemplazarlo")),
+                    React.createElement("button", {
+                      type: "button", className: "cm-dropzone-clear", title: "Quitar el archivo",
+                      onClick: function(e) { e.stopPropagation(); self.aceptarArchivoImport(null); },
+                      "data-testid": "expense-import-clear",
+                    }, React.createElement("i", { className: "fa fa-times" })))
+                : React.createElement("div", { className: "cm-dropzone-empty" },
+                    React.createElement("i", { className: "fa fa-cloud-upload-alt cm-dropzone-icon" }),
+                    React.createElement("span", { className: "cm-dropzone-title" },
+                      "Arrastre aquí su archivo de Excel"),
+                    React.createElement("span", { className: "cm-dropzone-hint" },
+                      "o haga clic para buscarlo · XLSX o XLS"))
+            ),
+
+            // La plantilla, al pie y en una sola linea: es una ayuda, no el
+            // asunto del modal. Antes ocupaba un bloque destacado ARRIBA del
+            // selector y le robaba el protagonismo a lo que se viene a hacer
+            // aqui, que es subir un archivo.
+            React.createElement("div", { className: "cm-field-hint", style: { marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" } },
+              React.createElement("span", null,
+                "Una fila con errores no detiene el archivo: las demás se importan."),
+              React.createElement("a", {
+                href: "/import_template/report_expenses",
+                "data-testid": "expense-import-template",
+              }, React.createElement("i", { className: "fas fa-file-excel" }), " Descargar plantilla")
             )
           ),
           React.createElement("div", { className: "cm-modal-footer" },
             React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeImportModal },
               React.createElement("i", { className: "fa fa-times" }), " Cancelar"
             ),
-            React.createElement("button", { type: "submit", className: "cm-btn cm-btn-submit" },
-              React.createElement("i", { className: "fas fa-upload" }), " Subir"
+            React.createElement("button", {
+              type: "submit",
+              className: "cm-btn cm-btn-submit",
+              disabled: !self.state.importFileName || self.state.importing,
+              "data-testid": "expense-import-submit",
+            },
+              React.createElement("i", { className: "fas fa-upload" }),
+              self.state.importing ? " Subiendo..." : " Subir plantilla"
             )
           )
         )
@@ -1904,8 +2124,11 @@ class ReportExpenseIndex extends React.Component {
       );
     }
 
-    // Importar
-    if (this.props.estados.create) {
+    // Importar. Va con `estados.import` —que el servidor calcula como "es
+    // administrador"— y no con `estados.create`: crear un gasto por el
+    // formulario y crear 300 por un Excel no son el mismo permiso. El import
+    // salta el formulario, el presupuesto y las reglas de gasto.
+    if (this.props.estados.import) {
       buttons.push(
         React.createElement("button", {
           key: "import",

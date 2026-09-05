@@ -3,7 +3,7 @@ import NumberFormat from "react-number-format";
 import Swal from "sweetalert2";
 import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable, CmModal, CmButton } from '../../generalcomponents/ui';
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon } from '../../generalcomponents/expenseIndicators';
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen } from '../../generalcomponents/expenseIndicators';
 
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
@@ -96,6 +96,10 @@ class ExpensesTable extends Component {
       receiptFile: null,
       receiptFileName: "",
       receiptExistingId: null,
+      // URL del comprobante YA GUARDADO. Hace falta aparte de
+      // `receiptFileName` —que solo se llena al elegir archivo nuevo— para
+      // saber si lo adjuntado es imagen cuando se EDITA un gasto.
+      receiptExistingUrl: "",
       receiptError: null,
       receiptPreview: { open: false, id: null, name: "" },
       receiptPreviewError: false,
@@ -162,22 +166,26 @@ class ExpensesTable extends Component {
       // al hacer clic. `receipt_file.url` se usa SOLO como condicion de
       // existencia. sortable:false porque no es una columna real de la base.
       { key: "receipt_file", label: "Comprobante", width: "120px", sortable: false, render: (r) => {
-        if (!r.receipt_file || !r.receipt_file.url) return <i className="fas fa-times" style={{ color: "#ccc" }} />;
+        // Guion centrado y NO una equis: la equis se lee como "fallo" o como un
+        // boton de quitar. Aqui no hay error ni accion, solo ausencia de dato.
+        if (!r.receipt_file || !r.receipt_file.url) return <div className="cm-celda-vacia">—</div>;
 
+        // UN SOLO BOTON, no dos. Antes habia una descarga y un ojo, y la
+        // diferencia entre ambos no la decide el usuario sino el archivo: una
+        // foto se mira, un PDF se abre en el visor del navegador. El boton hace
+        // lo que corresponda y el icono lo anuncia.
+        // Con etiqueta y no solo icono, igual que en la pantalla de Gastos: el
+        // verbo cambia con el archivo porque no hacen lo mismo. Iconos de
+        // FontAwesome 5, que es la que carga el layout.
+        const imagen = esComprobanteImagen(r.receipt_file.url);
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <a href={"/download_receipt/report_expenses/" + r.id}
-               target="_blank" rel="noopener noreferrer"
-               className="cm-btn cm-btn-outline cm-btn-sm"
-               title="Descargar comprobante"
-               data-testid={"expense-receipt-link-" + r.id}>
-              <i className="fas fa-download" />
-            </a>
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <button type="button" className="cm-btn cm-btn-outline cm-btn-sm"
-                    title="Previsualizar comprobante"
-                    onClick={() => this.openReceiptPreview(r.id, r.receipt_file.name)}
+                    title={imagen ? "Ver el comprobante" : "Abrir el comprobante en otra pestaña"}
+                    onClick={() => this.abrirComprobante(r.id, r.receipt_file.url)}
                     data-testid={"expense-receipt-preview-" + r.id}>
-              <i className="fas fa-eye" />
+              <i className={imagen ? "fas fa-receipt" : "fas fa-external-link-alt"} />
+              {imagen ? " Ver" : " Abrir"}
             </button>
           </div>
         );
@@ -308,7 +316,7 @@ class ExpensesTable extends Component {
       selectedOptionTypeIndentification: { type_identification_id: "", label: "" },
       selectedOptionPaymentType: { payment_type_id: "", label: "" },
       selectedOptionCurrency: { value: "COP", label: "COP — Peso colombiano" },
-      receiptFile: null, receiptFileName: "", receiptExistingId: null, receiptError: null,
+      receiptFile: null, receiptFileName: "", receiptExistingId: null, receiptExistingUrl: "", receiptError: null,
       extraction: Object.assign({}, EXTRACTION_VACIA),
       exchange: Object.assign({}, EXCHANGE_VACIO),
       budgetAvailability: Object.assign({}, DISPONIBLE_VACIO),
@@ -348,6 +356,7 @@ class ExpensesTable extends Component {
       // se vuelve a subir.
       receiptFile: null, receiptFileName: "", receiptError: null,
       receiptExistingId: row.receipt_file && row.receipt_file.url ? row.id : null,
+      receiptExistingUrl: row.receipt_file && row.receipt_file.url ? row.receipt_file.url : "",
       extraction: Object.assign({}, EXTRACTION_VACIA),
       exchange: Object.assign({}, EXCHANGE_VACIO),
       budgetAvailability: Object.assign({}, DISPONIBLE_VACIO),
@@ -563,7 +572,7 @@ class ExpensesTable extends Component {
             Swal.fire({ icon: "error", title: "No se pudo quitar el comprobante", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
             return;
           }
-          self.setState({ receiptExistingId: null });
+          self.setState({ receiptExistingId: null, receiptExistingUrl: "" });
           self.loadData();
         })
         .catch(function() {
@@ -576,6 +585,18 @@ class ExpensesTable extends Component {
   // proposito: la columna "Comprobante" del indice de Gastos (paquete 09) llama
   // a este mismo par de metodos por nombre. Renombrarlos obliga a actualizar la
   // Tarea 2 del 09 en el mismo PR.
+  // UNICO punto de entrada al comprobante. Imagen -> modal; cualquier otra
+  // cosa -> descarga directa, sin modal: abrir una ventana para que el usuario
+  // tenga que pulsar "Descargar" es un clic de mas.
+  abrirComprobante = (id, pista) => {
+    if (esComprobanteImagen(pista)) { this.openReceiptPreview(id, pista); return; }
+    // `?disposition=inline` tambien para lo que NO es imagen: un PDF se abre en
+    // el visor del navegador, que ya sabe mostrarlo, imprimirlo y guardarlo.
+    // Forzar la descarga le quitaba al usuario esas tres cosas para darle un
+    // archivo en la carpeta de descargas que igual tiene que abrir.
+    window.open("/download_receipt/report_expenses/" + id + "?disposition=inline", "_blank", "noopener");
+  };
+
   openReceiptPreview = (id, name) => {
     this.setState({ receiptPreview: { open: true, id: id, name: name || "" }, receiptPreviewError: false });
   };
@@ -720,30 +741,32 @@ class ExpensesTable extends Component {
       .then(function(data) {
         if (data.type === "error") {
           self.setState({ saving: false });
+
+          // LAS REGLAS DE GASTO SON DURAS: el servidor RECHAZA el gasto y este
+          // modal se queda abierto con los datos puestos, para corregir sin
+          // volver a escribirlo todo. Se separa del error generico porque no es
+          // un fallo del sistema sino una decision de negocio, y el usuario
+          // necesita leer QUE regla incumplio, no "ocurrió un error".
+          var violaciones = data.rule_violations || [];
+          if (violaciones.length > 0) {
+            Swal.fire({
+              icon: "warning",
+              title: "No se puede guardar: incumple las reglas de gasto",
+              html: "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
+                    violaciones.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
+                    "</ul>",
+              confirmButtonColor: "#2a3f53",
+              confirmButtonText: "Corregir",
+            });
+            return;
+          }
+
           Swal.fire({ icon: "error", title: "¡Ocurrió un error!", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
           return;
         }
         self.setState({ modal: false, saving: false });
         self.loadData(isEdit ? undefined : 1);
         self.clearValues();
-
-        // Mismo aviso que en el modulo de Gastos, y a proposito: es el mismo
-        // gasto y las mismas reglas, asi que no puede leerse distinto segun por
-        // cual de las dos pantallas se registre.
-        var violaciones = data.rule_violations || [];
-        if (violaciones.length > 0) {
-          Swal.fire({
-            icon: "warning",
-            title: isEdit ? "Gasto actualizado, pero no queda aprobado" : "Gasto creado, pero no queda aprobado",
-            html: "<p>Incumple " + (violaciones.length === 1 ? "una regla de gasto" : violaciones.length + " reglas de gasto") + ":</p>" +
-                  "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
-                  violaciones.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
-                  "</ul>",
-            confirmButtonColor: "#2a3f53",
-            confirmButtonText: "Entendido",
-          });
-          return;
-        }
 
         Swal.fire({ position: "center", icon: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
       })
@@ -784,14 +807,11 @@ class ExpensesTable extends Component {
     var p = this.state.receiptPreview;
     if (!p.open) return null;
 
-    var src = "/download_receipt/report_expenses/" + p.id;
-    // El <img> solo se usa cuando el nombre del archivo dice claramente que es
-    // una imagen. En cualquier otro caso —incluido "no se conoce el nombre",
-    // que es lo normal desde la tabla porque el serializer solo expone `url`—
-    // se usa <iframe>, que sirve tanto para PDF como para imagen. Al reves, un
-    // <img> sobre un PDF muestra el icono de imagen rota.
-    var nombre = (p.name || "").toLowerCase();
-    var esImagen = /\.(jpe?g|png|webp|heic|gif)$/.test(nombre);
+    // `?disposition=inline` para PINTAR: con "attachment" el navegador descarga
+    // en vez de mostrar y el modal salia VACIO. La descarga usa la misma ruta
+    // sin el parametro, donde el default sigue forzando el guardado.
+    var src = "/download_receipt/report_expenses/" + p.id + "?disposition=inline";
+    var descarga = "/download_receipt/report_expenses/" + p.id;
 
     return (
       <CmModal
@@ -800,12 +820,13 @@ class ExpensesTable extends Component {
         size="lg"
         title={<span><i className="fa fa-file" /> Comprobante del gasto #{p.id}</span>}
         footer={
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
-            {/* Sin data-testid: `expense-receipt-link-{id}` ya lo emite la fila
-                de la tabla, que es donde §7.6 lo situa. Repetirlo aqui daria dos
-                nodos con el mismo selector justo cuando el modal esta abierto,
-                que es el momento en que el spec E4.2 del paquete 12 lo busca. */}
-            <a className="cm-btn cm-btn-outline" href={src} target="_blank" rel="noopener noreferrer">
+          // VUELVE EL BOTON DE DESCARGAR. Antes sobraba porque la fila tenia su
+          // propio enlace al lado del ojo; ahora la fila tiene un solo boton y
+          // este modal es el UNICO sitio desde donde se puede guardar la imagen.
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+            <a href={descarga} target="_blank" rel="noopener noreferrer"
+               className="cm-btn cm-btn-outline"
+               data-testid={"receipt-preview-download"}>
               <i className="fa fa-download" /> Descargar
             </a>
             <CmButton variant="accent" onClick={this.closeReceiptPreview}>
@@ -817,14 +838,14 @@ class ExpensesTable extends Component {
         <div data-testid="receipt-preview-modal">
           {this.state.receiptPreviewError ? (
             <div className="cm-alert cm-alert-warning">
-              <i className="fa fa-exclamation-triangle" /> No se pudo previsualizar el comprobante. Intente descargarlo.
+              <i className="fa fa-exclamation-triangle" /> No se pudo previsualizar el comprobante.{" "}
+              <a href={descarga} target="_blank" rel="noopener noreferrer">Descargarlo</a>.
             </div>
-          ) : esImagen ? (
-            <img src={src} alt="Comprobante" style={{ maxWidth: "100%" }}
-                 onError={() => this.setState({ receiptPreviewError: true })} />
           ) : (
-            <iframe src={src} title="Comprobante" style={{ width: "100%", height: "70vh", border: 0 }}
-                    onError={() => this.setState({ receiptPreviewError: true })} />
+            // Solo <img>: `abrirComprobante` ya desvio a descarga lo que no sea
+            // imagen, asi que el <iframe> sobra. Era el que salia en blanco.
+            <img src={src} alt="Comprobante" style={{ maxWidth: "100%", display: "block", margin: "0 auto" }}
+                 onError={() => this.setState({ receiptPreviewError: true })} />
           )}
         </div>
       </CmModal>
@@ -869,7 +890,9 @@ class ExpensesTable extends Component {
             receiptExistingId={this.state.receiptExistingId}
             receiptError={this.state.receiptError}
             onDeleteReceipt={this.state.modeEdit ? this.handleDeleteReceipt : null}
-            onPreviewReceipt={() => this.openReceiptPreview(this.state.receiptExistingId, this.state.receiptFileName)}
+            // Pista: el archivo recien elegido si lo hay, si no la URL del ya
+            // guardado (al editar, `receiptFileName` esta vacio).
+            onPreviewReceipt={() => this.abrirComprobante(this.state.receiptExistingId, this.state.receiptFileName || this.state.receiptExistingUrl)}
             extractionEnabled={receiptExtractionEnabled()}
             extraction={this.state.extraction}
             onExtract={this.handleExtract}
