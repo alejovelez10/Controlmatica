@@ -155,6 +155,30 @@ class ReportExpenseImportTest < ActiveSupport::TestCase
     assert_equal "Hotel Uno CORREGIDO", gasto.reload.invoice_name
   end
 
+  # LA BASE ESTA EN COLLATION `C`. Con esa configuracion el `LOWER()` de Postgres
+  # solo baja ASCII, asi que la consulta que resolvia los catalogos —
+  # `LOWER(TRIM(name)) = <texto en minuscula de Ruby>`— no podia coincidir NUNCA
+  # con un valor que tuviera una mayuscula acentuada. El tipo "Útiles papelería"
+  # y las personas "Pedro Álvarez" y "Luciana Álvarez" eran imposibles de
+  # importar, y el import no avisaba: dejaba el campo en NULL y daba la fila por
+  # buena. Se resuelve en Ruby.
+  test "un catalogo con mayuscula acentuada si se resuelve" do
+    assert_equal "útiles papelería 51953001",
+                 ReportExpense.clave_de_catalogo("Útiles papelería 51953001"),
+                 "la clave tiene que bajar tambien las mayusculas acentuadas"
+    refute_equal ReportExpense.clave_de_catalogo("Útiles papelería"),
+                 "Útiles papelería",
+                 "si esto pasa, se esta comparando sin normalizar"
+  end
+
+  # El espacio duro (U+00A0) es invisible y varios nombres del catalogo lo llevan
+  # en medio. Quien teclee el texto a mano escribe un espacio normal.
+  test "el espacio duro y las rachas de espacios se tratan como un espacio" do
+    assert_equal ReportExpense.clave_de_catalogo("Casino y restaurante\u00A0 51956001"),
+                 ReportExpense.clave_de_catalogo("Casino y restaurante 51956001")
+    assert_equal "a b", ReportExpense.clave_de_catalogo("  A   b  ")
+  end
+
   test "archivo v2 ignora estado presupuestal" do
     # La prueba de que el import NO puede fabricar aprobaciones presupuestales.
     importar(V2)

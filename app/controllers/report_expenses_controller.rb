@@ -24,6 +24,10 @@ class ReportExpensesController < ApplicationController
       closed: is_admin? || has_menu_permission?("Gastos", "Aceptar gasto"),
       export: is_admin? || has_menu_permission?("Gastos", "Exportar a excel"),
       show_user: is_admin? || has_menu_permission?("Gastos", "Cambiar responsable"),
+      # Importar y descargar la plantilla: SOLO administrador. El import salta el
+      # formulario, el presupuesto y las reglas, asi que no se reparte por
+      # permisos de menu.
+      import: puede_importar?,
     }
   end
 
@@ -138,6 +142,11 @@ class ReportExpensesController < ApplicationController
                success: "El Registro No se creo!",
                message: result.errors,
                type: "error",
+               # Separadas de `message` para que el formulario pueda distinguir
+               # "incumple una regla de negocio" de "fallo algo": lo primero se
+               # muestra como una lista de reglas y se deja el modal abierto para
+               # corregir; lo segundo es un error generico.
+               rule_violations: reglas_incumplidas(report_expense_del_resultado(result)),
              }
     end
   end
@@ -200,6 +209,11 @@ class ReportExpensesController < ApplicationController
                success: "El Registro No se creo!",
                message: result.errors,
                type: "error",
+               # Separadas de `message` para que el formulario pueda distinguir
+               # "incumple una regla de negocio" de "fallo algo": lo primero se
+               # muestra como una lista de reglas y se deja el modal abierto para
+               # corregir; lo segundo es un error generico.
+               rule_violations: reglas_incumplidas(report_expense_del_resultado(result)),
              }
     end
   end
@@ -284,7 +298,14 @@ class ReportExpensesController < ApplicationController
     # `page.waitForEvent("download")` del escenario E4.3 se cuelga 60 s.
     #
     # Rails 6.1 NO acepta `allow_other_host:` (se agrego en Rails 7): no se pone.
-    disposicion = "attachment; filename=\"#{@report_expense.receipt_file.file.filename}\""
+    #
+    # `?disposition=inline` es la UNICA excepcion y existe para el modal de
+    # previsualizacion: con "attachment" el navegador descarga en vez de pintar,
+    # y el modal salia EN BLANCO. Es opt-in a proposito —el default sigue siendo
+    # la descarga forzada— para no romper el contrato del 12 ni el enlace de
+    # descarga de la tabla, que no manda el parametro.
+    modo = params[:disposition].to_s == "inline" ? "inline" : "attachment"
+    disposicion = "#{modo}; filename=\"#{@report_expense.receipt_file.file.filename}\""
 
     if remote_receipt_storage?
       redirect_to @report_expense.receipt_file.url(query: { "response-content-disposition" => disposicion })
@@ -297,7 +318,7 @@ class ReportExpensesController < ApplicationController
       send_file @report_expense.receipt_file.path,
                 filename: @report_expense.receipt_file.file.filename,
                 type: @report_expense.receipt_file.content_type.presence || "application/octet-stream",
-                disposition: "attachment"
+                disposition: modo
     end
   end
 
@@ -343,7 +364,40 @@ class ReportExpensesController < ApplicationController
                    warnings: warnings }
   end
 
+  # PLANTILLA DE IMPORTACION. Se genera contra la base en cada descarga: las
+  # hojas de catalogo tienen que traer los valores EXACTOS, porque el import
+  # resuelve centro, responsable, tipo y medio de pago por texto y `TRIM` no
+  # limpia los espacios de en medio. Ver el encabezado de la vista.
+  def import_template
+    return forbidden_import! unless puede_importar?
+
+    # Sin catalogo de centros de costo: hay 10.901 y pueden ser 21.000. El codigo
+    # lo escribe quien llena la plantilla, que ya sabe en que centro trabaja.
+    @responsables = User.where.not(names: [nil, ""]).order(:names).pluck(:names).uniq
+    @tipos        = ReportExpenseOption.where(category: "Tipo").order(:name).pluck(:name)
+    @medios       = ReportExpenseOption.where(category: "Medio de pago").order(:name).pluck(:name)
+
+    # Las filas de ejemplo usan valores REALES del catalogo: una plantilla cuyo
+    # ejemplo no importa es peor que no tener ejemplo.
+    @ejemplos = [
+      ["CC-0001", @responsables.first, Date.current, "Hotel Ejemplo S.A.S", "900123456",
+       "Alojamiento salida a obra", "FE-1001", @tipos.first, @medios.first, 250_000, 47_500],
+      ["CC-0001", @responsables.first, Date.current - 3, "Estación de servicio", "800987654",
+       "Combustible camioneta", "FE-1002", (@tipos[1] || @tipos.first), (@medios[1] || @medios.first),
+       120_000, 0],
+    ]
+
+    render xlsx: "Plantilla de gastos", template: "report_expenses/import_template.xlsx.axlsx"
+  end
+
   def upload_file
+    # SOLO ADMINISTRADOR. Antes esta accion no tenia NINGUNA comprobacion —y
+    # ademas `verify_authenticity_token` esta saltado para ella—, asi que
+    # cualquier usuario autenticado podia crear gastos en masa en cualquier
+    # centro y a nombre de cualquiera. El import salta el formulario, el
+    # presupuesto y las reglas: es la puerta mas ancha de la aplicacion.
+    return forbidden_import! unless puede_importar?
+
     status_upload = ReportExpense.import(params[:file], current_user.id)
     if status_upload
       render :json => {
@@ -484,14 +538,37 @@ class ReportExpensesController < ApplicationController
     @_is_admin ||= current_user.rol.name == "Administrador"
   end
 
-  # Las violaciones que dejo el `before_save` del modelo, en el formato plano que
-  # consume el formulario. Es LECTURA: no vuelve a evaluar nada, porque
-  # `apply_expense_rules` ya lo hizo sobre el objeto que se guardo. Reevaluar
-  # aqui podria dar un resultado distinto del que quedo en la base.
+  # Las reglas que el gasto incumple, en el formato plano que consume el
+  # formulario.
+  #
+  # NO REEVALUA: lee lo que dejo la validacion del modelo sobre ESTE objeto. En
+  # el rechazo el gasto no llego a guardarse, asi que `rule_violations` (la
+  # columna) esta vacia y lo que sirve es la lista en memoria; en un guardado
+  # exitoso las dos coinciden. Volver a llamar al servicio aqui podria dar un
+  # resultado distinto del que motivo el rechazo.
   def reglas_incumplidas(expense)
-    Array(expense&.rule_violations).map do |v|
-      { code: v["code"] || v[:code], message: v["message"] || v[:message] }
+    Array(expense&.violaciones_de_reglas).map do |v|
+      { code: v[:code] || v["code"], message: v[:message] || v["message"] }
     end
+  end
+
+  # `result.value` es el propio gasto cuando el guardado falla, pero se protege
+  # el caso de un Result sin value (lock timeout, centro inexistente).
+  def report_expense_del_resultado(result)
+    result.value.is_a?(ReportExpense) ? result.value : nil
+  end
+
+  # "El del rol administrador, el que tiene todo". Es el rol, no un permiso de
+  # menu: no existe una accion "Importar" en la tabla de acciones, y crearla es
+  # una decision de configuracion aparte.
+  def puede_importar?
+    is_admin?
+  end
+
+  def forbidden_import!
+    render json: { success: "¡Ocurrió un error!", type: "error",
+                   message: ["Solo un administrador puede importar gastos"] },
+           status: :forbidden
   end
 
   def report_expense_find

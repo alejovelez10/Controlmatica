@@ -1,0 +1,139 @@
+# Plantilla de importacion de gastos.
+#
+# SE GENERA, NO ES UN ARCHIVO ESTATICO, y esa es la decision importante de este
+# archivo. `ReportExpense.import` no resuelve el centro, el responsable, el tipo
+# ni el medio de pago por id: los busca por TEXTO EXACTO.
+#
+#   User.where("LOWER(TRIM(names)) = ?", ...)
+#   CostCenter.where("LOWER(TRIM(code)) = ?", ...)
+#   ReportExpenseOption.where("LOWER(TRIM(name)) = ?", ...)
+#
+# `TRIM` limpia los extremos y NADA MAS. Y los catalogos reales tienen espacios
+# dobles y hasta un espacio duro (U+00A0) en medio del nombre:
+# "Casino y restaurante  51956001", "Taxis y buses 51954501". Quien teclee
+# ese texto a mano en un Excel jamas va a acertar, y el import NO avisa: deja el
+# campo en NULL y da la fila por buena. Es la explicacion mas probable de que
+# 4.985 de los 5.017 gastos de la base no tengan responsable.
+#
+# Por eso la plantilla se arma contra la base en el momento de la descarga:
+# las hojas de catalogo traen los valores reales, listos para copiar y pegar.
+#
+# Las hojas de catalogo NO incluyen los centros de costo: son 10.901 y pueden
+# ser 21.000. Ese dato lo pone quien llena la plantilla.
+#
+# LAYOUT v1 (11 columnas) A PROPOSITO. El de 18 columnas existe y es el que
+# produce el export —sirve para REIMPORTAR y actualizar por ID—, pero como
+# plantilla para CREAR gastos es peor: arrastra la columna ID y tres columnas
+# (`_estado_operativo`, `_budget_status`, `_budget_reason`) que el import lee y
+# TIRA, porque son campos que escribe el servidor. Ofrecerlas invita a llenarlas.
+#
+# `detect_layout` decide por posicion, no por el texto de la cabecera: con 11
+# columnas siempre cae en v1, asi que los encabezados pueden estar en castellano
+# y con tildes sin romper nada. Lo que NO se puede cambiar es EL ORDEN.
+wb = xlsx_package.workbook
+
+encabezado = wb.styles.add_style(
+  b: true, sz: 11, fg_color: "FFFFFF", bg_color: "2A3F53",
+  alignment: { horizontal: :center, vertical: :center, wrap_text: true },
+  border: { style: :thin, color: "1B2C3B" }
+)
+obligatorio = wb.styles.add_style(
+  b: true, sz: 11, fg_color: "FFFFFF", bg_color: "B8860B",
+  alignment: { horizontal: :center, vertical: :center, wrap_text: true },
+  border: { style: :thin, color: "8A6708" }
+)
+ejemplo    = wb.styles.add_style(sz: 10, alignment: { vertical: :center })
+fecha      = wb.styles.add_style(sz: 10, format_code: "yyyy-mm-dd", alignment: { horizontal: :center })
+# `$#,##0` y NO `"$"#,##0`: axlsx no escapa las comillas dobles dentro del
+# format_code y genera `formatCode=""$"#,##0"`, que es XML invalido —el archivo
+# se produce sin error y ningun lector lo abre—. En Excel el `$` ya es literal.
+dinero     = wb.styles.add_style(sz: 10, format_code: "$#,##0")
+titulo     = wb.styles.add_style(b: true, sz: 14, fg_color: "2A3F53")
+subtitulo  = wb.styles.add_style(sz: 10, fg_color: "6C757D")
+aviso      = wb.styles.add_style(sz: 10, fg_color: "8A6708", b: true)
+catalogo   = wb.styles.add_style(sz: 10, border: { style: :thin, color: "DDDDDD" })
+
+# --- Hoja 1: la que se llena ------------------------------------------------
+#
+# El orden de estas 11 columnas ES EL CONTRATO con LEGACY_HEADER_KEYS. Mover una
+# no rompe nada visible: importa los datos en el campo equivocado.
+wb.add_worksheet(name: "Gastos") do |sheet|
+  sheet.add_row ["Centro de costo", "Responsable", "Fecha de factura", "Nombre / Proveedor",
+                 "NIT o cédula", "Descripción", "Número de factura", "Tipo de gasto",
+                 "Medio de pago", "Valor (sin IVA)", "IVA"],
+                style: [obligatorio, obligatorio, obligatorio, obligatorio, encabezado,
+                        encabezado, encabezado, obligatorio, obligatorio, obligatorio, encabezado]
+
+  @ejemplos.each do |fila|
+    sheet.add_row fila, style: [ejemplo, ejemplo, fecha, ejemplo, ejemplo, ejemplo,
+                                ejemplo, ejemplo, ejemplo, dinero, dinero],
+                        types: [:string, :string, :date, :string, :string, :string,
+                                :string, :string, :string, :float, :float]
+  end
+
+  sheet.column_widths 18, 22, 16, 30, 16, 30, 18, 30, 22, 16, 14
+  # La cabecera queda fija: con 200 filas cargadas, saber que columna se esta
+  # llenando es la diferencia entre importar bien y no hacerlo.
+  sheet.sheet_view.pane do |pane|
+    pane.top_left_cell = "A2"
+    pane.state         = :frozen
+    pane.y_split       = 1
+  end
+end
+
+# --- Hoja 2: como se llena --------------------------------------------------
+wb.add_worksheet(name: "Instrucciones") do |sheet|
+  sheet.add_row ["Cómo llenar esta plantilla"], style: titulo
+  sheet.add_row []
+  sheet.add_row ["Llene la hoja «Gastos», una fila por gasto. Borre las filas de ejemplo antes de subirla."], style: subtitulo
+  sheet.add_row ["Las columnas en dorado son obligatorias. NO cambie el orden ni agregue columnas."], style: aviso
+  sheet.add_row []
+  sheet.add_row ["Copie y pegue los valores desde las hojas de catálogo."], style: aviso
+  sheet.add_row ["Si el texto no coincide EXACTAMENTE, el gasto se crea igual pero con ese campo vacío,"], style: subtitulo
+  sheet.add_row ["y no se le avisa. Varios nombres del catálogo llevan espacios dobles que no se ven."], style: subtitulo
+  sheet.add_row []
+  sheet.add_row ["Columna", "Qué va", "Dónde sale"], style: encabezado
+  [
+    ["Centro de costo",    "Código del centro, ej. CC-0175",              "Lo escribe usted"],
+    ["Responsable",        "Nombre de la persona que reporta el gasto",   "Hoja «Responsables»"],
+    ["Fecha de factura",   "Fecha real de la factura (AAAA-MM-DD)",       "De la factura"],
+    ["Nombre / Proveedor", "A quién se le pagó",                          "De la factura"],
+    ["NIT o cédula",       "Identificación del proveedor (opcional)",     "De la factura"],
+    ["Descripción",        "Para qué fue el gasto (opcional)",            "—"],
+    ["Número de factura",  "Consecutivo de la factura (opcional)",        "De la factura"],
+    ["Tipo de gasto",      "Categoría contable",                          "Hoja «Tipos de gasto»"],
+    ["Medio de pago",      "Cómo se pagó",                                "Hoja «Medios de pago»"],
+    ["Valor (sin IVA)",    "Base gravable, solo números",                 "De la factura"],
+    ["IVA",                "Impuesto, solo números. Cero si no tiene",    "De la factura"],
+  ].each { |f| sheet.add_row f, style: catalogo }
+
+  sheet.add_row []
+  sheet.add_row ["Lo que el archivo NO puede hacer"], style: titulo
+  sheet.add_row ["El estado del gasto, la aprobación contable y el estado presupuestal los calcula"], style: subtitulo
+  sheet.add_row ["el sistema. Aunque agregue esas columnas, se ignoran."], style: subtitulo
+  sheet.add_row ["Una fila con un error no detiene el archivo: las demás se importan y al terminar"], style: subtitulo
+  sheet.add_row ["se le indica cuáles filas hay que corregir."], style: subtitulo
+
+  sheet.column_widths 24, 46, 28
+end
+
+# --- Hojas de catalogo ------------------------------------------------------
+#
+# Son la razon de que la plantilla se genere. Copiar de aqui es la unica forma
+# fiable de acertarle a un nombre con espacios raros.
+# NO HAY HOJA DE CENTROS DE COSTO. Hay 10.901 en la base y pueden llegar a
+# 21.000: volcarlos convertiria la plantilla en un directorio inutil de recorrer
+# y multiplicaria por veinte el peso del archivo. El codigo del centro lo pone
+# quien llena la plantilla, que ya sabe en cual esta trabajando.
+{
+  "Responsables"     => ["Nombre del responsable", @responsables],
+  "Tipos de gasto"   => ["Tipo de gasto", @tipos],
+  "Medios de pago"   => ["Medio de pago", @medios],
+}.each do |nombre, (titulo_col, valores)|
+  wb.add_worksheet(name: nombre) do |sheet|
+    sheet.add_row [titulo_col], style: encabezado
+    sheet.add_row ["Copie el valor tal cual, sin retocarlo."], style: subtitulo
+    valores.each { |v| sheet.add_row [v], style: catalogo, types: [:string] }
+    sheet.column_widths 46
+  end
+end

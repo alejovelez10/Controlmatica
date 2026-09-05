@@ -85,6 +85,11 @@ class ReportExpensesCreateTool < ApplicationTool
       re = ReportExpense.new(attrs)
       re.exchange_rate_source = resolve_rate_source(re)
       re.user_id = creator.id
+      # Desde que las reglas son una VALIDACION del modelo (duras, bloquean), la
+      # confirmacion de la persona hay que trasladarla al objeto: sin esto el
+      # `save` fallaria despues del guard de abajo y la confirmacion no serviria
+      # de nada.
+      re.reglas_confirmadas_por_el_usuario = ActiveModel::Type::Boolean.new.cast(confirm_rule_violations)
 
       # GUARD DE REGLAS DE NEGOCIO — antes de guardar nada (§7.5). El motor es
       # ExpenseRuleService (paquete 14) y es el MISMO que corre en la web: aquí

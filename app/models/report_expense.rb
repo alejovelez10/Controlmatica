@@ -272,6 +272,24 @@ class ReportExpense < ApplicationRecord
     edit_min_length:   59
   )
 
+  # Las violaciones que encontro la validacion sobre ESTE objeto, para que el
+  # controller pueda mostrarselas al usuario cuando el guardado se rechaza (ahi
+  # la columna `rule_violations` no existe todavia: el gasto no se guardo).
+  attr_reader :violaciones_de_reglas
+
+  # ESCAPE EXPLICITO Y CONSCIENTE, no un interruptor general.
+  #
+  # Lo usa SOLO el canal de WhatsApp: `ReportExpensesCreateTool` ya rechazaba por
+  # su cuenta un gasto con violaciones y exige `confirm_rule_violations: true`,
+  # que el agente solo manda DESPUES de mostrarle las reglas a la persona y de
+  # que ella confirme registrar igual. Sin este atributo, la validacion nueva
+  # anularia esa confirmacion y romperia un flujo que ya existia.
+  #
+  # El formulario web NO lo usa: alli las reglas son duras y no hay forma de
+  # saltarselas. Si algun dia se quiere quitar tambien la de WhatsApp, se borra
+  # este atributo y su unico uso en la tool.
+  attr_accessor :reglas_confirmadas_por_el_usuario
+
   # === REGLAS DE GASTOS (paquete 14) ========================================
   #
   # POR QUE UN CALLBACK DEL MODELO Y NO UNA LLAMADA EN EL CONTROLLER: las tres
@@ -280,13 +298,25 @@ class ReportExpense < ApplicationRecord
   # Puesto en el controller cubriria un solo canal y la asimetria no la notaria
   # nadie hasta la auditoria contable.
   #
-  # Corre en `before_save` y no en `validate` a proposito: una violacion NO
-  # impide guardar. Bloquear al usuario en campo, con la factura en la mano,
-  # solo consigue que no reporte. Lo que si hace es impedir que el gasto quede
-  # APROBADO presupuestalmente.
+  # LAS REGLAS SON DURAS: IMPIDEN GUARDAR (decision de producto, 2026-08-29).
   #
-  # Va DESPUES del `evaluate!` de ExpenseBudgetService —que corre sobre el objeto
-  # en memoria antes del save— justamente para poder pisarle el `aprobado`.
+  # Antes vivian en un `before_save` que solo dejaba una anotacion y bajaba el
+  # gasto a "sin aprobar". El dueño del producto lo corrigio: son obligatorias, y
+  # un gasto que las incumple no debe existir. La nota que habia aqui —"bloquear
+  # al usuario en campo, con la factura en la mano, solo consigue que no
+  # reporte"— queda registrada como el riesgo que se acepto a conciencia.
+  #
+  # EN UNA VALIDACION Y NO EN EL CONTROLLER, por el mismo motivo que antes: los
+  # tres canales (web, WhatsApp y el import de Excel) tienen que rechazar lo
+  # mismo. Puesto en el controller cubriria uno solo.
+  validate :enforce_expense_rules
+
+  # `apply_expense_rules` sobrevive a la validacion y sigue escribiendo la foto en
+  # `rule_violations`. No es redundante: reusa el resultado que ya calculo la
+  # validacion (no vuelve a consultar) y cubre los guardados que se saltan las
+  # validaciones —`save(validate: false)` y el reevaluo FIFO, que escribe con
+  # `update_columns`—. Va DESPUES del `evaluate!` de ExpenseBudgetService para
+  # poder pisarle el `aprobado`.
   before_save :apply_expense_rules
 
   # ACEPTACION AUTOMATICA. Un gasto que cabe en el presupuesto nace aceptado y
@@ -307,10 +337,11 @@ class ReportExpense < ApplicationRecord
   # siguiente save y el desplegable de la tabla no serviria para nada.
   # Automatico al nacer, manual desde ahi.
   #
-  # El orden tambien importa: `before_create` corre DESPUES de los `before_save`,
-  # asi que `apply_expense_rules` ya bajo de `aprobado` a `sin_presupuesto` los
-  # gastos que incumplen una regla. Un gasto que rompe una regla NO se acepta
-  # solo, aunque le sobre cupo.
+  # Un gasto que rompe una regla no llega hasta aqui: la validacion lo rechaza
+  # antes. Y si llegara por un camino que se salte las validaciones,
+  # `apply_expense_rules` —que corre antes, porque los `before_save` preceden a
+  # los `before_create`— ya lo habria bajado de `aprobado` a `sin_presupuesto`,
+  # asi que tampoco se aceptaria solo.
   #
   # El import de Excel no se ve afectado: no pasa por ExpenseBudgetService, asi
   # que sus gastos quedan en `sin_presupuesto` y nunca cumplen la condicion
@@ -404,6 +435,47 @@ class ReportExpense < ApplicationRecord
     raw_header.compact.length >= 18 && first == "id" ? :v2 : :v1
   end
 
+  # Clave con la que se emparejan los textos del Excel contra los catalogos.
+  #
+  # SE RESUELVE EN RUBY Y NO EN SQL, y no es un capricho: la base esta creada con
+  # collation `C` (`datcollate = "C"`), y con esa configuracion el `LOWER()` de
+  # Postgres SOLO baja ASCII. `LOWER('Útiles papelería')` devuelve
+  # `'Útiles papelería'` —la Ú intacta— mientras que el `.downcase` de Ruby da
+  # `'útiles papelería'`. La comparacion `LOWER(TRIM(name)) = <texto en minuscula>`
+  # que habia aqui no podia coincidir NUNCA para un valor con mayuscula
+  # acentuada: el tipo "Útiles papelería 51953001" y las personas "Pedro Álvarez"
+  # y "Luciana Álvarez" eran IMPOSIBLES de importar, y el import no avisaba: los
+  # dejaba en NULL y daba la fila por buena.
+  #
+  # El espacio duro (U+00A0) se trata como espacio normal y las rachas de
+  # espacios se colapsan. Varios nombres del catalogo lo llevan en medio
+  # —"Casino y restaurante\u00A0 51956001"— y es invisible: quien teclee ese
+  # texto a mano escribira un espacio normal y no coincidiria.
+  def self.clave_de_catalogo(valor)
+    valor.to_s.tr("\u00A0", " ").gsub(/\s+/, " ").strip.downcase
+  end
+
+  # Los cuatro catalogos, cargados UNA vez por archivo en vez de cuatro consultas
+  # por fila. Un archivo de 300 filas hacia 1.200 consultas; ahora hace 4.
+  #
+  # `reverse_each` en el volcado: si dos filas comparten clave gana la de id mas
+  # bajo, que es el mismo criterio que tenia el `.first` de la consulta anterior.
+  def self.indice_de_catalogos
+    opciones = ReportExpenseOption.order(:id).to_a
+    {
+      usuarios: indexar(User.where.not(names: [nil, ""]).order(:id), :names),
+      centros:  indexar(CostCenter.where.not(code: [nil, ""]).order(:id), :code),
+      tipos:    indexar(opciones.select { |o| o.category == "Tipo" }, :name),
+      medios:   indexar(opciones.select { |o| o.category == "Medio de pago" }, :name),
+    }
+  end
+
+  def self.indexar(coleccion, campo)
+    coleccion.to_a.reverse_each.each_with_object({}) do |registro, h|
+      h[clave_de_catalogo(registro.public_send(campo))] = registro
+    end
+  end
+
   def self.import(file, user)
     success_records = []
     fail_records = []
@@ -418,6 +490,8 @@ class ReportExpense < ApplicationRecord
     # datos de CADA factura al log de produccion.
     Rails.logger.debug { "ReportExpense.import: layout #{layout}, #{spreadsheet.last_row - 1} filas" }
 
+    indice = indice_de_catalogos
+
     (2..spreadsheet.last_row).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
 
@@ -426,10 +500,10 @@ class ReportExpense < ApplicationRecord
         # es nil y siempre se crea, exactamente como hoy.
         report_expense = find_by(id: row["id"]) || new
 
-        user_invoice = User.where("LOWER(TRIM(names)) = ?", row["user_invoice_id"].to_s.strip.downcase).first
-        cost_center = CostCenter.where("LOWER(TRIM(code)) = ?", row["cost_center_id"].to_s.strip.downcase).first
-        type_identification = ReportExpenseOption.where("LOWER(TRIM(name)) = ?", row["type_identification_id"].to_s.strip.downcase).first
-        payment_type = ReportExpenseOption.where("LOWER(TRIM(name)) = ?", row["payment_type_id"].to_s.strip.downcase).first
+        user_invoice        = indice[:usuarios][clave_de_catalogo(row["user_invoice_id"])]
+        cost_center         = indice[:centros][clave_de_catalogo(row["cost_center_id"])]
+        type_identification = indice[:tipos][clave_de_catalogo(row["type_identification_id"])]
+        payment_type        = indice[:medios][clave_de_catalogo(row["payment_type_id"])]
 
         Rails.logger.debug do
           "ReportExpense.import fila #{i}: centro=#{cost_center&.id.inspect} " \
@@ -593,9 +667,44 @@ class ReportExpense < ApplicationRecord
   # gasto de hoy no deberia dejar de estar marcado de forma retroactiva; y al
   # reves, endurecerla no puede convertir en infractores a 5.000 gastos
   # historicos.
+  # Campos que alimentan las tres reglas deterministas. Se listan para poder
+  # saltarse la validacion cuando una edicion no los toca.
+  CAMPOS_DE_REGLAS = %w[invoice_value invoice_tax invoice_total invoice_date
+                        invoice_number identification].freeze
+
+  def enforce_expense_rules
+    # AL CREAR SIEMPRE; AL EDITAR, SOLO SI CAMBIO ALGO QUE LAS REGLAS MIRAN.
+    #
+    # Sin esta guarda, endurecer una regla dejaria ILEGIBLES los gastos que ya
+    # existen: con un tope de $10.000, corregirle una letra al nombre de un gasto
+    # de $500.000 del año pasado fallaria con "El valor supera el tope", y no hay
+    # forma de arreglarlo porque la factura ya es la que es. Tampoco se podria
+    # aceptar ni aprobar contablemente nada, que son updates sobre gastos viejos.
+    #
+    # Lo que SI se sigue bloqueando al editar es subir el valor por encima del
+    # tope o mover la fecha fuera del plazo: ahi el campo cambio.
+    return if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
+
+    # La confirmacion de WhatsApp: se evaluan igual (para dejar la foto en
+    # `rule_violations`) pero no se convierten en errores.
+    if reglas_confirmadas_por_el_usuario
+      @violaciones_de_reglas = ExpenseRuleService.validate(self).value[:violations]
+      return
+    end
+
+    @violaciones_de_reglas = ExpenseRuleService.validate(self).value[:violations]
+    @violaciones_de_reglas.each { |v| errors.add(:base, v[:message]) }
+  rescue StandardError => e
+    # Un fallo del motor de reglas NO puede impedir registrar un gasto: seria
+    # convertir un error nuestro en una puerta cerrada para el usuario.
+    Rails.logger.error("[report_expense] reglas: #{e.class}: #{e.message}")
+    @violaciones_de_reglas = []
+  end
+
   def apply_expense_rules
-    resultado = ExpenseRuleService.validate(self)
-    violaciones = resultado.value[:violations]
+    # Reusa lo que calculo la validacion; solo consulta si no corrio (por
+    # ejemplo, un `save(validate: false)`).
+    violaciones = @violaciones_de_reglas || ExpenseRuleService.validate(self).value[:violations]
 
     # `.map(&:stringify_keys)` porque jsonb devuelve siempre claves String: sin
     # esto, el objeto en memoria y el releido de la base tendrian formas

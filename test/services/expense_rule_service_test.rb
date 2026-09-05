@@ -45,6 +45,15 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     as_user(@admin) { gasto_nuevo(**attrs).tap(&:save!) }
   end
 
+  # Un gasto que YA incumple una regla. Desde que las reglas son duras
+  # (validacion que bloquea) no se puede crear uno por la via normal, y aun asi
+  # existen: son los gastos anteriores a la regla, o los registrados por WhatsApp
+  # con la confirmacion expresa de la persona. `save(validate: false)` reproduce
+  # esa situacion sin fabricar un camino que la aplicacion no tenga.
+  def gasto_infractor(**attrs)
+    as_user(@admin) { gasto_nuevo(**attrs).tap { |g| g.save(validate: false) } }
+  end
+
   def violaciones(expense, **kwargs)
     ExpenseRuleService.validate(expense, **kwargs).value[:violations]
   end
@@ -93,7 +102,7 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     regla_del_ingeniero(max_invoice_age_days: 10)
     # Gasto viejo REGISTRADO HOY: si se midiera contra created_at pasaria el
     # filtro, que es exactamente el fraude que la regla quiere evitar.
-    gasto = gasto_guardado(invoice_date: Date.current - 60)
+    gasto = gasto_infractor(invoice_date: Date.current - 60)
     gasto.update_columns(created_at: Time.current)
 
     assert_includes codigos(gasto.reload), ExpenseRuleService::CODE_TOO_OLD
@@ -266,19 +275,44 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
 
   # --- Efecto sobre el gasto -------------------------------------------------
 
-  test "un gasto con violacion no queda aprobado por presupuesto aunque quepa" do
+  # LA REGLA SE INVIRTIO (2026-08-29): las reglas de gasto son DURAS. Antes este
+  # test afirmaba `resultado.ok?` y comprobaba que el gasto se guardaba en
+  # "sin_presupuesto"; ahora el guardado se rechaza y no se crea nada.
+  test "un gasto con violacion NO se guarda, aunque quepa de sobra en el presupuesto" do
     regla(name: "Regla general", is_default: true, max_invoice_age_days: 5)
 
     gasto = ReportExpense.new(user: @admin, cost_center: @centro, user_invoice: @ingeniero,
                               invoice_name: "Hotel viejo", invoice_date: Date.current - 60,
                               invoice_number: "FE-VIEJA", identification: "900111222",
                               invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
+
+    resultado = nil
+    assert_no_difference "ReportExpense.count" do
+      resultado = ExpenseBudgetService.persist_with_evaluation!(gasto, actor: @admin)
+    end
+
+    # Cabe de sobra en la partida (700.000 asignados, 200.000 gastados) y aun asi
+    # se rechaza: el presupuesto no salva a un gasto que rompe una regla.
+    refute resultado.ok?
+    assert_includes resultado.errors.join(" "), "El comprobante tiene 60 días"
+  end
+
+  # La otra mitad: con la confirmacion expresa de la persona —la que pide el
+  # agente de WhatsApp— el mismo gasto SI se guarda, y entonces si aplica la
+  # regla vieja de "no impide guardar, pero impide aprobar".
+  test "con confirmacion expresa el gasto se guarda pero no queda aprobado" do
+    regla(name: "Regla general", is_default: true, max_invoice_age_days: 5)
+
+    gasto = ReportExpense.new(user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+                              invoice_name: "Hotel viejo", invoice_date: Date.current - 60,
+                              invoice_number: "FE-VIEJA-OK", identification: "900111222",
+                              invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
+    gasto.reglas_confirmadas_por_el_usuario = true
+
     resultado = ExpenseBudgetService.persist_with_evaluation!(gasto, actor: @admin)
 
     assert resultado.ok?, resultado.errors.inspect
     gasto.reload
-    # Cabe de sobra en la partida (700.000 asignados, 200.000 gastados) y aun asi
-    # NO queda aprobado: una violacion no impide guardar, pero impide aprobar.
     refute_equal "aprobado", gasto.budget_status
     assert_includes gasto.budget_reason.to_s, "reglas de gasto"
     assert_equal 1, gasto.rule_violations.size
@@ -301,7 +335,7 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
 
   test "las violaciones se persisten y no se recalculan al leer" do
     regla(name: "Regla general", is_default: true, max_invoice_age_days: 5)
-    gasto = gasto_guardado(invoice_date: Date.current - 60)
+    gasto = gasto_infractor(invoice_date: Date.current - 60)
     assert_equal 1, gasto.reload.rule_violations.size
 
     # El administrador afloja la regla DESPUES: el gasto de ayer no deja de estar

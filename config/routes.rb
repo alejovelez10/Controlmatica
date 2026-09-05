@@ -84,6 +84,9 @@ Rails.application.routes.draw do
   get "download_file/report_expenses/:type", to: "report_expenses#download_file"
 
   post "upload_file/report_expenses", to: "report_expenses#upload_file"
+  # Plantilla de importacion. Se genera contra la base en cada descarga (ver
+  # app/views/report_expenses/import_template.xlsx.axlsx). Solo administrador.
+  get "import_template/report_expenses", to: "report_expenses#import_template"
   get "indicators_expenses", to: "report_expenses#indicators_expenses"
   get "get_report_expenses", to: "report_expenses#get_report_expenses"
   # Presupuesto de viaticos (partidas, paquete 07). Contrato en
