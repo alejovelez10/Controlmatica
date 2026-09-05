@@ -81,15 +81,33 @@ class AccountingExpensesController < ApplicationController
     # JSON y el aviso de la tabla los muestra. Se informa, no se bloquea, que es
     # la misma regla que ya seguia el guardado del gasto.
 
-    ok = expense.update(
+    # `update_columns` Y NO `update`, y esto NO es un atajo: es la MISMA escritura
+    # que ya hacia la aprobacion masiva con `update_all` unas lineas mas abajo.
+    #
+    # POR QUE. `update` corre TODAS las validaciones del gasto, y 4.985 de los
+    # 5.017 gastos historicos no tienen `user_invoice_id` (`belongs_to
+    # :user_invoice` es obligatorio). Aprobar uno de ellos fallaba con "User
+    # invoice must exist" —un dato que no tiene nada que ver con la aprobacion
+    # contable— y dejaba 2.469 gastos de la bandeja imposibles de aprobar de a
+    # uno. Los mismos gastos SI se aprobaban en masa, porque `update_all` se
+    # salta las validaciones: una fila no se podia y cincuenta si.
+    #
+    # Los tres campos los escribe el SERVIDOR y ninguna validacion del modelo los
+    # mira, asi que saltarselas no relaja ningun control real. Lo que si hay que
+    # escribir a mano es lo que el callback ya no hara: `last_user_edited_id` y
+    # `updated_at`, exactamente igual que en la aprobacion masiva. El RegisterEdit
+    # de la auditoria se escribe abajo, explicitamente, y no depende de callbacks.
+    #
+    # Esto NO arregla la causa: los 4.985 gastos sin responsable siguen sin
+    # responsable, y eso rompe tambien el presupuesto (que se calcula por par
+    # centro/beneficiario). Es una limpieza de datos aparte.
+    expense.update_columns(
       accounting_approved: approve,
       accounting_approved_by_id: approve ? current_user.id : nil,
-      accounting_approved_at: approve ? Time.now : nil
+      accounting_approved_at: approve ? Time.now : nil,
+      last_user_edited_id: current_user.id,
+      updated_at: Time.now
     )
-    unless ok
-      return render json: { success: "¡Ocurrió un error!", type: "error",
-                            message: expense.errors.full_messages }
-    end
 
     # El RegisterEdit se escribe AQUI y no con `audit_field` del concern
     # RegisterAuditable: el texto de una aprobacion contable queda por debajo del

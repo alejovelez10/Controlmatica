@@ -147,6 +147,70 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
   end
 
+  # --- Las dos vistas de la pantalla ----------------------------------------
+  #
+  # La pantalla tiene dos pestanas: "Por aprobar" (la que abre) y "Aprobados".
+  # Las dos son el MISMO endpoint con `accounting_approved` distinto, asi que lo
+  # que se prueba aqui es que el parametro recorta de verdad: si dejara de
+  # aplicarse, "Por aprobar" listaria tambien lo ya aprobado y contabilidad
+  # volveria a revisar lo que ya reviso.
+
+  test "la vista Por aprobar deja fuera lo ya aprobado" do
+    pendiente = crear_gasto
+    aprobado  = crear_gasto
+    aprobado.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { accounting_approved: "false" }
+
+    ids = assert_json_list.map { |r| r["id"] }
+    assert_includes ids, pendiente.id
+    refute_includes ids, aprobado.id
+  end
+
+  test "las dos vistas se reparten los gastos sin perder ninguno" do
+    pendiente = crear_gasto
+    aprobado  = crear_gasto
+    aprobado.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
+    sign_in_as @admin
+
+    get get_accounting_expenses_path, params: { accounting_approved: "false" }
+    pendientes = assert_json_list.map { |r| r["id"] }
+
+    get get_accounting_expenses_path, params: { accounting_approved: "true" }
+    aprobados = assert_json_list.map { |r| r["id"] }
+
+    assert_empty pendientes & aprobados, "un gasto no puede salir en las dos pestanas"
+    assert_includes pendientes, pendiente.id
+    assert_includes aprobados,  aprobado.id
+  end
+
+  test "el Excel de la vista Por aprobar tampoco trae lo aprobado" do
+    # El boton de exportar manda SIEMPRE type=filtro (aun sin filtros), porque es
+    # la unica rama de download_file que pasa por filtered_scope. Con "todos" el
+    # Excel traia la tabla entera y no coincidia con la pestana en pantalla.
+    pendiente = crear_gasto(invoice_name: "PENDIENTE-EXPORT")
+    aprobado  = crear_gasto(invoice_name: "APROBADO-EXPORT")
+    aprobado.update_columns(accounting_approved: true, accounting_approved_by_id: @admin.id)
+    sign_in_as @admin
+
+    get "/download_file/accounting_expenses/filtro", params: { accounting_approved: "false" }
+
+    assert_response :success
+    tmp = Tempfile.new(["export", ".xlsx"])
+    begin
+      tmp.binmode
+      tmp.write(response.body)
+      tmp.flush
+      texto = Roo::Excelx.new(tmp.path).to_a.flatten.map(&:to_s)
+      assert_includes texto, pendiente.invoice_name
+      refute_includes texto, aprobado.invoice_name
+    ensure
+      tmp.close
+      tmp.unlink
+    end
+  end
+
   # --- Solo lo aprobado operativamente --------------------------------------
   #
   # `is_acepted` es la aceptacion del responsable del gasto. Hasta que ocurre, el

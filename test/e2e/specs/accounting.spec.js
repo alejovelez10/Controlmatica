@@ -48,6 +48,17 @@ async function aplicarFiltros(page) {
   return { url: res.url(), body: await res.json() };
 }
 
+// Cambia de vista. La pestana YA dispara la carga por si sola (no hay que
+// pulsar "Aplicar"), asi que se espera la respuesta aqui para no dejar una
+// peticion en vuelo pisando la del siguiente paso.
+async function verPestana(page, id) {
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.status() === 200),
+    page.getByTestId("accounting-tab-" + id).click(),
+  ]);
+  return { url: res.url(), body: await res.json() };
+}
+
 async function abrirBandeja(page) {
   const primera = page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.status() === 200);
   await page.goto("/accounting_expenses");
@@ -91,7 +102,7 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
   test("aprueba en masa el filtro y los aprobados salen de la bandeja de pendientes", async ({ page }) => {
     await abrirBandeja(page);
     await filtrarPorCentro(page);
-    await page.getByTestId("accounting-filter-approved").selectOption("false");
+    await verPestana(page, "pendientes");
 
     // 10 por pagina y no 50: el boton "aprobar los N del filtro completo" solo
     // se pinta cuando la pagina entera esta seleccionada Y el filtro tiene MAS
@@ -130,7 +141,7 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
     await expect(page.locator(".cm-dt-empty")).toBeVisible();
 
     // Y al pedir los aprobados vuelven los 12, con quien aprobo.
-    await page.getByTestId("accounting-filter-approved").selectOption("true");
+    await verPestana(page, "aprobados");
     const aprobados = await aplicarFiltros(page);
     expect(aprobados.body.total).toBe(12);
 
@@ -197,15 +208,17 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
   test("aprobar un gasto desde la bandeja lo saca de la lista de pendientes", async ({ page }) => {
     await abrirBandeja(page);
     await filtrarPorCentro(page);
-    await page.getByTestId("accounting-filter-approved").selectOption("false");
+    await verPestana(page, "pendientes");
     const { body } = await aplicarFiltros(page);
 
     const id = body.data[0].id;
-    await page.getByTestId(`accounting-row-menu-${id}`).click();
 
+    // EL DESPLEGABLE DE LA COLUMNA "Contabilidad", no el menu de tres puntos que
+    // habia antes: se retiro porque escondia la unica accion de la pantalla
+    // detras de dos clics.
     const [res] = await Promise.all([
       page.waitForResponse((r) => r.url().includes(`/update_accounting_state/${id}/true`)),
-      page.getByTestId(`accounting-approve-${id}`).click(),
+      page.getByTestId(`accounting-approve-select-${id}`).selectOption("true"),
     ]);
 
     expect(res.request().method()).toBe("PATCH");
@@ -218,7 +231,7 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
     // ABIERTO: `applyFilters` no lo cierra, y volver a pulsar el toggle no lo
     // reabre sino que lo cierra Y BORRA todos los filtros (`toggleFilters` limpia
     // al cerrar).
-    await page.getByTestId("accounting-filter-approved").selectOption("true");
+    await verPestana(page, "aprobados");
     await aplicarFiltros(page);
     await expect(page.getByTestId(`accounting-status-${id}`)).toContainText("Aprobado");
   });
@@ -226,20 +239,19 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
   test("desaprobar un gasto lo devuelve a pendientes", async ({ page }) => {
     await abrirBandeja(page);
     await filtrarPorCentro(page);
-    await page.getByTestId("accounting-filter-approved").selectOption("true");
+    await verPestana(page, "aprobados");
     const { body } = await aplicarFiltros(page);
 
     expect(body.total).toBe(1);
     const id = body.data[0].id;
 
-    await page.getByTestId(`accounting-row-menu-${id}`).click();
     const [res] = await Promise.all([
       page.waitForResponse((r) => r.url().includes(`/update_accounting_state/${id}/false`)),
-      page.getByTestId(`accounting-unapprove-${id}`).click(),
+      page.getByTestId(`accounting-approve-select-${id}`).selectOption("false"),
     ]);
     expect((await res.json()).type).toBe("success");
 
-    await page.getByTestId("accounting-filter-approved").selectOption("false");
+    await verPestana(page, "pendientes");
     const pendientes = await aplicarFiltros(page);
 
     expect(pendientes.body.total).toBe(12);
@@ -249,7 +261,7 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
   test("la aprobacion masiva por seleccion manda un solo request con ids[]", async ({ page }) => {
     await abrirBandeja(page);
     await filtrarPorCentro(page);
-    await page.getByTestId("accounting-filter-approved").selectOption("false");
+    await verPestana(page, "pendientes");
     await aplicarFiltros(page);
 
     // Se cuentan TODAS las peticiones al endpoint de lote: el defecto que este
@@ -288,6 +300,11 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
     page.on("framenavigated", (f) => navegaciones.push(f.url()));
 
     await filtrarPorCentro(page);
+    // EN "Aprobados" y no en la vista por defecto: estos tests comparten la
+    // siembra y corren en serie, y el anterior (aprobacion masiva por seleccion)
+    // deja los 12 aprobados. En "Por aprobar" este filtro daria 0 y el test
+    // afirmaria sobre una tabla vacia sin probar nada.
+    await verPestana(page, "aprobados");
     const conFiltro = await aplicarFiltros(page);
     expect(conFiltro.url).toContain(`cost_center_id=${cc("ACC")}`);
     expect(conFiltro.body.total).toBe(12);
@@ -352,7 +369,11 @@ test.describe("Contabilidad — negativos de permisos y de render", () => {
 
     await expect(page.locator(".cm-dt-select-header")).toHaveCount(0);
     await expect(page.getByTestId("cm-dt-select-all")).toHaveCount(0);
-    await expect(page.getByTestId(`accounting-row-menu-${body.data[0].id}`)).toHaveCount(0);
+    // Sin permiso de aprobar no hay desplegable: la columna queda de solo
+    // lectura. (Antes se afirmaba la ausencia del menu de fila, que ya no
+    // existe para nadie.)
+    await expect(page.getByTestId(`accounting-approve-select-${body.data[0].id}`)).toHaveCount(0);
+    await expect(page.getByTestId(`accounting-status-${body.data[0].id}`)).toBeVisible();
     await expect(page.getByTestId("accounting-approve-selected")).toHaveCount(0);
     await expect(page.getByTestId("accounting-approve-filter")).toHaveCount(0);
   });

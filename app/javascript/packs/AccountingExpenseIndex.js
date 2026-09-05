@@ -28,12 +28,29 @@ var EMPTY_FILTERS = {
   user_invoice_id: "",
   start_date: "",
   end_date: "",
-  accounting_approved: "",
   budget_status: "",
   currency: "",
   type_identification_id: "",
   payment_type_id: "",
 };
+
+// LAS DOS VISTAS DE CONTABILIDAD. No son un filtro mas: son el universo de la
+// pantalla, y por eso viven fuera de `filters` (que se vacia al cerrar o
+// limpiar el panel de filtros) y viajan SIEMPRE en `filterParams`.
+//
+// "pendientes" va primera y es la que abre: la pantalla de aprobaciones tiene
+// que mostrar solo lo que falta por aprobar, sin que nadie configure nada.
+// Cambiar el orden de este arreglo cambia la vista por defecto.
+//
+// OJO con la aprobacion masiva: `accounting_approved` NO esta en
+// AccountingExpensesController::FILTER_KEYS a proposito, asi que la pestana por
+// si sola NO cuenta como "filtro aplicado" y no habilita el boton de "aprobar
+// todo el filtro". Es deliberado: si contara, estando en "Por aprobar" sin
+// ningun filtro ese boton aprobaria la tabla entera.
+var TABS = [
+  { id: "pendientes", label: "Por aprobar", icon: "fas fa-clock" },
+  { id: "aprobados",  label: "Aprobados",   icon: "fas fa-check-circle" },
+];
 
 var selectStyles = {
   control: function(base, state) {
@@ -79,6 +96,12 @@ class AccountingExpenseIndex extends React.Component {
     // EN BLANCO, sin error de servidor y con un warning cripitco en consola.
     this.estados = props.estados || {};
 
+    // `self` para los `render` de las columnas, que son funciones normales y no
+    // arrow: dentro de ellas `this` es el del llamador (CmDataTable), no el
+    // componente. Se captura AQUI y no en cada metodo porque las columnas se
+    // declaran en este constructor.
+    var self = this;
+
     this.state = {
       data: [],
       loading: true,
@@ -93,6 +116,7 @@ class AccountingExpenseIndex extends React.Component {
       showFilters: false,
       isFiltering: false,
       filters: Object.assign({}, EMPTY_FILTERS),
+      tab: TABS[0].id,
       filterCostCenter: null,
       filterCostCenterOptions: [],
       filterCostCenterLoading: false,
@@ -189,14 +213,46 @@ class AccountingExpenseIndex extends React.Component {
           budgetWarningIcon(row)
         );
       }},
+      // LA APROBACION SE CAMBIA AQUI, EN UN DESPLEGABLE, y no en un menu de tres
+      // puntos con una sola opcion adentro. Aquel escondia la unica accion de la
+      // pantalla detras de dos clics y no anunciaba lo que iba a pasar; el
+      // desplegable se lee y se cambia en el mismo gesto.
+      //
+      // Es el MISMO control que la columna "Estado" de la pantalla de Gastos
+      // (.cm-status-select, disfrazado de pildora para que 50 filas no
+      // conviertan la tabla en un formulario). La aprobacion de VARIOS gastos
+      // sigue estando donde estaba: en los checkboxes y la barra de seleccion.
       { key: "accounting_approved", label: "Contabilidad", width: "180px", render: function(row) {
         var badge = accountingBadge(row.accounting_approved);
+        var pie = row.accounting_approved
+          ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
+              shortDate(row.accounting_approved_at) + (row.accounting_approved_by ? " · " + row.accounting_approved_by.names : ""))
+          : null;
+
+        // Sin permiso de aprobar, SOLO LECTURA. Antes esto se notaba porque no
+        // aparecia el menu de la fila; sin el, hay que seguir pintando el badge
+        // o el usuario veria un desplegable que el servidor le rechaza con 403.
+        if (!self.estados.approve) {
+          return React.createElement("div", { "data-testid": "accounting-status-" + row.id },
+            React.createElement("span", { className: badge.className }, badge.label),
+            pie
+          );
+        }
+
         return React.createElement("div", { "data-testid": "accounting-status-" + row.id },
-          React.createElement("span", { className: badge.className }, badge.label),
-          row.accounting_approved
-            ? React.createElement("span", { className: "cm-hint", style: { display: "block" } },
-                shortDate(row.accounting_approved_at) + (row.accounting_approved_by ? " · " + row.accounting_approved_by.names : ""))
-            : null
+          React.createElement("select", {
+            className: "cm-status-select" + (row.accounting_approved ? " cm-status-select--ok" : ""),
+            value: row.accounting_approved ? "true" : "false",
+            onChange: function(e) { self.updateAccountingState(row, e.target.value); },
+            // stopPropagation por la misma razon que en Gastos: el clic en la
+            // fila no puede dispararse al elegir un estado.
+            onClick: function(e) { e.stopPropagation(); },
+            "data-testid": "accounting-approve-select-" + row.id,
+          },
+            React.createElement("option", { value: "true" }, "Aprobado"),
+            React.createElement("option", { value: "false" }, "Pendiente")
+          ),
+          pie
         );
       }},
 
@@ -250,7 +306,9 @@ class AccountingExpenseIndex extends React.Component {
     if (f.user_invoice_id) out.push("user_invoice_id=" + f.user_invoice_id);
     if (f.start_date) out.push("start_date=" + f.start_date);
     if (f.end_date) out.push("end_date=" + f.end_date);
-    if (f.accounting_approved) out.push("accounting_approved=" + f.accounting_approved);
+    // Va SIN condicion: las dos vistas son excluyentes y no existe un "todos".
+    // Si dejara de mandarse, "Por aprobar" listaria tambien los ya aprobados.
+    out.push("accounting_approved=" + (this.state.tab === "aprobados"));
     if (f.budget_status) out.push("budget_status=" + f.budget_status);
     if (f.currency) out.push("currency=" + f.currency);
     if (f.type_identification_id) out.push("type_identification_id=" + f.type_identification_id);
@@ -331,6 +389,17 @@ class AccountingExpenseIndex extends React.Component {
     this.setState({ selectedIds: [] }, this.loadData.bind(this, 1, undefined, term));
   }.bind(this);
 
+  // Cambiar de vista LIMPIA LA SELECCION, por la misma razon que buscar: el
+  // universo cambia y aprobar una seleccion armada en la otra pestana tocaria
+  // registros que el usuario ya no tiene delante.
+  //
+  // Los filtros y el termino de busqueda SI se conservan: quien esta mirando un
+  // centro de costos quiere verlo en las dos vistas sin volver a escribirlo.
+  setTab = function(tab) {
+    if (tab === this.state.tab) return;
+    this.setState({ tab: tab, selectedIds: [] }, this.loadData.bind(this, 1));
+  }.bind(this);
+
   toggleFilters = function() {
     var self = this;
     var willClose = this.state.showFilters;
@@ -404,7 +473,6 @@ class AccountingExpenseIndex extends React.Component {
 
   clearSelection = function() { this.setState({ selectedIds: [] }); }.bind(this);
 
-  openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);
 
   // Aprobacion individual. Conserva la seleccion: es una accion independiente
   // del lote que el usuario este armando.
@@ -445,37 +513,6 @@ class AccountingExpenseIndex extends React.Component {
       });
   }.bind(this);
 
-  getRowActions = function(row) {
-    var self = this;
-    if (!this.estados.approve) return null;
-
-    var approved = !!row.accounting_approved;
-
-    // El dropdown tiene que ser el HERMANO INMEDIATO del trigger:
-    // window.cmOpenMenu (layouts/user.html.erb) lo busca con nextElementSibling.
-    // Un Fragment que renderice un nodo o un `condicion && ...` en medio deja el
-    // menu sin abrir y sin error.
-    return React.createElement("div", { className: "cm-dt-menu" },
-      React.createElement("button", {
-        className: "cm-dt-menu-trigger",
-        onClick: self.openMenu,
-        "data-testid": "accounting-row-menu-" + row.id
-      }, React.createElement("i", { className: "fas fa-ellipsis-v" })),
-      React.createElement("div", { className: "cm-dt-menu-dropdown" },
-        approved
-          ? React.createElement("button", {
-              onClick: function() { self.updateAccountingState(row, "false"); },
-              className: "cm-dt-menu-item cm-dt-menu-item--danger",
-              "data-testid": "accounting-unapprove-" + row.id
-            }, React.createElement("i", { className: "fas fa-undo" }), " Desaprobar")
-          : React.createElement("button", {
-              onClick: function() { self.updateAccountingState(row, "true"); },
-              className: "cm-dt-menu-item",
-              "data-testid": "accounting-approve-" + row.id
-            }, React.createElement("i", { className: "fas fa-check" }), " Aprobar")
-      )
-    );
-  }.bind(this);
 
   // Aprobacion por seleccion multiple: UNA sola request con un ids[] por cada
   // id. El backend acepta `ids[]` como filtro valido (§C.4) y aplica el mismo
@@ -575,7 +612,10 @@ class AccountingExpenseIndex extends React.Component {
   // El export IGNORA la seleccion a proposito: exporta el resultado del filtro.
   // Nunca lleva ids[].
   getExportUrl = function() {
-    if (!this.state.isFiltering) return "/download_file/accounting_expenses/todos.xlsx";
+    // SIEMPRE por la ruta "filtro", incluso sin filtros: es la unica que pasa
+    // por filtered_scope y por lo tanto la unica que respeta la pestana. Con
+    // "todos" el Excel traia la tabla entera y en "Por aprobar" salian tambien
+    // los ya aprobados, que es justo lo contrario de lo que se ve en pantalla.
     return "/download_file/accounting_expenses/filtro.xlsx?" + this.filterParams().join("&");
   }.bind(this);
 
@@ -650,17 +690,6 @@ class AccountingExpenseIndex extends React.Component {
             React.createElement("input", { type: "date", name: "end_date", className: "cm-input", value: f.end_date, onChange: self.handleFilterChange })
           ),
           // Fila 2
-          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
-            React.createElement("label", { className: "cm-label" },
-              React.createElement("i", { className: "fas fa-file-invoice-dollar", style: { marginRight: 6, opacity: 0.5 } }),
-              "Aprobado por contabilidad"
-            ),
-            React.createElement("select", { name: "accounting_approved", className: "cm-input", value: f.accounting_approved, onChange: self.handleFilterChange, "data-testid": "accounting-filter-approved" },
-              React.createElement("option", { value: "" }, "Todos"),
-              React.createElement("option", { value: "true" }, "Aprobado"),
-              React.createElement("option", { value: "false" }, "Pendiente")
-            )
-          ),
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
               React.createElement("i", { className: "fas fa-coins", style: { marginRight: 6, opacity: 0.5 } }),
@@ -814,8 +843,30 @@ class AccountingExpenseIndex extends React.Component {
     return React.createElement("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" } }, buttons);
   }.bind(this);
 
+  // Barra de pestanas. Usa las clases del sistema de diseno (cm-tabs), las
+  // mismas de la pestana del centro de costos, para que las dos pantallas de
+  // la aplicacion que tienen pestanas se vean igual.
+  renderTabs = function() {
+    var self = this;
+    return React.createElement("div", { className: "cm-tabs", style: { marginBottom: 12 } },
+      React.createElement("div", { className: "cm-tabs-nav", "data-testid": "accounting-tabs" },
+        TABS.map(function(t) {
+          return React.createElement("button", {
+            key: t.id,
+            type: "button",
+            className: "cm-tab-btn" + (self.state.tab === t.id ? " cm-tab-btn--active" : ""),
+            onClick: function() { self.setTab(t.id); },
+            "data-testid": "accounting-tab-" + t.id,
+          }, React.createElement("i", { className: t.icon, style: { marginRight: 6 } }), t.label);
+        })
+      )
+    );
+  }.bind(this);
+
   render() {
     return React.createElement("div", { className: "cm-page", "data-testid": "accounting-page" },
+      this.renderTabs(),
+
       this.state.showFilters && this.renderFilters(),
 
       this.state.loadError
@@ -841,14 +892,21 @@ class AccountingExpenseIndex extends React.Component {
         onSearch: this.handleSearch,
         // Los checkboxes van atados al permiso de aprobar: sin el, no hay nada
         // que hacer con una seleccion.
-        selectable: !!this.estados.approve,
+        //
+        // Y solo en "Por aprobar": en "Aprobados" no queda nada que aprobar, y
+        // dejar las casillas ahi permitiria mandar al masivo gastos que ya
+        // estan aprobados. El servidor los ignoraria (filtra por
+        // accounting_approved: false) y el usuario veria "se aprobaron N"
+        // habiendo aprobado cero. Para desaprobar esta la accion de la fila.
+        selectable: !!this.estados.approve && this.state.tab === "pendientes",
         selectedIds: this.state.selectedIds,
         onToggleRow: this.toggleRow,
         onToggleAllPage: this.toggleAllPage,
-        actions: this.getRowActions,
         headerActions: this.renderHeaderActions(),
         searchPlaceholder: "Buscar por ID, nombre, NIT o # de factura...",
-        emptyMessage: "No hay gastos para aprobar",
+        emptyMessage: this.state.tab === "pendientes"
+          ? "No hay gastos pendientes de aprobación"
+          : "Todavía no hay gastos aprobados",
       })
     );
   }
