@@ -45,7 +45,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
           only: [:id, :names, :email, :document_type, :number_document, :phone, :rol_id],
           include: { rol: { only: [:id, :name] } }
         ).merge(
-          avatar: user.avatar.present? ? { url: user.avatar.url } : nil
+          # El avatar es adorno; la lista es la función. `present?`/`url` van a
+          # S3 y un solo objeto inaccesible (región/permisos/objeto borrado)
+          # respondía 500 para la página entera de usuarios.
+          avatar: begin
+            user.avatar.present? ? { url: user.avatar.url } : nil
+          rescue StandardError
+            nil
+          end
         )
       end,
       meta: { total: total, page: page, per_page: per_page, total_pages: (total.to_f / per_page).ceil }
