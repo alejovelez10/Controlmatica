@@ -69,3 +69,8 @@ yarn-debug.log*
 /.auth
 # Temporales de subida de comprobantes.
 /public/uploads/tmp
+# Excel de trabajo en la raiz: exports de la aplicacion, plantillas descargadas y
+# archivos armados para probar la importacion. Se regeneran desde la aplicacion
+# (la plantilla la genera app/views/report_expenses/import_template.xlsx.axlsx),
+# asi que versionarlos solo deja binarios que envejecen.
+/*.xlsx
