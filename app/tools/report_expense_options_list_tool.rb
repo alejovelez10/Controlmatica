@@ -34,7 +34,12 @@ class ReportExpenseOptionsListTool < ApplicationTool
     tenant = current_tenant(server_context)
     return unauthorized! unless tenant
 
-    scope = ReportExpenseOption.all
+    # Filtro EXCLUSIVO de esta tool: existe para alimentar el menu del agente y
+    # ese es su unico proposito. Un default_scope en el modelo haria lo mismo
+    # en apariencia y dejaria fuera, en silencio, al formulario web, a la
+    # plantilla de importacion y al indice del import
+    # (ReportExpense.indice_de_catalogos).
+    scope = ReportExpenseOption.where(used_by_ai: true)
     if category.present?
       canonica = normalize_category(category)
       unless canonica
