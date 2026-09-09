@@ -11,6 +11,10 @@ class ExchangeRateClientTest < ActiveSupport::TestCase
     [{ "valor" => valor, "unidad" => "COP", "vigenciadesde" => desde, "vigenciahasta" => hasta }].to_json
   end
 
+  def cross_body(fecha: "2026-07-18", dop: "58.90936785")
+    { "date" => fecha, "usd" => { "dop" => dop.to_f, "crc" => 453.47, "eur" => 0.85 } }.to_json
+  end
+
   # --- parse_trm ------------------------------------------------------------
 
   test "parse_trm lee valor y vigencias" do
@@ -108,6 +112,62 @@ class ExchangeRateClientTest < ActiveSupport::TestCase
     assert_nil ExchangeRateClient.parse_ecb_csv(cuerpo, upto: UPTO)
   end
 
+  # --- parse_cross_usd -------------------------------------------------------
+
+  test "parse_cross_usd lee la moneda pedida del hash usd" do
+    quote = ExchangeRateClient.parse_cross_usd(cross_body, currency: "dop", upto: UPTO)
+
+    assert_not_nil quote
+    assert_equal BigDecimal("58.90936785"), quote.rate
+    assert_kind_of BigDecimal, quote.rate, "en Float el centavo llega al centro de costos"
+    assert_equal Date.new(2026, 7, 18), quote.effective_date
+    assert_equal UPTO, quote.valid_until
+  end
+
+  test "parse_cross_usd normaliza la moneda: mayuscula, minuscula y espacios dan lo mismo" do
+    quote_minusc = ExchangeRateClient.parse_cross_usd(cross_body, currency: " dop ", upto: UPTO)
+    quote_mayusc = ExchangeRateClient.parse_cross_usd(cross_body, currency: "DOP", upto: UPTO)
+
+    assert_equal quote_minusc.rate, quote_mayusc.rate
+  end
+
+  test "parse_cross_usd devuelve nil si la moneda no esta en el hash usd" do
+    assert_nil ExchangeRateClient.parse_cross_usd(cross_body, currency: "HNL", upto: UPTO)
+  end
+
+  test "parse_cross_usd devuelve nil con JSON invalido o HTML de error" do
+    assert_nil ExchangeRateClient.parse_cross_usd("<html>503</html>", currency: "dop", upto: UPTO)
+  end
+
+  test "parse_cross_usd devuelve nil sin la clave date, con usd que no es Hash, o con {}" do
+    assert_nil ExchangeRateClient.parse_cross_usd({ "usd" => { "dop" => 58.9 } }.to_json,
+                                                   currency: "dop", upto: UPTO)
+    assert_nil ExchangeRateClient.parse_cross_usd({ "date" => "2026-07-18", "usd" => "no soy un hash" }.to_json,
+                                                   currency: "dop", upto: UPTO)
+    assert_nil ExchangeRateClient.parse_cross_usd("{}", currency: "dop", upto: UPTO)
+  end
+
+  test "parse_cross_usd devuelve nil con valor cero, negativo, vacio o no numerico" do
+    assert_nil ExchangeRateClient.parse_cross_usd(cross_body(dop: "0"), currency: "dop", upto: UPTO)
+    assert_nil ExchangeRateClient.parse_cross_usd(cross_body(dop: "-1"), currency: "dop", upto: UPTO)
+    assert_nil ExchangeRateClient.parse_cross_usd({ "date" => "2026-07-18", "usd" => { "dop" => "" } }.to_json,
+                                                   currency: "dop", upto: UPTO)
+    assert_nil ExchangeRateClient.parse_cross_usd({ "date" => "2026-07-18", "usd" => { "dop" => "abc" } }.to_json,
+                                                   currency: "dop", upto: UPTO)
+  end
+
+  test "parse_cross_usd devuelve nil si la fecha es posterior a upto" do
+    cuerpo = cross_body(fecha: "2026-07-19")
+
+    assert_nil ExchangeRateClient.parse_cross_usd(cuerpo, currency: "dop", upto: UPTO)
+  end
+
+  test "parse_cross_usd devuelve nil si la fecha excede LOOKBACK_DAYS" do
+    cuerpo = cross_body(fecha: "2026-06-01")
+
+    assert_nil ExchangeRateClient.parse_cross_usd(cuerpo, currency: "dop", upto: UPTO)
+  end
+
   # --- EUR: atajo sin red ---------------------------------------------------
 
   test "ecb_units_per_eur devuelve 1 para EUR sin pegarle a la red" do
@@ -127,26 +187,43 @@ class ExchangeRateClientTest < ActiveSupport::TestCase
   # de config/application.yml, que esta gitignoreada.
   test "los timeouts y las URLs caen a un default corto sin ENV" do
     con_env("EXCHANGE_RATE_OPEN_TIMEOUT" => nil, "EXCHANGE_RATE_HTTP_TIMEOUT" => nil,
-            "TRM_API_URL" => nil, "ECB_API_URL" => nil) do
+            "TRM_API_URL" => nil, "ECB_API_URL" => nil,
+            "CROSS_USD_API_URL" => nil, "CROSS_USD_FALLBACK_URL" => nil) do
       cliente = ExchangeRateClient.new
 
       assert_equal 3, cliente.open_timeout
       assert_equal 5, cliente.read_timeout
       assert_equal ExchangeRateClient::TRM_URL_DEFAULT, cliente.trm_url
       assert_equal ExchangeRateClient::ECB_URL_DEFAULT, cliente.ecb_url
+      assert_equal ExchangeRateClient::CROSS_USD_URL_DEFAULT, cliente.cross_usd_url
+      assert_equal ExchangeRateClient::CROSS_USD_FALLBACK_URL_DEFAULT, cliente.cross_usd_fallback_url
     end
   end
 
   test "los timeouts y las URLs se pueden mover por ENV" do
     con_env("EXCHANGE_RATE_OPEN_TIMEOUT" => "1", "EXCHANGE_RATE_HTTP_TIMEOUT" => "2",
             "TRM_API_URL" => "https://otro.example/trm.json",
-            "ECB_API_URL" => "https://otro.example/EXR") do
+            "ECB_API_URL" => "https://otro.example/EXR",
+            "CROSS_USD_API_URL" => "https://otro.example/cross/%{ver}.json",
+            "CROSS_USD_FALLBACK_URL" => "https://otro.example/cross-respaldo/%{ver}.json") do
       cliente = ExchangeRateClient.new
 
       assert_equal 1, cliente.open_timeout
       assert_equal 2, cliente.read_timeout
       assert_equal "https://otro.example/trm.json", cliente.trm_url
       assert_equal "https://otro.example/EXR", cliente.ecb_url
+      assert_equal "https://otro.example/cross/%{ver}.json", cliente.cross_usd_url
+      assert_equal "https://otro.example/cross-respaldo/%{ver}.json", cliente.cross_usd_fallback_url
+    end
+  end
+
+  test "cross_usd_request_url reemplaza el marcador de version en las dos plantillas" do
+    con_env("CROSS_USD_API_URL" => nil, "CROSS_USD_FALLBACK_URL" => nil) do
+      cliente = ExchangeRateClient.new
+      cdn, respaldo = cliente.cross_usd_request_url(ver: "2026-07-18")
+
+      assert_equal "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@2026-07-18/v1/currencies/usd.json", cdn
+      assert_equal "https://2026-07-18.currency-api.pages.dev/v1/currencies/usd.json", respaldo
     end
   end
 
