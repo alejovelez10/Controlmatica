@@ -27,7 +27,7 @@ class Index extends Component {
       { key: "category", label: "Tipo" },
       {
         key: "used_by_ai",
-        label: "Ofrecer al agente",
+        label: "Enviar a la IA",
         sortable: false,
         render: (row) => (
           <input
