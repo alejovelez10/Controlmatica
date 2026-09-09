@@ -15,9 +15,11 @@ class ExchangeRateServiceTest < ActiveSupport::TestCase
   class ClienteFalso
     attr_reader :consultas
 
-    def initialize(trm:, usd_per_eur:)
+    def initialize(trm:, usd_per_eur:, por_eur: {}, por_usd: {})
       @trm = trm
       @usd_per_eur = usd_per_eur
+      @por_eur = por_eur
+      @por_usd = por_usd
       @consultas = []
     end
 
@@ -32,8 +34,15 @@ class ExchangeRateServiceTest < ActiveSupport::TestCase
       # Espeja el atajo del cliente real: 1 EUR vale 1 EUR y la serie D.EUR.EUR
       # no existe.
       return quote(BigDecimal("1"), date) if code == "EUR"
+      return quote(@usd_per_eur, date) if code == "USD"
 
-      quote(@usd_per_eur, date) if code == "USD"
+      @por_eur[code] && quote(@por_eur[code], date)
+    end
+
+    def units_per_usd(currency:, date:)
+      code = Currency.normalize(currency)
+      @consultas << [:cross_usd, code, date]
+      @por_usd[code] && quote(@por_usd[code], date)
     end
 
     private
@@ -226,6 +235,129 @@ class ExchangeRateServiceTest < ActiveSupport::TestCase
     assert_equal BigDecimal("4400.0"), resultado.value.rate_to_cop
     assert_equal "bce", resultado.value.source
     assert_includes cliente.consultas, [:ecb, "USD", dia]
+  end
+
+  # --- cruce cross_usd (DOP/CRC/HNL) -----------------------------------------
+
+  test "la division de cross_usd NO esta invertida" do
+    dia = Date.new(2026, 8, 3)
+    trm = ExchangeRateClient::Quote.new(rate: BigDecimal("3116.47"), effective_date: dia, valid_until: dia)
+    cliente = ClienteFalso.new(trm: trm, usd_per_eur: BigDecimal("1.10"),
+                               por_usd: { "DOP" => BigDecimal("58.909") })
+    resultado = nil
+
+    ExchangeRateClient.stub(:new, cliente) do
+      resultado = ExchangeRateService.fetch_remote(currency: "DOP", date: dia)
+    end
+
+    assert resultado.ok?
+    assert_in_delta 52.90, resultado.value[:quote].rate, 0.01
+    assert_operator resultado.value[:quote].rate, :>, BigDecimal("1"),
+                    "division invertida: 3116.47/58.909 es ~52.90 COP por DOP, no ~0.0189"
+    refute_in_delta 0.0189, resultado.value[:quote].rate, 0.001
+    assert_equal "cross_usd", resultado.value[:source]
+  end
+
+  test "el source cross_usd se persiste y ExchangeRate lo acepta" do
+    dia = Date.new(2026, 8, 3)
+    trm = ExchangeRateClient::Quote.new(rate: BigDecimal("3116.47"), effective_date: dia, valid_until: dia)
+    cliente = ClienteFalso.new(trm: trm, usd_per_eur: BigDecimal("1.10"),
+                               por_usd: { "DOP" => BigDecimal("58.909") })
+
+    ExchangeRateClient.stub(:new, cliente) do
+      ExchangeRateService.fetch(currency: "DOP", date: dia)
+    end
+
+    fila = ExchangeRate.applicable_on("DOP", dia).first
+    assert_not_nil fila, "sin SOURCES incluyendo cross_usd, upsert_row! se come el RecordInvalid"
+    assert_equal "cross_usd", fila.source
+  end
+
+  test "el ruteo es determinista por moneda, sin cadena de fallback entre fuentes" do
+    dia = Date.new(2026, 8, 3)
+    trm = ExchangeRateClient::Quote.new(rate: BigDecimal("3116.47"), effective_date: dia, valid_until: dia)
+    cliente = ClienteFalso.new(trm: trm, usd_per_eur: BigDecimal("1.10"),
+                               por_eur: { "MXN" => BigDecimal("18.50") },
+                               por_usd: { "DOP" => BigDecimal("58.909"),
+                                          "CRC" => BigDecimal("530.0"),
+                                          "HNL" => BigDecimal("26.8") })
+
+    esperado = { "USD" => "trm_oficial", "EUR" => "bce", "MXN" => "bce",
+                "DOP" => "cross_usd", "CRC" => "cross_usd", "HNL" => "cross_usd" }
+
+    esperado.each do |moneda, source|
+      resultado = nil
+      ExchangeRateClient.stub(:new, cliente) do
+        resultado = ExchangeRateService.fetch_remote(currency: moneda, date: dia)
+      end
+
+      assert resultado.ok?, "#{moneda} deberia resolver ok"
+      assert_equal source, resultado.value[:source], "#{moneda} deberia rutear por #{source}"
+    end
+
+    assert_includes cliente.consultas, [:ecb, "MXN", dia]
+    refute_includes cliente.consultas, [:cross_usd, "MXN", dia]
+    assert_includes cliente.consultas, [:cross_usd, "DOP", dia]
+    refute_includes cliente.consultas, [:ecb, "DOP", dia]
+  end
+
+  test "COP no consulta a nadie, ni siquiera la TRM" do
+    dia = Date.new(2026, 8, 3)
+    cliente = ClienteFalso.new(trm: nil, usd_per_eur: BigDecimal("1.10"))
+    resultado = nil
+
+    ExchangeRateClient.stub(:new, cliente) do
+      resultado = ExchangeRateService.fetch_remote(currency: "COP", date: dia)
+    end
+
+    assert resultado.ok?
+    assert_equal "identity", resultado.value[:source]
+    assert_equal BigDecimal("1"), resultado.value[:quote].rate
+    assert_empty cliente.consultas
+  end
+
+  test "effective_date de cross_usd es la mas vieja de TRM y agregador" do
+    dia = Date.new(2026, 8, 10)
+    trm_vieja = dia - 3
+    trm = ExchangeRateClient::Quote.new(rate: BigDecimal("3116.47"), effective_date: trm_vieja, valid_until: dia)
+    cliente = ClienteFalso.new(trm: trm, usd_per_eur: BigDecimal("1.10"),
+                               por_usd: { "DOP" => BigDecimal("58.909") })
+    resultado = nil
+
+    ExchangeRateClient.stub(:new, cliente) do
+      resultado = ExchangeRateService.fetch_remote(currency: "DOP", date: dia)
+    end
+
+    assert resultado.ok?
+    assert_equal trm_vieja, resultado.value[:quote].effective_date
+  end
+
+  test "agregador caido para DOP: fetch_remote da error y fetch no persiste" do
+    dia = Date.new(2026, 8, 10)
+    trm = ExchangeRateClient::Quote.new(rate: BigDecimal("3116.47"), effective_date: dia, valid_until: dia)
+    cliente = ClienteFalso.new(trm: trm, usd_per_eur: BigDecimal("1.10"), por_usd: {})
+    resultado = nil
+
+    assert_no_difference("ExchangeRate.count") do
+      ExchangeRateClient.stub(:new, cliente) do
+        resultado = ExchangeRateService.fetch(currency: "DOP", date: dia)
+      end
+    end
+
+    assert resultado.error?
+  end
+
+  test "fetch_remote de una moneda fuera del catalogo devuelve error sin tocar la red" do
+    dia = Date.new(2026, 8, 3)
+    cliente = ClienteFalso.new(trm: nil, usd_per_eur: BigDecimal("1.10"))
+    resultado = nil
+
+    ExchangeRateClient.stub(:new, cliente) do
+      resultado = ExchangeRateService.fetch_remote(currency: "ARS", date: dia)
+    end
+
+    assert resultado.error?
+    assert_empty cliente.consultas
   end
 
   test "EUR con TRM caida devuelve error y no persiste" do

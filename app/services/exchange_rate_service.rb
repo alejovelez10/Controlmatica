@@ -92,21 +92,35 @@ class ExchangeRateService
   #
   # Devuelve Result cuyo value es { quote: ExchangeRateClient::Quote, source: }.
   def self.fetch_remote(currency:, date:)
-    code   = Currency.normalize(currency)
-    d      = date.to_date
+    code  = Currency.normalize(currency)
+    d     = date.to_date
+    ruteo = Currency.rate_source(code)
+    return error("Moneda no soportada: #{currency}") if ruteo.nil?
+
+    # Un peso vale un peso: ni red, ni base. Va ANTES de pedir la TRM: este
+    # metodo es publico y el initializer de E2E lo llama directo para COP, asi
+    # que la moneda base abriendo un socket seria un bug latente.
+    if ruteo == :identity
+      return ok({ quote: ExchangeRateClient::Quote.new(rate: BigDecimal("1"), effective_date: d,
+                                                       valid_until: d),
+                 source: "identity" })
+    end
+
     client = ExchangeRateClient.new
 
-    # La TRM es el ancla de TODO: incluso el EUR se convierte cruzando por USD,
-    # porque la tasa legal para causar en pesos en Colombia es la TRM.
+    # La TRM es el ancla de TODO: incluso el EUR y el resto se convierten
+    # cruzando por USD, porque la tasa legal para causar en pesos en Colombia
+    # es la TRM.
     trm = client.trm_cop_per_usd(date: d)
     return error("fuente TRM no disponible") if trm.nil?
 
-    if code == "USD"
+    case ruteo
+    when :trm
       rate        = trm.rate
       source      = "trm_oficial"
       effective   = trm.effective_date
       valid_until = trm.valid_until
-    else
+    when :ecb
       x_per_eur   = client.ecb_units_per_eur(currency: code, date: d)  # unidades de X por 1 EUR
       usd_per_eur = client.ecb_units_per_eur(currency: "USD", date: d) # USD por 1 EUR
       return error("fuente BCE no disponible") if x_per_eur.nil? || usd_per_eur.nil? || x_per_eur.rate <= 0
@@ -120,6 +134,17 @@ class ExchangeRateService
       # de la mas nueva seria decir que la tasa es mas fresca de lo que es.
       effective    = [trm.effective_date, x_per_eur.effective_date, usd_per_eur.effective_date].min
       valid_until  = d
+    when :cross_usd
+      x_per_usd = client.units_per_usd(currency: code, date: d)
+      return error("fuente cross_usd no disponible") if x_per_usd.nil? || x_per_usd.rate <= 0
+
+      # COP_por_X = TRM_COP_por_USD / X_por_USD. Invertir esta division es el
+      # error mas caro del paquete: con DOP daria 0,0189 COP en vez de 52,90.
+      rate        = (trm.rate / x_per_usd.rate).round(6)
+      source      = "cross_usd"
+      # La vigencia es la de la fuente MAS VIEJA de las dos.
+      effective   = [trm.effective_date, x_per_usd.effective_date].min
+      valid_until = d
     end
 
     return error("tasa no positiva") if rate <= 0
