@@ -37,7 +37,7 @@ class ReportExpenseOptionsController < ApplicationController
     paginated = options.offset((page - 1) * per_page).limit(per_page)
 
     render json: {
-      data: paginated.as_json(only: [:id, :name, :category]),
+      data: paginated.as_json(only: [:id, :name, :category, :used_by_ai]),
       meta: {
         total: total,
         page: page,
@@ -99,6 +99,6 @@ class ReportExpenseOptionsController < ApplicationController
     end
 
     def report_expense_options_update
-      params.permit(:user_id, :category, :name)
+      params.permit(:user_id, :category, :name, :used_by_ai)
     end
 end
