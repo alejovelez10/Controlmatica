@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_11_000002) do
+ActiveRecord::Schema.define(version: 2026_09_09_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -488,6 +488,7 @@ ActiveRecord::Schema.define(version: 2026_08_11_000002) do
     t.integer "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "used_by_ai", default: true, null: false
   end
 
   create_table "report_expenses", force: :cascade do |t|
