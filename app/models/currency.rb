@@ -1,5 +1,5 @@
 # Catalogo de monedas soportadas. Es una CONSTANTE RUBY, no una tabla
-# (00-ARQUITECTURA.md 1.6): son tres codigos que cambian una vez cada varios
+# (00-ARQUITECTURA.md 1.6): son siete codigos que cambian una vez cada varios
 # años, y una tabla obligaria a sembrarla en desarrollo, en test, en staging y
 # en produccion para que el formulario no salga vacio.
 #
@@ -7,9 +7,13 @@
 # autocarga igual porque vive en app/models/ con el nombre del archivo.
 class Currency
   CATALOG = [
-    { code: "COP", name: "Peso colombiano", symbol: "$",   decimals: 2 },
-    { code: "USD", name: "Dólar",           symbol: "US$", decimals: 2 },
-    { code: "EUR", name: "Euro",            symbol: "€",   decimals: 2 }
+    { code: "COP", name: "Peso colombiano",     symbol: "$",   decimals: 2, rate_source: :identity },
+    { code: "USD", name: "Dólar",               symbol: "US$", decimals: 2, rate_source: :trm },
+    { code: "EUR", name: "Euro",                symbol: "€",   decimals: 2, rate_source: :ecb },
+    { code: "MXN", name: "Peso mexicano",       symbol: "MX$", decimals: 2, rate_source: :ecb },
+    { code: "DOP", name: "Peso dominicano",     symbol: "RD$", decimals: 2, rate_source: :cross_usd },
+    { code: "CRC", name: "Colón costarricense", symbol: "₡",   decimals: 2, rate_source: :cross_usd },
+    { code: "HNL", name: "Lempira hondureño",   symbol: "L",   decimals: 2, rate_source: :cross_usd }
   ].freeze
 
   CODES   = CATALOG.map { |c| c[:code] }.freeze
@@ -33,4 +37,10 @@ class Currency
   # devolver true aqui haria que apply_currency_conversion intentara convertir
   # un gasto que la validacion va a rechazar de todos modos.
   def self.foreign?(code) = valid?(code) && normalize(code) != DEFAULT
+
+  # De donde sale la tasa de esta moneda. DECLARADO, no deducido: es lo que hace
+  # que `source` —el dato de auditoria de exchange_rates— sea determinista.
+  # Un fallback "intento BCE y si falla caigo al agregador" dejaria dos gastos
+  # identicos con `source` distinto segun que API estuvo caida ese dia.
+  def self.rate_source(code) = find(code)&.dig(:rate_source)
 end

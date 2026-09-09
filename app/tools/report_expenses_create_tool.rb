@@ -27,7 +27,7 @@ class ReportExpensesCreateTool < ApplicationTool
       description:            { type: "string",  description: "Descripción (opcional)" },
       type_identification_id: { type: "integer", description: "ID de opción tipo de identificación (opcional)" },
       payment_type_id:        { type: "integer", description: "ID de opción tipo de pago (opcional)" },
-      currency:               { type: "string",  description: "Moneda ISO 4217 del comprobante. Valores validos: COP, USD, EUR. Default COP." },
+      currency:               { type: "string",  description: "Moneda ISO 4217 del comprobante. Valores validos: #{Currency::CODES.join(', ')}. Default COP." },
       foreign_value:          { type: "number",  description: "Valor base en la moneda del comprobante (solo si currency != COP)" },
       foreign_tax:            { type: "number",  description: "Impuestos en la moneda del comprobante" },
       foreign_total:          { type: "number",  description: "Total en la moneda del comprobante" },

@@ -80,7 +80,7 @@ class ApplicationHelperCurrencyTest < ActionView::TestCase
 
   test "get_currencies publica el catalogo que consume el frontend" do
     assert_equal Currency.options, get_currencies
-    assert_equal 3, get_currencies.size
+    assert_equal 7, get_currencies.size
     assert_equal({ label: "COP — Peso colombiano", value: "COP" }, get_currencies.first)
   end
 end

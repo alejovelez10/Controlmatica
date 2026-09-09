@@ -12,7 +12,7 @@ class ReportExpensesListTool < ApplicationTool
       q:                   { type: "string",  description: "Texto en nombre o descripción" },
       budget_status:       { type: "string",  description: "Estado presupuestal del gasto",
                              enum: %w[sin_presupuesto aprobado excedido] },
-      currency:            { type: "string",  description: "Moneda ISO 4217 del comprobante (COP, USD, EUR)" },
+      currency:            { type: "string",  description: "Moneda ISO 4217 del comprobante (#{Currency::CODES.join(', ')})" },
       accounting_approved: { type: "boolean", description: "Filtra por aprobación contable" },
       date_from:           { type: "string",  description: "Fecha de factura desde, YYYY-MM-DD" },
       date_to:             { type: "string",  description: "Fecha de factura hasta, YYYY-MM-DD" },

@@ -18,7 +18,7 @@ class ExchangeRatesGetTool < ApplicationTool
               "Si no hay tasa devuelve error: NO inventes una tasa, pídesela a la persona."
   input_schema(
     properties: {
-      currency: { type: "string", description: "Código ISO 4217. Válidos: COP, USD, EUR" },
+      currency: { type: "string", description: "Código ISO 4217. Válidos: #{Currency::CODES.join(', ')}" },
       date:     { type: "string", description: "Fecha YYYY-MM-DD (normalmente la fecha del comprobante)" }
     },
     required: %w[currency date]

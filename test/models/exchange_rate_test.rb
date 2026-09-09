@@ -40,6 +40,15 @@ class ExchangeRateTest < ActiveSupport::TestCase
     assert_includes rate.errors.attribute_names, :source
   end
 
+  test "SOURCES incluye cross_usd y una fila con esa etiqueta es valida" do
+    assert_includes ExchangeRate::SOURCES, "cross_usd"
+
+    rate = exchange_rates(:usd_habil)
+    rate.source = "cross_usd"
+
+    assert rate.valid?
+  end
+
   test "rechaza rate_to_cop cero o negativa" do
     rate = exchange_rates(:usd_habil)
 

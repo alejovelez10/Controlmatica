@@ -18,7 +18,10 @@
 #  index_exchange_rates_on_currency_and_rate_date       (currency,rate_date) UNIQUE
 #
 class ExchangeRate < ApplicationRecord
-  SOURCES = %w[trm_oficial bce manual].freeze
+  # cross_usd = agregador de mercado cruzado por la TRM, aceptado explicitamente
+  # por el usuario para DOP/CRC/HNL porque ningun banco central las publica
+  # contra el euro.
+  SOURCES = %w[trm_oficial bce manual cross_usd].freeze
 
   validates :currency,       presence: true, inclusion: { in: Currency::CODES }
   validates :rate_date,      presence: true, uniqueness: { scope: :currency }

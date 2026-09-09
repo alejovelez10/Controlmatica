@@ -27,7 +27,7 @@ class ExpenseRulesValidateTool < ApplicationTool
       invoice_value:      { type: "number",  description: "Valor base en COP" },
       invoice_tax:        { type: "number",  description: "IVA en COP" },
       invoice_total:      { type: "number",  description: "Total en COP" },
-      currency:           { type: "string",  description: "Moneda ISO 4217 (COP, USD, EUR)" },
+      currency:           { type: "string",  description: "Moneda ISO 4217 (#{Currency::CODES.join(', ')})" },
       foreign_value:      { type: "number",  description: "Valor base en la moneda del comprobante" },
       foreign_tax:        { type: "number",  description: "Impuestos en la moneda del comprobante" },
       foreign_total:      { type: "number",  description: "Total en la moneda del comprobante" },
