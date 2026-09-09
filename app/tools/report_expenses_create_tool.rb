@@ -25,8 +25,8 @@ class ReportExpensesCreateTool < ApplicationTool
       invoice_total:          { type: "number",  description: "Total en COP (opcional)" },
       identification:         { type: "string",  description: "NIT/identificación (opcional)" },
       description:            { type: "string",  description: "Descripción (opcional)" },
-      type_identification_id: { type: "integer", description: "ID de opción tipo de identificación (opcional)" },
-      payment_type_id:        { type: "integer", description: "ID de opción tipo de pago (opcional)" },
+      type_identification_id: { type: "integer", description: "ID de opción de categoría \"Tipo\" (el tipo de gasto). Obtenlo con report_expense_options_list(category: \"Tipo\"). Opcional; un id que no sea de esa categoría se rechaza." },
+      payment_type_id:        { type: "integer", description: "ID de opción de categoría \"Medio de pago\". Obtenlo con report_expense_options_list(category: \"Medio de pago\"). Opcional; un id que no sea de esa categoría se rechaza." },
       currency:               { type: "string",  description: "Moneda ISO 4217 del comprobante. Valores validos: #{Currency::CODES.join(', ')}. Default COP." },
       foreign_value:          { type: "number",  description: "Valor base en la moneda del comprobante (solo si currency != COP)" },
       foreign_tax:            { type: "number",  description: "Impuestos en la moneda del comprobante" },
@@ -49,6 +49,15 @@ class ReportExpensesCreateTool < ApplicationTool
                 type_identification_id payment_type_id
                 currency foreign_value foreign_tax foreign_total
                 exchange_rate exchange_rate_date].freeze
+
+  # Cada id de opción tiene UNA categoría válida. Sin esto, `belongs_to
+  # optional: true` deja pasar tanto un id inexistente (FK colgando, y el MCP
+  # no tiene tool de borrado) como uno de la otra categoría (EFECTIVO guardado
+  # como tipo de gasto).
+  OPTION_CATEGORIES = {
+    type_identification_id: ReportExpenseOptionsListTool::CATEGORY_TIPO,
+    payment_type_id:        ReportExpenseOptionsListTool::CATEGORY_MEDIO
+  }.freeze
 
   # Válvula de reversión del rollout: con MCP_STRICT_EXPENSE_ACTOR=false se
   # restaura el comportamiento laxo anterior SIN desplegar código. Por defecto
@@ -74,6 +83,15 @@ class ReportExpensesCreateTool < ApplicationTool
     resolved_user_id = user_invoice_id || actor&.id
     return text(NO_ACTOR_MESSAGE) unless resolved_user_id
     return not_found!("user #{resolved_user_id}") unless User.exists?(resolved_user_id)
+
+    # GUARD DE IDS DE OPCION — existencia Y categoria, antes de ExpenseRuleService
+    # y de persist_with_evaluation!, y FUERA del lock del centro de costo (§2.7):
+    # rechazar algo que se sabia desde el argumento no debe alargar la seccion
+    # critica.
+    OPTION_CATEGORIES.each_key do |campo|
+      error = option_error(campo, args[campo])
+      return text(error) if error
+    end
 
     creator = actor || User.find(resolved_user_id)
 
@@ -156,4 +174,27 @@ class ReportExpensesCreateTool < ApplicationTool
     fila.rate_to_cop.to_d.round(6) == re.exchange_rate.to_d.round(6) ? fila.source : "manual"
   end
   private_class_method :resolve_rate_source
+
+  # nil si el id es válido para su categoría (u omitido); el mensaje de rechazo
+  # si no. `find_by` y no `find`: las tools nunca levantan. La comparación de
+  # categoría es contra el valor almacenado tal cual (los datos del catálogo
+  # son canónicos; la tolerancia de forma es para lo que escribe el modelo, no
+  # para la columna).
+  def self.option_error(campo, raw)
+    return nil if raw.nil? || raw.to_s.strip.empty?
+
+    esperada = OPTION_CATEGORIES[campo]
+    opcion   = ReportExpenseOption.find_by(id: raw)
+    return nil if opcion && opcion.category == esperada
+
+    detalle = if opcion.nil?
+                "no existe ninguna opción con ese id"
+              else
+                "esa opción es #{opcion.name.inspect}, de categoría #{opcion.category.inspect}"
+              end
+    "Error: #{campo} #{raw.inspect} no sirve: #{detalle}. Tiene que ser una opción de " \
+    "categoría #{esperada.inspect}. Llama a report_expense_options_list con " \
+    "category: #{esperada.inspect} y usa uno de los ids que devuelve. El gasto NO se registró."
+  end
+  private_class_method :option_error
 end

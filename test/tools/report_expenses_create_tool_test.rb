@@ -359,4 +359,91 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
       end
     end
   end
+
+  # --- Ids de opción (categoría) --------------------------------------------
+
+  test "type_identification_id inexistente NO crea el gasto" do
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = crear({ actor_phone: "+57 300 123 4567" }, type_identification_id: 999_999)
+        assert_tool_error res, "Error:"
+        assert_tool_error res, "type_identification_id"
+        assert_tool_error res, "Tipo"
+      end
+    end
+  end
+
+  test "payment_type_id inexistente NO crea el gasto" do
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = crear({ actor_phone: "+57 300 123 4567" }, payment_type_id: 999_999)
+        assert_tool_error res, "Error:"
+        assert_tool_error res, "payment_type_id"
+        assert_tool_error res, "Medio de pago"
+      end
+    end
+  end
+
+  test "type_identification_id con un id que existe pero es de la otra categoria NO crea el gasto" do
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = crear({ actor_phone: "+57 300 123 4567" },
+                    type_identification_id: report_expense_options(:opcion_pago).id)
+        assert_tool_error res, "Error:"
+        assert_tool_error res, "type_identification_id"
+        assert_tool_error res, "Tipo"
+        assert_tool_error res, "Medio de pago"
+      end
+    end
+  end
+
+  test "payment_type_id con un id que existe pero es de la otra categoria NO crea el gasto" do
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = crear({ actor_phone: "+57 300 123 4567" },
+                    payment_type_id: report_expense_options(:opcion_tipo).id)
+        assert_tool_error res, "Error:"
+        assert_tool_error res, "payment_type_id"
+        assert_tool_error res, "Medio de pago"
+        assert_tool_error res, "Tipo"
+      end
+    end
+  end
+
+  test "con los ids correctos si crea" do
+    with_mcp_key do
+      res = crear({ actor_phone: "+57 300 123 4567" },
+                  type_identification_id: report_expense_options(:opcion_tipo).id,
+                  payment_type_id: report_expense_options(:opcion_pago).id)
+      creado = ReportExpense.find(tool_json(res)["id"])
+      assert_equal report_expense_options(:opcion_tipo).id, creado.type_identification_id
+      assert_equal report_expense_options(:opcion_pago).id, creado.payment_type_id
+    end
+  end
+
+  test "omitir los dos ids sigue creando" do
+    with_mcp_key do
+      assert_difference("ReportExpense.count", 1) do
+        crear({ actor_phone: "+57 300 123 4567" })
+      end
+    end
+  end
+
+  test "el rechazo de id de opcion ocurre antes del motor de reglas" do
+    regla_default!(max_invoice_value: 50_000)
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = crear({ actor_phone: "+57 300 123 4567" }, type_identification_id: 999_999)
+        assert_tool_error res, "type_identification_id"
+        refute_includes tool_text(res), "rule_violations"
+      end
+    end
+  end
+
+  test "el schema nombra la categoria de cada id" do
+    props = ReportExpensesCreateTool.input_schema.to_h[:properties]
+    assert_includes props[:type_identification_id][:description], "Tipo"
+    assert_includes props[:type_identification_id][:description], "report_expense_options_list"
+    assert_includes props[:payment_type_id][:description], "Medio de pago"
+  end
 end
