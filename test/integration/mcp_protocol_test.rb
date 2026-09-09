@@ -103,7 +103,8 @@ class McpProtocolTest < ActionDispatch::IntegrationTest
         call_tool("report_expenses_create",
                   { cost_center_id: cost_centers(:centro_con_viaticos).id,
                     invoice_name: "Hotel por WhatsApp", invoice_date: Date.current.to_s,
-                    invoice_value: 50_000, invoice_total: 59_500 },
+                    invoice_value: 50_000, invoice_total: 59_500,
+                    type_identification_id: report_expense_options(:opcion_tipo).id },
                   headers: { "X-Actor-Phone" => "whatsapp:+573001234567" })
       end
       assert_equal users(:ingeniero).id, ReportExpense.order(:id).last.user_invoice_id
@@ -115,7 +116,8 @@ class McpProtocolTest < ActionDispatch::IntegrationTest
       assert_no_difference("ReportExpense.count") do
         res = call_tool("report_expenses_create",
                         { cost_center_id: cost_centers(:centro_con_viaticos).id,
-                          invoice_name: "Anonimo", invoice_value: 50_000 })
+                          invoice_name: "Anonimo", invoice_value: 50_000,
+                          type_identification_id: report_expense_options(:opcion_tipo).id })
         assert_includes texto(res), "no se pudo identificar"
       end
     end

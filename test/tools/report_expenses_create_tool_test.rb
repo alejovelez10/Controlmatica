@@ -17,8 +17,12 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
 
   # Argumentos mínimos de un gasto válido.
   def base(**extra)
+    # type_identification_id va en la base porque el servidor lo exige (ver el
+    # guard del tool): sin el, cada test de este archivo fallaria por una razon
+    # ajena a lo que quiere probar.
     { cost_center_id: @centro.id, invoice_name: "Hotel Dann", invoice_date: "2026-07-17",
-      invoice_value: 100_000, invoice_tax: 19_000, invoice_total: 119_000 }.merge(extra)
+      invoice_value: 100_000, invoice_tax: 19_000, invoice_total: 119_000,
+      type_identification_id: report_expense_options(:opcion_tipo).id }.merge(extra)
   end
 
   def crear(ctx_args = {}, **args)
@@ -445,5 +449,46 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
     assert_includes props[:type_identification_id][:description], "Tipo"
     assert_includes props[:type_identification_id][:description], "report_expense_options_list"
     assert_includes props[:payment_type_id][:description], "Medio de pago"
+  end
+
+  # --- el tipo de gasto es obligatorio, y lo exige el SERVIDOR ---------------
+  # 2026-09-09: el body ya lo pedia y el modelo lo salteo igual — pidio la lista
+  # de opciones, la recibio entera y guardo sin preguntarle nada a la persona.
+
+  test "sin type_identification_id NO crea nada" do
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = ReportExpensesCreateTool.call(
+          server_context: ctx(actor_phone: "+57 300 123 4567"),
+          **base.except(:type_identification_id)
+        )
+        assert_tool_error res, "type_identification_id"
+      end
+    end
+  end
+
+  test "el rechazo por tipo faltante manda a report_expense_options_list" do
+    with_mcp_key do
+      res = ReportExpensesCreateTool.call(
+        server_context: ctx(actor_phone: "+57 300 123 4567"),
+        **base.except(:type_identification_id)
+      )
+      texto = res.content.first[:text]
+      assert_includes texto, "report_expense_options_list"
+      assert_includes texto, "Tipo"
+    end
+  end
+
+  test "con un type_identification_id valido si crea" do
+    with_mcp_key do
+      assert_difference("ReportExpense.count", 1) do
+        crear({ actor_phone: "+57 300 123 4567" })
+      end
+    end
+  end
+
+  test "el input_schema declara type_identification_id como requerido" do
+    assert_includes ReportExpensesCreateTool.input_schema.to_h[:required],
+                    "type_identification_id"
   end
 end

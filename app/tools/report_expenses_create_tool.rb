@@ -35,7 +35,7 @@ class ReportExpensesCreateTool < ApplicationTool
       exchange_rate_date:     { type: "string",  description: "Fecha de la tasa aplicada, YYYY-MM-DD. Normalmente = invoice_date." },
       confirm_rule_violations: { type: "boolean", description: "Solo en true DESPUÉS de mostrarle a la persona las violaciones de reglas y de que ella confirme registrar igual. Sin esto, un gasto con violaciones se rechaza." }
     },
-    required: %w[cost_center_id]
+    required: %w[cost_center_id type_identification_id]
   )
 
   # NUNCA ESCRIBIBLES desde el argumento (y hay un test por cada uno):
@@ -91,6 +91,22 @@ class ReportExpensesCreateTool < ApplicationTool
     OPTION_CATEGORIES.each_key do |campo|
       error = option_error(campo, args[campo])
       return text(error) if error
+    end
+
+    # El TIPO es obligatorio, y lo exige el SERVIDOR y no el prompt. El body ya
+    # lo pedia, pero el modelo se lo saltea de forma no deterministica: el
+    # 2026-09-09 en prod llamo a report_expense_options_list, recibio la lista
+    # entera y despues guardo sin haberle preguntado nada a la persona. Un gasto
+    # sin tipo no lo puede clasificar contabilidad, y el MCP no tiene tool de
+    # edicion ni de borrado para arreglarlo despues.
+    if args[:type_identification_id].nil? ||
+       args[:type_identification_id].to_s.strip.empty?
+      return text(
+        "Error: falta type_identification_id, que es OBLIGATORIO. NO se registro " \
+        "nada. Llama a report_expense_options_list con category: \"Tipo\", " \
+        "muestrale a la persona TODAS las opciones que devuelva y usa el id de la " \
+        "que ella elija. No elijas tu, y no inventes un id."
+      )
     end
 
     creator = actor || User.find(resolved_user_id)
