@@ -25,6 +25,19 @@ class Index extends Component {
     this.columns = [
       { key: "name", label: "Nombre" },
       { key: "category", label: "Tipo" },
+      {
+        key: "used_by_ai",
+        label: "Ofrecer al agente",
+        sortable: false,
+        render: (row) => (
+          <input
+            type="checkbox"
+            checked={!!row.used_by_ai}
+            disabled={!this.props.estados.edit}
+            onChange={() => this.toggleUsedByAi(row)}
+          />
+        ),
+      },
     ];
   }
 
@@ -112,6 +125,22 @@ class Index extends Component {
           .then(function() { self.props.loadData(); });
       }
     });
+  };
+
+  toggleUsedByAi = (row) => {
+    var self = this;
+    fetch("/report_expense_options/" + row.id, {
+      method: "PATCH",
+      body: JSON.stringify({ used_by_ai: !row.used_by_ai }),
+      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.type === "error") {
+          Swal.fire({ position: "center", icon: "error", title: data.success, showConfirmButton: false, timer: 2000 });
+        }
+        self.props.loadData();
+      });
   };
 
   openMenu = (e) => { window.cmOpenMenu(e); };
