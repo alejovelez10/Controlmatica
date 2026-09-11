@@ -2767,11 +2767,11 @@ select.cm-input {
    `.cm-form-group` encima, el primer campo de verdad —el centro de costo—
    quedaba empujado casi fuera de la vista al abrir el modal. */
 .cm-form-group--receipt {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .cm-extract {
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 /* --- Espera --- */
