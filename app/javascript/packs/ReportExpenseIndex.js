@@ -1957,7 +1957,8 @@ class ReportExpenseIndex extends React.Component {
             ),
 
             self.renderForeignBlock(),
-            self.renderReceiptBlock(),
+
+            React.createElement("hr", { className: "cm-divider" }),
 
             self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
               React.createElement("i", { className: "fas fa-exclamation-circle" }),
