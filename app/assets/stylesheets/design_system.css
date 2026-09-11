@@ -2767,7 +2767,11 @@ select.cm-input {
    `.cm-form-group` encima, el primer campo de verdad —el centro de costo—
    quedaba empujado casi fuera de la vista al abrir el modal. */
 .cm-form-group--receipt {
-  margin-bottom: 12px;
+  /* 20px y no los 16 de `.cm-form-group`: el bloque del comprobante termina en
+     un boton, no en un campo, y un boton pegado a la fila de abajo se lee como
+     si perteneciera a ella. El aire de ARRIBA se queda en 12 (`.cm-extract`):
+     ahi el boton si pertenece al comprobante. */
+  margin-bottom: 20px;
 }
 
 .cm-extract {
