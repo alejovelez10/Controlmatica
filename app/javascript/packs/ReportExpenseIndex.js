@@ -1794,6 +1794,13 @@ class ReportExpenseIndex extends React.Component {
             // la factura no servia.
             self.renderReceiptBlock(),
 
+            // El divider va JUSTO DEBAJO DEL COMPROBANTE y no al final del
+            // formulario. Separa las dos mitades del modal —adjuntar el archivo
+            // arriba, escribir los datos abajo—, que es la unica division real
+            // que hay aqui. Al final no separaba nada: quedaba pegado a una
+            // alerta que casi nunca se pinta.
+            React.createElement("hr", { className: "cm-divider" }),
+
             self.state.copyMessage ? React.createElement("div", { className: "alert alert-warning", style: { marginBottom: "12px" } }, self.state.copyMessage) : null,
             React.createElement("div", { className: "cm-form-grid-2" },
               // Centro de costo. El data-testid va en un DIV envolvente:
@@ -1957,8 +1964,6 @@ class ReportExpenseIndex extends React.Component {
             ),
 
             self.renderForeignBlock(),
-
-            React.createElement("hr", { className: "cm-divider" }),
 
             self.state.ErrorValues === false && React.createElement("div", { className: "cm-alert cm-alert-error" },
               React.createElement("i", { className: "fas fa-exclamation-circle" }),
