@@ -386,3 +386,124 @@ mismo, y el trabajo que queda es humano (§4.1) y de campo (§9).
 *Última actualización: 2026-08-11, cierre de la ola 8 (paquete 13) con la verificación
 independiente incorporada. Todas las cifras de este documento se midieron ejecutando los comandos,
 no se reportaron de memoria.*
+
+---
+
+# ADENDA — 2026-09-11: puesta en marcha y cambios de producto
+
+> Todo lo de arriba describe el proyecto **antes** de desplegar. Esta adenda recoge lo que
+> cambió después, y **donde contradiga al cuerpo del documento, manda la adenda**.
+> Las cifras se midieron corriendo los comandos.
+
+## A.1 El sistema ESTÁ EN PRODUCCIÓN
+
+El §1 decía «la puesta en marcha NO se ha ejecutado». Ya no es cierto.
+
+| Qué | Estado |
+|---|---|
+| Despliegue | **Hecho.** `controlmatica` va por la release **v520** |
+| Migraciones | **Las 9 corridas** en producción |
+| Permisos | Creados con `permissions_gastos_ia:install` y `permissions_expense_rules:install` |
+| Rama | `feature/gastos-presupuesto-ia`, empujada a `origin` y desplegada a Heroku |
+| `bin/rails test` | **1.007 runs / 3.369 assertions / 0 failures** |
+| Variables | `AWS_REGION`, `RECEIPT_EXTRACTION_ENABLED=false` y las cuatro de TRM |
+
+**La extracción por IA sigue apagada** y las tres `TAIMES_*` sin sembrar: se decidió estrenar
+con el registro manual. El kill switch es la única garantía de que no se bloquee.
+
+## A.2 Las cinco decisiones de producto que se tomaron
+
+Cinco de los pendientes del §3 y §4 quedaron resueltos, y **tres cambian reglas que el cuerpo
+de este documento da por firmes**.
+
+**1. Las reglas de gasto son DURAS.** Vivían en un `before_save` que solo anotaba la violación y
+bajaba el gasto a «sin aprobar». Ahora son `validate :enforce_expense_rules`: un gasto que
+incumple **no se guarda**. La nota que había en el código —«bloquear al usuario en campo, con la
+factura en la mano, solo consigue que no reporte»— queda como el riesgo aceptado a conciencia.
+
+  Al **editar** solo se valida si cambió un campo que las reglas miran. Sin esa guarda,
+  endurecer una regla dejaría ilegibles los gastos que ya existen: con un tope de $10.000 no se
+  podría ni corregir una letra del nombre de un gasto viejo, ni aceptarlo, ni aprobarlo
+  contablemente.
+
+  La confirmación expresa de WhatsApp (`confirm_rule_violations`) se conserva: es el único
+  escape, y es una decisión humana registrada.
+
+**2. `is_acepted` se usa para algo nuevo — ROMPE EL INVARIANTE #1.** A petición explícita del
+dueño del producto. Un gasto que cabe en el presupuesto **nace aceptado** (`before_create`), y
+el que se pasa o no tiene partida nace en «Creado». Va en `before_create` y no en `before_save`
+para que el cambio manual de estado siga siendo posible y no se deshaga en el siguiente guardado.
+
+  Consecuencia real: `is_acepted` es lo único que deja pasar un gasto a la bandeja de
+  Contabilidad, así que lo que cabe llega solo y lo anómalo queda retenido.
+
+**3. El cupo lo mueve la ACEPTACIÓN, no el registro.** La regla 2 del §2.6 («los
+`sin_presupuesto` consumen cupo») queda derogada. Ahora consume `is_acepted: true`: el gasto se
+registra sin tocar el presupuesto y descuenta cuando el responsable lo acepta, **aunque deje el
+cupo en negativo** —el gasto ya ocurrió y la factura hay que pagarla—. La pregunta se responde
+en un solo sitio, `ExpenseBudgetService.consumidores`; vivía repetida en tres consultas.
+
+**4. A Contabilidad llega TODO lo aceptado, exceso incluido.** `accounting_visible` ya no
+recorta por estado presupuestal y se retiró el candado que impedía aprobar un excedido. Ese es
+justamente el gasto que contabilidad necesita mirar, y la plata existe igual.
+
+**5. El estado presupuestal deja de ser columna.** Se oculta en las tres tablas y su señal se
+muda a un aviso al lado del estado, cuyo tooltip es **el único sitio donde se lee
+`budget_reason`**. Antes el motivo se calculaba, se guardaba y no lo mostraba nadie: las tablas
+lo pintaban solo bajo `budget_status === "excedido"`, así que el motivo de las reglas —que deja
+el gasto en `sin_presupuesto`— no se veía nunca.
+
+## A.3 Defectos encontrados y corregidos
+
+**El import perdía datos en silencio.** Resolvía los catálogos con
+`LOWER(TRIM(name)) = <texto en minúscula de Ruby>`. Con una base en collation `C`, el `LOWER()`
+de Postgres **solo baja ASCII**: el tipo `Útiles papelería` y las personas `Pedro Álvarez` y
+`Luciana Álvarez` eran **imposibles de importar**, y no se avisaba: el campo quedaba en NULL y
+la fila se daba por buena. Se resuelve en Ruby, así que ya no depende de la configuración
+regional de la base. Producción (`en_US.UTF-8`) no sufría el defecto; un portátil en `C` sí —el
+peor tipo de diferencia.
+
+  De paso: el espacio duro (U+00A0) se trata como espacio normal. **Ocho de los 19 tipos** del
+  catálogo llevan algo invisible (`Casino y restaurante\u00A0 51956001`), en producción también.
+  Y los catálogos se cargan una vez por archivo: 300 filas hacían 1.200 consultas, ahora 4.
+
+**`upload_file` no tenía NINGÚN control de permisos** —y `verify_authenticity_token` está
+saltado para ella—, así que cualquier usuario autenticado podía crear gastos en masa, en
+cualquier centro y a nombre de cualquiera, saltándose formulario, presupuesto y reglas. Ahora
+exige rol Administrador en el servidor.
+
+**No se podía aprobar contablemente un gasto histórico.** `update_accounting_state` usaba
+`update`, que corre todas las validaciones, y hay gastos sin `user_invoice_id`: fallaba con
+«User invoice must exist». Los mismos gastos sí se aprobaban en masa, porque `update_all` se
+salta las validaciones. Pasa a `update_columns`, como ya hacía el masivo.
+
+**Plantilla de importación**, generada contra la base en cada descarga
+(`app/views/report_expenses/import_template.xlsx.axlsx`). Las hojas de catálogo traen los
+valores exactos para copiar y pegar, que es la única forma fiable de acertarle a un nombre con
+espacios invisibles. **No incluye los centros de costo**: hay 10.901 y pueden ser 21.000.
+
+## A.4 Lo que sigue abierto
+
+**El import contra las reglas duras.** Una regla con tope bajo rechaza casi cualquier archivo
+real, incluido el de prueba de los 19 tipos. Falta decidir si el import queda exento: es una
+carga histórica, y un histórico es viejo y grande por definición.
+
+**Tres roles llamados `Administrador`** (ids 1, 2 y 3) y las tasks de permisos usan `find_by`,
+que toma uno solo. Los otros dos se quedan sin los módulos nuevos. Y el rol `ADMINISTRADOR` en
+mayúsculas (id 4) **nunca pasa por `is_admin?`**, porque la comparación es literal.
+
+**Módulo `Tipos de Gastos` duplicado** en dev (ids 41 y 47) más basura (`test`, `dsaasf`). Un
+permiso asignado sobre el registro equivocado se ve concedido y no funciona.
+
+**El motivo sigue sin leerse en dos casos**: cuando el gasto además no tiene partida o está
+excedido, `apply_expense_rules` no escribe `budget_reason` (es un `return unless`), y
+`rule_violations` no está en el serializer. Falta decidir qué texto gana.
+
+**`agent_instructions` no es una regla**: el servidor no la evalúa nunca, es texto para el
+agente. Desde la tabla de reglas se ve como un campo más.
+
+**Una prueba de zona horaria** falla cada tarde después de las 19:00 hora Colombia:
+`register_auditable.rb` escribe `date_update: Time.now` (hora local) y el test compara contra
+`Date.current` (UTC).
+
+*Adenda medida y escrita el 2026-09-11.*
