@@ -1585,7 +1585,7 @@ class ReportExpenseIndex extends React.Component {
   renderReceiptBlock = function() {
     var self = this;
 
-    return React.createElement("div", { className: "cm-form-group", style: { marginTop: 12 } },
+    return React.createElement("div", { className: "cm-form-group cm-form-group--receipt", style: { marginTop: 0 } },
       React.createElement("label", { className: "cm-label" },
         "Comprobante",
         // El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo mientras

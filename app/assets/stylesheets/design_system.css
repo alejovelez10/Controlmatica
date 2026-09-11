@@ -853,6 +853,11 @@ select.cm-input {
   font-size: 12px;
   font-weight: 600;
   font-family: "Poppins", sans-serif;
+  /* UNA PILDORA NUNCA SE PARTE EN DOS LINEAS. Con el texto envuelto, el
+     punto de estado queda arriba a la izquierda y el fondo redondeado se
+     deforma: deja de leerse como una etiqueta. Si no cabe, que la columna
+     crezca o que el texto se corte, pero la pildora se mantiene entera. */
+  white-space: nowrap;
 }
 
 .cm-status-badge::before {
@@ -2757,8 +2762,16 @@ select.cm-input {
    docena y empujaba fuera de la pantalla los campos que hay que revisar. Aqui
    son filas de una misma lista: se leen de un vistazo y ocupan un tercio. */
 
+/* El bloque del comprobante es el PRIMERO del formulario y ya trae su propio
+   aire: la banda punteada y, debajo, el boton de extraer. Con los 16px de
+   `.cm-form-group` encima, el primer campo de verdad —el centro de costo—
+   quedaba empujado casi fuera de la vista al abrir el modal. */
+.cm-form-group--receipt {
+  margin-bottom: 8px;
+}
+
 .cm-extract {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 /* --- Espera --- */

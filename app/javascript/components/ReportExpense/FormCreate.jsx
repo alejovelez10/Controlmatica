@@ -383,7 +383,7 @@ class FormCreate extends Component {
 
   renderReceiptBlock = () => (
     <div className="cm-form-grid-1">
-      <div className="cm-form-group">
+      <div className="cm-form-group cm-form-group--receipt">
         <label className="cm-label">
           <i className="fa fa-paperclip"></i> Comprobante
           {/* El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo
