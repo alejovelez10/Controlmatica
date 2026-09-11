@@ -48,6 +48,13 @@ class ExpenseBudgetsControllerTest < ActionDispatch::IntegrationTest
       ExpenseBudget.create!(cost_center: @centro, user: @limitado, amount: 150_000,
                             notes: "Partida del limitado", created_by: @admin)
     end
+
+    # Los gastos preexistentes de las fixtures representan cupo YA EJECUTADO.
+    # Desde 2026-09-10 solo lo ACEPTADO consume (ExpenseBudgetService.consumidores)
+    # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible de
+    # partida sube y toda la aritmetica de este archivo se corre. Se marca aqui y
+    # no en el YAML para no cambiarle el escenario al resto del repo.
+    ReportExpense.update_all(is_acepted: true)
   end
 
   def listado_path(centro = @centro)
@@ -750,7 +757,11 @@ class ExpenseBudgetsControllerTest < ActionDispatch::IntegrationTest
     # El contador tiene UNA sola partida en el centro: al borrarla no queda
     # ninguna activa del par y el gasto no puede reimputarse a otra.
     gasto = as_user(@admin) do
-      ReportExpense.create!(user: @admin, cost_center: @centro, user_invoice: users(:contador),
+      ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: users(:contador),
                             invoice_name: "Gasto imputado", invoice_date: Date.new(2026, 6, 1),
                             invoice_number: "FE-IMP-1", identification: "900111222",
                             invoice_value: 50_000, invoice_tax: 0, invoice_total: 50_000)

@@ -1,3 +1,24 @@
+# == Schema Information
+#
+# Table name: expense_budgets
+#
+#  id                  :bigint           not null, primary key
+#  active              :boolean          default(TRUE), not null
+#  amount              :decimal(15, 2)   default(0.0), not null
+#  notes               :text
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  cost_center_id      :integer          not null
+#  created_by_id       :integer
+#  last_user_edited_id :integer
+#  user_id             :integer          not null
+#
+# Indexes
+#
+#  index_expense_budgets_on_center_user_active  (cost_center_id,user_id,active)
+#  index_expense_budgets_on_cost_center_id      (cost_center_id)
+#  index_expense_budgets_on_user_id             (user_id)
+#
 require "test_helper"
 
 # Validaciones, scopes y regla de tope de ExpenseBudget.

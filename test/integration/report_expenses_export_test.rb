@@ -14,11 +14,21 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
   setup do
     @admin = users(:admin)
     @centro = cost_centers(:centro_con_viaticos)
+
+    # Los gastos preexistentes de las fixtures representan cupo YA EJECUTADO.
+    # Desde 2026-09-10 solo lo ACEPTADO consume (ExpenseBudgetService.consumidores)
+    # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible del
+    # par sube y el escenario de este archivo deja de ser el que se queria medir.
+    ReportExpense.update_all(is_acepted: true)
   end
 
   def crear_gasto(**overrides)
     as_user(@admin) do
       ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @admin,
         cost_center: @centro,
         user_invoice: users(:ingeniero),
@@ -82,7 +92,14 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     hoja_de_la_respuesta { |hoja| assert_equal ENCABEZADOS, hoja.row(1) }
   end
 
-  test "el export de contabilidad no incluye excedidos" do
+  test "el export de contabilidad SI incluye los excedidos" do
+    # LA REGLA SE INVIRTIO (decision de producto, 2026-08-29). Este test afirmaba
+    # lo contrario y quedo desalineado cuando `accounting_visible` paso a ser
+    # `all`: el estado presupuestal ya no recorta la vista de Contabilidad,
+    # porque el gasto excedido es justamente el que hay que mirar y la factura se
+    # paga igual. El exceso se informa —aviso en la tabla y `budget_reason`—, no
+    # se esconde. La comprobacion se invierte para que el archivo no vuelva a
+    # quedarse afirmando una regla que el modelo ya no aplica.
     excedido = crear_gasto(budget_status: "excedido")
     normal = crear_gasto
     sign_in_as @admin
@@ -90,16 +107,8 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     get "/download_file/accounting_expenses/todos"
     hoja_de_la_respuesta do |hoja|
       ids = (2..hoja.last_row).map { |i| hoja.row(i)[0] }
-      refute_includes ids, excedido.id
+      assert_includes ids, excedido.id
       assert_includes ids, normal.id
-    end
-
-    # Y con type=filtro sin el filtro "Aprobados por contabilidad" tampoco: la
-    # excepcion de la correccion 13 solo aplica a ese filtro.
-    get "/download_file/accounting_expenses/filtro", params: { cost_center_id: @centro.id }
-    hoja_de_la_respuesta do |hoja|
-      ids = (2..hoja.last_row).map { |i| hoja.row(i)[0] }
-      refute_includes ids, excedido.id
     end
   end
 

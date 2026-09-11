@@ -29,15 +29,22 @@ export function budgetStatusBadge(status) {
   }
 }
 
-// Badge de la aprobacion contable. Devuelve { label, className }.
+// Badge del estado contable. Devuelve { label, className }.
+//
+// LAS ETIQUETAS SON "Contabilizado" / "No contabilizado" y no "Aprobado" /
+// "Pendiente" (2026-09-10). El problema del par viejo era que en esta pantalla
+// conviven DOS aprobaciones —la presupuestal (`budgetStatusBadge`, que sigue
+// diciendo "Aprobado") y la contable— y con el mismo adjetivo para las dos no
+// habia forma de saber cual estaba mirando uno. `accounting_approved` sigue
+// llamandose asi en la base: esto es vocabulario de pantalla.
 //
 // Se compara por veracidad y no por `=== true`: el JSON puede traer el booleano,
 // pero el mismo helper se usa con valores que pasaron por un <select> ("true").
 export function accountingBadge(approved) {
   if (approved) {
-    return { label: "Aprobado", className: "cm-status-badge cm-status-badge--green" };
+    return { label: "Contabilizado", className: "cm-status-badge cm-status-badge--green" };
   }
-  return { label: "Pendiente", className: "cm-status-badge cm-status-badge--gray" };
+  return { label: "No contabilizado", className: "cm-status-badge cm-status-badge--gray" };
 }
 
 // Fecha corta de aprobacion: "2026-07-14T10:22:00Z" -> "14/07/2026". null -> "".

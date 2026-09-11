@@ -36,11 +36,16 @@ class ExpenseBudgetServiceEvaluateTest < ActiveSupport::TestCase
   end
 
   def nuevo_gasto(valor, **overrides)
-    ReportExpense.new(atributos_gasto(valor, **overrides))
+    ReportExpense.new(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        atributos_gasto(valor, **overrides).merge(omitir_comprobante_obligatorio: true))
   end
 
   def crear_gasto(valor, **overrides)
-    as_user(@admin) { ReportExpense.create!(atributos_gasto(valor, **overrides)) }
+    as_user(@admin) { ReportExpense.create!(
+        atributos_gasto(valor, **overrides).merge(omitir_comprobante_obligatorio: true)) }
   end
 
   # --- evaluate! ------------------------------------------------------------

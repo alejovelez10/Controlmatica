@@ -17,6 +17,10 @@ class ReportExpenseAccountingTest < ActiveSupport::TestCase
   def crear_gasto(**overrides)
     as_user(@actor) do
       ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @actor,
         cost_center: cost_centers(:centro_con_viaticos),
         user_invoice: users(:ingeniero),
@@ -73,8 +77,10 @@ class ReportExpenseAccountingTest < ActiveSupport::TestCase
   end
 
   test "accounting_state_label" do
-    assert_equal "Pendiente", ReportExpense.new(accounting_approved: false).accounting_state_label
-    assert_equal "Aprobado", ReportExpense.new(accounting_approved: true).accounting_state_label
+    assert_equal "No contabilizado", ReportExpense.new(
+        omitir_comprobante_obligatorio: true, accounting_approved: false).accounting_state_label
+    assert_equal "Contabilizado", ReportExpense.new(
+        omitir_comprobante_obligatorio: true, accounting_approved: true).accounting_state_label
   end
 
   test "receipt_file_url es nil sin comprobante" do

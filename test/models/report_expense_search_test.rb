@@ -65,6 +65,10 @@ class ReportExpenseSearchTest < ActiveSupport::TestCase
   def crear(centro:, responsable:, nombre:, fecha:, identificacion:, descripcion:, numero:,
             tipo:, pago:, valor:, iva:, aceptado:)
     ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
       user_id: users(:admin).id,
       cost_center_id: centro.id,
       user_invoice_id: responsable.id,
@@ -262,6 +266,7 @@ class ReportExpenseSearchConcurrencyTest < ActiveSupport::TestCase
       10.times do |i|
         [@centro_uno, @centro_dos].each do |centro|
           gasto = ReportExpense.create!(
+        omitir_comprobante_obligatorio: true,
             user_id: users(:admin).id,
             cost_center_id: centro.id,
             user_invoice_id: users(:ingeniero_dos).id,

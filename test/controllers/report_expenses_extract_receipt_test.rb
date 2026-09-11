@@ -243,8 +243,12 @@ class ReportExpensesExtractReceiptTest < ActionDispatch::IntegrationTest
 
     as_user(@admin) do
       ExpenseRule.create!(name: "Duplicados extract test", active: true, is_default: false,
-                          check_duplicates: true, users: [@admin], user: @admin)
+                          check_duplicates: true, rols: [@admin.rol], user: @admin)
       ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @admin, cost_center: cost_centers(:centro_con_viaticos),
         user_invoice: users(:ingeniero), invoice_name: "Distribuidora El Sol SAS",
         invoice_date: Date.new(2026, 7, 14), description: "Original",

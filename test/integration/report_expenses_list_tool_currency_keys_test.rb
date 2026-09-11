@@ -47,6 +47,10 @@ class ReportExpensesListToolCurrencyKeysTest < ActiveSupport::TestCase
   test "el serializador MCP resuelve las 7 claves contra un gasto en USD" do
     gasto = as_user(users(:admin)) do
       ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         cost_center: cost_centers(:centro_con_viaticos),
         user_invoice: users(:ingeniero),
         user: users(:admin),

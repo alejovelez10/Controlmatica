@@ -28,6 +28,9 @@ class ExpenseFormMultipartTest < ActionDispatch::IntegrationTest
   # Los vacios van como "" y NUNCA se omiten, porque FormData siempre los manda.
   def form_params(**overrides)
     {
+      # Obligatorio desde 2026-09-10. Los tests que prueban su AUSENCIA lo
+      # quitan con `receipt_file: nil`.
+      receipt_file: upload_fixture("comprobante.pdf"),
       cost_center_id: @centro.id,
       user_invoice_id: @ingeniero.id,
       invoice_name: "Hotel Multipart",
@@ -49,7 +52,10 @@ class ExpenseFormMultipartTest < ActionDispatch::IntegrationTest
       exchange_rate_date: "",
       exchange_rate_source: "",
       cop_manual_override: "false",
-    }.merge(overrides)
+      # `.compact` para que `receipt_file: nil` signifique NO MANDAR la clave.
+      # Mandarla en nil es otra cosa: el controller lo lee como "borra el
+      # comprobante", que es justo lo que el test de conservacion no quiere.
+    }.merge(overrides).compact
   end
 
   test "crea un gasto enviado como multipart form data" do
@@ -71,17 +77,23 @@ class ExpenseFormMultipartTest < ActionDispatch::IntegrationTest
     assert_equal "Hotel Multipart", gasto.invoice_name
   end
 
-  test "crea un gasto multipart sin archivo adjunto" do
-    sign_in_as @admin
+  test "un gasto multipart SIN archivo adjunto se rechaza" do
+    con_comprobante_obligatorio do
+      # LA REGLA SE INVIRTIO (2026-09-10). Este test afirmaba que el multipart sin
+      # archivo creaba el gasto igual, y eso era justamente el hueco: un gasto sin
+      # soporte no lo puede causar contabilidad, asi que registrarlo solo aplaza el
+      # problema al cierre, cuando ya nadie se acuerda de que factura era.
+      sign_in_as @admin
 
-    # `receipt_file` NO se manda: el cliente solo lo adjunta si es un File.
-    # OrdenesDeCompraTable hace el append siempre y por eso manda el string
-    # "[object Object]"; este test blinda que aqui no pasa.
-    as_user(@admin) { post report_expenses_path, params: form_params }
+      assert_no_difference -> { ReportExpense.count } do
+        post report_expenses_path, params: form_params(receipt_file: nil)
+      end
 
-    registro = assert_json_success
-    assert_nil registro["receipt_file"], "Sin archivo, receipt_file debe viajar en null"
-    assert ReportExpense.order(:id).last.receipt_file.blank?
+      assert_response :success
+      cuerpo = JSON.parse(response.body)
+      assert_equal "error", cuerpo["type"]
+      assert_match(/comprobante/i, Array(cuerpo["message"]).join(" "))
+    end
   end
 
   test "los campos vacios enviados como string vacio no rompen el create" do
@@ -174,6 +186,10 @@ class ExpenseFormMultipartTest < ActionDispatch::IntegrationTest
   test "actualiza un gasto por multipart conservando el comprobante existente" do
     gasto = as_user(@admin) do
       registro = ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @admin, cost_center: @centro, user_invoice: @ingeniero,
         invoice_name: "Con comprobante", invoice_date: Date.new(2026, 6, 1),
         invoice_number: "FE-KEEP-#{SecureRandom.hex(3)}", identification: "900111222",
@@ -191,7 +207,10 @@ class ExpenseFormMultipartTest < ActionDispatch::IntegrationTest
     # edita el nombre y no toca el archivo. Si el controller hiciera
     # `update(receipt_file: nil)` el comprobante desapareceria en silencio.
     as_user(@admin) do
-      patch report_expense_path(gasto), params: form_params(invoice_name: "Nombre editado")
+      # `receipt_file: nil` es la premisa del test: el formulario manda el PATCH
+      # sin archivo cuando la persona edita el nombre y no toca el comprobante.
+      # Desde que `form_params` adjunta uno por defecto hay que quitarlo aqui.
+      patch report_expense_path(gasto), params: form_params(invoice_name: "Nombre editado", receipt_file: nil)
     end
 
     assert_json_success

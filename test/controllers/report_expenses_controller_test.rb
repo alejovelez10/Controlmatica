@@ -28,6 +28,9 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
 
   def parametros_gasto(**overrides)
     {
+      # El comprobante es obligatorio desde 2026-09-10: sin el, el create por la
+      # via web se rechaza y estos tests no llegarian a probar lo suyo.
+      receipt_file: upload_fixture("comprobante.pdf"),
       cost_center_id: @centro.id,
       user_invoice_id: @ingeniero.id,
       invoice_name: "Hotel Nuevo",
@@ -60,7 +63,11 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
     # description e identification son iguales en las dos fixtures: el fragmento
     # tiene que devolver LAS DOS, no la tabla entera. Se comprueba con un gasto
     # de un tercer texto que NO debe aparecer.
-    ajeno = as_user(@admin) { ReportExpense.create!(parametros_gasto(invoice_name: "Restaurante", description: "Comida de campo", identification: "800999888")) }
+    ajeno = as_user(@admin) { ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        parametros_gasto(invoice_name: "Restaurante", description: "Comida de campo", identification: "800999888").merge(omitir_comprobante_obligatorio: true)) }
 
     get get_report_expenses_path, params: { q: "Alojamiento de comision" }
     ids = assert_json_list.map { |g| g["id"] }
@@ -180,7 +187,8 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "get_report_expenses sin Ver todos solo devuelve los del responsable" do
-    ajeno = as_user(@admin) { ReportExpense.create!(parametros_gasto(user_invoice_id: @otro.id)) }
+    ajeno = as_user(@admin) { ReportExpense.create!(
+        parametros_gasto(user_invoice_id: @otro.id).merge(omitir_comprobante_obligatorio: true)) }
     sign_in_as @ingeniero
 
     get get_report_expenses_path
@@ -382,7 +390,8 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
 
   test "destroy recalcula el centro de costos" do
     sign_in_as @admin
-    gasto = as_user(@admin) { ReportExpense.create!(parametros_gasto(invoice_value: 77_000)) }
+    gasto = as_user(@admin) { ReportExpense.create!(
+        parametros_gasto(invoice_value: 77_000).merge(omitir_comprobante_obligatorio: true)) }
     # Se parte del valor YA recalculado para que la asercion mida el efecto del
     # destroy y no el arrastre de las fixtures.
     as_user(@admin) { @centro.update_columns(viat_costo_real: ReportExpense.where(cost_center_id: @centro.id).sum(:invoice_value)) }
@@ -397,7 +406,8 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
 
   test "destroy responde el contrato JSON de exito" do
     sign_in_as @admin
-    gasto = as_user(@admin) { ReportExpense.create!(parametros_gasto) }
+    gasto = as_user(@admin) { ReportExpense.create!(
+        parametros_gasto.merge(omitir_comprobante_obligatorio: true)) }
 
     assert_difference -> { ReportExpense.count }, -1 do
       delete report_expense_path(gasto)

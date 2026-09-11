@@ -209,6 +209,8 @@ GASTOS = [
 
 gastos = GASTOS.map do |g|
   ReportExpense.create!(
+    # Misma excepcion que abajo: la siembra no adjunta archivos.
+    omitir_comprobante_obligatorio: true,
     user_id: usuario.id,
     user_invoice_id: usuario.id,
     cost_center_id: centro.id,
@@ -399,6 +401,11 @@ gastos_e2e   = {}
 
 def gasto_e2e!(centro:, responsable:, numero:, nombre:, valor:, fecha:, tipo:, pago:, iva: 0.0)
   ReportExpense.create!(
+    # El comprobante es obligatorio desde 2026-09-10, pero la siembra no puede
+    # adjuntar archivos: varios escenarios E2E (el 4, sin ir mas lejos) existen
+    # justamente para subirlo POR LA UI, y sembrarlo ya adjunto haria que esos
+    # tests no probaran nada. Misma excepcion declarada que la del import.
+    omitir_comprobante_obligatorio: true,
     user_id: responsable.id, user_invoice_id: responsable.id, cost_center_id: centro.id,
     invoice_name: nombre, invoice_date: fecha,
     description: "Gasto semilla determinista para E2E",

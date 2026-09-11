@@ -206,6 +206,10 @@ class CostCentersController < ApplicationController
       expense_edit: is_admin? || has_menu_permission?("Gastos", "Editar"),
       expense_delete: is_admin? || has_menu_permission?("Gastos", "Eliminar"),
       expense_show_all: is_admin? || has_menu_permission?("Gastos", "Ver todos"),
+      # No es un permiso: es el flag EXPENSE_RECEIPT_REQUIRED, para que el
+      # formulario marque el campo y corte antes de subir. Quien rechaza de
+      # verdad es el modelo.
+      receipt_required: ReportExpense.comprobante_obligatorio?,
     )
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)

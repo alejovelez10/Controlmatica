@@ -28,10 +28,19 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
   # no determinista.
   def crear_gasto(valor, dia:, cost_center: @centro_lab, user: @user_lab, **overrides)
     gasto = as_user(@admin) do
-      ReportExpense.create!({ user_id: @admin.id, cost_center_id: cost_center.id,
+      ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user_id: @admin.id, cost_center_id: cost_center.id,
                               user_invoice_id: user.id, invoice_name: "Gasto #{dia}",
                               invoice_date: Date.new(2026, 6, dia), invoice_value: valor,
                               invoice_tax: 0, invoice_total: valor,
+                              # Los gastos de estas pruebas representan cupo YA COMPROMETIDO.
+                              # Desde 2026-09-10 solo lo ACEPTADO consume (ver
+                              # ExpenseBudgetService.consumidores); con el default de la columna
+                              # —false— no descontarian nada y el disponible saldria intacto.
+                              is_acepted: true,
                               budget_status: "aprobado" }.merge(overrides))
     end
     gasto.update_columns(created_at: Time.zone.local(2026, 6, dia, 8, 0, 0))
@@ -52,10 +61,14 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
 
     assert_equal "aprobado", viejo.reload.budget_status
     assert_equal "excedido", medio.reload.budget_status
-    # El tercero tambien excede, y por el MISMO monto que el segundo: lo que no
-    # cabe no consume cupo, asi que el segundo no arrastra al tercero.
+    # LA CASCADA AHORA ES REAL (2026-09-10). Antes el segundo no arrastraba al
+    # tercero —"lo que no cabe no consume"— y los dos excedian por los mismos
+    # $20.000. Ahora los tres estan ACEPTADOS, luego los tres consumen, y el
+    # mensaje del tercero reporta el sobregiro ACUMULADO del par: 180.000
+    # gastados contra 100.000 asignados. Es el dato util: decir "$20.000" cuando
+    # el cupo esta 80.000 en rojo engañaria a quien lo lee.
     assert_equal "excedido", nuevo.reload.budget_status
-    assert_equal "Excede el presupuesto disponible en $20.000", nuevo.reload.budget_reason
+    assert_equal "Excede el presupuesto disponible en $80.000", nuevo.reload.budget_reason
   end
 
   def test_reducir_partida_bajo_lo_gastado_empuja_a_excedido_a_los_mas_nuevos
@@ -96,12 +109,19 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
   end
 
   # La anulacion COMPLETA (la partida no tiene nada ejecutado) es la unica que
-  # desactiva la partida, y ahi si los gastos se quedan sin cupo. Un gasto
-  # `excedido` no cuenta como ejecutado: no consume cupo, asi que no impide la
-  # anulacion total.
+  # desactiva la partida, y ahi si los gastos se quedan sin cupo.
+  #
+  # QUE CUENTA COMO "EJECUTADO" CAMBIO (2026-09-10): antes lo definia el estado
+  # presupuestal (un `excedido` no consumia y por eso no estorbaba); ahora lo
+  # define la ACEPTACION. Por eso el gasto de este escenario va SIN aceptar: es
+  # la unica forma de que la partida siga sin nada ejecutado.
   def test_desactivar_partida_sin_gasto_ejecutado_deja_los_gestionados_en_sin_presupuesto
     partida = crear_partida(200_000)
     excedido = crear_gasto(500_000, dia: 1)
+    # `update_columns` y no un override en `crear_gasto`: el helper crea con
+    # budget_status "aprobado" y `auto_accept_if_within_budget` (before_create)
+    # pisaria cualquier `is_acepted: false` que se le pase al constructor.
+    excedido.update_columns(is_acepted: false)
     reevaluar
     assert_equal "excedido", excedido.reload.budget_status
 
@@ -118,7 +138,14 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
   def test_anular_partida_con_gasto_ejecutado_recorta_y_conserva_la_imputacion
     partida = crear_partida(200_000)
     aprobado = crear_gasto(100_000, dia: 1)
+    # SIN aceptar: lo ejecutado son los 100.000 del aprobado. Si este tambien
+    # contara, el par llevaria 600.000 sobre una partida de 200.000 y no habria
+    # nada que recortar —que es otro caso, el de `anular_con_gasto_mayor_al_monto`.
     excedido = crear_gasto(500_000, dia: 2)
+    # `update_columns` y no un override en `crear_gasto`: el helper crea con
+    # budget_status "aprobado" y `auto_accept_if_within_budget` (before_create)
+    # pisaria cualquier `is_acepted: false` que se le pase al constructor.
+    excedido.update_columns(is_acepted: false)
     reevaluar
     assert_equal "excedido", excedido.reload.budget_status
 

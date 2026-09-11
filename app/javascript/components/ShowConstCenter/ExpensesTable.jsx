@@ -100,6 +100,8 @@ class ExpensesTable extends Component {
       // `receiptFileName` —que solo se llena al elegir archivo nuevo— para
       // saber si lo adjuntado es imagen cuando se EDITA un gasto.
       receiptExistingUrl: "",
+      // Violaciones de reglas del gasto en curso, evaluadas al adjuntar.
+      ruleViolations: [],
       receiptError: null,
       receiptPreview: { open: false, id: null, name: "" },
       receiptPreviewError: false,
@@ -392,7 +394,10 @@ class ExpensesTable extends Component {
       cambios.exchange_rate_source = "manual";
     }
     this.setState({ formCreate: Object.assign({}, this.state.formCreate, cambios) }, () => {
-      var total = Number(this.state.formCreate.invoice_value) + Number(this.state.formCreate.invoice_tax);
+      // Redondeado a dos: sumar dos floats da 119000.11999999999. El modelo lo
+      // vuelve a redondear (es el guardian de los cuatro canales); aqui se hace
+      // para que el usuario vea el mismo numero que se va a guardar.
+      var total = Math.round((Number(this.state.formCreate.invoice_value) + Number(this.state.formCreate.invoice_tax)) * 100) / 100;
       this.setState({ formCreate: Object.assign({}, this.state.formCreate, { invoice_total: total }) }, this.refreshBudgetAvailability);
     });
   };
@@ -544,7 +549,38 @@ class ExpensesTable extends Component {
       this.setState({ receiptFile: null, receiptFileName: "", receiptError: "El archivo supera los 20 MB permitidos." });
       return;
     }
-    this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null });
+    this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null },
+                  this.validarReglas);
+  };
+
+  // Espejo de `validarReglas` del indice de Gastos. Delega en
+  // /validate_expense_rules, que corre el MISMO ExpenseRuleService que la
+  // validacion del modelo: evaluarlas aqui en JavaScript las dejaria
+  // contradiciendose con el servidor, y la de duplicados ni siquiera es
+  // evaluable sin consultar la base.
+  validarReglas = () => {
+    var f = this.state.formCreate;
+    if (!f.user_invoice_id) return;
+
+    fetch("/validate_expense_rules", {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: this.state.modeEdit ? this.state.id : null,
+        user_invoice_id: f.user_invoice_id,
+        cost_center_id: f.cost_center_id,
+        invoice_date: f.invoice_date,
+        invoice_number: f.invoice_number,
+        identification: f.identification,
+        invoice_value: f.invoice_value,
+        invoice_tax: f.invoice_tax,
+        invoice_total: f.invoice_total,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      // Un fallo del chequeo no estorba: el servidor valida igual al guardar.
+      .then((data) => this.setState({ ruleViolations: (data && data.violations) || [] }))
+      .catch(() => this.setState({ ruleViolations: [] }));
   };
 
   handleDeleteReceipt = () => {
@@ -711,6 +747,14 @@ class ExpensesTable extends Component {
 
     if (!f.cost_center_id || !f.user_invoice_id || !f.invoice_name || !f.invoice_date) {
       this.setState({ ErrorValues: false });
+      return;
+    }
+
+    // Mismo corte que en el indice de Gastos: el comprobante es obligatorio al
+    // CREAR (el servidor tambien lo rechaza) y no al editar, porque los gastos
+    // historicos no tienen y con la regla en updates no se podrian ni tocar.
+    if (this.props.estados.receipt_required && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
+      this.setState({ receiptError: "Adjunte el comprobante: es obligatorio." });
       return;
     }
 
@@ -889,6 +933,8 @@ class ExpensesTable extends Component {
             receiptFileName={this.state.receiptFileName}
             receiptExistingId={this.state.receiptExistingId}
             receiptError={this.state.receiptError}
+            ruleViolations={this.state.ruleViolations}
+            receiptRequired={!!this.props.estados.receipt_required}
             onDeleteReceipt={this.state.modeEdit ? this.handleDeleteReceipt : null}
             // Pista: el archivo recien elegido si lo hay, si no la URL del ya
             // guardado (al editar, `receiptFileName` esta vacio).

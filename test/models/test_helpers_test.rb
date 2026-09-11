@@ -29,6 +29,10 @@ class TestHelpersTest < ActiveSupport::TestCase
 
     gasto = as_user(users(:admin)) do
       ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user_id: users(:admin).id,
         user_invoice_id: users(:ingeniero).id,
         cost_center_id: cost_centers(:centro_con_viaticos).id,
@@ -51,6 +55,7 @@ class TestHelpersTest < ActiveSupport::TestCase
     User.current = nil
 
     gasto = ReportExpense.create!(
+        omitir_comprobante_obligatorio: true,
       user_id: users(:admin).id,
       user_invoice_id: users(:ingeniero).id,
       cost_center_id: cost_centers(:centro_con_viaticos).id,

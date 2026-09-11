@@ -26,4 +26,19 @@ module UploadHelpers
     end
     fixture_file_upload(Rails.root.join("test/fixtures/files", nombre), tipo)
   end
+
+  # Enciende EXPENSE_RECEIPT_REQUIRED solo dentro del bloque.
+  #
+  # El flag arranca APAGADO (ReportExpense.comprobante_obligatorio?) para no
+  # cortarle el registro a quien hoy sube gastos sin comprobante, asi que las
+  # pruebas que cubren la regla tienen que encenderlo a mano. Se restaura en
+  # `ensure`: dejarlo encendido contaminaria todo lo que corra despues en el
+  # mismo proceso.
+  def con_comprobante_obligatorio
+    anterior = ENV["EXPENSE_RECEIPT_REQUIRED"]
+    ENV["EXPENSE_RECEIPT_REQUIRED"] = "true"
+    yield
+  ensure
+    ENV["EXPENSE_RECEIPT_REQUIRED"] = anterior
+  end
 end

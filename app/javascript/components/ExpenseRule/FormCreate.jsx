@@ -222,31 +222,31 @@ class ExpenseRuleFormCreate extends Component {
         {/* --- Usuarios ---------------------------------------------------- */}
         <div className="cm-form-section" style={{ marginTop: 16 }}>
           <div className="cm-form-section-title">
-            <i className="fa fa-users" /> Usuarios a los que aplica
+            <i className="fa fa-users" /> Roles a los que aplica
           </div>
 
           {/* react-select NO propaga atributos sueltos al DOM: el data-testid va
               SIEMPRE en un div envolvente. El menu se portaliza a document.body,
               asi que las opciones se buscan en la pagina, no dentro del div. */}
-          <div data-testid="rule-users-select">
+          <div data-testid="rule-roles-select">
             <Select
               isMulti
               closeMenuOnSelect={false}
-              name="user_ids"
-              options={p.users || []}
-              value={p.selectedUsers}
-              onChange={p.onChangeUsers}
+              name="rol_ids"
+              options={p.roles || []}
+              value={p.selectedRoles}
+              onChange={p.onChangeRoles}
               styles={selectStyles}
               menuPortalTarget={document.body}
-              placeholder="Seleccione las personas a las que aplica…"
-              noOptionsMessage={() => "No hay más usuarios"}
+              placeholder="Seleccione los roles a los que aplica…"
+              noOptionsMessage={() => "No hay más roles"}
             />
           </div>
 
           {/* EL AVISO DE LA LISTA VACIA. Va siempre visible, no solo cuando la
               lista esta vacia: quien esta quitando el ultimo usuario tiene que
               haberlo leido ANTES de guardar. */}
-          <div className="cm-alert cm-alert-warning" data-testid="rule-users-empty-warning"
+          <div className="cm-alert cm-alert-warning" data-testid="rule-roles-empty-warning"
                style={{ marginTop: 10 }}>
             <i className="fa fa-exclamation-triangle" />{" "}
             <span>

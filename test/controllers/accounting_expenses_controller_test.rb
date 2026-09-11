@@ -32,6 +32,10 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
   def crear_gasto(**overrides)
     as_user(@admin) do
       ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @admin,
         cost_center: @centro,
         user_invoice: @ingeniero,
@@ -209,6 +213,87 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
       tmp.close
       tmp.unlink
     end
+  end
+
+  # --- ZIP de comprobantes --------------------------------------------------
+
+  def gasto_con_comprobante(**overrides)
+    gasto = crear_gasto(**overrides)
+    as_user(@admin) do
+      gasto.receipt_file = Rack::Test::UploadedFile.new(
+        Rails.root.join("test/fixtures/files/comprobante.pdf"), "application/pdf",
+        original_filename: "comprobante.pdf"
+      )
+      gasto.save!
+    end
+    gasto
+  end
+
+  def entradas_del_zip
+    Zip::File.open_buffer(response.body) { |zip| return zip.map(&:name) }
+  end
+
+  test "download_receipts arma un zip con los comprobantes seleccionados" do
+    uno = gasto_con_comprobante
+    dos = gasto_con_comprobante
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses", params: { ids: [uno.id, dos.id] }
+
+    assert_response :success
+    assert_equal "application/zip", response.media_type
+    nombres = entradas_del_zip
+    # El id va delante del nombre: los dos archivos se llaman "comprobante.pdf" y
+    # sin el prefijo el segundo pisaria al primero dentro del zip.
+    assert_includes nombres, "#{uno.id}-comprobante.pdf"
+    assert_includes nombres, "#{dos.id}-comprobante.pdf"
+  end
+
+  test "download_receipts lista aparte los gastos sin comprobante en vez de fallar" do
+    con    = gasto_con_comprobante
+    sin    = crear_gasto(invoice_name: "Sin soporte")
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses", params: { ids: [con.id, sin.id] }
+
+    assert_response :success
+    nombres = entradas_del_zip
+    assert_includes nombres, "#{con.id}-comprobante.pdf"
+    # Un zip con 1 de 2 facturas y sin decir cual falta es peor que uno que lo diga.
+    assert_includes nombres, "FALTANTES.txt"
+  end
+
+  test "download_receipts sin seleccion responde error y no un zip vacio" do
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses"
+
+    assert_json_error(incluye: "Seleccione al menos un gasto")
+  end
+
+  test "download_receipts respeta el recorte de la pantalla, no los ids a secas" do
+    # Sin el `filtered_scope`, mandar ids a mano bajaria comprobantes de gastos
+    # que el usuario no tiene permiso ni de ver en la tabla.
+    ajeno = gasto_con_comprobante(user_invoice: @ingeniero)
+    contador = contador_solo_ingreso
+    # Necesita el permiso de exportar (es el gate del ZIP) pero NO "Ver todos":
+    # ese es exactamente el usuario que el recorte tiene que frenar.
+    grant_permission!(rols(:contador), "Contabilidad", "Exportar a excel")
+    revoke_permission!(rols(:contador), "Contabilidad", "Ver todos")
+    sign_in_as contador
+
+    get "/download_receipts/accounting_expenses", params: { ids: [ajeno.id] }
+
+    assert_response :success
+    refute_includes entradas_del_zip, "#{ajeno.id}-comprobante.pdf"
+  end
+
+  test "download_receipts sin permiso de exportar responde 403" do
+    sign_in_as users(:sin_permisos)
+
+    get "/download_receipts/accounting_expenses", params: { ids: [1] }, as: :json
+
+    assert_json_forbidden
   end
 
   # --- Solo lo aprobado operativamente --------------------------------------

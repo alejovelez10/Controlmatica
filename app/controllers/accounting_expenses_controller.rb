@@ -176,7 +176,87 @@ class AccountingExpensesController < ApplicationController
     render xlsx: "Contabilidad de gastos", template: "accounting_expenses/download_file.xlsx.axlsx"
   end
 
+  # ZIP con los comprobantes de los gastos seleccionados.
+  #
+  # POR QUE UN ZIP Y NO N DESCARGAS: contabilidad causa por lotes y bajar treinta
+  # archivos de uno en uno, cada uno con su dialogo del navegador, no es una
+  # tarea que alguien vaya a hacer. El limite es el mismo MAX_BULK de la
+  # aprobacion masiva: el criterio de "cuantos gastos caben en una operacion" no
+  # puede depender de cual boton se pulso.
+  #
+  # SE ARMA EN MEMORIA y no en disco: Heroku tiene filesystem efimero y un
+  # Tempfile que sobreviva a la respuesta es una fuga. Con el tope de 20 MB por
+  # comprobante y MAX_BULK gastos el peor caso teorico es grande, pero el real no
+  # —una seleccion de contabilidad son decenas de facturas de pocos cientos de
+  # KB—. Si algun dia se vuelve un problema, el cambio es a `zip_tricks` en
+  # streaming, no a escribir en disco.
+  #
+  # Los gastos SIN comprobante no revientan el ZIP: se listan en un
+  # `FALTANTES.txt` dentro del propio archivo. Un ZIP con 28 de 30 facturas y sin
+  # decir cuales faltan es peor que uno que lo diga.
+  def download_receipts
+    return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Exportar a excel")
+
+    ids = accounting_ids
+    if ids.blank?
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["Seleccione al menos un gasto"] }
+    end
+    if ids.size > MAX_BULK
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["Máximo #{MAX_BULK} gastos por descarga"] }
+    end
+
+    # `filtered_scope` y no `ReportExpense.where(id:)`: la descarga tiene que
+    # respetar los mismos recortes que la pantalla (aceptados, y solo los propios
+    # para quien no tiene "Ver todos"). Sin esto, mandar ids a mano bajaria
+    # comprobantes de gastos que el usuario no puede ni ver.
+    gastos = filtered_scope.order(:id)
+
+    faltantes = []
+    buffer = Zip::OutputStream.write_buffer do |zip|
+      gastos.each do |gasto|
+        unless gasto.receipt_file.present?
+          faltantes << "##{gasto.id} - #{gasto.invoice_name} (#{gasto.invoice_number})"
+          next
+        end
+
+        contenido = leer_comprobante(gasto)
+        if contenido.nil?
+          faltantes << "##{gasto.id} - #{gasto.invoice_name}: el archivo no se pudo leer"
+          next
+        end
+
+        # El nombre lleva el id delante: dos proveedores distintos suben
+        # "factura.pdf" y sin el prefijo el segundo pisaria al primero.
+        zip.put_next_entry("#{gasto.id}-#{gasto.receipt_file.file.filename}")
+        zip.write(contenido)
+      end
+
+      if faltantes.any?
+        zip.put_next_entry("FALTANTES.txt")
+        zip.write("Gastos seleccionados que no tienen comprobante adjunto:\n\n" + faltantes.join("\n") + "\n")
+      end
+    end
+
+    buffer.rewind
+    send_data buffer.read,
+              filename: "comprobantes-#{Date.current.strftime('%Y%m%d')}.zip",
+              type: "application/zip",
+              disposition: "attachment"
+  end
+
   private
+
+# Bytes del comprobante, vengan de S3 o del disco. Devuelve nil si el archivo
+  # ya no esta: un comprobante borrado del bucket no puede tumbar la descarga
+  # entera de las otras 29 facturas.
+  def leer_comprobante(gasto)
+    gasto.receipt_file.read
+  rescue StandardError => e
+    Rails.logger.error("[accounting] comprobante #{gasto.id} ilegible: #{e.class}: #{e.message}")
+    nil
+  end
 
   # Memoizado para no repetir la query del rol en cada gate.
   def is_admin?

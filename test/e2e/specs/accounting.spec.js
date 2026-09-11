@@ -146,7 +146,7 @@ test.describe("Contabilidad — bandeja, aprobacion masiva y guarda de filtros (
     expect(aprobados.body.total).toBe(12);
 
     const primero = aprobados.body.data[0].id;
-    await expect(page.getByTestId(`accounting-status-${primero}`)).toContainText("Aprobado");
+    await expect(page.getByTestId(`accounting-status-${primero}`)).toContainText("Contabilizado");
     // Y QUIEN aprobo: el usuario de la sesion es e2e@controlmatica.test, cuyo
     // `names` es "Ingeniero" (la columna pinta names, no el correo).
     await expect(page.getByTestId(`accounting-status-${primero}`)).toContainText("Ingeniero");
@@ -224,16 +224,16 @@ test.describe("Contabilidad — flujo canonico y seleccion multiple", () => {
     expect(res.request().method()).toBe("PATCH");
     expect((await res.json()).type).toBe("success");
 
-    // Con el filtro "Pendiente" aplicado, la fila desaparece de la bandeja.
+    // En la vista "No contabilizados", la fila desaparece de la bandeja.
     await expect(page.getByTestId(`accounting-ref-${id}`)).toHaveCount(0);
 
-    // Y con el filtro "Aprobado" vuelve, ya marcada. El panel de filtros SIGUE
+    // Y en "Contabilizados" vuelve, ya marcada. El panel de filtros SIGUE
     // ABIERTO: `applyFilters` no lo cierra, y volver a pulsar el toggle no lo
     // reabre sino que lo cierra Y BORRA todos los filtros (`toggleFilters` limpia
     // al cerrar).
     await verPestana(page, "aprobados");
     await aplicarFiltros(page);
-    await expect(page.getByTestId(`accounting-status-${id}`)).toContainText("Aprobado");
+    await expect(page.getByTestId(`accounting-status-${id}`)).toContainText("Contabilizado");
   });
 
   test("desaprobar un gasto lo devuelve a pendientes", async ({ page }) => {

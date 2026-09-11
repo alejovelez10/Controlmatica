@@ -183,6 +183,12 @@ module ApplicationHelper
     User.all
   end
 
+  # Catalogo {value, label} de roles para el multi-select de reglas de gasto.
+  # Misma forma que get_users_select, que es la que react-select exige.
+  def get_rols_select
+    Rol.order(:name).map { |r| { value: r.id, label: r.name } }
+  end
+
   def get_users_rol
     users = User.all
     users.collect do |user|

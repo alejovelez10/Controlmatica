@@ -13,6 +13,13 @@ class ExpenseBudgetsToolsTest < ActiveSupport::TestCase
 
   setup do
     @centro = cost_centers(:centro_con_viaticos)
+
+    # Los gastos preexistentes de las fixtures representan cupo YA EJECUTADO.
+    # Desde 2026-09-10 solo lo ACEPTADO consume (ExpenseBudgetService.consumidores)
+    # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible de
+    # partida sube y toda la aritmetica de este archivo se corre. Se marca aqui y
+    # no en el YAML para no cambiarle el escenario al resto del repo.
+    ReportExpense.update_all(is_acepted: true)
   end
 
   # --- expense_budgets_list -------------------------------------------------

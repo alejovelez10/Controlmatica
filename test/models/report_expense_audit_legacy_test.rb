@@ -112,7 +112,11 @@ class ReportExpenseAuditLegacyTest < ActiveSupport::TestCase
       invoice_total: 1190.0
     }.merge(overrides)
 
-    as_user(@actor) { ReportExpense.create!(atributos) }
+    as_user(@actor) { ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        atributos.merge(omitir_comprobante_obligatorio: true)) }
   end
 
   def test_html_de_creacion_es_identico_al_legado

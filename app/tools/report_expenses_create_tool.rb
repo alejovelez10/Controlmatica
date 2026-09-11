@@ -117,6 +117,19 @@ class ReportExpensesCreateTool < ApplicationTool
       attrs = args.slice(*WRITABLE).merge(cost_center_id: cost_center_id,
                                           user_invoice_id: resolved_user_id)
       re = ReportExpense.new(attrs)
+      # COMPROBANTE OBLIGATORIO: APAGADO EN ESTE CANAL, Y NO POR OLVIDO.
+      #
+      # La regla del 2026-09-10 exige comprobante en todo gasto nuevo, pero el
+      # flujo documentado de WhatsApp (docs/TAIMES-AGENTE-GASTOS.md) es
+      # create -> receipt_url_get -> attach_receipt: la URL de subida se pide CON
+      # EL ID del gasto, asi que el archivo no existe todavia cuando se crea.
+      # Exigirlo aqui no haria el gasto mas completo, haria imposible registrarlo
+      # por WhatsApp.
+      #
+      # Para cerrar tambien este canal hay que cambiar el flujo (que el agente
+      # suba primero y mande el `upload_key` al crear), y eso es una decision de
+      # producto sobre el contrato con Taimes, no un ajuste de validacion.
+      re.omitir_comprobante_obligatorio = true
       re.exchange_rate_source = resolve_rate_source(re)
       re.user_id = creator.id
       # Desde que las reglas son una VALIDACION del modelo (duras, bloquean), la

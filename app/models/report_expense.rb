@@ -126,7 +126,9 @@ class ReportExpense < ApplicationRecord
   scope :accounting_pending, -> { accounting_visible.where(accounting_approved: false) }
 
   def accounting_state_label
-    accounting_approved ? "Aprobado" : "Pendiente"
+    # Mismo vocabulario que la pantalla (ver accountingBadge): "aprobado" a secas
+    # se confundia con la aprobacion PRESUPUESTAL, que es otra cosa.
+    accounting_approved ? "Contabilizado" : "No contabilizado"
   end
 
   # La URL del comprobante tal cual la emite CarrierWave.
@@ -159,6 +161,10 @@ class ReportExpense < ApplicationRecord
   before_validation :normalize_currency
   before_validation :backfill_foreign_total
   before_validation :apply_currency_conversion
+  # VA ULTIMO de los before_validation, despues de la conversion de moneda: si
+  # corriera antes, `apply_currency_conversion` volveria a escribir los tres
+  # campos y dejaria el ruido otra vez.
+  before_validation :redondear_cifras_de_dinero
 
   validates :currency, presence: true,
             inclusion: { in: Currency::CODES, message: "no es una moneda soportada" }
@@ -310,6 +316,38 @@ class ReportExpense < ApplicationRecord
   # tres canales (web, WhatsApp y el import de Excel) tienen que rechazar lo
   # mismo. Puesto en el controller cubriria uno solo.
   validate :enforce_expense_rules
+
+  # EL COMPROBANTE ES OBLIGATORIO EN GASTOS NUEVOS (decision de producto,
+  # 2026-09-10). Un gasto sin soporte no lo puede causar contabilidad, asi que
+  # registrarlo solo aplaza el problema hasta el cierre, cuando ya nadie se
+  # acuerda de que factura era.
+  #
+  # `on: :create` Y SOLO ESO: los ~7.000 gastos historicos no tienen comprobante
+  # y con la validacion en updates no se podrian ni aceptar ni contabilizar, que
+  # son updates sobre gastos viejos. Es el mismo razonamiento que ya tenia
+  # `enforce_expense_rules`.
+  #
+  # EN EL MODELO para que cubra la web Y el agente de WhatsApp de una sola vez.
+  # El import de Excel es la UNICA excepcion y se declara a mano con
+  # `omitir_comprobante_obligatorio`: un .xlsx no transporta archivos adjuntos,
+  # asi que exigirselo seria dejar el import inservible.
+  attr_accessor :omitir_comprobante_obligatorio
+  validate :comprobante_obligatorio, on: :create
+
+  # INTERRUPTOR DE DESPLIEGUE, y arranca APAGADO a proposito.
+  #
+  # La regla es correcta —un gasto sin soporte no lo puede causar contabilidad—
+  # pero encenderla de golpe le corta el registro a toda la gente que hoy sube
+  # gastos sin comprobante, incluida la que ya tiene el gasto hecho y la factura
+  # traspapelada. Se prende con EXPENSE_RECEIPT_REQUIRED=true cuando la
+  # operacion este avisada, no cuando el codigo este listo.
+  #
+  # SE LEE EN CADA LLAMADA y no se guarda en una constante: una constante
+  # congela el valor al arrancar el proceso, y para mover el flag habria que
+  # reiniciar los dynos en vez de cambiar la variable.
+  def self.comprobante_obligatorio?
+    ActiveModel::Type::Boolean.new.cast(ENV["EXPENSE_RECEIPT_REQUIRED"]) || false
+  end
 
   # `apply_expense_rules` sobrevive a la validacion y sigue escribiendo la foto en
   # `rule_violations`. No es redundante: reusa el resultado que ya calculo la
@@ -527,6 +565,9 @@ class ReportExpense < ApplicationRecord
         report_expense.payment_type_id = payment_type.present? ? payment_type.id : nil
 
         apply_currency_from_row(report_expense, row) if layout == :v2
+        # UNICA excepcion al comprobante obligatorio: un .xlsx no transporta
+        # archivos. Sin esto el import dejaria de poder crear gastos.
+        report_expense.omitir_comprobante_obligatorio = true
 
         report_expense.save!
         success_records << 1
@@ -645,6 +686,36 @@ class ReportExpense < ApplicationRecord
     # diferencia maxima por redondeo es de un centavo de peso y ningun calculo
     # del centro de costos usa invoice_total.
     self.invoice_total = self.class.to_cop(foreign_total, exchange_rate)
+  end
+
+  # REDONDEO A DOS DECIMALES DE LAS CIFRAS EN PESOS.
+  #
+  # `invoice_value`, `invoice_tax` e `invoice_total` son columnas FLOAT
+  # (invariante 2 de la arquitectura, no se migran). Sumar floats en el navegador
+  # —`invoice_value + invoice_tax`, que es como el formulario arma el total—
+  # produce cosas como 119000.11999999999, y eso es lo que se guardaba: la tabla
+  # lo disimulaba pintando con `decimalScale: 2`, pero el numero de la base era
+  # ese y reaparecia en el Excel y en cualquier comparacion.
+  #
+  # EN EL MODELO Y NO EN EL FORMULARIO porque son cuatro canales —los dos
+  # formularios web, el agente de WhatsApp y el import de Excel— y arreglarlo en
+  # uno solo deja los otros tres escribiendo basura.
+  #
+  # LA TRM (`exchange_rate`) NO SE REDONDEA A PROPOSITO: es decimal(18,6) y sus
+  # seis decimales son significativos —el Banco de la República la publica así—,
+  # asi que recortarla a dos moveria las conversiones.
+  def comprobante_obligatorio
+    return unless self.class.comprobante_obligatorio?
+    return if omitir_comprobante_obligatorio
+    return if receipt_file.present?
+
+    errors.add(:receipt_file, "es obligatorio: adjunte la foto o el PDF del comprobante")
+  end
+
+  def redondear_cifras_de_dinero
+    self.invoice_value = invoice_value.round(2) if invoice_value.present?
+    self.invoice_tax   = invoice_tax.round(2)   if invoice_tax.present?
+    self.invoice_total = invoice_total.round(2) if invoice_total.present?
   end
 
   def foreign_fields_required_when_foreign_currency

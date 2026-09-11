@@ -28,6 +28,10 @@ class ReportExpensesController < ApplicationController
       # formulario, el presupuesto y las reglas, asi que no se reparte por
       # permisos de menu.
       import: puede_importar?,
+      # El formulario necesita saberlo para marcar el campo y cortar antes de
+      # subir. NO es un permiso: es el mismo flag del modelo, que es quien
+      # rechaza de verdad.
+      receipt_required: ReportExpense.comprobante_obligatorio?,
     }
   end
 
@@ -92,9 +96,25 @@ class ReportExpensesController < ApplicationController
     }
   end
 
+  # ACEPTAR MUEVE PRESUPUESTO. Desde que el consumo de cupo depende de
+  # `is_acepted` (ver ExpenseBudgetService.consumidores), cambiar este estado
+  # cambia cuanta plata esta comprometida en el par (centro, responsable), asi
+  # que hay que reevaluarlo en FIFO. Sin esto el gasto pasa a "Aceptado" y el
+  # disponible de la pantalla se queda como estaba hasta el proximo guardado de
+  # cualquier otro gasto del mismo par: un desfase invisible y dificil de atar a
+  # su causa.
   def update_state_report_expense
     report_expense = ReportExpense.find(params[:id])
     update_status = report_expense.update(is_acepted: params[:state])
+
+    if update_status && report_expense.cost_center_id.present? && report_expense.user_invoice_id.present?
+      ExpenseBudgetService.reevaluate_center_user!(cost_center_id: report_expense.cost_center_id,
+                                                  user_id: report_expense.user_invoice_id,
+                                                  actor: current_user)
+      # El reevaluo escribe con update_columns, asi que el objeto en memoria
+      # —el que se serializa abajo— quedo con el budget_status viejo.
+      report_expense.reload
+    end
 
     if update_status
       render :json => {
@@ -161,7 +181,20 @@ class ReportExpensesController < ApplicationController
       report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters).order(invoice_date: :desc)
     end
 
+    # Los pares afectados se capturan ANTES del update: despues el scope sigue
+    # siendo el mismo, pero traerlos aqui evita repetir la consulta de filtro.
+    pares = report_expenses.pluck(:cost_center_id, :user_invoice_id).uniq.reject { |c, u| c.blank? || u.blank? }
+
     update_status = report_expenses.update(is_acepted: true)
+
+    # Mismo motivo que en update_state_report_expense: aceptar compromete cupo.
+    # Se reevalua UNA vez por par, no una por gasto.
+    if update_status
+      pares.each do |centro_id, usuario_id|
+        ExpenseBudgetService.reevaluate_center_user!(cost_center_id: centro_id, user_id: usuario_id,
+                                                    actor: current_user)
+      end
+    end
 
     if update_status
       render :json => {

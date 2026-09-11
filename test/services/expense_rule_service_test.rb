@@ -25,17 +25,23 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     end
   end
 
-  # Regla asignada explicitamente al ingeniero.
+  # Regla asignada al ROL del ingeniero. Desde 2026-09-10 las reglas se asignan
+  # por rol, no persona por persona; el escenario es el mismo porque el ingeniero
+  # es el unico usuario de su rol en las fixtures.
   def regla_del_ingeniero(**attrs)
     r = regla(**attrs)
-    r.users = [@ingeniero]
+    r.rols = [@ingeniero.rol]
     r
   end
 
   # Gasto SIN GUARDAR: el agente valida antes de crear y el servicio tiene que
   # aceptar un objeto nuevo.
   def gasto_nuevo(**attrs)
-    ReportExpense.new({ user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+    ReportExpense.new({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
                         invoice_name: "Hotel", invoice_date: Date.current,
                         invoice_number: "FE-#{SecureRandom.hex(3)}", identification: "900111222",
                         invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000 }.merge(attrs))
@@ -281,7 +287,8 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
   test "un gasto con violacion NO se guarda, aunque quepa de sobra en el presupuesto" do
     regla(name: "Regla general", is_default: true, max_invoice_age_days: 5)
 
-    gasto = ReportExpense.new(user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+    gasto = ReportExpense.new(
+        omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
                               invoice_name: "Hotel viejo", invoice_date: Date.current - 60,
                               invoice_number: "FE-VIEJA", identification: "900111222",
                               invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
@@ -303,7 +310,8 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
   test "con confirmacion expresa el gasto se guarda pero no queda aprobado" do
     regla(name: "Regla general", is_default: true, max_invoice_age_days: 5)
 
-    gasto = ReportExpense.new(user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+    gasto = ReportExpense.new(
+        omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
                               invoice_name: "Hotel viejo", invoice_date: Date.current - 60,
                               invoice_number: "FE-VIEJA-OK", identification: "900111222",
                               invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
@@ -322,7 +330,8 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
   test "un gasto sin violaciones si queda aprobado y con rule_violations vacio" do
     regla(name: "Regla general", is_default: true, max_invoice_age_days: 90)
 
-    gasto = ReportExpense.new(user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+    gasto = ReportExpense.new(
+        omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
                               invoice_name: "Hotel de ayer", invoice_date: Date.current - 1,
                               invoice_number: "FE-NUEVA", identification: "900111222",
                               invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)

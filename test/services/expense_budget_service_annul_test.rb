@@ -45,10 +45,19 @@ class ExpenseBudgetServiceAnnulTest < ActiveSupport::TestCase
   # `created_at` explicito porque el reparto del cupo es FIFO por esa fecha.
   def crear_gasto(valor, dia:, **overrides)
     gasto = as_user(@admin) do
-      ReportExpense.create!({ user_id: @admin.id, cost_center_id: @centro.id,
+      ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user_id: @admin.id, cost_center_id: @centro.id,
                               user_invoice_id: @user.id, invoice_name: "Gasto #{dia}",
                               invoice_date: Date.new(2026, 6, dia), invoice_value: valor,
                               invoice_tax: 0, invoice_total: valor,
+                              # Los gastos de estas pruebas representan cupo YA COMPROMETIDO.
+                              # Desde 2026-09-10 solo lo ACEPTADO consume (ver
+                              # ExpenseBudgetService.consumidores); con el default de la columna
+                              # —false— no descontarian nada y el disponible saldria intacto.
+                              is_acepted: true,
                               budget_status: "aprobado" }.merge(overrides))
     end
     gasto.update_columns(created_at: Time.zone.local(2026, 6, dia, 8, 0, 0))

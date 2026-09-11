@@ -15,6 +15,10 @@ class ReceiptUploaderTest < ActiveSupport::TestCase
   def crear_gasto(**overrides)
     as_user(@actor) do
       ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @actor,
         cost_center: cost_centers(:centro_con_viaticos),
         user_invoice: users(:ingeniero),

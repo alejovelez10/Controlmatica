@@ -57,6 +57,10 @@ class ReportExpenseImportCurrencyTest < ActiveSupport::TestCase
   # El bloque de asignacion de moneda que el 06 mete dentro de su C2.
   def construir(row)
     gasto = ReportExpense.new(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
       cost_center: cost_centers(:centro_con_viaticos),
       user_invoice: users(:ingeniero),
       user: @admin,

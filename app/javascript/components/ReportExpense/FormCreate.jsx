@@ -386,6 +386,9 @@ class FormCreate extends Component {
       <div className="cm-form-group">
         <label className="cm-label">
           <i className="fa fa-paperclip"></i> Comprobante
+          {/* El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo
+              siempre seria mentirle a la persona mientras esta apagado. */}
+          {this.props.receiptRequired ? <span className="cm-required">*</span> : null}
         </label>
         {/* ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que cada
             navegador pinta a su manera ("Choose File" en ingles dentro de una app
@@ -465,6 +468,18 @@ class FormCreate extends Component {
           </div>
         ) : null}
 
+        {/* Reglas incumplidas, evaluadas al adjuntar. Es un AVISO: quien rechaza
+            es el servidor al guardar. Verlo con la factura en la mano permite
+            corregir o desistir antes de llenar el resto del formulario. */}
+        {(this.props.ruleViolations || []).length > 0 ? (
+          <div className="cm-alert cm-alert-warning" data-testid="expense-rule-violations">
+            <div><i className="fa fa-exclamation-triangle"></i> Este gasto incumple las reglas y será rechazado al guardar:</div>
+            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+              {this.props.ruleViolations.map((v, i) => <li key={i}>{v.message}</li>)}
+            </ul>
+          </div>
+        ) : null}
+
         {this.props.receiptError ? (
           <div className="cm-alert cm-alert-danger" data-testid="expense-receipt-error">
             {this.props.receiptError}
@@ -505,6 +520,13 @@ class FormCreate extends Component {
         }
       >
         <form onSubmit={this.handleSubmit}>
+              {/* EL COMPROBANTE VA PRIMERO (2026-09-10). Estaba al final, debajo del
+                  total, y es el campo que manda: es obligatorio, y cuando se adjunta
+                  se validan las reglas de gasto contra lo que ya haya en el
+                  formulario. Pedirlo de ultimo invitaba a llenar diez campos para
+                  enterarse al final de que la factura no cumplia. */}
+              {this.renderReceiptBlock()}
+
               {this.state.showMessage && (
                 <div className="alert alert-warning mb-3">
                   {this.state.message} copiado
@@ -833,7 +855,6 @@ class FormCreate extends Component {
                 </div>
               </div>
 
-              {this.renderReceiptBlock()}
 
               {!this.props.errorValues && (
                 <div className="cm-error-message">

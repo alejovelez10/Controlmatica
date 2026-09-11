@@ -17,7 +17,11 @@ class ReportExpensesReadToolsTest < ActiveSupport::TestCase
 
   def crear_gasto(**attrs)
     as_user(users(:admin)) do
-      ReportExpense.create!({ cost_center: @centro, user_invoice: users(:ingeniero),
+      ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, cost_center: @centro, user_invoice: users(:ingeniero),
                               user: users(:admin), invoice_name: "Proveedor",
                               invoice_date: Date.new(2026, 6, 15),
                               invoice_value: 1000.0, invoice_total: 1000.0 }.merge(attrs))

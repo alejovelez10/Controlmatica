@@ -34,6 +34,10 @@ class ReportExpensesReceiptTest < ActionDispatch::IntegrationTest
   def crear_gasto(**overrides)
     as_user(@admin) do
       ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         user: @admin,
         cost_center: cost_centers(:centro_con_viaticos),
         user_invoice: @ingeniero,
@@ -83,26 +87,30 @@ class ReportExpensesReceiptTest < ActionDispatch::IntegrationTest
 
   # --- create / update: retrocompatibilidad y mass-assignment ---------------
 
-  test "POST sin archivo sigue funcionando con JSON" do
-    # RETROCOMPATIBILIDAD: el endpoint no puede exigir multipart. Si lo hiciera,
-    # el formulario actual y las tools MCP dejarian de crear gastos.
-    sign_in_as @admin
+  test "POST sin archivo se rechaza tambien en JSON" do
+    con_comprobante_obligatorio do
+      # LA REGLA SE INVIRTIO (2026-09-10): el comprobante es obligatorio en gastos
+      # nuevos. Este test afirmaba que el create en JSON seguia funcionando sin
+      # archivo, que era el camino por el que el hueco se colaba: basta mandar
+      # application/json en vez de multipart para saltarse el formulario.
+      sign_in_as @admin
 
-    assert_difference "ReportExpense.count", 1 do
-      post report_expenses_path, as: :json, params: {
-        cost_center_id: cost_centers(:centro_con_viaticos).id,
-        user_invoice_id: @ingeniero.id,
-        invoice_name: "Sin comprobante",
-        invoice_date: "2026-06-05",
-        description: "Alojamiento",
-        invoice_number: "FE-SIN-1",
-        identification: "900111222",
-        invoice_value: 50_000,
-        invoice_tax: 0
-      }
+      assert_no_difference -> { ReportExpense.count } do
+        post report_expenses_path, as: :json, params: {
+          cost_center_id: cost_centers(:centro_con_viaticos).id,
+          user_invoice_id: @ingeniero.id,
+          invoice_name: "Hotel Web",
+          invoice_date: "2026-06-01",
+          invoice_number: "FE-JSON-#{SecureRandom.hex(3)}",
+          identification: "900111222",
+          invoice_value: 50_000, invoice_tax: 0, invoice_total: 50_000
+        }
+      end
+
+      cuerpo = JSON.parse(response.body)
+      assert_equal "error", cuerpo["type"]
+      assert_match(/comprobante/i, Array(cuerpo["message"]).join(" "))
     end
-
-    assert_json_success
   end
 
   test "PATCH no puede setear accounting_approved" do

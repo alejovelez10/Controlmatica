@@ -1,3 +1,26 @@
+# == Schema Information
+#
+# Table name: expense_rules
+#
+#  id                   :bigint           not null, primary key
+#  active               :boolean          default(TRUE), not null
+#  agent_instructions   :text
+#  check_duplicates     :boolean          default(TRUE), not null
+#  is_default           :boolean          default(FALSE), not null
+#  max_invoice_age_days :integer
+#  max_invoice_value    :decimal(15, 2)
+#  name                 :string           not null
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
+#  last_user_edited_id  :integer
+#  user_id              :integer
+#
+# Indexes
+#
+#  index_expense_rules_on_active              (active)
+#  index_expense_rules_on_is_default          (is_default)
+#  index_expense_rules_unique_default_active  (is_default) UNIQUE WHERE (is_default AND active)
+#
 require "test_helper"
 
 # Modelo de regla de gastos (paquete 14, tarea 2).
@@ -108,9 +131,9 @@ class ExpenseRuleTest < ActiveSupport::TestCase
   end
 
   test "aplicables_a ignora las inactivas" do
-    # `historica` esta asignada a ingeniero pero inactiva: no cuenta como
+    # `historica` esta asignada al ROL del ingeniero pero inactiva: no cuenta como
     # "asignada", asi que el usuario cae al camino de la default (que no existe).
-    assert_includes expense_rules(:historica).users, @ingeniero
+    assert_includes expense_rules(:historica).rols, @ingeniero.rol
 
     assert_empty ExpenseRule.aplicables_a(@ingeniero).to_a
   end

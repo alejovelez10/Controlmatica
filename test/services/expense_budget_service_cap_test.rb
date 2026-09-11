@@ -168,7 +168,11 @@ class ExpenseBudgetServiceCapTest < ActiveSupport::TestCase
   end
 
   def test_persist_with_evaluation_emite_select_for_update
-    gasto = ReportExpense.new(user_id: @admin.id, cost_center_id: @centro.id,
+    gasto = ReportExpense.new(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user_id: @admin.id, cost_center_id: @centro.id,
                               user_invoice_id: @ingeniero.id, invoice_name: "Gasto con lock",
                               invoice_date: Date.new(2026, 6, 1), invoice_value: 10_000,
                               invoice_tax: 0, invoice_total: 10_000)

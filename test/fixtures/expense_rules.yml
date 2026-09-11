@@ -15,6 +15,12 @@
 #  last_user_edited_id  :integer
 #  user_id              :integer
 #
+# Indexes
+#
+#  index_expense_rules_on_active              (active)
+#  index_expense_rules_on_is_default          (is_default)
+#  index_expense_rules_unique_default_active  (is_default) UNIQUE WHERE (is_default AND active)
+#
 
 # 🔴 NINGUNA FIXTURE ES `is_default: true` CON `active: true`, Y ES A PROPOSITO.
 #
@@ -28,10 +34,15 @@
 # Los tests que necesitan una regla por defecto la crean ellos mismos, que
 # ademas es lo unico que prueba de verdad la resolucion "cae a la default".
 #
-# El HABTM con users va INLINE (lista separada por comas con las etiquetas de
-# users.yml), igual que el de rols.yml con accion_modules. NO existe
-# test/fixtures/expense_rules_users.yml y no se debe crear: una fixture de tabla
+# El HABTM con rols va INLINE (lista separada por comas con las etiquetas de
+# rols.yml), igual que el de rols.yml con accion_modules. NO existe
+# test/fixtures/expense_rules_rols.yml y no se debe crear: una fixture de tabla
 # puente suelta no resuelve etiquetas.
+#
+# LAS REGLAS SE ASIGNAN POR ROL desde 2026-09-10. Las etiquetas de rols.yml y
+# users.yml coinciden (gerente, ingeniero...), asi que el escenario de estas
+# pruebas no cambio: la regla del "gerente" le sigue aplicando al usuario
+# gerente, ahora por su rol.
 
 # Regla asignada explicitamente. Sirve de "regla del usuario" en los tests de
 # resolucion y de combinacion.
@@ -43,7 +54,7 @@ directivos:
   max_invoice_value: 2000000.0
   check_duplicates: true
   agent_instructions: No se aceptan licores ni gastos personales.
-  users: gerente
+  rols: gerente
   user: admin
 
 # Segunda regla del MISMO usuario, mas estricta en antiguedad y sin tope de
@@ -57,7 +68,7 @@ directivos_estricta:
   max_invoice_value:
   check_duplicates: false
   agent_instructions: Las propinas no pueden superar el 10%.
-  users: gerente
+  rols: gerente
   user: admin
 
 # INACTIVA y marcada como default: el indice unico parcial es
@@ -71,5 +82,5 @@ historica:
   max_invoice_value: 1000.0
   check_duplicates: true
   agent_instructions: Regla archivada, no debe aplicar a nadie.
-  users: ingeniero
+  rols: ingeniero
   user: admin

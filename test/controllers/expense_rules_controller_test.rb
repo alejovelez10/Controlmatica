@@ -51,7 +51,7 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     data = assert_json_list
     refute_empty data
     esperadas = %w[id name active is_default max_invoice_age_days max_invoice_value
-                   check_duplicates agent_instructions user_ids users]
+                   check_duplicates agent_instructions rol_ids rols]
     assert_equal [], esperadas - data.first.keys
   end
 
@@ -94,16 +94,16 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as @admin
 
     assert_difference -> { ExpenseRule.count }, 1 do
-      post expense_rules_path, params: params_regla(user_ids: [users(:ingeniero).id, users(:contador).id])
+      post expense_rules_path, params: params_regla(rol_ids: [users(:ingeniero).id, users(:contador).id])
     end
 
     assert_json_success
     creada = ExpenseRule.order(:id).last
-    assert_equal [users(:contador).id, users(:ingeniero).id].sort, creada.users.map(&:id).sort
+    assert_equal [users(:contador).id, users(:ingeniero).id].sort, creada.rols.map(&:id).sort
     assert_equal @admin.id, creada.user_id, "el creador lo pone el servidor, no el body"
   end
 
-  test "crear sin user_ids deja la regla sin nadie asignado" do
+  test "crear sin rol_ids deja la regla sin nadie asignado" do
     sign_in_as @admin
 
     post expense_rules_path, params: params_regla(is_default: false)
@@ -111,7 +111,7 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     # UN MULTI-SELECT VACIO SIGNIFICA "NINGUNO", NO "TODOS". Para "todos" esta el
     # switch de regla por defecto. Es la confusion obvia de la pantalla y el
     # servidor la respeta literalmente.
-    assert_empty ExpenseRule.order(:id).last.users
+    assert_empty ExpenseRule.order(:id).last.rols
   end
 
   test "crear una segunda regla por defecto falla con mensaje claro" do
@@ -151,25 +151,25 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
 
   test "editar quita y agrega usuarios correctamente" do
     sign_in_as @admin
-    assert_equal [users(:gerente).id], @regla.users.map(&:id)
+    assert_equal [users(:gerente).id], @regla.rols.map(&:id)
 
-    patch expense_rule_path(@regla), params: { user_ids: [users(:contador).id, users(:ingeniero).id] }
+    patch expense_rule_path(@regla), params: { rol_ids: [users(:contador).id, users(:ingeniero).id] }
 
     assert_json_success
-    assert_equal [users(:contador).id, users(:ingeniero).id].sort, @regla.reload.users.map(&:id).sort
-    refute_includes @regla.users.map(&:id), users(:gerente).id
+    assert_equal [users(:contador).id, users(:ingeniero).id].sort, @regla.reload.rols.map(&:id).sort
+    refute_includes @regla.rols.map(&:id), users(:gerente).id
   end
 
-  test "editar con user_ids vacio deja la regla sin nadie" do
+  test "editar con rol_ids vacio deja la regla sin nadie" do
     sign_in_as @admin
 
-    patch expense_rule_path(@regla), params: { user_ids: [] }
+    patch expense_rule_path(@regla), params: { rol_ids: [] }
 
     assert_json_success
-    assert_empty @regla.reload.users
+    assert_empty @regla.reload.rols
   end
 
-  test "editar sin mandar user_ids no toca la asignacion" do
+  test "editar sin mandar rol_ids no toca la asignacion" do
     sign_in_as @admin
 
     # `params.key?` y no `.present?`: si se usara `.present?`, mandar la lista
@@ -177,7 +177,7 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     patch expense_rule_path(@regla), params: { name: "Regla directivos renombrada" }
 
     assert_json_success
-    assert_equal [users(:gerente).id], @regla.reload.users.map(&:id)
+    assert_equal [users(:gerente).id], @regla.reload.rols.map(&:id)
     assert_equal "Regla directivos renombrada", @regla.name
   end
 

@@ -23,7 +23,11 @@ class ReportExpenseCurrencyTest < ActiveSupport::TestCase
   end
 
   def crear(extra = {})
-    as_user(@admin) { ReportExpense.create!(atributos(extra)) }
+    as_user(@admin) { ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        atributos(extra).merge(omitir_comprobante_obligatorio: true)) }
   end
 
   # --- normalizacion --------------------------------------------------------
@@ -41,7 +45,8 @@ class ReportExpenseCurrencyTest < ActiveSupport::TestCase
   end
 
   test "rechaza moneda fuera del catalogo" do
-    gasto = as_user(@admin) { ReportExpense.new(atributos(currency: "ARS")) }
+    gasto = as_user(@admin) { ReportExpense.new(
+        atributos(currency: "ARS").merge(omitir_comprobante_obligatorio: true)) }
 
     assert_not gasto.valid?
     assert_includes gasto.errors.attribute_names, :currency
@@ -134,14 +139,16 @@ class ReportExpenseCurrencyTest < ActiveSupport::TestCase
   # --- validaciones ---------------------------------------------------------
 
   test "moneda extranjera sin foreign_value es invalida" do
-    gasto = as_user(@admin) { ReportExpense.new(atributos(currency: "USD", exchange_rate: 4120.5)) }
+    gasto = as_user(@admin) { ReportExpense.new(
+        atributos(currency: "USD", exchange_rate: 4120.5).merge(omitir_comprobante_obligatorio: true)) }
 
     assert_not gasto.valid?
     assert_includes gasto.errors[:foreign_value], "es obligatorio cuando la moneda no es COP"
   end
 
   test "moneda extranjera sin exchange_rate es invalida" do
-    gasto = as_user(@admin) { ReportExpense.new(atributos(currency: "USD", foreign_value: 120)) }
+    gasto = as_user(@admin) { ReportExpense.new(
+        atributos(currency: "USD", foreign_value: 120).merge(omitir_comprobante_obligatorio: true)) }
 
     assert_not gasto.valid?
     assert_includes gasto.errors[:exchange_rate], "es obligatoria cuando la moneda no es COP"
@@ -149,7 +156,8 @@ class ReportExpenseCurrencyTest < ActiveSupport::TestCase
 
   test "rechaza tasa y montos extranjeros negativos" do
     gasto = as_user(@admin) do
-      ReportExpense.new(atributos(currency: "USD", foreign_value: -1, exchange_rate: -4120.5))
+      ReportExpense.new(
+        atributos(currency: "USD", foreign_value: -1, exchange_rate: -4120.5).merge(omitir_comprobante_obligatorio: true))
     end
 
     assert_not gasto.valid?
@@ -159,11 +167,45 @@ class ReportExpenseCurrencyTest < ActiveSupport::TestCase
 
   test "rechaza exchange_rate_source fuera de SOURCES" do
     gasto = as_user(@admin) do
-      ReportExpense.new(atributos(currency: "USD", foreign_value: 120, exchange_rate: 4120.5,
-                                  exchange_rate_source: "google"))
+      ReportExpense.new(
+        atributos(currency: "USD", foreign_value: 120, exchange_rate: 4120.5,
+                                  exchange_rate_source: "google")
+          .merge(omitir_comprobante_obligatorio: true))
     end
 
     assert_not gasto.valid?
     assert_includes gasto.errors.attribute_names, :exchange_rate_source
+  end
+
+  # --- Redondeo de las cifras en pesos ---------------------------------------
+
+  test "el total se guarda redondeado a dos decimales" do
+    # EL CASO REAL: el formulario arma el total sumando dos floats en el
+    # navegador y manda 119000.11999999999. Antes se guardaba tal cual y la
+    # tabla solo lo disimulaba al pintarlo.
+    gasto = crear(invoice_value: 100_000.1, invoice_tax: 19_000.02,
+                        invoice_total: 100_000.1 + 19_000.02)
+
+    assert_equal 119_000.12, gasto.reload.invoice_total
+  end
+
+  test "el redondeo alcanza tambien a valor e IVA" do
+    gasto = crear(invoice_value: 33_333.333, invoice_tax: 6_333.336,
+                        invoice_total: 39_666.669)
+
+    gasto.reload
+    assert_equal 33_333.33, gasto.invoice_value
+    assert_equal 6_333.34,  gasto.invoice_tax
+    assert_equal 39_666.67, gasto.invoice_total
+  end
+
+  test "la TRM NO se redondea: sus seis decimales son significativos" do
+    # `exchange_rate` es decimal(18,6) y asi la publica el Banco de la Republica.
+    # Recortarla a dos moveria todas las conversiones.
+    gasto = crear(currency: "USD", foreign_value: 100, foreign_tax: 0,
+                        foreign_total: 100, exchange_rate: 4123.456789,
+                        exchange_rate_date: Date.current, exchange_rate_source: "manual")
+
+    assert_equal BigDecimal("4123.456789"), gasto.reload.exchange_rate
   end
 end

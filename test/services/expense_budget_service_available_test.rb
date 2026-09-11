@@ -6,8 +6,10 @@ require "test_helper"
 #
 #   1. el gastado suma `invoice_value` (SIN IVA), nunca `invoice_total`;
 #   2. todo en COP;
-#   3. los gastos `excedido` NO cuentan;
-#   4. los gastos `sin_presupuesto` SI cuentan.
+#   3. SOLO cuenta lo ACEPTADO (`is_acepted`), sea cual sea su estado
+#      presupuestal. La regla cambio el 2026-09-10: antes contaba todo lo que
+#      no estuviera `excedido`, incluido un gasto que nadie habia mirado;
+#   4. un aceptado que se pasa TAMBIEN cuenta, y deja el disponible negativo.
 class ExpenseBudgetServiceAvailableTest < ActiveSupport::TestCase
   setup do
     @admin     = users(:admin)
@@ -18,6 +20,12 @@ class ExpenseBudgetServiceAvailableTest < ActiveSupport::TestCase
     # que cada test arma exactamente el escenario que quiere medir.
     @centro_lab = cost_centers(:centro_ajeno)     # viatic_value 1.000.000
     @user_lab   = users(:ingeniero_dos)
+
+    # Los gastos de las fixtures representan cupo YA EJECUTADO para los tests de
+    # `summary_for_center`. Como solo lo aceptado consume y las fixtures del
+    # paquete 01 nacen sin aceptar, se marcan AQUI: tocar el YAML compartido por
+    # esto cambiaria el escenario de todas las demas pruebas del repo.
+    ReportExpense.where(cost_center_id: @centro.id).update_all(is_acepted: true)
   end
 
   def crear_partida(amount, cost_center: @centro_lab, user: @user_lab)
@@ -29,9 +37,18 @@ class ExpenseBudgetServiceAvailableTest < ActiveSupport::TestCase
 
   def crear_gasto(valor, cost_center: @centro_lab, user: @user_lab, **overrides)
     as_user(@admin) do
-      ReportExpense.create!({ user_id: @admin.id, cost_center_id: cost_center.id,
+      ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user_id: @admin.id, cost_center_id: cost_center.id,
                               user_invoice_id: user.id, invoice_name: "Gasto de prueba",
                               invoice_date: Date.new(2026, 6, 1), invoice_value: valor,
+                              # Los gastos de estas pruebas representan cupo YA COMPROMETIDO.
+                              # Desde 2026-09-10 solo lo ACEPTADO consume (ver
+                              # ExpenseBudgetService.consumidores); con el default de la columna
+                              # —false— no descontarian nada y el disponible saldria intacto.
+                              is_acepted: true,
                               invoice_tax: 0, invoice_total: valor }.merge(overrides))
     end
   end
@@ -69,13 +86,42 @@ class ExpenseBudgetServiceAvailableTest < ActiveSupport::TestCase
     assert_equal BigDecimal("100000.0"), disponible[:spent]
   end
 
-  def test_excluye_los_excedidos_del_gastado
+  def test_un_excedido_aceptado_si_consume_cupo
     crear_partida(100_000)
-    crear_gasto(80_000, budget_status: "excedido", budget_reason: "Excede el presupuesto disponible en $80.000")
+    crear_gasto(80_000, budget_status: "excedido",
+                        budget_reason: "Excede el presupuesto disponible en $80.000")
 
-    # Un gasto excedido NO consume cupo: si lo consumiera, un solo gasto grande
-    # dejaria excedidos a todos los siguientes en cascada.
+    # LA REGLA SE INVIRTIO (2026-09-10). Este test afirmaba lo contrario ("un
+    # gasto excedido NO consume cupo") para evitar que un gasto grande dejara
+    # excedidos en cascada a los siguientes. El dueño del producto decidio que la
+    # cascada es correcta: si la plata ya se gasto, el cupo esta comprometido
+    # aunque el resultado quede en negativo. Lo que protege de la cascada ahora no
+    # es el estado sino la ACEPTACION (ver el test de abajo).
+    assert_equal BigDecimal("80000.0"), disponible[:spent]
+  end
+
+  def test_un_gasto_sin_aceptar_no_consume_cupo
+    # EL CASO CENTRAL DE LA REGLA NUEVA: el gasto se registra sin tocar el
+    # presupuesto y empieza a descontar cuando el responsable lo Acepta.
+    #
+    # El escenario usa un gasto EXCEDIDO a proposito, y no uno aprobado: lo que
+    # cabe nace aceptado solo (`auto_accept_if_within_budget`, before_create del
+    # modelo), asi que un `is_acepted: false` sobre un aprobado lo pisa el
+    # callback y el test no probaria nada. El gasto que no cabe es justo el que
+    # se queda esperando a que alguien lo mire, que es el caso del que se trata.
+    crear_partida(100_000)
+    gasto = crear_gasto(150_000, budget_status: "excedido", is_acepted: false,
+                                 budget_reason: "Excede el presupuesto disponible en $50.000")
+    assert_not gasto.is_acepted, "el que no cabe no debe nacer aceptado"
+
     assert_equal BigDecimal(0), disponible[:spent]
+    assert_equal BigDecimal("100000.0"), disponible[:available]
+
+    gasto.update!(is_acepted: true)
+
+    # Al aceptarlo descuenta, y el disponible queda NEGATIVO: el gasto ya ocurrio.
+    assert_equal BigDecimal("150000.0"), disponible[:spent]
+    assert_equal BigDecimal("-50000.0"), disponible[:available]
   end
 
   def test_incluye_los_sin_presupuesto_del_gastado
@@ -194,8 +240,9 @@ class ExpenseBudgetServiceAvailableTest < ActiveSupport::TestCase
            .find { |f| f[:user_id] == @user_lab.id }
 
     assert_equal BigDecimal(0), fila[:assigned]
-    # El excedido no suma al gastado, pero SI se cuenta aparte.
-    assert_equal BigDecimal("50000.0"), fila[:spent]
+    # Los DOS suman al gastado: ambos estan aceptados. El excedido ademas se
+    # cuenta aparte, que es el dato que el tablero usa para la alerta.
+    assert_equal BigDecimal("140000.0"), fila[:spent]
     assert_equal 0, fila[:budgets_count]
     assert_equal 1, fila[:exceeded_expenses_count]
   end

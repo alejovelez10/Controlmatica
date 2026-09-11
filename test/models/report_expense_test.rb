@@ -62,4 +62,45 @@ class ReportExpenseTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end
+
+  # --- Comprobante obligatorio (EXPENSE_RECEIPT_REQUIRED) --------------------
+
+  def atributos_basicos
+    { user: users(:admin),
+      cost_center: cost_centers(:centro_con_viaticos),
+      user_invoice: users(:ingeniero),
+      invoice_name: "Hotel",
+      invoice_date: Date.new(2026, 6, 1),
+      invoice_number: "FE-FLAG-#{SecureRandom.hex(3)}",
+      identification: "900111222",
+      invoice_value: 10_000.0, invoice_tax: 0.0, invoice_total: 10_000.0 }
+  end
+
+  def crear_gasto_basico
+    as_user(users(:admin)) { ReportExpense.create!(atributos_basicos) }
+  end
+
+  test "con el flag apagado un gasto sin comprobante se crea" do
+    # ES EL DEFAULT, y a proposito: encender la regla de golpe le corta el
+    # registro a toda la gente que hoy sube gastos sin adjuntar nada.
+    refute ReportExpense.comprobante_obligatorio?
+    assert crear_gasto_basico.persisted?
+  end
+
+  test "con el flag encendido un gasto sin comprobante no se crea" do
+    con_comprobante_obligatorio do
+      gasto = ReportExpense.new(atributos_basicos)
+      refute gasto.valid?
+      assert_match(/comprobante/i, gasto.errors.full_messages.join(" "))
+    end
+  end
+
+  test "con el flag encendido editar un gasto viejo sin comprobante sigue siendo posible" do
+    # Los ~7.000 historicos no tienen comprobante: con la regla en updates no se
+    # podrian ni aceptar ni contabilizar, que son updates sobre gastos viejos.
+    gasto = crear_gasto_basico
+    con_comprobante_obligatorio do
+      assert gasto.update(invoice_name: "Nombre editado")
+    end
+  end
 end

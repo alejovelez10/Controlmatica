@@ -138,24 +138,24 @@ class ExpenseRulesViewTest < ActionDispatch::IntegrationTest
     assert_equal false, props["estados"]["delete"]
   end
 
-  test "las props traen el catalogo de usuarios para el multi-select" do
+  test "las props traen el catalogo de roles para el multi-select" do
     sign_in @admin
 
     get expense_rules_path
 
     props = react_props
-    assert_kind_of Array, props["users"]
-    assert props["users"].any?, "El catalogo de usuarios llego vacio"
+    assert_kind_of Array, props["roles"]
+    assert props["roles"].any?, "El catalogo de roles llego vacio"
   end
 
-  test "el catalogo de usuarios trae label y value" do
+  test "el catalogo de roles trae label y value" do
     sign_in @admin
 
     get expense_rules_path
 
     # Es la forma que exige react-select. Con User.all serializado entero, el
     # multi-select quedaria mudo sin lanzar ningun error.
-    assert_equal %w[label value], react_props["users"].first.keys.sort
+    assert_equal %w[label value], react_props["roles"].first.keys.sort
   end
 
   test "las props traen el usuario actual" do
@@ -200,5 +200,57 @@ class ExpenseRulesViewTest < ActionDispatch::IntegrationTest
     # navegador, y un redirect a la raiz le llegaria como HTML de inicio.
     assert_response :forbidden
     assert_equal "error", JSON.parse(response.body)["type"]
+  end
+
+  # --- validate_candidate ----------------------------------------------------
+  #
+  # Es lo que el formulario llama al adjuntar el comprobante. Lo que se prueba no
+  # es el motor de reglas (eso lo cubre expense_rule_service_test) sino que la
+  # accion DELEGUE en el: si evaluara por su cuenta, la pantalla podria decir
+  # "todo bien" y el Guardar rechazar.
+
+  test "validate_candidate devuelve las violaciones del gasto en curso" do
+    ExpenseRule.update_all(active: false)
+    regla = ExpenseRule.create!(name: "Tope bajo", max_invoice_value: 10_000,
+                                check_duplicates: false, active: true, is_default: true)
+    sign_in_as @admin
+
+    post "/validate_expense_rules", as: :json, params: {
+      user_invoice_id: @admin.id, invoice_value: 500_000, invoice_total: 500_000,
+      invoice_date: Date.current.to_s
+    }
+
+    assert_response :success
+    cuerpo = JSON.parse(response.body)
+    assert_equal false, cuerpo["ok"]
+    assert_includes cuerpo["violations"].map { |v| v["code"] }, "invoice_value_exceeded"
+    assert_includes cuerpo["applied_rules"], regla.name
+  end
+
+  test "validate_candidate con un gasto que cumple devuelve ok y ninguna violacion" do
+    ExpenseRule.update_all(active: false)
+    ExpenseRule.create!(name: "Tope alto", max_invoice_value: 1_000_000,
+                        check_duplicates: false, active: true, is_default: true)
+    sign_in_as @admin
+
+    post "/validate_expense_rules", as: :json, params: {
+      user_invoice_id: @admin.id, invoice_value: 5_000, invoice_total: 5_000,
+      invoice_date: Date.current.to_s
+    }
+
+    cuerpo = JSON.parse(response.body)
+    assert_equal true, cuerpo["ok"]
+    assert_empty cuerpo["violations"]
+  end
+
+  test "validate_candidate NO crea ningun gasto" do
+    sign_in_as @admin
+
+    assert_no_difference -> { ReportExpense.count } do
+      post "/validate_expense_rules", as: :json, params: {
+        user_invoice_id: @admin.id, invoice_value: 500_000, invoice_total: 500_000,
+        invoice_date: Date.current.to_s
+      }
+    end
   end
 end

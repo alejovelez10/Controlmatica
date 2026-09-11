@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_09_000001) do
+ActiveRecord::Schema.define(version: 2026_09_10_230000) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -350,12 +350,12 @@ ActiveRecord::Schema.define(version: 2026_09_09_000001) do
     t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"
   end
 
-  create_table "expense_rules_users", id: false, force: :cascade do |t|
-    t.integer "expense_rule_id", null: false
-    t.integer "user_id", null: false
-    t.index ["expense_rule_id", "user_id"], name: "index_expense_rules_users_unique", unique: true
-    t.index ["expense_rule_id"], name: "index_expense_rules_users_on_expense_rule_id"
-    t.index ["user_id"], name: "index_expense_rules_users_on_user_id"
+  create_table "expense_rules_rols", id: false, force: :cascade do |t|
+    t.bigint "expense_rule_id", null: false
+    t.bigint "rol_id", null: false
+    t.index ["expense_rule_id", "rol_id"], name: "index_expense_rules_rols_unique", unique: true
+    t.index ["expense_rule_id"], name: "index_expense_rules_rols_on_expense_rule_id"
+    t.index ["rol_id"], name: "index_expense_rules_rols_on_rol_id"
   end
 
   create_table "material_invoices", force: :cascade do |t|
@@ -678,4 +678,6 @@ ActiveRecord::Schema.define(version: 2026_09_09_000001) do
     t.index ["rol_id"], name: "index_users_on_rol_id"
   end
 
+  add_foreign_key "expense_rules_rols", "expense_rules"
+  add_foreign_key "expense_rules_rols", "rols"
 end

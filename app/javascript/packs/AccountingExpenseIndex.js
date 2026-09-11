@@ -4,7 +4,8 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable } from "../generalcomponents/ui";
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon } from "../generalcomponents/expenseIndicators";
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen } from "../generalcomponents/expenseIndicators";
+import { Modal, ModalBody } from "reactstrap";
 
 // Pantalla de Contabilidad (paquete 09, bloque 4). El backend completo —las
 // cinco rutas, `@estados` y el tope de la aprobacion masiva— es del paquete 06:
@@ -48,8 +49,8 @@ var EMPTY_FILTERS = {
 // todo el filtro". Es deliberado: si contara, estando en "Por aprobar" sin
 // ningun filtro ese boton aprobaria la tabla entera.
 var TABS = [
-  { id: "pendientes", label: "Por aprobar", icon: "fas fa-clock" },
-  { id: "aprobados",  label: "Aprobados",   icon: "fas fa-check-circle" },
+  { id: "pendientes", label: "No contabilizados", icon: "fas fa-clock" },
+  { id: "aprobados",  label: "Contabilizados",   icon: "fas fa-check-circle" },
 ];
 
 var selectStyles = {
@@ -125,6 +126,8 @@ class AccountingExpenseIndex extends React.Component {
       filterPayment: null,
       selectedIds: [],
       bulkRunning: false,
+      receiptPreview: { open: false, id: null },
+      receiptPreviewError: false,
     };
 
     this.userOptions = (props.users || []).map(function(u) {
@@ -249,8 +252,8 @@ class AccountingExpenseIndex extends React.Component {
             onClick: function(e) { e.stopPropagation(); },
             "data-testid": "accounting-approve-select-" + row.id,
           },
-            React.createElement("option", { value: "true" }, "Aprobado"),
-            React.createElement("option", { value: "false" }, "Pendiente")
+            React.createElement("option", { value: "true" }, "Contabilizado"),
+            React.createElement("option", { value: "false" }, "No contabilizado")
           ),
           pie
         );
@@ -263,6 +266,32 @@ class AccountingExpenseIndex extends React.Component {
       // AccountingExpensesController::SORT_COLUMNS. El indice de Gastos si las
       // marca sortable y es un bug preexistente (ordena por invoice_date en
       // silencio); no se replica.
+      // COMPROBANTE. Contabilidad causa mirando el soporte: tenerlo aqui evita
+      // saltar a la pantalla de Gastos por cada fila. Mismo comportamiento que
+      // alli: el ojo abre la imagen en un modal y descarga lo que no se puede
+      // pintar; el enlace de al lado descarga siempre.
+      { key: "receipt_file", label: "Comprobante", width: "120px", sortable: false, render: function(row) {
+        if (!row.receipt_file || !row.receipt_file.url) return "—";
+
+        return React.createElement("div", { style: { display: "flex", alignItems: "center", gap: "6px" } },
+          React.createElement("a", {
+            href: "/download_receipt/report_expenses/" + row.id,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            title: "Descargar comprobante",
+            onClick: function(e) { e.stopPropagation(); },
+            "data-testid": "accounting-receipt-link-" + row.id
+          }, React.createElement("i", { className: "fas fa-download" })),
+          React.createElement("button", {
+            type: "button",
+            className: "cm-btn cm-btn-outline cm-btn-sm",
+            title: "Previsualizar comprobante",
+            onClick: function(e) { e.stopPropagation(); self.abrirComprobante(row.id, row.receipt_file.url); },
+            "data-testid": "accounting-receipt-preview-" + row.id
+          }, React.createElement("i", { className: "fas fa-eye" }))
+        );
+      }},
+
       { key: "type_name", label: "Tipo", width: "160px", sortable: false, render: function(row) { return row.type_identification ? row.type_identification.name : ""; } },
       { key: "payment_name", label: "Medio de pago", width: "150px", sortable: false, render: function(row) { return row.payment_type ? row.payment_type.name : ""; } },
       { key: "invoice_value", label: "Valor (COP)", width: "120px", render: function(row) { return React.createElement(NumberFormat, { value: row.invoice_value, displayType: "text", thousandSeparator: true, decimalScale: 2, prefix: "$" }); } },
@@ -518,6 +547,20 @@ class AccountingExpenseIndex extends React.Component {
   // id. El backend acepta `ids[]` como filtro valido (§C.4) y aplica el mismo
   // tope de 500; N requests secuenciales quedaron descartadas por auditoria
   // (sin atomicidad y con estado intermedio si la cuarta falla).
+  // Descarga los comprobantes de la seleccion en UN zip.
+  //
+  // `window.location` y no `fetch`: la respuesta es un binario con
+  // Content-Disposition: attachment, y lo que se quiere es que el navegador lo
+  // guarde. Con fetch habria que materializar el blob en memoria y fabricar un
+  // <a download> para lo mismo.
+  downloadSelectedReceipts = function() {
+    var ids = this.state.selectedIds;
+    if (ids.length === 0 || ids.length > MAX_BULK) return;
+
+    var params = ids.map(function(id) { return "ids[]=" + id; });
+    window.location = "/download_receipts/accounting_expenses?" + params.join("&");
+  }.bind(this);
+
   approveSelected = function() {
     var self = this;
     var ids = this.state.selectedIds.slice();
@@ -525,13 +568,13 @@ class AccountingExpenseIndex extends React.Component {
     if (n === 0 || n > MAX_BULK) return;
 
     Swal.fire({
-      title: "¿Aprobar " + n + " gastos?",
-      text: "Quedarán marcados como aprobados por contabilidad, con su nombre y la fecha de hoy.",
+      title: "¿Contabilizar " + n + " gastos?",
+      text: "Quedarán marcados como contabilizados, con su nombre y la fecha de hoy.",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
-      confirmButtonText: "Sí, aprobar",
+      confirmButtonText: "Sí, contabilizar",
       cancelButtonText: "Cancelar",
     }).then(function(result) {
       if (!result.value) return;
@@ -547,13 +590,13 @@ class AccountingExpenseIndex extends React.Component {
     var params = this.filterParams();
 
     Swal.fire({
-      title: "¿Aprobar " + this.state.meta.total + " gastos?",
-      text: "Se aprobarán TODOS los gastos que coinciden con el filtro, no solo los de esta página.",
+      title: "¿Contabilizar " + this.state.meta.total + " gastos?",
+      text: "Se contabilizarán TODOS los gastos que coinciden con el filtro, no solo los de esta página.",
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#2a3f53",
       cancelButtonColor: "#dc3545",
-      confirmButtonText: "Sí, aprobar",
+      confirmButtonText: "Sí, contabilizar",
       cancelButtonText: "Cancelar",
     }).then(function(result) {
       if (!result.value) return;
@@ -777,20 +820,36 @@ class AccountingExpenseIndex extends React.Component {
     // El boton del filtro completo SOLO aparece con filtro aplicado: C.4 rechaza
     // en el servidor las llamadas sin ningun filtro, y ofrecer un boton que
     // siempre falla es peor que no ofrecerlo.
-    var showFilterButton = allPageSelected && this.state.isFiltering && this.state.meta.total > n;
+    var showFilterButton = allPageSelected && this.state.isFiltering && this.state.meta.total > n &&
+                           this.state.tab === "pendientes" && this.estados.approve;
 
     return React.createElement("div", { className: "cm-dt-selection-bar", "data-testid": "accounting-selection-bar" },
       React.createElement("span", null,
         React.createElement("strong", { "data-testid": "accounting-selection-count" }, String(n)),
         " seleccionados"
       ),
-      React.createElement("button", {
+      // Contabilizar en lote SOLO en "No contabilizados" y con permiso: en la
+      // otra pestana el servidor filtra por accounting_approved: false y el
+      // usuario veria "se contabilizaron N" habiendo tocado cero.
+      (self.state.tab === "pendientes" && self.estados.approve)
+        ? React.createElement("button", {
         type: "button",
         className: "cm-btn cm-btn-success cm-btn-sm",
         onClick: self.approveSelected,
         disabled: self.state.bulkRunning || overLimit,
         "data-testid": "accounting-approve-selected"
-      }, React.createElement("i", { className: "fas fa-check-double" }), " Aprobar seleccionados (" + n + ")"),
+      }, React.createElement("i", { className: "fas fa-check-double" }), " Contabilizar seleccionados (" + n + ")")
+        : null,
+      self.estados.export
+        ? React.createElement("button", {
+        type: "button",
+        className: "cm-btn cm-btn-outline cm-btn-sm",
+        onClick: self.downloadSelectedReceipts,
+        disabled: overLimit,
+        title: "Descarga los comprobantes de los gastos seleccionados en un ZIP",
+        "data-testid": "accounting-download-receipts"
+      }, React.createElement("i", { className: "fas fa-file-archive" }), " Descargar comprobantes (" + n + ")")
+        : null,
       React.createElement("button", {
         type: "button",
         className: "cm-btn cm-btn-outline cm-btn-sm",
@@ -804,7 +863,7 @@ class AccountingExpenseIndex extends React.Component {
             onClick: self.approveFilteredAll,
             disabled: self.state.bulkRunning,
             "data-testid": "accounting-approve-filter"
-          }, React.createElement("i", { className: "fas fa-layer-group" }), " Aprobar los " + self.state.meta.total + " del filtro completo")
+          }, React.createElement("i", { className: "fas fa-layer-group" }), " Contabilizar los " + self.state.meta.total + " del filtro completo")
         : null,
       overLimit
         ? React.createElement("span", { className: "cm-hint", style: { color: "#dc3545", width: "100%" } },
@@ -843,6 +902,68 @@ class AccountingExpenseIndex extends React.Component {
     return React.createElement("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" } }, buttons);
   }.bind(this);
 
+  // --- Comprobante -----------------------------------------------------------
+  //
+  // Copia del comportamiento de la pantalla de Gastos, a proposito: imagen ->
+  // modal, cualquier otra cosa -> descarga directa. Que las dos pantallas se
+  // comporten distinto con el mismo archivo seria peor que duplicar diez lineas.
+  abrirComprobante = function(id, pista) {
+    if (esComprobanteImagen(pista)) {
+      this.setState({ receiptPreview: { open: true, id: id }, receiptPreviewError: false });
+      return;
+    }
+    window.open("/download_receipt/report_expenses/" + id, "_blank", "noopener");
+  }.bind(this);
+
+  cerrarComprobante = function() {
+    this.setState({ receiptPreview: { open: false, id: null }, receiptPreviewError: false });
+  }.bind(this);
+
+  renderReceiptPreview = function() {
+    var self = this;
+    var p = this.state.receiptPreview;
+    if (!p.open) return null;
+
+    // `?disposition=inline` para PINTAR: sin el, la ruta responde
+    // Content-Disposition: attachment y el modal sale en blanco.
+    var src = "/download_receipt/report_expenses/" + p.id + "?disposition=inline";
+    var descarga = "/download_receipt/report_expenses/" + p.id;
+
+    return React.createElement(Modal, { isOpen: true, toggle: self.cerrarComprobante, className: "modal-dialog-centered modal-lg" },
+      React.createElement("div", { className: "cm-modal-container" },
+        React.createElement("div", { className: "cm-modal-header" },
+          React.createElement("div", { className: "cm-modal-header-content" },
+            React.createElement("div", { className: "cm-modal-icon" }, React.createElement("i", { className: "fas fa-file" })),
+            React.createElement("div", null,
+              React.createElement("h2", { className: "cm-modal-title" }, "Comprobante del gasto #" + p.id),
+              React.createElement("p", { className: "cm-modal-subtitle" }, "Previsualización del archivo adjunto")
+            )
+          ),
+          React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.cerrarComprobante },
+            React.createElement("i", { className: "fa fa-times" })
+          )
+        ),
+        React.createElement(ModalBody, { className: "cm-modal-body" },
+          React.createElement("div", { "data-testid": "receipt-preview-modal" },
+            self.state.receiptPreviewError
+              ? React.createElement("div", { className: "cm-alert cm-alert-warning" },
+                  React.createElement("i", { className: "fa fa-exclamation-triangle" }),
+                  " No se pudo previsualizar el comprobante. ",
+                  React.createElement("a", { href: descarga, target: "_blank", rel: "noopener noreferrer" }, "Descargarlo"),
+                  ".")
+              : React.createElement("img", { src: src, alt: "Comprobante",
+                  style: { maxWidth: "100%", display: "block", margin: "0 auto" },
+                  onError: function() { self.setState({ receiptPreviewError: true }); } })
+          )
+        ),
+        React.createElement("div", { className: "cm-modal-footer" },
+          React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.cerrarComprobante },
+            React.createElement("i", { className: "fa fa-times" }), " Cerrar")
+        )
+      )
+    );
+  }.bind(this);
+
   // Barra de pestanas. Usa las clases del sistema de diseno (cm-tabs), las
   // mismas de la pestana del centro de costos, para que las dos pantallas de
   // la aplicacion que tienen pestanas se vean igual.
@@ -865,6 +986,8 @@ class AccountingExpenseIndex extends React.Component {
 
   render() {
     return React.createElement("div", { className: "cm-page", "data-testid": "accounting-page" },
+      this.renderReceiptPreview(),
+
       this.renderTabs(),
 
       this.state.showFilters && this.renderFilters(),
@@ -890,15 +1013,12 @@ class AccountingExpenseIndex extends React.Component {
         onPageChange: this.handlePageChange,
         onPerPageChange: this.handlePerPageChange,
         onSearch: this.handleSearch,
-        // Los checkboxes van atados al permiso de aprobar: sin el, no hay nada
-        // que hacer con una seleccion.
-        //
-        // Y solo en "Por aprobar": en "Aprobados" no queda nada que aprobar, y
-        // dejar las casillas ahi permitiria mandar al masivo gastos que ya
-        // estan aprobados. El servidor los ignoraria (filtra por
-        // accounting_approved: false) y el usuario veria "se aprobaron N"
-        // habiendo aprobado cero. Para desaprobar esta la accion de la fila.
-        selectable: !!this.estados.approve && this.state.tab === "pendientes",
+        // La seleccion sirve para DOS cosas —contabilizar en lote y bajar los
+        // comprobantes en un ZIP—, asi que basta con cualquiera de los dos
+        // permisos. Va en las dos pestanas: en "Contabilizados" no hay nada que
+        // contabilizar, pero bajarse los soportes de lo ya causado es
+        // justamente lo que se hace para archivar.
+        selectable: !!(this.estados.approve || this.estados.export),
         selectedIds: this.state.selectedIds,
         onToggleRow: this.toggleRow,
         onToggleAllPage: this.toggleAllPage,

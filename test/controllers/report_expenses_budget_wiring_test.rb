@@ -14,7 +14,8 @@ require "test_helper"
 # CUPO DE LAS FIXTURES (centro_con_viaticos / ingeniero):
 #   partidas activas ..... 500.000 + 200.000 = 700.000
 #   gastos preexistentes .. report_expenses(:one) y (:two), 100.000 cada uno
-#   Los dos estan en `sin_presupuesto`, que SI consume cupo (§2.6 regla 2).
+#   Los dos se marcan ACEPTADOS en el setup: desde 2026-09-10 consumir cupo
+#   depende de `is_acepted`, no del estado presupuestal.
 #   => disponible al empezar cada test: 500.000
 class ReportExpensesBudgetWiringTest < ActionDispatch::IntegrationTest
   DISPONIBLE_INICIAL = 500_000
@@ -35,11 +36,21 @@ class ReportExpensesBudgetWiringTest < ActionDispatch::IntegrationTest
     [@centro, @centro_ajeno].each { |c| c.update_columns(hour_cotizada: 0.0, eng_hours: 0.0) }
 
     sign_in_as @admin
+
+    # Los gastos preexistentes de las fixtures representan cupo YA EJECUTADO.
+    # Desde 2026-09-10 solo lo ACEPTADO consume (ExpenseBudgetService.consumidores)
+    # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible de
+    # partida sube y toda la aritmetica de este archivo se corre. Se marca aqui y
+    # no en el YAML para no cambiarle el escenario al resto del repo.
+    ReportExpense.update_all(is_acepted: true)
   end
 
   # Parametros minimos de un gasto valido por la via web.
   def parametros_gasto(**overrides)
     {
+      # El comprobante es obligatorio desde 2026-09-10: sin el, el create por la
+      # via web se rechaza y estos tests no llegarian a probar lo suyo.
+      receipt_file: upload_fixture("comprobante.pdf"),
       cost_center_id: @centro.id,
       user_invoice_id: @ingeniero.id,
       invoice_name: "Hotel Cableado",
@@ -217,7 +228,7 @@ class ReportExpensesBudgetWiringTest < ActionDispatch::IntegrationTest
                           check_duplicates: false, max_invoice_value: 900_000)
       regla = ExpenseRule.create!(name: "Regla de Ingeniero", active: true, is_default: false,
                                   check_duplicates: false, max_invoice_value: 20_000)
-      regla.users << @ingeniero
+      regla.rols << @ingeniero.rol
     end
 
     # El responsable es @ingeniero, que tiene regla propia de 20.000: se rechaza.

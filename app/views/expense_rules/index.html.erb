@@ -1,8 +1,8 @@
 <%# Pantalla de Reglas de gastos (paquete 14, tarea 6).
 
-    `users` viaja como catalogo {value, label} y no como User.all serializado:
+    `roles` viaja como catalogo {value, label} y no como User.all serializado:
     el multi-select del formulario es react-select, que exige exactamente esa
     forma. Mandar los registros completos serializaria la tabla entera de
-    usuarios en el HTML de la pagina por nada. %>
+    roles en el HTML de la pagina por nada. %>
 <%= javascript_pack_tag 'ExpenseRuleIndex' %>
-<%= react_component('ExpenseRuleIndex', current_user: get_current_user, estados: @estados, users: get_users_select) %>
+<%= react_component('ExpenseRuleIndex', current_user: get_current_user, estados: @estados, roles: get_rols_select) %>

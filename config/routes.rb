@@ -109,6 +109,7 @@ Rails.application.routes.draw do
   # para avisar antes de guardar, y la tool MCP para que el agente sepa las
   # reglas antes de conversar.
   get "get_expense_rules_for_user", to: "expense_rules#get_expense_rules_for_user"
+  post "validate_expense_rules", to: "expense_rules#validate_candidate"
   # Multimoneda (paquete 05). Contrato en 00-ARQUITECTURA E.1: responde 200
   # tanto en exito como en error y el frontend discrimina por `type`.
   get "get_exchange_rate", to: "exchange_rates#get_exchange_rate"
@@ -130,6 +131,7 @@ Rails.application.routes.draw do
   patch "update_accounting_state/:id/:state", to: "accounting_expenses#update_accounting_state"
   patch "update_accounting_filter_values", to: "accounting_expenses#update_accounting_filter_values"
   get "download_file/accounting_expenses/:type", to: "accounting_expenses#download_file"
+  get "download_receipts/accounting_expenses", to: "accounting_expenses#download_receipts"
   resources :notification_alerts, :only => [:index]
 
   get "get_expense_ratios", to: "expense_ratios#get_expense_ratios"

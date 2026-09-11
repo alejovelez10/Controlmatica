@@ -68,7 +68,7 @@ class ExpenseRuleIndex extends Component {
       formCreate: Object.assign({}, EMPTY_FORM),
       // Opciones {value, label} de react-select, NO ids. Se guardan asi para
       // pintarlas sin buscar el label en cada render.
-      selectedUsers: [],
+      selectedRoles: [],
     };
 
     // this.columns SE DECLARA COMPLETO AQUI, en el constructor: CmDataTable
@@ -109,20 +109,20 @@ class ExpenseRuleIndex extends Component {
       // `sortable: false`: el orden del cliente compara `row[key]` y aqui la
       // celda es un arreglo de objetos. Una flecha que no ordena es peor que
       // ninguna flecha.
-      { key: "users", label: "Aplica a", width: "220px", sortable: false, render: (r) => {
-        var nombres = (r.users || []).map(function(u) { return u.names; });
+      { key: "rols", label: "Aplica a", width: "220px", sortable: false, render: (r) => {
+        var nombres = (r.rols || []).map(function(u) { return u.name; });
         if (nombres.length === 0) {
           // Se dice explicitamente. Una celda vacia se lee como "todos", que es
           // exactamente lo contrario de lo que significa.
           return (
-            <span className="cm-badge cm-badge-warning" data-testid={"rule-users-none-" + r.id}>
+            <span className="cm-badge cm-badge-warning" data-testid={"rule-roles-none-" + r.id}>
               {r.is_default ? "Todos (por defecto)" : "Nadie"}
             </span>
           );
         }
         return (
           <div className="cm-cell-truncate" data-tooltip={nombres.join(", ")}
-               data-testid={"rule-users-" + r.id}>
+               data-testid={"rule-roles-" + r.id}>
             <span className="cm-cell-truncate-text">{nombres.join(", ")}</span>
           </div>
         );
@@ -190,8 +190,8 @@ class ExpenseRuleIndex extends Component {
   // usuario ya no esta en el catalogo (desactivado, borrado) se arma una opcion
   // con el nombre que trajo el serializer, para no perder la asignacion en
   // silencio al guardar.
-  optionForUser = (u) => {
-    var opciones = this.props.users || [];
+  optionForRole = (u) => {
+    var opciones = this.props.roles || [];
     for (var i = 0; i < opciones.length; i++) {
       if (opciones[i].value === u.id) return opciones[i];
     }
@@ -202,7 +202,7 @@ class ExpenseRuleIndex extends Component {
     this.setState({
       modal: true, modeEdit: false, id: "", saving: false, formError: null,
       formCreate: Object.assign({}, EMPTY_FORM),
-      selectedUsers: [],
+      selectedRoles: [],
     });
   };
 
@@ -226,7 +226,7 @@ class ExpenseRuleIndex extends Component {
         check_duplicates: !!row.check_duplicates,
         agent_instructions: row.agent_instructions || "",
       },
-      selectedUsers: (row.users || []).map(function(u) { return self.optionForUser(u); }),
+      selectedRoles: (row.rols || []).map(function(u) { return self.optionForRole(u); }),
     });
   };
 
@@ -256,7 +256,7 @@ class ExpenseRuleIndex extends Component {
   // Sin este `|| []` el multi-select quedaria descontrolado y `.length`
   // reventaria en el render del contador.
   handleChangeUsers = (opts) => {
-    this.setState({ selectedUsers: opts || [] });
+    this.setState({ selectedRoles: opts || [] });
   };
 
   // UNICA definicion del motivo de bloqueo. El modal solo la pinta.
@@ -292,10 +292,10 @@ class ExpenseRuleIndex extends Component {
       check_duplicates: !!f.check_duplicates,
       agent_instructions: f.agent_instructions || "",
       // SIEMPRE se manda, incluso vacio. El controller distingue con
-      // `params.key?(:user_ids)`: mandar la lista vacia es la operacion
+      // `params.key?(:rol_ids)`: mandar la lista vacia es la operacion
       // legitima "esta regla ya no aplica a nadie", y omitir la clave
       // significaria "no toques las asignaciones".
-      user_ids: (this.state.selectedUsers || []).map(function(o) { return o.value; }),
+      rol_ids: (this.state.selectedRoles || []).map(function(o) { return o.value; }),
     };
 
     this.setState({ saving: true, formError: null });
@@ -459,12 +459,12 @@ class ExpenseRuleIndex extends Component {
             nameBnt={this.state.modeEdit ? "Actualizar" : "Crear"}
             modeEdit={this.state.modeEdit}
             formValues={this.state.formCreate}
-            users={this.props.users || []}
-            selectedUsers={this.state.selectedUsers}
+            roles={this.props.roles || []}
+            selectedRoles={this.state.selectedRoles}
             onChangeForm={this.handleChangeForm}
             onChangeMoney={this.handleChangeMoney}
             onToggleBool={this.handleToggleBool}
-            onChangeUsers={this.handleChangeUsers}
+            onChangeRoles={this.handleChangeUsers}
             submitForm={this.submit}
             saving={this.state.saving}
             blockReason={this.blockReason()}

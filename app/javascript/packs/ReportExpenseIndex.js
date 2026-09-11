@@ -154,6 +154,10 @@ function estadoComprobanteVacio() {
     // `receiptFileName` —que solo se llena cuando el usuario acaba de elegir
     // un archivo— para saber si lo adjuntado es una imagen al EDITAR un gasto.
     receiptExistingUrl: "",
+    // Violaciones de reglas del gasto EN CURSO. Se llenan al adjuntar el
+    // comprobante; el Guardar las vuelve a validar en el servidor, que es quien
+    // manda. Esto solo adelanta el aviso.
+    ruleViolations: [],
     receiptError: null,
     extraction: Object.assign({}, EXTRACTION_VACIA),
     exchange: Object.assign({}, EXCHANGE_VACIO),
@@ -683,7 +687,11 @@ class ReportExpenseIndex extends React.Component {
       newForm.cop_manual_override = true;
       newForm.exchange_rate_source = "manual";
     }
-    var total = (Number(newForm.invoice_value) || 0) + (Number(newForm.invoice_tax) || 0);
+    // Redondeado a dos: sumar dos floats da 119000.11999999999 y ese numero
+    // es el que viajaba al servidor. El modelo lo vuelve a redondear (es el
+    // guardian de los cuatro canales); aqui se hace ademas para que el usuario
+    // vea el mismo numero que se va a guardar.
+    var total = Math.round(((Number(newForm.invoice_value) || 0) + (Number(newForm.invoice_tax) || 0)) * 100) / 100;
     newForm.invoice_total = total;
     this.setState({ form: newForm }, self.refreshBudgetAvailability);
   }.bind(this);
@@ -832,7 +840,49 @@ class ReportExpenseIndex extends React.Component {
       this.setState(Object.assign({}, vacio, { receiptError: "El archivo supera los 20 MB permitidos." }));
       return;
     }
-    this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null });
+    this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null },
+                  this.validarReglas);
+  }.bind(this);
+
+  // Evalua las reglas de gasto contra lo que hay AHORA en el formulario.
+  //
+  // Se dispara al adjuntar el comprobante porque ese es el momento en que la
+  // persona tiene la factura delante: enterarse ahi de que tiene 90 dias, o de
+  // que supera el tope, le permite arreglarlo o desistir antes de llenar el
+  // resto. Al pulsar Guardar se vuelve a validar EN EL SERVIDOR, que es quien
+  // rechaza; esto no sustituye nada, solo adelanta el aviso.
+  //
+  // Delega en /validate_expense_rules, que corre el MISMO ExpenseRuleService
+  // que la validacion del modelo. Evaluar las reglas aqui en JavaScript las
+  // dejaria contradiciendose con el servidor en cuanto una cambiara, y la de
+  // duplicados ni siquiera es evaluable sin consultar la base.
+  validarReglas = function() {
+    var self = this;
+    var f = this.state.form;
+    if (!f.user_invoice_id) return;
+
+    fetch("/validate_expense_rules", {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: self.state.modeEdit ? self.state.editId : null,
+        user_invoice_id: f.user_invoice_id,
+        cost_center_id: f.cost_center_id,
+        invoice_date: f.invoice_date,
+        invoice_number: f.invoice_number,
+        identification: f.identification,
+        invoice_value: f.invoice_value,
+        invoice_tax: f.invoice_tax,
+        invoice_total: f.invoice_total,
+      }),
+    })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) {
+        // Un fallo del chequeo NO puede estorbar: el servidor valida igual al
+        // guardar. Se limpia el aviso y ya.
+        self.setState({ ruleViolations: (data && data.violations) || [] });
+      })
+      .catch(function() { self.setState({ ruleViolations: [] }); });
   }.bind(this);
 
   // --- Arrastrar y soltar ----------------------------------------------------
@@ -1035,6 +1085,16 @@ class ReportExpenseIndex extends React.Component {
 
     if (!form.cost_center_id || !form.user_invoice_id || !form.invoice_name || !form.invoice_date) {
       this.setState({ ErrorValues: false });
+      return;
+    }
+
+    // COMPROBANTE OBLIGATORIO AL CREAR. El servidor tambien lo rechaza (es el
+    // guardian de verdad); aqui se corta antes para no gastarle a la persona
+    // una subida y un viaje al servidor por algo que se ve desde el formulario.
+    // Al EDITAR no se exige: los ~7.000 gastos historicos no tienen comprobante
+    // y con esto no se podrian ni tocar.
+    if (this.estados.receipt_required && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
+      this.setState({ receiptError: "Adjunte el comprobante: es obligatorio." });
       return;
     }
 
@@ -1290,12 +1350,12 @@ class ReportExpenseIndex extends React.Component {
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
             React.createElement("label", { className: "cm-label" },
               React.createElement("i", { className: "fas fa-file-invoice-dollar", style: { marginRight: 6, opacity: 0.5 } }),
-              "Aprobado por contabilidad"
+              "Estado contable"
             ),
             React.createElement("select", { name: "accounting_approved", className: "cm-input", value: f.accounting_approved, onChange: self.handleFilterChange, "data-testid": "filter-accounting-approved" },
               React.createElement("option", { value: "" }, "Todos"),
-              React.createElement("option", { value: "true" }, "Aprobado"),
-              React.createElement("option", { value: "false" }, "Pendiente")
+              React.createElement("option", { value: "true" }, "Contabilizado"),
+              React.createElement("option", { value: "false" }, "No contabilizado")
             )
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1", display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },
@@ -1527,7 +1587,12 @@ class ReportExpenseIndex extends React.Component {
 
     return React.createElement("div", { className: "cm-form-group", style: { marginTop: 12 } },
       React.createElement("label", { className: "cm-label" },
-        "Comprobante"),
+        "Comprobante",
+        // El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo mientras
+        // el flag esta apagado seria mentirle a la persona.
+        self.estados.receipt_required
+          ? React.createElement("span", { className: "cm-required" }, " *")
+          : null),
 
       // ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que en cada
       // navegador se pinta distinto ("Choose File" en ingles aunque la app este
@@ -1605,6 +1670,22 @@ class ReportExpenseIndex extends React.Component {
 
       self.state.receiptError
         ? React.createElement("div", { className: "cm-alert cm-alert-danger", "data-testid": "expense-receipt-error" }, self.state.receiptError)
+        : null,
+
+      // Reglas incumplidas, evaluadas al adjuntar. Es un AVISO, no un bloqueo:
+      // quien rechaza es el servidor al guardar. Pintarlo aqui le da a la
+      // persona la oportunidad de corregir con la factura todavia en la mano.
+      self.state.ruleViolations.length > 0
+        ? React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-rule-violations" },
+            React.createElement("div", null,
+              React.createElement("i", { className: "fa fa-exclamation-triangle" }),
+              " Este gasto incumple las reglas y será rechazado al guardar:"),
+            React.createElement("ul", { style: { margin: "6px 0 0", paddingLeft: 18 } },
+              self.state.ruleViolations.map(function(v, i) {
+                return React.createElement("li", { key: i }, v.message);
+              })
+            )
+          )
         : null,
 
       self.renderExtraction()
@@ -1701,6 +1782,13 @@ class ReportExpenseIndex extends React.Component {
         ),
         React.createElement("form", null,
           React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
+            // EL COMPROBANTE VA PRIMERO. Es el campo que manda: al adjuntarlo se
+            // evaluan las reglas contra lo que ya haya en el formulario, y con
+            // EXPENSE_RECEIPT_REQUIRED encendido sin el no se guarda. Pedirlo de
+            // ultimo invitaba a llenar diez campos para enterarse al final de que
+            // la factura no servia.
+            self.renderReceiptBlock(),
+
             self.state.copyMessage ? React.createElement("div", { className: "alert alert-warning", style: { marginBottom: "12px" } }, self.state.copyMessage) : null,
             React.createElement("div", { className: "cm-form-grid-2" },
               // Centro de costo. El data-testid va en un DIV envolvente:

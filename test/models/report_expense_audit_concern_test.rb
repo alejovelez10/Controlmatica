@@ -33,7 +33,11 @@ class ReportExpenseAuditConcernTest < ActiveSupport::TestCase
       invoice_total: 1190.0
     }.merge(overrides)
 
-    as_user(@actor) { ReportExpense.create!(atributos) }
+    as_user(@actor) { ReportExpense.create!(
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        atributos.merge(omitir_comprobante_obligatorio: true)) }
   end
 
   # Inventario declarado. Subio de 13 a 14 con `budget_status` (paquete 04) y de

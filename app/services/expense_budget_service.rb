@@ -39,6 +39,25 @@ class ExpenseBudgetService
   # redondea POR FILA, no sobre la suma.
   SPENT_EXPR = Arel.sql("ROUND(CAST(report_expenses.invoice_value AS numeric), 2)")
 
+  # QUE CONSUME CUPO. Unico sitio donde se responde esa pregunta. Vivia repetido
+  # como `where.not(budget_status: EXCEDIDO)` en TRES consultas —el disponible de
+  # la pantalla, el tablero del centro y el motor FIFO— y bastaba con que una se
+  # quedara atras para que los tres numeros dejaran de cuadrar entre si.
+  #
+  # LA REGLA CAMBIO (2026-09-10). Antes consumia todo lo que no estuviera
+  # excedido, incluido un gasto recien creado que nadie habia mirado. Ahora
+  # consume LA ACEPTACION: el gasto se registra sin tocar el presupuesto y
+  # descuenta cuando el responsable lo pasa a "Aceptado" —aunque eso deje el cupo
+  # en negativo, que es explicitamente lo que se quiere: el gasto ya ocurrio y la
+  # factura hay que pagarla igual.
+  #
+  # Se combina con `auto_accept_if_within_budget` (before_create del modelo): lo
+  # que cabe nace aceptado y por tanto descuenta de una; lo que no cabe, o no
+  # tiene partida, nace en "Creado" y espera a que alguien lo acepte.
+  def self.consumidores(scope)
+    scope.where(is_acepted: true)
+  end
+
   # Result canonico del proyecto (00-ARQUITECTURA.md 4.2, 7.4), identico en los
   # paquetes 04, 05 y 07. `errors` es SIEMPRE un array, nunca nil ni un `:error`
   # singular.
@@ -122,8 +141,7 @@ class ExpenseBudgetService
     # ausencia de presupuesto.
     has_budget = partidas.exists?
 
-    scope = ReportExpense.where(cost_center_id: cost_center_id, user_invoice_id: user_id)
-                         .where.not(budget_status: STATUS_EXCEDIDO)
+    scope = consumidores(ReportExpense.where(cost_center_id: cost_center_id, user_invoice_id: user_id))
     # TRAMPA: `where.not(id: nil)` devuelve CERO filas, no todas. Con un gasto
     # nuevo (id nil) el spent daria 0 y todo gasto quedaria aprobado.
     scope = scope.where.not(id: exclude_expense_id) if exclude_expense_id.present?
@@ -151,8 +169,7 @@ class ExpenseBudgetService
                                         .group(:user_id).sum(:amount)
     partidas_por_usuario = ExpenseBudget.activas.where(cost_center_id: cost_center_id)
                                         .group(:user_id).count
-    gastado_por_usuario  = ReportExpense.where(cost_center_id: cost_center_id)
-                                        .where.not(budget_status: STATUS_EXCEDIDO)
+    gastado_por_usuario  = consumidores(ReportExpense.where(cost_center_id: cost_center_id))
                                         .group(:user_invoice_id).sum(SPENT_EXPR)
     excedidos_por_usuario = ReportExpense.where(cost_center_id: cost_center_id,
                                                 budget_status: STATUS_EXCEDIDO)
@@ -307,29 +324,39 @@ class ExpenseBudgetService
     gastos.each do |gasto|
       valor = [gasto.invoice_value.to_d.round(2), 0].max
 
+      # SOLO LO ACEPTADO CONSUME (ver `consumidores`). `corriendo` es el cupo ya
+      # comprometido, asi que un gasto en "Creado" no lo mueve: existe, se ve en
+      # la tabla y no le quita plata a nadie hasta que alguien lo acepte.
+      consume = gasto.is_acepted?
+
       # Un historico consume cupo pero NUNCA cambia de estado por un reevaluo
       # (Discrepancia D2). Si cambiara, editar una partida podria empujar a
       # `excedido` a un gasto historico y sacarlo de la vista de contabilidad,
       # que es exactamente lo que la decision de no tocar historicos evitaba.
       if MANAGED_STATUSES.exclude?(gasto.budget_status)
-        corriendo += valor
+        corriendo += valor if consume
         next
       end
 
       destino =
         if budget.nil?
-          corriendo += valor
+          corriendo += valor if consume
           [STATUS_SIN_PRESUPUESTO, nil, nil]
         elsif valor <= 0 || corriendo + valor <= asignado
           resultado = [STATUS_APROBADO, nil, budget.id]
-          corriendo += valor
+          corriendo += valor if consume
           resultado
         else
-          # `corriendo` NO se incrementa: lo que no cabe no consume cupo, asi que
-          # un gasto grande no arrastra consigo a los siguientes que si caben.
+          # EL ACEPTADO QUE SE PASA TAMBIEN CONSUME, y el cupo queda en negativo.
+          # Antes `corriendo` no se incrementaba nunca en esta rama ("lo que no
+          # cabe no consume"), de modo que un excedido no gastaba y los gastos
+          # siguientes volvian a caber contra una plata que en realidad ya estaba
+          # comprometida. El exceso se calcula ANTES de incrementar: si no, el
+          # mensaje reportaria el sobrante contandose a si mismo.
+          exceso = corriendo + valor - asignado
+          corriendo += valor if consume
           [STATUS_EXCEDIDO,
-           "Excede el presupuesto disponible en #{money(corriendo + valor - asignado)}",
-           budget.id]
+           "Excede el presupuesto disponible en #{money(exceso)}", budget.id]
         end
 
       next if [gasto.budget_status, gasto.budget_reason, gasto.expense_budget_id] == destino

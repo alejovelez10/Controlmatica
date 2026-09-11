@@ -17,8 +17,8 @@
 #
 # Indexes
 #
-#  index_expense_rules_on_active            (active)
-#  index_expense_rules_on_is_default        (is_default)
+#  index_expense_rules_on_active              (active)
+#  index_expense_rules_on_is_default          (is_default)
 #  index_expense_rules_unique_default_active  (is_default) UNIQUE WHERE (is_default AND active)
 #
 
@@ -36,7 +36,12 @@
 # Mover una regla determinista al prompt del agente rompe la simetria entre
 # canales en silencio: el gasto por la web deja de validarse y nadie se entera.
 class ExpenseRule < ApplicationRecord
-  has_and_belongs_to_many :users
+  # POR ROL Y NO POR USUARIO (2026-09-10). Mantener la lista persona por persona
+  # es trabajo que nadie hace: cada usuario nuevo hay que acordarse de agregarlo,
+  # y olvidarlo no produce ningun error —`aplicables_a` cae a la regla por
+  # defecto—, asi que el olvido no se nota hasta que alguien registra un gasto
+  # que debia haberse rechazado. El rol ya se asigna al crear el usuario.
+  has_and_belongs_to_many :rols
   belongs_to :user,             optional: true   # quien la creo
   belongs_to :last_user_edited, class_name: "User", optional: true
 
@@ -51,9 +56,12 @@ class ExpenseRule < ApplicationRecord
 
   scope :activas, -> { where(active: true) }
   scope :default_activa, -> { activas.where(is_default: true) }
+  # Recibe un User (lo normal) o un rol_id suelto.
   scope :para_usuario, ->(user) {
-    id = user.is_a?(User) ? user.id : user
-    activas.joins(:users).where(users: { id: id })
+    rol_id = user.is_a?(User) ? user.rol_id : user
+    return none if rol_id.blank?
+
+    activas.joins(:rols).where(rols: { id: rol_id })
   }
 
   # RESOLUCION DE QUE REGLA APLICA A QUIEN. Es la parte donde se cometen los
@@ -167,7 +175,7 @@ class ExpenseRule < ApplicationRecord
       "<p>Antigüedad máxima: <b>#{limite_antiguedad_label}</b></p>" \
       "<p>Tope de valor: <b>#{limite_valor_label}</b></p>" \
       "<p>Validar duplicados: <b>#{etiqueta_si_no(check_duplicates)}</b></p>" \
-      "<p>Aplica a: <b>#{users.map(&:names).sort.join(", ").presence || "Nadie asignado"}</b></p>"
+      "<p>Aplica a: <b>#{rols.map(&:name).sort.join(", ").presence || "Ningun rol asignado"}</b></p>"
   end
 
   def segmento_edicion(label, anterior, nuevo)

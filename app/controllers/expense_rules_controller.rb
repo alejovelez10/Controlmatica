@@ -47,7 +47,7 @@ class ExpenseRulesController < ApplicationController
   def get_expense_rules
     return deny! unless rule_permission?
 
-    scope = ExpenseRule.includes(:users, :user, :last_user_edited)
+    scope = ExpenseRule.includes(:rols, :user, :last_user_edited)
     scope = scope.where(active: params[:only_active] == "true") if params[:only_active].present?
 
     if params[:q].present?
@@ -73,6 +73,45 @@ class ExpenseRulesController < ApplicationController
   #
   # Devuelve lo determinista y lo semantico por separado a proposito: quien lo
   # consuma no tiene que adivinar cual de los dos evalua el servidor.
+  # Evalua las reglas contra un gasto EN CURSO, sin guardarlo.
+  #
+  # POR QUE EXISTE: el formulario tiene que poder avisar en el momento en que se
+  # adjunta el comprobante, no al pulsar Guardar. Hasta ahora la web solo podia
+  # pedir los LIMITES (`get_expense_rules_for_user`) y evaluarlos por su cuenta,
+  # y eso significa reimplementar las tres reglas en JavaScript: la de duplicados
+  # ni siquiera es evaluable en el cliente, porque necesita consultar la base.
+  #
+  # DELEGA EN ExpenseRuleService, que es el mismo motor que corre en la
+  # validacion del modelo y en la tool del agente. Si esta accion evaluara por su
+  # cuenta, la pantalla podria decir "todo bien" y el Guardar rechazar.
+  #
+  # Es SOLO LECTURA: no crea, no guarda y no escribe auditoria.
+  def validate_candidate
+    responsable = User.find_by(id: params[:user_invoice_id].presence || current_user.id)
+    return validation_error(["El usuario no existe"]) if responsable.nil?
+
+    candidato = ReportExpense.new(
+      user_invoice_id: responsable.id,
+      cost_center_id: params[:cost_center_id],
+      invoice_date: params[:invoice_date],
+      invoice_number: params[:invoice_number],
+      identification: params[:identification],
+      invoice_value: params[:invoice_value].to_f,
+      invoice_tax: params[:invoice_tax].to_f,
+      invoice_total: params[:invoice_total].to_f
+    )
+    # `id` para que la regla de duplicados no se encuentre a si misma al editar.
+    candidato.id = params[:id] if params[:id].present?
+
+    resultado = ExpenseRuleService.validate(candidato, user: responsable)
+
+    render json: {
+      ok: resultado.value[:ok],
+      violations: resultado.value[:violations],
+      applied_rules: resultado.value[:applied_rules]
+    }
+  end
+
   def get_expense_rules_for_user
     user = User.find_by(id: params[:user_id].presence || current_user.id)
     return validation_error(["El usuario no existe"]) if user.nil?
@@ -94,7 +133,7 @@ class ExpenseRulesController < ApplicationController
 
     rule = ExpenseRule.new(expense_rule_params)
     rule.user_id = current_user.id
-    rule.users = usuarios_del_body if params.key?(:user_ids)
+    rule.rols = roles_del_body if params.key?(:rol_ids)
 
     if guardar(rule)
       render json: { success: "¡La regla fue creada con exito!", type: "success",
@@ -108,10 +147,10 @@ class ExpenseRulesController < ApplicationController
     return deny! unless rule_permission?("Editar")
 
     @expense_rule.assign_attributes(expense_rule_params)
-    # `params.key?` y no `params[:user_ids].present?`: mandar la lista VACIA es
+    # `params.key?` y no `params[:rol_ids].present?`: mandar la lista VACIA es
     # una operacion legitima ("esta regla ya no aplica a nadie") y con
     # `.present?` seria indistinguible de no mandar el campo.
-    @expense_rule.users = usuarios_del_body if params.key?(:user_ids)
+    @expense_rule.rols = roles_del_body if params.key?(:rol_ids)
 
     if guardar(@expense_rule)
       render json: { success: "¡La regla fue actualizada con exito!", type: "success",
@@ -185,9 +224,9 @@ class ExpenseRulesController < ApplicationController
   # Un multi-select vacio significa "ninguno", NO "todos". Para "todos" esta el
   # switch de regla por defecto. Es la confusion obvia de la pantalla, y aqui se
   # respeta literalmente: lista vacia => la regla no aplica a nadie.
-  def usuarios_del_body
-    ids = params.permit(user_ids: [])[:user_ids] || []
-    User.where(id: ids)
+  def roles_del_body
+    ids = params.permit(rol_ids: [])[:rol_ids] || []
+    Rol.where(id: ids)
   end
 
   # `user_id` y `last_user_edited_id` NO estan y no pueden estar: el creador lo

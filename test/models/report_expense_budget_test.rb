@@ -129,7 +129,11 @@ class ReportExpenseBudgetTest < ActiveSupport::TestCase
   end
 
   def nuevo_gasto(**overrides)
-    ReportExpense.new({ user_id: @admin.id, cost_center_id: @centro.id,
+    ReportExpense.new({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true, user_id: @admin.id, cost_center_id: @centro.id,
                         user_invoice_id: @ingeniero.id, invoice_name: "Gasto",
                         invoice_date: Date.new(2026, 6, 1), invoice_value: 1000,
                         invoice_tax: 0, invoice_total: 1000 }.merge(overrides))

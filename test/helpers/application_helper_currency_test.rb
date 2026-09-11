@@ -27,6 +27,10 @@ class ApplicationHelperCurrencyTest < ActionView::TestCase
   def crear_gasto(extra = {})
     as_user(@admin) do
       ReportExpense.create!({
+        # Estas pruebas no cubren la regla del comprobante obligatorio
+        # (ReportExpense#comprobante_obligatorio); adjuntarle un PDF a cada gasto
+        # solo agregaria I/O. Los tres canales tienen su propia prueba.
+        omitir_comprobante_obligatorio: true,
         cost_center: @centro,
         user_invoice: users(:ingeniero),
         user: @admin,
