@@ -255,7 +255,7 @@ class ExpenseRuleIndex extends Component {
   // react-select devuelve `null` (no `[]`) cuando se quita la ultima opcion.
   // Sin este `|| []` el multi-select quedaria descontrolado y `.length`
   // reventaria en el render del contador.
-  handleChangeUsers = (opts) => {
+  handleChangeRoles = (opts) => {
     this.setState({ selectedRoles: opts || [] });
   };
 
@@ -464,7 +464,7 @@ class ExpenseRuleIndex extends Component {
             onChangeForm={this.handleChangeForm}
             onChangeMoney={this.handleChangeMoney}
             onToggleBool={this.handleToggleBool}
-            onChangeRoles={this.handleChangeUsers}
+            onChangeRoles={this.handleChangeRoles}
             submitForm={this.submit}
             saving={this.state.saving}
             blockReason={this.blockReason()}

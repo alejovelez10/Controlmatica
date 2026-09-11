@@ -34,7 +34,7 @@ const selectStyles = {
 //
 // LO QUE ESTE FORMULARIO TIENE QUE ENSENAR, Y NO ES DECORACION:
 //
-//   1. El multi-select vacio significa NINGUN usuario, no todos. Es la
+//   1. El multi-select vacio significa NINGUN rol, no todos. Es la
 //      confusion obvia de quien administra, y por eso el aviso esta AL LADO del
 //      campo, en la pantalla, no en un manual que nadie abre.
 //   2. Las instrucciones para el agente son texto en español para una persona
@@ -244,7 +244,7 @@ class ExpenseRuleFormCreate extends Component {
           </div>
 
           {/* EL AVISO DE LA LISTA VACIA. Va siempre visible, no solo cuando la
-              lista esta vacia: quien esta quitando el ultimo usuario tiene que
+              lista esta vacia: quien esta quitando el ultimo rol tiene que
               haberlo leido ANTES de guardar. */}
           <div className="cm-alert cm-alert-warning" data-testid="rule-roles-empty-warning"
                style={{ marginTop: 10 }}>
@@ -256,10 +256,10 @@ class ExpenseRuleFormCreate extends Component {
             </span>
           </div>
 
-          <div className="cm-field-hint" style={{ marginTop: 8 }} data-testid="rule-users-count">
-            {(p.selectedUsers || []).length === 0
-              ? "Actualmente no aplica a ninguna persona."
-              : "Aplica a " + (p.selectedUsers || []).length + " persona(s)."}
+          <div className="cm-field-hint" style={{ marginTop: 8 }} data-testid="rule-roles-count">
+            {(p.selectedRoles || []).length === 0
+              ? "Actualmente no aplica a ningun rol."
+              : "Aplica a " + (p.selectedRoles || []).length + " rol(es)."}
           </div>
         </div>
 
