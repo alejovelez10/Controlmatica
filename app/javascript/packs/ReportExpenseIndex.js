@@ -1642,11 +1642,16 @@ class ReportExpenseIndex extends React.Component {
                 "data-testid": "expense-receipt-clear",
               }, React.createElement("i", { className: "fa fa-times" })))
           : React.createElement("div", { className: "cm-dropzone-empty" },
-              React.createElement("i", { className: "fa fa-cloud-upload-alt cm-dropzone-icon" }),
-              React.createElement("span", { className: "cm-dropzone-title" },
-                "Arrastre aquí su comprobante"),
-              React.createElement("span", { className: "cm-dropzone-hint" },
-                "o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 20 MB"))
+              React.createElement("span", { className: "cm-dropzone-badge" },
+                React.createElement("i", { className: "fa fa-cloud-upload-alt cm-dropzone-icon" })),
+              React.createElement("div", { className: "cm-dropzone-body" },
+                React.createElement("span", { className: "cm-dropzone-title" },
+                  "Arrastre aquí su comprobante"),
+                React.createElement("span", { className: "cm-dropzone-link" },
+                  "o haga clic para seleccionar")),
+              React.createElement("div", { className: "cm-dropzone-meta" },
+                React.createElement("span", null, "JPG, PNG, WEBP, HEIC o PDF"),
+                React.createElement("span", null, "hasta 20 MB")))
       ),
 
       self.state.receiptExistingId

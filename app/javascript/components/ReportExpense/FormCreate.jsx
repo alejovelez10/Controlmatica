@@ -438,11 +438,17 @@ class FormCreate extends Component {
             </div>
           ) : (
             <div className="cm-dropzone-empty">
-              <i className="fa fa-cloud-upload-alt cm-dropzone-icon"></i>
-              <span className="cm-dropzone-title">Arrastre aquí su comprobante</span>
-              <span className="cm-dropzone-hint">
-                o haga clic para buscarlo · JPG, PNG, WEBP, HEIC o PDF · hasta 20 MB
+              <span className="cm-dropzone-badge">
+                <i className="fa fa-cloud-upload-alt cm-dropzone-icon"></i>
               </span>
+              <div className="cm-dropzone-body">
+                <span className="cm-dropzone-title">Arrastre aquí su comprobante</span>
+                <span className="cm-dropzone-link">o haga clic para seleccionar</span>
+              </div>
+              <div className="cm-dropzone-meta">
+                <span>JPG, PNG, WEBP, HEIC o PDF</span>
+                <span>hasta 20 MB</span>
+              </div>
             </div>
           )}
         </div>
