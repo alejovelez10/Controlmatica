@@ -1093,7 +1093,7 @@ class ReportExpenseIndex extends React.Component {
     // una subida y un viaje al servidor por algo que se ve desde el formulario.
     // Al EDITAR no se exige: los ~7.000 gastos historicos no tienen comprobante
     // y con esto no se podrian ni tocar.
-    if (this.estados.receipt_required && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
+    if ((this.props.estados || {}).receipt_required && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
       this.setState({ receiptError: "Adjunte el comprobante: es obligatorio." });
       return;
     }
@@ -1590,7 +1590,7 @@ class ReportExpenseIndex extends React.Component {
         "Comprobante",
         // El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo mientras
         // el flag esta apagado seria mentirle a la persona.
-        self.estados.receipt_required
+        (self.props.estados || {}).receipt_required
           ? React.createElement("span", { className: "cm-required" }, " *")
           : null),
 
