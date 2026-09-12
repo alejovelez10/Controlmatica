@@ -199,6 +199,74 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
     refute_includes data.map { |g| g["id"] }, ajeno.id
   end
 
+  # --- Pestañas de la lista (params[:scope]) --------------------------------
+  #
+  # `dueno_centro` es la fixture que sostiene todo este bloque: tiene el rol
+  # `presupuesto_limitado` (SIN "Ver todos") y es el `user_owner` de
+  # `centro_con_viaticos`, donde viven los gastos :one y :two, que son de
+  # `ingeniero`. O sea: la pestaña le muestra gastos que NO son suyos y que sin
+  # ella no alcanzaba a ver. Si alguien le cambia el rol o el propietario del
+  # centro, estos tests pasan a verde sin probar nada.
+
+  test "get_report_expenses con scope owned_centers devuelve los gastos de los centros propios aunque no sean suyos" do
+    sign_in_as users(:dueno_centro)
+
+    get get_report_expenses_path, params: { scope: "owned_centers" }
+
+    ids = assert_json_list.map { |g| g["id"] }
+    assert_includes ids, @uno.id
+    assert_includes ids, @dos.id
+    refute_equal users(:dueno_centro).id, @uno.user_invoice_id,
+                 "La fixture dejo de probar lo suyo: el gasto es del propio dueno del centro"
+  end
+
+  test "get_report_expenses con scope owned_centers no devuelve los gastos de centros ajenos" do
+    ajeno = as_user(@admin) { ReportExpense.create!(
+        parametros_gasto(cost_center_id: cost_centers(:centro_ajeno).id).merge(omitir_comprobante_obligatorio: true)) }
+    sign_in_as users(:dueno_centro)
+
+    get get_report_expenses_path, params: { scope: "owned_centers" }
+
+    refute_includes assert_json_list.map { |g| g["id"] }, ajeno.id
+  end
+
+  test "get_report_expenses con scope mine recorta al responsable aunque tenga Ver todos" do
+    sign_in_as @admin
+
+    get get_report_expenses_path, params: { scope: "mine" }
+
+    data = assert_json_list
+    assert(data.all? { |g| g["user_invoice_id"] == @admin.id })
+    refute_includes data.map { |g| g["id"] }, @uno.id
+  end
+
+  # El scope NO es una puerta trasera: sin permiso, `all` sigue recortando al
+  # responsable. Si alguna vez `apply_expense_scope` trata "all" como un caso
+  # propio en vez de caer al `else`, este test lo caza.
+  test "get_report_expenses con scope all no salta el permiso Ver todos" do
+    ajeno = as_user(@admin) { ReportExpense.create!(
+        parametros_gasto(user_invoice_id: @otro.id).merge(omitir_comprobante_obligatorio: true)) }
+    sign_in_as @ingeniero
+
+    get get_report_expenses_path, params: { scope: "all" }
+
+    refute_includes assert_json_list.map { |g| g["id"] }, ajeno.id
+  end
+
+  # LA ACEPTACION MASIVA VA POR FILTRO, NO POR PAGINA: si el scope no llegara
+  # hasta aqui, aceptar desde "Centros a mi cargo" tocaria gastos que la pantalla
+  # no estaba mostrando. Es el peor de los bugs posibles de esta pestaña.
+  test "update_filter_values respeta el scope de la pestaña" do
+    fuera = as_user(@admin) { ReportExpense.create!(
+        parametros_gasto(cost_center_id: cost_centers(:centro_ajeno).id).merge(omitir_comprobante_obligatorio: true)) }
+    sign_in_as @admin
+
+    patch update_filter_values_path, params: { scope: "owned_centers" }
+
+    assert_response :success
+    refute fuera.reload.is_acepted, "Se acepto un gasto de un centro fuera de la pestaña"
+  end
+
   test "get_report_expenses expone los campos nuevos en el serializer" do
     sign_in_as @admin
 

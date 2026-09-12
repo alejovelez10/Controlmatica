@@ -32,6 +32,13 @@ class ReportExpensesController < ApplicationController
       # subir. NO es un permiso: es el mismo flag del modelo, que es quien
       # rechaza de verdad.
       receipt_required: ReportExpense.comprobante_obligatorio?,
+      # Las dos banderas que deciden QUE pestañas de la lista se pintan. Sin
+      # ellas el frontend tendria que adivinar: pintar "Todos" a quien no lo
+      # puede ver devuelve una tabla recortada sin explicacion, y pintar
+      # "Centros a mi cargo" a quien no es propietario de ninguno devuelve una
+      # tabla vacia que parece un error.
+      show_all: is_admin? || has_menu_permission?("Gastos", "Ver todos"),
+      owns_cost_centers: CostCenter.where(user_owner_id: current_user.id).exists?,
     }
   end
 
@@ -40,16 +47,14 @@ class ReportExpensesController < ApplicationController
   end
 
   def get_report_expenses
-    # Usar helper memoizado para evitar queries de permisos (581ms -> ~0ms)
-    show_all = is_admin? || has_menu_permission?("Gastos", "Ver todos")
-
     # Base query con includes para evitar N+1. `accounting_approved_by` entra al
     # includes porque el serializer lo emite desde que el paquete 07 lo agrego:
     # sin el, una pagina de 50 gastos aprobados cuesta 50 consultas de mas.
     base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by)
 
-    # Filtrar por usuario si no tiene permiso de ver todos
-    base_query = base_query.where(user_invoice_id: current_user.id) unless show_all
+    # Recorte de visibilidad: permiso + pestaña elegida. UNICO sitio donde se
+    # decide, compartido con el Excel y con la aceptacion masiva.
+    base_query = apply_expense_scope(base_query)
 
     # Aplicar filtros de búsqueda. Ya no hace falta la guarda previa de "¿hay
     # algún filtro?": con un hash vacío el builder devuelve `all`, que es
@@ -172,14 +177,12 @@ class ReportExpensesController < ApplicationController
   end
 
   def update_filter_values
-    # Usar helper memoizado para evitar queries de permisos
-    show_all = is_admin? || has_menu_permission?("Gastos", "Ver todos")
-
-    if show_all
-      report_expenses = ReportExpense.search(report_expense_search_filters).order(invoice_date: :desc)
-    else
-      report_expenses = ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters).order(invoice_date: :desc)
-    end
+    # EL MISMO RECORTE QUE LA TABLA. Esta accion acepta TODO lo que casa con el
+    # filtro, no solo la pagina visible: si la pestaña recorta la lista y esto
+    # no, el usuario ve 3 filas de sus centros y acepta miles ajenos.
+    report_expenses = apply_expense_scope(ReportExpense.all)
+                        .search(report_expense_search_filters)
+                        .order(invoice_date: :desc)
 
     # Los pares afectados se capturan ANTES del update: despues el scope sigue
     # siendo el mismo, pero traerlos aqui evita repetir la consulta de filtro.
@@ -447,23 +450,19 @@ class ReportExpensesController < ApplicationController
   end
 
   def download_file
-    # Usar helper memoizado para evitar queries de permisos
-    validate = is_admin? || has_menu_permission?("Gastos", "Ver todos")
-    if validate
-      if params[:type] == "filtro"
-        # Mismos filtros que la tabla: el Excel tiene que exportar exactamente lo
-        # que el usuario esta viendo, incluidos los cuatro filtros nuevos.
-        @items = apply_free_text(apply_expense_filters(ReportExpense.search(report_expense_search_filters))).order(invoice_date: :desc)
-      else
-        @items = ReportExpense.all.order(invoice_date: :desc)
-      end
-    else
-      if params[:type] == "filtro"
-        @items = apply_free_text(apply_expense_filters(ReportExpense.where(user_invoice_id: current_user.id).search(report_expense_search_filters))).order(invoice_date: :desc)
-      else
-        @items = ReportExpense.where(user_invoice_id: current_user.id).order(invoice_date: :desc)
-      end
-    end
+    # EL MISMO RECORTE QUE LA TABLA (permiso + pestaña). Antes estaba escrito
+    # aqui otra vez, en dos ramas que repetian el `where(user_invoice_id:)`; con
+    # la pestaña nueva serian seis. El Excel exporta lo que el usuario ve.
+    visible = apply_expense_scope(ReportExpense.all)
+
+    @items = if params[:type] == "filtro"
+               # Mismos filtros que la tabla: el Excel tiene que exportar
+               # exactamente lo que el usuario esta viendo, incluidos los cuatro
+               # filtros nuevos.
+               apply_free_text(apply_expense_filters(visible.search(report_expense_search_filters))).order(invoice_date: :desc)
+             else
+               visible.order(invoice_date: :desc)
+             end
 
     render xlsx: "Reporte de gastos", template: "report_expenses/download_file.xlsx.axlsx"
 
@@ -709,6 +708,44 @@ class ReportExpensesController < ApplicationController
 
   def monto_cop(monto, rate)
     monto.present? ? (monto * rate).round(2).to_f : nil
+  end
+
+  # RECORTE DE VISIBILIDAD DE LA LISTA DE GASTOS. Dueño unico de la pregunta
+  # "¿que gastos alcanza este usuario?": lo llaman la tabla
+  # (`get_report_expenses`), el Excel (`download_file`) y la aceptacion masiva
+  # (`update_filter_values`). Estaba copiado en los tres, y el de aceptar es el
+  # que no perdona: acepta por filtro, no por pagina.
+  #
+  # `get_cost_center_report_expenses` NO pasa por aqui a proposito: esa tabla
+  # vive dentro de un centro de costo que el usuario ya abrio, y su recorte es
+  # el centro, no la persona.
+  #
+  # Las TRES pestañas (`params[:scope]`):
+  #
+  # - sin valor / `all`: lo de siempre, decidido por el permiso "Ver todos".
+  # - `mine`: los gastos cuyo responsable es el usuario.
+  # - `owned_centers`: los gastos de los centros donde el usuario es el
+  #   Propietario (`cost_centers.user_owner_id`). Es la UNICA que ensancha lo
+  #   que alguien alcanza a ver —un lider sin "Ver todos" llega a gastos que no
+  #   son suyos— y se deja a proposito: quien responde por el presupuesto de un
+  #   centro tiene que poder ver lo que se le carga. No hay forma de pedir los
+  #   gastos de un centro ajeno: el centro sale de `current_user`, nunca de un
+  #   parametro.
+  def apply_expense_scope(scope)
+    case params[:scope]
+    when "mine"
+      scope.where(user_invoice_id: current_user.id)
+    when "owned_centers"
+      # Subconsulta y no `pluck`: con 400 centros el `IN (...)` explicito manda
+      # 400 enteros en cada peticion de cada pagina.
+      scope.where(cost_center_id: CostCenter.where(user_owner_id: current_user.id).select(:id))
+    else
+      # Sin pestaña —o con una que no existe— manda el permiso, igual que antes
+      # de que hubiera pestañas.
+      return scope if is_admin? || has_menu_permission?("Gastos", "Ver todos")
+
+      scope.where(user_invoice_id: current_user.id)
+    end
   end
 
   # Filtros de la pantalla de Gastos. La lista canonica vive en el modelo

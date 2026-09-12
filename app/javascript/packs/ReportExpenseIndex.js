@@ -206,6 +206,12 @@ class ReportExpenseIndex extends React.Component {
       sortKey: null,
       sortDir: "asc",
       meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
+      // PESTAÑA DE LA LISTA. El valor inicial reproduce lo que hacia la pantalla
+      // antes de que hubiera pestañas: con "Ver todos" se abre en "Todos", sin
+      // el permiso en "Mis gastos", que es lo unico que el servidor devolvia.
+      // No se abre en "Centros a mi cargo" ni a quien los tenga: al entrar a
+      // Gastos uno viene a ver los propios.
+      scope: props.estados.show_all ? "all" : "mine",
       // Filters
       showFilters: false,
       isFiltering: false,
@@ -465,6 +471,12 @@ class ReportExpenseIndex extends React.Component {
   filterParams = function() {
     var f = this.state.filters;
     var out = [];
+    // LA PESTAÑA VIAJA CON LOS FILTROS, y por eso vive aqui dentro y no en
+    // loadData. Es un recorte de la lista igual que los demas, y las otras dos
+    // salidas de esta funcion —el Excel y "Aceptar gastos"— tienen que
+    // respetarlo: aceptar desde "Centros a mi cargo" sin mandar el scope
+    // aceptaria todo lo que el permiso alcance, no lo que el usuario ve.
+    if (this.state.scope) out.push("scope=" + this.state.scope);
     if (f.cost_center_id) out.push("cost_center_id=" + f.cost_center_id);
     if (f.user_invoice_id) out.push("user_invoice_id=" + f.user_invoice_id);
     if (f.start_date) out.push("start_date=" + f.start_date);
@@ -588,11 +600,20 @@ class ReportExpenseIndex extends React.Component {
   openImportModal = function() { this.setState({ modalImport: true }); }.bind(this);
   closeImportModal = function() { this.aceptarArchivoImport(null); this.setState({ modalImport: false }); }.bind(this);
 
+  // El Excel sale SIEMPRE con los parametros, incluso sin filtros: aunque no
+  // haya ninguno puesto, la pestaña sigue siendo un recorte y "todos.xlsx" a
+  // secas exportaria la lista entera desde "Centros a mi cargo".
   getExportUrl = function() {
-    if (!this.state.isFiltering) {
-      return "/download_file/report_expenses/todos.xlsx";
-    }
-    return "/download_file/report_expenses/filtro.xlsx?" + this.filterParams().join("&");
+    var tipo = this.state.isFiltering ? "filtro" : "todos";
+    return "/download_file/report_expenses/" + tipo + ".xlsx?" + this.filterParams().join("&");
+  }.bind(this);
+
+  // Cambiar de pestaña vuelve a la pagina 1 y RESPETA los filtros, el orden y
+  // la busqueda: son preguntas distintas —"sobre que conjunto" y "que de ese
+  // conjunto"— y limpiarlos aqui obligaria a rehacerlos en cada salto.
+  handleScopeChange = function(scope) {
+    if (scope === this.state.scope) return;
+    this.setState({ scope: scope }, this.loadData.bind(this, 1));
   }.bind(this);
 
   openNewModal = function() {
@@ -1240,6 +1261,46 @@ class ReportExpenseIndex extends React.Component {
       );
     }
     return null;
+  }.bind(this);
+
+  // LAS PESTAÑAS DE LA LISTA. Van ARRIBA de los filtros porque no son un filtro
+  // mas: eligen el conjunto sobre el que los filtros trabajan, y esa es la
+  // primera decision que toma quien entra a la pantalla.
+  //
+  // Se pinta solo lo que el usuario puede usar: sin "Ver todos" no hay "Todos",
+  // y sin centros propios no hay "Centros a mi cargo". Si eso deja una sola
+  // pestaña no se pinta ninguna —una pestaña unica no es una eleccion, es
+  // ruido— y la pantalla queda igual que antes de este cambio.
+  renderScopeTabs = function() {
+    var self = this;
+    var estados = this.props.estados;
+
+    var tabs = [{ value: "mine", label: "Mis gastos", icon: "fas fa-user" }];
+    if (estados.owns_cost_centers) {
+      tabs.push({ value: "owned_centers", label: "Centros a mi cargo", icon: "fas fa-sitemap" });
+    }
+    if (estados.show_all) {
+      tabs.push({ value: "all", label: "Todos los gastos", icon: "fas fa-list-ul" });
+    }
+
+    if (tabs.length < 2) return null;
+
+    return React.createElement("div", { className: "cm-scope-tabs", "data-testid": "expense-scope-tabs" },
+      tabs.map(function(t) {
+        var activa = self.state.scope === t.value;
+        return React.createElement("button", {
+          key: t.value,
+          type: "button",
+          className: "cm-scope-tab" + (activa ? " cm-scope-tab--active" : ""),
+          onClick: function() { self.handleScopeChange(t.value); },
+          "aria-pressed": activa,
+          "data-testid": "expense-scope-" + t.value,
+        },
+          React.createElement("i", { className: t.icon }),
+          " " + t.label
+        );
+      })
+    );
   }.bind(this);
 
   renderFilters = function() {
@@ -2266,6 +2327,8 @@ class ReportExpenseIndex extends React.Component {
         testId: "expense-new",
       }),
 
+      this.renderScopeTabs(),
+
       this.state.showFilters && this.renderFilters(),
 
       React.createElement(CmDataTable, {
@@ -2280,7 +2343,14 @@ class ReportExpenseIndex extends React.Component {
         onSearch: this.handleSearch,
         actions: this.getRowActions,
         headerActions: this.renderHeaderActions(),
-        emptyMessage: "No hay gastos registrados",
+        // El vacio se explica por la pestaña. "No hay gastos registrados" en
+        // "Centros a mi cargo" se lee como que el modulo esta vacio, cuando lo
+        // que pasa es que a esos centros todavia no les han cargado nada.
+        emptyMessage: this.state.scope === "owned_centers"
+          ? "Todavía no hay gastos en los centros de costo a su cargo"
+          : this.state.scope === "mine"
+            ? "Usted no tiene gastos registrados"
+            : "No hay gastos registrados",
       }),
 
       this.renderModal(),
