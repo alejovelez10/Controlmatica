@@ -507,3 +507,90 @@ agente. Desde la tabla de reglas se ve como un campo más.
 `Date.current` (UTC).
 
 *Adenda medida y escrita el 2026-09-11.*
+
+---
+
+# ADENDA — 2026-09-12: lista por centro propio y aviso de aprobación
+
+## B.1 Tercera vista de la lista de Gastos
+
+La pantalla sabía responder dos preguntas —todos los gastos o los míos— y lo decidía el permiso
+«Ver todos» sin que el usuario eligiera. Se agrega una tercera pestaña, **Centros a mi cargo**:
+los gastos de los centros donde el usuario es el **Propietario** (`cost_centers.user_owner_id`).
+
+Es la única que **ensancha** visibilidad —un líder sin «Ver todos» alcanza gastos que no son
+suyos— y se dejó a propósito: quien responde por el presupuesto de un centro tiene que poder ver
+lo que se le carga. No hay forma de pedir los gastos de un centro ajeno: el centro sale de
+`current_user`, nunca de un parámetro.
+
+El riesgo estaba en **«Aceptar gastos»**, que acepta por filtro y no por página: sin el `scope`,
+aceptar desde la pestaña nueva habría tocado todo lo que el permiso alcanza. El recorte de
+visibilidad —copiado antes en la tabla, el Excel y la aceptación masiva— pasa a ser un solo
+`ReportExpensesController#apply_expense_scope`.
+
+Sin `scope` en la petición el servidor responde **exactamente como antes**.
+
+## B.2 Aviso por correo al dueño del centro — APAGADO
+
+Cuando un gasto **nace sin aceptar** se le avisa por correo al propietario del centro, con un
+enlace para aprobarlo sin iniciar sesión.
+
+La condición es el **estado final** (`is_acepted == false`) y no «excedido o sin presupuesto»:
+una regla de gasto también puede dejarlo retenido, y preguntar por el estado cubre esa causa y
+cualquiera que se agregue después.
+
+| Pieza | Dónde |
+|---|---|
+| Disparador | `ReportExpense#avisar_al_dueno_del_centro` (`after_create_commit`) |
+| Correo | `ExpenseApprovalMailer#pending_approval` (HTML + texto) |
+| Token | `ExpenseApprovalToken`, firmado con `purpose`, caduca a los **7 días** |
+| Aprobación | `ExpenseApprovalsController`, rutas `GET`/`POST /gastos/aprobar` |
+
+**Son dos pasos y no uno.** El precedente del repo (`aprobar_informe`) es un GET que aprueba de
+una, y los antivirus de correo y los prefetchers **visitan** los enlaces: con un GET que muta,
+los gastos se aprobarían solos. Aquí el GET solo pinta y el POST aprueba.
+
+**Lo que el token no resuelve**, escrito para que nadie lo descubra tarde: no se puede revocar
+ni se invalida al usarse, porque no hay estado donde anotarlo. Lo tolerable es que la acción es
+**idempotente** y que el alcance es un gasto. Si hace falta revocar, pasa a ser una columna con
+un nonce.
+
+**El import de Excel queda excluido** (`omitir_aviso_de_aprobacion`), igual que con el
+comprobante obligatorio: un archivo de 300 filas no son 300 solicitudes de aprobación.
+
+### El segundo enlace: la lista completa
+
+Además del botón, el correo lleva a `/report_expenses?scope=owned_centers`, para el que no
+quiere decidir sobre un gasto suelto sino ver el panorama. La pantalla lee el `scope` de la URL
+(`scopeInicial`, en `packs/ReportExpenseIndex.js`) y **lo valida contra lo que el usuario puede
+usar**: pedir `scope=all` sin el permiso dejaría la pestaña «Todos» marcada mostrando una lista
+recortada, que es peor que no hacer caso.
+
+**Ese enlace sí pide sesión, y así se decidió**: no lleva token porque no autoriza nada, solo
+navega. Quien quiera ver su lista completa entra a la aplicación como cualquier otro día. El
+token existe para lo único que no puede esperar a un login —decidir sobre el gasto que motivó el
+correo— y no para ahorrarse el login en general.
+
+Consecuencia conocida y aceptada: `after_sign_in_path_for` no mira el destino que Devise guarda
+antes del rebote, así que quien no tenga sesión abierta cae en su tablero después de entrar y
+tiene que ir a Gastos. Se probó a honrarlo y **se descartó**: `FailureApp#store_location!`
+guarda cualquier GET navegable, y los `fetch` de las tablas mandan `Accept: */*`, que Devise
+cuenta como navegable; a quien se le venza la sesión con la tabla abierta, lo último guardado es
+`/get_report_expenses?page=1`, y al volver a entrar aterrizaría mirando un JSON. Arreglarlo bien
+es cambiar el login de toda la aplicación, y eso no es de este paquete.
+
+### Variables nuevas
+
+| Variable | Default | Para qué |
+|---|---|---|
+| `EXPENSE_APPROVAL_EMAIL` | apagado | **El interruptor.** Sin él no sale ningún correo y el módulo se comporta como hoy |
+| `APP_HOST` | `controlmatica.herokuapp.com` | Host de los enlaces del correo; un mailer no tiene request de donde deducirlo |
+| `APP_PROTOCOL` | `https` | En local: `http` |
+| `EXPENSE_APPROVAL_FROM` | `aprobaciones@controlmatica.com.co` | Remitente |
+
+**Antes de encender `EXPENSE_APPROVAL_EMAIL=true`**, lo único que hay que verificar es que
+`APP_HOST` apunte al dominio real: si no, los enlaces llevan al sitio equivocado y el correo no
+sirve para nada. El SMTP ya está puesto —SendGrid, en `config/environment.rb`, con `USER_NAME` y
+`PASSWORD`— y es el mismo por el que hoy sale la aprobación de reportes de servicio.
+
+*Adenda escrita el 2026-09-12.*

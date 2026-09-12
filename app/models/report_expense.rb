@@ -349,6 +349,19 @@ class ReportExpense < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(ENV["EXPENSE_RECEIPT_REQUIRED"]) || false
   end
 
+  # SEGUNDO INTERRUPTOR DE DESPLIEGUE, y tambien arranca APAGADO.
+  #
+  # Enciende el correo al dueño del centro cuando un gasto nace SIN aceptar.
+  # Apagado no se manda nada y el modulo se comporta exactamente como hoy; se
+  # prende con EXPENSE_APPROVAL_EMAIL=true cuando el resto del paquete este
+  # aprobado y la operacion avisada, que fue la condicion con la que se pidio.
+  #
+  # Mismo motivo que arriba para leerlo en cada llamada: una constante lo
+  # congelaria al arrancar el proceso y mover el flag exigiria reiniciar.
+  def self.aviso_de_aprobacion?
+    ActiveModel::Type::Boolean.new.cast(ENV["EXPENSE_APPROVAL_EMAIL"]) || false
+  end
+
   # `apply_expense_rules` sobrevive a la validacion y sigue escribiendo la foto en
   # `rule_violations`. No es redundante: reusa el resultado que ya calculo la
   # validacion (no vuelve a consultar) y cubre los guardados que se saltan las
@@ -386,6 +399,53 @@ class ReportExpense < ApplicationRecord
   # (test/models/report_expense_import_test.rb, "archivo v2 ignora estado
   # operativo").
   before_create :auto_accept_if_within_budget
+
+  # AVISO AL DUEÑO DEL CENTRO DE COSTOS.
+  #
+  # La condicion es `is_acepted == false` DESPUES de crear, y no "excedido o sin
+  # presupuesto". Son casi lo mismo, pero no del todo: una regla de gasto
+  # tambien puede bajar un gasto de `aprobado`, y preguntar por el estado final
+  # cubre esa causa y cualquiera que se agregue despues sin tener que volver
+  # aqui. La pregunta que importa es "¿quedo pendiente de que alguien lo mire?".
+  #
+  # VA EN `after_create_commit` por dos razones, las dos necesarias:
+  #
+  #   1. `is_acepted` no es definitivo hasta que termina
+  #      `persist_with_evaluation!`: el reevaluo FIFO corre DESPUES del save,
+  #      dentro de la misma transaccion. Un `after_create` mandaria el correo
+  #      con el estado a medias.
+  #   2. Un correo es irreversible. Si la transaccion despues hace rollback, el
+  #      gasto no existe pero el dueño ya recibio el aviso. `after_commit` es la
+  #      unica posicion donde eso no puede pasar.
+  #
+  # Y EN EL MODELO y no en el controller para que cubra la web Y el agente de
+  # WhatsApp de una sola vez, igual que la regla del comprobante.
+  after_create_commit :avisar_al_dueno_del_centro
+
+  # El import de Excel se excluye A MANO, igual que con el comprobante: un
+  # archivo de 300 filas son 300 gastos sin presupuesto y serian hasta 300
+  # correos de golpe. Un archivo no es 300 avisos.
+  attr_accessor :omitir_aviso_de_aprobacion
+
+  # Por que el gasto quedo retenido, en una frase, para el correo.
+  #
+  # GEMELO EN RUBY de `budgetWarning` (generalcomponents/expenseIndicators.js),
+  # que responde lo mismo para el "!" de las tablas. Se duplica porque el correo
+  # se arma en el servidor y no hay forma de llamar al de JavaScript; si se
+  # cambia uno hay que cambiar el otro. El orden de preferencia es el mismo:
+  # primero las reglas incumplidas, que son lo mas concreto, y despues el motivo
+  # presupuestal.
+  #
+  # => String, o nil si no hay nada que explicar (gasto aprobado).
+  def motivo_de_retencion
+    return rule_violations_messages.join(" · ") if rule_violations?
+    return budget_reason if budget_reason.present?
+
+    case budget_status
+    when ExpenseBudgetService::STATUS_EXCEDIDO      then "Excede el presupuesto disponible"
+    when ExpenseBudgetService::STATUS_SIN_PRESUPUESTO then "No tiene presupuesto asignado"
+    end
+  end
 
   # Etiqueta de conveniencia para la pantalla y para el agente.
   def rule_violations_messages
@@ -568,6 +628,10 @@ class ReportExpense < ApplicationRecord
         # UNICA excepcion al comprobante obligatorio: un .xlsx no transporta
         # archivos. Sin esto el import dejaria de poder crear gastos.
         report_expense.omitir_comprobante_obligatorio = true
+        # Y el aviso al dueño del centro, por lo mismo: un archivo de 300 filas
+        # deja 300 gastos sin presupuesto y mandaria una rafaga de correos. El
+        # import es una carga masiva, no 300 solicitudes de aprobacion.
+        report_expense.omitir_aviso_de_aprobacion = true
 
         report_expense.save!
         success_records << 1
@@ -729,6 +793,38 @@ class ReportExpense < ApplicationRecord
     return unless budget_status == ExpenseBudgetService::STATUS_APROBADO
 
     self.is_acepted = true
+  end
+
+  # Ver el comentario del `after_create_commit`. Las cinco guardas, en orden de
+  # lo mas barato a lo mas caro, y ninguna sobra:
+  #
+  #   - el flag apagado es el caso normal de hoy;
+  #   - el gasto aceptado no necesita que nadie lo apruebe;
+  #   - el import se excluye a mano;
+  #   - sin centro no hay dueño a quien escribirle;
+  #   - un dueño sin correo es dato incompleto, no un error que deba verse.
+  #
+  # EL `rescue` NO ES OPCIONAL. Esto corre DESPUES del commit: el gasto ya
+  # existe y ya se le respondio que si al usuario. Una excepcion aqui —SMTP
+  # caido, credenciales vencidas, el host mal configurado— no deshace nada y
+  # solo convierte un guardado exitoso en un 500. El correo es un aviso; que
+  # falle se anota en el log y no le arruina el registro a nadie.
+  def avisar_al_dueno_del_centro
+    return unless self.class.aviso_de_aprobacion?
+    return if is_acepted?
+    return if omitir_aviso_de_aprobacion
+
+    dueno = cost_center&.user_owner
+    return if dueno.nil? || dueno.email.blank?
+
+    # `deliver_later` y no `deliver`: el correo sale del hilo del request, que
+    # es el que tiene al usuario esperando el modal de "gasto creado".
+    ExpenseApprovalMailer.pending_approval(self, dueno).deliver_later
+  rescue StandardError => e
+    Rails.logger.error do
+      "ReportExpense##{id}: no se pudo encolar el aviso de aprobacion (#{e.class}: #{e.message})"
+    end
+    nil
   end
 
   # Evalua las reglas del paquete 14 y deja la foto en `rule_violations`.

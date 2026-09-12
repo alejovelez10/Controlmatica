@@ -1,0 +1,25 @@
+Hola <%= @approver.names %>,
+
+Se registró un gasto en el centro de costos <%= @cost_center&.code || "(sin centro)" %>,
+del que usted es propietario, y quedó pendiente de aprobación.
+
+<%= @expense.invoice_name %>
+Valor:       <%= ExpenseBudgetService.money(@expense.invoice_total) %><%= " #{@expense.currency}" unless @expense.currency == "COP" %>
+Responsable: <%= @responsable&.names || "—" %>
+Fecha:       <%= @expense.invoice_date&.strftime("%d/%m/%Y") || "—" %>
+Factura:     <%= @expense.invoice_number.presence || "—" %>
+<% if @motivo.present? %>
+Motivo:      <%= @motivo %>
+<% end %>
+
+Revisar y aprobar:
+<%= @url_aprobar %>
+
+Ver todos los gastos de los centros a mi cargo:
+<%= @url_lista %>
+
+El enlace le muestra el gasto y le pide confirmar antes de aprobarlo. Caduca en <%= ExpenseApprovalToken.caducidad_en_dias %> días; después de eso puede aprobarlo
+entrando a Controlmatica como siempre.
+
+Si no está de acuerdo con el gasto, no haga nada: se queda en "Creado" y no pasa
+a Contabilidad.

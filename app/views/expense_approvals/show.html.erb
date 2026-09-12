@@ -1,0 +1,67 @@
+<%# Pagina PUBLICA: la abre alguien sin sesion, desde el correo y casi siempre
+    desde el telefono. Usa `layouts/application`, que es una cascara limpia sin
+    menu ni nada que dependa de current_user, y las clases cm-* del design
+    system, que ese layout si carga. %>
+<div class="cm-page" style="max-width: 560px; margin: 40px auto; padding: 0 16px;">
+  <div class="cm-card" style="background: #fff; border: 1px solid var(--cm-border); border-radius: 12px; padding: 28px;">
+
+    <h1 style="font-family: 'Poppins', sans-serif; font-size: 20px; margin: 0 0 6px;">
+      Gasto pendiente de su aprobación
+    </h1>
+    <p class="cm-hint" style="margin: 0 0 22px;">
+      Centro de costos <strong><%= @expense.cost_center&.code || "—" %></strong>
+    </p>
+
+    <div style="font-family: 'Poppins', sans-serif; font-size: 17px; font-weight: 600; margin-bottom: 14px;">
+      <%= @expense.invoice_name %>
+    </div>
+
+    <dl style="display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0 0 20px; font-size: 14px;">
+      <dt style="color: var(--cm-text-muted);">Valor</dt>
+      <dd style="margin: 0;">
+        <strong><%= ExpenseBudgetService.money(@expense.invoice_total) %></strong>
+        <%= @expense.currency unless @expense.currency == "COP" %>
+      </dd>
+
+      <dt style="color: var(--cm-text-muted);">Responsable</dt>
+      <dd style="margin: 0;"><%= @expense.user_invoice&.names || "—" %></dd>
+
+      <dt style="color: var(--cm-text-muted);">Fecha</dt>
+      <dd style="margin: 0;"><%= @expense.invoice_date&.strftime("%d/%m/%Y") || "—" %></dd>
+
+      <dt style="color: var(--cm-text-muted);">Factura</dt>
+      <dd style="margin: 0;"><%= @expense.invoice_number.presence || "—" %></dd>
+
+      <% if @expense.description.present? %>
+        <dt style="color: var(--cm-text-muted);">Descripción</dt>
+        <dd style="margin: 0;"><%= @expense.description %></dd>
+      <% end %>
+    </dl>
+
+    <% if @expense.motivo_de_retencion.present? %>
+      <div class="cm-alert cm-alert-warning" style="margin-bottom: 20px;">
+        <strong>Motivo:</strong> <%= @expense.motivo_de_retencion %>
+      </div>
+    <% end %>
+
+    <%# YA APROBADO: se dice antes de ofrecer el boton, no despues de pulsarlo.
+        Pasa cuando alguien ya lo acepto desde la pantalla de Gastos entre que
+        salio el correo y se abrio el enlace. %>
+    <% if @expense.is_acepted? %>
+      <div class="cm-alert cm-alert-success" style="margin: 0;">
+        Este gasto ya fue aprobado. No hay nada pendiente por hacer.
+      </div>
+    <% else %>
+      <%= form_with url: expense_approval_path, method: :post, local: true do %>
+        <%= hidden_field_tag :t, @token %>
+        <button type="submit" class="cm-btn cm-btn-success" style="width: 100%; justify-content: center; padding: 12px;">
+          <i class="fas fa-check"></i> Aprobar este gasto
+        </button>
+      <% end %>
+      <p class="cm-hint" style="margin: 14px 0 0; text-align: center;">
+        Si no está de acuerdo, cierre esta página: el gasto se queda en "Creado"
+        y no pasa a Contabilidad.
+      </p>
+    <% end %>
+  </div>
+</div>

@@ -21,6 +21,35 @@ function formatDate(fecha) {
   return months[d.getMonth()] + " " + d.getDate() + " del " + d.getFullYear() + " / " + timeValue;
 }
 
+// PESTAÑA CON LA QUE ABRE LA PANTALLA.
+//
+// Se puede pedir por la URL (`/report_expenses?scope=owned_centers`) y de ahi
+// sale el enlace "Ver los gastos de mis centros" del correo de aprobacion: el
+// dueño llega directo a su lista y no a una tabla que tiene que reencuadrar.
+//
+// SE VALIDA CONTRA LO QUE EL USUARIO PUEDE USAR y no se confia en el parametro.
+// No es un agujero de seguridad —el servidor recorta igual, mande lo que mande—
+// pero pedir `scope=all` sin el permiso dejaria la pestaña "Todos" marcada
+// mostrando una lista recortada, que es peor que no hacer caso.
+//
+// Sin parametro, o con uno que no aplica, manda el default de siempre: "Todos"
+// con permiso, "Mis gastos" sin el.
+function scopeInicial(estados) {
+  var porDefecto = estados.show_all ? "all" : "mine";
+  var pedido;
+
+  try {
+    pedido = new URLSearchParams(window.location.search).get("scope");
+  } catch (e) {
+    return porDefecto;
+  }
+
+  if (pedido === "mine") return "mine";
+  if (pedido === "owned_centers" && estados.owns_cost_centers) return "owned_centers";
+  if (pedido === "all" && estados.show_all) return "all";
+  return porDefecto;
+}
+
 var EMPTY_FILTERS = {
   cost_center_id: "",
   user_invoice_id: "",
@@ -206,12 +235,13 @@ class ReportExpenseIndex extends React.Component {
       sortKey: null,
       sortDir: "asc",
       meta: { total: 0, page: 1, per_page: 50, total_pages: 1 },
-      // PESTAÑA DE LA LISTA. El valor inicial reproduce lo que hacia la pantalla
-      // antes de que hubiera pestañas: con "Ver todos" se abre en "Todos", sin
-      // el permiso en "Mis gastos", que es lo unico que el servidor devolvia.
-      // No se abre en "Centros a mi cargo" ni a quien los tenga: al entrar a
-      // Gastos uno viene a ver los propios.
-      scope: props.estados.show_all ? "all" : "mine",
+      // PESTAÑA DE LA LISTA. Sin nada en la URL reproduce lo que hacia la
+      // pantalla antes de que hubiera pestañas: con "Ver todos" abre en "Todos",
+      // sin el permiso en "Mis gastos", que es lo unico que el servidor
+      // devolvia. No abre en "Centros a mi cargo" ni a quien los tenga: al
+      // entrar a Gastos uno viene a ver los propios. Con `?scope=` en la URL
+      // manda eso (ver `scopeInicial`), que es como aterriza el correo.
+      scope: scopeInicial(props.estados),
       // Filters
       showFilters: false,
       isFiltering: false,

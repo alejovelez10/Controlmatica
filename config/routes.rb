@@ -89,6 +89,16 @@ Rails.application.routes.draw do
   get "import_template/report_expenses", to: "report_expenses#import_template"
   get "indicators_expenses", to: "report_expenses#indicators_expenses"
   get "get_report_expenses", to: "report_expenses#get_report_expenses"
+
+  # Aprobacion por correo, SIN sesion. Dos rutas para el mismo camino y no una:
+  # el GET solo pinta el gasto y el POST lo aprueba, porque los escaneres de
+  # correo visitan los enlaces y un GET que muta se aprobaria solo (ver
+  # ExpenseApprovalsController).
+  #
+  # EL TOKEN VA EN LA QUERY (`?t=`) Y NO EN EL PATH: lo firma MessageVerifier
+  # con Base64 estandar, que puede traer "/" dentro.
+  get  "gastos/aprobar", to: "expense_approvals#show",   as: "expense_approval"
+  post "gastos/aprobar", to: "expense_approvals#create"
   # Presupuesto de viaticos (partidas, paquete 07). Contrato en
   # 00-ARQUITECTURA A.1. El `index` de resources esta excluido A PROPOSITO: una
   # partida no tiene sentido fuera de su centro de costos, asi que el listado

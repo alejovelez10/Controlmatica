@@ -22,6 +22,25 @@ module Controlmatica
     # busqueda de i18n adicional, y la unica clave `format` definida en el
     # proyecto es la de `expense_budget.amount`.
     config.active_model.i18n_customize_full_message = true
+
+    # HOST DE LOS ENLACES QUE VIAJAN POR CORREO. Un mailer no tiene request, asi
+    # que `expense_approval_url` no puede deducir el dominio: sin esto, ARMAR el
+    # correo revienta con ArgumentError y el aviso de aprobacion no sale nunca.
+    #
+    # El default es el mismo dominio que ya estaba escrito a mano en
+    # config/routes.rb y en la plantilla de aprobacion de reportes; APP_HOST lo
+    # mueve sin tocar codigo (en local: APP_HOST=localhost:3000 APP_PROTOCOL=http).
+    config.action_mailer.default_url_options = {
+      host: ENV["APP_HOST"].presence || "controlmatica.herokuapp.com",
+      protocol: ENV["APP_PROTOCOL"].presence || "https",
+    }
+
+    # `load_defaults 5.2` deja el DeliveryJob viejo, que Rails 7 ya no tiene y
+    # que avisa por consola en cada envio. Solo afecta a `deliver_later`, y el
+    # unico que lo usa es el aviso de aprobacion de gastos: los demas correos
+    # del proyecto salen con `.deliver`, sincronos, y no pasan por aqui.
+    config.action_mailer.delivery_job = "ActionMailer::MailDeliveryJob"
+
     config.middleware.insert_before 0, Rack::Cors do
         allow do
             origins '*'

@@ -1,0 +1,49 @@
+<div class="cm-page" style="max-width: 560px; margin: 40px auto; padding: 0 16px;">
+  <div style="background: #fff; border: 1px solid var(--cm-border); border-radius: 12px; padding: 28px; text-align: center;">
+
+    <% if @ya_estaba %>
+      <div style="font-size: 34px; color: var(--cm-text-muted); margin-bottom: 10px;">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h1 style="font-family: 'Poppins', sans-serif; font-size: 20px; margin: 0 0 8px;">
+        Este gasto ya estaba aprobado
+      </h1>
+      <p class="cm-hint" style="margin: 0;">
+        Alguien lo aprobó antes. No se hizo ningún cambio.
+      </p>
+
+    <% elsif @aprobado %>
+      <div style="font-size: 34px; color: var(--cm-success, #28a745); margin-bottom: 10px;">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h1 style="font-family: 'Poppins', sans-serif; font-size: 20px; margin: 0 0 8px;">
+        Gasto aprobado
+      </h1>
+      <p class="cm-hint" style="margin: 0;">
+        <%= @expense.invoice_name %> ·
+        <%= ExpenseBudgetService.money(@expense.invoice_total) %> ·
+        <%= @expense.cost_center&.code %>
+      </p>
+      <p class="cm-hint" style="margin: 14px 0 0;">
+        Ya puede pasar a Contabilidad. Puede cerrar esta página.
+      </p>
+
+    <% else %>
+      <%# La rama que no se puede omitir: `update` devolvio false. Pasa si una
+          validacion del modelo rechaza el gasto. Decirle "aprobado" a alguien
+          cuyo gasto sigue en "Creado" es peor que no mandar nada. %>
+      <div style="font-size: 34px; color: var(--cm-danger, #dc3545); margin-bottom: 10px;">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <h1 style="font-family: 'Poppins', sans-serif; font-size: 20px; margin: 0 0 8px;">
+        No se pudo aprobar
+      </h1>
+      <p class="cm-hint" style="margin: 0;">
+        <%= @expense.errors.full_messages.presence&.join(". ") || "El gasto no pudo actualizarse." %>
+      </p>
+      <p class="cm-hint" style="margin: 14px 0 0;">
+        Entre a Controlmatica y apruébelo desde la pantalla de Gastos.
+      </p>
+    <% end %>
+  </div>
+</div>

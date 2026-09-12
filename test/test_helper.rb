@@ -21,6 +21,14 @@ class ActiveSupport::TestCase
   include PermissionHelpers
   include JsonHelpers
   include UploadHelpers
+  include ExpenseApprovalHelpers
+  # `deliver_later` encola un job. Sin este helper, `assert_enqueued_emails` no
+  # existe y el adaptador de test tampoco esta puesto: los correos se irian por
+  # el adaptador :async, en otro hilo, y ninguna prueba podria verlos.
+  include ActiveJob::TestHelper
+  # `assert_enqueued_emails` / `assert_no_enqueued_emails` viven aqui, no en
+  # ActiveJob::TestHelper.
+  include ActionMailer::TestHelper
 
   teardown do
     # User.current es Thread.current[:user] y SOBREVIVE entre tests del mismo
