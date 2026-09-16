@@ -7,6 +7,7 @@
 #  agent_instructions   :text
 #  check_duplicates     :boolean          default(TRUE), not null
 #  is_default           :boolean          default(FALSE), not null
+#  mandatory            :boolean          default(TRUE), not null
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
@@ -21,13 +22,8 @@
 #  index_expense_rules_on_is_default          (is_default)
 #  index_expense_rules_unique_default_active  (is_default) UNIQUE WHERE (is_default AND active)
 #
-# Forma JSON de una regla de gastos (paquete 14).
-#
-# `rols` sale como lista completa y no como conteo: la pantalla de reglas monta
-# un multi-select y necesita las opciones ya seleccionadas para pintarlo. Con
-# solo el conteo habria que pedir la relacion en una segunda llamada por fila.
 class ExpenseRuleSerializer < ActiveModel::Serializer
-  attributes :id, :name, :active, :is_default,
+  attributes :id, :name, :active, :is_default, :mandatory,
              :max_invoice_age_days, :max_invoice_value, :check_duplicates,
              :agent_instructions, :rol_ids, :created_at, :updated_at
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_10_230000) do
+ActiveRecord::Schema.define(version: 2026_09_15_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -345,6 +345,7 @@ ActiveRecord::Schema.define(version: 2026_09_10_230000) do
     t.integer "last_user_edited_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.boolean "mandatory", default: true, null: false
     t.index ["active"], name: "index_expense_rules_on_active"
     t.index ["is_default"], name: "index_expense_rules_on_is_default"
     t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"

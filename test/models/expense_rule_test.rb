@@ -7,6 +7,7 @@
 #  agent_instructions   :text
 #  check_duplicates     :boolean          default(TRUE), not null
 #  is_default           :boolean          default(FALSE), not null
+#  mandatory            :boolean          default(TRUE), not null
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
@@ -161,5 +162,53 @@ class ExpenseRuleTest < ActiveSupport::TestCase
     assert_equal "Reglas de gastos", registro.module
     assert_equal "creo", registro.type_edit
     assert_includes registro.description, "Regla auditada"
+  end
+
+  # === mandatory: que pasa cuando la regla se incumple (2026-09-15) ==========
+
+  # EL DEFAULT ES LA DECISION IMPORTANTE DE LA MIGRACION y se fija con un test:
+  # con `default: false` la migracion habria aflojado de golpe todas las reglas
+  # que ya existen en produccion, sin que nadie lo pidiera regla por regla.
+  test "una regla nace obligatoria" do
+    assert ExpenseRule.new.mandatory
+    assert crear_regla(name: "Regla nueva").mandatory
+  end
+
+  test "las fixtures heredan el default y siguen frenando" do
+    assert expense_rules(:directivos).mandatory
+    assert expense_rules(:directivos_estricta).mandatory
+  end
+
+  test "mandatory no acepta nil" do
+    regla = ExpenseRule.new(name: "Regla sin decidir", mandatory: nil)
+
+    refute regla.valid?
+    assert_includes regla.errors.attribute_names, :mandatory
+  end
+
+  # AFLOJAR UNA REGLA TIENE QUE QUEDAR EN LA AUDITORIA: es el cambio de esa
+  # pantalla con mas consecuencias —deja de rechazarse un gasto que antes se
+  # rechazaba— y no produce ningun error visible, asi que sin el registro no
+  # habria forma de saber quien lo hizo.
+  test "aflojar una regla queda en la auditoria con el antes y el despues" do
+    regla = crear_regla(name: "Regla que se afloja", mandatory: true)
+
+    assert_difference -> { RegisterEdit.count }, 1 do
+      as_user(@admin) { regla.update!(mandatory: false) }
+    end
+
+    descripcion = RegisterEdit.order(:id).last.description
+    assert_includes descripcion, "Al incumplirse"
+    assert_includes descripcion, "Deja crear y avisa"
+    assert_includes descripcion, "Frena la creación del gasto"
+  end
+
+  # Se dice la consecuencia y no el nombre del flag: "mandatory: true" no le
+  # dice nada a quien lee la auditoria seis meses despues.
+  test "la etiqueta dice que pasa, no como se llama el campo" do
+    assert_equal "Frena la creación del gasto",
+                 ExpenseRule.new(mandatory: true).obligatoriedad_label
+    assert_equal "Deja crear y avisa",
+                 ExpenseRule.new(mandatory: false).obligatoriedad_label
   end
 end

@@ -50,6 +50,28 @@ class ExpenseRulesValidateToolTest < ActiveSupport::TestCase
     end
   end
 
+  # `blocking` SALE DEL SERVICIO Y NO ESTA CABLEADO. Hasta 2026-09-15 esta tool
+  # escribia `blocking: true` en toda violacion determinista, porque todas
+  # frenaban; con el flag `mandatory` eso dejo de ser cierto y decirle al agente
+  # que algo frena cuando no frena lo manda a pedir una confirmacion que ya no
+  # existe, o a no registrar un gasto que si se podia registrar.
+  test "una regla no obligatoria da blocking false y no cuenta como bloqueante" do
+    regla_default!(max_invoice_value: 50_000, mandatory: false)
+    with_mcp_key do
+      cuerpo = tool_json(validar)
+
+      # `ok` DE ESTA TOOL SIGNIFICA "SE PUEDE REGISTRAR", no "no se incumple
+      # nada": ya se comportaba asi con el aviso de presupuesto, y una regla
+      # blanda es exactamente eso, un aviso. Queda en true y la violacion viaja
+      # igual en la lista para que el agente se lo cuente antes de crear.
+      assert_equal true, cuerpo["ok"]
+      assert_equal "invoice_value_exceeded", cuerpo["violations"].first["code"]
+      assert_equal false, cuerpo["violations"].first["blocking"]
+      assert_equal 0, cuerpo["blocking_count"]
+      assert_equal 1, cuerpo["warning_count"]
+    end
+  end
+
   test "la advertencia de presupuesto no es bloqueante y deja ok en true" do
     with_mcp_key do
       cuerpo = tool_json(validar(invoice_value: 900_000, invoice_total: 900_000))

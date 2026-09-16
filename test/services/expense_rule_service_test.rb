@@ -304,18 +304,23 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     assert_includes resultado.errors.join(" "), "El comprobante tiene 60 días"
   end
 
-  # La otra mitad: con la confirmacion expresa de la persona —la que pide el
-  # agente de WhatsApp— el mismo gasto SI se guarda, y entonces si aplica la
-  # regla vieja de "no impide guardar, pero impide aprobar".
-  test "con confirmacion expresa el gasto se guarda pero no queda aprobado" do
-    regla(name: "Regla general", is_default: true, max_invoice_age_days: 5)
+  # La otra mitad, y es la rama que el flag `mandatory` devolvio a la vida: con
+  # la regla marcada como NO obligatoria el mismo gasto SI se guarda, y aplica la
+  # regla de "no impide guardar, pero impide aprobar".
+  #
+  # ASI SE LLEGABA AQUI HASTA 2026-09-15: con `reglas_confirmadas_por_el_usuario`,
+  # el escape de WhatsApp. Se retiro —una regla obligatoria no se puede confirmar—
+  # y el disparador pasó a ser la configuracion de la regla, que es donde el
+  # administrador puede verlo. Las aserciones son las mismas de entonces: lo que
+  # cambio es QUIEN decide, no que pasa.
+  test "con la regla no obligatoria el gasto se guarda pero no queda aprobado" do
+    regla(name: "Regla general", is_default: true, max_invoice_age_days: 5, mandatory: false)
 
     gasto = ReportExpense.new(
         omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
                               invoice_name: "Hotel viejo", invoice_date: Date.current - 60,
                               invoice_number: "FE-VIEJA-OK", identification: "900111222",
                               invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
-    gasto.reglas_confirmadas_por_el_usuario = true
 
     resultado = ExpenseBudgetService.persist_with_evaluation!(gasto, actor: @admin)
 
@@ -363,5 +368,123 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     refute resultado.ok?
     assert_kind_of Array, resultado.errors
     assert_equal 1, resultado.errors.size
+  end
+
+  # === QUE FRENA Y QUE SOLO AVISA (flag `mandatory`, 2026-09-15) =============
+  #
+  # ESTE BLOQUE EXISTE POR UN ERROR QUE ESTUVO A PUNTO DE COMETERSE: la idea
+  # obvia al implementar el flag es marcar cada violacion con el `mandatory` de
+  # "su" regla y filtrar. No se puede. `effective_limits` colapsa las N reglas
+  # de la persona en UN tope tomando el minimo, asi que una violacion del tope
+  # efectivo no tiene una regla dueña —por eso `violation` deja `rule` en nil—.
+  # La unica forma honesta es resolver los limites otra vez usando SOLO las
+  # reglas obligatorias, y eso es lo que estos tests fijan.
+
+  test "la violacion que sale de una regla blanda NO frena, aunque el tope efectivo sea el suyo" do
+    # La dura es la MAS FLOJA de las dos: 30 dias. La blanda es la estricta: 5.
+    # El tope efectivo es 5 (gana la mas restrictiva), pero el que frena es 30.
+    regla_del_ingeniero(name: "Dura floja",     max_invoice_age_days: 30, mandatory: true)
+    regla_del_ingeniero(name: "Blanda estricta", max_invoice_age_days: 5,  mandatory: false)
+
+    valor = ExpenseRuleService.validate(gasto_nuevo(invoice_date: Date.current - 10)).value
+
+    # Se incumple el limite efectivo: la foto lo registra y cita los 5 dias.
+    assert_equal 1, valor[:violations].size
+    assert_equal ExpenseRuleService::CODE_TOO_OLD, valor[:violations].first[:code]
+    assert_includes valor[:violations].first[:message], "el máximo son 5"
+
+    # Pero NADA frena: 10 dias caben en los 30 de la unica regla obligatoria.
+    assert_empty valor[:blocking_violations]
+  end
+
+  test "la misma pareja al reves SI frena: la estricta es la obligatoria" do
+    regla_del_ingeniero(name: "Dura estricta", max_invoice_age_days: 5,  mandatory: true)
+    regla_del_ingeniero(name: "Blanda floja",  max_invoice_age_days: 30, mandatory: false)
+
+    valor = ExpenseRuleService.validate(gasto_nuevo(invoice_date: Date.current - 10)).value
+
+    assert_equal 1, valor[:blocking_violations].size
+    assert_equal ExpenseRuleService::CODE_TOO_OLD, valor[:blocking_violations].first[:code]
+  end
+
+  # EL MENSAJE DEL ERROR CITA EL TOPE QUE DE VERDAD FRENA, no el efectivo. Es la
+  # consecuencia sutil del doble pase y se fija aqui a proposito: al usuario hay
+  # que decirle el numero que tiene que respetar para poder guardar, no el de
+  # una regla que no le va a cerrar la puerta.
+  test "el tope que cita el bloqueo es el de la regla obligatoria, no el efectivo" do
+    regla_del_ingeniero(name: "Dura",   max_invoice_value: 2_000_000, mandatory: true)
+    regla_del_ingeniero(name: "Blanda", max_invoice_value: 200_000,   mandatory: false)
+
+    valor = ExpenseRuleService.validate(gasto_nuevo(invoice_total: 3_000_000)).value
+
+    assert_includes valor[:violations].first[:message],          "200.000"
+    assert_includes valor[:blocking_violations].first[:message], "2.000.000"
+  end
+
+  # INVARIANTE DEL DISENO: las obligatorias son un SUBCONJUNTO, asi que su tope
+  # nunca puede ser mas estricto que el efectivo. Si este test falla, alguien
+  # cambio `effective_limits` para que una regla AFLOJE en vez de restringir.
+  test "todo lo que frena esta tambien en la foto completa" do
+    regla_del_ingeniero(name: "Dura",   max_invoice_age_days: 5, max_invoice_value: 100, mandatory: true)
+    regla_del_ingeniero(name: "Blanda", max_invoice_age_days: 3, mandatory: false)
+
+    valor = ExpenseRuleService.validate(
+      gasto_nuevo(invoice_date: Date.current - 10, invoice_total: 5_000)
+    ).value
+
+    codigos_foto = valor[:violations].map { |v| v[:code] }
+    valor[:blocking_violations].each { |v| assert_includes codigos_foto, v[:code] }
+    assert_equal 2, valor[:blocking_violations].size
+  end
+
+  test "sin ninguna regla obligatoria no frena nada, ni con las tres reglas incumplidas" do
+    regla_del_ingeniero(name: "Blanda todo", max_invoice_age_days: 1, max_invoice_value: 100,
+                        check_duplicates: true, mandatory: false)
+    # Un gasto real con la misma factura, para que el duplicado tenga con que chocar.
+    gasto_nuevo(invoice_number: "FE-DUP", invoice_total: 1_000_000).save!(validate: false)
+
+    valor = ExpenseRuleService.validate(
+      gasto_nuevo(invoice_date: Date.current - 30, invoice_number: "FE-DUP", invoice_total: 1_000_000)
+    ).value
+
+    assert_equal 3, valor[:violations].size
+    assert_empty valor[:blocking_violations]
+    # `ok` sigue mirando la foto completa: hay algo que contarle a la persona
+    # aunque no haya nada que frenarla.
+    refute valor[:ok]
+  end
+
+  # EL DUPLICADO ES EL UNICO CHECK QUE VA A LA BASE y el doble pase no lo puede
+  # consultar dos veces: seria duplicar una consulta en cada guardado de cada
+  # gasto del sistema.
+  test "el duplicado se consulta una sola vez aunque se resuelvan dos juegos de limites" do
+    regla_del_ingeniero(name: "Dura dup", check_duplicates: true, mandatory: true)
+    gasto_nuevo(invoice_number: "FE-UNICA").save!(validate: false)
+
+    candidato = gasto_nuevo(invoice_number: "FE-UNICA")
+    consultas = 0
+    suscriptor = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, datos|
+      consultas += 1 if datos[:sql].to_s.include?("report_expenses") &&
+                        datos[:sql].to_s.include?("invoice_number")
+    end
+    begin
+      valor = ExpenseRuleService.validate(candidato).value
+    ensure
+      ActiveSupport::Notifications.unsubscribe(suscriptor)
+    end
+
+    assert_equal 1, consultas, "el check de duplicados se corrio dos veces"
+    assert_equal ExpenseRuleService::CODE_DUPLICATE, valor[:violations].first[:code]
+    assert_equal ExpenseRuleService::CODE_DUPLICATE, valor[:blocking_violations].first[:code]
+  end
+
+  test "una regla blanda que pide duplicados los anota pero no frena" do
+    regla_del_ingeniero(name: "Blanda dup", check_duplicates: true, mandatory: false)
+    gasto_nuevo(invoice_number: "FE-BLANDA").save!(validate: false)
+
+    valor = ExpenseRuleService.validate(gasto_nuevo(invoice_number: "FE-BLANDA")).value
+
+    assert_equal ExpenseRuleService::CODE_DUPLICATE, valor[:violations].first[:code]
+    assert_empty valor[:blocking_violations]
   end
 end

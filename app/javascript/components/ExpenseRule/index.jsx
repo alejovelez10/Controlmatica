@@ -54,6 +54,10 @@ var EMPTY_FORM = {
   max_invoice_age_days: "",
   max_invoice_value: "",
   check_duplicates: true,
+  // `true` IGUAL QUE LA COLUMNA EN LA BASE: una regla nueva frena, y aflojarla
+  // es un acto deliberado. Al reves, quien crea una regla creeria haber puesto
+  // un control y solo habria puesto un aviso.
+  mandatory: true,
   agent_instructions: "",
 };
 
@@ -105,6 +109,19 @@ class ExpenseRuleIndex extends Component {
         r.check_duplicates
           ? <span className="cm-badge cm-badge-success">Se validan</span>
           : <span className="cm-badge cm-badge-warning">No se validan</span>
+      ) },
+      // VA EN LA TABLA Y NO SOLO EN EL FORMULARIO: es lo primero que alguien
+      // necesita saber al mirar la lista —cual de estas reglas rechaza gastos y
+      // cual solo los marca— y averiguarlo abriendo una por una no lo hace
+      // nadie. El texto dice la consecuencia, no el nombre del campo.
+      { key: "mandatory", label: "Al incumplirse", width: "170px", render: (r) => (
+        r.mandatory
+          ? <span className="cm-badge cm-badge-danger" data-testid={"rule-mandatory-" + r.id}>
+              No deja crear el gasto
+            </span>
+          : <span className="cm-badge cm-badge-warning" data-testid={"rule-mandatory-" + r.id}>
+              Deja crear y avisa
+            </span>
       ) },
       // `sortable: false`: el orden del cliente compara `row[key]` y aqui la
       // celda es un arreglo de objetos. Una flecha que no ordena es peor que
@@ -224,6 +241,7 @@ class ExpenseRuleIndex extends Component {
         max_invoice_value: row.max_invoice_value === null || row.max_invoice_value === undefined
           ? "" : String(parseFloat(row.max_invoice_value)),
         check_duplicates: !!row.check_duplicates,
+        mandatory: !!row.mandatory,
         agent_instructions: row.agent_instructions || "",
       },
       selectedRoles: (row.rols || []).map(function(u) { return self.optionForRole(u); }),
@@ -290,6 +308,7 @@ class ExpenseRuleIndex extends Component {
       max_invoice_age_days: f.max_invoice_age_days === "" ? null : parseInt(f.max_invoice_age_days, 10),
       max_invoice_value: f.max_invoice_value === "" ? null : parseFloat(f.max_invoice_value),
       check_duplicates: !!f.check_duplicates,
+      mandatory: !!f.mandatory,
       agent_instructions: f.agent_instructions || "",
       // SIEMPRE se manda, incluso vacio. El controller distingue con
       // `params.key?(:rol_ids)`: mandar la lista vacia es la operacion

@@ -283,18 +283,22 @@ class ReportExpense < ApplicationRecord
   # la columna `rule_violations` no existe todavia: el gasto no se guardo).
   attr_reader :violaciones_de_reglas
 
-  # ESCAPE EXPLICITO Y CONSCIENTE, no un interruptor general.
+  # AQUI VIVIA `reglas_confirmadas_por_el_usuario` Y SE RETIRO EL 2026-09-15.
   #
-  # Lo usa SOLO el canal de WhatsApp: `ReportExpensesCreateTool` ya rechazaba por
-  # su cuenta un gasto con violaciones y exige `confirm_rule_violations: true`,
-  # que el agente solo manda DESPUES de mostrarle las reglas a la persona y de
-  # que ella confirme registrar igual. Sin este atributo, la validacion nueva
-  # anularia esa confirmacion y romperia un flujo que ya existia.
+  # Era el escape de WhatsApp: el agente mostraba las violaciones, la persona
+  # confirmaba y el gasto entraba aunque incumpliera. Existia porque la adenda
+  # A.2 habia vuelto duras TODAS las reglas y sin el escape el canal movil
+  # dejaba a la gente tirada en campo con la factura en la mano.
   #
-  # El formulario web NO lo usa: alli las reglas son duras y no hay forma de
-  # saltarselas. Si algun dia se quiere quitar tambien la de WhatsApp, se borra
-  # este atributo y su unico uso en la tool.
-  attr_accessor :reglas_confirmadas_por_el_usuario
+  # El flag `ExpenseRule#mandatory` lo dejo sin trabajo, y por las dos puntas:
+  # una regla blanda ya no produce errores que haya que confirmar, y una regla
+  # obligatoria no se puede confirmar —si el administrador la marco asi, el
+  # gasto no existe, y ofrecerle al movil una puerta que la web no tiene es
+  # justo la asimetria entre canales que este paquete evita en todos lados—.
+  #
+  # NO SE VUELVE A AGREGAR SIN DECIDIR ESO DE NUEVO: quien lo reponga estara
+  # devolviendole al agente el poder de saltarse la configuracion del
+  # administrador.
 
   # === REGLAS DE GASTOS (paquete 14) ========================================
   #
@@ -304,13 +308,21 @@ class ReportExpense < ApplicationRecord
   # Puesto en el controller cubriria un solo canal y la asimetria no la notaria
   # nadie hasta la auditoria contable.
   #
-  # LAS REGLAS SON DURAS: IMPIDEN GUARDAR (decision de producto, 2026-08-29).
+  # CADA REGLA DECIDE SI ES DURA (decision de producto, 2026-09-15). El flag
+  # `ExpenseRule#mandatory` manda:
   #
-  # Antes vivian en un `before_save` que solo dejaba una anotacion y bajaba el
-  # gasto a "sin aprobar". El dueño del producto lo corrigio: son obligatorias, y
-  # un gasto que las incumple no debe existir. La nota que habia aqui —"bloquear
-  # al usuario en campo, con la factura en la mano, solo consigue que no
-  # reporte"— queda registrada como el riesgo que se acepto a conciencia.
+  #   * mandatory  -> la violacion es un error de validacion y el gasto NO se
+  #     guarda, ni por la web ni por movil.
+  #   * !mandatory -> el gasto se guarda, la violacion queda anotada en
+  #     `rule_violations` y `apply_expense_rules` lo baja a "sin aprobar" con el
+  #     motivo, para que la persona sepa por que no quedo aprobado.
+  #
+  # LAS DOS RAMAS YA EXISTIERON, no se invento ninguna: hasta 2026-08-29 todas
+  # las reglas eran blandas (un `before_save` que solo anotaba); la adenda A.2
+  # las volvio todas duras y dejo registrado el riesgo que se aceptaba a
+  # conciencia —"bloquear al usuario en campo, con la factura en la mano, solo
+  # consigue que no reporte"—. El flag no elige por el producto: le da el
+  # interruptor regla por regla, que es lo que faltaba.
   #
   # EN UNA VALIDACION Y NO EN EL CONTROLLER, por el mismo motivo que antes: los
   # tres canales (web, WhatsApp y el import de Excel) tienen que rechazar lo
@@ -852,15 +864,14 @@ class ReportExpense < ApplicationRecord
     # tope o mover la fecha fuera del plazo: ahi el campo cambio.
     return if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
 
-    # La confirmacion de WhatsApp: se evaluan igual (para dejar la foto en
-    # `rule_violations`) pero no se convierten en errores.
-    if reglas_confirmadas_por_el_usuario
-      @violaciones_de_reglas = ExpenseRuleService.validate(self).value[:violations]
-      return
-    end
-
-    @violaciones_de_reglas = ExpenseRuleService.validate(self).value[:violations]
-    @violaciones_de_reglas.each { |v| errors.add(:base, v[:message]) }
+    resultado = ExpenseRuleService.validate(self).value
+    # LA FOTO ES SIEMPRE COMPLETA Y LOS ERRORES SOLO LOS DUROS. Son dos listas
+    # distintas a proposito: `rule_violations` tiene que registrar tambien lo
+    # que se incumplio sin frenar —es justo el caso que el dueño del centro
+    # necesita ver para decidir—, mientras que al usuario solo se le cierra la
+    # puerta por las reglas marcadas como obligatorias.
+    @violaciones_de_reglas = resultado[:violations]
+    resultado[:blocking_violations].each { |v| errors.add(:base, v[:message]) }
   rescue StandardError => e
     # Un fallo del motor de reglas NO puede impedir registrar un gasto: seria
     # convertir un error nuestro en una puerta cerrada para el usuario.
@@ -879,7 +890,10 @@ class ReportExpense < ApplicationRecord
     self.rule_violations = violaciones.map(&:stringify_keys)
 
     return if violaciones.empty?
-    # UNA VIOLACION NUNCA IMPIDE GUARDAR, PERO IMPIDE QUE QUEDE APROBADO.
+    # ESTA ES LA RAMA BLANDA Y AQUI SOLO LLEGA LO QUE NO FRENO: si alguna
+    # violacion fuera de una regla `mandatory`, la validacion ya habria abortado
+    # el guardado y este callback no correria. Lo que queda es una violacion que
+    # se anota y NO IMPIDE GUARDAR, PERO IMPIDE QUE QUEDE APROBADO.
     # No se pasa a `excedido`: eso lo sacaria de la vista de contabilidad
     # (scope accounting_visible) y contabilidad tiene que verlo justamente para
     # decidir. `sin_presupuesto` consume cupo igual, asi que tampoco libera

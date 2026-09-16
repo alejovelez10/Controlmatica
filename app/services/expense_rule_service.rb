@@ -1,11 +1,17 @@
 # Unico lugar donde se evaluan las reglas de gasto (paquete 14).
 #
-# POR QUE UN SERVICIO Y NO UN `validate` DEL MODELO: una violacion de regla NO
-# impide guardar el gasto. Es la misma filosofia que la aprobacion presupuestal
-# —bloquear al usuario en campo, con la factura en la mano, solo consigue que no
-# reporte—, y una validacion de ActiveRecord no sabe expresar "esto esta mal
-# pero guardalo igual". Lo que si hace la violacion es impedir que el gasto
-# quede APROBADO.
+# POR QUE UN SERVICIO Y NO UN `validate` DEL MODELO: este servicio EVALUA, no
+# decide. Que una violacion frene el guardado o solo lo explique depende del
+# flag `mandatory` de cada regla (pedido de producto, 2026-09-15), y quien
+# aplica esa consecuencia es `ReportExpense#enforce_expense_rules`. Partirlo asi
+# es lo que permite que la web, WhatsApp y el import de Excel compartan el
+# veredicto y no cada uno su propia interpretacion.
+#
+# HISTORIA DE ESTE ARCHIVO, PORQUE EXPLICA LOS COMENTARIOS QUE QUEDAN ABAJO:
+# hasta 2026-08-29 ninguna violacion impedia guardar, solo bajaba el gasto a
+# "sin aprobar"; la adenda A.2 las volvio todas duras; el flag `mandatory` hace
+# de eso una decision regla por regla y devuelve la rama blanda, que nunca se
+# borro (`ReportExpense#apply_expense_rules`).
 #
 # LAS TRES REGLAS DETERMINISTAS SE EVALUAN AQUI Y SOLO AQUI, en el servidor.
 # Si alguna se moviera al prompt del agente, un gasto creado por la web dejaria
@@ -32,25 +38,59 @@ class ExpenseRuleService
   #
   # => Result cuyo `value` es
   #    { ok: true/false,
-  #      violations: [{ rule:, code:, message: }],   # solo deterministas
-  #      agent_instructions: "…texto concatenado…",  # lo aplica el agente
+  #      violations: [{ rule:, code:, message: }],           # la foto completa
+  #      blocking_violations: [{ rule:, code:, message: }],  # las que FRENAN
+  #      agent_instructions: "…texto concatenado…",           # lo aplica el agente
   #      applied_rules: ["Regla general"] }
   #
   # `ok` del Result y `ok` del value son lo mismo a proposito: quien solo quiera
   # saber si paso usa `result.ok?` y quien necesite el detalle abre el value.
+  #
+  # OJO CON `ok`: mira `violations`, NO `blocking_violations`. Un gasto que solo
+  # incumple reglas blandas trae `ok: false` y se puede guardar igual. Quien
+  # decide si guardar o no tiene que preguntar por `blocking_violations`.
+  #
+  # POR QUE DOS JUEGOS DE VIOLACIONES Y NO UN CAMPO `mandatory` EN CADA UNA:
+  # `effective_limits` colapsa las N reglas de la persona en UN tope tomando el
+  # minimo, asi que una violacion no tiene una regla dueña de la que heredar el
+  # flag —por eso `violation` deja `rule` en nil—. La unica forma honesta de
+  # saber que frena es volver a resolver los limites usando SOLO las reglas
+  # obligatorias y evaluar contra esos.
   def self.validate(expense, user: nil)
     responsable = user || expense&.user_invoice
     reglas = ExpenseRule.aplicables_a(responsable).to_a
 
     limites = effective_limits(reglas)
+    # Segundo juego de limites, con el mismo minimo pero solo sobre las reglas
+    # que frenan. Al ser un subconjunto, su tope es siempre IGUAL O MAS FLOJO
+    # que el efectivo: `blocking` nunca puede tener una violacion que no este
+    # tambien —por el mismo code— en `violations`.
+    limites_duros = effective_limits(reglas.select(&:mandatory))
+
     violations = []
+    blocking   = []
+
+    # Antiguedad y valor son calculo puro: evaluarlos dos veces no cuesta una
+    # consulta y evita tener que adivinar de que regla salio cada violacion.
     violations.concat(check_age(expense, limites[:max_invoice_age_days]))
+    blocking.concat(check_age(expense, limites_duros[:max_invoice_age_days]))
     violations.concat(check_value(expense, limites[:max_invoice_value]))
-    violations.concat(check_duplicate(expense)) if limites[:check_duplicates]
+    blocking.concat(check_value(expense, limites_duros[:max_invoice_value]))
+
+    # DUPLICADOS SE CONSULTA UNA SOLA VEZ: es el unico check que va a la base, y
+    # correrlo dos veces duplicaria la consulta en cada guardado de cada gasto.
+    # Se puede reusar el resultado porque el check no depende de ningun limite,
+    # solo de si alguna regla lo pide.
+    if limites[:check_duplicates]
+      duplicado = check_duplicate(expense)
+      violations.concat(duplicado)
+      blocking.concat(duplicado) if limites_duros[:check_duplicates]
+    end
 
     valor = {
       ok: violations.empty?,
       violations: violations,
+      blocking_violations: blocking,
       agent_instructions: limites[:agent_instructions],
       applied_rules: reglas.map(&:name)
     }

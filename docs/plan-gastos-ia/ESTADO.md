@@ -54,7 +54,7 @@ mismo y no podía arreglar nada.
 | **08** | Frontend: presupuesto y formulario | ⚠️ | `9d327e4`..`35570a9` | La **pestaña Presupuesto** completa (tabla, tablero de 6 cifras, alta/edición/anulación y validación en vivo del tope que deshabilita Guardar) y **los dos formularios de gasto** con comprobante, bloque de moneda con TRM en vivo, aviso presupuestal y modal de previsualización. **Verificado a mano en un navegador contra desarrollo**, y esa verificación encontró un defecto que ninguna prueba habría visto (un total pintado como `$374.152,66000000003`), ya corregido |
 | **09** | Frontend: tablas y contabilidad | ⚠️ | `3d96073`..`d6b182d` | Las 6 columnas nuevas en las dos tablas de gastos, un único constructor de parámetros de filtro, 3 filtros nuevos, columna de selección múltiple opt-in en la tabla genérica y **la pantalla de Contabilidad completa** (813 líneas). De 51 criterios cumplen 50. **Salvedades**: tocó un componente compartido por ~20 pantallas (pendiente **P-16**) y sus commits no son atómicos (**P-15**) |
 | **10** | IA: extracción | ⚠️ | `41c8bbc`..`1ae2af0` | **Solo el esqueleto**, por la frontera de alcance: contrato, `Result`, esquema JSON de salida, mapeo de errores y el seam `call_vision_model` como `NotImplementedError` documentado, más 49 pruebas de contrato **sin una sola llamada de red**. **3 criterios incumplidos a propósito**, ver §5 |
-| **11** | MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | Actor por teléfono en modo estricto, `X-Actor-Phone`, las claves nuevas del listado, creación de gasto con actor estricto + guard de reglas + persistencia evaluada + los 6 campos de moneda, y **8 herramientas nuevas**. **191 pruebas propias** contra las ~120 nominadas. `tools/list` real devuelve **62 herramientas**. **Salvedades**: la puerta de escape `confirm_rule_violations` contradice un criterio (pendiente **P-17**) y los criterios 27/28 dependen de que se carguen los teléfonos (**P-03**) |
+| **11** | MCP y contrato con Taimes | ⚠️ | `d1a3b75`..`d54b09c` | Actor por teléfono en modo estricto, `X-Actor-Phone`, las claves nuevas del listado, creación de gasto con actor estricto + guard de reglas + persistencia evaluada + los 6 campos de moneda, y **8 herramientas nuevas**. **191 pruebas propias** contra las ~120 nominadas. `tools/list` real devuelve **62 herramientas**. **Salvedades**: la puerta de escape `confirm_rule_violations` contradecía un criterio (**P-17**, resuelto el 2026-09-15 retirando el escape — §C.3) y los criterios 27/28 dependen de que se carguen los teléfonos (**P-03**) |
 | **12** | Suite E2E Playwright | ⚠️ | `f93c81f`..`ac334a7` | Los 9 escenarios del brief más los 4 de reglas, con los dos bordes de red stubeados con doble guarda y bitácora auditable, el seed ampliado a 8 centros / 6 usuarios / 3 roles, 5 helpers y 19 pruebas Minitest del stub y del seed. **Es la primera vez que la superficie de usuario se EJECUTA en un navegador**, y eso encontró 5 defectos que ninguna lectura de código había visto (§6.1). **Salvedades**: el criterio 12 está incumplido (**P-19**) y el 27 no se ejecuta (**P-20**) |
 | **13** | Cierre, documentación y puesta en marcha | ⚠️ | `611f95c`..`c0dae3a` (8 commits) | Manual de usuario (552 l), guía de reglas (349 l), instructivo de campo (169 l), runbook con los valores reales (602 l), plantilla de acta (199 l), `rake users:import_phones` (253 l) con 23 pruebas, el arreglo del flash con 18 pruebas y este documento. **41 pruebas propias, 156 assertions, 0 fallos.** **Falta lo que no se puede hacer sin una persona y sin acceso a producción**: ejecutar el runbook, recolectar los teléfonos, configurar el agente y dar la capacitación. **Salvedades halladas por la verificación independiente**: el entregable "a modificar" no se hizo (**P-26**), tocó el layout sin ser dueño (**P-27**), su criterio 3 no cierra por diseño (**P-28**) y el arreglo del flash no tiene cobertura de navegador (**P-29**) |
 | **14** | Reglas de gastos (backend) | ⚠️ | `6dac5f9`..`e34111e` | Las 2 migraciones (con índice único **parcial**), el modelo con resolución de 3 ramas, el servicio con las 3 reglas deterministas y el combinador "gana la más restrictiva", el enganche en el gasto y el controlador con su rake de permisos. **65 pruebas propias** contra las 30 pedidas. **Salvedad**: el detalle de la violación no se expone al navegador (pendiente **P-18**) |
@@ -136,7 +136,7 @@ falta es que alguien las bendiga o pida moverlas.
 |---|---|---|
 | **P-14** | Criterio 1 del **07** | Pide que un `grep -c` de rutas de partidas dé 6 y da **7**, por la línea alias `PUT` que genera `resources`. Los 6 endpoints distintos son correctos y el `index` **no** existe, que es la mitad importante. **Se corrige el criterio, no el código** |
 | **P-15** | Regla inviolable del encargo: commits atómicos | 🔴 **Los commits de la ola 5 NO son atómicos.** Los paquetes 09 y 11 se ejecutaron en paralelo y **cuatro commits mezclan archivos de los dos**. Consecuencias concretas: **ningún commit del 09 contiene sus propias pruebas**, y **revertir cualquiera de los tres commits del 09 citados rompería el servidor MCP**. No se reescribió la historia por cuenta propia: son 19 commits encadenados y reescribir commits ya revisados es decisión de quien revisa. Las opciones son aceptarlo con esta nota, o rehacer la ola en una rama limpia |
-| **P-17** | Criterio 35 del **11** vs. el documento del **14** | Se contradicen: el 11 dice *"un gasto con violación bloqueante es rechazado por MCP"* y el 14 dice *"una violación nunca impide guardar"*. Se implementó un punto medio: se rechaza **salvo** que llegue confirmación explícita de la persona, que es exactamente lo que hace la web, y el gasto confirmado **nunca queda aprobado**. Pero el criterio, tal como está escrito, no admite excepciones. Hay que decidir: se corrige el criterio, o se quita la puerta de escape y el agente deja de poder registrar gastos que violan una regla |
+| **P-17** | Criterio 35 del **11** vs. el documento del **14** | Se contradicen: el 11 dice *"un gasto con violación bloqueante es rechazado por MCP"* y el 14 dice *"una violación nunca impide guardar"*. Se implementó un punto medio: se rechaza **salvo** que llegue confirmación explícita de la persona, que es exactamente lo que hace la web, y el gasto confirmado **nunca queda aprobado**. Pero el criterio, tal como está escrito, no admite excepciones. Hay que decidir: se corrige el criterio, o se quita la puerta de escape y el agente deja de poder registrar gastos que violan una regla. **✅ RESUELTO el 2026-09-15 (§C.3): se quitó la puerta de escape.** Con el flag `mandatory`, una regla obligatoria rechaza el gasto en los dos canales y no admite confirmación; una regla blanda lo deja entrar sin pedirla. Los dos criterios quedan compatibles y el 14 se corrigió |
 | **P-19** | Criterio 12 del **12** | Exige que la bitácora de bordes de red tenga **≥5 líneas** tras la corrida. Medido hoy, otra vez: **3 líneas**, todas de tasas de cambio. Es coherente con que los 3 escenarios de IA estén sin ejecutar y por tanto nunca toquen el stub de extracción. **No es un test en rojo.** Decisión: recalibrar el criterio a 3, o exigir que crezca cuando se enciendan los 3 escenarios |
 | **P-26** | Entregable del **13** que **no se hizo** | El paquete prometía en su tabla "a modificar" agregarle a [`TAIMES-AGENTE-GASTOS.md`](../TAIMES-AGENTE-GASTOS.md) una sección **"Estado de la configuración en staging/producción"** con el resultado de las tareas B5/B6. **La sección no existe**: `grep -i "estado de la configuraci" docs/*.md` no devuelve nada y el último commit que tocó ese archivo es `ea98dad`, del paquete 11. Ningún commit del 13 lo modificó. **En rigor no se podía escribir**: su contenido es el resultado de ejecutar el runbook en los entornos reales, que es P-02/P-03/P-05 y nadie lo ha hecho. Hay que escribirla el día del despliegue, o dar el entregable por retirado |
 | **P-28** | Criterio 3 del **13** | Exige que la guía de reglas "nombre cada fila de `parameterizations` con su nombre exacto, incluidos el prefijo de conceptos y el sentinela (NINGUNO)". [`GUIA-REGLAS-NEGOCIO.md`](../GUIA-REGLAS-NEGOCIO.md) **no lo hace, a propósito**: documenta la pantalla y la tabla propia de reglas del paquete 14, y su Anexo declara obsoleta la especificación basada en `parameterizations`. **Verificado y cierto**: no existe `lib/tasks/parameterizations*` ni la tarea `parameterizations_gastos_ia:install`, y sí existen `app/models/expense_rule.rb` y `app/services/expense_rule_service.rb`. **Se corrige el criterio, no la guía** |
@@ -429,6 +429,10 @@ factura en la mano, solo consigue que no reporte»— queda como el riesgo acept
   La confirmación expresa de WhatsApp (`confirm_rule_violations`) se conserva: es el único
   escape, y es una decisión humana registrada.
 
+  > **Derogado el 2026-09-15 — ver §C.1 y §C.3.** «Las reglas son duras» pasó a decidirse regla
+  > por regla con el flag `mandatory`, y el escape de WhatsApp se retiró: una regla obligatoria
+  > ya no se puede confirmar. La guarda de edición del párrafo de arriba **sí sigue vigente**.
+
 **2. `is_acepted` se usa para algo nuevo — ROMPE EL INVARIANTE #1.** A petición explícita del
 dueño del producto. Un gasto que cabe en el presupuesto **nace aceptado** (`before_create`), y
 el que se pasa o no tiene partida nace en «Creado». Va en `before_create` y no en `before_save`
@@ -594,3 +598,79 @@ sirve para nada. El SMTP ya está puesto —SendGrid, en `config/environment.rb`
 `PASSWORD`— y es el mismo por el que hoy sale la aprobación de reportes de servicio.
 
 *Adenda escrita el 2026-09-12.*
+
+---
+
+# ADENDA — 2026-09-15: cada regla decide si frena o solo avisa
+
+## C.1 El flag `mandatory`, y qué corrige de la adenda A.2
+
+`expense_rules` gana una columna, `mandatory`, y con ella **la decisión de A.2 §1 deja de ser
+global y pasa a ser regla por regla**:
+
+* `mandatory: true` → un gasto que incumple los límites de esa regla **no se guarda**, ni por la
+  web ni por móvil. Es exactamente lo que hace hoy toda regla.
+* `mandatory: false` → el gasto **se registra**, la violación queda anotada en `rule_violations`
+  y el gasto baja a «sin aprobar» con el motivo en `budget_reason`, para que la persona sepa por
+  qué no quedó aprobado.
+
+**La rama blanda no es funcionalidad nueva: es la que había antes de A.2** y nunca se borró
+(`ReportExpense#apply_expense_rules`). Lo único que se construyó es el interruptor.
+
+**El default de la columna es `true`.** Es la decisión importante de la migración y se tomó
+a conciencia: con `false`, correr la migración habría aflojado de golpe todas las reglas que ya
+están en producción, sin que nadie lo pidiera regla por regla. Así, migrar no cambia ni un
+comportamiento; aflojar una regla es un acto deliberado, y queda en la auditoría.
+
+## C.2 Lo que no se pudo hacer como parecía, y por qué importa
+
+La forma obvia de implementar esto —marcar cada violación con el `mandatory` de «su» regla y
+filtrar— **no funciona**, y conviene que quede escrito porque el error es natural:
+`ExpenseRuleService.effective_limits` colapsa las N reglas de una persona en **un** juego de
+límites tomando el mínimo de cada uno. Una violación del tope efectivo no tiene una regla dueña
+de la que heredar el flag; el propio código ya lo decía, en el comentario de `violation`, que
+deja `rule` en `nil` porque «atribuírselo a una sola sería mentir».
+
+La solución es **resolver los límites dos veces**: una con todas las reglas (la foto que va a
+`rule_violations`) y otra con solo las obligatorias (lo que frena). El caso que lo prueba: una
+regla dura de 30 días y una blanda de 15; un comprobante de 20 días **se registra** —no viola
+ninguna regla obligatoria— pero queda marcado, porque sí incumple el límite efectivo.
+
+Consecuencia sutil, fijada en un test: el mensaje del error cita **el tope de la regla
+obligatoria**, no el efectivo. Al usuario hay que decirle el número que tiene que respetar para
+poder guardar, no el de una regla que no le va a cerrar la puerta.
+
+El único check que va a la base —duplicados— **se consulta una sola vez** y su resultado se
+reusa en los dos juegos. Correrlo dos veces habría duplicado una consulta en cada guardado de
+cada gasto del sistema. Hay un test que cuenta las consultas.
+
+## C.3 Se retiró el escape de WhatsApp — esto sí es un cambio de comportamiento
+
+**A.2 §1 decía que `confirm_rule_violations` «se conserva: es el único escape». Ya no.**
+
+Ese escape existía porque A.2 había vuelto duras *todas* las reglas, y sin él el canal móvil
+dejaba a la gente tirada en campo con la factura en la mano. El flag `mandatory` lo dejó sin
+trabajo por las dos puntas: una regla blanda ya no produce errores que haya que confirmar, y una
+regla obligatoria **no se puede confirmar** —si el administrador la marcó así, el gasto no debe
+existir, y darle al móvil una puerta que la web no tiene es justo la asimetría entre canales que
+este paquete evita en todos lados—.
+
+Lo que cambia para quien usa WhatsApp: hoy un `confirm_rule_violations: true` mete cualquier
+gasto; desde ahora, si la regla es obligatoria el gasto se rechaza y el agente tiene que pedir
+que se corrija el comprobante. El parámetro **se sigue aceptando y se ignora**, para no romper
+conversaciones en curso; su descripción en la tool lo dice.
+
+## C.4 Lo que este cambio le responde a A.4, y lo que no
+
+**El import contra las reglas duras** (A.4) ya tiene con qué resolverse: basta marcar la regla
+que aplique a la carga histórica como no obligatoria, y el archivo entra con los gastos marcados
+en vez de rechazados. **La decisión sigue abierta**: este cambio da la herramienta, no elige.
+
+**Sigue abierto igual que antes**: `rule_violations` no está en el serializer de gastos, así que
+el detalle de la violación sigue sin leerse en pantalla cuando el gasto además está excedido o
+sin partida (A.4). Este cambio no lo toca.
+
+**La prueba de zona horaria** (A.4) sigue fallando cada tarde después de las 19:00 hora Colombia,
+por `date_update: Time.now` contra `Date.current`. Se verificó que falla igual sin estos cambios.
+
+*Adenda escrita el 2026-09-15.*

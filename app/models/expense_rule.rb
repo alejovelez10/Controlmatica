@@ -7,6 +7,7 @@
 #  agent_instructions   :text
 #  check_duplicates     :boolean          default(TRUE), not null
 #  is_default           :boolean          default(FALSE), not null
+#  mandatory            :boolean          default(TRUE), not null
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
@@ -35,6 +36,12 @@
 #
 # Mover una regla determinista al prompt del agente rompe la simetria entre
 # canales en silencio: el gasto por la web deja de validarse y nadie se entera.
+#
+# `mandatory` NO ES NI UNA COSA NI LA OTRA: no es un limite que se evalue, es la
+# CONSECUENCIA de incumplir los limites de esta regla. `true` frena la creacion
+# del gasto (web y movil); `false` la deja pasar, anota la violacion y baja el
+# gasto a "sin aprobar" con el motivo. Aplica solo a los limites deterministas:
+# `agent_instructions` las juzga el agente y este flag no lo alcanza.
 class ExpenseRule < ApplicationRecord
   # POR ROL Y NO POR USUARIO (2026-09-10). Mantener la lista persona por persona
   # es trabajo que nadie hace: cada usuario nuevo hay que acordarse de agregarlo,
@@ -51,7 +58,7 @@ class ExpenseRule < ApplicationRecord
   validate  :name_unico_entre_activas
   validates :max_invoice_age_days, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :max_invoice_value,    numericality: { greater_than: 0 }, allow_nil: true
-  validates :active, :is_default, :check_duplicates, inclusion: { in: [true, false] }
+  validates :active, :is_default, :check_duplicates, :mandatory, inclusion: { in: [true, false] }
   validate  :una_sola_default_activa
 
   scope :activas, -> { where(active: true) }
@@ -100,6 +107,12 @@ class ExpenseRule < ApplicationRecord
 
   def limite_valor_label
     max_invoice_value.present? ? ExpenseBudgetService.money(max_invoice_value) : "Sin tope"
+  end
+
+  # Se dice lo que PASA, no el nombre del flag: "Obligatoria / Informativa" no
+  # le sirve a quien lee la auditoria seis meses despues.
+  def obligatoriedad_label
+    etiqueta_obligatoriedad(mandatory)
   end
 
   private
@@ -160,6 +173,12 @@ class ExpenseRule < ApplicationRecord
                                etiqueta_monto(max_invoice_value_change[1]))                     if max_invoice_value_changed?
     partes << segmento_edicion("Validar duplicados", etiqueta_si_no(check_duplicates_change[0]),
                                etiqueta_si_no(check_duplicates_change[1]))                      if check_duplicates_changed?
+    # AFLOJAR O ENDURECER UNA REGLA TIENE QUE QUEDAR EN LA AUDITORIA: es el
+    # cambio de esta pantalla con mas consecuencias —deja de rechazarse un gasto
+    # que antes se rechazaba— y sin este segmento no habria forma de saber quien
+    # lo hizo ni cuando.
+    partes << segmento_edicion("Al incumplirse", etiqueta_obligatoriedad(mandatory_change[0]),
+                               etiqueta_obligatoriedad(mandatory_change[1]))                    if mandatory_changed?
     partes << segmento_edicion("Instrucciones para el agente", agent_instructions_change[0],
                                agent_instructions_change[1])                                    if agent_instructions_changed?
 
@@ -175,6 +194,7 @@ class ExpenseRule < ApplicationRecord
       "<p>Antigüedad máxima: <b>#{limite_antiguedad_label}</b></p>" \
       "<p>Tope de valor: <b>#{limite_valor_label}</b></p>" \
       "<p>Validar duplicados: <b>#{etiqueta_si_no(check_duplicates)}</b></p>" \
+      "<p>Al incumplirse: <b>#{obligatoriedad_label}</b></p>" \
       "<p>Aplica a: <b>#{rols.map(&:name).sort.join(", ").presence || "Ningun rol asignado"}</b></p>"
   end
 
@@ -184,6 +204,7 @@ class ExpenseRule < ApplicationRecord
 
   def etiqueta_estado(valor) = valor ? "Activa" : "Inactiva"
   def etiqueta_si_no(valor)  = valor ? "Sí" : "No"
+  def etiqueta_obligatoriedad(valor) = valor ? "Frena la creación del gasto" : "Deja crear y avisa"
   def etiqueta_dias(valor)   = valor.present? ? "#{valor} días" : "Sin límite"
   def etiqueta_monto(valor)  = valor.present? ? ExpenseBudgetService.money(valor) : "Sin tope"
 

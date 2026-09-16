@@ -37,7 +37,11 @@ const selectStyles = {
 //   1. El multi-select vacio significa NINGUN rol, no todos. Es la
 //      confusion obvia de quien administra, y por eso el aviso esta AL LADO del
 //      campo, en la pantalla, no en un manual que nadie abre.
-//   2. Las instrucciones para el agente son texto en español para una persona
+//   2. «Al incumplirse» decide si la regla RECHAZA el gasto o solo lo marca, y
+//      el aviso que lo explica cambia con la casilla. Una regla desmarcada por
+//      error no produce ningun error visible: simplemente deja de rechazar, y
+//      eso no se nota hasta la auditoria contable.
+//   3. Las instrucciones para el agente son texto en español para una persona
 //      (bueno, para un modelo que lee como una persona), NO reglas de fecha ni
 //      de monto: esas tienen sus propios campos y las evalua el servidor. Si
 //      alguien escribe ahi "no aceptar facturas de mas de 30 dias", ese limite
@@ -125,8 +129,7 @@ class ExpenseRuleFormCreate extends Component {
           </div>
           <div className="cm-field-hint" style={{ marginBottom: 12 }}>
             Estos tres los revisa el servidor siempre, entren los gastos por la web o por WhatsApp.
-            Una violación nunca impide guardar el gasto, pero lo deja marcado y sin aprobación
-            automática de presupuesto.
+            Lo que pasa cuando uno se incumple lo decide <b>«Al incumplirse»</b>, más abajo.
           </div>
 
           <div className="cm-form-grid-2">
@@ -177,6 +180,47 @@ class ExpenseRuleFormCreate extends Component {
                 Marca el gasto cuando ya existe otro con el mismo número de factura y el mismo NIT
                 de proveedor. Si alguno de los dos datos viene vacío, no se evalúa.
               </div>
+            </div>
+          </div>
+
+          {/* EL INTERRUPTOR CON MAS CONSECUENCIAS DE ESTA PANTALLA, y por eso
+              no es un checkbox suelto arriba: gobierna a los tres limites de
+              esta seccion y va despues de ellos, ya leidos.
+
+              EL AVISO DE ABAJO CAMBIA CON LA CASILLA A PROPOSITO. La casilla
+              sola dice "obligatoria", que no le dice a nadie que va a pasar;
+              quien la desmarca tiene que leer, en la pantalla y en ese momento,
+              que los gastos van a EMPEZAR A ENTRAR. */}
+          <div className="cm-form-grid-1" style={{ marginTop: 4 }}>
+            <div className="cm-form-group">
+              <label className="cm-label">
+                <input type="checkbox" name="mandatory" checked={!!f.mandatory}
+                       onChange={p.onToggleBool} data-testid="rule-mandatory" />
+                {" "}Al incumplirse, <b>no dejar crear el gasto</b>
+              </label>
+
+              {f.mandatory ? (
+                <div className="cm-alert cm-alert-danger" data-testid="rule-mandatory-hint"
+                     style={{ marginTop: 8 }}>
+                  <i className="fa fa-ban" />{" "}
+                  <span>
+                    Un gasto que incumpla cualquiera de los tres límites de arriba
+                    <b> se rechaza y no se guarda</b>, entre por la web o por WhatsApp. La persona
+                    tendrá que corregir el comprobante para poder reportarlo; <b>no</b> hay forma de
+                    registrarlo de todos modos.
+                  </span>
+                </div>
+              ) : (
+                <div className="cm-alert cm-alert-warning" data-testid="rule-mandatory-hint"
+                     style={{ marginTop: 8 }}>
+                  <i className="fa fa-exclamation-triangle" />{" "}
+                  <span>
+                    El gasto <b>sí se registra</b>: queda guardado, con la violación anotada y en
+                    estado <b>«sin aprobar»</b>, y la persona ve el motivo por el que no quedó
+                    aprobado. Alguien tiene que revisarlo después: esta regla <b>avisa, no impide</b>.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

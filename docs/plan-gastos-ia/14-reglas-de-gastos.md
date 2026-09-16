@@ -255,7 +255,11 @@ para que el agente lo tenga antes de conversar.
 - [ ] Las tres reglas deterministas se evalúan **en el servidor**, y aplican igual a un gasto
       creado por la web que a uno creado por MCP.
 - [ ] El texto semántico no se evalúa en el servidor: se expone para que lo aplique el agente.
-- [ ] Una violación nunca impide guardar el gasto, pero impide que quede aprobado.
+- [ ] Cada regla decide qué pasa al incumplirse (`mandatory`, 2026-09-15): si es obligatoria, el
+      gasto **no se guarda** —igual por la web que por MCP, y sin confirmación que lo permita—;
+      si no lo es, el gasto se guarda, la violación queda anotada y **no queda aprobado**.
+      *(Este criterio decía «una violación nunca impide guardar»: fue cierto hasta la adenda A.2,
+      que las volvió todas duras, y ahora depende de la regla. Ver ESTADO.md §C.1.)*
 - [ ] Todas las operaciones sobre reglas quedan en el registro de edición.
 - [ ] Las 30 pruebas unitarias y los 4 escenarios E2E pasan.
 

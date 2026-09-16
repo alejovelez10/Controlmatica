@@ -7,8 +7,10 @@ class ReportExpensesCreateTool < ApplicationTool
               "X-Actor-Email; si no se identifica a nadie y no se indica user_invoice_id explícito, " \
               "la tool RECHAZA y no registra nada (nunca lo atribuye al Administrador). " \
               "Antes de llamar a esta tool consulta expense_rules_validate: si devuelve alguna " \
-              "violación, muéstrasela a la persona, espera su confirmación y solo entonces llama " \
-              "aquí con confirm_rule_violations: true. " \
+              "violación con blocking: true, el gasto NO se puede registrar de ninguna forma " \
+              "—no hay confirmación que lo permita—; explícale el motivo a la persona y pídele " \
+              "corregir el comprobante. Las violaciones con blocking: false sí se registran: el " \
+              "gasto queda \"sin aprobar\" y la respuesta trae el motivo para que se lo cuentes. " \
               "Los valores (invoice_value/tax/total) van en pesos; si el comprobante está en otra " \
               "moneda usa currency + foreign_* + exchange_rate (pídela con exchange_rates_get). " \
               "Usa report_expense_options_list para obtener type_identification_id y payment_type_id válidos."
@@ -33,7 +35,7 @@ class ReportExpensesCreateTool < ApplicationTool
       foreign_total:          { type: "number",  description: "Total en la moneda del comprobante" },
       exchange_rate:          { type: "number",  description: "Tasa a COP: cuantos COP vale 1 unidad de currency. Usa exchange_rates_get para obtenerla." },
       exchange_rate_date:     { type: "string",  description: "Fecha de la tasa aplicada, YYYY-MM-DD. Normalmente = invoice_date." },
-      confirm_rule_violations: { type: "boolean", description: "Solo en true DESPUÉS de mostrarle a la persona las violaciones de reglas y de que ella confirme registrar igual. Sin esto, un gasto con violaciones se rechaza." }
+      confirm_rule_violations: { type: "boolean", description: "OBSOLETO desde 2026-09-15, se ignora. Cada regla decide si frena (blocking: true, y entonces no hay confirmación posible) o si solo deja el gasto sin aprobar. Se sigue aceptando para no romper conversaciones en curso." }
     },
     required: %w[cost_center_id type_identification_id]
   )
@@ -132,23 +134,29 @@ class ReportExpensesCreateTool < ApplicationTool
       re.omitir_comprobante_obligatorio = true
       re.exchange_rate_source = resolve_rate_source(re)
       re.user_id = creator.id
-      # Desde que las reglas son una VALIDACION del modelo (duras, bloquean), la
-      # confirmacion de la persona hay que trasladarla al objeto: sin esto el
-      # `save` fallaria despues del guard de abajo y la confirmacion no serviria
-      # de nada.
-      re.reglas_confirmadas_por_el_usuario = ActiveModel::Type::Boolean.new.cast(confirm_rule_violations)
-
       # GUARD DE REGLAS DE NEGOCIO — antes de guardar nada (§7.5). El motor es
       # ExpenseRuleService (paquete 14) y es el MISMO que corre en la web: aquí
       # no se escribe ni una regla, solo se decide qué hacer con el veredicto.
-      violations = ExpenseRuleService.validate(re).value[:violations]
-      if violations.any? && !ActiveModel::Type::Boolean.new.cast(confirm_rule_violations)
+      # SOLO FRENAN LAS REGLAS OBLIGATORIAS, Y NO HAY CONFIRMACION QUE LAS PASE
+      # (decision de producto, 2026-09-15). Una violación de regla blanda NO
+      # entra aquí: se registra, se anota y el gasto queda "sin aprobar" con el
+      # motivo, que es lo que la respuesta de éxito ya le cuenta al agente.
+      #
+      # `confirm_rule_violations` ya no se lee. Se dejó de leer a proposito: el
+      # administrador marca la regla como obligatoria para que el gasto no
+      # exista, y una confirmación del agente le devolveria la decisión a quien
+      # esta reportando.
+      veredicto = ExpenseRuleService.validate(re).value
+      if veredicto[:blocking_violations].any?
         return json(type: "error",
-                    message: violations.map { |v| v[:message] },
-                    rule_violations: violations,
-                    next_step: "Muéstrale estas advertencias a la persona. Si aun así confirma " \
-                               "que quiere registrar el gasto, vuelve a llamar a esta tool con " \
-                               "confirm_rule_violations: true.")
+                    message: veredicto[:blocking_violations].map { |v| v[:message] },
+                    # La foto completa, no solo lo que frena: el agente tiene que
+                    # poder contarle a la persona todo lo que se incumplio.
+                    rule_violations: veredicto[:violations],
+                    next_step: "Explícale a la persona por qué no se pudo registrar el gasto. " \
+                               "Estas reglas son obligatorias: NO se puede registrar así, ni " \
+                               "confirmando. Lo que sí puede hacer es corregir el comprobante " \
+                               "(fecha, valor o número de factura) y volver a intentarlo.")
       end
 
       # PERSISTENCIA — punto de entrada único del paquete 04 (§7.4): toma el

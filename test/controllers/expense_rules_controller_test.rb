@@ -194,6 +194,20 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     refute @regla.check_duplicates
   end
 
+  # `mandatory` TIENE QUE ESTAR EN `expense_rule_params`: sin permitirlo, la
+  # pantalla mandaria la casilla, el controller la descartaria en silencio y la
+  # regla se quedaria dura para siempre sin que nadie entienda por que.
+  test "editar puede aflojar la regla y el serializer devuelve el campo" do
+    sign_in_as @admin
+    assert @regla.mandatory
+
+    patch expense_rule_path(@regla), params: { mandatory: false }
+
+    assert_json_success
+    refute @regla.reload.mandatory
+    assert_equal false, json_body["register"]["mandatory"]
+  end
+
   test "editar con id inexistente responde 404" do
     sign_in_as @admin
 
@@ -256,6 +270,30 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     # tenga que adivinar cual de los dos evalua el servidor.
     assert_includes cuerpo["agent_instructions"], "licores"
     assert_includes cuerpo["agent_instructions"], "propinas"
+    # Las dos fixtures son obligatorias, asi que los topes que frenan son los
+    # mismos que los efectivos. La diferencia se prueba en el test de abajo.
+    assert_equal 15, cuerpo["binding_limits"]["max_invoice_age_days"]
+  end
+
+  # LOS TOPES DE ARRIBA SON EL MINIMO DE TODAS LAS REGLAS Y NO TODOS FRENAN.
+  # Sin `binding_limits`, la pantalla anunciaria como tope infranqueable uno que
+  # el servidor va a dejar pasar igual, y la persona en campo no intentaria
+  # registrar un gasto que si podia registrar.
+  test "get_expense_rules_for_user separa los topes que frenan de los que solo avisan" do
+    sign_in_as @admin
+    # La estricta en antiguedad (15 dias) pasa a ser un aviso; queda como unica
+    # obligatoria `directivos`, con 30 dias y tope de 2.000.000.
+    as_user(@admin) { expense_rules(:directivos_estricta).update!(mandatory: false) }
+
+    get "/get_expense_rules_for_user", params: { user_id: users(:gerente).id }
+
+    assert_response :success
+    cuerpo = json_body
+    # El limite efectivo no cambia: la regla blanda se sigue evaluando.
+    assert_equal 15, cuerpo["max_invoice_age_days"]
+    # Pero lo que frena son los 30 dias de la regla que quedo obligatoria.
+    assert_equal 30, cuerpo["binding_limits"]["max_invoice_age_days"]
+    assert_equal BigDecimal("2000000"), cuerpo["binding_limits"]["max_invoice_value"].to_d
   end
 
   test "get_expense_rules_for_user sin reglas devuelve todo en nil" do

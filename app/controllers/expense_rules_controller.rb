@@ -108,6 +108,10 @@ class ExpenseRulesController < ApplicationController
     render json: {
       ok: resultado.value[:ok],
       violations: resultado.value[:violations],
+      # LA PANTALLA TIENE QUE PODER DISTINGUIRLAS: con una sola lista pintaria
+      # el mismo aviso rojo para lo que frena el guardado y para lo que solo lo
+      # explica, y la persona no sabria si puede seguir o no.
+      blocking_violations: resultado.value[:blocking_violations],
       applied_rules: resultado.value[:applied_rules]
     }
   end
@@ -116,15 +120,26 @@ class ExpenseRulesController < ApplicationController
     user = User.find_by(id: params[:user_id].presence || current_user.id)
     return validation_error(["El usuario no existe"]) if user.nil?
 
-    limites = ExpenseRuleService.limits_for(user)
+    # Las reglas se resuelven UNA vez y de ahi salen los dos juegos de limites y
+    # los nombres. Antes se llamaba a `limits_for` y a `aplicables_a` por
+    # separado, que son dos consultas para la misma lista.
+    reglas = ExpenseRule.aplicables_a(user).to_a
+    limites = ExpenseRuleService.effective_limits(reglas)
 
     render json: {
       user_id: user.id,
-      applied_rules: ExpenseRule.aplicables_a(user).map(&:name),
+      applied_rules: reglas.map(&:name),
       max_invoice_age_days: limites[:max_invoice_age_days],
       max_invoice_value: limites[:max_invoice_value],
       check_duplicates: limites[:check_duplicates],
-      agent_instructions: limites[:agent_instructions]
+      agent_instructions: limites[:agent_instructions],
+      # Los limites de arriba son el MINIMO de TODAS las reglas; estos son el
+      # minimo de las obligatorias, que es lo que de verdad frena un guardado.
+      # Sin ellos, la pantalla anunciaria como tope infranqueable uno que el
+      # servidor va a dejar pasar igual.
+      binding_limits: ExpenseRuleService.effective_limits(reglas.select(&:mandatory))
+                                        .slice(:max_invoice_age_days, :max_invoice_value,
+                                               :check_duplicates)
     }
   end
 
@@ -233,7 +248,7 @@ class ExpenseRulesController < ApplicationController
   # pone el servidor a partir de la sesion y el editor lo escribe el callback del
   # modelo. Permitirlos dejaria atribuirle a otro una regla propia.
   def expense_rule_params
-    params.permit(:name, :active, :is_default, :max_invoice_age_days,
+    params.permit(:name, :active, :is_default, :mandatory, :max_invoice_age_days,
                   :max_invoice_value, :check_duplicates, :agent_instructions)
   end
 end

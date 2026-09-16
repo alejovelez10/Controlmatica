@@ -7,6 +7,7 @@
 #  agent_instructions   :text
 #  check_duplicates     :boolean          default(TRUE), not null
 #  is_default           :boolean          default(FALSE), not null
+#  mandatory            :boolean          default(TRUE), not null
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
@@ -38,6 +39,12 @@
 # rols.yml), igual que el de rols.yml con accion_modules. NO existe
 # test/fixtures/expense_rules_rols.yml y no se debe crear: una fixture de tabla
 # puente suelta no resuelve etiquetas.
+#
+# NINGUNA FIXTURE FIJA `mandatory` Y ES A PROPOSITO: heredan el default de la
+# columna (true), asi que las tres frenan la creacion del gasto igual que antes
+# del flag, y ningun test ajeno cambio de comportamiento cuando se agrego. El
+# test que necesita una regla blanda la afloja el mismo, que ademas es lo unico
+# que prueba de verdad la diferencia entre lo que frena y lo que solo avisa.
 #
 # LAS REGLAS SE ASIGNAN POR ROL desde 2026-09-10. Las etiquetas de rols.yml y
 # users.yml coinciden (gerente, ingeniero...), asi que el escenario de estas

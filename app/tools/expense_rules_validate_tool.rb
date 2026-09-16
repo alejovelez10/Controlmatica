@@ -11,9 +11,10 @@ class ExpenseRulesValidateTool < ApplicationTool
   description "Valida un gasto candidato contra las reglas de negocio de Controlmatica " \
               "(antigüedad del comprobante, tope por gasto, duplicados) y, opcionalmente, contra " \
               "el presupuesto disponible. NO guarda nada. Llámala SIEMPRE antes de " \
-              "report_expenses_create. Si alguna violación trae blocking: true, no registres el " \
-              "gasto sin explicarle el motivo a la persona y obtener su confirmación explícita: " \
-              "esa confirmación se envía luego como confirm_rule_violations en report_expenses_create. " \
+              "report_expenses_create. Una violación con blocking: true significa que el gasto NO " \
+              "se puede registrar: no lo intentes, explícale el motivo a la persona y pídele " \
+              "corregir el comprobante. Una con blocking: false sí se registra, pero el gasto " \
+              "queda \"sin aprobar\" con ese motivo: avísaselo antes de crearlo. " \
               "El campo agent_instructions trae las reglas que escribió el administrador en texto " \
               "libre: aplícalas tú, el servidor no las evalúa."
   input_schema(
@@ -67,11 +68,20 @@ class ExpenseRulesValidateTool < ApplicationTool
     responsable = resolved_user_id && User.find_by(id: resolved_user_id)
     violations = ExpenseRuleService.validate(candidato, user: responsable)
 
+    # `blocking` SALE DEL SERVICIO, NO SE ASUME. Hasta 2026-09-15 esta tool
+    # cableaba `blocking: true` porque toda violación determinista frenaba la
+    # creación; con el flag `mandatory` por regla eso dejó de ser cierto, y
+    # decirle al agente que algo frena cuando no frena le hace pedir una
+    # confirmación que nadie necesitaba.
+    #
+    # Se comparan por `code` y no por objeto: son hashes construidos en dos
+    # pasadas distintas del servicio y el mensaje puede citar topes distintos
+    # (el efectivo en la foto, el obligatorio en el que frena).
+    codigos_que_frenan = violations.value[:blocking_violations].map { |v| v[:code] }
+
     lista = violations.value[:violations].map do |v|
-      # blocking: true = report_expenses_create la rechaza mientras la persona
-      # no confirme. No la inventa esta tool: TODA violación determinista del
-      # paquete 14 tiene ese efecto.
-      { rule: v[:rule], code: v[:code], message: v[:message], blocking: true }
+      { rule: v[:rule], code: v[:code], message: v[:message],
+        blocking: codigos_que_frenan.include?(v[:code]) }
     end
 
     presupuesto = nil

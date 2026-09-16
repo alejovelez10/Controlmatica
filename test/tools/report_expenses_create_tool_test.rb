@@ -326,7 +326,12 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
         cuerpo = tool_json(res)
         assert_equal "error", cuerpo["type"]
         assert_equal ["invoice_value_exceeded"], cuerpo["rule_violations"].map { |v| v["code"] }
-        assert_includes cuerpo["next_step"], "confirm_rule_violations"
+        # NO SE LE OFRECE CONFIRMAR: desde 2026-09-15 una regla obligatoria no
+        # tiene puerta de atras, y un next_step que invitara a reintentar con
+        # `confirm_rule_violations: true` haria que el agente lo intentara, se
+        # llevara un error crudo del save y se lo contara a la persona.
+        refute_includes cuerpo["next_step"], "confirm_rule_violations"
+        assert_includes cuerpo["next_step"], "ni confirmando"
       end
     end
   end
@@ -342,16 +347,37 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
     end
   end
 
-  test "con confirm_rule_violations la persona puede registrar igual y el gasto NO queda aprobado" do
-    regla_default!(max_invoice_value: 50_000)
+  # ESTE TEST PROBABA EL ESCAPE DE WHATSAPP (`confirm_rule_violations: true`) y
+  # ahora prueba la regla blanda. Las aserciones son las mismas: lo que cambio es
+  # QUIEN decide que el gasto entre —antes la persona en el chat, ahora el
+  # administrador al configurar la regla—.
+  test "con la regla no obligatoria el gasto se registra sin confirmar nada y NO queda aprobado" do
+    regla_default!(max_invoice_value: 50_000, mandatory: false)
     with_mcp_key do
-      res = crear({ actor_phone: "+57 300 123 4567" }, confirm_rule_violations: true)
+      res = crear({ actor_phone: "+57 300 123 4567" })
       cuerpo = tool_json(res)
       creado = ReportExpense.find(cuerpo["id"])
       assert_equal ["invoice_value_exceeded"], creado.rule_violations.map { |v| v["code"] }
-      # El paquete 14 manda: una violación no impide guardar, pero impide que
-      # quede aprobado.
+      # Una violación blanda no impide guardar, pero impide que quede aprobado.
       refute_equal "aprobado", creado.budget_status
+      # Y EL MOTIVO VIAJA AL AGENTE: es la mitad del pedido —"deja crear y
+      # muestra el mensaje de por que no quedo aprobado"—. Sin esto el gasto
+      # entraria en silencio y la persona creeria que quedo aprobado.
+      assert_includes creado.budget_reason.to_s, "reglas de gasto"
+    end
+  end
+
+  # LA PUERTA DE ATRAS ESTA CERRADA, Y SE FIJA CON UN TEST porque el parametro
+  # sigue existiendo en el esquema de la tool (se acepta para no romper
+  # conversaciones en curso) y es facil creer que todavia hace algo.
+  test "confirm_rule_violations ya no pasa por encima de una regla obligatoria" do
+    regla_default!(max_invoice_value: 50_000, mandatory: true)
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        cuerpo = tool_json(crear({ actor_phone: "+57 300 123 4567" }, confirm_rule_violations: true))
+        assert_equal "error", cuerpo["type"]
+        assert_equal ["invoice_value_exceeded"], cuerpo["rule_violations"].map { |v| v["code"] }
+      end
     end
   end
 
