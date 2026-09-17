@@ -26,3 +26,10 @@ opcion_pago:
   name: Efectivo
   category: Medio de pago
   user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>
+
+# El nombre es el de produccion (id 27): los viaticos no exigen comprobante
+# (ReportExpenseOption::PREFIJOS_SIN_COMPROBANTE).
+opcion_viaticos:
+  name: "Viáticos de transporte 510521"
+  category: Tipo
+  user_id: <%= ActiveRecord::FixtureSet.identify(:admin) %>

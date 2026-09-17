@@ -210,6 +210,8 @@ class CostCentersController < ApplicationController
       # formulario marque el campo y corte antes de subir. Quien rechaza de
       # verdad es el modelo.
       receipt_required: ReportExpense.comprobante_obligatorio?,
+      # Tipos que no exigen comprobante aunque el flag este encendido (viaticos).
+      receipt_optional_type_ids: ReportExpenseOption.ids_sin_comprobante,
     )
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)

@@ -95,6 +95,23 @@ class ReportExpenseTest < ActiveSupport::TestCase
     end
   end
 
+  test "con el flag encendido un gasto de viaticos sin comprobante si se crea" do
+    # Decision de producto 2026-09-16: los viaticos se liquidan sin factura.
+    con_comprobante_obligatorio do
+      gasto = ReportExpense.new(atributos_basicos.merge(type_identification: report_expense_options(:opcion_viaticos)))
+      gasto.valid?
+      refute gasto.errors.key?(:receipt_file), gasto.errors.full_messages.join(" ")
+    end
+  end
+
+  test "con el flag encendido otro tipo sin comprobante sigue sin crearse" do
+    con_comprobante_obligatorio do
+      gasto = ReportExpense.new(atributos_basicos.merge(type_identification: report_expense_options(:opcion_tipo)))
+      refute gasto.valid?
+      assert gasto.errors.key?(:receipt_file)
+    end
+  end
+
   test "con el flag encendido editar un gasto viejo sin comprobante sigue siendo posible" do
     # Los ~7.000 historicos no tienen comprobante: con la regla en updates no se
     # podrian ni aceptar ni contabilizar, que son updates sobre gastos viejos.

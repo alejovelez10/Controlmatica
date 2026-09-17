@@ -5,6 +5,9 @@ import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable, CmModal, CmButton } from '../../generalcomponents/ui';
 import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen } from '../../generalcomponents/expenseIndicators';
 
+// Un solo literal: el cambio de tipo compara contra el para saber si puede borrarlo.
+const AVISO_COMPROBANTE = "Adjunte el comprobante: es obligatorio.";
+
 function csrfToken() {
   var meta = document.querySelector('meta[name="csrf-token"]');
   return meta ? meta.getAttribute("content") : "";
@@ -409,7 +412,14 @@ class ExpensesTable extends Component {
     this.loadBudgetAvailability(opt ? opt.value : null, this.state.modeEdit ? this.state.id : null);
   };
 
-  handleChangeAutocompleteReportExpenceOptionType = (opt) => { this.setState({ selectedOptionTypeIndentification: opt, formCreate: Object.assign({}, this.state.formCreate, { type_identification_id: opt.value }) }); };
+  // Al pasar a viaticos el aviso de "comprobante obligatorio" deja de ser cierto.
+  handleChangeAutocompleteReportExpenceOptionType = (opt) => {
+    this.setState({
+      selectedOptionTypeIndentification: opt,
+      receiptError: this.state.receiptError === AVISO_COMPROBANTE ? null : this.state.receiptError,
+      formCreate: Object.assign({}, this.state.formCreate, { type_identification_id: opt.value }),
+    });
+  };
   handleChangeAutocompleteReportExpenceOptionPaymentType = (opt) => { this.setState({ selectedOptionPaymentType: opt, formCreate: Object.assign({}, this.state.formCreate, { payment_type_id: opt.value }) }); };
 
   // --- Moneda extranjera -----------------------------------------------------
@@ -741,6 +751,15 @@ class ExpensesTable extends Component {
 
   // --- Guardado --------------------------------------------------------------
 
+  // Obligatoriedad del comprobante para el tipo elegido: el flag global, menos
+  // los tipos exentos que publica el servidor (viaticos). Misma regla que
+  // packs/ReportExpenseIndex.js y que ReportExpense#comprobante_obligatorio.
+  comprobanteObligatorio = (typeId) => {
+    var e = this.props.estados || {};
+    if (!e.receipt_required) return false;
+    return (e.receipt_optional_type_ids || []).indexOf(Number(typeId)) === -1;
+  };
+
   HandleClick = () => {
     var self = this;
     var f = this.state.formCreate;
@@ -753,8 +772,8 @@ class ExpensesTable extends Component {
     // Mismo corte que en el indice de Gastos: el comprobante es obligatorio al
     // CREAR (el servidor tambien lo rechaza) y no al editar, porque los gastos
     // historicos no tienen y con la regla en updates no se podrian ni tocar.
-    if (this.props.estados.receipt_required && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
-      this.setState({ receiptError: "Adjunte el comprobante: es obligatorio." });
+    if (this.comprobanteObligatorio(f.type_identification_id) && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
+      this.setState({ receiptError: AVISO_COMPROBANTE });
       return;
     }
 
@@ -934,7 +953,8 @@ class ExpensesTable extends Component {
             receiptExistingId={this.state.receiptExistingId}
             receiptError={this.state.receiptError}
             ruleViolations={this.state.ruleViolations}
-            receiptRequired={!!this.props.estados.receipt_required}
+            receiptRequired={this.comprobanteObligatorio(this.state.formCreate.type_identification_id)}
+            receiptOptional={!!this.props.estados.receipt_required && !this.comprobanteObligatorio(this.state.formCreate.type_identification_id)}
             onDeleteReceipt={this.state.modeEdit ? this.handleDeleteReceipt : null}
             // Pista: el archivo recien elegido si lo hay, si no la URL del ya
             // guardado (al editar, `receiptFileName` esta vacio).

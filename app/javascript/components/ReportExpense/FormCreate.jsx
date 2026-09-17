@@ -389,6 +389,10 @@ class FormCreate extends Component {
           {/* El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo
               siempre seria mentirle a la persona mientras esta apagado. */}
           {this.props.receiptRequired ? <span className="cm-required">*</span> : null}
+          {/* Flag encendido pero el tipo elegido esta exento (viaticos). */}
+          {this.props.receiptOptional
+            ? <span className="cm-field-hint" data-testid="expense-receipt-optional"> (opcional para viáticos)</span>
+            : null}
         </label>
         {/* ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que cada
             navegador pinta a su manera ("Choose File" en ingles dentro de una app

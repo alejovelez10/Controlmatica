@@ -784,6 +784,8 @@ class ReportExpense < ApplicationRecord
     return unless self.class.comprobante_obligatorio?
     return if omitir_comprobante_obligatorio
     return if receipt_file.present?
+    # Los viaticos no llevan factura (ReportExpenseOption::PREFIJOS_SIN_COMPROBANTE).
+    return if type_identification&.comprobante_opcional?
 
     errors.add(:receipt_file, "es obligatorio: adjunte la foto o el PDF del comprobante")
   end

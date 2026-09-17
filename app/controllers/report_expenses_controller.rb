@@ -32,6 +32,8 @@ class ReportExpensesController < ApplicationController
       # subir. NO es un permiso: es el mismo flag del modelo, que es quien
       # rechaza de verdad.
       receipt_required: ReportExpense.comprobante_obligatorio?,
+      # Tipos que no exigen comprobante aunque el flag este encendido (viaticos).
+      receipt_optional_type_ids: ReportExpenseOption.ids_sin_comprobante,
       # Las dos banderas que deciden QUE pestañas de la lista se pintan. Sin
       # ellas el frontend tendria que adivinar: pintar "Todos" a quien no lo
       # puede ver devuelve una tabla recortada sin explicacion, y pintar

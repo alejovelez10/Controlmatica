@@ -113,6 +113,34 @@ class ReportExpensesReceiptTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "POST de viaticos sin archivo se crea aunque el comprobante sea obligatorio" do
+    con_comprobante_obligatorio do
+      sign_in_as @admin
+
+      assert_difference -> { ReportExpense.count }, 1 do
+        post report_expenses_path, as: :json, params: {
+          cost_center_id: cost_centers(:centro_con_viaticos).id,
+          user_invoice_id: @ingeniero.id,
+          type_identification_id: report_expense_options(:opcion_viaticos).id,
+          invoice_name: "Viaticos Web",
+          invoice_date: "2026-06-01",
+          invoice_number: "FE-VIAT-#{SecureRandom.hex(3)}",
+          identification: "900111222",
+          invoice_value: 50_000, invoice_tax: 0, invoice_total: 50_000
+        }
+      end
+    end
+  end
+
+  test "la pantalla de Gastos publica los tipos que no exigen comprobante" do
+    sign_in_as @admin
+    get report_expenses_path
+
+    assert_response :success
+    assert_includes response.body, "receipt_optional_type_ids"
+    assert_match(/receipt_optional_type_ids[^\]]*#{report_expense_options(:opcion_viaticos).id}/, response.body)
+  end
+
   test "PATCH no puede setear accounting_approved" do
     gasto = crear_gasto
     sign_in_as @admin

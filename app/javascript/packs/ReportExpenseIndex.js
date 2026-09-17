@@ -127,6 +127,8 @@ function esComprobanteImagen(pista) {
 
 var EXTENSIONES_COMPROBANTE = ["jpg", "jpeg", "png", "pdf", "webp", "heic"];
 var TAMANO_MAXIMO_COMPROBANTE = 20 * 1024 * 1024;
+// Un solo literal: el cambio de tipo compara contra el para saber si puede borrarlo.
+var AVISO_COMPROBANTE = "Adjunte el comprobante: es obligatorio.";
 
 // Nombres legibles de los campos que devuelve la extraccion. Son las claves DEL
 // SERVICIO (provider_name, value…), no las del formulario, porque asi llega la
@@ -1130,6 +1132,15 @@ class ReportExpenseIndex extends React.Component {
     }, 300);
   }.bind(this);
 
+  // Obligatoriedad del comprobante PARA EL TIPO ELEGIDO. El flag global manda,
+  // pero los viaticos quedan exentos (ReportExpenseOption::PREFIJOS_SIN_COMPROBANTE):
+  // el servidor publica sus ids en `estados.receipt_optional_type_ids`.
+  comprobanteObligatorio = function(typeId) {
+    var e = this.props.estados || {};
+    if (!e.receipt_required) return false;
+    return (e.receipt_optional_type_ids || []).indexOf(Number(typeId)) === -1;
+  }.bind(this);
+
   handleSubmit = function() {
     var self = this;
     var form = this.state.form;
@@ -1144,8 +1155,8 @@ class ReportExpenseIndex extends React.Component {
     // una subida y un viaje al servidor por algo que se ve desde el formulario.
     // Al EDITAR no se exige: los ~7.000 gastos historicos no tienen comprobante
     // y con esto no se podrian ni tocar.
-    if ((this.props.estados || {}).receipt_required && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
-      this.setState({ receiptError: "Adjunte el comprobante: es obligatorio." });
+    if (this.comprobanteObligatorio(form.type_identification_id) && !this.state.modeEdit && !(this.state.receiptFile instanceof File)) {
+      this.setState({ receiptError: AVISO_COMPROBANTE });
       return;
     }
 
@@ -1681,9 +1692,11 @@ class ReportExpenseIndex extends React.Component {
         "Comprobante",
         // El asterisco sigue al flag EXPENSE_RECEIPT_REQUIRED: marcarlo mientras
         // el flag esta apagado seria mentirle a la persona.
-        (self.props.estados || {}).receipt_required
+        self.comprobanteObligatorio(self.state.form.type_identification_id)
           ? React.createElement("span", { className: "cm-required" }, " *")
-          : null),
+          : ((self.props.estados || {}).receipt_required
+              ? React.createElement("span", { className: "cm-field-hint", "data-testid": "expense-receipt-optional" }, " (opcional para viáticos)")
+              : null)),
 
       // ZONA DE ARRASTRE. Reemplaza al `<input type="file">` nativo, que en cada
       // navegador se pinta distinto ("Choose File" en ingles aunque la app este
@@ -1994,7 +2007,9 @@ class ReportExpenseIndex extends React.Component {
                 React.createElement(Select, {
                   options: self.typeOptions,
                   value: self.state.selectedType,
-                  onChange: function(opt) { self.setState({ selectedType: opt, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
+                  // Al pasar a viaticos el aviso de "comprobante obligatorio"
+                  // deja de ser cierto; cualquier otro error del archivo se queda.
+                  onChange: function(opt) { self.setState({ selectedType: opt, receiptError: self.state.receiptError === AVISO_COMPROBANTE ? null : self.state.receiptError, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
                   placeholder: "Seleccionar tipo...",
                   isClearable: true,
                   styles: selectStyles,
