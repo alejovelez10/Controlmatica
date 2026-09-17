@@ -123,6 +123,13 @@ Rails.application.routes.draw do
   # Multimoneda (paquete 05). Contrato en 00-ARQUITECTURA E.1: responde 200
   # tanto en exito como en error y el frontend discrimina por `type`.
   get "get_exchange_rate", to: "exchange_rates#get_exchange_rate"
+  # Configuracion > Documentacion. `index` sirve la pantalla (HTML) y los datos
+  # (JSON). Los archivos tienen sus propias rutas porque se ven, descargan y
+  # borran uno por uno; la descarga pasa SIEMPRE por el controller porque el
+  # almacenamiento es privado y la URL de S3 se firma en el clic.
+  resources :documentation_modules, only: [:index, :create, :update, :destroy]
+  get "documentation_files/:id/download", to: "documentation_modules#download", as: :download_documentation_file
+  delete "documentation_files/:id", to: "documentation_modules#destroy_file", as: :documentation_file
   # Comprobante adjunto (paquete 06). `download_receipt` existe porque con
   # fog_public = false la URL de CarrierWave se firma al SERIALIZAR y expira a
   # los 600 s: la tabla apunta aqui para que la firma se genere en el clic, y de

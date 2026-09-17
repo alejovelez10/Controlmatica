@@ -1,0 +1,25 @@
+# Mensajes de error del modulo de Documentacion, en español.
+#
+# Mismo motivo y mismo patron que expense_rule.en.yml: el controller devuelve
+# `errors.full_messages` y Rails antepone el nombre del atributo EN INGLES
+# ("File No se permiten archivos exe…"). Los modelos ya escriben frases
+# completas, asi que el formato se reduce a `%{message}`.
+#
+# Va bajo `en:` porque la app corre con `default_locale = :en`.
+en:
+  activerecord:
+    errors:
+      models:
+        documentation_module:
+          attributes:
+            name:
+              format: "%{message}"
+        documentation_file:
+          attributes:
+            file:
+              format: "%{message}"
+            name:
+              format: "%{message}"
+            documentation_module:
+              format: "%{message}"
+              required: "El archivo debe pertenecer a un módulo"

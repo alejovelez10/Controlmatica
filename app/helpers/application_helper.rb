@@ -44,6 +44,8 @@ module ApplicationHelper
     # dice "Proyectos", que es el `else` del final de la cadena.
     elsif controller == "expense_rules" && action == "index"
       card = "<h1>" + " <i class='fas fa-gavel'></i> Reglas de gastos " + "</h1>" + "<p>" + "Antigüedad, tope, duplicados e instrucciones para el agente" + "</p>"
+    elsif controller == "documentation_modules" && action == "index"
+      card = "<h1>" + " <i class='fas fa-book'></i> Documentación " + "</h1>" + "<p>" + "Manuales, formatos y políticas de la empresa, a un clic" + "</p>"
     elsif controller == "shifts" && action == "index"
       card = "<h1>" + " <i class='fas fa-calendar-alt'></i> Turnos " + "</h1>" + "<p>" + "Gestiona tus turnos" + "</p>"
     elsif controller == "shifts" && action == "calendar"
@@ -717,6 +719,21 @@ module ApplicationHelper
   # tiene el modulo, asi que se consume como falsy.
   def authorization_expense_rules
     has_menu_permission?("Reglas de gastos")
+  end
+
+  # === MENU DE DOCUMENTACION ================================================
+  # Sin permiso de modulo a proposito: ver la documentacion es para cualquier
+  # usuario con sesion. Crear y borrar es solo del Administrador, y eso lo
+  # decide DocumentationModulesController, no el menu.
+  #
+  # NO se suma a `authorization_config`: ese metodo responde "tiene algun
+  # permiso de configuracion" y hay una prueba que lo exige falso para un rol
+  # vacio. El layout pregunta por los dos.
+  #
+  # `current_user.present?` y no `user_signed_in?`: el segundo solo existe
+  # dentro de un request de Devise y rompe las pruebas del helper.
+  def authorization_documentation
+    current_user.present?
   end
 
   # === CAPTURA ASISTIDA DE COMPROBANTES (paquete 10) =======================

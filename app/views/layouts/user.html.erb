@@ -57,11 +57,15 @@
       <%# `expense_rules` lo agrega el paquete 14: sin el, el treeview de
           Configuración se renderiza CERRADO al entrar a la pantalla de reglas
           y el usuario no ve donde esta parado. %>
-      <% config_controllers = %w[providers customers parameterizations users rols module_controls alerts report_expense_options expense_rules] %>
+      <% config_controllers = %w[providers customers parameterizations users rols module_controls alerts report_expense_options expense_rules documentation_modules] %>
       <% commission_controllers = %w[commissions commission_relations] %>
       <% expense_controllers = %w[report_expenses expense_ratios accounting_expenses] %>
 
-      <% if authorization_config %>
+      <%# `authorization_documentation` es verdadero para TODO usuario con
+          sesion: Documentación la ve todo el mundo, asi que el treeview de
+          Configuración tambien. Los demas items no se destapan porque cada uno
+          conserva su propia condicion. %>
+      <% if authorization_config || authorization_documentation %>
         <li class="treeview <%= 'is-expanded' if config_controllers.include?(controller_name) %>">
           <a class="app-menu__item" href="#" data-toggle="treeview">
             <i class="app-menu__icon fas fa-cogs"></i>
@@ -140,6 +144,19 @@
               <li>
                 <%= link_to expense_rules_path, class: "app-menu__item #{'active' if controller_name == 'expense_rules'}", data: { testid: "nav-reglas-gastos" } do %>
                   <i class="app-menu__icon fas fa-gavel"></i><span class="app-menu__label">Reglas de gastos</span>
+                <% end -%>
+              </li>
+            <% end %>
+
+            <%# Documentación: la ve TODO usuario con sesion (por eso el
+                treeview de Configuración ahora se pinta para todos; ver la
+                condicion de apertura del treeview). Crear, editar y borrar es
+                solo del Administrador y lo controla
+                DocumentationModulesController. %>
+            <% if authorization_documentation %>
+              <li>
+                <%= link_to documentation_modules_path, class: "app-menu__item #{'active' if controller_name == 'documentation_modules'}", data: { testid: "nav-documentacion" } do %>
+                  <i class="app-menu__icon fas fa-book"></i><span class="app-menu__label">Documentación</span>
                 <% end -%>
               </li>
             <% end %>

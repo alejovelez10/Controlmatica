@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_15_000001) do
+ActiveRecord::Schema.define(version: 2026_09_16_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -287,6 +287,27 @@ ActiveRecord::Schema.define(version: 2026_09_15_000001) do
     t.index ["code"], name: "index_customers_on_code"
     t.index ["created_at"], name: "index_customers_on_created_at"
     t.index ["name"], name: "index_customers_on_name"
+  end
+
+  create_table "documentation_files", force: :cascade do |t|
+    t.bigint "documentation_module_id", null: false
+    t.string "file", null: false
+    t.string "name", null: false
+    t.string "content_type"
+    t.bigint "byte_size"
+    t.integer "user_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["documentation_module_id"], name: "index_documentation_files_on_documentation_module_id"
+  end
+
+  create_table "documentation_modules", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.integer "user_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index "lower((name)::text)", name: "index_documentation_modules_on_lower_name", unique: true
   end
 
   create_table "exchange_rates", force: :cascade do |t|
@@ -679,6 +700,7 @@ ActiveRecord::Schema.define(version: 2026_09_15_000001) do
     t.index ["rol_id"], name: "index_users_on_rol_id"
   end
 
+  add_foreign_key "documentation_files", "documentation_modules"
   add_foreign_key "expense_rules_rols", "expense_rules"
   add_foreign_key "expense_rules_rols", "rols"
 end

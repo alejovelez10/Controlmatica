@@ -1,0 +1,9 @@
+<%# Configuracion > Documentacion.
+
+    `estados.manage` decide si se pintan Crear/Editar/Eliminar. Se resuelve UNA
+    vez en el servidor; el gate real esta en cada accion del controller.
+    `limits` viaja como prop para que la validacion del cliente (formato y
+    tamaño) use los MISMOS valores que el uploader y no una copia que se
+    desincroniza. %>
+<%= javascript_pack_tag 'DocumentationIndex' %>
+<%= react_component('DocumentationIndex', estados: @estados, limits: @limits) %>

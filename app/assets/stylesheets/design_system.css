@@ -2969,3 +2969,588 @@ select.cm-input {
   border-radius: var(--cm-radius, 10px);
   background: rgba(255, 193, 7, 0.1);
 }
+
+/* ============================================
+   DOCUMENTACION (Configuracion > Documentacion)
+   ============================================
+   Grilla de tarjetas, una por modulo. Todo lleva el prefijo `cm-doc-` para
+   no pisar nada de las otras pantallas: esta hoja se carga en TODA la app. */
+
+.cm-doc-page {
+  padding-bottom: 24px;
+}
+
+/* --- Barra de busqueda y resumen --- */
+
+.cm-doc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cm-doc-search {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 480px;
+}
+
+/* Dos clases: la regla global de .cm-input fija su propio padding. */
+.cm-doc-search .cm-input {
+  padding-left: 38px;
+  padding-right: 36px;
+  height: 42px;
+  border-radius: var(--cm-radius-pill);
+  background: #fff;
+  box-shadow: var(--cm-shadow-sm);
+}
+
+.cm-doc-search .cm-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.cm-doc-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cm-text-light);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.cm-doc-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: var(--cm-bg);
+  color: var(--cm-text-muted);
+  cursor: pointer;
+}
+
+.cm-doc-search-clear:hover {
+  background: var(--cm-border);
+  color: var(--cm-text);
+}
+
+.cm-doc-summary {
+  font-size: 13px;
+  color: var(--cm-text-muted);
+}
+
+/* --- Grilla: 1 columna en telefono, 2 en tableta, 3 en escritorio --- */
+
+.cm-doc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1199px) {
+  .cm-doc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .cm-doc-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* --- Tarjeta --- */
+
+.cm-doc-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--cm-bg-card);
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius-lg);
+  box-shadow: var(--cm-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Franja de acento arriba: da identidad a la tarjeta sin llenarla de color. */
+.cm-doc-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cm-accent) 0%, var(--cm-accent-light) 100%);
+}
+
+.cm-doc-card:hover {
+  box-shadow: var(--cm-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.cm-doc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 18px 12px;
+}
+
+.cm-doc-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--cm-primary) 0%, var(--cm-primary-light) 100%);
+  color: #fff;
+  font-size: 18px;
+  box-shadow: 0 4px 10px rgba(42, 63, 83, 0.25);
+}
+
+/* `min-width: 0` para que un nombre largo se recorte en vez de empujar los
+   botones fuera de la tarjeta. */
+.cm-doc-card-titles {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cm-doc-card-title {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-doc-card-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cm-text-muted);
+}
+
+.cm-doc-card-tools {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.cm-doc-card-description {
+  margin: 0 18px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--cm-text-muted);
+  white-space: pre-line;
+}
+
+/* --- Lista de documentos --- */
+
+.cm-doc-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 10px 12px;
+  border-top: 1px solid var(--cm-border);
+}
+
+.cm-doc-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--cm-radius-sm);
+  transition: background-color 0.15s ease;
+}
+
+.cm-doc-file:hover {
+  background: var(--cm-bg);
+}
+
+.cm-doc-file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* Colores por tipo: los que la gente ya asocia con cada programa. */
+.cm-doc-tone-pdf     { background: #fdecec; color: #d93025; }
+.cm-doc-tone-word    { background: #e8f0fe; color: #2b579a; }
+.cm-doc-tone-excel   { background: #e6f4ea; color: #217346; }
+.cm-doc-tone-ppt     { background: #fdf0e8; color: #c43e1c; }
+.cm-doc-tone-image   { background: #f3e8fd; color: #8e44ad; }
+.cm-doc-tone-archive { background: #fff5e0; color: #b7791f; }
+.cm-doc-tone-text    { background: #eef1f5; color: #5f6b7a; }
+
+.cm-doc-file-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cm-doc-file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.cm-doc-file-meta {
+  font-size: 11px;
+  color: var(--cm-text-light);
+}
+
+.cm-doc-file-actions {
+  display: flex;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+/* Enlace con aspecto de texto (sirve para <a> y <button>). */
+.cm-doc-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cm-primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.cm-doc-link:hover,
+.cm-doc-link:focus {
+  color: var(--cm-accent);
+  text-decoration: underline;
+}
+
+.cm-doc-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cm-text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.cm-doc-icon-btn:hover,
+.cm-doc-icon-btn:focus-visible {
+  background: #fff3e0;
+  color: var(--cm-accent);
+  text-decoration: none;
+  outline: none;
+}
+
+.cm-doc-icon-btn--danger:hover,
+.cm-doc-icon-btn--danger:focus-visible {
+  background: #fdecec;
+  color: var(--cm-danger);
+}
+
+.cm-doc-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cm-doc-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0 18px 18px;
+  padding: 20px 12px;
+  border: 1px dashed var(--cm-border);
+  border-radius: var(--cm-radius);
+  font-size: 13px;
+  color: var(--cm-text-muted);
+  text-align: center;
+}
+
+.cm-doc-card-empty i {
+  font-size: 22px;
+  color: var(--cm-text-light);
+}
+
+.cm-doc-card-more {
+  margin-top: auto;
+  padding: 10px;
+  border: none;
+  border-top: 1px solid var(--cm-border);
+  background: #fcfcfd;
+  color: var(--cm-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cm-doc-card-more:hover {
+  background: var(--cm-bg);
+  color: var(--cm-accent);
+}
+
+.cm-doc-mark {
+  padding: 0 1px;
+  border-radius: 3px;
+  background: #ffe8b3;
+  color: inherit;
+}
+
+/* Esqueleto mientras carga: mejor que un spinner, porque ya anuncia la forma
+   de lo que viene. */
+.cm-doc-card--skeleton {
+  height: 220px;
+  background: linear-gradient(90deg, #f1f3f6 25%, #e8ebef 37%, #f1f3f6 63%);
+  background-size: 400% 100%;
+  animation: cm-doc-shimmer 1.4s ease infinite;
+}
+
+.cm-doc-card--skeleton::before { display: none; }
+.cm-doc-card--skeleton:hover { transform: none; box-shadow: var(--cm-shadow); }
+
+@keyframes cm-doc-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* --- Estado vacio --- */
+
+.cm-doc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 40px 24px;
+  background: var(--cm-bg-card);
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius-lg);
+  box-shadow: var(--cm-shadow);
+  text-align: center;
+}
+
+.cm-doc-empty--compact {
+  margin-top: 8px;
+  padding: 28px 24px;
+  box-shadow: none;
+}
+
+.cm-doc-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: #fff3e0;
+  color: var(--cm-accent);
+  font-size: 30px;
+}
+
+.cm-doc-empty h3 {
+  margin: 0 0 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--cm-text);
+}
+
+.cm-doc-empty p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--cm-text-muted);
+}
+
+/* --- Formulario (modal) --- */
+
+/* La zona de arrastre del comprobante es una banda de una linea; aqui se
+   suben varios archivos y conviene un blanco mas grande. */
+.cm-doc-dropzone {
+  justify-content: center;
+  min-height: 150px;
+  padding: 20px;
+  text-align: center;
+}
+
+.cm-doc-dropzone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.cm-doc-dropzone-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: #eef1f5;
+  color: #9aa5b3;
+  font-size: 22px;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.cm-doc-dropzone:hover .cm-doc-dropzone-badge,
+.cm-doc-dropzone.cm-dropzone--active .cm-doc-dropzone-badge {
+  background: #fdeedd;
+  color: var(--cm-accent);
+  transform: translateY(-2px);
+}
+
+.cm-doc-dropzone-meta {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--cm-text-muted);
+}
+
+.cm-doc-hint {
+  margin: 0 0 8px;
+}
+
+.cm-doc-alert-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-weight: 400;
+}
+
+.cm-doc-picked {
+  margin-top: 4px;
+  border: 1px solid var(--cm-border);
+  border-radius: var(--cm-radius);
+  overflow: hidden;
+}
+
+.cm-doc-picked-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #fcfcfd;
+  border-bottom: 1px solid var(--cm-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cm-text-muted);
+}
+
+.cm-doc-picked-list {
+  max-height: 240px;
+  margin: 0;
+  padding: 4px 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.cm-doc-picked-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: var(--cm-radius-sm);
+}
+
+.cm-doc-picked-item:hover {
+  background: var(--cm-bg);
+}
+
+.cm-doc-picked-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-doc-picked-size {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--cm-text-muted);
+}
+
+.cm-doc-progress {
+  margin-top: 14px;
+}
+
+.cm-doc-progress-bar {
+  height: 8px;
+  border-radius: var(--cm-radius-pill);
+  background: #eef1f5;
+  overflow: hidden;
+}
+
+.cm-doc-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cm-accent) 0%, var(--cm-accent-light) 100%);
+  transition: width 0.2s ease;
+}
+
+.cm-doc-progress-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--cm-text-muted);
+}
+
+/* --- Vista previa --- */
+
+.cm-doc-preview-heading,
+.cm-doc-preview-titles {
+  min-width: 0;
+}
+
+.cm-doc-preview-titles .cm-modal-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-doc-preview-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f6fa !important;
+}
+
+.cm-doc-preview-frame {
+  width: 100%;
+  height: 70vh;
+  border: none;
+  border-radius: var(--cm-radius-sm);
+  background: #fff;
+}
+
+.cm-doc-preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0 auto;
+  border-radius: var(--cm-radius-sm);
+  box-shadow: var(--cm-shadow);
+}
