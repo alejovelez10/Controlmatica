@@ -86,7 +86,7 @@ MODULOS = {
                "Exportar a excel", "Ver todos", "Cambiar responsable"],
   "Centro de Costos" => ["Ingreso al modulo", "Editar"],
   "Presupuesto de gastos" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
-  "Contabilidad" => ["Ingreso al modulo", "Aprobar", "Exportar a excel", "Ver todos"],
+  "Contabilidad" => ["Ingreso al modulo", "Contabilizar", "Exportar a excel", "Ver todos"],
   "Reportes de servicios" => ["Ingreso al modulo"],
   "Tablero de Ingenieros" => ["Ver tablero"]
 }.freeze
@@ -268,7 +268,7 @@ ROLES_E2E = {
   # filas: los tres escenarios negativos exigen el control positivo "la tabla
   # renderiza CON datos", porque sin el un 500 daria los mismos toHaveCount(0) y
   # las pruebas pasarian por la razon equivocada. Lo que el encargo pide de
-  # verdad —ni Aprobar ni Exportar— se conserva intacto.
+  # verdad —ni Contabilizar ni Exportar— se conserva intacto.
   "Contable E2E" => {
     "Gastos" => ["Ingreso al modulo"],
     "Centro de Costos" => ["Ingreso al modulo"],

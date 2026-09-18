@@ -57,7 +57,7 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
   def contador_solo_ingreso
     grant_permission!(rols(:contador), "Contabilidad", "Ingreso al modulo")
     grant_permission!(rols(:contador), "Contabilidad", "Ver todos")
-    revoke_permission!(rols(:contador), "Contabilidad", "Aprobar")
+    revoke_permission!(rols(:contador), "Contabilidad", "Contabilizar")
     revoke_permission!(rols(:contador), "Contabilidad", "Exportar a excel")
     @contador
   end
@@ -65,7 +65,7 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
   def contador_aprobador
     grant_permission!(rols(:contador), "Contabilidad", "Ingreso al modulo")
     grant_permission!(rols(:contador), "Contabilidad", "Ver todos")
-    grant_permission!(rols(:contador), "Contabilidad", "Aprobar")
+    grant_permission!(rols(:contador), "Contabilidad", "Contabilizar")
     @contador
   end
 

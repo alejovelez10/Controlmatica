@@ -34,7 +34,7 @@ class AccountingExpensesController < ApplicationController
 
   def index
     @estados = {
-      approve: is_admin? || has_menu_permission?("Contabilidad", "Aprobar"),
+      approve: is_admin? || has_menu_permission?("Contabilidad", "Contabilizar"),
       export: is_admin? || has_menu_permission?("Contabilidad", "Exportar a excel"),
       show_all: is_admin? || has_menu_permission?("Contabilidad", "Ver todos")
     }
@@ -65,7 +65,7 @@ class AccountingExpensesController < ApplicationController
   end
 
   def update_accounting_state
-    return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Aprobar")
+    return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Contabilizar")
 
     expense = ReportExpense.find(params[:id])
     approve = params[:state].to_s == "true"
@@ -126,7 +126,7 @@ class AccountingExpensesController < ApplicationController
   end
 
   def update_accounting_filter_values
-    return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Aprobar")
+    return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Contabilizar")
 
     unless FILTER_KEYS.any? { |k| params[k].present? }
       return render json: { success: "¡Ocurrió un error!", type: "error",

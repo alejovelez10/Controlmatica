@@ -140,7 +140,7 @@ class E2eSeedTest < ActionDispatch::IntegrationTest
     # quedan sin control positivo. Lo que el encargo exige es que NO pueda
     # aprobar ni exportar, y eso es lo que afirman las dos lineas siguientes.
     assert_equal ["Ingreso al modulo", "Ver todos"], contabilidad
-    refute_includes contabilidad, "Aprobar"
+    refute_includes contabilidad, "Contabilizar"
     refute_includes contabilidad, "Exportar a excel"
     assert_equal 0,
                  rol.accion_modules.joins(:module_control)

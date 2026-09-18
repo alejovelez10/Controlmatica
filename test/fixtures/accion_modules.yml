@@ -92,7 +92,7 @@ contabilidad_ingreso:
   user: admin
 
 contabilidad_aprobar:
-  name: Aprobar
+  name: Contabilizar
   module_control: contabilidad
   user: admin
 
