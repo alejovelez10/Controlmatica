@@ -1,3 +1,18 @@
+# == Schema Information
+#
+# Table name: documentation_modules
+#
+#  id          :bigint           not null, primary key
+#  description :text
+#  name        :string           not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  user_id     :integer
+#
+# Indexes
+#
+#  index_documentation_modules_on_lower_name  (lower((name)::text)) UNIQUE
+#
 require "test_helper"
 
 # Modelos del modulo de Documentacion: DocumentationModule, DocumentationFile y
