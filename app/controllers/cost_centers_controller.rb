@@ -212,6 +212,9 @@ class CostCentersController < ApplicationController
       receipt_required: ReportExpense.comprobante_obligatorio?,
       # Tipos que no exigen comprobante aunque el flag este encendido (viaticos).
       receipt_optional_type_ids: ReportExpenseOption.ids_sin_comprobante,
+      # Tipos de viatico: el formulario propone en "Nombre" a la persona
+      # responsable, porque un viatico no lo factura un proveedor.
+      viatic_type_ids: ReportExpenseOption.ids_viaticos,
     )
 
     @customer_invoice = CustomerInvoice.where(cost_center_id: @cost_center.id)

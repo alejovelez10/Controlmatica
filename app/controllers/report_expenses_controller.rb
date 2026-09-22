@@ -34,6 +34,9 @@ class ReportExpensesController < ApplicationController
       receipt_required: ReportExpense.comprobante_obligatorio?,
       # Tipos que no exigen comprobante aunque el flag este encendido (viaticos).
       receipt_optional_type_ids: ReportExpenseOption.ids_sin_comprobante,
+      # Tipos de viatico: el formulario propone en "Nombre" a la persona
+      # responsable, porque un viatico no lo factura un proveedor.
+      viatic_type_ids: ReportExpenseOption.ids_viaticos,
       # Las dos banderas que deciden QUE pestañas de la lista se pintan. Sin
       # ellas el frontend tendria que adivinar: pintar "Todos" a quien no lo
       # puede ver devuelve una tabla recortada sin explicacion, y pintar

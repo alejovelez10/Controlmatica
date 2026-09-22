@@ -1141,6 +1141,29 @@ class ReportExpenseIndex extends React.Component {
     return (e.receipt_optional_type_ids || []).indexOf(Number(typeId)) === -1;
   }.bind(this);
 
+  // NOMBRE EN LOS VIATICOS (2026-09-21). El campo "Nombre" se penso para el
+  // proveedor que factura, pero un viatico se le paga a una PERSONA: no hay
+  // tercero que poner ahi y cada quien escribia una cosa distinta. Al elegir un
+  // tipo de viatico el formulario propone el nombre del responsable.
+  //
+  // Es una PROPUESTA, no un candado: el campo sigue editable, y solo se pisa lo
+  // que escribio el propio formulario (el campo vacio, o el nombre del
+  // responsable anterior). Lo que la persona teclea NUNCA se toca.
+  esViatico = function(typeId) {
+    var e = this.props.estados || {};
+    return (e.viatic_type_ids || []).indexOf(Number(typeId)) !== -1;
+  }.bind(this);
+
+  // `labelAnterior` es el nombre que el formulario habria puesto antes del
+  // cambio: si el campo trae eso mismo (o esta vacio) es suyo y lo puede
+  // reescribir; si trae otra cosa, la escribio la persona y se respeta.
+  nombreDeViatico = function(form, typeId, labelNuevo, labelAnterior) {
+    var actual = (form.invoice_name || "").trim();
+    var esDelFormulario = actual === "" || actual === (labelAnterior || "").trim();
+    if (!esDelFormulario) return form.invoice_name;
+    return this.esViatico(typeId) ? (labelNuevo || "") : "";
+  }.bind(this);
+
   handleSubmit = function() {
     var self = this;
     var form = this.state.form;
@@ -1941,7 +1964,17 @@ class ReportExpenseIndex extends React.Component {
                     options: self.userOptions,
                     value: self.state.selectedUser,
                     onChange: function(opt) {
-                      self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }, function() {
+                      var anterior = self.state.selectedUser ? self.state.selectedUser.label : "";
+                      self.setState({
+                        selectedUser: opt,
+                        form: Object.assign({}, form, {
+                          user_invoice_id: opt ? opt.value : "",
+                          // Si el gasto es viatico, cambiar de responsable cambia
+                          // tambien el nombre propuesto: sin esto quedaria a
+                          // nombre de la persona anterior.
+                          invoice_name: self.nombreDeViatico(form, form.type_identification_id, opt ? opt.label : "", anterior),
+                        }),
+                      }, function() {
                         self.loadBudgetAvailability(opt ? opt.value : null, self.state.modeEdit ? self.state.editId : null);
                       });
                     },
@@ -1971,12 +2004,15 @@ class ReportExpenseIndex extends React.Component {
                   })
                 )
               ),
-              // Nombre
+              // Nombre. En un viatico es el de la PERSONA, no el de un
+              // proveedor: lo dice el placeholder, que cambia con el tipo. La
+              // etiqueta se queda en "Nombre" a secas para no descuadrar la
+              // rejilla de dos columnas con un titulo el doble de largo.
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
                   "Nombre"
                 ),
-                React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: "Nombre del gasto", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
+                React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: self.esViatico(form.type_identification_id) ? "Nombre de quien recibe el viático" : "Nombre del proveedor o tercero", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
               ),
               // Fecha
               React.createElement("div", { className: "cm-form-group" },
@@ -2009,7 +2045,21 @@ class ReportExpenseIndex extends React.Component {
                   value: self.state.selectedType,
                   // Al pasar a viaticos el aviso de "comprobante obligatorio"
                   // deja de ser cierto; cualquier otro error del archivo se queda.
-                  onChange: function(opt) { self.setState({ selectedType: opt, receiptError: self.state.receiptError === AVISO_COMPROBANTE ? null : self.state.receiptError, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
+                  onChange: function(opt) {
+                    var tipoId = opt ? opt.value : "";
+                    var responsable = self.state.selectedUser ? self.state.selectedUser.label : "";
+                    self.setState({
+                      selectedType: opt,
+                      receiptError: self.state.receiptError === AVISO_COMPROBANTE ? null : self.state.receiptError,
+                      form: Object.assign({}, form, {
+                        type_identification_id: tipoId,
+                        // El nombre propuesto entra y sale con el tipo: al dejar
+                        // de ser viatico se limpia, o quedaria una persona en el
+                        // campo de un gasto que ya factura un proveedor.
+                        invoice_name: self.nombreDeViatico(form, tipoId, responsable, responsable),
+                      }),
+                    });
+                  },
                   placeholder: "Seleccionar tipo...",
                   isClearable: true,
                   styles: selectStyles,

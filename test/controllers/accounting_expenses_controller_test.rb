@@ -233,6 +233,10 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     Zip::File.open_buffer(response.body) { |zip| return zip.map(&:name) }
   end
 
+  def nombre_esperado(gasto)
+    "#{gasto.invoice_date.strftime('%Y-%m-%d')} - #{gasto.invoice_name} - #{gasto.invoice_number}.pdf"
+  end
+
   test "download_receipts arma un zip con los comprobantes seleccionados" do
     uno = gasto_con_comprobante
     dos = gasto_con_comprobante
@@ -243,10 +247,11 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "application/zip", response.media_type
     nombres = entradas_del_zip
-    # El id va delante del nombre: los dos archivos se llaman "comprobante.pdf" y
-    # sin el prefijo el segundo pisaria al primero dentro del zip.
-    assert_includes nombres, "#{uno.id}-comprobante.pdf"
-    assert_includes nombres, "#{dos.id}-comprobante.pdf"
+    # El nombre original ("comprobante.pdf") no sobrevive: contabilidad busca por
+    # fecha, tercero y numero de factura, y son esos tres los que quedan.
+    assert_includes nombres, nombre_esperado(uno)
+    assert_includes nombres, nombre_esperado(dos)
+    refute_includes nombres, "comprobante.pdf"
   end
 
   test "download_receipts lista aparte los gastos sin comprobante en vez de fallar" do
@@ -258,9 +263,63 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     nombres = entradas_del_zip
-    assert_includes nombres, "#{con.id}-comprobante.pdf"
+    assert_includes nombres, nombre_esperado(con)
     # Un zip con 1 de 2 facturas y sin decir cual falta es peor que uno que lo diga.
     assert_includes nombres, "FALTANTES.txt"
+  end
+
+  test "download_receipts nombra los comprobantes por fecha, tercero y factura" do
+    gasto = gasto_con_comprobante(invoice_date: Date.new(2026, 9, 21),
+                                  invoice_name: "Claro Soluciones SA",
+                                  invoice_number: "FV-12345")
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses", params: { ids: [gasto.id] }
+
+    # La fecha va ano-mes-dia para que el orden alfabetico del explorador sea el
+    # cronologico: con dia-mes, "01-12" se listaria antes que "28-11".
+    assert_includes entradas_del_zip, "2026-09-21 - Claro Soluciones SA - FV-12345.pdf"
+  end
+
+  test "download_receipts limpia del nombre los caracteres que Windows rechaza" do
+    # Un ZIP que no se puede extraer en Windows no le sirve a contabilidad.
+    gasto = gasto_con_comprobante(invoice_date: Date.new(2026, 9, 21),
+                                  invoice_name: 'ACME S.A.S / Sucursal: Norte*',
+                                  invoice_number: "FV?9")
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses", params: { ids: [gasto.id] }
+
+    nombre = entradas_del_zip.first
+    assert_equal "2026-09-21 - ACME S.A.S Sucursal Norte - FV 9.pdf", nombre
+    refute_match %r{[\\/:*?"<>|]}, nombre.sub(/\.pdf\z/, "")
+  end
+
+  test "download_receipts no deja que dos gastos iguales se pisen dentro del zip" do
+    # Mismo dia, mismo tercero y misma factura: sin sufijo, varios descompresores
+    # se quedan con el ultimo SIN avisar y el lote llegaria incompleto.
+    datos = { invoice_date: Date.new(2026, 9, 21), invoice_name: "Duplicado SA", invoice_number: "FV-1" }
+    uno = gasto_con_comprobante(**datos)
+    dos = gasto_con_comprobante(**datos)
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses", params: { ids: [uno.id, dos.id] }
+
+    nombres = entradas_del_zip
+    assert_equal 2, nombres.uniq.size
+    assert_includes nombres, "2026-09-21 - Duplicado SA - FV-1.pdf"
+    assert_includes nombres, "2026-09-21 - Duplicado SA - FV-1 (2).pdf"
+  end
+
+  test "download_receipts omite el numero de factura cuando el gasto no lo trae" do
+    # Sin el reject, el nombre saldria con un " - " colgando al final.
+    gasto = gasto_con_comprobante(invoice_date: Date.new(2026, 9, 21),
+                                  invoice_name: "Taxi Norte", invoice_number: nil)
+    sign_in_as @admin
+
+    get "/download_receipts/accounting_expenses", params: { ids: [gasto.id] }
+
+    assert_includes entradas_del_zip, "2026-09-21 - Taxi Norte.pdf"
   end
 
   test "download_receipts sin seleccion responde error y no un zip vacio" do
@@ -285,7 +344,7 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     get "/download_receipts/accounting_expenses", params: { ids: [ajeno.id] }
 
     assert_response :success
-    refute_includes entradas_del_zip, "#{ajeno.id}-comprobante.pdf"
+    refute_includes entradas_del_zip, nombre_esperado(ajeno)
   end
 
   test "download_receipts sin permiso de exportar responde 403" do

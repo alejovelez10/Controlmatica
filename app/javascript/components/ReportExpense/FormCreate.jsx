@@ -655,6 +655,9 @@ class FormCreate extends Component {
               </div>
 
               <div className="cm-form-grid-1">
+                {/* En un viatico el nombre es el de la PERSONA que lo recibe,
+                    no el de un proveedor: lo dice el placeholder, que cambia
+                    con el tipo. La etiqueta se queda en "Nombre" a secas. */}
                 <div className="cm-form-group">
                   <label className="cm-label">
                     <i className="fa fa-user-circle"></i> Nombre
@@ -670,7 +673,7 @@ class FormCreate extends Component {
                         ? "error-class"
                         : ""
                     }`}
-                    placeholder="Nombre del proveedor o tercero"
+                    placeholder={this.props.esViatico ? "Nombre de quien recibe el viático" : "Nombre del proveedor o tercero"}
                   />
                 </div>
 

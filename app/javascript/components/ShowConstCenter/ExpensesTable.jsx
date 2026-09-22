@@ -407,17 +407,57 @@ class ExpensesTable extends Component {
 
   handleChangeAutocompleteCostCenter = (opt) => { this.setState({ selectedOptionCostCenter: opt, formCreate: Object.assign({}, this.state.formCreate, { cost_center_id: opt.value }) }); };
 
+  // NOMBRE EN LOS VIATICOS. Misma regla que packs/ReportExpenseIndex.js: el
+  // campo "Nombre" se penso para el proveedor que factura, pero un viatico se
+  // le paga a una PERSONA y la gente no sabia que escribir ahi. Es una
+  // PROPUESTA editable: solo se pisa el campo vacio o el nombre que el propio
+  // formulario habia puesto, nunca lo que la persona tecleo.
+  esViatico = (typeId) => {
+    var e = this.props.estados || {};
+    return (e.viatic_type_ids || []).indexOf(Number(typeId)) !== -1;
+  };
+
+  // Las opciones de usuario no vienen con la misma forma en los dos caminos de
+  // esta pantalla (`{value,label}` del select, `{id,name}` de get_users_json),
+  // asi que el nombre se lee de las dos y si no hay ninguna no se toca nada.
+  etiquetaUsuario = (opt) => (opt ? (opt.label || opt.name || "") : "");
+
+  nombreDeViatico = (form, typeId, labelNuevo, labelAnterior) => {
+    var actual = (form.invoice_name || "").trim();
+    var esDelFormulario = actual === "" || actual === (labelAnterior || "").trim();
+    if (!esDelFormulario) return form.invoice_name;
+    return this.esViatico(typeId) ? (labelNuevo || "") : "";
+  };
+
   handleChangeAutocompleteUser = (opt) => {
-    this.setState({ selectedOptionUser: opt, formCreate: Object.assign({}, this.state.formCreate, { user_invoice_id: opt.value }) });
+    var f = this.state.formCreate;
+    var anterior = this.etiquetaUsuario(this.state.selectedOptionUser);
+    this.setState({
+      selectedOptionUser: opt,
+      formCreate: Object.assign({}, f, {
+        user_invoice_id: opt.value,
+        // En un viatico el nombre sigue al responsable: sin esto el gasto
+        // quedaria a nombre de la persona anterior.
+        invoice_name: this.nombreDeViatico(f, f.type_identification_id, this.etiquetaUsuario(opt), anterior),
+      }),
+    });
     this.loadBudgetAvailability(opt ? opt.value : null, this.state.modeEdit ? this.state.id : null);
   };
 
   // Al pasar a viaticos el aviso de "comprobante obligatorio" deja de ser cierto.
   handleChangeAutocompleteReportExpenceOptionType = (opt) => {
+    var f = this.state.formCreate;
+    var responsable = this.etiquetaUsuario(this.state.selectedOptionUser);
     this.setState({
       selectedOptionTypeIndentification: opt,
       receiptError: this.state.receiptError === AVISO_COMPROBANTE ? null : this.state.receiptError,
-      formCreate: Object.assign({}, this.state.formCreate, { type_identification_id: opt.value }),
+      formCreate: Object.assign({}, f, {
+        type_identification_id: opt.value,
+        // El nombre propuesto entra y sale con el tipo: al dejar de ser viatico
+        // se limpia, o quedaria una persona en el campo de un gasto que factura
+        // un proveedor.
+        invoice_name: this.nombreDeViatico(f, opt.value, responsable, responsable),
+      }),
     });
   };
   handleChangeAutocompleteReportExpenceOptionPaymentType = (opt) => { this.setState({ selectedOptionPaymentType: opt, formCreate: Object.assign({}, this.state.formCreate, { payment_type_id: opt.value }) }); };
@@ -955,6 +995,7 @@ class ExpensesTable extends Component {
             ruleViolations={this.state.ruleViolations}
             receiptRequired={this.comprobanteObligatorio(this.state.formCreate.type_identification_id)}
             receiptOptional={!!this.props.estados.receipt_required && !this.comprobanteObligatorio(this.state.formCreate.type_identification_id)}
+            esViatico={this.esViatico(this.state.formCreate.type_identification_id)}
             onDeleteReceipt={this.state.modeEdit ? this.handleDeleteReceipt : null}
             // Pista: el archivo recien elegido si lo hay, si no la URL del ya
             // guardado (al editar, `receiptFileName` esta vacio).

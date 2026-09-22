@@ -49,4 +49,25 @@ class ReportExpenseOptionTest < ActiveSupport::TestCase
   test "ids_sin_comprobante devuelve solo los tipos exentos" do
     assert_equal [report_expense_options(:opcion_viaticos).id], ReportExpenseOption.ids_sin_comprobante
   end
+
+  # --- Tipos de viatico (nombre propuesto en el formulario) ------------------
+
+  test "el tipo de viaticos de produccion es viatico" do
+    assert report_expense_options(:opcion_viaticos).viatico?
+  end
+
+  test "un tipo cualquiera no es viatico" do
+    refute report_expense_options(:opcion_tipo).viatico?
+  end
+
+  test "viatico? normaliza igual que comprobante_opcional?" do
+    assert tipo("VIATICOS alimentacion").viatico?
+    assert tipo("Viáticos de transporte").viatico?
+    refute tipo("Gastos de viaticos").viatico?
+    refute tipo("Viaticos", "Medio de pago").viatico?
+  end
+
+  test "ids_viaticos devuelve solo los tipos de viatico" do
+    assert_equal [report_expense_options(:opcion_viaticos).id], ReportExpenseOption.ids_viaticos
+  end
 end
