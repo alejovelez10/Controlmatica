@@ -754,7 +754,24 @@ class ReportExpenseIndex extends React.Component {
   handleChangeCurrency = function(opt) {
     var self = this;
     var code = opt ? opt.value : "COP";
+    var anterior = this.state.form.currency || "COP";
     var f = Object.assign({}, this.state.form, { currency: code });
+    var round2 = function(x) { return Math.round(x * 100) / 100; };
+
+    // EL VALOR ESCRITO SE CONSERVA. Cambiar la moneda corrige de que moneda es
+    // el numero del comprobante, no el numero: antes, pasar de COP a USD
+    // dejaba vacio el valor extranjero y el recalculo ponia en 0 los COP que ya
+    // estaban escritos (o precargados por la extraccion).
+    if (anterior === "COP" && code !== "COP" && !toNumber(f.foreign_value) && toNumber(f.invoice_value)) {
+      f.foreign_value = f.invoice_value;
+      f.foreign_tax = f.invoice_tax || "";
+    }
+    if (anterior !== "COP" && code === "COP" && toNumber(f.foreign_value)) {
+      f.invoice_value = f.foreign_value;
+      f.invoice_tax = f.foreign_tax || "";
+      f.invoice_total = round2(toNumber(f.foreign_value) + toNumber(f.foreign_tax));
+    }
+
     if (code === "COP") {
       // Volver a COP limpia TODO lo extranjero: un foreign_value colgando con
       // currency COP haria que la tabla y los exportables muestren un valor
@@ -762,11 +779,36 @@ class ReportExpenseIndex extends React.Component {
       f.foreign_value = ""; f.foreign_tax = ""; f.foreign_total = "";
       f.exchange_rate = ""; f.exchange_rate_date = ""; f.exchange_rate_source = "";
       f.cop_manual_override = false;
+    } else if (code !== anterior) {
+      // La tasa de la moneda anterior no sirve para la nueva: si la consulta
+      // falla (o no hay fecha) no puede quedarse convirtiendo EUR con la TRM
+      // del dolar.
+      f.exchange_rate = ""; f.exchange_rate_date = ""; f.exchange_rate_source = "";
+      f.cop_manual_override = false;
     }
     this.setState(
       { selectedCurrency: opt, form: f, exchange: Object.assign({}, EXCHANGE_VACIO) },
-      code === "COP" ? undefined : self.fetchExchangeRate
+      code === "COP" ? self.refreshBudgetAvailability : function() {
+        self.recomputeConversion();
+        self.fetchExchangeRate();
+      }
     );
+  }.bind(this);
+
+  // Boton "Recalcular" del bloque extranjero. Dice QUE falta en vez de no
+  // hacer nada: sin fecha no hay TRM que consultar y sin valor no hay nada que
+  // convertir.
+  handleRecalcular = function() {
+    var f = this.state.form;
+    var faltan = [];
+    if (!f.invoice_date) faltan.push("la fecha de factura");
+    if (!toNumber(f.foreign_value)) faltan.push("el valor en " + f.currency);
+    if (faltan.length) {
+      this.setState({ exchange: { status: "error", requested_date: null, rate_date: null, source: null,
+        message: "Para recalcular indique " + faltan.join(" y ") + "." } });
+      return;
+    }
+    this.fetchExchangeRate();
   }.bind(this);
 
   handleFormChangeForeignMoney = function(e) {
@@ -1600,8 +1642,8 @@ class ReportExpenseIndex extends React.Component {
         React.createElement("div", { className: "cm-form-group" },
           React.createElement("label", { className: "cm-label" }, " "),
           React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline cm-btn-sm",
-            onClick: self.fetchExchangeRate, "data-testid": "expense-fetch-rate-btn" },
-            "Consultar TRM")
+            onClick: self.handleRecalcular, "data-testid": "expense-fetch-rate-btn" },
+            React.createElement("i", { className: "fa fa-refresh" }), " Recalcular")
         )
       ),
 

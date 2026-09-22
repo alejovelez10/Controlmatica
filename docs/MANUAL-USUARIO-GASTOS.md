@@ -291,7 +291,7 @@ El sistema consulta la tasa oficial del **día de la factura** (no del día en q
 el gasto). Para el dólar consulta la TRM oficial colombiana; para el euro, la tasa del Banco
 Central Europeo.
 
-También hay un botón **Consultar TRM** para volver a pedirla si cambió la fecha de la factura.
+También hay un botón **Recalcular** que vuelve a pedir la TRM y convierte el valor a COP. Si falta la fecha de la factura o el valor en la moneda extranjera, el formulario le dice cuál falta. Si cambia la moneda después de escribir el valor, el valor se conserva y se recalcula con la nueva moneda.
 
 Debajo del bloque aparece el estado de la consulta:
 
