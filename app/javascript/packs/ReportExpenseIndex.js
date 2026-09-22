@@ -2004,37 +2004,6 @@ class ReportExpenseIndex extends React.Component {
                   })
                 )
               ),
-              // Nombre. En un viatico es el de la PERSONA, no el de un
-              // proveedor: lo dice el placeholder, que cambia con el tipo. La
-              // etiqueta se queda en "Nombre" a secas para no descuadrar la
-              // rejilla de dos columnas con un titulo el doble de largo.
-              React.createElement("div", { className: "cm-form-group" },
-                React.createElement("label", { className: "cm-label" },
-                  "Nombre"
-                ),
-                React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: self.esViatico(form.type_identification_id) ? "Nombre de quien recibe el viático" : "Nombre del proveedor o tercero", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
-              ),
-              // Fecha
-              React.createElement("div", { className: "cm-form-group" },
-                React.createElement("label", { className: "cm-label" },
-                  "Fecha de factura"
-                ),
-                React.createElement("input", { type: "date", name: "invoice_date", value: form.invoice_date || "", onChange: self.handleFormChange, className: hasError("invoice_date") ? "cm-input cm-input-error" : "cm-input" })
-              ),
-              // NIT/Cedula
-              React.createElement("div", { className: "cm-form-group" },
-                React.createElement("label", { className: "cm-label" },
-                  "NIT / Cédula"
-                ),
-                React.createElement("input", { type: "text", name: "identification", value: form.identification || "", onChange: self.handleFormChange, placeholder: "NIT o cédula", className: "cm-input" })
-              ),
-              // # Factura
-              React.createElement("div", { className: "cm-form-group" },
-                React.createElement("label", { className: "cm-label" },
-                  "# Factura"
-                ),
-                React.createElement("input", { type: "text", name: "invoice_number", value: form.invoice_number || "", onChange: self.handleFormChange, placeholder: "Número de factura", className: "cm-input" })
-              ),
               // Tipo
               React.createElement("div", { className: "cm-form-group" },
                 React.createElement("label", { className: "cm-label" },
@@ -2069,6 +2038,37 @@ class ReportExpenseIndex extends React.Component {
                   className: "cm-field-hint cm-field-hint--copyable",
                   onClick: function() { navigator.clipboard.writeText(self.state.selectedType.label); self.setState({ copyMessage: "Tipo copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
                 }, self.state.selectedType.label) : null
+              ),
+              // Nombre. En un viatico es el de la PERSONA, no el de un
+              // proveedor: lo dice el placeholder, que cambia con el tipo. La
+              // etiqueta se queda en "Nombre" a secas para no descuadrar la
+              // rejilla de dos columnas con un titulo el doble de largo.
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  "Nombre"
+                ),
+                React.createElement("input", { type: "text", name: "invoice_name", value: form.invoice_name || "", onChange: self.handleFormChange, placeholder: self.esViatico(form.type_identification_id) ? "Nombre de quien recibe el viático" : "Nombre del proveedor o tercero", className: hasError("invoice_name") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // Fecha
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  "Fecha de factura"
+                ),
+                React.createElement("input", { type: "date", name: "invoice_date", value: form.invoice_date || "", onChange: self.handleFormChange, className: hasError("invoice_date") ? "cm-input cm-input-error" : "cm-input" })
+              ),
+              // NIT/Cedula
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  "NIT / Cédula"
+                ),
+                React.createElement("input", { type: "text", name: "identification", value: form.identification || "", onChange: self.handleFormChange, placeholder: "NIT o cédula", className: "cm-input" })
+              ),
+              // # Factura
+              React.createElement("div", { className: "cm-form-group" },
+                React.createElement("label", { className: "cm-label" },
+                  "# Factura"
+                ),
+                React.createElement("input", { type: "text", name: "invoice_number", value: form.invoice_number || "", onChange: self.handleFormChange, placeholder: "Número de factura", className: "cm-input" })
               ),
               // Medio de pago
               React.createElement("div", { className: "cm-form-group" },
