@@ -164,6 +164,21 @@ class BudgetSummaryBoard extends Component {
                 <span className="cm-metric-item-label">Sin asignar</span>
                 {this.renderMoney(totals.unassigned, "budget-summary-unassigned")}
               </div>
+              {/* Las dos filas de la reserva solo aparecen cuando hay algo
+                  reservado: en un centro sin gastos por aceptar serian dos
+                  ceros repitiendo la cifra de arriba. */}
+              {this.n(totals.pending) > 0 && (
+                <div className="cm-metric-item">
+                  <span className="cm-metric-item-label">Gastos por aceptar</span>
+                  {this.renderMoney(totals.pending, "budget-summary-pending")}
+                </div>
+              )}
+              {this.n(totals.pending) > 0 && (
+                <div className="cm-metric-item">
+                  <span className="cm-metric-item-label">Disponible para asignar</span>
+                  {this.renderMoney(totals.assignable, "budget-summary-assignable")}
+                </div>
+              )}
             </div>
           </div>
 

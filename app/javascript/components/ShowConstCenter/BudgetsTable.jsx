@@ -207,10 +207,15 @@ class BudgetsTable extends Component {
   assignableLimit = () => {
     var s = this.state.summary;
     if (!s || !s.totals) return null;
-    var unassigned = parseFloat(s.totals.unassigned || 0);
+    // `assignable` (cotizado - asignado - gastos sin aceptar) es el numero que
+    // valida el servidor. El respaldo en `unassigned` es para una pantalla
+    // abierta contra una version anterior del backend, que no lo devuelve.
+    var disponible = parseFloat(
+      s.totals.assignable !== undefined && s.totals.assignable !== null ? s.totals.assignable : (s.totals.unassigned || 0)
+    );
     var o = this.state.original;
-    if (this.state.modeEdit && o && o.active) unassigned += parseFloat(o.amount || 0);
-    return Math.round(unassigned * 100) / 100;
+    if (this.state.modeEdit && o && o.active) disponible += parseFloat(o.amount || 0);
+    return Math.round(disponible * 100) / 100;
   };
 
   // Devuelve null o el string exacto a mostrar. Se evalua en cada render y es la
@@ -235,7 +240,14 @@ class BudgetsTable extends Component {
     //
     // Una partida INACTIVA no consume cupo: la regla de tope no le aplica.
     if (f.active !== false && limit !== null && parseFloat(f.amount) > limit + 0.005) {
-      return "El valor supera lo disponible para asignar en este centro. Disponible: $" + formatoCorto(limit);
+      // Si hay gastos sin aceptar se dice, porque si no el usuario ve un
+      // disponible menor que "cotizado - asignado" y no sabe de donde sale.
+      var pendientes = s && s.totals ? parseFloat(s.totals.pending || 0) : 0;
+      var motivo = pendientes > 0
+        ? " Se reservan $" + formatoCorto(pendientes) + " en gastos creados sin aceptar."
+        : "";
+      return "El valor supera lo disponible para asignar en este centro." + motivo +
+             " Disponible: $" + formatoCorto(limit);
     }
     return null;
   };

@@ -58,6 +58,27 @@ class ExpenseBudgetService
     scope.where(is_acepted: true)
   end
 
+  # El reverso exacto de `consumidores`: los gastos que TODAVIA no descuentan
+  # cupo porque nadie los ha aceptado. Son plata que ya se gasto y que va a
+  # consumir presupuesto en cuanto alguien acepte el gasto.
+  #
+  # `[false, nil]` y no `false`: la columna tiene default false y NOT NULL en el
+  # esquema nuevo, pero hay filas historicas con NULL y un gasto con NULL no es
+  # un gasto aceptado.
+  def self.pendientes_de_aceptar(scope)
+    scope.where(is_acepted: [false, nil])
+  end
+
+  # Cuanto hay en el centro esperando aceptacion. Se RESERVA del tope: no se
+  # puede repartir en partidas plata que ya esta comprometida en gastos que solo
+  # les falta el visto bueno (regla pedida el 2026-09-22).
+  def self.pending_for_center(cost_center_id)
+    return BigDecimal(0) if cost_center_id.blank?
+
+    pendientes_de_aceptar(ReportExpense.where(cost_center_id: cost_center_id))
+      .sum(SPENT_EXPR).to_d.round(2)
+  end
+
   # Result canonico del proyecto (00-ARQUITECTURA.md 4.2, 7.4), identico en los
   # paquetes 04, 05 y 07. `errors` es SIEMPRE un array, nunca nil ni un `:error`
   # singular.
@@ -196,6 +217,7 @@ class ExpenseBudgetService
     viaticos        = centro&.viatic_value.to_d.round(2)
     asignado_total  = asignado_por_usuario.values.sum.to_d.round(2)
     gastado_total   = gastado_por_usuario.values.sum.to_d.round(2)
+    pendiente_total = pending_for_center(centro&.id)
 
     { cost_center: { id: centro&.id, code: centro&.code, viatic_value: viaticos },
       totals: { viatic_value: viaticos,
@@ -203,6 +225,15 @@ class ExpenseBudgetService
                 # Lo que del tope todavia no esta repartido en partidas. Puede
                 # ser negativo solo si alguien forzo datos por fuera del modelo.
                 unassigned: (viaticos - asignado_total).round(2),
+                # Gastos creados que nadie ha aceptado: no estan en `spent`
+                # (todavia no descuentan cupo) pero si se descuentan de lo que
+                # queda por repartir.
+                pending: pendiente_total,
+                # EL NUMERO QUE MANDA AL ASIGNAR. Es el mismo que valida
+                # ExpenseBudget.cap_violation_for; el tablero y el formulario lo
+                # pintan en vez de calcularlo por su cuenta, para que pantalla y
+                # servidor no puedan discrepar.
+                assignable: (viaticos - asignado_total - pendiente_total).round(2),
                 spent: gastado_total,
                 available: (asignado_total - gastado_total).round(2) },
       by_user: by_user }

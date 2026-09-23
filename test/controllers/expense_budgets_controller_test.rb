@@ -284,7 +284,7 @@ class ExpenseBudgetsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal %w[cost_center totals by_user].sort, json_body.keys.sort
-    assert_equal %w[viatic_value assigned unassigned spent available].sort,
+    assert_equal %w[viatic_value assigned unassigned pending assignable spent available].sort,
                  json_body["totals"].keys.sort
     assert_kind_of Array, json_body["by_user"]
     assert_equal %w[user_id user_name assigned spent available budgets_count exceeded_expenses_count].sort,

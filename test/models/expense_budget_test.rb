@@ -201,10 +201,22 @@ class ExpenseBudgetTest < ActiveSupport::TestCase
   end
 
   def test_tope_ignora_partidas_inactivas
+    # Los gastos de las fixtures nacen SIN aceptar y desde el 2026-09-22 eso
+    # reserva cupo (200.000 aqui). Se aceptan para dejar el tope entero y medir
+    # unicamente lo que este test mide: que la partida inactiva no cuenta.
+    ReportExpense.where(cost_center_id: @centro.id).update_all(is_acepted: true)
+
     # El centro tiene 1.000.000 en partidas ACTIVAS y 900.000 en una inactiva
     # sobre un tope de 5.000.000. Si la inactiva contara, esta partida de
     # 4.000.000 se pasaria por 900.000.
     assert_predicate nueva_partida(amount: 4_000_000), :valid?
+  end
+
+  # La cara opuesta del test anterior: con los gastos sin aceptar tal como
+  # vienen, esos mismos 4.000.000 ya no caben.
+  def test_tope_reserva_los_gastos_sin_aceptar
+    assert_not nueva_partida(amount: 4_000_000).valid?
+    assert_predicate nueva_partida(amount: 3_800_000), :valid?
   end
 
   def test_tope_suma_partidas_de_otros_usuarios_del_mismo_centro

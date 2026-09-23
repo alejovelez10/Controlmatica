@@ -97,7 +97,8 @@ class BudgetTabContractTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = json_body
 
-    assert_equal %w[assigned available spent unassigned viatic_value].sort, body["totals"].keys.sort
+    assert_equal %w[assigned assignable available pending spent unassigned viatic_value].sort,
+                 body["totals"].keys.sort
     body["totals"].each do |clave, v|
       # Todos los totales pasan por parseFloat en el tablero.
       assert Float(v), "El total #{clave} no es parseable por parseFloat: #{v.inspect}"

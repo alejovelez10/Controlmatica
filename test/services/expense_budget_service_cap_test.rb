@@ -154,6 +154,62 @@ class ExpenseBudgetServiceCapTest < ActiveSupport::TestCase
     assert_equal MENSAJE_TOPE, ExpenseBudgetService.validate_cap!(budget)
   end
 
+  # --- Los gastos sin aceptar se reservan del tope (2026-09-22) -------------
+
+  def test_gasto_sin_aceptar_baja_lo_que_se_puede_asignar
+    crear_gasto_sin_aceptar(300_000)
+
+    # 1.000.000 de cotizado - 300.000 reservados: 700.000 entra justo.
+    assert_predicate crear_partida_resultado(700_000), :ok?
+  end
+
+  def test_gasto_sin_aceptar_bloquea_lo_que_antes_cabia
+    crear_gasto_sin_aceptar(300_000)
+
+    resultado = crear_partida_resultado(700_001)
+
+    assert_predicate resultado, :error?
+    # El mensaje dice CUANTO esta reservado y por que: sin eso, el usuario ve un
+    # disponible menor que el cotizado y no sabe de donde sale.
+    assert_equal "La suma de las partidas ($700.001) supera lo que se puede asignar en el centro " \
+                 "de costos: del valor de viáticos ($1.000.000) se reservan $300.000 en gastos " \
+                 "creados sin aceptar. Disponible para asignar: $700.000",
+                 resultado.errors.first
+  end
+
+  def test_gasto_aceptado_no_reserva_porque_ya_descuenta_del_cupo
+    gasto = crear_gasto_sin_aceptar(300_000)
+    gasto.update!(is_acepted: true)
+
+    # Aceptado pasa a `spent` y sale de la reserva: el cotizado vuelve a estar
+    # entero para repartir. Contarlo dos veces seria el error a evitar.
+    assert_predicate crear_partida_resultado(1_000_000), :ok?
+  end
+
+  def test_bajar_una_partida_sigue_siendo_posible_con_el_tope_ya_rebasado
+    partida = crear_partida(900_000)
+    crear_gasto_sin_aceptar(500_000)   # deja el tope efectivo en 500.000
+
+    # Subir NO: el escape solo deja pasar lo que no aumenta el total asignado.
+    assert_predicate ExpenseBudgetService.update_budget!(partida, { amount: 950_000 }, actor: @admin), :error?
+    # Bajar SI, aunque 800.000 siga por encima del tope efectivo. Sin esto la
+    # partida quedaria atrapada y el centro congelado.
+    assert_predicate ExpenseBudgetService.update_budget!(partida, { amount: 800_000 }, actor: @admin), :ok?
+  end
+
+  def test_summary_for_center_publica_pending_y_assignable
+    crear_partida(200_000)
+    crear_gasto_sin_aceptar(300_000)
+
+    totales = ExpenseBudgetService.summary_for_center(@centro.id)[:totals]
+
+    assert_equal BigDecimal("300000.0"), totales[:pending]
+    # 1.000.000 - 200.000 asignados - 300.000 reservados.
+    assert_equal BigDecimal("500000.0"), totales[:assignable]
+    # `unassigned` NO cambia de significado: sigue siendo cotizado - asignado.
+    assert_equal BigDecimal("800000.0"), totales[:unassigned]
+  end
+
   # --- El lock, capturado del SQL real --------------------------------------
 
   def test_create_budget_emite_select_for_update_sobre_cost_centers
@@ -190,8 +246,25 @@ class ExpenseBudgetServiceCapTest < ActiveSupport::TestCase
   private
 
   def crear_partida(amount)
+    crear_partida_resultado(amount).value
+  end
+
+  def crear_partida_resultado(amount)
     ExpenseBudgetService.create_budget!(cost_center_id: @centro.id, user_id: @ingeniero.id,
-                                        amount: amount, actor: @admin).value
+                                        amount: amount, actor: @admin)
+  end
+
+  # Gasto en "Creado". Se crea SIN partida a la vista para que el
+  # `auto_accept_if_within_budget` del modelo no lo acepte solo: lo que cabe
+  # nace aceptado, y un gasto aceptado ya no reserva, descuenta.
+  def crear_gasto_sin_aceptar(valor)
+    as_user(@admin) do
+      ReportExpense.create!(omitir_comprobante_obligatorio: true,
+                            user_id: @admin.id, cost_center_id: @centro.id,
+                            user_invoice_id: @ingeniero.id, invoice_name: "Gasto sin aceptar",
+                            invoice_date: Date.new(2026, 6, 1), invoice_value: valor,
+                            invoice_tax: 0, invoice_total: valor)
+    end
   end
 
   def capturar_sql

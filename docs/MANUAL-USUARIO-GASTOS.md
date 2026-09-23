@@ -65,7 +65,9 @@ La pestaña tiene tres partes:
 |---|---|---|
 | **Asignación** | Cotizado | El valor de viáticos que trae el centro de costos. Es el techo de todo |
 | | Asignado | La suma de todas las partidas activas del centro |
-| | Sin asignar | Cotizado − Asignado. Lo que todavía puede repartir |
+| | Sin asignar | Cotizado − Asignado |
+| | Gastos por aceptar | Lo que hay registrado en el centro sin aceptar todavía. Solo aparece si hay alguno |
+| | Disponible para asignar | Sin asignar − Gastos por aceptar. **Es el tope real de una partida nueva**. Solo aparece si hay gastos por aceptar |
 | **Ejecución** | Gastado | La suma de los gastos del centro que **sí** consumen presupuesto |
 | | Disponible | Asignado − Gastado. **Si sale en rojo, está en negativo** |
 | | Excedidos | Cuántos gastos del centro quedaron marcados como excedidos |
@@ -115,9 +117,24 @@ registra y se exporta, pero no descuenta cupo.
 3. Escriba el **monto**.
 4. Guardar.
 
-Mientras escribe el monto, el formulario le va diciendo cuánto queda **sin asignar** en el
-centro. Si se pasa del tope, **el botón Guardar se deshabilita** y aparece el mensaje con el
-excedente exacto. Si asigna exactamente lo que queda disponible, sí se puede guardar.
+Mientras escribe el monto, el formulario le va diciendo cuánto queda **disponible para
+asignar** en el centro. Si se pasa del tope, **el botón Guardar se deshabilita** y aparece el
+mensaje con el excedente exacto. Si asigna exactamente lo que queda disponible, sí se puede
+guardar.
+
+> 🔴 **Los gastos registrados que todavía nadie ha aceptado reservan cupo.** Un gasto en
+> "Creado" aún no descuenta presupuesto (eso pasa al aceptarlo), pero el dinero ya se gastó.
+> Por eso el sistema lo aparta del cotizado y no deja repartirlo en partidas: si no, el centro
+> se pasaría del cotizado en el momento en que alguien acepte esos gastos.
+>
+> Ejemplo: centro con $5.000.000 cotizados, $1.000.000 ya repartido en partidas y $200.000 en
+> gastos sin aceptar. Lo máximo que puede asignar es **$3.800.000**, no $4.000.000.
+>
+> En cuanto esos gastos se aceptan dejan de estar reservados y pasan a descontar del cupo de
+> la persona, que es donde se controlan de ahí en adelante.
+
+Bajar el monto de una partida que ya existe siempre se puede, aunque la reserva haya dejado el
+disponible por debajo de lo ya repartido. Lo que se bloquea es subirla.
 
 ### 1.7 Editar y anular una partida
 
