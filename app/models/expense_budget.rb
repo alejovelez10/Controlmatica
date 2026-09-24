@@ -113,12 +113,14 @@ class ExpenseBudget < ApplicationRecord
     tope = cost_center&.viatic_value.to_d.round(2)
     return "El centro de costos no tiene valor de viáticos cotizado; no es posible asignar partidas" if tope <= 0
 
-    # LOS GASTOS SIN ACEPTAR SE RESERVAN DEL TOPE (2026-09-22). Un gasto en
-    # "Creado" todavia no descuenta cupo (`consumidores` mira `is_acepted`), asi
-    # que sin esto se podria repartir en partidas plata que ya esta gastada y el
-    # centro se pasaria del cotizado en cuanto alguien acepte esos gastos.
-    pendientes = ExpenseBudgetService.pending_for_center(cost_center.id)
-    tope_efectivo = (tope - pendientes).round(2)
+    # EL TOPE SE MIDE CONTRA LO COMPROMETIDO, no contra lo asignado (2026-09-24).
+    # Lo comprometido es Σ max(asignado, gastado aceptado) por persona: lo que a
+    # alguien le aceptaron por encima de su partida ya salio del cotizado y no
+    # se puede volver a repartir. Los gastos SIN aceptar no cuentan: son plata
+    # que Controlmatica considera todavia libre.
+    limite = ExpenseBudgetService.assignable_limit_for(cost_center: cost_center,
+                                                       exclude_budget_id: exclude_id)
+    return nil if monto <= limite
 
     scope = activas.where(cost_center_id: cost_center.id)
     # TRAMPA: `where.not(id: nil)` no filtra nada, filtra TODO (en SQL
@@ -127,32 +129,31 @@ class ExpenseBudget < ApplicationRecord
     # cualquier monto.
     scope = scope.where.not(id: exclude_id) if exclude_id.present?
     suma_otras = scope.sum(:amount)
-
     nueva_suma = suma_otras + monto
-    return nil if nueva_suma <= tope_efectivo
 
-    # ESCAPE PARA NO DEJAR UNA PARTIDA ATRAPADA. Si los gastos pendientes bajan
-    # el tope efectivo por debajo de lo ya repartido, sin esto no se podria ni
-    # siquiera BAJAR una partida existente: la validacion rechazaria tambien el
-    # monto nuevo, mas pequeno, y el centro quedaria congelado. Solo deja pasar
-    # lo que no aumenta el total ya asignado; subir sigue bloqueado.
+    # ESCAPE PARA NO DEJAR UNA PARTIDA ATRAPADA. Si lo gastado sin respaldo deja
+    # el limite por debajo de lo ya repartido, sin esto no se podria ni siquiera
+    # BAJAR una partida existente: la validacion rechazaria tambien el monto
+    # nuevo, mas pequeno, y el centro quedaria congelado. Solo deja pasar lo que
+    # no aumenta el total ya asignado; subir sigue bloqueado.
     if exclude_id.present?
       anterior = find_by(id: exclude_id)
       previo = (anterior&.active ? anterior.amount.to_d.round(2) : BigDecimal(0))
-      return nil if nueva_suma <= suma_otras + previo
+      return nil if monto <= previo
     end
 
-    disponible = ExpenseBudgetService.money([tope_efectivo - suma_otras, 0].max)
+    disponible = ExpenseBudgetService.money(limite)
+    descubierto = ExpenseBudgetService.uncovered_for_center(cost_center.id, exclude_budget_id: exclude_id)
 
     # Dos mensajes distintos porque son dos motivos distintos: pasarse del
-    # cotizado, o chocar contra lo que los gastos sin aceptar tienen reservado.
-    # Con un solo texto, el usuario que ve "supera el valor de viáticos" con el
-    # cotizado a la vista y sin pasarse de el no entiende que lo bloqueo.
-    if pendientes > 0
+    # cotizado repartiendo, o chocar contra plata que ya se gasto sin partida.
+    # Con un solo texto, quien ve "supera el valor de viáticos" sin haberse
+    # pasado de el no entiende que lo bloqueo.
+    if descubierto > 0
       return "La suma de las partidas (#{ExpenseBudgetService.money(nueva_suma)}) supera lo que se puede " \
              "asignar en el centro de costos: del valor de viáticos (#{ExpenseBudgetService.money(tope)}) " \
-             "se reservan #{ExpenseBudgetService.money(pendientes)} en gastos creados sin aceptar. " \
-             "Disponible para asignar: #{disponible}"
+             "ya se consumieron #{ExpenseBudgetService.money(descubierto)} en gastos aceptados sin partida " \
+             "que los cubra. Disponible para asignar: #{disponible}"
     end
 
     "La suma de las partidas (#{ExpenseBudgetService.money(nueva_suma)}) supera el valor de viáticos " \

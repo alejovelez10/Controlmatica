@@ -66,8 +66,8 @@ La pestaña tiene tres partes:
 | **Asignación** | Cotizado | El valor de viáticos que trae el centro de costos. Es el techo de todo |
 | | Asignado | La suma de todas las partidas activas del centro |
 | | Sin asignar | Cotizado − Asignado |
-| | Gastos por aceptar | Lo que hay registrado en el centro sin aceptar todavía. Solo aparece si hay alguno |
-| | Disponible para asignar | Sin asignar − Gastos por aceptar. **Es el tope real de una partida nueva**. Solo aparece si hay gastos por aceptar |
+| | Gastado sin partida | Lo aceptado que ninguna partida cubre. Solo aparece si hay algo |
+| | Disponible para asignar | Sin asignar − Gastado sin partida. **Es el tope real de una partida nueva**. Solo aparece si hay gasto sin partida |
 | **Ejecución** | Gastado | La suma de los gastos del centro que **sí** consumen presupuesto |
 | | Disponible | Asignado − Gastado. **Si sale en rojo, está en negativo** |
 | | Excedidos | Cuántos gastos del centro quedaron marcados como excedidos |
@@ -122,19 +122,23 @@ asignar** en el centro. Si se pasa del tope, **el botón Guardar se deshabilita*
 mensaje con el excedente exacto. Si asigna exactamente lo que queda disponible, sí se puede
 guardar.
 
-> 🔴 **Los gastos registrados que todavía nadie ha aceptado reservan cupo.** Un gasto en
-> "Creado" aún no descuenta presupuesto (eso pasa al aceptarlo), pero el dinero ya se gastó.
-> Por eso el sistema lo aparta del cotizado y no deja repartirlo en partidas: si no, el centro
-> se pasaría del cotizado en el momento en que alguien acepte esos gastos.
+> 🔴 **Lo que ya se gastó sin partida que lo cubra también sale del cotizado.** Un gasto
+> aceptado consume presupuesto aunque la persona no tuviera partida asignada: esa plata ya
+> salió y no se puede volver a repartir.
 >
-> Ejemplo: centro con $5.000.000 cotizados, $1.000.000 ya repartido en partidas y $200.000 en
-> gastos sin aceptar. Lo máximo que puede asignar es **$3.800.000**, no $4.000.000.
+> Ejemplo: centro con $1.010.750 cotizados, $0 repartido en partidas y $312.392 en gastos ya
+> aceptados de alguien sin partida. Lo máximo que puede asignar es **$698.358**.
 >
-> En cuanto esos gastos se aceptan dejan de estar reservados y pasan a descontar del cupo de
-> la persona, que es donde se controlan de ahí en adelante.
+> **Los gastos que todavía nadie ha aceptado no reservan nada**: para Controlmatica siguen
+> siendo plata libre y no bajan el disponible. Empiezan a pesar cuando alguien los acepta.
 
-Bajar el monto de una partida que ya existe siempre se puede, aunque la reserva haya dejado el
-disponible por debajo de lo ya repartido. Lo que se bloquea es subirla.
+El sistema nunca cuenta dos veces la misma plata: si una persona tiene $400.000 de partida y
+$300.000 gastados dentro de ella, el centro tiene comprometidos $400.000, no $700.000. Lo que
+se suma es lo mayor de los dos, persona por persona. Y el cupo que le sobra a una persona no
+cubre lo que otra gastó de más, porque las partidas no se prestan entre beneficiarios.
+
+Bajar el monto de una partida que ya existe siempre se puede, aunque el gasto sin partida haya
+dejado el disponible por debajo de lo ya repartido. Lo que se bloquea es subirla.
 
 ### 1.7 Editar y anular una partida
 

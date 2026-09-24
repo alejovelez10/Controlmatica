@@ -58,26 +58,71 @@ class ExpenseBudgetService
     scope.where(is_acepted: true)
   end
 
-  # El reverso exacto de `consumidores`: los gastos que TODAVIA no descuentan
-  # cupo porque nadie los ha aceptado. Son plata que ya se gasto y que va a
-  # consumir presupuesto en cuanto alguien acepte el gasto.
+  # QUE TIENE COMPROMETIDO EL CENTRO, por beneficiario (regla pedida el
+  # 2026-09-24). Es el MAXIMO entre lo que se le asigno y lo que ya gasto
+  # aceptado, NUNCA la suma: un gasto aceptado que cabe en su partida ya esta
+  # contado dentro de ella, y sumarlo descontaria dos veces la misma plata.
   #
-  # `[false, nil]` y no `false`: la columna tiene default false y NOT NULL en el
-  # esquema nuevo, pero hay filas historicas con NULL y un gasto con NULL no es
-  # un gasto aceptado.
-  def self.pendientes_de_aceptar(scope)
-    scope.where(is_acepted: [false, nil])
+  # El maximo se toma POR PERSONA y no sobre los totales del centro: las
+  # partidas no se prestan entre beneficiarios, asi que el cupo que le sobra a
+  # uno no cubre lo que otro gasto de mas.
+  #
+  # Los gastos SIN ACEPTAR no entran: Controlmatica los considera plata todavia
+  # libre (se probo al reves entre el 22 y el 24 de septiembre de 2026 y no es
+  # lo que se quiere). Empiezan a pesar cuando alguien los acepta.
+  def self.committed_by_user(cost_center_id, exclude_budget_id: nil)
+    asignado = ExpenseBudget.activas.where(cost_center_id: cost_center_id)
+    # TRAMPA conocida: `where.not(id: nil)` no filtra nada, filtra TODO.
+    asignado = asignado.where.not(id: exclude_budget_id) if exclude_budget_id.present?
+    asignado = asignado.group(:user_id).sum(:amount)
+
+    gastado = consumidores(ReportExpense.where(cost_center_id: cost_center_id))
+              .group(:user_invoice_id).sum(SPENT_EXPR)
+
+    { assigned: asignado, spent: gastado }
   end
 
-  # Cuanto hay en el centro esperando aceptacion. Se RESERVA del tope: no se
-  # puede repartir en partidas plata que ya esta comprometida en gastos que solo
-  # les falta el visto bueno (regla pedida el 2026-09-22).
-  def self.pending_for_center(cost_center_id)
-    return BigDecimal(0) if cost_center_id.blank?
-
-    pendientes_de_aceptar(ReportExpense.where(cost_center_id: cost_center_id))
-      .sum(SPENT_EXPR).to_d.round(2)
+  # Suma de los compromisos del centro: Σ max(asignado, gastado) por persona.
+  def self.committed_for_center(cost_center_id, exclude_budget_id: nil)
+    mapas = committed_by_user(cost_center_id, exclude_budget_id: exclude_budget_id)
+    total_comprometido(mapas[:assigned], mapas[:spent])
   end
+
+  # Cuanto puede tomar UNA partida sin que el centro se pase del cotizado: el
+  # cotizado menos lo ya comprometido. Nunca negativo: un tope negativo no
+  # significa "puede asignar menos que nada", significa cero.
+  #
+  # La partida que se esta creando NO cubre hacia atras lo que esa persona ya
+  # gasto: el gasto viejo sigue contando como consumido hasta que exista una
+  # partida que lo respalde. Es la lectura que pidio Controlmatica (un centro
+  # con $1.010.750 cotizados y $312.392 aceptados sin partida ofrece $698.358, no
+  # el cotizado entero).
+  def self.assignable_limit_for(cost_center:, exclude_budget_id: nil)
+    return BigDecimal(0) if cost_center.blank?
+
+    tope = cost_center.viatic_value.to_d.round(2)
+    [(tope - committed_for_center(cost_center.id, exclude_budget_id: exclude_budget_id)).round(2),
+     BigDecimal(0)].max
+  end
+
+  # Lo gastado y aceptado que NINGUNA partida cubre: Σ max(0, gastado - asignado)
+  # por persona. Es la parte del cotizado que ya se consumio sin respaldo y la
+  # unica razon por la que el disponible para asignar puede ser menor que
+  # "cotizado - asignado".
+  def self.uncovered_for_center(cost_center_id, exclude_budget_id: nil)
+    mapas = committed_by_user(cost_center_id, exclude_budget_id: exclude_budget_id)
+    asignado = mapas[:assigned]
+    mapas[:spent].sum(BigDecimal(0)) do |uid, gastado|
+      [gastado.to_d.round(2) - asignado.fetch(uid, 0).to_d.round(2), BigDecimal(0)].max
+    end.round(2)
+  end
+
+  def self.total_comprometido(asignado, gastado)
+    (asignado.keys | gastado.keys).compact.sum(BigDecimal(0)) do |uid|
+      [asignado.fetch(uid, 0).to_d.round(2), gastado.fetch(uid, 0).to_d.round(2)].max
+    end.round(2)
+  end
+  private_class_method :total_comprometido
 
   # Result canonico del proyecto (00-ARQUITECTURA.md 4.2, 7.4), identico en los
   # paquetes 04, 05 y 07. `errors` es SIEMPRE un array, nunca nil ni un `:error`
@@ -217,7 +262,11 @@ class ExpenseBudgetService
     viaticos        = centro&.viatic_value.to_d.round(2)
     asignado_total  = asignado_por_usuario.values.sum.to_d.round(2)
     gastado_total   = gastado_por_usuario.values.sum.to_d.round(2)
-    pendiente_total = pending_for_center(centro&.id)
+    # Σ max(asignado, gastado) por persona, con los mapas que ya estan en
+    # memoria: el tablero no puede costar dos consultas mas por una resta.
+    comprometido    = (asignado_por_usuario.keys | gastado_por_usuario.keys).compact.sum(BigDecimal(0)) do |uid|
+      [asignado_por_usuario.fetch(uid, 0).to_d.round(2), gastado_por_usuario.fetch(uid, 0).to_d.round(2)].max
+    end.round(2)
 
     { cost_center: { id: centro&.id, code: centro&.code, viatic_value: viaticos },
       totals: { viatic_value: viaticos,
@@ -225,15 +274,16 @@ class ExpenseBudgetService
                 # Lo que del tope todavia no esta repartido en partidas. Puede
                 # ser negativo solo si alguien forzo datos por fuera del modelo.
                 unassigned: (viaticos - asignado_total).round(2),
-                # Gastos creados que nadie ha aceptado: no estan en `spent`
-                # (todavia no descuentan cupo) pero si se descuentan de lo que
-                # queda por repartir.
-                pending: pendiente_total,
-                # EL NUMERO QUE MANDA AL ASIGNAR. Es el mismo que valida
-                # ExpenseBudget.cap_violation_for; el tablero y el formulario lo
-                # pintan en vez de calcularlo por su cuenta, para que pantalla y
-                # servidor no puedan discrepar.
-                assignable: (viaticos - asignado_total - pendiente_total).round(2),
+                # EL NUMERO QUE MANDA AL ASIGNAR. Coincide con `unassigned`
+                # salvo cuando alguien gasto (y le aceptaron) mas de lo que
+                # tiene asignado: esa plata ya se fue del cotizado y no se puede
+                # repartir. El tablero y el formulario lo pintan en vez de
+                # calcularlo, para que pantalla y servidor no puedan discrepar.
+                assignable: [(viaticos - comprometido).round(2), BigDecimal(0)].max,
+                # Lo aceptado que ninguna partida cubre. Es exactamente la
+                # diferencia entre `unassigned` y `assignable`, y existe para
+                # poder explicarla en pantalla.
+                uncovered: (comprometido - asignado_total).round(2),
                 spent: gastado_total,
                 available: (asignado_total - gastado_total).round(2) },
       by_user: by_user }

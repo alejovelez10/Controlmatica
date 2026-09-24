@@ -240,11 +240,11 @@ class BudgetsTable extends Component {
     //
     // Una partida INACTIVA no consume cupo: la regla de tope no le aplica.
     if (f.active !== false && limit !== null && parseFloat(f.amount) > limit + 0.005) {
-      // Si hay gastos sin aceptar se dice, porque si no el usuario ve un
-      // disponible menor que "cotizado - asignado" y no sabe de donde sale.
-      var pendientes = s && s.totals ? parseFloat(s.totals.pending || 0) : 0;
-      var motivo = pendientes > 0
-        ? " Se reservan $" + formatoCorto(pendientes) + " en gastos creados sin aceptar."
+      // Si hay gasto aceptado sin partida se dice, porque si no el usuario ve
+      // un disponible menor que "cotizado - asignado" y no sabe de donde sale.
+      var descubierto = s && s.totals ? parseFloat(s.totals.uncovered || 0) : 0;
+      var motivo = descubierto > 0
+        ? " Ya se consumieron $" + formatoCorto(descubierto) + " en gastos aceptados sin partida."
         : "";
       return "El valor supera lo disponible para asignar en este centro." + motivo +
              " Disponible: $" + formatoCorto(limit);
