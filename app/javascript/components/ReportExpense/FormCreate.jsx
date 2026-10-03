@@ -293,7 +293,8 @@ class FormCreate extends Component {
     // apagado y el formulario se llena a mano, que es lo que se hace hoy.
     if (!this.props.extractionEnabled) return null;
 
-    const x = this.props.extraction || { status: "idle", filled: [], confidence: {}, warnings: [], violations: [] };
+    const x = this.props.extraction ||
+      { status: "idle", filled: [], confidence: {}, warnings: [], violations: [], policy: null };
 
     // TODOS los avisos van a UNA sola lista. Antes cada tipo abria su propia
     // caja .cm-alert con su borde y sus 16px de margen: una extraccion normal
@@ -303,6 +304,27 @@ class FormCreate extends Component {
     const avisos = [];
 
     (x.warnings || []).forEach((w, i) => avisos.push({ key: "w" + i, tono: "warn", texto: w }));
+
+    // VEREDICTO DEL AGENTE sobre las instrucciones de la regla (texto libre que
+    // el servidor no sabe evaluar). Es lo unico de esta lista que puede impedir
+    // guardar, y por eso va en tono `danger` cuando frena.
+    const pol = x.policy || {};
+    if (pol.compliant === false) {
+      avisos.push({
+        key: "pol",
+        tono: pol.blocking ? "danger" : "warn",
+        texto: pol.blocking
+          ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
+          : "Incumple las instrucciones de la regla de gasto:",
+        testid: "expense-policy-verdict",
+      });
+      (pol.findings || []).forEach((m, i) => avisos.push({
+        key: "pf" + i,
+        tono: pol.blocking ? "danger" : "warn",
+        texto: "— " + m,
+        testid: "expense-policy-finding-" + i,
+      }));
+    }
 
     // Una violacion blocking:true INFORMA pero no deshabilita Guardar: la puerta
     // de bloqueo es del servidor.

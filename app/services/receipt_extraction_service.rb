@@ -27,7 +27,7 @@ class ReceiptExtractionService
   # mismo paquete. Fuera de aqui, un `result.error` singular sigue siendo señal
   # de desvio: el resto del proyecto usa `ok/value/errors` con errors ARRAY.
   Result = Struct.new(:ok, :fields, :confidence, :error, :error_message, :model, :usage,
-                      keyword_init: true) do
+                      :policy_compliant, :policy_findings, keyword_init: true) do
     def ok?    = !!ok
     def error? = !ok
 
@@ -103,6 +103,11 @@ class ReceiptExtractionService
       tax:            { type: %w[number null] },
       total:          { type: %w[number null] },
       description:    { type: %w[string null] },
+      # VEREDICTO SEMANTICO. Opcionales a proposito (no estan en `required`):
+      # solo tienen sentido cuando el payload lleva instrucciones que juzgar, y
+      # un agente que las ignore tiene que seguir validando contra el esquema.
+      policy_compliant: { type: %w[boolean null] },
+      policy_findings:  { type: "array", items: { type: "string" } },
       confidence: {
         type: "object",
         additionalProperties: false,
@@ -130,6 +135,15 @@ class ReceiptExtractionService
     - unreadable en true si el documento esta demasiado borroso, cortado u oscuro para leerlo.
     - confidence: un numero entre 0 y 1 por campo, que refleje que tan seguro estas de HABER LEIDO
       ese valor en el documento. 0 para los campos que devolviste en null.
+
+    Politica de gasto:
+    - Si el mensaje del usuario trae un bloque "Instrucciones de la politica de gasto", juzgalo
+      contra lo que ves en el comprobante y responde policy_compliant (true si lo cumple, false si
+      lo incumple) y policy_findings con un motivo corto por cada incumplimiento, citando lo que
+      viste en el documento.
+    - Si NO hay bloque de instrucciones, o si el documento no alcanza para juzgarlas, devuelve
+      policy_compliant en null y policy_findings vacio. Un false frena el registro del gasto, asi
+      que no lo uses ante la duda.
   PROMPT
 
   # Punto de entrada unico. NUNCA lanza una excepcion: siempre devuelve Result.
@@ -474,9 +488,20 @@ class ReceiptExtractionService
 
   def user_hint
     code = @context[:cost_center_code].presence
-    return "Extrae los datos de este comprobante." if code.nil?
+    partes = ["Extrae los datos de este comprobante."]
+    partes << "El gasto se imputa al centro de costos #{code}." if code
 
-    "Extrae los datos de este comprobante. El gasto se imputa al centro de costos #{code}."
+    # LAS INSTRUCCIONES DE LA REGLA VIAJAN AQUI (2026-10-03). Son el texto libre
+    # que el administrador escribe en la regla de gasto y que este servidor no
+    # sabe evaluar ("no se aceptan licores, ni propinas superiores al 10%").
+    # Antes solo las veia el agente de WhatsApp, asi que el mismo comprobante se
+    # juzgaba por un canal y por el otro no.
+    instrucciones = @context[:agent_instructions].to_s.strip
+    if instrucciones.present?
+      partes << "\n\nInstrucciones de la politica de gasto:\n#{instrucciones}"
+    end
+
+    partes.join(" ")
   end
 
   # ---- post-proceso de la respuesta del modelo -------------------------------
@@ -491,7 +516,27 @@ class ReceiptExtractionService
     fields     = build_fields(data, confidence)
 
     Result.new(ok: true, fields: fields, confidence: confidence, error: nil, error_message: nil,
-               model: self.class.model, usage: data["_usage"])
+               model: self.class.model, usage: data["_usage"],
+               # `fetch` con default nil y no `[]`: la clave ausente (el agente
+               # que todavia no implementa el veredicto) y un null explicito son
+               # el mismo caso —nadie lo juzgo—, pero conviene que se lea.
+               policy_compliant: normalize_policy_compliant(data["policy_compliant"]),
+               policy_findings: normalize_policy_findings(data["policy_findings"]))
+  end
+
+  # SOLO `true` Y `false` CUENTAN. Cualquier otra cosa —la clave ausente, un
+  # null, un "quizas"— es "nadie lo juzgo", que es distinto de "lo cumple": un
+  # false frena el guardado cuando la regla es obligatoria, asi que convertir
+  # basura en un veredicto seria bloquear gastos por un dato que nadie emitio.
+  def normalize_policy_compliant(raw)
+    return true  if raw == true
+    return false if raw == false
+
+    nil
+  end
+
+  def normalize_policy_findings(raw)
+    Array(raw).map { |m| m.to_s.strip }.reject(&:empty?).first(10)
   end
 
   def normalize_confidence(raw)

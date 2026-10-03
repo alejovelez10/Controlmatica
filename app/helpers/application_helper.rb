@@ -202,8 +202,22 @@ module ApplicationHelper
     end
   end
 
+  # Roles que pueden ser PROPIETARIO de un centro de costos (y que alimentan los
+  # selects de usuario de la pantalla del centro). Ser propietario no es
+  # cosmetico: administra las partidas de su centro sin necesitar el permiso
+  # "Ver todos" (ExpenseBudgetsController#owner_or_show_all?) y es quien recibe
+  # el correo de aprobacion de gastos (ReportExpense#avisar_al_dueno_del_centro).
+  #
+  # Se compara en MINUSCULAS y sin tilde porque el nombre del rol es texto libre
+  # escrito a mano: `db/seeds_staging.rb:148` siembra "ADMINISTRADOR" en
+  # mayusculas, y con la comparacion literal anterior esa base devolvia una
+  # lista VACIA y el formulario se quedaba sin propietarios que ofrecer.
+  ROLES_PROPIETARIOS = ["administrador", "comercial", "administracion", "administración"].freeze
+
   def get_users_json
-    users = User.joins(:rol).where("rols.name = ? OR rols.name = ?", "Administrador", "Comercial")
+    users = User.joins(:rol)
+                .where("LOWER(rols.name) IN (?)", ROLES_PROPIETARIOS)
+                .order(:names)
     users.collect do |user|
       {
         :id => user.id,

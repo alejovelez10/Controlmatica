@@ -17,16 +17,16 @@ mitades y **no son intercambiables**:
 |---|---|---|
 | Qué son | Antigüedad máxima, tope de valor, duplicados | Un texto libre |
 | Dónde van | **Cada uno tiene su propio campo** en el formulario | El **cuadro de texto grande** del final |
-| Quién las evalúa | **El sistema, siempre** | El **agente de WhatsApp**, cuando esté activo |
-| Cuándo aplican | En **todos** los canales: web, WhatsApp e importación de Excel | **Solo** cuando el gasto entra conversando con el agente |
+| Quién las evalúa | **El sistema, siempre** | El **agente**, que sí tiene criterio |
+| Cuándo aplican | En **todos** los canales: web, WhatsApp e importación de Excel | Cuando el agente ve el comprobante: por WhatsApp, y desde la web al pulsar **Extraer datos del comprobante** |
 
 > 🔴 **La confusión que hay que evitar a toda costa**: escribir *"las facturas no pueden tener
 > más de 30 días"* dentro del cuadro de texto en vez de ponerlo en el campo «Antigüedad
 > máxima».
 >
-> **Qué pasa si lo hace**: un gasto registrado desde la web **deja de validarse por completo**
-> y nadie se entera. La regla parece configurada, la pantalla la muestra, y no hace nada. Solo
-> el agente de WhatsApp la aplicaría, y de forma aproximada.
+> **Qué pasa si lo hace**: un gasto escrito a mano **deja de validarse por completo** y nadie
+> se entera. La regla parece configurada, la pantalla la muestra, y no hace nada. Solo la
+> aplicaría el agente, de forma aproximada y únicamente cuando alguien le pase el comprobante.
 >
 > **La norma es simple: si el límite es un número o un sí/no, tiene campo propio. El cuadro de
 > texto es solo para lo que hay que juzgar con criterio.**
@@ -67,8 +67,8 @@ La propuesta comprometió **cinco** reglas. Así se configuran hoy:
 | 1 | **Antigüedad del comprobante** | Campo **«Antigüedad máxima del comprobante»** | 🟢 El sistema, siempre |
 | 2 | **Tope de valor por gasto** | Campo **«Tope de valor del comprobante»** | 🟢 El sistema, siempre |
 | 3 | **Duplicados** | Casilla **«Validar duplicados»** | 🟢 El sistema, siempre |
-| 4 | **Conceptos no permitidos** (licores, gastos personales, propinas…) | **Cuadro de texto** de instrucciones | 🟡 El agente de WhatsApp |
-| 5 | **Coherencia entre lo declarado y el comprobante** | **Cuadro de texto** de instrucciones | 🟡 El agente de WhatsApp |
+| 4 | **Conceptos no permitidos** (licores, gastos personales, propinas…) | **Cuadro de texto** de instrucciones | 🟡 El agente, al leer el comprobante |
+| 5 | **Coherencia entre lo declarado y el comprobante** | **Cuadro de texto** de instrucciones | 🟡 El agente, al leer el comprobante |
 
 Las tres primeras son **verificables sin criterio**: una factura tiene 40 días o no los tiene.
 Las dos últimas requieren interpretar (¿un almuerzo con un cliente es "gasto personal"?), y por
@@ -154,13 +154,20 @@ Tres advertencias:
 
 1. 🔴 **Aquí NO van reglas de fecha ni de monto.** Tienen sus campos propios (§3.4 y §3.5) y
    solo ahí las verifica el sistema.
-2. **Solo aplica cuando el gasto entra conversando con el agente de WhatsApp.** Un gasto
-   registrado desde la web **no se puede juzgar con este texto**: no hay nadie leyéndolo.
+2. **Solo aplica cuando el agente ve el comprobante.** Eso ocurre por WhatsApp y también desde
+   la web, al pulsar **Extraer datos del comprobante**. Un gasto escrito a mano, sin pasar por
+   esa lectura, no se puede juzgar con este texto y se registra igual.
 3. Es **opcional**. Una regla puede tener solo límites deterministas y funcionar perfectamente.
 
-> ⚠️ **Estado actual**: el agente de WhatsApp todavía no está conectado, así que hoy este
-> campo **se guarda y se muestra, pero no se aplica en ningún lado**. Puede dejarlo escrito
-> desde ya; empezará a surtir efecto el día que el canal se conecte.
+**Qué pasa cuando el agente dice que el comprobante incumple**: los motivos salen en el
+formulario, debajo del botón. Si la regla está marcada como **Obligatoria**, el gasto **no se
+guarda** hasta corregirlo; si no lo está, se guarda, los motivos quedan en la auditoría del
+gasto y el gasto no queda aprobado.
+
+> ⚠️ **Estado actual**: Controlmatica ya le manda estas instrucciones al agente y aplica su
+> respuesta. Falta que el agente extractor de Taimes devuelva el veredicto
+> (`docs/TAIMES-EXTRACTOR-COMPROBANTES.md`); hasta entonces el campo se guarda y se muestra,
+> pero nadie lo juzga.
 
 ### 3.8 Usuarios a los que aplica
 

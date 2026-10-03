@@ -556,6 +556,63 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
     end
   end
 
+  # ---- politica de gasto (instrucciones de la regla, 2026-10-03) -----------
+
+  test "las instrucciones de la regla viajan en el mensaje al agente" do
+    with_fake_extractor(payload_modelo) do |fake|
+      ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"),
+                                       agent_instructions: "No se aceptan licores")
+
+      texto = fake.calls.first[:messages].first[:content].last[:text]
+      assert_includes texto, "Instrucciones de la politica de gasto"
+      assert_includes texto, "No se aceptan licores"
+    end
+  end
+
+  test "sin instrucciones no se agrega el bloque de politica" do
+    with_fake_extractor(payload_modelo) do |fake|
+      ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
+
+      assert_not_includes fake.calls.first[:messages].first[:content].last[:text],
+                          "Instrucciones de la politica"
+    end
+  end
+
+  test "el veredicto del agente llega al Result" do
+    payload = payload_modelo("policy_compliant" => false,
+                             "policy_findings" => ["Incluye una botella de vino", "  "])
+
+    with_fake_extractor(payload) do
+      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"),
+                                                   agent_instructions: "No se aceptan licores")
+
+      assert_equal false, resultado.policy_compliant
+      # Los motivos vacios se descartan: pintarlos seria una viñeta en blanco.
+      assert_equal ["Incluye una botella de vino"], resultado.policy_findings
+    end
+  end
+
+  test "un agente que no devuelve veredicto deja policy_compliant en nil" do
+    with_fake_extractor(payload_modelo) do
+      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"),
+                                                   agent_instructions: "No se aceptan licores")
+
+      # NIL Y NO FALSE: el agente de Taimes puede no implementar todavia el
+      # veredicto, y "no me lo dijo" no puede frenar el registro de un gasto.
+      assert_nil resultado.policy_compliant
+      assert_empty resultado.policy_findings
+    end
+  end
+
+  test "un veredicto que no es booleano se trata como ausente" do
+    with_fake_extractor(payload_modelo("policy_compliant" => "quizas")) do
+      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"),
+                                                   agent_instructions: "No licores")
+
+      assert_nil resultado.policy_compliant
+    end
+  end
+
   private
 
   def claves_esperadas

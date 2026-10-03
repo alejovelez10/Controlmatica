@@ -150,6 +150,7 @@ class ReportExpensesController < ApplicationController
   # escritura): desaparece como efecto del cableado, no como refactor aparte.
   def create
     report_expense = ReportExpense.new(report_expense_params_create)
+    report_expense.agent_policy_verdict = agent_policy_verdict_param
     result = ExpenseBudgetService.persist_with_evaluation!(report_expense, actor: current_user)
 
     if result.ok?
@@ -226,6 +227,7 @@ class ReportExpensesController < ApplicationController
     prev_user_invoice_id = @report_expense.user_invoice_id
 
     @report_expense.assign_attributes(report_expense_params_update)
+    @report_expense.agent_policy_verdict = agent_policy_verdict_param
     result = ExpenseBudgetService.persist_with_evaluation!(
       @report_expense, actor: current_user,
       previous_cost_center_id: prev_cost_center_id,
@@ -384,7 +386,19 @@ class ReportExpensesController < ApplicationController
     end
 
     center = CostCenter.find_by(id: params[:cost_center_id])
-    result = ReceiptExtractionService.extract(params[:file], cost_center_code: center&.code)
+
+    # LAS INSTRUCCIONES DE LA REGLA VIAJAN CON EL COMPROBANTE (2026-10-03).
+    # Son del RESPONSABLE del gasto, no de quien captura: las reglas se asignan
+    # por rol y la persona que digita puede no ser la misma por la que responde
+    # el gasto. Si todavia no se eligio responsable se usan las de quien esta en
+    # pantalla, que es lo que el formulario trae precargado.
+    responsable = User.find_by(id: params[:user_invoice_id].presence) || current_user
+    reglas      = ExpenseRule.aplicables_a(responsable).to_a
+    limites     = ExpenseRuleService.effective_limits(reglas)
+    duros       = ExpenseRuleService.effective_limits(reglas.select(&:mandatory))
+
+    result = ReceiptExtractionService.extract(params[:file], cost_center_code: center&.code,
+                                                             agent_instructions: limites[:agent_instructions])
     return render json: { type: "error", message: [result.error_message] } unless result.ok?
 
     # LA EXTRACCION YA NO EVALUA REGLAS (decision de producto, 2026-08-29). Era
@@ -401,8 +415,24 @@ class ReportExpensesController < ApplicationController
     # Las reglas se evaluan y se informan al GUARDAR, que es el unico punto por
     # el que pasan los dos caminos y donde ya se conoce el responsable.
     fields, warnings = build_extraction_draft(result)
+
+    # El veredicto SEMANTICO si se devuelve, y no contradice la decision de
+    # 2026-08-29 de sacar de aqui las reglas DETERMINISTAS: aquellas se evaluan
+    # en el servidor en todos los canales y se avisan al adjuntar, mientras que
+    # esta es la unica oportunidad de juzgar el texto libre, porque es cuando el
+    # agente tiene el comprobante delante. `blocking` dice si ademas frena el
+    # guardado, que depende de que alguna regla obligatoria traiga
+    # instrucciones.
+    policy = {
+      compliant: result.policy_compliant,
+      findings: Array(result.policy_findings),
+      blocking: result.policy_compliant == false && duros[:agent_instructions].present?,
+      instructions: limites[:agent_instructions],
+      applied_rules: reglas.map(&:name)
+    }
+
     render json: { type: "success", fields: fields, confidence: result.confidence,
-                   warnings: warnings }
+                   warnings: warnings, policy: policy }
   end
 
   # PLANTILLA DE IMPORTACION. Se genera contra la base en cada descarga: las
@@ -832,6 +862,31 @@ class ReportExpensesController < ApplicationController
     :currency, :foreign_value, :foreign_tax, :foreign_total,
     :exchange_rate, :exchange_rate_date, :exchange_rate_source, :cop_manual_override
   ].freeze
+
+  # VEREDICTO DEL AGENTE SOBRE LAS INSTRUCCIONES DE LA REGLA.
+  #
+  # No va en EXPENSE_WRITABLE_PARAMS porque no es un atributo del gasto: es el
+  # juicio que devolvio el agente al leer ESTE comprobante y que el formulario
+  # reenvia al guardar. Se asigna aparte, a `agent_policy_verdict`.
+  #
+  # AUSENTE SIGNIFICA "NADIE LO JUZGO" y no frena nada. Que un cliente pueda no
+  # mandarlo no es un agujero que este metodo pueda tapar: el servidor no sabe
+  # evaluar instrucciones en texto libre —para eso esta el agente—, asi que un
+  # gasto escrito a mano, sin comprobante, nunca tiene veredicto. Lo que esto
+  # garantiza es que el veredicto que SI se emitio se aplique igual por la web
+  # que por WhatsApp.
+  #
+  # El formulario manda multipart (lleva el archivo), asi que `true`/`false`
+  # llegan como texto.
+  def agent_policy_verdict_param
+    bruto = params[:policy_compliant]
+    return nil if bruto.nil? || bruto == "" || bruto == "null"
+
+    cumple = ActiveModel::Type::Boolean.new.cast(bruto)
+    return nil if cumple.nil?
+
+    { compliant: cumple, findings: Array(params[:policy_findings]).map(&:to_s) }
+  end
 
   def report_expense_params_create
     defaults = { user_id: current_user.id }

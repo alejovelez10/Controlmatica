@@ -602,9 +602,9 @@ class Show extends React.Component {
             {/* Sub-tables */}
             {/* `users_select` (get_users_select, TODOS los usuarios) baja hasta
                 la pestana de Presupuesto. `users` NO sirve para el select de
-                beneficiario de una partida: sale de get_users_json, que filtra a
-                los roles Administrador y Comercial (application_helper.rb:190),
-                y el beneficiario tipico es un ingeniero. */}
+                beneficiario de una partida: sale de get_users_json, que filtra
+                a los roles de ROLES_PROPIETARIOS (application_helper.rb), y el
+                beneficiario tipico es un ingeniero. */}
             <div className="cm-tabs">
               <TabContentShow
                 loadData={this.loadData}

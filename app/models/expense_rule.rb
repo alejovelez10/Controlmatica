@@ -31,17 +31,27 @@
 #     la evalua el SERVIDOR, siempre. No hay nada que interpretar: o la factura
 #     tiene 40 dias o no los tiene. Vive aqui para que un gasto que entra por la
 #     web se valide exactamente igual que uno que entra por WhatsApp.
-#   * SEMANTICA (agent_instructions): texto libre que este modelo NO evalua. Se
-#     expone para que lo aplique el agente de Taimes, que si tiene criterio.
+#   * SEMANTICA (agent_instructions): texto libre que este modelo NO evalua
+#     nunca. Lo juzga el agente de Taimes, que si tiene criterio, y el servidor
+#     solo APLICA el veredicto que el agente le devuelve
+#     (ReportExpense#agent_policy_verdict).
 #
 # Mover una regla determinista al prompt del agente rompe la simetria entre
 # canales en silencio: el gasto por la web deja de validarse y nadie se entera.
 #
+# LOS DOS CANALES JUZGAN EL TEXTO LIBRE (2026-10-03). Antes solo lo veia el
+# agente de WhatsApp; ahora la web tambien se lo manda al agente extractor al
+# pulsar "Extraer datos del comprobante" (docs/TAIMES-EXTRACTOR-COMPROBANTES.md).
+# Un gasto escrito a mano, sin esa lectura, sigue sin veredicto y se registra
+# igual: el servidor no sabe evaluar estas instrucciones y no puede frenar un
+# gasto por una pregunta que nadie hizo.
+#
 # `mandatory` NO ES NI UNA COSA NI LA OTRA: no es un limite que se evalue, es la
-# CONSECUENCIA de incumplir los limites de esta regla. `true` frena la creacion
-# del gasto (web y movil); `false` la deja pasar, anota la violacion y baja el
-# gasto a "sin aprobar" con el motivo. Aplica solo a los limites deterministas:
-# `agent_instructions` las juzga el agente y este flag no lo alcanza.
+# CONSECUENCIA de incumplir esta regla. `true` frena la creacion del gasto (web
+# y movil); `false` la deja pasar, anota la violacion y baja el gasto a "sin
+# aprobar" con el motivo. Alcanza TAMBIEN al veredicto semantico desde el
+# 2026-10-03: una regla obligatoria cuyas instrucciones el agente da por
+# incumplidas frena el guardado.
 class ExpenseRule < ApplicationRecord
   # POR ROL Y NO POR USUARIO (2026-09-10). Mantener la lista persona por persona
   # es trabajo que nadie hace: cada usuario nuevo hay que acordarse de agregarlo,

@@ -23,6 +23,10 @@ class ExpenseRuleService
   CODE_TOO_OLD    = "invoice_too_old".freeze
   CODE_VALUE      = "invoice_value_exceeded".freeze
   CODE_DUPLICATE  = "duplicate_invoice".freeze
+  # Veredicto SEMANTICO: lo emite el agente al leer el comprobante contra las
+  # `agent_instructions`, no lo calcula este servidor. Llega por parametro y se
+  # traduce a una violacion mas para que los dos canales lo traten igual.
+  CODE_AGENT      = "agent_instructions".freeze
 
   # Result canonico del proyecto, identico al de ExpenseBudgetService
   # (00-ARQUITECTURA.md §4.2). `errors` es SIEMPRE un array.
@@ -56,7 +60,15 @@ class ExpenseRuleService
   # flag —por eso `violation` deja `rule` en nil—. La unica forma honesta de
   # saber que frena es volver a resolver los limites usando SOLO las reglas
   # obligatorias y evaluar contra esos.
-  def self.validate(expense, user: nil)
+  # `agent_verdict` es el juicio del agente sobre las `agent_instructions` —el
+  # texto libre que este servidor NO sabe evaluar—, con la forma
+  # `{ compliant: true/false/nil, findings: ["motivo", ...] }`. Entra por
+  # parametro porque quien lo produce es el agente de Taimes: la web se lo pide
+  # al leer el comprobante y lo reenvia al guardar. `nil` (o `compliant` nil)
+  # significa "nadie lo juzgo" y no genera violacion: un gasto escrito a mano,
+  # sin comprobante, no puede quedar bloqueado por una pregunta que nunca se
+  # hizo.
+  def self.validate(expense, user: nil, agent_verdict: nil)
     responsable = user || expense&.user_invoice
     reglas = ExpenseRule.aplicables_a(responsable).to_a
 
@@ -86,6 +98,13 @@ class ExpenseRuleService
       violations.concat(duplicado)
       blocking.concat(duplicado) if limites_duros[:check_duplicates]
     end
+
+    # El veredicto del agente FRENA solo si alguna regla obligatoria trae
+    # instrucciones: `mandatory` describe la consecuencia de incumplir ESA
+    # regla, y una regla blanda con instrucciones avisa pero deja guardar.
+    semanticas = check_agent_policy(agent_verdict)
+    violations.concat(semanticas)
+    blocking.concat(semanticas) if limites_duros[:agent_instructions].present?
 
     valor = {
       ok: violations.empty?,
@@ -178,6 +197,27 @@ class ExpenseRuleService
   # `rule` se deja en nil porque el limite efectivo puede venir de la
   # combinacion de varias reglas y atribuirselo a una sola seria mentir; los
   # nombres de todas van en `applied_rules`.
+  # Traduce el veredicto del agente a violaciones. Una por MOTIVO, no una sola
+  # con todos los motivos pegados: cada motivo es un incumplimiento distinto y
+  # la pantalla los pinta en lista.
+  #
+  # Sin motivos pero con `compliant: false` se emite una violacion generica: que
+  # el agente no explique por que no puede traducirse en "entonces no pasa
+  # nada", o bastaria con devolver el veredicto pelado para saltarse la regla.
+  def self.check_agent_policy(verdict)
+    return [] if verdict.blank?
+
+    v = verdict.respond_to?(:with_indifferent_access) ? verdict.with_indifferent_access : verdict
+    # nil es "nadie lo juzgo"; solo false es un incumplimiento.
+    return [] unless v[:compliant] == false
+
+    motivos = Array(v[:findings]).map { |m| m.to_s.strip }.reject(&:empty?)
+    return [violation(CODE_AGENT, "El comprobante no cumple las instrucciones de la regla de gasto")] if motivos.empty?
+
+    motivos.map { |motivo| violation(CODE_AGENT, motivo) }
+  end
+  private_class_method :check_agent_policy
+
   def self.violation(code, message, rule: nil)
     { rule: rule, code: code, message: message }
   end

@@ -329,6 +329,20 @@ class ReportExpense < ApplicationRecord
   # mismo. Puesto en el controller cubriria uno solo.
   validate :enforce_expense_rules
 
+  # VEREDICTO SEMANTICO DEL AGENTE, en memoria y sin columna detras.
+  #
+  #   { compliant: true/false/nil, findings: ["no se aceptan licores", ...] }
+  #
+  # Lo produce el agente al leer el comprobante contra las `agent_instructions`
+  # (el texto libre que este servidor no sabe evaluar) y lo reenvia quien crea
+  # el gasto: la web lo recibe del boton "Extraer datos del comprobante" y lo
+  # manda al guardar. Vive aqui, y no en el controller, para que el dia que
+  # WhatsApp o el import lo manden tambien, se aplique igual sin tocar nada.
+  #
+  # `nil` significa "nadie lo juzgo" y no frena nada: un gasto escrito a mano no
+  # puede quedar bloqueado por una pregunta que no se le hizo a ningun agente.
+  attr_accessor :agent_policy_verdict
+
   # EL COMPROBANTE ES OBLIGATORIO EN GASTOS NUEVOS (decision de producto,
   # 2026-09-10). Un gasto sin soporte no lo puede causar contabilidad, asi que
   # registrarlo solo aplaza el problema hasta el cierre, cuando ya nadie se
@@ -866,7 +880,7 @@ class ReportExpense < ApplicationRecord
     # tope o mover la fecha fuera del plazo: ahi el campo cambio.
     return if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
 
-    resultado = ExpenseRuleService.validate(self).value
+    resultado = ExpenseRuleService.validate(self, agent_verdict: agent_policy_verdict).value
     # LA FOTO ES SIEMPRE COMPLETA Y LOS ERRORES SOLO LOS DUROS. Son dos listas
     # distintas a proposito: `rule_violations` tiene que registrar tambien lo
     # que se incumplio sin frenar —es justo el caso que el dueño del centro
@@ -884,7 +898,8 @@ class ReportExpense < ApplicationRecord
   def apply_expense_rules
     # Reusa lo que calculo la validacion; solo consulta si no corrio (por
     # ejemplo, un `save(validate: false)`).
-    violaciones = @violaciones_de_reglas || ExpenseRuleService.validate(self).value[:violations]
+    violaciones = @violaciones_de_reglas ||
+                  ExpenseRuleService.validate(self, agent_verdict: agent_policy_verdict).value[:violations]
 
     # `.map(&:stringify_keys)` porque jsonb devuelve siempre claves String: sin
     # esto, el objeto en memoria y el releido de la base tendrian formas

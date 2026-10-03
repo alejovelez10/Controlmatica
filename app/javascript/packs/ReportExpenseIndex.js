@@ -106,7 +106,10 @@ function escaparHtml(texto) {
   });
 }
 
-var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [] };
+// `policy` es el veredicto del agente sobre las instrucciones de la regla de
+// gasto (el texto libre que el servidor no sabe evaluar). null = nadie lo
+// juzgo, que NO es lo mismo que "lo cumple".
+var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [], policy: null };
 var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
 var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
 
@@ -935,7 +938,11 @@ class ReportExpenseIndex extends React.Component {
       this.setState(Object.assign({}, vacio, { receiptError: "El archivo supera los 20 MB permitidos." }));
       return;
     }
-    this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null },
+    // EL VEREDICTO MUERE CON EL ARCHIVO. Es el juicio sobre UN comprobante: si
+    // se adjunta otro, dejarlo puesto significaria bloquear (o dejar pasar) el
+    // nuevo por lo que decia el anterior.
+    this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null,
+                    extraction: Object.assign({}, EXTRACTION_VACIA) },
                   this.validarReglas);
   }.bind(this);
 
@@ -1080,6 +1087,9 @@ class ReportExpenseIndex extends React.Component {
     var fd = new FormData();
     fd.append("file", this.state.receiptFile);
     if (this.state.form.cost_center_id) fd.append("cost_center_id", this.state.form.cost_center_id);
+    // EL RESPONSABLE DECIDE QUE REGLAS SE JUZGAN: se asignan por rol, y quien
+    // digita puede no ser la persona por la que responde el gasto.
+    if (this.state.form.user_invoice_id) fd.append("user_invoice_id", this.state.form.user_invoice_id);
 
     this.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "loading" }) });
 
@@ -1111,7 +1121,8 @@ class ReportExpenseIndex extends React.Component {
         var newState = {
           form: f,
           extraction: { status: "done", message: null, filled: filled,
-                        confidence: d.confidence || {}, warnings: d.warnings || [] },
+                        confidence: d.confidence || {}, warnings: d.warnings || [],
+                        policy: d.policy || null },
         };
         if (f.currency && f.currency !== "COP") newState.selectedCurrency = self.currencyOption(f.currency);
         // NADA SE GUARDA SOLO: la extraccion precarga y la persona pulsa Guardar.
@@ -1243,6 +1254,17 @@ class ReportExpenseIndex extends React.Component {
     // Solo si es un File: hacer el append siempre manda el string
     // "[object Object]" cuando no hay archivo.
     if (this.state.receiptFile instanceof File) fd.append("receipt_file", this.state.receiptFile);
+
+    // EL VEREDICTO VIAJA AL GUARDAR. Quien lo aplica es el servidor
+    // (ReportExpense#agent_policy_verdict): sin esto, el aviso de la pantalla
+    // seria decorativo y el gasto se guardaria igual. Solo se manda si el
+    // agente juzgo de verdad: sin veredicto no se manda la clave, porque
+    // ausente significa "nadie lo juzgo" y no frena nada.
+    var veredicto = (this.state.extraction || {}).policy;
+    if (veredicto && (veredicto.compliant === true || veredicto.compliant === false)) {
+      fd.append("policy_compliant", veredicto.compliant ? "true" : "false");
+      (veredicto.findings || []).forEach(function(m) { fd.append("policy_findings[]", m); });
+    }
 
     this.setState({ saving: true });
 
@@ -1683,6 +1705,20 @@ class ReportExpenseIndex extends React.Component {
     (x.warnings || []).forEach(function(w, i) {
       avisos.push({ key: "w" + i, tono: "warn", texto: w });
     });
+
+    // VEREDICTO DEL AGENTE sobre las instrucciones de la regla. Va primero en
+    // intencion aunque se pinte aqui: es lo unico de esta lista que puede
+    // impedir guardar.
+    var pol = x.policy || {};
+    if (pol.compliant === false) {
+      var cabeza = pol.blocking
+        ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
+        : "Incumple las instrucciones de la regla de gasto:";
+      avisos.push({ key: "pol", tono: "warn", texto: cabeza, testid: "expense-policy-verdict" });
+      (pol.findings || []).forEach(function(m, i) {
+        avisos.push({ key: "pf" + i, tono: "warn", texto: "— " + m, testid: "expense-policy-finding-" + i });
+      });
+    }
 
     // SOLO la franja 0,60–0,80. Por debajo de 0,60 el servidor ya manda su
     // propio aviso redactado (CONFIDENCE_WARN en receipt_extraction_service.rb),

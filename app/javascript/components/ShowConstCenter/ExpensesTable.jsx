@@ -52,7 +52,9 @@ function escaparHtml(texto) {
   });
 }
 
-var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [] };
+// `policy` es el veredicto del agente sobre las instrucciones de la regla de
+// gasto. null = nadie lo juzgo, que NO es lo mismo que "lo cumple".
+var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [], policy: null };
 var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
 var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
 
@@ -599,7 +601,9 @@ class ExpensesTable extends Component {
       this.setState({ receiptFile: null, receiptFileName: "", receiptError: "El archivo supera los 20 MB permitidos." });
       return;
     }
-    this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null },
+    // EL VEREDICTO MUERE CON EL ARCHIVO: es el juicio sobre UN comprobante.
+    this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null,
+                    extraction: Object.assign({}, EXTRACTION_VACIA) },
                   this.validarReglas);
   };
 
@@ -703,6 +707,11 @@ class ExpensesTable extends Component {
     var fd = new FormData();
     fd.append("file", this.state.receiptFile);
     fd.append("cost_center_id", this.props.cost_center.id);
+    // EL RESPONSABLE DECIDE QUE REGLAS SE JUZGAN: se asignan por rol, y quien
+    // digita puede no ser la persona por la que responde el gasto.
+    if (this.state.formCreate.user_invoice_id) {
+      fd.append("user_invoice_id", this.state.formCreate.user_invoice_id);
+    }
 
     this.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "loading" }) });
 
@@ -735,7 +744,8 @@ class ExpensesTable extends Component {
         var newState = {
           formCreate: f,
           extraction: { status: "done", message: null, filled: filled,
-                        confidence: d.confidence || {}, warnings: d.warnings || [] },
+                        confidence: d.confidence || {}, warnings: d.warnings || [],
+                        policy: d.policy || null },
         };
         if (f.currency && f.currency !== "COP") {
           var opcion = currencyOptions().filter(function(o) { return o.value === f.currency; })[0];
@@ -831,6 +841,14 @@ class ExpensesTable extends Component {
     // Solo si es un File. OrdenesDeCompraTable.jsx:108 hace el append siempre y
     // por eso manda el string "[object Object]" cuando no hay archivo.
     if (this.state.receiptFile instanceof File) fd.append("receipt_file", this.state.receiptFile);
+
+    // EL VEREDICTO VIAJA AL GUARDAR: quien lo aplica es el servidor
+    // (ReportExpense#agent_policy_verdict). Sin esto el aviso seria decorativo.
+    var veredicto = (this.state.extraction || {}).policy;
+    if (veredicto && (veredicto.compliant === true || veredicto.compliant === false)) {
+      fd.append("policy_compliant", veredicto.compliant ? "true" : "false");
+      (veredicto.findings || []).forEach(function(m) { fd.append("policy_findings[]", m); });
+    }
 
     var isEdit = this.state.modeEdit;
     var url = isEdit ? "/report_expenses/" + this.state.id : "/report_expenses";

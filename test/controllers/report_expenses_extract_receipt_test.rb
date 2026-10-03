@@ -265,6 +265,83 @@ class ReportExpensesExtractReceiptTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # ---- politica de gasto (instrucciones de la regla, 2026-10-03) -----------
+  #
+  # Las reglas DETERMINISTAS siguen sin evaluarse aqui (ver el test de arriba):
+  # esas las valida el servidor en todos los canales. Lo que si pasa por aqui
+  # es el texto libre, porque es el unico momento en que el agente tiene el
+  # comprobante delante.
+
+  def regla_semantica(usuario, texto: "No se aceptan licores", mandatory: true)
+    as_user(@admin) do
+      ExpenseRule.create!(name: "Semantica #{SecureRandom.hex(3)}", active: true, is_default: false,
+                          check_duplicates: false, mandatory: mandatory,
+                          agent_instructions: texto, rols: [usuario.rol], user: @admin)
+    end
+  end
+
+  test "las instrucciones del responsable viajan al agente" do
+    sign_in_as(@admin)
+    regla_semantica(users(:ingeniero), texto: "No se aceptan licores")
+
+    with_fake_extractor(payload_modelo) do |fake|
+      post_extraccion(user_invoice_id: users(:ingeniero).id)
+
+      texto = fake.calls.first[:messages].first[:content].last[:text]
+      assert_includes texto, "No se aceptan licores"
+    end
+  end
+
+  test "sin responsable se usan las reglas de quien esta capturando" do
+    sign_in_as(@admin)
+    regla_semantica(@admin, texto: "Nada de propinas")
+
+    with_fake_extractor(payload_modelo) do |fake|
+      post_extraccion
+
+      assert_includes fake.calls.first[:messages].first[:content].last[:text], "Nada de propinas"
+    end
+  end
+
+  test "el veredicto de incumplimiento vuelve con blocking true si la regla es obligatoria" do
+    sign_in_as(@admin)
+    regla_semantica(users(:ingeniero), mandatory: true)
+
+    payload = payload_modelo("policy_compliant" => false, "policy_findings" => ["Incluye vino"])
+    with_fake_extractor(payload) do
+      post_extraccion(user_invoice_id: users(:ingeniero).id)
+
+      policy = json_body["policy"]
+      assert_equal false, policy["compliant"]
+      assert_equal ["Incluye vino"], policy["findings"]
+      assert_equal true, policy["blocking"]
+    end
+  end
+
+  test "con la regla blanda el veredicto avisa pero no frena" do
+    sign_in_as(@admin)
+    regla_semantica(users(:ingeniero), mandatory: false)
+
+    payload = payload_modelo("policy_compliant" => false, "policy_findings" => ["Incluye vino"])
+    with_fake_extractor(payload) do
+      post_extraccion(user_invoice_id: users(:ingeniero).id)
+
+      assert_equal false, json_body["policy"]["blocking"]
+    end
+  end
+
+  test "sin reglas semanticas el veredicto viene vacio y no frena" do
+    sign_in_as(@admin)
+
+    with_fake_extractor(payload_modelo) do
+      post_extraccion
+
+      policy = json_body["policy"]
+      assert_nil policy["compliant"]
+      assert_equal false, policy["blocking"]
+    end
+  end
+
   # ---- fallos del servicio --------------------------------------------------
 
   test "un comprobante ilegible responde el error estandar con HTTP 200" do

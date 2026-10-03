@@ -437,4 +437,47 @@ class ReportExpensesBudgetWiringTest < ActionDispatch::IntegrationTest
     assert_in_delta antes - 123_000, @centro.reload.viat_costo_real.to_f, 0.01,
                     "El destroy no llamo a recalculate_cost_center: viat_costo_real queda inflado"
   end
+
+  # === VEREDICTO DEL AGENTE SOBRE LAS INSTRUCCIONES (2026-10-03) ============
+  #
+  # El texto libre de la regla lo juzga el agente al leer el comprobante y el
+  # formulario reenvia el veredicto al guardar. Sin estos tests, el aviso de la
+  # pantalla seria decorativo: el gasto se guardaria igual.
+
+  test "el veredicto de incumplimiento frena la creacion si la regla es obligatoria" do
+    regla_default!(agent_instructions: "No se aceptan licores", mandatory: true)
+
+    cuerpo = crear_rechazado(**parametros_gasto(policy_compliant: "false",
+                                                policy_findings: ["Incluye una botella de vino"]))
+
+    assert_equal ["Incluye una botella de vino"], cuerpo["rule_violations"].map { |v| v["message"] }
+  end
+
+  test "con la regla blanda el gasto se guarda con la violacion anotada" do
+    regla_default!(agent_instructions: "No se aceptan licores", mandatory: false)
+
+    gasto = crear_por_web(policy_compliant: "false", policy_findings: ["Incluye licor"])
+
+    assert_predicate gasto, :persisted?
+    assert_equal ["Incluye licor"], gasto.rule_violations.map { |v| v["message"] }
+    # Misma consecuencia que cualquier otra violacion blanda: no queda aprobado.
+    assert_not_equal ExpenseBudgetService::STATUS_APROBADO, gasto.budget_status
+  end
+
+  test "el veredicto de cumplimiento no estorba" do
+    regla_default!(agent_instructions: "No se aceptan licores", mandatory: true)
+
+    gasto = crear_por_web(policy_compliant: "true")
+
+    assert_predicate gasto, :persisted?
+    assert_empty gasto.rule_violations
+  end
+
+  test "sin veredicto el gasto se guarda aunque la regla tenga instrucciones" do
+    regla_default!(agent_instructions: "No se aceptan licores", mandatory: true)
+
+    # Un gasto escrito a mano no pasa por ningun agente. Bloquearlo seria
+    # impedir registrar gastos por una pregunta que nadie hizo.
+    assert_predicate crear_por_web, :persisted?
+  end
 end

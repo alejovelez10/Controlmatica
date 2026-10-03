@@ -228,7 +228,7 @@ class ExpenseRuleFormCreate extends Component {
         {/* --- Regla semantica --------------------------------------------- */}
         <div className="cm-form-section" style={{ marginTop: 16 }}>
           <div className="cm-form-section-title">
-            <i className="fa fa-comments" /> Instrucciones para el agente de WhatsApp
+            <i className="fa fa-comments" /> Instrucciones para el agente
           </div>
 
           {/* ESTA AYUDA NO ES OPCIONAL. Quien llena el campo tiene que entender
@@ -238,11 +238,10 @@ class ExpenseRuleFormCreate extends Component {
                style={{ marginBottom: 12 }}>
             <i className="fa fa-info-circle" />{" "}
             <span>
-              Esto se le pasa al agente de WhatsApp para que lo interprete;
-              escríbelo como se lo dirías a una persona. Aquí <b>no</b> van reglas de fecha ni de
-              monto —esas tienen sus propios campos arriba y las verifica el sistema—, sino los
-              criterios que hay que juzgar: <i>"no se aceptan licores, ni gastos personales, ni
-              propinas superiores al 10%"</i>.
+              Esto se le pasa al agente para que lo interprete; escríbelo como se lo dirías a
+              una persona. Aquí <b>no</b> van reglas de fecha ni de monto —esas tienen sus propios
+              campos arriba y las verifica el sistema—, sino los criterios que hay que juzgar:
+              <i>"no se aceptan licores, ni gastos personales, ni propinas superiores al 10%"</i>.
             </span>
           </div>
 
@@ -257,8 +256,10 @@ class ExpenseRuleFormCreate extends Component {
               data-testid="rule-agent-instructions"
             />
             <div className="cm-field-hint">
-              Opcional. Solo aplica cuando el gasto entra conversando con el agente: un gasto
-              registrado desde la web no se puede juzgar con este texto.
+              Opcional. Se aplica por WhatsApp y también desde la web, al pulsar
+              <b>Extraer datos del comprobante</b>: el agente juzga el comprobante contra este
+              texto. Un gasto escrito a mano, sin pasar por esa lectura, no se puede juzgar y se
+              registra igual.
             </div>
           </div>
         </div>

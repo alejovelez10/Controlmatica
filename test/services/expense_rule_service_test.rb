@@ -241,6 +241,74 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     assert_includes resultado.value[:agent_instructions], "licores"
   end
 
+  # --- Veredicto del agente sobre las instrucciones (2026-10-03) ------------
+  #
+  # El servidor sigue sin evaluar el texto libre: lo juzga el agente al leer el
+  # comprobante y aqui solo se APLICA el veredicto que llega por parametro. Es
+  # lo que hace que la web y WhatsApp traten igual el mismo incumplimiento.
+
+  test "el veredicto de incumplimiento se vuelve una violacion por motivo" do
+    regla_del_ingeniero(agent_instructions: "No se aceptan licores")
+    verdict = { compliant: false, findings: ["Incluye una botella de vino", "Propina del 15%"] }
+
+    v = violaciones(gasto_nuevo, agent_verdict: verdict)
+
+    assert_equal [ExpenseRuleService::CODE_AGENT] * 2, v.map { |x| x[:code] }
+    assert_equal ["Incluye una botella de vino", "Propina del 15%"], v.map { |x| x[:message] }
+  end
+
+  test "sin veredicto no hay violacion semantica" do
+    regla_del_ingeniero(agent_instructions: "No se aceptan licores")
+
+    # Un gasto escrito a mano no pasa por ningun agente: nadie lo juzgo, y eso
+    # no puede equivaler a incumplir.
+    assert_empty violaciones(gasto_nuevo)
+    assert_empty violaciones(gasto_nuevo, agent_verdict: { compliant: nil, findings: [] })
+  end
+
+  test "el veredicto de cumplimiento no genera violacion" do
+    regla_del_ingeniero(agent_instructions: "No se aceptan licores")
+
+    assert_empty violaciones(gasto_nuevo, agent_verdict: { compliant: true, findings: [] })
+  end
+
+  test "un incumplimiento sin motivos deja una violacion generica" do
+    regla_del_ingeniero(agent_instructions: "No se aceptan licores")
+
+    v = violaciones(gasto_nuevo, agent_verdict: { compliant: false, findings: [] })
+
+    # Que el agente no explique no puede significar "entonces pasa": seria la
+    # forma mas facil de saltarse la regla.
+    assert_equal 1, v.length
+    assert_equal ExpenseRuleService::CODE_AGENT, v.first[:code]
+  end
+
+  test "el veredicto frena solo si la regla con instrucciones es obligatoria" do
+    blanda = regla_del_ingeniero(agent_instructions: "No se aceptan licores", mandatory: false)
+    verdict = { compliant: false, findings: ["Incluye licor"] }
+
+    resultado = ExpenseRuleService.validate(gasto_nuevo, agent_verdict: verdict)
+    assert_equal 1, resultado.value[:violations].length
+    assert_empty resultado.value[:blocking_violations], "una regla blanda avisa, no frena"
+
+    blanda.update!(mandatory: true)
+    resultado = ExpenseRuleService.validate(gasto_nuevo, agent_verdict: verdict)
+    assert_equal 1, resultado.value[:blocking_violations].length
+  end
+
+  test "una regla obligatoria SIN instrucciones no convierte el veredicto en bloqueo" do
+    regla_del_ingeniero(name: "A dura sin texto", mandatory: true, max_invoice_value: 999_999_999)
+    regla_del_ingeniero(name: "B blanda con texto", mandatory: false, agent_instructions: "No licores")
+
+    resultado = ExpenseRuleService.validate(gasto_nuevo,
+                                            agent_verdict: { compliant: false, findings: ["Licor"] })
+
+    # El texto que se incumplio es el de la regla BLANDA: la dura no dice nada
+    # sobre esto y no puede prestar su dureza.
+    assert_equal 1, resultado.value[:violations].length
+    assert_empty resultado.value[:blocking_violations]
+  end
+
   test "applied_rules trae los nombres de las reglas que se usaron" do
     regla_del_ingeniero(name: "Regla aplicada")
 
