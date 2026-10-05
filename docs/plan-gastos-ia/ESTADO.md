@@ -674,3 +674,92 @@ sin partida (A.4). Este cambio no lo toca.
 por `date_update: Time.now` contra `Date.current`. Se verificó que falla igual sin estos cambios.
 
 *Adenda escrita el 2026-09-15.*
+
+---
+
+# Adenda D — Auditoría del recorrido de reglas al crear un gasto (2026-10-05)
+
+Se revisó, con pruebas ejecutadas y no solo leyendo el código, si **la creación de un gasto
+recorre de verdad todas las reglas**. La respuesta corta: el motor sí corre en los tres canales
+y corre siempre al crear, pero había **un hueco real** y quedan **tres puertas abiertas por
+omisión** que son decisión de producto, no bugs.
+
+## D.1 Lo que se confirmó que funciona
+
+Los tres caminos de creación pasan por las validaciones, así que ninguno se saltea
+`enforce_expense_rules`:
+
+| Canal | Entrada | Llega al motor por |
+|---|---|---|
+| Web | `report_expenses_controller.rb:152` | `persist_with_evaluation!` → `expense.save` |
+| WhatsApp / MCP | `report_expenses_create_tool.rb:149` | pre-chequeo explícito **y** el mismo `save` |
+| Import de Excel | `report_expense.rb:663` | `save!` |
+
+No existe ningún camino de creación con `save(validate: false)`. Los `update_columns` y
+`update_all` del módulo son del reevalúo FIFO y de la aprobación contable: los dos sobre gastos
+ya existentes, y `apply_expense_rules` los cubre.
+
+También se verificó en ejecución: una regla obligatoria frena; una blanda deja crear, anota en
+`rule_violations` y baja el gasto a `sin_presupuesto` con el motivo; el mínimo entre reglas y la
+caída a la regla por defecto funcionan.
+
+## D.2 El hueco, que se arregló
+
+**`check_value` medía el tope solo contra `invoice_total`**, y esa columna tiene default `0.0` y
+es **opcional** en el `input_schema` de la tool del agente. Un gasto de WhatsApp con
+`invoice_value` e `invoice_tax` pero **sin** total se medía contra cero y pasaba cualquier tope.
+
+Verificado antes del arreglo: **$5.950.000 contra una regla obligatoria de $100.000 se guardó**,
+con `rule_violations` vacío. El pre-chequeo de la tool tampoco lo veía, porque mira el mismo
+campo.
+
+**El formulario web nunca estuvo expuesto**: calcula el total y lo manda siempre (campo
+deshabilitado, `ReportExpenseIndex.js:751`). Eso es justo lo que hacía el hueco invisible —la
+misma regla frenaba por la pantalla y pasaba por WhatsApp—, y es la asimetría entre canales que
+este paquete evita en todos lados.
+
+**El arreglo:** el tope se mide contra **el mayor** entre `invoice_total` e
+`invoice_value + invoice_tax`. El mayor y no la suma a secas, porque en moneda extranjera
+`invoice_total` es la conversión del total del comprobante y **no** la suma de los dos COP
+convertidos (`apply_currency_conversion`): reemplazarlo le habría movido el tope a todos los
+gastos en divisa. Tomar el mayor respeta ese número cuando existe y solo lo suple cuando llega
+en cero. Cuatro tests nuevos, uno de ellos en el canal MCP, que es donde el hueco vivía.
+
+**Queda escrito por si alguien lo cuestiona:** el presupuesto consume `invoice_value` (sin IVA,
+`SPENT_EXPR`) mientras la regla mide el total con IVA. Son dos campos distintos a propósito, y
+por eso este check no puede mirar uno solo de los dos.
+
+## D.3 Tres puertas que siguen abiertas, y son decisión de producto
+
+Las tres ya estaban documentadas como deliberadas y el razonamiento de cada una se sostiene. Lo
+que no estaba escrito es que, **juntas, dejan tres formas de pasar una regla obligatoria
+simplemente omitiendo un campo opcional**. Verificadas en ejecución:
+
+1. **Sin `invoice_date` no se evalúa la antigüedad.** `invoice_date` no tiene validación de
+   presencia y en el MCP es opcional. El motivo escrito es bueno —«un gasto sin fecha es un dato
+   incompleto, no una infracción»—, pero el efecto es un pase libre. Se cierra exigiendo
+   `invoice_date` al crear, o tratando el nil como violación cuando alguna regla tiene plazo.
+
+2. **El duplicado exige `invoice_number` e `identification` los dos.** Si falta cualquiera
+   —opcionales en los dos canales— el chequeo no corre. Está así para no llamar duplicada a
+   media base con campos vacíos, que es correcto; la decisión pendiente es si al menos
+   `invoice_number` debería ser obligatorio cuando una regla pide validar duplicados.
+
+3. **La regla semántica obligatoria no frena por WhatsApp.** La tool de creación **nunca** asigna
+   `agent_policy_verdict`: no está en su `input_schema` ni en `WRITABLE`, y ninguna tool acepta
+   el veredicto. La web sí lo manda (`policy_compliant`). O sea, unas `agent_instructions`
+   marcadas como obligatorias frenan por la web y por WhatsApp quedan al criterio del agente.
+   **Esto no es un arreglo mecánico**: cerrarlo exige agregarle el parámetro a la tool y que el
+   agente de Taimes lo mande, o sea cambiar el contrato, igual que el comprobante obligatorio en
+   ese canal (D.4 de la adenda anterior sobre `report_expenses_create_tool.rb`).
+
+## D.4 Un detalle del motor que conviene tener presente
+
+`enforce_expense_rules` envuelve todo en `rescue StandardError` y, ante cualquier error del
+servicio, deja `@violaciones_de_reglas = []` y **no frena**. Está decidido así a conciencia —un
+error nuestro no puede convertirse en una puerta cerrada para quien reporta un gasto— y no se
+propone cambiarlo. Lo que vale la pena saber es la consecuencia: un bug del motor no se nota en
+pantalla, se nota en la auditoría contable. Si algún día se le pone monitoreo al módulo, ese
+`Rails.logger.error("[report_expense] reglas: ...")` es la línea que hay que vigilar.
+
+*Adenda escrita el 2026-10-05. Suite completa en verde al cerrarla: 1327 corridas, 0 fallos.*

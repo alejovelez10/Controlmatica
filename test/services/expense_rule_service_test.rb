@@ -133,6 +133,43 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     assert_empty violaciones(gasto_nuevo(invoice_total: 100_000))
   end
 
+  # EL HUECO QUE ESTOS TRES TESTS CIERRAN (2026-10-05): `invoice_total` tiene
+  # default 0.0 y es opcional en la tool del agente, asi que un gasto de
+  # WhatsApp con valor e IVA pero sin total se medía contra 0 y pasaba cualquier
+  # tope. La web nunca estuvo expuesta —el formulario calcula el total—, lo que
+  # hacia el hueco invisible desde la pantalla.
+  test "sin invoice_total el tope se mide contra valor mas IVA" do
+    regla_del_ingeniero(max_invoice_value: 100_000)
+
+    v = violaciones(gasto_nuevo(invoice_value: 5_000_000, invoice_tax: 950_000, invoice_total: nil))
+
+    assert_equal [ExpenseRuleService::CODE_VALUE], v.map { |x| x[:code] }
+  end
+
+  test "con invoice_total en cero el tope se mide contra valor mas IVA" do
+    regla_del_ingeniero(max_invoice_value: 100_000)
+
+    # Es el caso REAL del canal: la columna no llega nula sino con su default.
+    v = violaciones(gasto_nuevo(invoice_value: 5_000_000, invoice_tax: 950_000, invoice_total: 0))
+
+    assert_equal [ExpenseRuleService::CODE_VALUE], v.map { |x| x[:code] }
+  end
+
+  test "manda el mayor y no la suma: el total del comprobante no se reemplaza" do
+    regla_del_ingeniero(max_invoice_value: 100_000)
+
+    # En moneda extranjera `invoice_total` es la conversion del total del
+    # comprobante y NO la suma de los dos COP convertidos (ReportExpense
+    # #apply_currency_conversion). Si este check usara la suma, le cambiaria el
+    # tope a todos los gastos en divisa; tomando el mayor, un total mayor que la
+    # suma sigue siendo el que manda.
+    v = violaciones(gasto_nuevo(invoice_value: 40_000, invoice_tax: 10_000, invoice_total: 150_000))
+
+    assert_equal [ExpenseRuleService::CODE_VALUE], v.map { |x| x[:code] }
+    # Y por debajo del tope los dos numeros dejan pasar.
+    assert_empty violaciones(gasto_nuevo(invoice_value: 40_000, invoice_tax: 10_000, invoice_total: 90_000))
+  end
+
   # --- Duplicados ------------------------------------------------------------
 
   test "duplicado con mismo numero y NIT genera duplicate_invoice" do

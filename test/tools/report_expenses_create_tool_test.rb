@@ -336,6 +336,28 @@ class ReportExpensesCreateToolTest < ActiveSupport::TestCase
     end
   end
 
+  # EL CANAL DONDE EL HUECO EXISTIA DE VERDAD (2026-10-05). `invoice_total` es
+  # OPCIONAL en el input_schema de esta tool y la columna tiene default 0.0, asi
+  # que el agente que mandaba valor e IVA sin total hacia pasar el gasto por
+  # cualquier tope: el check se medía contra 0. Se verifico con $5.950.000
+  # contra una regla obligatoria de $100.000, y el gasto quedo guardado.
+  #
+  # El formulario web nunca estuvo expuesto —calcula el total y lo manda
+  # siempre—, y eso es lo que hacia el hueco invisible: la misma regla frenaba
+  # por la pantalla y pasaba por WhatsApp.
+  test "el tope frena aunque el agente no mande invoice_total" do
+    regla_default!(max_invoice_value: 100_000)
+    with_mcp_key do
+      assert_no_difference("ReportExpense.count") do
+        res = crear({ actor_phone: "+57 300 123 4567" },
+                    invoice_value: 5_000_000, invoice_tax: 950_000, invoice_total: nil)
+        cuerpo = tool_json(res)
+        assert_equal "error", cuerpo["type"]
+        assert_equal ["invoice_value_exceeded"], cuerpo["rule_violations"].map { |v| v["code"] }
+      end
+    end
+  end
+
   test "un comprobante vencido es rechazado por el motor de reglas" do
     regla_default!(max_invoice_age_days: 5)
     with_mcp_key do

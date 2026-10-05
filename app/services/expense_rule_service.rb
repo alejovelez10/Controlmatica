@@ -166,13 +166,41 @@ class ExpenseRuleService
   # El tope es INCLUSIVO: un gasto exactamente igual al tope NO viola. Un tope de
   # $200.000 que rechaza un gasto de $200.000 es incomprensible para quien lo
   # configura.
+  #
+  # SE MIDE CONTRA EL MAYOR ENTRE invoice_total Y invoice_value + invoice_tax, Y
+  # NO CONTRA invoice_total SOLO (2026-10-05). `invoice_total` tiene default 0.0
+  # y es OPCIONAL en la tool del agente (report_expenses_create_tool.rb), asi que
+  # un gasto de WhatsApp que llegue con valor e IVA pero sin total se media
+  # contra 0 y pasaba cualquier tope: se verifico con un gasto de $5.950.000
+  # contra una regla obligatoria de $100.000. El formulario web no tenia el
+  # problema porque calcula el total y lo manda siempre, y por eso el hueco solo
+  # existia en un canal, que es justo la asimetria que este paquete evita.
+  #
+  # EL MAYOR Y NO LA SUMA A SECAS: `invoice_total` es el total DEL COMPROBANTE y
+  # en moneda extranjera no es la suma de los dos COP convertidos (ver
+  # ReportExpense#apply_currency_conversion), asi que reemplazarlo moveria los
+  # topes de los gastos en divisa. Tomar el mayor respeta ese numero cuando
+  # existe y solo entra a suplirlo cuando viene en cero.
+  #
+  # El presupuesto, en cambio, consume `invoice_value` (ExpenseBudgetService::
+  # SPENT_EXPR): son dos campos distintos a proposito —el cupo se mide sin IVA—,
+  # y por eso aqui no se puede mirar uno solo de los dos.
   def self.check_value(expense, max_value)
     return [] if max_value.blank?
 
-    total = expense&.invoice_total.to_d
+    total = valor_evaluable(expense)
     return [] if total <= max_value.to_d
 
     [violation(CODE_VALUE, "El valor supera el tope de #{ExpenseBudgetService.money(max_value)}")]
+  end
+
+  # El valor contra el que se mide el tope. Publico porque la pantalla de reglas
+  # y el agente tienen que poder explicar el mismo numero que frena.
+  def self.valor_evaluable(expense)
+    return BigDecimal(0) if expense.blank?
+
+    [expense.invoice_total.to_d,
+     expense.invoice_value.to_d + expense.invoice_tax.to_d].max
   end
 
   # DUPLICADO SOLO CON invoice_number E identification AMBOS PRESENTES. Con
