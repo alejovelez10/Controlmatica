@@ -1,7 +1,7 @@
 # 15 — Mejoras de octubre 2026 (rechazo, permisos y exportación)
 
-Nueve mejoras pedidas el 2026-10-06. Este documento las organiza; **no las aprueba**: las
-decisiones abiertas están en §3 y hay cuatro que bloquean el arranque.
+Nueve mejoras pedidas el 2026-10-06. Este documento las organiza y registra lo decidido: las
+ocho decisiones están resueltas en §3 y el avance por fases en §5.
 
 Se escribió después de mapear el código real, no de memoria. Todo lo que afirma sobre el estado
 actual está citado con `archivo:línea`.
@@ -74,46 +74,45 @@ producción qué roles tienen `Editar`, `Eliminar` y `Aceptar gasto` **antes** d
 
 ### M2 — Estado de rechazo
 
-Tercer estado operativo: **Creado / Aceptado / Rechazado**. La forma propuesta (decisión D1, §3)
-es **no** convertir `is_acepted` en un enum, sino agregar `rejected_at`, `rejected_by_id` y
-`rejection_reason`, dejando "Rechazado" = `is_acepted == false AND rejected_at IS NOT NULL`.
+Tercer estado operativo: **Creado / Aceptado / Rechazado**, en **un solo campo**
+`operational_state` (decisión D1, §3.1) y en **dos despliegues** (§3.2).
 
-Por qué así: `is_acepted: true` es la condición que gobierna el consumo de presupuesto
-(`expense_budget_service.rb:63`), el FIFO (`:409`) y la base del scope de Contabilidad
-(`accounting_expenses_controller.rb:355`). Un enum obliga a reescribir los tres y las seis
-etiquetas del frontend; esto no toca ninguna semántica existente y **regala M8 para presupuesto**
-(un rechazado tiene `is_acepted == false`, así que ya no consume cupo sin escribir una línea).
-
-Alcance: migración, `estado_operativo` en el modelo con su etiqueta, la píldora y el desplegable
-de la tabla (`ReportExpenseIndex.js:366` y `:378-383`), el filtro de Estado (`:1509` y
-`FormFilter.jsx:205`), las tablas de Contabilidad (`AccountingExpenseIndex.js:215`) y del centro
+Alcance del despliegue A: migración con backfill, el campo en el modelo con sus scopes y su
+etiqueta, `is_acepted` convertido en método derivado que sigue escribiendo la columna vieja, los
+10 sitios semánticos de §3.1, y el tercer estado en la píldora y el desplegable de la tabla
+(`ReportExpenseIndex.js:366` y `:378-383`), el filtro de Estado (`:1509` y `FormFilter.jsx:205`),
+las tablas de Contabilidad (`AccountingExpenseIndex.js:215`) y del centro
 (`ExpensesTable.jsx:151`), y la columna "Estado operativo" de los dos Excel.
+
+Van también `rejected_at`, `rejected_by_id` y `rejection_reason`: el estado dice QUÉ pasó, esos
+tres dicen quién, cuándo y por qué, que es lo que el correo de respuesta necesita.
 
 ### M3 — Campo observaciones
 
-Columna `observations` tipo `text` (el precedente del repo para esto es `t.text`, y
-`description` ya es `text`). Va en los dos formularios web, en el Excel y en el import. Comparte
-migración con M2 para no correr dos veces en producción. **Decisión D2:** quién lo escribe.
+✅ **Hecho** (`b20a9c4`). Columna `observations` tipo `text`, en los dos formularios vivos, el
+serializer, la auditoría y los dos Excel. **No** viaja de vuelta por el import, y la columna del
+Excel va en la posición 19 (la última) a propósito: el import mapea por POSICIÓN y una columna
+insertada en medio correría todas las siguientes sin fallar por ningún lado.
 
 ### M4 — Dos permisos de aceptar
 
-Hoy existe uno solo: `Gastos · Aceptar gasto`. La propuesta es que **ese se quede significando
-"los de los centros a mi cargo"** y se cree `Gastos · Aceptar todos los gastos`. Se sigue la
+Hoy existe uno solo: `Gastos · Aceptar gasto`. **Ese pasa a significar "los de los centros a mi
+cargo y los míos"** y se crea `Gastos · Aceptar todos los gastos`, que **no se le asigna a nadie**
+al migrar (D3). Se sigue la
 plantilla del renombre de permisos de septiembre (`20260918000001`): migración de **dato**,
 acotada al módulo por subconsulta, idempotente, `up`/`down` simétricos, y **código y migración en
 el mismo commit** —con la migración corrida y el código viejo, nadie podría aceptar nada—.
 
 El alcance del "a mi cargo" ya existe y está probado: `apply_expense_scope` con
-`scope == "owned_centers"` (`report_expenses_controller.rb:777`). **Decisión D3:** a qué roles se
-les da el permiso nuevo al migrar.
+`scope == "owned_centers"` (`report_expenses_controller.rb:777`).
 
 ### M5 — Rechazar y avisar el resultado
 
 Tres piezas:
 
 1. **Rechazar desde la pantalla:** el desplegable de estado pasa a tener tres opciones; el
-   backend escribe `rejected_at`, `rejected_by_id`, `rejection_reason` y fuerza
-   `is_acepted: false`, y después reevalúa el par (`reevaluate_center_user!`) igual que hoy hace
+   backend pone `operational_state` en `rechazado`, escribe `rejected_at`, `rejected_by_id` y
+   `rejection_reason`, y después reevalúa el par (`reevaluate_center_user!`) igual que hoy hace
    aceptar (`report_expenses_controller.rb:131`).
 2. **Rechazar desde el correo:** un `POST` nuevo en `expense_approvals_controller.rb` con el
    **mismo token** y la misma mecánica de dos pasos (el GET solo pinta, porque los antivirus de
@@ -124,10 +123,15 @@ Tres piezas:
 
 ### M6 — Editar devuelve el gasto a Creado
 
-Al editar, `rejected_at` y `is_acepted` vuelven a cero y se vuelve a avisar al dueño del centro.
-**Decisión D4**, que es la que más puede doler: qué cuenta como "editar". Sin un recorte, un
-admin que corrige 300 filas dispara 300 correos, y un gasto ya **contabilizado** se devolvería a
-Creado por un cambio de descripción.
+Al editar, `operational_state` vuelve a `creado`, se limpian los tres campos del rechazo y se
+vuelve a avisar al dueño del centro. **Cualquier edición** (D4), con una salvedad técnica: la
+regla ignora los cambios del propio estado, o aceptar un gasto contaría como edición y lo
+devolvería a Creado solo. El import no manda correos —ya tiene `omitir_aviso_de_aprobacion`— y
+contabilizar escribe con `update_columns`, así que tampoco dispara la reapertura.
+
+**El interruptor `EXPENSE_APPROVAL_EMAIL` sigue apagado**, así que en producción esto no manda un
+solo correo hasta que se decida prenderlo. Es la red que hace tolerable reabrir con cualquier
+edición.
 
 ### M7 — Contabilidad rechaza y ve todo
 
@@ -144,7 +148,8 @@ rechaza por error lo pierde de vista desde esa pantalla.
 
 ### M8 — Un gasto rechazado no suma
 
-- **Presupuesto: ya queda resuelto por M2** (`consumidores` filtra `is_acepted: true`).
+- **Presupuesto: ya queda resuelto por M2.** Lo que consume cupo es la aceptación
+  (`consumidores`), y un rechazado no está aceptado.
 - **Viáticos: hay que tocarlo.** `application_helper.rb:621` suma `invoice_value` de **todos** los
   gastos del centro, sin condición, y de ahí se propaga a `aiu`, `aiu_percent`, `aiu_real`,
   `aiu_percent_real` y `total_expenses`, que se **persisten** en `cost_centers`. Se excluyen los
