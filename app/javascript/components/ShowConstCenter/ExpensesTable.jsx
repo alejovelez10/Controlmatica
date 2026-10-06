@@ -3,7 +3,7 @@ import NumberFormat from "react-number-format";
 import Swal from "sweetalert2";
 import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable, CmModal, CmButton } from '../../generalcomponents/ui';
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen } from '../../generalcomponents/expenseIndicators';
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen, operationalState } from '../../generalcomponents/expenseIndicators';
 
 // Un solo literal: el cambio de tipo compara contra el para saber si puede borrarlo.
 const AVISO_COMPROBANTE = "Adjunte el comprobante: es obligatorio.";
@@ -147,8 +147,10 @@ class ExpensesTable extends Component {
       // Aqui el estado es de SOLO LECTURA (se cambia desde el modulo de Gastos).
       { key: "is_acepted", label: "Estado", render: (r) => (
         <div className="cm-status-cell">
-          <span className={"cm-status-pill" + (r.is_acepted ? " cm-status-pill--ok" : "")}>
-            {r.is_acepted ? "Aceptado" : "Creado"}
+          <span className={"cm-status-pill"
+                           + (operationalState(r).isOk ? " cm-status-pill--ok" : "")
+                           + (operationalState(r).isRejected ? " cm-status-pill--danger" : "")}>
+            {operationalState(r).label}
           </span>
           {budgetWarningIcon(r)}
         </div>

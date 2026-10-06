@@ -29,6 +29,34 @@ export function budgetStatusBadge(status) {
   }
 }
 
+// Estado OPERATIVO del gasto: Creado / Aceptado / Rechazado (2026-10-06).
+// Devuelve { label, value, isOk, isRejected }.
+//
+// Antes esto era un ternario sobre `is_acepted` repetido en cuatro pantallas y
+// en los dos Excel. Vive aqui por el mismo motivo que los otros dos badges: con
+// la etiqueta copiada en cada tabla, el dia que se agrega un estado —que es
+// justo lo que acaba de pasar— alguna pantalla se queda diciendo "Creado" de un
+// gasto rechazado y nadie lo nota.
+//
+// CAE A `is_acepted` CUANDO NO HAY `operational_state`, y no es paranoia: entre
+// el despliegue del backend y el del frontend, y en cualquier respuesta cacheada
+// o pestana abierta de antes, las filas llegan sin el campo nuevo. Sin este
+// fallback la columna Estado se vaciaria sin ningun error en consola.
+export function operationalState(row) {
+  var estado = row && row.operational_state;
+
+  if (!estado) estado = row && row.is_acepted ? "aceptado" : "creado";
+
+  switch (estado) {
+    case "aceptado":
+      return { label: "Aceptado", value: "aceptado", isOk: true, isRejected: false };
+    case "rechazado":
+      return { label: "Rechazado", value: "rechazado", isOk: false, isRejected: true };
+    default:
+      return { label: "Creado", value: "creado", isOk: false, isRejected: false };
+  }
+}
+
 // Badge del estado contable. Devuelve { label, className }.
 //
 // LAS ETIQUETAS SON "Contabilizado" / "No contabilizado" y no "Aprobado" /

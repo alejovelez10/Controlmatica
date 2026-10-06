@@ -121,7 +121,7 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
     # `update_columns` y no un override en `crear_gasto`: el helper crea con
     # budget_status "aprobado" y `auto_accept_if_within_budget` (before_create)
     # pisaria cualquier `is_acepted: false` que se le pase al constructor.
-    excedido.update_columns(is_acepted: false)
+    excedido.update_columns(is_acepted: false, operational_state: ReportExpense::STATE_CREADO)
     reevaluar
     assert_equal "excedido", excedido.reload.budget_status
 
@@ -145,7 +145,7 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
     # `update_columns` y no un override en `crear_gasto`: el helper crea con
     # budget_status "aprobado" y `auto_accept_if_within_budget` (before_create)
     # pisaria cualquier `is_acepted: false` que se le pase al constructor.
-    excedido.update_columns(is_acepted: false)
+    excedido.update_columns(is_acepted: false, operational_state: ReportExpense::STATE_CREADO)
     reevaluar
     assert_equal "excedido", excedido.reload.budget_status
 
@@ -240,7 +240,7 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
   def test_reevaluo_no_toca_is_acepted_ni_accounting_approved
     partida = crear_partida(500_000)
     gasto = crear_gasto(100_000, dia: 1)
-    gasto.update_columns(is_acepted: true, accounting_approved: true)
+    gasto.update_columns(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO, accounting_approved: true)
 
     ExpenseBudgetService.update_budget!(partida, { amount: 50_000 }, actor: @admin)
 

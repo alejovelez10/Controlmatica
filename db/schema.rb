@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_06_000001) do
+ActiveRecord::Schema.define(version: 2026_10_06_000002) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -550,6 +550,10 @@ ActiveRecord::Schema.define(version: 2026_10_06_000001) do
     t.datetime "accounting_approved_at"
     t.jsonb "rule_violations", default: [], null: false
     t.text "observations"
+    t.string "operational_state", default: "creado", null: false
+    t.datetime "rejected_at"
+    t.integer "rejected_by_id"
+    t.text "rejection_reason"
     t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
     t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
@@ -559,6 +563,7 @@ ActiveRecord::Schema.define(version: 2026_10_06_000001) do
     t.index ["invoice_date"], name: "index_report_expenses_on_invoice_date"
     t.index ["invoice_number", "identification"], name: "index_report_expenses_on_invoice_number_and_identification"
     t.index ["is_acepted"], name: "index_report_expenses_on_is_acepted"
+    t.index ["operational_state"], name: "index_report_expenses_on_operational_state"
     t.index ["payment_type_id"], name: "index_report_expenses_on_payment_type_id"
     t.index ["type_identification_id"], name: "index_report_expenses_on_type_identification_id"
     t.index ["user_id"], name: "index_report_expenses_on_user_id"

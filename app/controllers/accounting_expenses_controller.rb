@@ -17,7 +17,7 @@ class AccountingExpensesController < ApplicationController
   # Allowlist de ordenamiento. Todo lo que no este aqui cae al orden por defecto:
   # `params[:sort]` entra a un `Arel.sql`, que NO escapa nada.
   SORT_COLUMNS = %w[id invoice_name invoice_date identification invoice_number invoice_value
-                    invoice_tax invoice_total currency is_acepted accounting_approved
+                    invoice_tax invoice_total currency is_acepted operational_state accounting_approved
                     accounting_approved_at created_at updated_at].freeze
 
   # `ids` es un FILTRO VALIDO (correccion 5 / §C.4): es lo que da backend a la
@@ -352,7 +352,7 @@ class AccountingExpensesController < ApplicationController
     # comparten el listado, los valores de los filtros, el Excel y la APROBACION
     # MASIVA. Ponerlo aqui garantiza que la aprobacion masiva tampoco pueda tocar
     # un gasto sin aceptar, que es el caso peligroso.
-    base = base.where(is_acepted: true)
+    base = base.where(operational_state: ReportExpense::STATE_ACEPTADO)
 
     scope = base.includes(:cost_center, :user_invoice, :type_identification, :payment_type,
                           :last_user_edited, :user, :accounting_approved_by, :expense_budget)

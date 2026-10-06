@@ -280,7 +280,8 @@ class ExpenseBudgetServiceCapTest < ActiveSupport::TestCase
                             invoice_date: Date.new(2026, 6, 1), invoice_value: valor,
                             invoice_tax: 0, invoice_total: valor)
     end
-    gasto.update_columns(is_acepted: aceptado)
+    gasto.update_columns(is_acepted: aceptado,
+                         operational_state: aceptado ? ReportExpense::STATE_ACEPTADO : ReportExpense::STATE_CREADO)
     gasto
   end
 

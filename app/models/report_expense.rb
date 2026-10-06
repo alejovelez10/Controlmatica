@@ -25,8 +25,11 @@
 #  invoice_value             :float            default(0.0)
 #  is_acepted                :boolean          default(FALSE)
 #  observations              :text
+#  operational_state         :string           default("creado"), not null
 #  payment_type              :string
 #  receipt_file              :string
+#  rejected_at               :datetime
+#  rejection_reason          :text
 #  rule_violations           :jsonb            not null
 #  type_identification       :string
 #  created_at                :datetime         not null
@@ -36,6 +39,7 @@
 #  expense_budget_id         :integer
 #  last_user_edited_id       :integer
 #  payment_type_id           :integer
+#  rejected_by_id            :integer
 #  type_identification_id    :integer
 #  user_id                   :integer
 #  user_invoice_id           :integer
@@ -51,6 +55,7 @@
 #  index_report_expenses_on_invoice_date                       (invoice_date)
 #  index_report_expenses_on_invoice_number_and_identification  (invoice_number,identification)
 #  index_report_expenses_on_is_acepted                         (is_acepted)
+#  index_report_expenses_on_operational_state                  (operational_state)
 #  index_report_expenses_on_payment_type_id                    (payment_type_id)
 #  index_report_expenses_on_type_identification_id             (type_identification_id)
 #  index_report_expenses_on_user_id                            (user_id)
@@ -102,6 +107,88 @@ class ReportExpense < ApplicationRecord
   scope :no_excedidos,         -> { where.not(budget_status: "excedido") }
 
   validates :budget_status, inclusion: { in: %w[sin_presupuesto aprobado excedido] }
+
+  # === ESTADO OPERATIVO (2026-10-06) =======================================
+  #
+  # UN campo con tres valores, y antes eran dos booleanos posibles. Hasta hoy el
+  # estado operativo era `is_acepted`: false = "Creado", true = "Aceptado". No
+  # habia rechazo —el "no" del aprobador era implicito, "si no esta de acuerdo,
+  # no haga nada"— y ese es justamente el agujero que esto cierra.
+  #
+  # LA COLUMNA VIEJA SIGUE ESCRITA Y SINCRONIZADA (`sincronizar_is_acepted`), y
+  # eso es lo que da marcha atras: este es el paso A de dos, y si hay que
+  # revertir el codigo los datos estan completos en las dos columnas. El paso B
+  # borra `is_acepted` de la base y la deja solo como metodo derivado.
+  STATE_CREADO    = "creado".freeze
+  STATE_ACEPTADO  = "aceptado".freeze
+  STATE_RECHAZADO = "rechazado".freeze
+  OPERATIONAL_STATES = [STATE_CREADO, STATE_ACEPTADO, STATE_RECHAZADO].freeze
+
+  # Mismo criterio que BUDGET_STATUS_LABELS: las etiquetas viven en el dueño de
+  # la columna y no en cada consumidor. Las leen las dos plantillas axlsx y la
+  # pantalla.
+  OPERATIONAL_STATE_LABELS = { STATE_CREADO    => "Creado",
+                               STATE_ACEPTADO  => "Aceptado",
+                               STATE_RECHAZADO => "Rechazado" }.freeze
+
+  # LO QUE SUMA EN VIATICOS Y EN EL AIU DEL CENTRO (2026-10-06).
+  #
+  # Un gasto rechazado no es plata comprometida: alguien lo miro y dijo que no,
+  # asi que dejarlo sumando inflaria el costo del centro y recortaria el AIU por
+  # un gasto que no va a existir.
+  #
+  # LOS "CREADO" SIGUEN SUMANDO, y es deliberado: es el comportamiento de hoy
+  # —esta suma nunca tuvo ninguna condicion— y sacarlos moveria el AIU de todos
+  # los centros de golpe. Eso es otra decision y otra mejora (D7 del documento
+  # 15-mejoras-octubre.md).
+  #
+  # El scope vive aqui, en el dueño de la columna, porque la suma esta en DOS
+  # sitios —`recalculate_cost_center`, que persiste, y `get_show_center`, que
+  # pinta— y con la condicion copiada en cada uno la pantalla y el valor
+  # guardado terminan diciendo numeros distintos.
+  scope :suman_en_centro, -> { where.not(operational_state: STATE_RECHAZADO) }
+
+  scope :aceptados,  -> { where(operational_state: STATE_ACEPTADO) }
+  scope :rechazados, -> { where(operational_state: STATE_RECHAZADO) }
+  scope :creados,    -> { where(operational_state: STATE_CREADO) }
+
+  validates :operational_state, inclusion: { in: OPERATIONAL_STATES }
+
+  def aceptado?  = operational_state == STATE_ACEPTADO
+  def rechazado? = operational_state == STATE_RECHAZADO
+  def creado?    = operational_state == STATE_CREADO
+
+  def operational_state_label = OPERATIONAL_STATE_LABELS[operational_state]
+
+  # `is_acepted` SOBREVIVE COMO LECTURA DERIVADA, y no es nostalgia: el MCP se lo
+  # expone al agente de Taimes (report_expenses_list_tool.rb) y el serializer se
+  # lo manda al frontend. Si desapareciera de golpe habria que cambiar el
+  # contrato con Taimes en el mismo despliegue que el estado, que es exactamente
+  # la clase de cambio que no se puede revertir por partes.
+  #
+  # Se lee del campo NUEVO y no de la columna: asi un objeto en memoria al que le
+  # acaban de mover el estado responde la verdad antes de guardarse.
+  def is_acepted = aceptado?
+  alias is_acepted? is_acepted
+
+  # Escritura de compatibilidad para el codigo que todavia dice `is_acepted =`.
+  #
+  # `true` -> aceptado, `false` -> creado. Y NO "false -> rechazado": quien
+  # escribe el booleano nunca puede estar queriendo decir "rechazado", porque ese
+  # estado no existia cuando se escribio esa linea. Rechazar es explicito, con
+  # `rechazar!`, o no es.
+  def is_acepted=(valor)
+    self.operational_state =
+      ActiveModel::Type::Boolean.new.cast(valor) ? STATE_ACEPTADO : STATE_CREADO
+  end
+
+  # Mantiene la columna vieja al dia en CADA guardado. Es el seguro del paso A:
+  # mientras exista, revertir el codigo es suficiente y no hay que reconstruir
+  # datos con gente usando el sistema.
+  #
+  # `self[:is_acepted]` y no `self.is_acepted =`, que ahora escribe el campo
+  # nuevo y dejaria el callback dando vueltas sobre si mismo.
+  before_save :sincronizar_is_acepted
 
   # === CONTABILIDAD (paquete 06) ===========================================
   #
@@ -502,7 +589,7 @@ class ReportExpense < ApplicationRecord
   SEARCH_KEYS = %i[
     cost_center_id user_invoice_id invoice_name invoice_date identification description
     invoice_number type_identification_id payment_type_id invoice_value invoice_tax
-    invoice_total start_date end_date is_acepted
+    invoice_total start_date end_date is_acepted operational_state
   ].freeze
 
   # Builder de filtros con firma de hash. Mismo patron que CostCenter.search, que
@@ -537,7 +624,15 @@ class ReportExpense < ApplicationRecord
     scope = scope.where(invoice_total: f[:invoice_total])                   if f[:invoice_total].present?
     scope = scope.where("invoice_date >= ?", f[:start_date])                if f[:start_date].present?
     scope = scope.where("invoice_date <= ?", f[:end_date])                  if f[:end_date].present?
-    scope = scope.where(is_acepted: f[:is_acepted])                         if f[:is_acepted].present?
+    scope = scope.where(operational_state: f[:operational_state])           if f[:operational_state].present?
+    # `is_acepted` SE SIGUE ACEPTANDO COMO FILTRO y se traduce al estado nuevo.
+    # No es cortesia: lo manda el MCP y cualquier enlace guardado o pestaña
+    # abierta con `?is_acepted=true`. Traducirlo cuesta una linea; romperlo
+    # devuelve una tabla con los gastos equivocados y sin ningun error.
+    if f[:operational_state].blank? && f[:is_acepted].present?
+      aceptado = ActiveModel::Type::Boolean.new.cast(f[:is_acepted])
+      scope = scope.where(operational_state: aceptado ? STATE_ACEPTADO : STATE_CREADO)
+    end
     scope
   end
 
@@ -832,10 +927,20 @@ class ReportExpense < ApplicationRecord
     errors.add(:exchange_rate, "es obligatoria cuando la moneda no es COP") if exchange_rate.blank?
   end
 
+  # Escribe la columna vieja desde el campo nuevo. Ver el comentario del
+  # `before_save` que lo registra: es el seguro que hace reversible el paso A.
+  #
+  # `self[:is_acepted]` y no `self.is_acepted =`: el escritor publico ahora
+  # escribe `operational_state`, asi que usarlo aqui dejaria el callback dando
+  # vueltas sobre si mismo sin tocar nunca la columna.
+  def sincronizar_is_acepted
+    self[:is_acepted] = aceptado?
+  end
+
   def auto_accept_if_within_budget
     return unless budget_status == ExpenseBudgetService::STATUS_APROBADO
 
-    self.is_acepted = true
+    self.operational_state = STATE_ACEPTADO
   end
 
   # Ver el comentario del `after_create_commit`. Las cinco guardas, en orden de
@@ -854,7 +959,7 @@ class ReportExpense < ApplicationRecord
   # falle se anota en el log y no le arruina el registro a nadie.
   def avisar_al_dueno_del_centro
     return unless self.class.aviso_de_aprobacion?
-    return if is_acepted?
+    return if aceptado?
     return if omitir_aviso_de_aprobacion
 
     dueno = cost_center&.user_owner

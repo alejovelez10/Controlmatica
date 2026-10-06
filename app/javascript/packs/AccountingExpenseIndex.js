@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable } from "../generalcomponents/ui";
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen } from "../generalcomponents/expenseIndicators";
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen, operationalState } from "../generalcomponents/expenseIndicators";
 import { Modal, ModalBody } from "reactstrap";
 
 // Pantalla de Contabilidad (paquete 09, bloque 4). El backend completo —las
@@ -208,11 +208,13 @@ class AccountingExpenseIndex extends React.Component {
       //
       // Los 140px salen de la columna "Estado presupuestal", que quedo oculta.
       { key: "is_acepted", label: "Estado", width: "140px", render: function(row) {
+        var estado = operationalState(row);
         return React.createElement("div", { className: "cm-status-cell" },
           React.createElement("span", {
-            className: "cm-status-pill" + (row.is_acepted ? " cm-status-pill--ok" : ""),
+            className: "cm-status-pill" + (estado.isOk ? " cm-status-pill--ok" : "")
+                       + (estado.isRejected ? " cm-status-pill--danger" : ""),
             "data-testid": "expense-status-" + row.id,
-          }, row.is_acepted ? "Aceptado" : "Creado"),
+          }, estado.label),
           budgetWarningIcon(row)
         );
       }},

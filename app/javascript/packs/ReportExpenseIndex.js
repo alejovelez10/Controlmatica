@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
-import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon } from "../generalcomponents/expenseIndicators";
+import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, operationalState } from "../generalcomponents/expenseIndicators";
 import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
@@ -55,7 +55,7 @@ var EMPTY_FILTERS = {
   user_invoice_id: "",
   start_date: "",
   end_date: "",
-  is_acepted: "",
+  operational_state: "",
   budget_status: "",
   currency: "",
   accounting_approved: "",
@@ -358,21 +358,28 @@ class ReportExpenseIndex extends React.Component {
         // unico sitio donde se lee el motivo. Va envuelto en un flex para que
         // el icono no empuje la pildora ni el desplegable.
         var aviso = budgetWarningIcon(row);
+        var estado = operationalState(row);
 
-        if (!props.estados.closed) {
+        // UN GASTO RECHAZADO SE PINTA COMO PILDORA AUNQUE SE TENGA EL PERMISO, y
+        // no como desplegable: el desplegable de hoy solo sabe de "true" y
+        // "false", asi que ofrecerlo sobre un rechazado dejaria elegir entre dos
+        // opciones ninguna de las cuales es la actual. Rechazar y des-rechazar
+        // desde la tabla llega con la mejora M5.
+        if (!props.estados.closed || estado.isRejected) {
           return React.createElement("div", { className: "cm-status-cell" },
             React.createElement("span", {
-              className: "cm-status-pill" + (row.is_acepted ? " cm-status-pill--ok" : ""),
+              className: "cm-status-pill" + (estado.isOk ? " cm-status-pill--ok" : "")
+                         + (estado.isRejected ? " cm-status-pill--danger" : ""),
               "data-testid": "expense-status-" + row.id,
-            }, row.is_acepted ? "Aceptado" : "Creado"),
+            }, estado.label),
             aviso
           );
         }
 
         return React.createElement("div", { className: "cm-status-cell" },
         React.createElement("select", {
-          className: "cm-status-select" + (row.is_acepted ? " cm-status-select--ok" : ""),
-          value: row.is_acepted ? "true" : "false",
+          className: "cm-status-select" + (estado.isOk ? " cm-status-select--ok" : ""),
+          value: estado.isOk ? "true" : "false",
           onChange: function(e) { self.updateStatus(e, row); },
           // stopPropagation SIGUE SIENDO OBLIGATORIO: el clic en la fila abre el
           // detalle, y sin esto elegir un estado abriria el modal encima.
@@ -517,7 +524,7 @@ class ReportExpenseIndex extends React.Component {
     if (f.user_invoice_id) out.push("user_invoice_id=" + f.user_invoice_id);
     if (f.start_date) out.push("start_date=" + f.start_date);
     if (f.end_date) out.push("end_date=" + f.end_date);
-    if (f.is_acepted) out.push("is_acepted=" + f.is_acepted);
+    if (f.operational_state) out.push("operational_state=" + f.operational_state);
     if (f.budget_status) out.push("budget_status=" + f.budget_status);
     if (f.currency) out.push("currency=" + f.currency);
     if (f.accounting_approved) out.push("accounting_approved=" + f.accounting_approved);
@@ -1368,7 +1375,7 @@ class ReportExpenseIndex extends React.Component {
     var estados = this.props.estados;
 
     // Solo mostrar acciones si no está aceptado o si tiene permiso closed
-    if (!row.is_acepted || estados.closed) {
+    if (!operationalState(row).isOk || estados.closed) {
       var hasEdit = estados.edit && row.cost_center && row.cost_center.execution_state !== "FINALIZADO";
       var hasDelete = estados.delete;
 
@@ -1506,10 +1513,11 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("i", { className: "fas fa-flag", style: { marginRight: 6, opacity: 0.5 } }),
               "Estado"
             ),
-            React.createElement("select", { name: "is_acepted", className: "cm-input", value: f.is_acepted, onChange: self.handleFilterChange },
+            React.createElement("select", { name: "operational_state", className: "cm-input", value: f.operational_state, onChange: self.handleFilterChange },
               React.createElement("option", { value: "" }, "Todos"),
-              React.createElement("option", { value: "true" }, "Aceptado"),
-              React.createElement("option", { value: "false" }, "No aceptado")
+              React.createElement("option", { value: "creado" }, "Creado"),
+              React.createElement("option", { value: "aceptado" }, "Aceptado"),
+              React.createElement("option", { value: "rechazado" }, "Rechazado")
             )
           ),
           React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },

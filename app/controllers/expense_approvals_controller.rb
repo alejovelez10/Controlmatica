@@ -32,7 +32,7 @@ class ExpenseApprovalsController < ApplicationController
     # reevalua el presupuesto: es el caso de quien hace doble clic, de quien
     # abre el mismo correo dos veces y de quien lo reenvia. Y es tambien lo que
     # hace tolerable un token que no se puede revocar.
-    if @expense.is_acepted?
+    if @expense.aceptado?
       @ya_estaba = true
       return render :done
     end
@@ -46,7 +46,7 @@ class ExpenseApprovalsController < ApplicationController
     previo = User.current
     begin
       User.current = aprobador
-      @aprobado = @expense.update(is_acepted: true)
+      @aprobado = @expense.update(operational_state: ReportExpense::STATE_ACEPTADO)
     ensure
       User.current = previo
     end

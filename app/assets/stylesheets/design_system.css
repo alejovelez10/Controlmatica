@@ -2551,6 +2551,17 @@ select.cm-input {
   color: #155724;
 }
 
+/* Gasto RECHAZADO (2026-10-06). Rojo y no gris: el gris de la pildora base es
+   "Creado", o sea un gasto que todavia puede terminar aceptado, y un rechazado
+   no es eso. Los valores son los MISMOS de .cm-status-badge--red, copiados a
+   proposito: en la tabla de gastos conviven esta pildora y ese badge —el estado
+   presupuestal "Excedido"— y dos rojos parecidos pero distintos en la misma
+   fila se leen como un error de la pantalla. */
+.cm-status-pill--danger {
+  background: rgba(220, 53, 69, 0.1);
+  color: #c82333;
+}
+
 .cm-status-select {
   appearance: none;
   -webkit-appearance: none;

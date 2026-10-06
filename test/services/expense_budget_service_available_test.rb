@@ -25,7 +25,7 @@ class ExpenseBudgetServiceAvailableTest < ActiveSupport::TestCase
     # `summary_for_center`. Como solo lo aceptado consume y las fixtures del
     # paquete 01 nacen sin aceptar, se marcan AQUI: tocar el YAML compartido por
     # esto cambiaria el escenario de todas las demas pruebas del repo.
-    ReportExpense.where(cost_center_id: @centro.id).update_all(is_acepted: true)
+    ReportExpense.where(cost_center_id: @centro.id).update_all(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO)
   end
 
   def crear_partida(amount, cost_center: @centro_lab, user: @user_lab)

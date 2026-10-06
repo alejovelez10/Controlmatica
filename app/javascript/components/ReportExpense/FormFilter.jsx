@@ -195,15 +195,16 @@ class FormFilter extends Component {
                         <div className="cm-form-group" style={{ marginBottom: 0 }}>
                             <label className="cm-label">Estado</label>
                             <select
-                                name="is_acepted"
-                                value={this.props.formValues.is_acepted}
+                                name="operational_state"
+                                value={this.props.formValues.operational_state}
                                 onChange={this.props.onChangeForm}
                                 className="cm-input"
                                 style={{ height: 38 }}
                             >
                                 <option value="">Selecciona</option>
-                                <option value="true">Aceptado</option>
-                                <option value="false">Creado</option>
+                                <option value="creado">Creado</option>
+                                <option value="aceptado">Aceptado</option>
+                                <option value="rechazado">Rechazado</option>
                             </select>
                         </div>
 

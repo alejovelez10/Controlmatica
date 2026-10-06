@@ -14,7 +14,7 @@ class ExpenseRulesValidateToolTest < ActiveSupport::TestCase
     # Desde 2026-09-10 solo lo ACEPTADO consume (ExpenseBudgetService.consumidores)
     # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible del
     # par sube y el escenario de este archivo deja de ser el que se queria medir.
-    ReportExpense.update_all(is_acepted: true)
+    ReportExpense.update_all(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO)
   end
 
   def regla_default!(**attrs)

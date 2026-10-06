@@ -385,6 +385,19 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     refute_includes assert_json_list.map { |r| r["id"] }, gasto.id
   end
 
+  test "get_accounting_expenses NO devuelve gastos rechazados" do
+    # El rechazo nacio el 2026-10-06 y la base de esta pantalla sigue siendo "lo
+    # aceptado". La consecuencia a tener presente: un gasto rechazado DESAPARECE
+    # de Contabilidad, asi que quien rechace por error lo pierde de vista desde
+    # aqui y tiene que volverlo a mover desde la pantalla de Gastos.
+    rechazado = crear_gasto(operational_state: ReportExpense::STATE_RECHAZADO)
+    sign_in_as @contador
+
+    get get_accounting_expenses_path
+
+    refute_includes assert_json_list.map { |r| r["id"] }, rechazado.id
+  end
+
   test "la aprobacion masiva por ids NO toca un gasto sin aceptar" do
     # Es el caso peligroso: sin el guard en la base, contabilidad podia aprobar
     # en bloque hasta 500 gastos que el responsable no habia aceptado.

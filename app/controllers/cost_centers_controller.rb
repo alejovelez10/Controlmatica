@@ -244,7 +244,11 @@ class CostCentersController < ApplicationController
     )
     report_viatic_sum, horas_eje, ejecutado_desplazamiento, ejecutado_desplazamiento_horas = report_sums
 
-    expense_sum = @cost_center.report_expenses.sum(:invoice_value)
+    # MISMO SCOPE que `recalculate_cost_center` (application_helper.rb): si esta
+    # pantalla sumara los rechazados y el recalculo no, el centro mostraria un
+    # viatico ejecutado distinto del que tiene guardado, y nadie sabria cual
+    # creer.
+    expense_sum = @cost_center.report_expenses.suman_en_centro.sum(:invoice_value)
     via_real = report_viatic_sum + expense_sum
 
     porc_eje = (@cost_center.eng_hours || 0) > 0 ? (((horas_eje.to_f / @cost_center.eng_hours)) * 100).round(1) : "N/A"

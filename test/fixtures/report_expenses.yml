@@ -25,8 +25,11 @@
 #  invoice_value             :float            default(0.0)
 #  is_acepted                :boolean          default(FALSE)
 #  observations              :text
+#  operational_state         :string           default("creado"), not null
 #  payment_type              :string
 #  receipt_file              :string
+#  rejected_at               :datetime
+#  rejection_reason          :text
 #  rule_violations           :jsonb            not null
 #  type_identification       :string
 #  created_at                :datetime         not null
@@ -36,6 +39,7 @@
 #  expense_budget_id         :integer
 #  last_user_edited_id       :integer
 #  payment_type_id           :integer
+#  rejected_by_id            :integer
 #  type_identification_id    :integer
 #  user_id                   :integer
 #  user_invoice_id           :integer
@@ -51,6 +55,7 @@
 #  index_report_expenses_on_invoice_date                       (invoice_date)
 #  index_report_expenses_on_invoice_number_and_identification  (invoice_number,identification)
 #  index_report_expenses_on_is_acepted                         (is_acepted)
+#  index_report_expenses_on_operational_state                  (operational_state)
 #  index_report_expenses_on_payment_type_id                    (payment_type_id)
 #  index_report_expenses_on_type_identification_id             (type_identification_id)
 #  index_report_expenses_on_user_id                            (user_id)

@@ -620,7 +620,10 @@ module ApplicationHelper
     # Los valores en moneda extranjera viven en foreign_* y NUNCA entran a esta suma.
     # Un viat_costo_real mal calculado se propaga a aiu, aiu_percent, aiu_real y
     # aiu_percent_real, y no hay ninguna validacion que lo detecte.
-    viat_costo_real = @cost_center.reports.sum(:viatic_value) + @cost_center.report_expenses.sum(:invoice_value)
+    # `suman_en_centro` excluye los RECHAZADOS (2026-10-06). Los "Creado" siguen
+    # sumando, que es el comportamiento de siempre.
+    viat_costo_real = @cost_center.reports.sum(:viatic_value) +
+                      @cost_center.report_expenses.suman_en_centro.sum(:invoice_value)
     viat_costo_porcentaje = @cost_center.viatic_value.to_f > 0 ? ((viat_costo_real.to_f / @cost_center.viatic_value.to_f) * 100).round(1) : 0
 
     fact_real = @cost_center.customer_invoices.sum(:invoice_value)

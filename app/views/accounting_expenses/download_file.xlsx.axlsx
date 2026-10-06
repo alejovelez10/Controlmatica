@@ -43,7 +43,7 @@ wb.add_worksheet(name: "Items") do |sheet|
       task.invoice_number,
       task.type_identification.present? ? task.type_identification.name : "",
       task.payment_type.present? ? task.payment_type.name : "",
-      task.is_acepted ? "Aceptado" : "Creado",
+      task.operational_state_label,
       budget_status_label(task.budget_status),
       task.budget_reason,
       task.currency,

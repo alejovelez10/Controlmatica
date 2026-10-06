@@ -19,7 +19,7 @@ class ExpenseBudgetsToolsTest < ActiveSupport::TestCase
     # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible de
     # partida sube y toda la aritmetica de este archivo se corre. Se marca aqui y
     # no en el YAML para no cambiarle el escenario al resto del repo.
-    ReportExpense.update_all(is_acepted: true)
+    ReportExpense.update_all(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO)
   end
 
   # --- expense_budgets_list -------------------------------------------------

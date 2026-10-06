@@ -12,7 +12,7 @@ class ReportExpensesController < ApplicationController
   # Los alias `cost_center_code` y `user_invoice_name` NO estan aqui: no son
   # columnas de `report_expenses` y se resuelven aparte, con su join.
   EXPENSE_SORT_COLUMNS = %w[id invoice_name invoice_date identification description invoice_number
-                            invoice_value invoice_tax invoice_total is_acepted currency
+                            invoice_value invoice_tax invoice_total is_acepted operational_state currency
                             budget_status accounting_approved created_at updated_at].freeze
 
   def index
@@ -117,8 +117,8 @@ class ReportExpensesController < ApplicationController
     }
   end
 
-  # ACEPTAR MUEVE PRESUPUESTO. Desde que el consumo de cupo depende de
-  # `is_acepted` (ver ExpenseBudgetService.consumidores), cambiar este estado
+  # ACEPTAR MUEVE PRESUPUESTO. Desde que el consumo de cupo depende de la
+  # aceptacion (ver ExpenseBudgetService.consumidores), cambiar este estado
   # cambia cuanta plata esta comprometida en el par (centro, responsable), asi
   # que hay que reevaluarlo en FIFO. Sin esto el gasto pasa a "Aceptado" y el
   # disponible de la pantalla se queda como estaba hasta el proximo guardado de
@@ -126,6 +126,9 @@ class ReportExpensesController < ApplicationController
   # su causa.
   def update_state_report_expense
     report_expense = ReportExpense.find(params[:id])
+    # `params[:state]` SIGUE LLEGANDO COMO "true"/"false" desde el desplegable
+    # de la tabla, y el escritor de compatibilidad `is_acepted=` lo traduce al
+    # estado nuevo. Rechazar NO entra por aqui: es explicito y llega con M5.
     update_status = report_expense.update(is_acepted: params[:state])
 
     if update_status && report_expense.cost_center_id.present? && report_expense.user_invoice_id.present?
@@ -205,7 +208,7 @@ class ReportExpensesController < ApplicationController
     # siendo el mismo, pero traerlos aqui evita repetir la consulta de filtro.
     pares = report_expenses.pluck(:cost_center_id, :user_invoice_id).uniq.reject { |c, u| c.blank? || u.blank? }
 
-    update_status = report_expenses.update(is_acepted: true)
+    update_status = report_expenses.update(operational_state: ReportExpense::STATE_ACEPTADO)
 
     # Mismo motivo que en update_state_report_expense: aceptar compromete cupo.
     # Se reevalua UNA vez por par, no una por gasto.

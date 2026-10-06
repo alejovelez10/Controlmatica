@@ -21,7 +21,7 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     # Desde 2026-09-10 solo lo ACEPTADO consume (ExpenseBudgetService.consumidores)
     # y las fixtures del paquete 01 nacen sin aceptar: sin esto el disponible del
     # par sube y el escenario de este archivo deja de ser el que se queria medir.
-    ReportExpense.update_all(is_acepted: true)
+    ReportExpense.update_all(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO)
   end
 
   def crear_gasto(**overrides)
@@ -210,6 +210,22 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
       # Las observaciones NO vuelven por el import, a proposito: la columna no
       # esta en V2_HEADER_KEYS. Lo que importa es que el archivo entre completo.
       assert_equal "No se reimporta, y esta bien", gasto.reload.observations
+    end
+  end
+
+
+  test "el Excel pinta el tercer estado y no solo Aceptado/Creado" do
+    # La columna "Estado operativo" salia de un ternario sobre `is_acepted`
+    # copiado en las dos plantillas: con tres estados, ese ternario pintaba
+    # "Creado" sobre un gasto rechazado y el Excel mentia sin fallar.
+    rechazado = crear_gasto(operational_state: ReportExpense::STATE_RECHAZADO)
+    sign_in_as @admin
+
+    get "/download_file/report_expenses/todos"
+
+    hoja_de_la_respuesta do |hoja|
+      fila = (2..hoja.last_row).map { |i| hoja.row(i) }.find { |f| f[0] == rechazado.id }
+      assert_equal "Rechazado", fila[10]
     end
   end
 

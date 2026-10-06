@@ -55,7 +55,7 @@ class ExpenseBudgetService
   # que cabe nace aceptado y por tanto descuenta de una; lo que no cabe, o no
   # tiene partida, nace en "Creado" y espera a que alguien lo acepte.
   def self.consumidores(scope)
-    scope.where(is_acepted: true)
+    scope.where(operational_state: ReportExpense::STATE_ACEPTADO)
   end
 
   # QUE TIENE COMPROMETIDO EL CENTRO, por beneficiario (regla pedida el
@@ -408,7 +408,7 @@ class ExpenseBudgetService
       # SOLO LO ACEPTADO CONSUME (ver `consumidores`). `corriendo` es el cupo ya
       # comprometido, asi que un gasto en "Creado" no lo mueve: existe, se ve en
       # la tabla y no le quita plata a nadie hasta que alguien lo acepte.
-      consume = gasto.is_acepted?
+      consume = gasto.aceptado?
 
       # Un historico consume cupo pero NUNCA cambia de estado por un reevaluo
       # (Discrepancia D2). Si cambiara, editar una partida podria empujar a
