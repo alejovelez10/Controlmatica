@@ -50,13 +50,13 @@ M8**, así que va temprano aunque no sea la más vistosa.
 | # | Mejora | Punto original | Depende de |
 |---|---|---|---|
 | **M1** | Candados de servidor para crear, editar, eliminar, aceptar y exportar | — (prerequisito) | — |
-| **M2** | Estado de rechazo (columnas, etiqueta, filtros, Excel) | 3 (parte 1) | — |
+| **M2** | ✅ Estado de rechazo (campo, etiqueta, filtros, Excel) | 3 (parte 1) | — |
 | **M3** | ✅ Campo observaciones | 2 | — |
 | **M4** | Dos permisos de aceptar: "Aceptar gasto" y "Aceptar todos los gastos" | 1 | M1 |
 | **M5** | Rechazar (pantalla + correo) y correo de respuesta al responsable | 3 (parte 2) | M1, M2 |
 | **M6** | Al editar, el gasto vuelve a Creado y se vuelve a avisar | 4 | M2, M5 |
 | **M7** | Contabilidad rechaza, y deja de necesitar "Ver todos" | 5 | M2, M5 |
-| **M8** | Un gasto rechazado no suma en viáticos ni en presupuesto | 6 | M2 |
+| **M8** | ✅ Un gasto rechazado no suma en viáticos ni en presupuesto | 6 | M2 |
 | **M9** | ✅ Esconder el botón de subir Excel | 7 | — |
 | **M10** | Exportar en Gastos: solo los seleccionados y los comprobantes | 8 | M1 |
 
@@ -258,6 +258,11 @@ Se registran porque el mapeo los encontró, no porque se vayan a hacer.
 |---|---|---|
 | 0 | Verificaciones previas | ⚠️ Los roles de **producción** siguen sin consultar (la sesión no tiene permiso de lectura a prod). En dev solo los tiene `Administrador`, que se salta los permisos igual, así que el dato de dev no sirve para decidir M4. |
 | 1 | M9 + M3 | ✅ Hecho. `ec763e2` y `b20a9c4`. Suite en 1338 corridas, 0 fallos. Verificado en el navegador. |
-| 2 | M2 + M8 | Siguiente. |
+| 2 | M2 + M8 | ✅ Hecho (paso A). `272875a`. Suite en 1357 corridas, 0 fallos. Verificado en el navegador: la píldora roja y el filtro con tres opciones. Impacto medido en viáticos antes de escribir: **cero** gastos rechazados, cero centros, cero pesos. |
+| 3 | M5 (rechazar + correos) | Siguiente. |
+
+**Pendiente del paso B** (otro despliegue, días después de que el A esté en producción): borrar
+`is_acepted` de la tabla y dejarla solo como método derivado. Mientras la columna exista y
+`sincronizar_is_acepted` la escriba, revertir el código es suficiente.
 
 *Documento escrito el 2026-10-06 y actualizado con cada fase.*
