@@ -51,13 +51,13 @@ M8**, así que va temprano aunque no sea la más vistosa.
 |---|---|---|---|
 | **M1** | Candados de servidor para crear, editar, eliminar, aceptar y exportar | — (prerequisito) | — |
 | **M2** | Estado de rechazo (columnas, etiqueta, filtros, Excel) | 3 (parte 1) | — |
-| **M3** | Campo observaciones | 2 | comparte migración con M2 |
+| **M3** | ✅ Campo observaciones | 2 | — |
 | **M4** | Dos permisos de aceptar: "Aceptar gasto" y "Aceptar todos los gastos" | 1 | M1 |
 | **M5** | Rechazar (pantalla + correo) y correo de respuesta al responsable | 3 (parte 2) | M1, M2 |
 | **M6** | Al editar, el gasto vuelve a Creado y se vuelve a avisar | 4 | M2, M5 |
 | **M7** | Contabilidad rechaza, y deja de necesitar "Ver todos" | 5 | M2, M5 |
 | **M8** | Un gasto rechazado no suma en viáticos ni en presupuesto | 6 | M2 |
-| **M9** | Esconder el botón de subir Excel | 7 | — |
+| **M9** | ✅ Esconder el botón de subir Excel | 7 | — |
 | **M10** | Exportar en Gastos: solo los seleccionados y los comprobantes | 8 | M1 |
 
 ### M1 — Candados de servidor (prerequisito)
@@ -177,20 +177,56 @@ botón no abre nada. Hay que mirar también el componente viejo `FormImportFile.
 
 ---
 
-## 3. Decisiones abiertas
+## 3. Decisiones
 
-Las cuatro primeras **bloquean el arranque** de su mejora.
+Las ocho, con lo que se decidió el 2026-10-06 y por qué.
 
-| # | Decisión | Default propuesto | Bloquea |
+| # | Decisión | Resuelta | Bloquea |
 |---|---|---|---|
-| **D1** | ¿El rechazo es columna nueva (`rejected_at`) o `is_acepted` pasa a ser un enum de tres valores? | **Columna nueva.** No toca la semántica de `is_acepted`, que gobierna presupuesto, FIFO y Contabilidad, y resuelve M8 para presupuesto sin escribir código. | M2 |
-| **D2** | ¿Quién escribe "observaciones": el que registra el gasto, o es el motivo de rechazo del aprobador? | **Dos campos distintos.** `observations` libre para quien registra; `rejection_reason` lo escribe quien rechaza. Mezclarlos deja al aprobador pisando lo que escribió el otro. | M3 |
-| **D3** | Al migrar los permisos, ¿quién recibe "Aceptar todos los gastos"? | **Solo Administrador** (que ya se salta todos los permisos). A quien tenga hoy `Aceptar gasto` + `Ver todos` se le queda el alcance recortado a sus centros, y hay que avisarle. | M4 |
-| **D4** | ¿Qué edición devuelve el gasto a "Creado"? | **Solo si cambia un campo que importa** (valor, IVA, total, fecha, número de factura, NIT, centro, responsable, tipo) y **solo si el gasto no está contabilizado**. Corregir una descripción no debería reabrir una aprobación ni mandar un correo. | M6 |
-| D5 | ¿El rechazo en Contabilidad también desaceptar, o es un estado contable aparte? | **Desacepta**, y por eso sale de la pantalla de Contabilidad. | M7 |
-| D6 | `Contabilidad · Ver todos` queda sin uso tras M7: ¿se borra el permiso o se deja inerte? | **Se deja inerte** y se anota. Borrarlo es una migración de dato más por un permiso que no estorba. | M7 |
-| D7 | ¿Los gastos en "Creado" deberían dejar de sumar en viáticos, como los rechazados? | **No se toca ahora.** Mueve el AIU de todos los centros; es mejora aparte. | — |
-| D8 | ¿El import de Excel se esconde solo, o también se bloquea el endpoint? | **Solo se esconde.** El endpoint ya es de administrador y el import es la vía de la carga histórica. | M9 |
+| **D1** | ¿Cómo se representa el rechazo? | ✅ **Un solo campo `operational_state`** (`creado` / `aceptado` / `rechazado`), **no** una columna suelta ni un `is_acepted` nullable. Ver §3.1: el costo real son 10 líneas, no "todo". | M2 |
+| **D2** | ¿Quién escribe "observaciones"? | ✅ **Solo quien registra el gasto.** El motivo del rechazo va en su propio campo. | M3 |
+| **D3** | ¿Quién recibe "Aceptar todos los gastos"? | ✅ **Nadie al migrar.** Se crea el permiso y lo asignan ellos desde la pantalla de roles. Consecuencia aceptada: `Aceptar gasto` pasa a significar "los centros a mi cargo y los míos", y quien lo tenga hoy junto con "Ver todos" **pierde alcance el día del despliegue**. Por eso esa fase se despliega sola y avisada. | M4 |
+| **D4** | ¿Qué edición devuelve el gasto a "Creado"? | ✅ **Cualquier edición.** Con una salvedad técnica, no de producto: la regla ignora los cambios del propio estado, o aceptar un gasto contaría como edición y lo devolvería a Creado solo. | M6 |
+| D5 | ¿El rechazo en Contabilidad desacepta? | ✅ **Sí**, y por eso el gasto sale de la pantalla de Contabilidad. | M7 |
+| D6 | `Contabilidad · Ver todos` tras M7 | ✅ **Se deja inerte** y se anota. Borrarlo es una migración de dato más por un permiso que no estorba. | M7 |
+| D7 | ¿Los "Creado" dejan de sumar en viáticos? | ✅ **No se toca.** Mueve el AIU de todos los centros; es mejora aparte. | — |
+| D8 | ¿El import se esconde o se bloquea? | ✅ **Solo se esconde**, con `EXPENSE_IMPORT_VISIBLE`. El endpoint sigue vivo y de administrador: es la vía de la carga histórica. | M9 |
+
+### 3.1 Por qué un solo campo y no `is_acepted` nullable
+
+`is_acepted` aparece **61 veces** en el código de gastos (otras 44 son del módulo de
+Comisiones, que no se toca). Pero **solo 10 deciden algo**: `expense_budget_service.rb:58` y
+`:411` (qué consume cupo y el FIFO), `accounting_expenses_controller.rb:355` (qué ve
+Contabilidad), `report_expense.rb:525` (el filtro), `:823` y `:842` (auto-aceptación y aviso),
+`report_expenses_controller.rb:118` y `:197` (aceptar suelto y masivo) y
+`expense_approvals_controller.rb:35` y `:49` (aprobar por correo).
+
+Las otras ~50 son etiquetas y pintado, y **cambian igual en las tres opciones**, porque hay que
+mostrar un tercer estado. O sea: el costo visible no distingue entre opciones y lo que se decide
+son 10 líneas.
+
+**`null` como "rechazado" se descartó.** Funciona —la columna ya es nullable y en dev no hay ni
+una fila nula de 5.037— pero en Postgres `NULL` significa "no se sabe", no "rechazado": un
+`where.not(is_acepted: true)` **excluye** las filas nulas en vez de incluirlas. Hoy no existe esa
+consulta; el problema es el día que alguien la escriba creyendo que trae los no aceptados, sin
+error y sin aviso.
+
+**`is_acepted` sobrevive como método derivado en Ruby** (`operational_state == "aceptado"`) antes
+de borrar la columna. Es lo que evita romper el contrato con Taimes, que lo recibe por el MCP
+(`report_expenses_list_tool.rb`), y el serializer que lo manda al frontend.
+
+### 3.2 El estado se cambia en DOS despliegues, no en uno
+
+Es la parte que evita el daño:
+
+- **Despliegue A:** se agrega `operational_state`, se hace el backfill y la aplicación **escribe
+  en los dos campos** y **lee del nuevo**. La columna vieja queda sincronizada.
+- **Despliegue B**, días después y con el A probado en producción: se borra `is_acepted` y queda
+  el método derivado.
+
+Si el A sale mal, **basta revertir el código**: los datos están completos en las dos columnas y
+no hay que restaurar nada con gente usando el sistema. En un solo paso, revertir exigiría
+recuperar una columna borrada con 5.000 filas.
 
 ---
 
@@ -211,4 +247,12 @@ Se registran porque el mapeo los encontró, no porque se vayan a hacer.
    (`expense_approval_token.rb`). Con M5, el mismo token sirve para aprobar y para rechazar: hay
    que decidir si el primer uso lo cierra.
 
-*Documento escrito el 2026-10-06. Ninguna mejora implementada todavía.*
+## 5. Avance
+
+| Fase | Contenido | Estado |
+|---|---|---|
+| 0 | Verificaciones previas | ⚠️ Los roles de **producción** siguen sin consultar (la sesión no tiene permiso de lectura a prod). En dev solo los tiene `Administrador`, que se salta los permisos igual, así que el dato de dev no sirve para decidir M4. |
+| 1 | M9 + M3 | ✅ Hecho. `ec763e2` y `b20a9c4`. Suite en 1338 corridas, 0 fallos. Verificado en el navegador. |
+| 2 | M2 + M8 | Siguiente. |
+
+*Documento escrito el 2026-10-06 y actualizado con cada fase.*
