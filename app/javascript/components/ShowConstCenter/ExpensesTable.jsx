@@ -247,7 +247,7 @@ class ExpensesTable extends Component {
   emptyForm = () => ({
     cost_center_id: this.props.cost_center.id,
     user_invoice_id: this.props.usuario.id,
-    invoice_name: "", invoice_date: "", description: "", invoice_number: "",
+    invoice_name: "", invoice_date: "", description: "", observations: "", invoice_number: "",
     identification: "", invoice_type: "", invoice_value: "", invoice_tax: "",
     invoice_total: "", type_identification_id: "", payment_type_id: "",
     currency: "COP", foreign_value: "", foreign_tax: "", foreign_total: "",
@@ -342,6 +342,7 @@ class ExpensesTable extends Component {
         user_invoice_id: row.user_invoice ? row.user_invoice.id : "",
         invoice_name: row.invoice_name, invoice_date: row.invoice_date,
         identification: row.identification, description: row.description,
+        observations: row.observations || "",
         invoice_number: row.invoice_number, invoice_type: row.invoice_type,
         invoice_value: row.invoice_value,
         invoice_tax: row.invoice_tax, invoice_total: row.invoice_total,
@@ -831,7 +832,7 @@ class ExpensesTable extends Component {
     // para los vacios: FormData convierte undefined en el string "undefined", que
     // un to_f en el servidor lee como 0.0.
     var fd = new FormData();
-    ["cost_center_id", "user_invoice_id", "invoice_name", "invoice_date", "description", "invoice_number",
+    ["cost_center_id", "user_invoice_id", "invoice_name", "invoice_date", "description", "observations", "invoice_number",
      "identification", "invoice_type", "invoice_value", "invoice_tax", "invoice_total",
      "type_identification_id", "payment_type_id",
      "currency", "foreign_value", "foreign_tax", "foreign_total",

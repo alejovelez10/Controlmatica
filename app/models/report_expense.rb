@@ -24,6 +24,7 @@
 #  invoice_type              :string
 #  invoice_value             :float            default(0.0)
 #  is_acepted                :boolean          default(FALSE)
+#  observations              :text
 #  payment_type              :string
 #  receipt_file              :string
 #  rule_violations           :jsonb            not null
@@ -251,6 +252,15 @@ class ReportExpense < ApplicationRecord
   # concern y no registraria nada. Esa auditoria se escribe explicitamente en
   # AccountingExpensesController con module "Contabilidad".
   audit_field :receipt_file,           label: "Comprobante"
+  # OBSERVACIONES (2026-10-06). Al final, como los dos de arriba y por el mismo
+  # motivo: el golden de la auditoria compara byte a byte y el orden de los
+  # segmentos del HTML es el orden de esta lista.
+  #
+  # SE AUDITA aunque sea texto libre: es el campo donde va a quedar escrito el
+  # "esto lo autorizo tal persona" o el "la factura llego sin IVA", y una
+  # observacion que cambia sin dejar rastro es justo lo que un auditor necesita
+  # ver. Mismo trato que `description`, que ya se audita.
+  audit_field :observations,           label: "Observaciones"
 
   # create_fields repite `identification` a proposito: en creacion y borrado el
   # NIT sale DOS veces. Las dos listas no tienen ni el mismo orden ni los mismos
@@ -267,10 +277,15 @@ class ReportExpense < ApplicationRecord
     # budget_status va SOLO en edicion (paquete 04): en la creacion el estado
     # siempre se setea y auditarlo es ruido; en la eliminacion el registro
     # desaparece.
+    # `observations` va al FINAL y SOLO en edicion (2026-10-06), por el mismo
+    # criterio con el que `budget_status` y `receipt_file` entraron antes: en la
+    # creacion el texto ya viaja dentro del cuerpo del registro y auditarlo
+    # seria repetirlo; lo que un auditor necesita es el CAMBIO de una
+    # observacion, que es donde queda escrito quien autorizo que.
     edit_fields:   %i[cost_center_id user_invoice_id type_identification_id payment_type_id
                       invoice_date invoice_name description type_identification invoice_number
                       invoice_value invoice_tax invoice_total identification budget_status
-                      receipt_file],
+                      receipt_file observations],
     create_min_length: 5,
     # 59 NO es arbitrario: es el largo exacto del encabezado de edicion. Si
     # alguien lo "redondea", cada save sin cambios (el controller hace uno en

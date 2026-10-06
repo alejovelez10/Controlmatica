@@ -1,6 +1,7 @@
 require "test_helper"
 
-# Las dos plantillas .axlsx de 18 columnas (paquete 06, tareas B9 y C1).
+# Las dos plantillas .axlsx de 19 columnas (paquete 06, tareas B9 y C1;
+# `Observaciones` se sumo el 2026-10-06).
 #
 # Se lee el xlsx generado con Roo sobre un Tempfile con `response.body`: es la
 # unica forma de afirmar sobre el archivo REAL y no sobre el codigo que lo
@@ -9,7 +10,8 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
   ENCABEZADOS = ["ID", "Centro de costo", "Responsable", "Fecha de factura", "Nombre",
                  "NIT / CEDULA", "Descripcion", "Numero de factura", "Tipo", "Medio de pago",
                  "Estado operativo", "Estado presupuestal", "Motivo presupuestal", "Moneda",
-                 "Valor extranjero", "TRM", "Valor del pago (COP)", "IVA (COP)"].freeze
+                 "Valor extranjero", "TRM", "Valor del pago (COP)", "IVA (COP)",
+                 "Observaciones"].freeze
 
   setup do
     @admin = users(:admin)
@@ -58,7 +60,7 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     tmp.unlink
   end
 
-  test "el export de gastos tiene 18 encabezados en el orden acordado" do
+  test "el export de gastos tiene 19 encabezados en el orden acordado" do
     crear_gasto
     sign_in_as @admin
 
@@ -80,7 +82,7 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "el export de contabilidad tiene los mismos 18 encabezados" do
+  test "el export de contabilidad tiene los mismos 19 encabezados" do
     # Garantiza que un archivo bajado desde CUALQUIERA de las dos pantallas es
     # importable con el mismo mapeo.
     crear_gasto
@@ -141,14 +143,16 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "las dos plantillas declaran 18 anchos de columna" do
-    # Criterio 23. La plantilla vieja declaraba 11 anchos para 12 columnas.
+  test "las dos plantillas declaran 19 anchos de columna" do
+    # Criterio 23. La plantilla vieja declaraba 11 anchos para 12 columnas, y de
+    # ahi viene esta prueba. Subio a 19 con `Observaciones` (2026-10-06): un
+    # ancho de menos deja la ultima columna con el default y pasa inadvertido.
     %w[report_expenses accounting_expenses].each do |carpeta|
       fuente = File.read(Rails.root.join("app/views", carpeta, "download_file.xlsx.axlsx"))
       anchos = fuente[/sheet\.column_widths (.+)$/, 1]
 
       refute_nil anchos, "#{carpeta} no llama a column_widths"
-      assert_equal 18, anchos.split(",").length, "#{carpeta} no declara 18 anchos"
+      assert_equal 19, anchos.split(",").length, "#{carpeta} no declara 19 anchos"
     end
   end
 
@@ -169,4 +173,44 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
 
     assert_equal "Hotel Roundtrip", gasto.reload.invoice_name
   end
+
+  # --- Observaciones (2026-10-06) -------------------------------------------
+
+  test "el export lleva las observaciones en la ULTIMA columna" do
+    gasto = crear_gasto(observations: "Autorizado por el director el 5 de octubre")
+    sign_in_as @admin
+
+    get "/download_file/report_expenses/todos"
+
+    hoja_de_la_respuesta do |hoja|
+      fila = (2..hoja.last_row).map { |i| hoja.row(i) }.find { |f| f[0] == gasto.id }
+      # La posicion 18 (la 19.a columna) es lo que se afirma, no solo que el
+      # texto este: si alguien inserta la columna en medio, el import empieza a
+      # leer el numero de factura como tipo de gasto y no falla por ningun lado.
+      assert_equal "Autorizado por el director el 5 de octubre", fila[18]
+    end
+  end
+
+  test "un Excel recien exportado se sigue pudiendo reimportar" do
+    # ES EL CONTRATO QUE LAS DOS PLANTILLAS EXISTEN PARA CUMPLIR, y la columna
+    # nueva es justo lo que lo podia romper: el import mapea POR POSICION contra
+    # V2_HEADER_KEYS (18 claves) y arma `Hash[[header, fila].transpose]`, que
+    # revienta si las dos listas no miden lo mismo. Con la columna al final, la
+    # clave sobrante se queda sin mapear y se ignora.
+    gasto = crear_gasto(observations: "No se reimporta, y esta bien")
+    sign_in_as @admin
+
+    get "/download_file/report_expenses/todos"
+
+    hoja_de_la_respuesta do |_hoja, ruta|
+      ok, fallidas = ReportExpense.import(Struct.new(:path).new(ruta), @admin.id)
+
+      assert_empty fallidas, "el archivo exportado dejo de ser importable"
+      assert ok.any?, "el import no leyo ni una fila"
+      # Las observaciones NO vuelven por el import, a proposito: la columna no
+      # esta en V2_HEADER_KEYS. Lo que importa es que el archivo entre completo.
+      assert_equal "No se reimporta, y esta bien", gasto.reload.observations
+    end
+  end
+
 end

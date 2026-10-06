@@ -717,6 +717,22 @@ class FormCreate extends Component {
                     placeholder="Descripcion del gasto"
                   />
                 </div>
+
+                {/* Observaciones. Campo libre de quien REGISTRA el gasto; no
+                    lleva la clase de error porque no es obligatorio. */}
+                <div className="cm-form-group">
+                  <label className="cm-label">
+                    <i className="fa fa-comment-dots"></i> Observaciones
+                  </label>
+                  <textarea
+                    rows="3"
+                    name="observations"
+                    value={this.props.formValues.observations || ""}
+                    onChange={this.props.onChangeForm}
+                    className="cm-input cm-textarea"
+                    placeholder="Observaciones del gasto"
+                  />
+                </div>
               </div>
 
               <div className="cm-form-grid-3">

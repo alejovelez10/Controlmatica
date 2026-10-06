@@ -24,6 +24,7 @@
 #  invoice_type              :string
 #  invoice_value             :float            default(0.0)
 #  is_acepted                :boolean          default(FALSE)
+#  observations              :text
 #  payment_type              :string
 #  receipt_file              :string
 #  rule_violations           :jsonb            not null
@@ -79,7 +80,12 @@ class ReportExpenseSerializer < ActiveModel::Serializer
              :receipt_file,
              # --- multimoneda (paquete 05, expuesto aqui) ---
              :currency, :foreign_value, :foreign_tax, :foreign_total,
-             :exchange_rate, :exchange_rate_date, :exchange_rate_source
+             :exchange_rate, :exchange_rate_date, :exchange_rate_source,
+             # --- observaciones (2026-10-06) ---
+             # AL FINAL, como manda el comentario de arriba: el orden de
+             # `attributes` es el orden de las claves del JSON y hay tablas que
+             # arman columnas por posicion.
+             :observations
 
   belongs_to :cost_center, serializer: CostCenterSerializer
 

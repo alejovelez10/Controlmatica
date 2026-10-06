@@ -412,6 +412,56 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 480_000.0, gasto.invoice_value
   end
 
+  # --- Observaciones (2026-10-06) -------------------------------------------
+
+  test "create guarda las observaciones" do
+    sign_in_as @admin
+
+    post report_expenses_path, params: parametros_gasto(
+      observations: "La factura llego sin IVA discriminado"
+    )
+
+    assert_response :success
+    assert_equal "La factura llego sin IVA discriminado", ReportExpense.order(:id).last.observations
+  end
+
+  test "update cambia las observaciones" do
+    sign_in_as @admin
+
+    patch report_expense_path(@uno), params: { observations: "Corregido con el proveedor" }
+
+    assert_response :success
+    assert_equal "Corregido con el proveedor", @uno.reload.observations
+  end
+
+  test "create acepta observaciones vacias" do
+    # No es obligatorio y no puede volverse obligatorio por accidente: el campo
+    # se agrego para que la gente escriba cuando tenga algo que decir.
+    sign_in_as @admin
+
+    post report_expenses_path, params: parametros_gasto(observations: "")
+
+    assert_response :success
+    assert_equal "", ReportExpense.order(:id).last.observations
+  end
+
+  test "las observaciones quedan en la auditoria al editarse" do
+    # Es texto libre, pero es el campo donde va a quedar escrito el "esto lo
+    # autorizo tal persona": una observacion que cambia sin dejar rastro es
+    # justo lo que un auditor necesita ver.
+    sign_in_as @admin
+    @uno.update_columns(observations: "Lo anterior")
+
+    assert_difference("RegisterEdit.count", 1) do
+      patch report_expense_path(@uno), params: { observations: "Lo nuevo" }
+    end
+
+    registro = RegisterEdit.order(:id).last
+    assert_includes registro.description, "Observaciones"
+    assert_includes registro.description, "Lo nuevo"
+    assert_includes registro.description, "Lo anterior"
+  end
+
   test "create con cop_manual_override respeta el invoice_value enviado" do
     sign_in_as @admin
 

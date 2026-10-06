@@ -885,7 +885,12 @@ class ReportExpensesController < ApplicationController
     :invoice_total, :type_identification_id, :payment_type_id,
     :receipt_file, :remove_receipt_file,
     :currency, :foreign_value, :foreign_tax, :foreign_total,
-    :exchange_rate, :exchange_rate_date, :exchange_rate_source, :cop_manual_override
+    :exchange_rate, :exchange_rate_date, :exchange_rate_source, :cop_manual_override,
+    # Observaciones (2026-10-06): LO ESCRIBE QUIEN REGISTRA EL GASTO, y por eso
+    # vive aqui, entre los campos del usuario. El motivo de un rechazo NO va en
+    # este campo ni se permite por aqui: lo escribe quien rechaza, en su propia
+    # columna, o el aprobador pisaria el texto de quien reporto el gasto.
+    :observations
   ].freeze
 
   # VEREDICTO DEL AGENTE SOBRE LAS INSTRUCCIONES DE LA REGLA.

@@ -1,4 +1,4 @@
-# Export de Contabilidad — 18 columnas (paquete 06, tarea B9).
+# Export de Contabilidad — 19 columnas (paquete 06, tarea B9).
 #
 # Este archivo y app/views/report_expenses/download_file.xlsx.axlsx son COPIAS
 # byte a byte salvo el nombre. No es casualidad: es lo que permite que un solo
@@ -11,13 +11,25 @@
 # Las guardas `present?` sobre `user_invoice` no son defensivas por gusto:
 # db/schema.rb no tiene ni un `add_foreign_key`, asi que una sola FK colgante
 # convierte el export entero en un 500.
+#
+# OBSERVACIONES VA EN LA POSICION 19, LA ULTIMA, Y ESO NO ES ESTETICA (2026-10-06):
+# `ReportExpense.import` mapea las columnas POR POSICION contra V2_HEADER_KEYS, y
+# un archivo con una columna de mas simplemente deja esa clave sin mapear y la
+# ignora. Insertarla en medio, en cambio, correria todas las siguientes y el
+# import leeria el numero de factura como si fuera el tipo de gasto, sin error.
+#
+# El import NO la lee de vuelta, tambien a proposito: agregarla a V2_HEADER_KEYS
+# dejaria 19 claves contra los 18 encabezados de los archivos que la gente ya
+# tiene guardados, y `Hash[[header, fila].transpose]` revienta cuando las dos
+# listas no miden lo mismo —se perderia el archivo entero, no una columna—.
 wb = xlsx_package.workbook
 
 wb.add_worksheet(name: "Items") do |sheet|
   sheet.add_row ["ID", "Centro de costo", "Responsable", "Fecha de factura", "Nombre",
                  "NIT / CEDULA", "Descripcion", "Numero de factura", "Tipo", "Medio de pago",
                  "Estado operativo", "Estado presupuestal", "Motivo presupuestal", "Moneda",
-                 "Valor extranjero", "TRM", "Valor del pago (COP)", "IVA (COP)"]
+                 "Valor extranjero", "TRM", "Valor del pago (COP)", "IVA (COP)",
+                 "Observaciones"]
 
   @items.each do |task|
     sheet.add_row [
@@ -38,9 +50,10 @@ wb.add_worksheet(name: "Items") do |sheet|
       task.foreign_value,
       task.exchange_rate,
       task.invoice_value,
-      task.invoice_tax
+      task.invoice_tax,
+      task.observations
     ]
   end
 
-  sheet.column_widths 10, 20, 30, 20, 20, 20, 40, 20, 25, 25, 18, 20, 40, 10, 18, 15, 20, 20
+  sheet.column_widths 10, 20, 30, 20, 20, 20, 40, 20, 25, 25, 18, 20, 40, 10, 18, 15, 20, 20, 40
 end

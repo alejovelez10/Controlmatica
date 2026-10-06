@@ -24,6 +24,7 @@
 #  invoice_type              :string
 #  invoice_value             :float            default(0.0)
 #  is_acepted                :boolean          default(FALSE)
+#  observations              :text
 #  payment_type              :string
 #  receipt_file              :string
 #  rule_violations           :jsonb            not null

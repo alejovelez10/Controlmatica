@@ -67,6 +67,7 @@ var EMPTY_FORM = {
   invoice_name: "",
   invoice_date: "",
   description: "",
+  observations: "",
   invoice_number: "",
   identification: "",
   invoice_type: "",
@@ -679,6 +680,7 @@ class ReportExpenseIndex extends React.Component {
         invoice_name: row.invoice_name || "",
         invoice_date: row.invoice_date || "",
         description: row.description || "",
+        observations: row.observations || "",
         invoice_number: row.invoice_number || "",
         identification: row.identification || "",
         invoice_type: row.invoice_type || "",
@@ -1244,7 +1246,7 @@ class ReportExpenseIndex extends React.Component {
     // `fd.append(k, "")` para los vacios: FormData convierte undefined en el
     // string "undefined", que un to_f en el servidor lee como 0.0.
     var fd = new FormData();
-    ["cost_center_id", "user_invoice_id", "invoice_name", "invoice_date", "description", "invoice_number",
+    ["cost_center_id", "user_invoice_id", "invoice_name", "invoice_date", "description", "observations", "invoice_number",
      "identification", "invoice_type", "invoice_value", "invoice_tax", "invoice_total",
      "type_identification_id", "payment_type_id",
      "currency", "foreign_value", "foreign_tax", "foreign_total",
@@ -2194,6 +2196,14 @@ class ReportExpenseIndex extends React.Component {
                   "Descripción"
                 ),
                 React.createElement("textarea", { name: "description", rows: "3", value: form.description || "", onChange: self.handleFormChange, placeholder: "Descripción del gasto...", className: "cm-input", style: { resize: "vertical", minHeight: "80px" } })
+              ),
+              // Observaciones. Campo libre de quien REGISTRA el gasto: el
+              // motivo de un rechazo no va aqui, va en su propio campo.
+              React.createElement("div", { className: "cm-form-group cm-full-width" },
+                React.createElement("label", { className: "cm-label" },
+                  "Observaciones"
+                ),
+                React.createElement("textarea", { name: "observations", rows: "3", value: form.observations || "", onChange: self.handleFormChange, placeholder: "Observaciones del gasto...", className: "cm-input", style: { resize: "vertical", minHeight: "80px" } })
               )
             ),
 

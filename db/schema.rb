@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_18_000001) do
+ActiveRecord::Schema.define(version: 2026_10_06_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -549,6 +549,7 @@ ActiveRecord::Schema.define(version: 2026_09_18_000001) do
     t.integer "accounting_approved_by_id"
     t.datetime "accounting_approved_at"
     t.jsonb "rule_violations", default: [], null: false
+    t.text "observations"
     t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
     t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"

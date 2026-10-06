@@ -13,6 +13,7 @@ class ReportExpenseAuditConcernTest < ActiveSupport::TestCase
     invoice_value invoice_tax invoice_total type_identification
     budget_status
     receipt_file
+    observations
   ].freeze
 
   setup do
@@ -40,16 +41,18 @@ class ReportExpenseAuditConcernTest < ActiveSupport::TestCase
         atributos.merge(omitir_comprobante_obligatorio: true)) }
   end
 
-  # Inventario declarado. Subio de 13 a 14 con `budget_status` (paquete 04) y de
-  # 14 a 15 con `receipt_file` (paquete 06), tal como este mismo comentario
-  # anticipaba. La cuenta es a proposito explicita: si alguien agrega un campo
-  # auditado sin pasar por aqui, este test se lo dice antes de que el golden
-  # falle con un diff de HTML ilegible.
-  def test_audit_fields_registra_los_quince_campos
-    assert_equal 15, ReportExpense.audit_fields.size
+  # Inventario declarado. Subio de 13 a 14 con `budget_status` (paquete 04), de
+  # 14 a 15 con `receipt_file` (paquete 06) y de 15 a 16 con `observations`
+  # (2026-10-06), tal como este mismo comentario anticipaba. La cuenta es a
+  # proposito explicita: si alguien agrega un campo auditado sin pasar por aqui,
+  # este test se lo dice antes de que el golden falle con un diff de HTML
+  # ilegible.
+  def test_audit_fields_registra_los_dieciseis_campos
+    assert_equal 16, ReportExpense.audit_fields.size
     assert_equal CLAVES_ESPERADAS.sort, ReportExpense.audit_fields.keys.sort
     assert_includes ReportExpense.audit_fields.keys, :budget_status
     assert_includes ReportExpense.audit_fields.keys, :receipt_file
+    assert_includes ReportExpense.audit_fields.keys, :observations
   end
 
   def test_layout_de_creacion_repite_identification
