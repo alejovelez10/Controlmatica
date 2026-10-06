@@ -27,7 +27,18 @@ class ReportExpensesController < ApplicationController
       # Importar y descargar la plantilla: SOLO administrador. El import salta el
       # formulario, el presupuesto y las reglas, asi que no se reparte por
       # permisos de menu.
-      import: puede_importar?,
+      #
+      # ESCONDIDO DESDE 2026-10-06 (pedido de producto). Se apaga aqui, en el
+      # servidor, y no quitando el boton del pack: `estados.import` es lo unico
+      # que lo pinta, asi que apagarlo cubre este frontend y cualquier otro que
+      # se agregue sin tener que acordarse de los dos sitios.
+      #
+      # LOS ENDPOINTS SIGUEN VIVOS Y SIGUEN SIENDO DE ADMINISTRADOR
+      # (`puede_importar?` en upload_file e import_template). Esconder el boton
+      # no cierra la puerta a proposito: el import es la via de la carga
+      # historica, y matarlo del todo dejaria sin herramienta a quien tenga que
+      # subir un archivo por consola o por URL directa.
+      import: puede_importar? && import_visible?,
       # El formulario necesita saberlo para marcar el campo y cortar antes de
       # subir. NO es un permiso: es el mismo flag del modelo, que es quien
       # rechaza de verdad.
@@ -630,6 +641,20 @@ class ReportExpensesController < ApplicationController
   # una decision de configuracion aparte.
   def puede_importar?
     is_admin?
+  end
+
+  # ¿SE PINTA EL BOTON DE IMPORTAR? Apagado por defecto desde 2026-10-06.
+  #
+  # EN UNA VARIABLE DE ENTORNO Y NO EN UN `false` PELADO para que volver a
+  # mostrarlo sea un `heroku config:set` y no un despliegue. Es el mismo patron
+  # de los otros dos interruptores del modulo (EXPENSE_RECEIPT_REQUIRED y
+  # EXPENSE_APPROVAL_EMAIL) y por el mismo motivo: se lee en cada llamada, asi
+  # que mover el flag no exige reiniciar los dynos.
+  #
+  # Esto NO es un permiso: solo decide si el boton existe en la pantalla. Quien
+  # puede importar de verdad lo sigue decidiendo `puede_importar?`.
+  def import_visible?
+    ActiveModel::Type::Boolean.new.cast(ENV["EXPENSE_IMPORT_VISIBLE"]) || false
   end
 
   def forbidden_import!
