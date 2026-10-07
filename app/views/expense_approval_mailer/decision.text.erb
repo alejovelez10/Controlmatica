@@ -1,0 +1,31 @@
+Hola <%= @responsable&.names %>,
+
+<% if @rechazado -%>
+El gasto que registró en el centro de costos <%= @cost_center&.code || "(sin centro)" %> fue RECHAZADO.
+<% else -%>
+El gasto que registró en el centro de costos <%= @cost_center&.code || "(sin centro)" %> fue APROBADO.
+<% end -%>
+
+<%= @expense.invoice_name %>
+Valor:   <%= ExpenseBudgetService.money(@expense.invoice_total) %><%= " #{@expense.currency}" unless @expense.currency == "COP" %>
+Fecha:   <%= @expense.invoice_date&.strftime("%d/%m/%Y") || "—" %>
+Factura: <%= @expense.invoice_number.presence || "—" %>
+<% if @decisor.present? -%>
+Decidió: <%= @decisor.names %>
+<% end -%>
+<% if @rechazado && @motivo_rechazo.present? -%>
+
+Motivo del rechazo:
+<%= @motivo_rechazo %>
+<% end -%>
+
+<% if @rechazado -%>
+Un gasto rechazado no pasa a Contabilidad y no consume presupuesto. Si cree que
+hay un error, corrija el gasto desde Controlmatica: al editarlo vuelve a quedar
+en "Creado" y se revisa de nuevo.
+<% else -%>
+No tiene que hacer nada más: el gasto ya pasó a Contabilidad.
+<% end -%>
+
+Ver mis gastos:
+<%= @url_lista %>

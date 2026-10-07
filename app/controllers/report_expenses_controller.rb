@@ -126,10 +126,23 @@ class ReportExpensesController < ApplicationController
   # su causa.
   def update_state_report_expense
     report_expense = ReportExpense.find(params[:id])
-    # `params[:state]` SIGUE LLEGANDO COMO "true"/"false" desde el desplegable
-    # de la tabla, y el escritor de compatibilidad `is_acepted=` lo traduce al
-    # estado nuevo. Rechazar NO entra por aqui: es explicito y llega con M5.
-    update_status = report_expense.update(is_acepted: params[:state])
+
+    estado = estado_operativo_pedido(params[:state])
+    if estado.nil?
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["Estado desconocido: #{params[:state]}"] },
+                    status: :unprocessable_entity
+    end
+
+    if estado == ReportExpense::STATE_RECHAZADO
+      # `rechazar` + `save` y no un `update` con los cuatro campos: el quien, el
+      # cuando y el por que son consecuencia del rechazo, y dejarlos en manos de
+      # cada llamador es como se terminan guardando rechazos sin autor.
+      report_expense.rechazar(actor: current_user, motivo: params[:rejection_reason])
+      update_status = report_expense.save
+    else
+      update_status = report_expense.update(operational_state: estado)
+    end
 
     if update_status && report_expense.cost_center_id.present? && report_expense.user_invoice_id.present?
       ExpenseBudgetService.reevaluate_center_user!(cost_center_id: report_expense.cost_center_id,
@@ -642,6 +655,27 @@ class ReportExpensesController < ApplicationController
   # "El del rol administrador, el que tiene todo". Es el rol, no un permiso de
   # menu: no existe una accion "Importar" en la tabla de acciones, y crearla es
   # una decision de configuracion aparte.
+  # Traduce lo que llega en la URL al estado operativo, y devuelve nil si no es
+  # ninguno de los tres.
+  #
+  # SIGUE ACEPTANDO "true"/"false" y no es cortesia con el pasado: la ruta es
+  # `update_state_report_expense/:id/:state` y cualquier pestaña abierta de antes
+  # del despliegue, o un reintento del navegador, manda el booleano viejo.
+  # Traducirlo son dos lineas; no hacerlo deja el gasto sin cambiar y con un
+  # error que el usuario no entiende.
+  #
+  # `false` -> creado, NUNCA rechazado, por el mismo motivo que el escritor de
+  # compatibilidad del modelo: rechazar es explicito o no es.
+  def estado_operativo_pedido(valor)
+    texto = valor.to_s.strip.downcase
+
+    return ReportExpense::STATE_ACEPTADO if texto == "true"
+    return ReportExpense::STATE_CREADO   if texto == "false"
+    return texto if ReportExpense::OPERATIONAL_STATES.include?(texto)
+
+    nil
+  end
+
   def puede_importar?
     is_admin?
   end

@@ -360,12 +360,11 @@ class ReportExpenseIndex extends React.Component {
         var aviso = budgetWarningIcon(row);
         var estado = operationalState(row);
 
-        // UN GASTO RECHAZADO SE PINTA COMO PILDORA AUNQUE SE TENGA EL PERMISO, y
-        // no como desplegable: el desplegable de hoy solo sabe de "true" y
-        // "false", asi que ofrecerlo sobre un rechazado dejaria elegir entre dos
-        // opciones ninguna de las cuales es la actual. Rechazar y des-rechazar
-        // desde la tabla llega con la mejora M5.
-        if (!props.estados.closed || estado.isRejected) {
+        // Sin permiso, el estado es una pildora de solo lectura. Con permiso es
+        // un desplegable con los TRES estados, incluido el de volver un
+        // rechazado a "Creado": una decision que no se puede deshacer desde la
+        // misma pantalla donde se tomo obliga a entrar a la base de datos.
+        if (!props.estados.closed) {
           return React.createElement("div", { className: "cm-status-cell" },
             React.createElement("span", {
               className: "cm-status-pill" + (estado.isOk ? " cm-status-pill--ok" : "")
@@ -379,15 +378,16 @@ class ReportExpenseIndex extends React.Component {
         return React.createElement("div", { className: "cm-status-cell" },
         React.createElement("select", {
           className: "cm-status-select" + (estado.isOk ? " cm-status-select--ok" : ""),
-          value: estado.isOk ? "true" : "false",
+          value: estado.value,
           onChange: function(e) { self.updateStatus(e, row); },
           // stopPropagation SIGUE SIENDO OBLIGATORIO: el clic en la fila abre el
           // detalle, y sin esto elegir un estado abriria el modal encima.
           onClick: function(e) { e.stopPropagation(); },
           "data-testid": "expense-status-select-" + row.id,
         },
-          React.createElement("option", { value: "true" }, "Aceptado"),
-          React.createElement("option", { value: "false" }, "Creado")
+          React.createElement("option", { value: "creado" }, "Creado"),
+          React.createElement("option", { value: "aceptado" }, "Aceptado"),
+          React.createElement("option", { value: "rechazado" }, "Rechazado")
         ),
           aviso
         );
@@ -1352,20 +1352,66 @@ class ReportExpenseIndex extends React.Component {
     this.setState({ editingStatusId: null });
   }.bind(this);
 
-  updateStatus = function(e, row) {
+  // Manda el estado y, si es un rechazo, el motivo. Separado de `updateStatus`
+  // para que el camino normal —aceptar, volver a Creado— siga siendo una sola
+  // peticion sin ninguna ventana de por medio.
+  enviarEstado = function(row, estado, motivo) {
     var self = this;
-    var newStatus = e.target.value;
-    var statusText = newStatus === "true" ? "Aceptado" : "Creado";
+    var cuerpo = motivo ? JSON.stringify({ rejection_reason: motivo }) : null;
 
-    fetch("/update_state_report_expense/" + row.id + "/" + newStatus, {
+    fetch("/update_state_report_expense/" + row.id + "/" + estado, {
       method: "PATCH",
       headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+      body: cuerpo,
     })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         self.setState({ editingStatusId: null });
         self.loadData();
+        if (data && data.type === "error") {
+          Swal.fire({ icon: "error", title: "No se pudo cambiar el estado",
+                      text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+        }
       });
+  }.bind(this);
+
+  updateStatus = function(e, row) {
+    var self = this;
+    var nuevoEstado = e.target.value;
+
+    if (nuevoEstado !== "rechazado") return this.enviarEstado(row, nuevoEstado, null);
+
+    // EL MOTIVO SE PIDE ANTES DE RECHAZAR, no despues. Es lo unico que el correo
+    // le va a poder decir a quien reporto el gasto; sin el, el aviso dice "su
+    // gasto fue rechazado" y nada mas, que es lo que termina en una llamada
+    // telefonica preguntando por que.
+    //
+    // Es OPCIONAL —se puede rechazar sin escribirlo— porque obligar a redactar
+    // para poder frenar un gasto equivocado es peor que un rechazo escueto.
+    Swal.fire({
+      title: "Rechazar este gasto",
+      input: "textarea",
+      inputLabel: "Motivo del rechazo (opcional)",
+      inputPlaceholder: "Por ejemplo: la factura no corresponde a este centro de costos",
+      text: "El gasto no pasa a Contabilidad y no consume presupuesto. Se le avisa a la persona que lo reportó.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#2a3f53",
+      confirmButtonText: "Sí, rechazar",
+      cancelButtonText: "Cancelar",
+    }).then(function(result) {
+      // `result.value` es "" cuando se confirma sin escribir nada, asi que la
+      // guarda mira `isConfirmed` y no el valor: con `if (!result.value)` un
+      // rechazo sin motivo se cancelaria solo.
+      if (!result.isConfirmed) {
+        // El <select> ya se pinto con el valor nuevo: hay que recargar para que
+        // vuelva a mostrar el estado real del gasto.
+        self.loadData();
+        return;
+      }
+      self.enviarEstado(row, "rechazado", result.value);
+    });
   }.bind(this);
 
   openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);

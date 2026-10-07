@@ -160,6 +160,35 @@ class ReportExpense < ApplicationRecord
 
   def operational_state_label = OPERATIONAL_STATE_LABELS[operational_state]
 
+  # Deja el gasto rechazado CON su quien, cuando y por que. No guarda: quien
+  # llama decide si valida, y el controller necesita el objeto en memoria para
+  # reevaluar el presupuesto despues.
+  #
+  # El motivo es OPCIONAL a proposito. La pantalla lo pide y el correo lo repite,
+  # pero exigirlo en el modelo dejaria sin poder rechazar a cualquier camino que
+  # no tenga como preguntarlo —el import, una consola, un canal futuro—, y un
+  # rechazo sin explicacion sigue siendo mejor que un gasto que nadie puede
+  # frenar.
+  def rechazar(actor: nil, motivo: nil)
+    assign_attributes(operational_state: STATE_RECHAZADO,
+                      rejected_at: Time.zone.now,
+                      rejected_by_id: actor&.id,
+                      rejection_reason: motivo.presence)
+  end
+
+  # Los tres campos del rechazo son CONSECUENCIA del estado, no datos sueltos, y
+  # este callback es lo que lo garantiza venga el cambio por donde venga:
+  # `rechazar`, un `update(operational_state: ...)` pelado, el import o la
+  # consola.
+  #
+  #   * sale de rechazado -> se borran. Sin esto, un gasto que vuelve a "Creado"
+  #     se queda con la fecha y el motivo del rechazo viejo, y la pantalla
+  #     termina mostrando "Creado" junto a "Rechazado el 6 de octubre porque...".
+  #   * entra a rechazado sin fecha -> se estampa. Un rechazado sin `rejected_at`
+  #     no se puede ordenar ni auditar, y quien escribio el update no tiene por
+  #     que acordarse de ponerla.
+  before_save :normalizar_datos_del_rechazo
+
   # `is_acepted` SOBREVIVE COMO LECTURA DERIVADA, y no es nostalgia: el MCP se lo
   # expone al agente de Taimes (report_expenses_list_tool.rb) y el serializer se
   # lo manda al frontend. Si desapareciera de golpe habria que cambiar el
@@ -550,9 +579,27 @@ class ReportExpense < ApplicationRecord
   # WhatsApp de una sola vez, igual que la regla del comprobante.
   after_create_commit :avisar_al_dueno_del_centro
 
+  # LA RESPUESTA AL RESPONSABLE (2026-10-06): se le avisa cuando SU gasto pasa a
+  # aceptado o a rechazado. Es el otro medio circuito; hasta hoy el que reportaba
+  # el gasto no se enteraba nunca de que habia pasado con el, y menos todavia de
+  # un rechazo, que ni siquiera existia.
+  #
+  # `after_update_commit` Y NO `after_save_commit`: en la creacion el estado
+  # tambien se "mueve" —un gasto que cabe en el presupuesto nace aceptado solo—,
+  # y avisarle a alguien de una decision que no tomo ninguna persona es ruido.
+  # La decision que importa es la que alguien toma DESPUES.
+  #
+  # Despues del COMMIT y no en el callback a secas, por lo mismo que el otro
+  # aviso: si la transaccion se deshace, el correo ya habria salido contando algo
+  # que no paso.
+  after_update_commit :avisar_la_decision_al_responsable
+
   # El import de Excel se excluye A MANO, igual que con el comprobante: un
   # archivo de 300 filas son 300 gastos sin presupuesto y serian hasta 300
   # correos de golpe. Un archivo no es 300 avisos.
+  #
+  # Vale para los DOS correos: un import que ademas moviera estados mandaria la
+  # misma rafaga por la otra punta.
   attr_accessor :omitir_aviso_de_aprobacion
 
   # Por que el gasto quedo retenido, en una frase, para el correo.
@@ -927,12 +974,58 @@ class ReportExpense < ApplicationRecord
     errors.add(:exchange_rate, "es obligatoria cuando la moneda no es COP") if exchange_rate.blank?
   end
 
+  # Ver el comentario del `after_update_commit`. Las guardas, de la mas barata a
+  # la mas cara:
+  #
+  #   - el flag apagado es el caso normal de hoy;
+  #   - si el estado no se movio no hay nada que contar (se guardan gastos todo
+  #     el dia por otros motivos);
+  #   - volver a "Creado" no es una decision, es una reapertura: el aviso de esa
+  #     es el OTRO correo, el del dueño del centro;
+  #   - el import se excluye a mano;
+  #   - un responsable sin correo es dato incompleto, no un error que deba verse.
+  #
+  # NO SE LE AVISA A QUIEN DECIDIO SOBRE SU PROPIO GASTO. Es el caso mas comun en
+  # esta aplicacion —mucha gente registra y acepta lo suyo— y mandarse un correo
+  # a uno mismo contandose lo que acaba de hacer entrena a la gente a ignorar
+  # estos avisos, que es justo lo que no se quiere del unico correo que avisa de
+  # un rechazo.
+  #
+  # EL `rescue` NO ES OPCIONAL, igual que en el otro: esto corre despues del
+  # commit, el cambio ya esta guardado y una excepcion aqui solo convertiria un
+  # guardado exitoso en un 500.
+  def avisar_la_decision_al_responsable
+    return unless self.class.aviso_de_aprobacion?
+    return unless saved_change_to_operational_state?
+    return unless [STATE_ACEPTADO, STATE_RECHAZADO].include?(operational_state)
+    return if omitir_aviso_de_aprobacion
+
+    decisor = User.current
+    return if decisor.present? && decisor.id == user_invoice_id
+    return if user_invoice.nil? || user_invoice.email.blank?
+
+    ExpenseApprovalMailer.decision(self, decisor).deliver_later
+  rescue StandardError => e
+    Rails.logger.error("[report_expense] aviso de decision ##{id}: #{e.class}: #{e.message}")
+  end
+
   # Escribe la columna vieja desde el campo nuevo. Ver el comentario del
   # `before_save` que lo registra: es el seguro que hace reversible el paso A.
   #
   # `self[:is_acepted]` y no `self.is_acepted =`: el escritor publico ahora
   # escribe `operational_state`, asi que usarlo aqui dejaria el callback dando
   # vueltas sobre si mismo sin tocar nunca la columna.
+  def normalizar_datos_del_rechazo
+    unless rechazado?
+      self.rejected_at = nil
+      self.rejected_by_id = nil
+      self.rejection_reason = nil
+      return
+    end
+
+    self.rejected_at ||= Time.zone.now
+  end
+
   def sincronizar_is_acepted
     self[:is_acepted] = aceptado?
   end

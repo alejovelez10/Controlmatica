@@ -133,4 +133,104 @@ class ReportExpenseApprovalEmailTest < ActiveSupport::TestCase
 
     assert_nil gasto.reload.motivo_de_retencion
   end
+
+  # --- El correo de la DECISION, al responsable (2026-10-06) ----------------
+  #
+  # Mismo criterio que arriba: pesan mas las pruebas de "no manda". Este correo
+  # se dispara en cada cambio de estado, que es la operacion mas frecuente de la
+  # pantalla, asi que una guarda que falle convierte el modulo en una fuente de
+  # spam.
+
+  test "con el flag apagado aceptar un gasto no manda correo" do
+    gasto = crear
+    assert_no_enqueued_emails do
+      as_user(users(:admin)) { gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+    end
+  end
+
+  test "con el flag encendido aceptar avisa al responsable" do
+    gasto = crear
+    con_aviso_de_aprobacion do
+      assert_enqueued_emails 1 do
+        # El actor es el DUEÑO del centro y no el responsable: si decidiera el
+        # propio responsable no se manda nada (prueba de abajo).
+        as_user(@dueno) { gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+      end
+    end
+  end
+
+  test "con el flag encendido rechazar avisa al responsable" do
+    gasto = crear
+    con_aviso_de_aprobacion do
+      assert_enqueued_emails 1 do
+        as_user(@dueno) do
+          gasto.rechazar(actor: @dueno, motivo: "No corresponde")
+          gasto.save!
+        end
+      end
+    end
+  end
+
+  test "NO se avisa a quien decidio sobre su propio gasto" do
+    # Es el caso mas comun de esta aplicacion: mucha gente registra y acepta lo
+    # suyo. Mandarse un correo a uno mismo contandose lo que acaba de hacer
+    # entrena a la gente a ignorar estos avisos, que es justo lo que no se quiere
+    # del unico correo que avisa de un rechazo.
+    gasto = crear(user_invoice: users(:ingeniero))
+    con_aviso_de_aprobacion do
+      assert_no_enqueued_emails do
+        as_user(users(:ingeniero)) { gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+      end
+    end
+  end
+
+  test "volver un gasto a Creado NO es una decision y no manda correo" do
+    # Una reapertura no es una respuesta: de eso avisa el OTRO correo, el del
+    # dueño del centro.
+    gasto = crear
+    as_user(@dueno) { gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+
+    con_aviso_de_aprobacion do
+      assert_no_enqueued_emails do
+        as_user(@dueno) { gasto.update!(operational_state: ReportExpense::STATE_CREADO) }
+      end
+    end
+  end
+
+  test "guardar sin mover el estado no manda correo" do
+    # Se guardan gastos todo el dia por otros motivos: corregir una descripcion
+    # no es una decision sobre el gasto.
+    gasto = crear
+    con_aviso_de_aprobacion do
+      assert_no_enqueued_emails do
+        as_user(@dueno) { gasto.update!(description: "otra cosa") }
+      end
+    end
+  end
+
+  test "un gasto que nace aceptado solo no avisa de ninguna decision" do
+    # La aceptacion automatica del presupuesto no la tomo ninguna persona.
+    con_aviso_de_aprobacion do
+      # El unico correo que puede salir aqui es el del dueño del centro, y
+      # tampoco sale porque el gasto nace ACEPTADO.
+      assert_no_enqueued_emails do
+        as_user(users(:admin)) do
+          ReportExpense.create!(atributos(budget_status: ExpenseBudgetService::STATUS_APROBADO))
+        end
+      end
+    end
+  end
+
+  test "el import no manda avisos de decision" do
+    gasto = crear
+    con_aviso_de_aprobacion do
+      assert_no_enqueued_emails do
+        as_user(@dueno) do
+          gasto.omitir_aviso_de_aprobacion = true
+          gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO)
+        end
+      end
+    end
+  end
+
 end

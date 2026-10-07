@@ -6,7 +6,7 @@
   <div class="cm-card" style="background: #fff; border: 1px solid var(--cm-border); border-radius: 12px; padding: 28px;">
 
     <h1 style="font-family: 'Poppins', sans-serif; font-size: 20px; margin: 0 0 6px;">
-      Gasto pendiente de su aprobación
+      Gasto pendiente de su decisión
     </h1>
     <p class="cm-hint" style="margin: 0 0 22px;">
       Centro de costos <strong><%= @expense.cost_center&.code || "—" %></strong>
@@ -44,23 +44,48 @@
       </div>
     <% end %>
 
-    <%# YA APROBADO: se dice antes de ofrecer el boton, no despues de pulsarlo.
-        Pasa cuando alguien ya lo acepto desde la pantalla de Gastos entre que
-        salio el correo y se abrio el enlace. %>
-    <% if @expense.is_acepted? %>
-      <div class="cm-alert cm-alert-success" style="margin: 0;">
-        Este gasto ya fue aprobado. No hay nada pendiente por hacer.
+    <%# YA DECIDIDO: se dice antes de ofrecer los botones, no despues de
+        pulsarlos. Pasa cuando alguien ya lo movio desde la pantalla de Gastos
+        entre que salio el correo y se abrio el enlace. %>
+    <% unless @expense.creado? %>
+      <div class="cm-alert <%= @expense.rechazado? ? "cm-alert-warning" : "cm-alert-success" %>" style="margin: 0;">
+        <%# Mismo criterio que `done`: el verbo de esta pagina es "aprobar",
+            aunque la columna del estado se llame "Aceptado". %>
+        Este gasto ya fue <%= @expense.rechazado? ? "rechazado" : "aprobado" %>.
+        No hay nada pendiente por hacer.
       </div>
     <% else %>
+      <%# DOS FORMULARIOS Y NO UNO CON DOS BOTONES: cada uno apunta a su propia
+          ruta, asi que no hay ninguna forma de que un error de maquetacion
+          mande a aprobar lo que la persona quiso rechazar. El motivo viaja solo
+          en el de rechazar, que es el unico que lo usa. %>
       <%= form_with url: expense_approval_path, method: :post, local: true do %>
         <%= hidden_field_tag :t, @token %>
         <button type="submit" class="cm-btn cm-btn-success" style="width: 100%; justify-content: center; padding: 12px;">
           <i class="fas fa-check"></i> Aprobar este gasto
         </button>
       <% end %>
+
+      <%= form_with url: expense_rejection_path, method: :post, local: true do %>
+        <%= hidden_field_tag :t, @token %>
+        <label class="cm-label" style="display: block; margin: 20px 0 6px;">
+          Motivo del rechazo <span class="cm-hint">(opcional)</span>
+        </label>
+        <%# El motivo es OPCIONAL pero se pide ANTES del boton y no despues:
+            puesto detras de una confirmacion, nadie lo escribe, y el correo que
+            le llega al responsable termina diciendo "su gasto fue rechazado" y
+            nada mas, que es lo que genera la llamada telefonica. %>
+        <%= text_area_tag :rejection_reason, nil, rows: 2, class: "cm-input",
+                          style: "width: 100%; resize: vertical;",
+                          placeholder: "Por ejemplo: la factura no corresponde a este centro de costos" %>
+        <button type="submit" class="cm-btn cm-btn-outline" style="width: 100%; justify-content: center; padding: 12px; margin-top: 10px; color: #c82333; border-color: #f5c2c7;">
+          <i class="fas fa-times"></i> Rechazar este gasto
+        </button>
+      <% end %>
+
       <p class="cm-hint" style="margin: 14px 0 0; text-align: center;">
-        Si no está de acuerdo, cierre esta página: el gasto se queda en "Creado"
-        y no pasa a Contabilidad.
+        Si prefiere decidirlo después, cierre esta página: el gasto se queda en
+        "Creado" y no pasa a Contabilidad.
       </p>
     <% end %>
   </div>

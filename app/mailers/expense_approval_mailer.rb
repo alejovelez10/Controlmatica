@@ -1,6 +1,14 @@
-# Aviso al dueño de un centro de costos de que un gasto suyo quedo pendiente de
-# aprobacion. Lo dispara `ReportExpense#avisar_al_dueno_del_centro` y solo sale
-# con EXPENSE_APPROVAL_EMAIL encendido.
+# Los dos correos del circuito de aprobacion de un gasto. Los dos salen SOLO con
+# EXPENSE_APPROVAL_EMAIL encendido, que hoy esta apagado en produccion.
+#
+#   1. `pending_approval` -> al DUEÑO DEL CENTRO: "tiene un gasto por decidir".
+#      Lo dispara `ReportExpense#avisar_al_dueno_del_centro` al crear.
+#   2. `decision` -> al RESPONSABLE DEL GASTO: "le aprobaron / le rechazaron lo
+#      que reporto". Lo dispara `ReportExpense#avisar_la_decision_al_responsable`
+#      cuando el estado operativo se mueve.
+#
+# Van en el MISMO mailer y no en dos, porque son las dos puntas de la misma
+# conversacion y comparten remitente, estilo y la forma del asunto.
 class ExpenseApprovalMailer < ApplicationMailer
   # El remitente sale de ENV para que en un despliegue nuevo no haya que tocar
   # codigo, con el mismo buzon que ya usa el correo de aprobacion de reportes
@@ -37,7 +45,41 @@ class ExpenseApprovalMailer < ApplicationMailer
          subject: asunto)
   end
 
+  # La respuesta al que reporto el gasto: se lo aprobaron o se lo rechazaron.
+  #
+  # VA AL RESPONSABLE (`user_invoice`) Y NO A QUIEN LO CREO. Son casi siempre la
+  # misma persona, pero cuando no lo son —un asistente registra el gasto de un
+  # ingeniero— el que necesita enterarse es a quien se le va a pagar o a quien
+  # hay que pedirle la factura corregida.
+  #
+  # NO LLEVA TOKEN NI BOTONES. No hay nada que decidir: es un aviso de algo que
+  # ya paso. Un enlace con token aqui seria una llave de 7 dias repartida sin
+  # motivo.
+  def decision(expense, decisor)
+    @expense = expense
+    @decisor = decisor
+    @cost_center = expense.cost_center
+    @responsable = expense.user_invoice
+    @rechazado = expense.rechazado?
+    @motivo_rechazo = expense.rejection_reason
+
+    @url_lista = report_expenses_url(scope: "mine")
+
+    mail(to: @responsable.email,
+         from: self.class.remitente,
+         subject: asunto_de_la_decision)
+  end
+
   private
+
+  # Mismo criterio que el otro asunto: el resultado y el centro van ANTES de
+  # abrir el correo. Quien reporta diez gastos a la semana no deberia tener que
+  # abrir diez correos para saber cual le rebotaron.
+  def asunto_de_la_decision
+    codigo = @cost_center&.code.presence || "sin centro"
+    resultado = @rechazado ? "rechazado" : "aprobado"
+    "Su gasto fue #{resultado} · #{codigo}"
+  end
 
   # El codigo del centro va en el ASUNTO y no solo en el cuerpo: quien es dueño
   # de varios centros los filtra en su bandeja sin abrir nada.

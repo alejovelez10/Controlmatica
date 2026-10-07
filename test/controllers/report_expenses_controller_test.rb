@@ -412,6 +412,76 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 480_000.0, gasto.invoice_value
   end
 
+  # --- Cambio de estado desde la tabla (2026-10-06) -------------------------
+
+  test "update_state acepta el nombre del estado" do
+    sign_in_as @admin
+
+    patch "/update_state_report_expense/#{@uno.id}/aceptado"
+
+    assert_response :success
+    assert @uno.reload.aceptado?
+  end
+
+  test "update_state rechaza y guarda autor y motivo" do
+    sign_in_as @admin
+
+    patch "/update_state_report_expense/#{@uno.id}/rechazado",
+          params: { rejection_reason: "La factura esta a nombre de otro" }
+
+    assert_response :success
+    @uno.reload
+    assert @uno.rechazado?
+    assert_equal "La factura esta a nombre de otro", @uno.rejection_reason
+    assert_equal @admin.id, @uno.rejected_by_id
+  end
+
+  test "update_state sigue entendiendo true y false" do
+    # La ruta lleva el estado en la URL: cualquier pestaña abierta de antes del
+    # despliegue, o un reintento del navegador, manda el booleano viejo.
+    sign_in_as @admin
+
+    patch "/update_state_report_expense/#{@uno.id}/true"
+    assert @uno.reload.aceptado?
+
+    patch "/update_state_report_expense/#{@uno.id}/false"
+    assert @uno.reload.creado?
+  end
+
+  test "update_state con false NUNCA rechaza" do
+    # Rechazar es explicito o no es. Si esto se invierte, cualquier
+    # des-aceptacion desde la tabla pasaria a rechazar gastos en silencio.
+    sign_in_as @admin
+    as_user(@admin) { @uno.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+
+    patch "/update_state_report_expense/#{@uno.id}/false"
+
+    assert @uno.reload.creado?
+    refute @uno.rechazado?
+  end
+
+  test "update_state con un estado inventado no toca el gasto" do
+    sign_in_as @admin
+    estado_previo = @uno.operational_state
+
+    patch "/update_state_report_expense/#{@uno.id}/pendiente_de_algo"
+
+    assert_response :unprocessable_entity
+    assert_equal estado_previo, @uno.reload.operational_state
+  end
+
+  test "volver un rechazado a Creado le borra el motivo" do
+    sign_in_as @admin
+    patch "/update_state_report_expense/#{@uno.id}/rechazado", params: { rejection_reason: "un motivo" }
+
+    patch "/update_state_report_expense/#{@uno.id}/creado"
+
+    @uno.reload
+    assert @uno.creado?
+    assert_nil @uno.rejection_reason
+    assert_nil @uno.rejected_at
+  end
+
   # --- Observaciones (2026-10-06) -------------------------------------------
 
   test "create guarda las observaciones" do

@@ -198,4 +198,53 @@ class ReportExpenseOperationalStateTest < ActiveSupport::TestCase
     assert_includes ids, creado.id
   end
 
+
+  # --- Rechazo: los tres campos son consecuencia del estado -----------------
+
+  test "rechazar deja quien, cuando y por que" do
+    gasto = nuevo_gasto
+    gasto.rechazar(actor: @admin, motivo: "No corresponde al centro")
+
+    assert gasto.rechazado?
+    assert_equal @admin.id, gasto.rejected_by_id
+    assert_equal "No corresponde al centro", gasto.rejection_reason
+    assert gasto.rejected_at.present?
+  end
+
+  test "un rechazo sin motivo no guarda cadena vacia" do
+    gasto = nuevo_gasto
+    gasto.rechazar(actor: @admin, motivo: "   ")
+
+    # `nil` y no `""`: la vista pregunta por `.present?` y una cadena de espacios
+    # pintaria un bloque "Motivo del rechazo" vacio en el correo.
+    assert_nil gasto.rejection_reason
+  end
+
+  test "rechazar por un update pelado tambien estampa la fecha" do
+    # El estado se puede mover desde una consola, el import o un canal futuro sin
+    # pasar por `rechazar`. Un rechazado sin `rejected_at` no se puede ordenar ni
+    # auditar.
+    gasto = gasto_guardado
+    as_user(@admin) { gasto.update!(operational_state: ReportExpense::STATE_RECHAZADO) }
+
+    assert gasto.reload.rejected_at.present?
+  end
+
+  test "salir de rechazado BORRA los tres campos" do
+    # Sin esto, un gasto que vuelve a "Creado" se queda con la fecha y el motivo
+    # del rechazo viejo, y la pantalla termina mostrando "Creado" junto a
+    # "Rechazado el 6 de octubre porque...".
+    gasto = gasto_guardado
+    as_user(@admin) do
+      gasto.rechazar(actor: @admin, motivo: "primera version")
+      gasto.save!
+      gasto.update!(operational_state: ReportExpense::STATE_CREADO)
+    end
+
+    gasto.reload
+    assert_nil gasto.rejected_at
+    assert_nil gasto.rejected_by_id
+    assert_nil gasto.rejection_reason
+  end
+
 end

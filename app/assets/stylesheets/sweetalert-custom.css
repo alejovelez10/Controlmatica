@@ -9,6 +9,9 @@
     "icon"
     "title"
     "content"
+    "inputlabel"
+    "input"
+    "validation"
     "actions" !important;
   grid-template-columns: 1fr !important;
   justify-items: center !important;
@@ -189,10 +192,35 @@
   color: #374151 !important;
 }
 
+/* CAMPOS DE ENTRADA DENTRO DEL MODAL (2026-10-06).
+   LAS TRES AREAS NUEVAS DEL GRID NO SON COSMETICA. El popup fuerza
+   `grid-template-areas` para garantizar el orden, y un elemento sin area
+   asignada cae en las filas IMPLICITAS, que van DESPUES de las nombradas: el
+   campo y su etiqueta aparecian debajo de los botones, asi que se podia
+   confirmar sin haber visto el campo. No se habia notado porque hasta hoy
+   ningun modal de la aplicacion pedia datos.
+   Cada elemento lleva su PROPIA area: dos elementos en la misma se superponen.
+   Las filas vacias colapsan a cero, asi que los modales que no piden nada se
+   ven exactamente igual que antes. */
+.swal2-input-label {
+  grid-area: inputlabel !important;
+  font-size: 13px !important;
+  color: #6b7280 !important;
+  margin: 16px 0 6px !important;
+}
+
+.swal2-validation-message {
+  grid-area: validation !important;
+}
+
 /* Input fields */
 .swal2-input,
 .swal2-textarea,
 .swal2-select {
+  grid-area: input !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
   font-family: "Poppins", sans-serif !important;
   font-size: 14px !important;
   border: 1px solid #e2e5ea !important;

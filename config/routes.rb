@@ -99,6 +99,11 @@ Rails.application.routes.draw do
   # con Base64 estandar, que puede traer "/" dentro.
   get  "gastos/aprobar", to: "expense_approvals#show",   as: "expense_approval"
   post "gastos/aprobar", to: "expense_approvals#create"
+  # Rechazar usa EL MISMO token y la misma pantalla: el GET de arriba pinta los
+  # dos botones. Es un POST aparte y no un campo del formulario de aprobar para
+  # que no exista ninguna forma de que un error de maquetacion mande a aprobar
+  # lo que la persona quiso rechazar.
+  post "gastos/rechazar", to: "expense_approvals#reject", as: "expense_rejection"
   # Presupuesto de viaticos (partidas, paquete 07). Contrato en
   # 00-ARQUITECTURA A.1. El `index` de resources esta excluido A PROPOSITO: una
   # partida no tiene sentido fuera de su centro de costos, asi que el listado

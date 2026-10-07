@@ -91,4 +91,65 @@ class ExpenseApprovalMailerTest < ActionMailer::TestCase
 
     assert_nil ExpenseApprovalToken.find_expense(ajeno)
   end
+
+  # --- Correo de la decision al responsable (2026-10-06) --------------------
+
+  def correo_de_decision(decisor = @dueno) = ExpenseApprovalMailer.decision(@gasto, decisor)
+
+  test "la decision va al RESPONSABLE del gasto, no a quien lo creo" do
+    # Son casi siempre la misma persona, pero cuando no lo son —un asistente
+    # registra el gasto de un ingeniero— el que necesita enterarse es a quien se
+    # le va a pagar o a quien hay que pedirle la factura corregida.
+    assert_equal [users(:ingeniero).email], correo_de_decision.to
+  end
+
+  test "el asunto dice el resultado y el centro, sin abrir el correo" do
+    as_user(users(:admin)) { @gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+
+    assert_equal "Su gasto fue aprobado · #{@centro.code}", correo_de_decision.subject
+  end
+
+  test "el asunto de un rechazo dice rechazado" do
+    as_user(users(:admin)) do
+      @gasto.rechazar(actor: @dueno, motivo: "No corresponde")
+      @gasto.save!
+    end
+
+    assert_equal "Su gasto fue rechazado · #{@centro.code}", correo_de_decision.subject
+  end
+
+  test "el correo de rechazo lleva el motivo en los dos formatos" do
+    # El motivo es lo UNICO que le dice a la persona que hacer a continuacion.
+    # Si se cae de una de las dos partes, el que lee en texto plano se queda sin
+    # saber por que le rebotaron el gasto.
+    as_user(users(:admin)) do
+      @gasto.rechazar(actor: @dueno, motivo: "La factura no es de este centro")
+      @gasto.save!
+    end
+
+    cuerpo = correo_de_decision.body.encoded
+
+    assert_match "La factura no es de este centro", cuerpo
+    assert_match(/rechazado/i, cuerpo)
+  end
+
+  test "el correo de rechazo dice como volver a intentarlo" do
+    # Un rechazo que no explica el siguiente paso termina en una llamada.
+    as_user(users(:admin)) do
+      @gasto.rechazar(actor: @dueno, motivo: "x")
+      @gasto.save!
+    end
+
+    assert_match(/al editarlo vuelve a quedar|editarlo vuelve/i, correo_de_decision.body.encoded)
+  end
+
+  test "el correo NO lleva ningun enlace con token" do
+    # No hay nada que decidir: es un aviso de algo que ya paso. Un enlace con
+    # token aqui seria una llave de 7 dias repartida sin motivo.
+    as_user(users(:admin)) { @gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+
+    refute_match "gastos/aprobar", correo_de_decision.body.encoded
+    refute_match "gastos/rechazar", correo_de_decision.body.encoded
+  end
+
 end

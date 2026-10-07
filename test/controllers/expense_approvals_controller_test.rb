@@ -131,4 +131,84 @@ class ExpenseApprovalsControllerTest < ActionDispatch::IntegrationTest
 
     assert_nil User.current
   end
+
+  # --- Rechazo desde el mismo enlace (2026-10-06) ---------------------------
+
+  test "el GET ofrece las dos salidas, aprobar y rechazar" do
+    get expense_approval_path(t: @token)
+
+    assert_match "Aprobar este gasto", response.body
+    assert_match "Rechazar este gasto", response.body
+    assert_match "Motivo del rechazo", response.body
+  end
+
+  test "el GET del enlace NO rechaza el gasto" do
+    # Gemela de la prueba del GET que no aprueba, y mas importante todavia: un
+    # rechazo disparado por un antivirus de correo saca el gasto de circulacion
+    # y nadie entiende por que.
+    get expense_approval_path(t: @token)
+
+    refute @gasto.reload.rechazado?
+  end
+
+  test "el POST de rechazo deja el gasto rechazado, con autor y motivo" do
+    post expense_rejection_path, params: { t: @token,
+                                           rejection_reason: "La factura no es de este centro" }
+
+    assert_response :success
+    @gasto.reload
+    assert @gasto.rechazado?
+    assert_equal "La factura no es de este centro", @gasto.rejection_reason
+    assert_equal @dueno.id, @gasto.rejected_by_id, "el rechazo tiene que quedar con autor"
+    assert @gasto.rejected_at.present?, "un rechazado sin fecha no se puede auditar"
+  end
+
+  test "rechazar sin motivo tambien funciona" do
+    # Es opcional a proposito: obligar a redactar para poder frenar un gasto
+    # equivocado es peor que un rechazo escueto.
+    post expense_rejection_path, params: { t: @token }
+
+    assert @gasto.reload.rechazado?
+    assert_nil @gasto.rejection_reason
+  end
+
+  test "el rechazo usa el MISMO token que la aprobacion" do
+    # Si esto deja de ser cierto, el correo tiene que llevar dos enlaces.
+    post expense_rejection_path, params: { t: @token }
+
+    assert @gasto.reload.rechazado?
+  end
+
+  test "no se puede rechazar un gasto que ya fue aceptado" do
+    # El caso de verdad: alguien lo acepto desde la pantalla de Gastos entre que
+    # salio el correo y se abrio el enlace. Rechazar por encima de eso, desde un
+    # correo de hace seis dias, seria pisar una decision mas nueva con una mas
+    # vieja.
+    as_user(users(:admin)) { @gasto.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+
+    post expense_rejection_path, params: { t: @token, rejection_reason: "tarde" }
+
+    assert @gasto.reload.aceptado?, "el gasto no se pudo cambiar"
+    assert_match(/ya estaba aprobado/i, response.body)
+  end
+
+  test "rechazar dos veces con el mismo enlace no rompe nada" do
+    post expense_rejection_path, params: { t: @token, rejection_reason: "primera" }
+    primera_fecha = @gasto.reload.rejected_at
+
+    post expense_rejection_path, params: { t: @token, rejection_reason: "segunda" }
+
+    @gasto.reload
+    assert @gasto.rechazado?
+    assert_equal "primera", @gasto.rejection_reason, "el segundo intento no debe pisar el motivo"
+    assert_equal primera_fecha.to_i, @gasto.rejected_at.to_i
+  end
+
+  test "un token invalido no rechaza nada" do
+    post expense_rejection_path, params: { t: "basura", rejection_reason: "x" }
+
+    assert_response :not_found
+    refute @gasto.reload.rechazado?
+  end
+
 end
