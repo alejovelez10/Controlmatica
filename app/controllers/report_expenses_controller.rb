@@ -126,6 +126,7 @@ class ReportExpensesController < ApplicationController
   # su causa.
   def update_state_report_expense
     report_expense = ReportExpense.find(params[:id])
+    estado_anterior = report_expense.operational_state
 
     estado = estado_operativo_pedido(params[:state])
     if estado.nil?
@@ -151,6 +152,18 @@ class ReportExpensesController < ApplicationController
       # El reevaluo escribe con update_columns, asi que el objeto en memoria
       # —el que se serializa abajo— quedo con el budget_status viejo.
       report_expense.reload
+    end
+
+    # LOS VIATICOS DEL CENTRO SOLO SE MUEVEN SI ENTRA O SALE DE "RECHAZADO". El
+    # rechazado no suma (`suman_en_centro`); "Creado" y "Aceptado" suman los dos,
+    # asi que aceptar no cambia nada y no vale el recalculo, que toca todo el
+    # centro. Sin esto el rechazo se veia en la tabla pero los viaticos y el AIU
+    # del centro seguian contando el gasto hasta la siguiente edicion de
+    # cualquier gasto del mismo centro.
+    if update_status && report_expense.cost_center_id.present? &&
+       [estado_anterior, report_expense.operational_state].include?(ReportExpense::STATE_RECHAZADO) &&
+       estado_anterior != report_expense.operational_state
+      recalculate_cost_center(report_expense.cost_center_id, "reportes")
     end
 
     if update_status

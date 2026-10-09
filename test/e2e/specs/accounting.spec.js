@@ -51,12 +51,20 @@ async function aplicarFiltros(page) {
 // Cambia de vista. La pestana YA dispara la carga por si sola (no hay que
 // pulsar "Aplicar"), asi que se espera la respuesta aqui para no dejar una
 // peticion en vuelo pisando la del siguiente paso.
+//
+// SI LA PESTANA YA ESTA ACTIVA NO SE ESPERA NADA (2026-10-09). `setTab` sale
+// sin cargar cuando se pulsa la pestana en la que ya se esta, y "No
+// contabilizados" es la de entrada: esperar la respuesta ahi colgaba el test 15
+// segundos y lo tumbaba, con el escenario 7 entero detras en "did not run".
+// Ningun llamador usa lo que devuelve.
 async function verPestana(page, id) {
-  const [res] = await Promise.all([
+  const pestana = page.getByTestId("accounting-tab-" + id);
+  if ((await pestana.getAttribute("class") || "").includes("cm-tab-btn--active")) return;
+
+  await Promise.all([
     page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.status() === 200),
-    page.getByTestId("accounting-tab-" + id).click(),
+    pestana.click(),
   ]);
-  return { url: res.url(), body: await res.json() };
 }
 
 async function abrirBandeja(page) {
@@ -405,5 +413,77 @@ test.describe("Contabilidad — negativos de permisos y de render", () => {
     await expect(page.getByTestId("cm-datatable-row")).toHaveCount(0);
     await expect(page.locator(".cm-dt-empty")).toBeVisible();
     await expect(page.getByText("No tiene permiso para realizar esta acción")).toBeVisible();
+  });
+});
+
+// M7 (2026-10-09): Contabilidad rechaza desde el mismo desplegable de la
+// columna "Contabilidad". Bloque propio y con resiembra: rechazar SACA el gasto
+// de la bandeja, y los conteos de los bloques de arriba no pueden depender de
+// en que orden corre este.
+test.describe("Contabilidad — rechazar un gasto (M7)", () => {
+  test.beforeAll(() => {
+    reseedE2E("ACC");
+  });
+
+  test("rechazar pide el motivo, lo manda y saca el gasto de la bandeja", async ({ page }) => {
+    await abrirBandeja(page);
+    await filtrarPorCentro(page);
+    await verPestana(page, "pendientes");
+    const { body } = await aplicarFiltros(page);
+    const id = body.data[0].id;
+
+    await page.getByTestId(`accounting-approve-select-${id}`).selectOption("rechazar");
+    await expect(page.locator(".swal2-title")).toContainText("Rechazar este gasto");
+    await page.locator(".swal2-textarea").fill("El comprobante no corresponde a la factura");
+
+    const [res] = await Promise.all([
+      page.waitForResponse((r) => r.url().includes(`/reject_accounting_expense/${id}`)),
+      page.locator(".swal2-confirm").click(),
+    ]);
+
+    expect(res.request().method()).toBe("PATCH");
+    expect(JSON.parse(res.request().postData()).rejection_reason).toBe("El comprobante no corresponde a la factura");
+    expect((await res.json()).type).toBe("success");
+    await expect(page.getByTestId(`accounting-ref-${id}`)).toHaveCount(0);
+  });
+
+  test("cancelar el rechazo no manda nada y la fila vuelve a su estado", async ({ page }) => {
+    await abrirBandeja(page);
+    await filtrarPorCentro(page);
+    await verPestana(page, "pendientes");
+    const { body } = await aplicarFiltros(page);
+    const id = body.data[0].id;
+
+    let rechazos = 0;
+    page.on("request", (r) => { if (r.url().includes("/reject_accounting_expense/")) rechazos += 1; });
+
+    await page.getByTestId(`accounting-approve-select-${id}`).selectOption("rechazar");
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes(ENDPOINT) && r.status() === 200),
+      page.locator(".swal2-cancel").click(),
+    ]);
+
+    expect(rechazos).toBe(0);
+    await expect(page.getByTestId(`accounting-approve-select-${id}`)).toHaveValue("false");
+  });
+
+  test("un gasto contabilizado no ofrece la opcion de rechazar", async ({ page }) => {
+    await abrirBandeja(page);
+    await filtrarPorCentro(page);
+    await verPestana(page, "pendientes");
+    const { body } = await aplicarFiltros(page);
+    const id = body.data[0].id;
+    const select = page.getByTestId(`accounting-approve-select-${id}`);
+
+    await expect(select.locator('option[value="rechazar"]')).toHaveCount(1);
+
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes(`/update_accounting_state/${id}/true`)),
+      select.selectOption("true"),
+    ]);
+    await verPestana(page, "aprobados");
+    await aplicarFiltros(page);
+
+    await expect(page.getByTestId(`accounting-approve-select-${id}`).locator('option[value="rechazar"]')).toHaveCount(0);
   });
 });

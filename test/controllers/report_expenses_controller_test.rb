@@ -482,6 +482,46 @@ class ReportExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_nil @uno.rejected_at
   end
 
+  test "rechazar desde la tabla recalcula los viaticos del centro" do
+    # El rechazado no suma en viaticos, pero el valor del centro esta GUARDADO:
+    # sin el recalculo, el rechazo se ve en la tabla y el AIU sigue contandolo.
+    centro = @uno.cost_center
+    centro.update_columns(viat_costo_real: 999_999_999)
+    sign_in_as @admin
+
+    patch "/update_state_report_expense/#{@uno.id}/rechazado"
+
+    esperado = centro.reports.sum(:viatic_value) + centro.report_expenses.suman_en_centro.sum(:invoice_value)
+    assert_in_delta esperado, centro.reload.viat_costo_real.to_f, 0.01
+  end
+
+  test "sacar un gasto de Rechazado tambien recalcula los viaticos" do
+    # La otra punta: el gasto vuelve a sumar.
+    centro = @uno.cost_center
+    sign_in_as @admin
+    patch "/update_state_report_expense/#{@uno.id}/rechazado"
+    centro.update_columns(viat_costo_real: 999_999_999)
+
+    patch "/update_state_report_expense/#{@uno.id}/creado"
+
+    assert_includes centro.report_expenses.suman_en_centro.pluck(:id), @uno.id
+    esperado = centro.reports.sum(:viatic_value) + centro.report_expenses.suman_en_centro.sum(:invoice_value)
+    assert_in_delta esperado, centro.reload.viat_costo_real.to_f, 0.01
+  end
+
+  test "aceptar no recalcula el centro" do
+    # "Creado" y "Aceptado" suman los dos: aceptar no mueve los viaticos y el
+    # recalculo, que toca todo el centro, sobra.
+    centro = @uno.cost_center
+    centro.update_columns(viat_costo_real: 123.0)
+    sign_in_as @admin
+
+    patch "/update_state_report_expense/#{@uno.id}/aceptado"
+
+    assert @uno.reload.aceptado?
+    assert_in_delta 123.0, centro.reload.viat_costo_real.to_f, 0.001
+  end
+
   # --- Observaciones (2026-10-06) -------------------------------------------
 
   test "create guarda las observaciones" do

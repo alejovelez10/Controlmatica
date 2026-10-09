@@ -80,7 +80,9 @@ class AccountingExpensesViewTest < ActionDispatch::IntegrationTest
     props = react_props
     assert props["estados"].key?("approve"), "Falta estados.approve en las props"
     assert props["estados"].key?("export"), "Falta estados.export en las props"
-    assert props["estados"].key?("show_all"), "Falta estados.show_all en las props"
+    # `show_all` SALIO de las props a proposito (M7, 2026-10-09): quien entra a
+    # Contabilidad ve todo lo aceptado y la pantalla ya no lo consulta.
+    refute props["estados"].key?("show_all"), "show_all no deberia volver: el permiso quedo inerte"
     assert_kind_of Array, props["currencies"]
     assert props["currencies"].any?, "El catalogo de monedas llego vacio"
   end
@@ -117,14 +119,14 @@ class AccountingExpensesViewTest < ActionDispatch::IntegrationTest
     assert_kind_of Array, props["report_expense_options"]
   end
 
-  test "el contador ve los tres estados en true" do
+  test "el contador ve los dos estados en true" do
     sign_in @contador
 
     get accounting_expenses_path
 
     props = react_props
-    assert_equal [true, true, true],
-                 props["estados"].values_at("approve", "export", "show_all"),
-                 "El rol contador debe poder aprobar, exportar y ver todos"
+    assert_equal [true, true],
+                 props["estados"].values_at("approve", "export"),
+                 "El rol contador debe poder contabilizar (y rechazar) y exportar"
   end
 end

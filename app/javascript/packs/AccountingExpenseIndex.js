@@ -244,18 +244,30 @@ class AccountingExpenseIndex extends React.Component {
           );
         }
 
+        // RECHAZAR VA EN EL MISMO DESPLEGABLE (M7, 2026-10-09): es la otra
+        // salida de la misma revision —el contador mira el soporte y lo causa o
+        // lo devuelve—, y una columna o un menu aparte para una sola accion es lo
+        // que este desplegable vino a reemplazar. SOLO en los no contabilizados:
+        // el servidor no rechaza un gasto contabilizado (habria que retirar
+        // primero la contabilizacion), y ofrecer la opcion seria ofrecer un error.
         return React.createElement("div", { "data-testid": "accounting-status-" + row.id },
           React.createElement("select", {
             className: "cm-status-select" + (row.accounting_approved ? " cm-status-select--ok" : ""),
             value: row.accounting_approved ? "true" : "false",
-            onChange: function(e) { self.updateAccountingState(row, e.target.value); },
+            onChange: function(e) {
+              if (e.target.value === "rechazar") return self.rejectExpense(row);
+              self.updateAccountingState(row, e.target.value);
+            },
             // stopPropagation por la misma razon que en Gastos: el clic en la
             // fila no puede dispararse al elegir un estado.
             onClick: function(e) { e.stopPropagation(); },
             "data-testid": "accounting-approve-select-" + row.id,
           },
             React.createElement("option", { value: "true" }, "Contabilizado"),
-            React.createElement("option", { value: "false" }, "No contabilizado")
+            React.createElement("option", { value: "false" }, "No contabilizado"),
+            row.accounting_approved
+              ? null
+              : React.createElement("option", { value: "rechazar" }, "Rechazar gasto…")
           ),
           pie
         );
@@ -542,6 +554,73 @@ class AccountingExpenseIndex extends React.Component {
         Swal.fire({ icon: "error", title: "¡Ocurrió un error!",
                     text: "No se pudo actualizar el gasto", confirmButtonColor: "#2a3f53" });
       });
+  }.bind(this);
+
+
+  // Rechazo desde Contabilidad (M7, 2026-10-09). Mismo dialogo que el rechazo
+  // de la pantalla de Gastos: el motivo se pide ANTES y es opcional, porque es
+  // lo unico que el correo le va a poder decir a quien reporto el gasto.
+  //
+  // El texto avisa que el gasto SALE de la tabla: esta pantalla solo muestra lo
+  // aceptado, y un gasto que desaparece sin aviso se lee como un error.
+  rejectExpense = function(row) {
+    var self = this;
+
+    Swal.fire({
+      title: "Rechazar este gasto",
+      input: "textarea",
+      inputLabel: "Motivo del rechazo (opcional)",
+      inputPlaceholder: "Por ejemplo: el comprobante no corresponde a la factura",
+      text: "El gasto sale de Contabilidad, deja de consumir presupuesto y no suma en los viáticos del centro. Se le avisa a la persona que lo reportó.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#2a3f53",
+      confirmButtonText: "Sí, rechazar",
+      cancelButtonText: "Cancelar",
+    }).then(function(result) {
+      // `isConfirmed` y no `result.value`: confirmar sin escribir motivo deja
+      // el valor en "" y con `if (!result.value)` el rechazo se cancelaria solo.
+      if (!result.isConfirmed) {
+        // El <select> ya se pinto con "Rechazar gasto…": recargar lo devuelve al
+        // estado real de la fila.
+        self.loadData();
+        return;
+      }
+
+      fetch("/reject_accounting_expense/" + row.id, {
+        method: "PATCH",
+        headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
+        body: JSON.stringify({ rejection_reason: result.value }),
+      })
+        .then(function(res) {
+          if (res.status === 403) {
+            Swal.fire({ icon: "error", title: "¡Ocurrió un error!",
+                        text: "No tiene permiso para realizar esta acción", confirmButtonColor: "#2a3f53" });
+            return null;
+          }
+          return res.json();
+        })
+        .then(function(data) {
+          // Se recarga SIEMPRE: con exito la fila sale de la tabla, y con error
+          // el <select> tiene que volver a mostrar el estado real.
+          self.loadData();
+          if (!data) return;
+
+          if (data.type === "error") {
+            Swal.fire({ icon: "error", title: data.success || "¡Ocurrió un error!",
+                        text: (data.message && data.message[0]) || "", confirmButtonColor: "#2a3f53" });
+          } else {
+            Swal.fire({ position: "center", icon: "success", title: data.success,
+                        showConfirmButton: false, timer: 1800 });
+          }
+        })
+        .catch(function() {
+          self.loadData();
+          Swal.fire({ icon: "error", title: "¡Ocurrió un error!",
+                      text: "No se pudo rechazar el gasto", confirmButtonColor: "#2a3f53" });
+        });
+    });
   }.bind(this);
 
 

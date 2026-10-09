@@ -32,11 +32,16 @@ class AccountingExpensesController < ApplicationController
   FILTER_KEYS = %i[cost_center_id user_invoice_id start_date end_date currency
                    budget_status type_identification_id payment_type_id q ids].freeze
 
+  # `Contabilidad · Ver todos` QUEDO INERTE (decision D6, 2026-10-09): quien
+  # entra al modulo ve todo lo aceptado, de cualquier persona, y la pantalla ya
+  # no pregunta por ese permiso. No se borra porque es una migracion de dato mas
+  # por un permiso que no estorba; si se le asigna a un rol, no cambia nada.
   def index
     @estados = {
+      # `approve` cubre CONTABILIZAR Y RECHAZAR: es el mismo permiso
+      # (`Contabilidad · Contabilizar`) y la pantalla no necesita distinguirlos.
       approve: is_admin? || has_menu_permission?("Contabilidad", "Contabilizar"),
-      export: is_admin? || has_menu_permission?("Contabilidad", "Exportar a excel"),
-      show_all: is_admin? || has_menu_permission?("Contabilidad", "Ver todos")
+      export: is_admin? || has_menu_permission?("Contabilidad", "Exportar a excel")
     }
 
     respond_to do |format|
@@ -125,6 +130,61 @@ class AccountingExpensesController < ApplicationController
                    register: ActiveModelSerializers::SerializableResource.new(expense, each_serializer: ReportExpenseSerializer) }
   end
 
+  # RECHAZAR DESDE CONTABILIDAD (M7, 2026-10-09). Lo puede hacer quien tiene
+  # `Contabilizar`: es quien revisa el soporte, y es quien encuentra la factura
+  # que no corresponde.
+  #
+  # RECHAZAR DESACEPTA (decision D5): el gasto pasa a "Rechazado", deja de
+  # consumir presupuesto y SALE DE ESTA PANTALLA, que solo muestra lo aceptado.
+  # Quien lo reporto recibe el mismo correo de decision que cuando rechaza el
+  # dueño del centro (callback del modelo, con EXPENSE_APPROVAL_EMAIL).
+  #
+  # Se busca dentro de `filtered_scope` y no con un `find` pelado: desde aqui
+  # solo se puede rechazar lo que esta pantalla muestra. Un id de un gasto en
+  # "Creado" o ya rechazado responde 404, que es tambien lo que ve quien tenia la
+  # tabla abierta mientras otro cambiaba el estado.
+  def reject_expense
+    return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Contabilizar")
+
+    expense = filtered_scope.find_by(id: params[:id])
+    if expense.nil?
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["El gasto ya no está en Contabilidad: alguien le cambió el estado. Recargue la tabla."] },
+                    status: :not_found
+    end
+
+    # UN GASTO CONTABILIZADO NO SE RECHAZA DIRECTO. Quedaria "Rechazado" y
+    # "Contabilizado" a la vez, que contablemente no significa nada. El contador
+    # retira primero la contabilizacion —un paso que ya existe y queda auditado—
+    # y despues rechaza.
+    if expense.accounting_approved
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["El gasto ya está contabilizado. Retire primero la contabilización y después recháce el gasto."] }
+    end
+
+    expense.rechazar(actor: current_user, motivo: params[:rejection_reason])
+
+    # `validate: false` POR EL MISMO MOTIVO QUE `update_accounting_state` usa
+    # `update_columns`: la mayoria de los gastos historicos no tienen
+    # `user_invoice_id` y el `save` normal falla con "User invoice must exist",
+    # que no tiene nada que ver con rechazar. Aqui NO se usa `update_columns`
+    # porque si hacen falta los callbacks: limpiar y fechar el rechazo, la
+    # columna `is_acepted`, la auditoria y el correo a quien reporto el gasto.
+    # Ninguna validacion mira el estado, asi que saltarlas no relaja nada.
+    expense.save(validate: false)
+
+    # Mismo recalculo que rechazar desde Gastos: el gasto deja de consumir cupo
+    # (se reevalua el par en FIFO) y deja de sumar en los viaticos del centro.
+    if expense.cost_center_id.present? && expense.user_invoice_id.present?
+      ExpenseBudgetService.reevaluate_center_user!(cost_center_id: expense.cost_center_id,
+                                                   user_id: expense.user_invoice_id,
+                                                   actor: current_user)
+    end
+    recalculate_cost_center(expense.cost_center_id, "reportes") if expense.cost_center_id.present?
+
+    render json: { success: "El gasto fue rechazado y salió de Contabilidad", type: "success" }
+  end
+
   def update_accounting_filter_values
     return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Contabilizar")
 
@@ -169,7 +229,6 @@ class AccountingExpensesController < ApplicationController
              else
                ReportExpense.accounting_visible
                             .includes(:cost_center, :user_invoice, :type_identification, :payment_type, :accounting_approved_by)
-                            .then { |s| ver_todos? ? s : s.where(user_invoice_id: current_user.id) }
                             .order(invoice_date: :desc)
              end
 
@@ -305,10 +364,6 @@ class AccountingExpensesController < ApplicationController
     @_is_admin ||= current_user.rol.name == "Administrador"
   end
 
-  def ver_todos?
-    is_admin? || has_menu_permission?("Contabilidad", "Ver todos")
-  end
-
   def forbidden!
     render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
            status: :forbidden
@@ -317,7 +372,7 @@ class AccountingExpensesController < ApplicationController
   def require_accounting_module!
     return if is_admin? || has_menu_permission?("Contabilidad")
 
-    if request.format.json? || request.path.start_with?("/get_", "/update_", "/download_file")
+    if request.format.json? || request.path.start_with?("/get_", "/update_", "/reject_", "/download_file")
       render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
              status: :forbidden
     else
@@ -354,9 +409,13 @@ class AccountingExpensesController < ApplicationController
     # un gasto sin aceptar, que es el caso peligroso.
     base = base.where(operational_state: ReportExpense::STATE_ACEPTADO)
 
+    # SIN RECORTE POR PERSONA (M7, 2026-10-09). Aqui habia un
+    # `where(user_invoice_id: current_user.id) unless ver_todos?`: un contador
+    # sin "Ver todos" solo veia SUS gastos, que en Contabilidad no sirve para
+    # nada —contabilidad causa los gastos de todos—. Quien entra al modulo ve
+    # todo lo aceptado; el permiso de entrar es el recorte.
     scope = base.includes(:cost_center, :user_invoice, :type_identification, :payment_type,
                           :last_user_edited, :user, :accounting_approved_by, :expense_budget)
-    scope = scope.where(user_invoice_id: current_user.id) unless ver_todos?
 
     scope = scope.where(id: accounting_ids)                                       if accounting_ids.present?
     scope = scope.where(cost_center_id: params[:cost_center_id])                  if params[:cost_center_id].present?

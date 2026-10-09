@@ -152,6 +152,7 @@ Rails.application.routes.draw do
   get "get_accounting_expenses", to: "accounting_expenses#get_accounting_expenses"
   patch "update_accounting_state/:id/:state", to: "accounting_expenses#update_accounting_state"
   patch "update_accounting_filter_values", to: "accounting_expenses#update_accounting_filter_values"
+  patch "reject_accounting_expense/:id", to: "accounting_expenses#reject_expense"
   get "download_file/accounting_expenses/:type", to: "accounting_expenses#download_file"
   get "download_receipts/accounting_expenses", to: "accounting_expenses#download_receipts"
   resources :notification_alerts, :only => [:index]

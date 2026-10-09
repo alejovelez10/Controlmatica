@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 # Los cinco endpoints de Contabilidad (paquete 06, bloque B).
 #
@@ -22,6 +23,12 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     @contador = users(:contador)
     @ingeniero = users(:ingeniero)
     @centro = cost_centers(:centro_con_viaticos)
+
+    # Deuda preexistente del legado, la misma que compensa
+    # report_expenses_controller_test: CostCenter#change_state multiplica
+    # hour_cotizada * eng_hours sin guarda de nil y revienta en cuanto
+    # recalculate_cost_center —que ahora corre al rechazar— actualiza el centro.
+    @centro.update_columns(hour_cotizada: 0.0, eng_hours: 0.0)
   end
 
   # `is_acepted: true` por defecto: Contabilidad SOLO ve gastos aprobados
@@ -54,9 +61,12 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
 
   # Contador con acceso al modulo pero SIN "Aprobar" ni "Exportar a excel":
   # es el usuario con el que se prueban los gates de accion.
+  #
+  # Los dos helpers REVOCAN "Ver todos" en vez de concederlo (M7, 2026-10-09):
+  # asi todo este archivo corre sin el permiso y prueba que ya no hace falta.
   def contador_solo_ingreso
     grant_permission!(rols(:contador), "Contabilidad", "Ingreso al modulo")
-    grant_permission!(rols(:contador), "Contabilidad", "Ver todos")
+    revoke_permission!(rols(:contador), "Contabilidad", "Ver todos")
     revoke_permission!(rols(:contador), "Contabilidad", "Contabilizar")
     revoke_permission!(rols(:contador), "Contabilidad", "Exportar a excel")
     @contador
@@ -64,7 +74,7 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
 
   def contador_aprobador
     grant_permission!(rols(:contador), "Contabilidad", "Ingreso al modulo")
-    grant_permission!(rols(:contador), "Contabilidad", "Ver todos")
+    revoke_permission!(rols(:contador), "Contabilidad", "Ver todos")
     grant_permission!(rols(:contador), "Contabilidad", "Contabilizar")
     @contador
   end
@@ -80,7 +90,7 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "No tiene permiso para ingresar al módulo de Contabilidad", flash[:alert]
   end
 
-  test "index con permiso arma los tres estados" do
+  test "index con permiso arma los dos estados" do
     # La plantilla HTML es del paquete 09. Se consulta en JSON para poder
     # verificar el contrato de `@estados` sin inventar un ERB provisional.
     sign_in_as @admin
@@ -88,8 +98,8 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     get accounting_expenses_path, as: :json
 
     assert_response :success
-    assert_equal %w[approve export show_all], json_body["estados"].keys.sort
-    assert_equal [true, true, true], json_body["estados"].values_at("approve", "export", "show_all")
+    assert_equal %w[approve export], json_body["estados"].keys.sort
+    assert_equal [true, true], json_body["estados"].values_at("approve", "export")
   end
 
   test "index en JSON tambien responde 403 sin permiso de modulo" do
@@ -332,19 +342,17 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
 
   test "download_receipts respeta el recorte de la pantalla, no los ids a secas" do
     # Sin el `filtered_scope`, mandar ids a mano bajaria comprobantes de gastos
-    # que el usuario no tiene permiso ni de ver en la tabla.
-    ajeno = gasto_con_comprobante(user_invoice: @ingeniero)
+    # que la tabla no muestra. Desde M7 el recorte ya no es por persona sino por
+    # estado: un gasto en "Creado" no esta en Contabilidad.
+    sin_aceptar = gasto_con_comprobante(is_acepted: false)
     contador = contador_solo_ingreso
-    # Necesita el permiso de exportar (es el gate del ZIP) pero NO "Ver todos":
-    # ese es exactamente el usuario que el recorte tiene que frenar.
     grant_permission!(rols(:contador), "Contabilidad", "Exportar a excel")
-    revoke_permission!(rols(:contador), "Contabilidad", "Ver todos")
     sign_in_as contador
 
-    get "/download_receipts/accounting_expenses", params: { ids: [ajeno.id] }
+    get "/download_receipts/accounting_expenses", params: { ids: [sin_aceptar.id] }
 
     assert_response :success
-    refute_includes entradas_del_zip, nombre_esperado(ajeno)
+    refute_includes entradas_del_zip, nombre_esperado(sin_aceptar)
   end
 
   test "download_receipts sin permiso de exportar responde 403" do
@@ -422,19 +430,152 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
     assert_includes assert_json_list.map { |r| r["id"] }, gasto.id
   end
 
-  test "sin Ver todos solo devuelve los gastos propios" do
-    crear_gasto(user_invoice: @ingeniero)
+  test "sin Ver todos el contador ve los gastos de todos" do
+    # M7 (2026-10-09): "contabilidad no necesita ver todos, el que entra puede
+    # verlos". Antes este mismo contador solo veia los gastos a su nombre.
+    ajeno = crear_gasto(user_invoice: @ingeniero)
     propio = crear_gasto(user_invoice: @contador)
-    contador = contador_solo_ingreso
-    revoke_permission!(rols(:contador), "Contabilidad", "Ver todos")
-    sign_in_as contador
+    sign_in_as contador_solo_ingreso
 
     get get_accounting_expenses_path
 
-    filas = assert_json_list
-    assert_includes filas.map { |r| r["id"] }, propio.id
-    assert filas.all? { |r| r["user_invoice_id"] == contador.id },
-           "un contador sin 'Ver todos' no puede ver los gastos de otros"
+    ids = assert_json_list.map { |r| r["id"] }
+    assert_includes ids, ajeno.id
+    assert_includes ids, propio.id
+  end
+
+  test "el Excel completo tampoco recorta por persona" do
+    ajeno = crear_gasto(user_invoice: @ingeniero, invoice_name: "Hotel del ingeniero")
+    contador = contador_solo_ingreso
+    grant_permission!(rols(:contador), "Contabilidad", "Exportar a excel")
+    sign_in_as contador
+
+    get "/download_file/accounting_expenses/todos"
+
+    assert_response :success
+    assert_includes celdas_del_excel, ajeno.invoice_name
+  end
+
+  # --- Rechazar desde Contabilidad (M7, 2026-10-09) --------------------------
+
+  test "rechazar deja el gasto rechazado con quien y por que" do
+    gasto = crear_gasto
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}", params: { rejection_reason: "La factura no es del proyecto" }
+
+    assert_equal "success", json_body["type"]
+    gasto.reload
+    assert gasto.rechazado?
+    assert_equal @contador.id, gasto.rejected_by_id
+    assert_equal "La factura no es del proyecto", gasto.rejection_reason
+    assert_equal false, ReportExpense.where(id: gasto.id).pick(:is_acepted)
+  end
+
+  test "el gasto rechazado sale de Contabilidad" do
+    # Decision D5: rechazar DESACEPTA, y la pantalla solo muestra lo aceptado.
+    gasto = crear_gasto
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+    get get_accounting_expenses_path
+
+    refute_includes assert_json_list.map { |r| r["id"] }, gasto.id
+  end
+
+  test "rechazar sin motivo tambien se puede" do
+    gasto = crear_gasto
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    assert gasto.reload.rechazado?
+    assert_nil gasto.rejection_reason
+  end
+
+  test "rechazar sin permiso de contabilizar responde 403" do
+    gasto = crear_gasto
+    sign_in_as contador_solo_ingreso
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    assert_json_forbidden
+    assert gasto.reload.aceptado?
+  end
+
+  test "rechazar sin permiso de modulo responde 403 y no redirige" do
+    gasto = crear_gasto
+    sign_in_as users(:sin_permisos)
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    assert_json_forbidden
+  end
+
+  test "no se rechaza un gasto contabilizado" do
+    # Quedaria "Rechazado" y "Contabilizado" a la vez. Se retira primero la
+    # contabilizacion, que queda auditada, y despues se rechaza.
+    gasto = crear_gasto(accounting_approved: true, accounting_approved_at: Time.zone.now)
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    assert_json_error(incluye: "Retire primero la contabilización")
+    assert gasto.reload.aceptado?
+  end
+
+  test "no se rechaza desde aqui un gasto que no esta en Contabilidad" do
+    # Un gasto en "Creado" no lo muestra esta pantalla: rechazarlo es cosa del
+    # dueño del centro, desde Gastos o desde el correo.
+    gasto = crear_gasto(is_acepted: false)
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    assert_response :not_found
+    assert gasto.reload.creado?
+  end
+
+  test "rechazar un gasto historico sin responsable funciona" do
+    # La mayoria de los gastos historicos no tienen `user_invoice_id` y un
+    # `save` con validaciones falla con "User invoice must exist". Es el mismo
+    # caso que obligo a `update_accounting_state` a usar `update_columns`.
+    gasto = crear_gasto
+    gasto.update_columns(user_invoice_id: nil)
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    assert_equal "success", json_body["type"]
+    assert gasto.reload.rechazado?
+  end
+
+  test "rechazar reevalua el presupuesto del par" do
+    gasto = crear_gasto
+    llamadas = []
+    sign_in_as contador_aprobador
+
+    ExpenseBudgetService.stub(:reevaluate_center_user!, ->(**kw) { llamadas << kw }) do
+      patch "/reject_accounting_expense/#{gasto.id}"
+    end
+
+    assert_equal 1, llamadas.size, "Rechazar libera cupo: el par se tiene que reevaluar"
+    assert_equal [@centro.id, @ingeniero.id], llamadas.first.values_at(:cost_center_id, :user_id)
+  end
+
+  test "rechazar recalcula los viaticos del centro sin el gasto rechazado" do
+    # "En ese caso se recalcula" (pedido del cliente). Un rechazado no suma en
+    # viaticos, pero el valor del centro esta GUARDADO: si no se recalcula, el
+    # AIU del centro sigue contando el gasto hasta la siguiente edicion.
+    gasto = crear_gasto
+    @centro.update_columns(viat_costo_real: 999_999_999)
+    sign_in_as contador_aprobador
+
+    patch "/reject_accounting_expense/#{gasto.id}"
+
+    esperado = @centro.reports.sum(:viatic_value) + @centro.report_expenses.suman_en_centro.sum(:invoice_value)
+    assert_in_delta esperado, @centro.reload.viat_costo_real.to_f, 0.01
+    refute_includes @centro.report_expenses.suman_en_centro.pluck(:id), gasto.id
   end
 
   test "q busca por id de registro" do
@@ -734,6 +875,19 @@ class AccountingExpensesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  # Todas las celdas del .xlsx de la respuesta, como texto. Mismo armado que la
+  # prueba del filtro de exportacion: Roo necesita un archivo en disco.
+  def celdas_del_excel
+    tmp = Tempfile.new(["export", ".xlsx"])
+    tmp.binmode
+    tmp.write(response.body)
+    tmp.flush
+    Roo::Excelx.new(tmp.path).to_a.flatten.map(&:to_s)
+  ensure
+    tmp.close
+    tmp.unlink
+  end
 
   # Baja MAX_BULK para probar el desborde sin crear 501 gastos. La constante se
   # restaura siempre, incluso si el bloque lanza.
