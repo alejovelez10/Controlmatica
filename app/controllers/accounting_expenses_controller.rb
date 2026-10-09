@@ -235,24 +235,10 @@ class AccountingExpensesController < ApplicationController
     render xlsx: "Contabilidad de gastos", template: "accounting_expenses/download_file.xlsx.axlsx"
   end
 
-  # ZIP con los comprobantes de los gastos seleccionados.
-  #
-  # POR QUE UN ZIP Y NO N DESCARGAS: contabilidad causa por lotes y bajar treinta
-  # archivos de uno en uno, cada uno con su dialogo del navegador, no es una
-  # tarea que alguien vaya a hacer. El limite es el mismo MAX_BULK de la
-  # aprobacion masiva: el criterio de "cuantos gastos caben en una operacion" no
-  # puede depender de cual boton se pulso.
-  #
-  # SE ARMA EN MEMORIA y no en disco: Heroku tiene filesystem efimero y un
-  # Tempfile que sobreviva a la respuesta es una fuga. Con el tope de 20 MB por
-  # comprobante y MAX_BULK gastos el peor caso teorico es grande, pero el real no
-  # —una seleccion de contabilidad son decenas de facturas de pocos cientos de
-  # KB—. Si algun dia se vuelve un problema, el cambio es a `zip_tricks` en
-  # streaming, no a escribir en disco.
-  #
-  # Los gastos SIN comprobante no revientan el ZIP: se listan en un
-  # `FALTANTES.txt` dentro del propio archivo. Un ZIP con 28 de 30 facturas y sin
-  # decir cuales faltan es peor que uno que lo diga.
+  # ZIP con los comprobantes de los gastos seleccionados. COMO se empaqueta
+  # (nombres, faltantes, en memoria) vive en ReceiptsZip, que comparte con la
+  # pantalla de Gastos; aqui se decide QUE entra: el permiso, el tope y el
+  # recorte de esta pantalla.
   def download_receipts
     return forbidden! unless is_admin? || has_menu_permission?("Contabilidad", "Exportar a excel")
 
@@ -267,97 +253,18 @@ class AccountingExpensesController < ApplicationController
     end
 
     # `filtered_scope` y no `ReportExpense.where(id:)`: la descarga tiene que
-    # respetar los mismos recortes que la pantalla (aceptados, y solo los propios
-    # para quien no tiene "Ver todos"). Sin esto, mandar ids a mano bajaria
-    # comprobantes de gastos que el usuario no puede ni ver.
+    # respetar el mismo recorte que la pantalla (solo lo aceptado). Sin esto,
+    # mandar ids a mano bajaria comprobantes de gastos que esta pantalla no
+    # muestra.
     gastos = filtered_scope.order(:id)
 
-    faltantes = []
-    usados = {}
-    buffer = Zip::OutputStream.write_buffer do |zip|
-      gastos.each do |gasto|
-        unless gasto.receipt_file.present?
-          faltantes << "##{gasto.id} - #{gasto.invoice_name} (#{gasto.invoice_number})"
-          next
-        end
-
-        contenido = leer_comprobante(gasto)
-        if contenido.nil?
-          faltantes << "##{gasto.id} - #{gasto.invoice_name}: el archivo no se pudo leer"
-          next
-        end
-
-        zip.put_next_entry(nombre_en_zip(gasto, usados))
-        zip.write(contenido)
-      end
-
-      if faltantes.any?
-        zip.put_next_entry("FALTANTES.txt")
-        zip.write("Gastos seleccionados que no tienen comprobante adjunto:\n\n" + faltantes.join("\n") + "\n")
-      end
-    end
-
-    buffer.rewind
-    send_data buffer.read,
-              filename: "comprobantes-#{Date.current.strftime('%Y%m%d')}.zip",
+    send_data ReceiptsZip.build(gastos),
+              filename: ReceiptsZip.nombre_de_descarga,
               type: "application/zip",
               disposition: "attachment"
   end
 
   private
-
-# Bytes del comprobante, vengan de S3 o del disco. Devuelve nil si el archivo
-  # ya no esta: un comprobante borrado del bucket no puede tumbar la descarga
-  # entera de las otras 29 facturas.
-  def leer_comprobante(gasto)
-    gasto.receipt_file.read
-  rescue StandardError => e
-    Rails.logger.error("[accounting] comprobante #{gasto.id} ilegible: #{e.class}: #{e.message}")
-    nil
-  end
-
-  # NOMBRE DE CADA COMPROBANTE DENTRO DEL ZIP (2026-09-21).
-  #
-  #   2026-09-21 - CLARO SOLUCIONES SA - FV-12345.pdf
-  #
-  # Antes era "#{id}-#{nombre original}", o sea "25704-IMG_0431.jpg": para
-  # contabilidad eso no es un nombre, es un acertijo. Ahora lleva los tres datos
-  # con los que se busca una factura: fecha, tercero y numero.
-  #
-  # LA FECHA VA AL REVES DE COMO SE LEE (ano-mes-dia y no dia-mes) A PROPOSITO.
-  # El explorador de archivos ordena alfabeticamente, asi que con dia-mes un ZIP
-  # de fin de ano lista "01-12" antes que "28-11" y el lote queda revuelto justo
-  # cuando mas facturas trae. Con ano-mes-dia el orden alfabetico ES el orden
-  # cronologico, y los dos datos que se pidieron siguen ahi.
-  #
-  # `invoice_date` y no `created_at`: es la fecha de la factura, que es por la
-  # que causa contabilidad. El fallback existe solo por los gastos historicos
-  # que se importaron sin ella.
-  def nombre_en_zip(gasto, usados)
-    fecha  = (gasto.invoice_date || gasto.created_at).strftime("%Y-%m-%d")
-    partes = [fecha, limpiar_para_archivo(gasto.invoice_name), limpiar_para_archivo(gasto.invoice_number)]
-    base   = partes.reject(&:blank?).join(" - ")
-    unico(base, File.extname(gasto.receipt_file.file.filename.to_s).downcase, usados)
-  end
-
-  # Windows rechaza \ / : * ? " < > | en un nombre de archivo, y un ZIP que no
-  # se puede extraer alla no le sirve a nadie: la razon social del tercero trae
-  # puntos y comas sin problema, pero un "S.A.S / SUCURSAL" rompe la extraccion.
-  # Se recorta a 60 porque hay razones sociales de mas de 100 caracteres y la
-  # ruta completa en Windows tiene tope.
-  def limpiar_para_archivo(texto)
-    texto.to_s.gsub(%r{[\\/:*?"<>|]}, " ").gsub(/[[:cntrl:]]/, "").squish.truncate(60, omission: "")
-  end
-
-  # Dos gastos del mismo dia, mismo tercero y misma factura (un duplicado, o dos
-  # sin numero) chocarian en el mismo nombre, y varios descompresores se quedan
-  # con el ultimo SIN avisar: el ZIP saldria con menos archivos de los que dice.
-  # El sufijo solo aparece cuando hace falta.
-  def unico(base, extension, usados)
-    usados[base] = usados.fetch(base, 0) + 1
-    repetido = usados[base]
-    repetido > 1 ? "#{base} (#{repetido})#{extension}" : "#{base}#{extension}"
-  end
 
   # Memoizado para no repetir la query del rol en cada gate.
   def is_admin?

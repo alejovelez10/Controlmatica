@@ -82,6 +82,7 @@ Rails.application.routes.draw do
   resources :report_expenses, :except => [:show, :new, :edit]
   patch "update_filter_values", to: "report_expenses#update_filter_values"
   get "download_file/report_expenses/:type", to: "report_expenses#download_file"
+  get "download_receipts/report_expenses", to: "report_expenses#download_receipts"
 
   post "upload_file/report_expenses", to: "report_expenses#upload_file"
   # Plantilla de importacion. Se genera contra la base en cada descarga (ver

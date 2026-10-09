@@ -229,4 +229,108 @@ class ReportExpensesExportTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # --- Solo los seleccionados y sus comprobantes (M10, 2026-10-09) ------------
+
+  def ids_del_excel
+    hoja_de_la_respuesta { |hoja| return (2..hoja.last_row).map { |i| hoja.row(i)[0] } }
+  end
+
+  def con_comprobante(gasto)
+    as_user(@admin) do
+      gasto.receipt_file = upload_fixture("comprobante.pdf")
+      gasto.save!
+    end
+    gasto
+  end
+
+  def entradas_del_zip
+    Zip::File.open_buffer(response.body) { |zip| return zip.map(&:name) }
+  end
+
+  def texto_del_zip(nombre)
+    Zip::File.open_buffer(response.body) { |zip| return zip.read(nombre) }
+  end
+
+  test "exportar con ids baja solo los seleccionados" do
+    marcado = crear_gasto(invoice_name: "MARCADO")
+    otro = crear_gasto(invoice_name: "NO MARCADO")
+    sign_in_as @admin
+
+    get "/download_file/report_expenses/seleccion.xlsx", params: { ids: [marcado.id], scope: "all" }
+
+    assert_response :success
+    ids = ids_del_excel
+    assert_equal [marcado.id], ids
+    refute_includes ids, otro.id
+  end
+
+  test "la seleccion manda sobre los filtros" do
+    # Marco tres filas y pulso "Exportar seleccionados": quiero esas, aunque el
+    # filtro aplicado traiga otras.
+    marcado = crear_gasto(invoice_name: "MARCADO", invoice_date: Date.new(2026, 1, 15))
+    sign_in_as @admin
+
+    get "/download_file/report_expenses/filtro.xlsx",
+        params: { ids: [marcado.id], scope: "all", start_date: "2026-06-01" }
+
+    assert_equal [marcado.id], ids_del_excel
+  end
+
+  test "los ids que la pestaña no deja ver no se exportan" do
+    ajeno = crear_gasto(user_invoice: users(:ingeniero_dos))
+    sign_in_as users(:ingeniero)
+    grant_permission!(rols(:ingeniero), "Gastos", "Exportar a excel")
+
+    get "/download_file/report_expenses/seleccion.xlsx", params: { ids: [ajeno.id], scope: "mine" }
+
+    assert_response :success
+    assert_empty ids_del_excel
+  end
+
+  test "descargar comprobantes de la seleccion arma el ZIP y lista los faltantes" do
+    con = con_comprobante(crear_gasto(invoice_name: "CLARO SOLUCIONES", invoice_number: "FV-1"))
+    sin = crear_gasto(invoice_name: "SIN SOPORTE", invoice_number: "FV-2")
+    sign_in_as @admin
+
+    get "/download_receipts/report_expenses", params: { ids: [con.id, sin.id], scope: "all" }
+
+    assert_response :success
+    assert_equal "application/zip", response.media_type
+    entradas = entradas_del_zip
+    # Mismo nombre que el ZIP de Contabilidad: fecha - tercero - factura.
+    assert_includes entradas, "2026-06-01 - CLARO SOLUCIONES - FV-1.pdf"
+    assert_includes entradas, "FALTANTES.txt"
+    assert_includes texto_del_zip("FALTANTES.txt"), "##{sin.id} - SIN SOPORTE"
+  end
+
+  test "los comprobantes que la pestaña no deja ver no entran al ZIP" do
+    ajeno = con_comprobante(crear_gasto(user_invoice: users(:ingeniero_dos), invoice_name: "AJENO"))
+    propio = con_comprobante(crear_gasto(invoice_name: "PROPIO"))
+    sign_in_as users(:ingeniero)
+    grant_permission!(rols(:ingeniero), "Gastos", "Exportar a excel")
+
+    get "/download_receipts/report_expenses", params: { ids: [ajeno.id, propio.id], scope: "mine" }
+
+    assert_response :success
+    entradas = entradas_del_zip
+    assert entradas.any? { |e| e.include?("PROPIO") }
+    refute entradas.any? { |e| e.include?("AJENO") }
+  end
+
+  test "descargar comprobantes sin permiso de exportar responde 403" do
+    gasto = crear_gasto
+    sign_in_as users(:ingeniero) # el rol ingeniero no trae "Exportar a excel"
+
+    get "/download_receipts/report_expenses", params: { ids: [gasto.id] }
+
+    assert_json_forbidden
+  end
+
+  test "descargar comprobantes sin seleccion responde un error entendible" do
+    sign_in_as @admin
+
+    get "/download_receipts/report_expenses"
+
+    assert_json_error(incluye: "Seleccione al menos un gasto")
+  end
 end

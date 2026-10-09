@@ -50,6 +50,11 @@ function scopeInicial(estados) {
   return porDefecto;
 }
 
+// Tope de la seleccion para exportar y descargar comprobantes. Es el mismo
+// ReceiptsZip::MAX del servidor (y el MAX_BULK de Contabilidad): pasarse aqui
+// solo serviria para que el servidor lo rechace.
+var MAX_SELECCION = 500;
+
 var EMPTY_FILTERS = {
   cost_center_id: "",
   user_invoice_id: "",
@@ -248,6 +253,11 @@ class ReportExpenseIndex extends React.Component {
       // entrar a Gastos uno viene a ver los propios. Con `?scope=` en la URL
       // manda eso (ver `scopeInicial`), que es como aterriza el correo.
       scope: scopeInicial(props.estados),
+      // SELECCION MULTIPLE (M10, 2026-10-09): para exportar solo lo marcado y
+      // bajar sus comprobantes. Se conserva al paginar —se arma un lote de
+      // varias paginas— y se limpia al cambiar de pestaña, filtro o busqueda,
+      // porque ahi el conjunto de fondo ya es otro.
+      selectedIds: [],
       // Filters
       showFilters: false,
       isFiltering: false,
@@ -566,7 +576,7 @@ class ReportExpenseIndex extends React.Component {
 
   handlePageChange = function(page) { this.loadData(page); }.bind(this);
   handlePerPageChange = function(pp) { this.loadData(1, pp); }.bind(this);
-  handleSearch = function(term) { this.loadData(1, undefined, term); }.bind(this);
+  handleSearch = function(term) { this.setState({ selectedIds: [] }); this.loadData(1, undefined, term); }.bind(this);
   handleSort = function(key, dir) { this.loadData(1, undefined, undefined, key, dir); }.bind(this);
 
   toggleFilters = function() {
@@ -574,7 +584,7 @@ class ReportExpenseIndex extends React.Component {
     var willClose = this.state.showFilters;
     this.setState({ showFilters: !this.state.showFilters }, function() {
       if (willClose) {
-        self.setState({ filters: Object.assign({}, EMPTY_FILTERS), filterCostCenter: null, filterUser: null, filterCostCenterOptions: [], isFiltering: false }, function() {
+        self.setState({ filters: Object.assign({}, EMPTY_FILTERS), filterCostCenter: null, filterUser: null, filterCostCenterOptions: [], isFiltering: false, selectedIds: [] }, function() {
           self.loadData(1);
         });
       }
@@ -602,12 +612,102 @@ class ReportExpenseIndex extends React.Component {
   }.bind(this);
 
   applyFilters = function() {
-    this.setState({ isFiltering: true });
+    this.setState({ isFiltering: true, selectedIds: [] });
     this.loadData(1);
   }.bind(this);
 
   clearFilters = function() {
-    this.setState({ filters: Object.assign({}, EMPTY_FILTERS), filterCostCenter: null, filterUser: null, filterCostCenterOptions: [], isFiltering: false }, this.loadData.bind(this, 1));
+    this.setState({ filters: Object.assign({}, EMPTY_FILTERS), filterCostCenter: null, filterUser: null, filterCostCenterOptions: [], isFiltering: false, selectedIds: [] }, this.loadData.bind(this, 1));
+  }.bind(this);
+
+  // --- Seleccion multiple (M10) ----------------------------------------------
+  // Mismo manejo que Contabilidad: CmDataTable pinta los checkboxes y avisa;
+  // la lista de ids vive aqui.
+  toggleRow = function(row) {
+    var ids = this.state.selectedIds.slice();
+    var i = ids.indexOf(row.id);
+    if (i === -1) { ids.push(row.id); } else { ids.splice(i, 1); }
+    this.setState({ selectedIds: ids });
+  }.bind(this);
+
+  toggleAllPage = function(rows, checked) {
+    var ids = this.state.selectedIds.slice();
+    rows.forEach(function(r) {
+      var i = ids.indexOf(r.id);
+      if (checked && i === -1) { ids.push(r.id); }
+      if (!checked && i !== -1) { ids.splice(i, 1); }
+    });
+    this.setState({ selectedIds: ids });
+  }.bind(this);
+
+  clearSelection = function() { this.setState({ selectedIds: [] }); }.bind(this);
+
+  // La PESTAÑA viaja con los ids: el servidor recorta la descarga a lo que esa
+  // pestaña deja ver, igual que la tabla. Sin ella, ids marcados en "Todos los
+  // gastos" se recortarian contra el permiso a secas.
+  //
+  // `window.location` y no `fetch`: las dos respuestas son binarios con
+  // Content-Disposition: attachment y lo que se quiere es que el navegador los
+  // guarde. Con fetch habria que materializar el blob en memoria para lo mismo.
+  urlDeSeleccion = function(base) {
+    var params = this.state.selectedIds.map(function(id) { return "ids[]=" + id; });
+    if (this.state.scope) params.push("scope=" + this.state.scope);
+    return base + "?" + params.join("&");
+  }.bind(this);
+
+  exportSelected = function() {
+    var n = this.state.selectedIds.length;
+    if (n === 0 || n > MAX_SELECCION) return;
+    window.location = this.urlDeSeleccion("/download_file/report_expenses/seleccion.xlsx");
+  }.bind(this);
+
+  downloadSelectedReceipts = function() {
+    var n = this.state.selectedIds.length;
+    if (n === 0 || n > MAX_SELECCION) return;
+    window.location = this.urlDeSeleccion("/download_receipts/report_expenses");
+  }.bind(this);
+
+  // La barra aparece SOLO con algo marcado, y cada boton dice cuantos gastos
+  // baja: el "Exportar" de arriba sigue bajando el filtro completo, y dos
+  // botones que exportan cosas distintas tienen que distinguirse a la vista.
+  renderSelectionBar = function() {
+    var self = this;
+    var n = this.state.selectedIds.length;
+    if (n === 0 || !this.props.estados.export) return null;
+    var overLimit = n > MAX_SELECCION;
+
+    return React.createElement("div", { className: "cm-dt-selection-bar", "data-testid": "expense-selection-bar" },
+      React.createElement("span", null,
+        React.createElement("strong", { "data-testid": "expense-selection-count" }, String(n)),
+        " seleccionados"
+      ),
+      React.createElement("button", {
+        type: "button",
+        className: "cm-btn cm-btn-outline cm-btn-sm",
+        onClick: self.exportSelected,
+        disabled: overLimit,
+        title: "Exporta a Excel solo los gastos seleccionados",
+        "data-testid": "expense-export-selected"
+      }, React.createElement("i", { className: "fas fa-file-excel" }), " Exportar seleccionados (" + n + ")"),
+      React.createElement("button", {
+        type: "button",
+        className: "cm-btn cm-btn-outline cm-btn-sm",
+        onClick: self.downloadSelectedReceipts,
+        disabled: overLimit,
+        title: "Descarga los comprobantes de los gastos seleccionados en un ZIP",
+        "data-testid": "expense-download-receipts"
+      }, React.createElement("i", { className: "fas fa-file-archive" }), " Descargar comprobantes (" + n + ")"),
+      React.createElement("button", {
+        type: "button",
+        className: "cm-btn cm-btn-outline cm-btn-sm",
+        onClick: self.clearSelection,
+        "data-testid": "expense-clear-selection"
+      }, React.createElement("i", { className: "fas fa-times" }), " Limpiar selección"),
+      overLimit
+        ? React.createElement("span", { className: "cm-hint", style: { color: "#dc3545", width: "100%" } },
+            "Máximo " + MAX_SELECCION + " por descarga. Reduzca la selección.")
+        : null
+    );
   }.bind(this);
 
   // La confirmacion es el UNICO freno de esta accion: /update_filter_values NO
@@ -660,7 +760,9 @@ class ReportExpenseIndex extends React.Component {
   // conjunto"— y limpiarlos aqui obligaria a rehacerlos en cada salto.
   handleScopeChange = function(scope) {
     if (scope === this.state.scope) return;
-    this.setState({ scope: scope }, this.loadData.bind(this, 1));
+    // La seleccion SI se limpia: los ids marcados eran de otro conjunto, y
+    // exportarlos desde esta pestaña recortaria en silencio los que no caben.
+    this.setState({ scope: scope, selectedIds: [] }, this.loadData.bind(this, 1));
   }.bind(this);
 
   openNewModal = function() {
@@ -2586,6 +2688,8 @@ class ReportExpenseIndex extends React.Component {
 
       this.state.showFilters && this.renderFilters(),
 
+      this.renderSelectionBar(),
+
       React.createElement(CmDataTable, {
         columns: this.columns,
         data: this.state.data,
@@ -2597,6 +2701,12 @@ class ReportExpenseIndex extends React.Component {
         onPerPageChange: this.handlePerPageChange,
         onSearch: this.handleSearch,
         actions: this.getRowActions,
+        // Los checkboxes solo con permiso de exportar: es lo unico que se hace
+        // con la seleccion, y sin el permiso el servidor responde 403.
+        selectable: !!this.props.estados.export,
+        selectedIds: this.state.selectedIds,
+        onToggleRow: this.toggleRow,
+        onToggleAllPage: this.toggleAllPage,
         headerActions: this.renderHeaderActions(),
         // El vacio se explica por la pestaña. "No hay gastos registrados" en
         // "Centros a mi cargo" se lee como que el modulo esta vacio, cuando lo

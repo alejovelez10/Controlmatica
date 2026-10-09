@@ -562,7 +562,14 @@ class ReportExpensesController < ApplicationController
     # la pestaña nueva serian seis. El Excel exporta lo que el usuario ve.
     visible = apply_expense_scope(ReportExpense.all)
 
-    @items = if params[:type] == "filtro"
+    @items = if ids_seleccionados.present?
+               # SOLO LOS SELECCIONADOS (M10, 2026-10-09), y la seleccion manda
+               # sobre los filtros: si alguien marco tres filas y pulso
+               # "Exportar seleccionados", quiere esas tres aunque el filtro
+               # tenga trescientas. Siempre DENTRO de `visible`: mandar ids a
+               # mano no exporta gastos que la pestaña no le deja ver.
+               visible.where(id: ids_seleccionados).order(invoice_date: :desc)
+             elsif params[:type] == "filtro"
                # Mismos filtros que la tabla: el Excel tiene que exportar
                # exactamente lo que el usuario esta viendo, incluidos los cuatro
                # filtros nuevos.
@@ -670,6 +677,32 @@ class ReportExpensesController < ApplicationController
     #  end
   end
 
+  # ZIP CON LOS COMPROBANTES DE LOS SELECCIONADOS (M10, 2026-10-09): "que
+  # tambien pueda exportar los comprobantes" desde Gastos, como ya hace
+  # Contabilidad. El empaquetado es el MISMO (ReceiptsZip); aqui se decide que
+  # entra: el permiso de exportar de Gastos, el tope y lo que la pestaña deja
+  # ver. Un id que la pestaña no muestra se ignora en silencio, igual que en
+  # Contabilidad: responder 403 diria que ese gasto existe.
+  def download_receipts
+    return forbidden! unless permiso_de_gastos?("Exportar a excel")
+
+    if ids_seleccionados.blank?
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["Seleccione al menos un gasto"] }
+    end
+    if ids_seleccionados.size > ReceiptsZip::MAX
+      return render json: { success: "¡Ocurrió un error!", type: "error",
+                            message: ["Máximo #{ReceiptsZip::MAX} gastos por descarga"] }
+    end
+
+    gastos = apply_expense_scope(ReportExpense.all).where(id: ids_seleccionados).order(:id)
+
+    send_data ReceiptsZip.build(gastos),
+              filename: ReceiptsZip.nombre_de_descarga,
+              type: "application/zip",
+              disposition: "attachment"
+  end
+
   private
 
   # Memoizado para evitar queries repetidas de rol (204ms -> ~0ms)
@@ -687,6 +720,12 @@ class ReportExpensesController < ApplicationController
   def forbidden!
     render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
            status: :forbidden
+  end
+
+  # `params.permit(ids: [])` y no `params[:ids]` a secas: sin el permit, Rails
+  # 6.1 lanza al convertir un array de parametros no permitidos.
+  def ids_seleccionados
+    @_ids_seleccionados ||= params.permit(ids: [])[:ids] || []
   end
 
   def permiso_de_gastos?(accion)
