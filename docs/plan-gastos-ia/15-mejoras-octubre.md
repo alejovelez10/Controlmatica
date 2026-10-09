@@ -49,16 +49,16 @@ M8**, así que va temprano aunque no sea la más vistosa.
 
 | # | Mejora | Punto original | Depende de |
 |---|---|---|---|
-| **M1** | Candados de servidor para crear, editar, eliminar, aceptar y exportar | — (prerequisito) | — |
+| **M1** | ✅ Candados de servidor para crear, editar, eliminar, aceptar y exportar | — (prerequisito) | — |
 | **M2** | ✅ Estado de rechazo (campo, etiqueta, filtros, Excel) | 3 (parte 1) | — |
 | **M3** | ✅ Campo observaciones | 2 | — |
-| **M4** | Dos permisos de aceptar: "Aceptar gasto" y "Aceptar todos los gastos" | 1 | M1 |
+| **M4** | ✅ Dos permisos de aceptar: "Aceptar gasto" y "Aceptar todos los gastos" | 1 | M1 |
 | **M5** | ✅ Rechazar (pantalla + correo) y correo de respuesta al responsable | 3 (parte 2) | M1, M2 |
-| **M6** | Al editar, el gasto vuelve a Creado y se vuelve a avisar | 4 | M2, M5 |
-| **M7** | Contabilidad rechaza, y deja de necesitar "Ver todos" | 5 | M2, M5 |
+| **M6** | ✅ Al editar, el gasto vuelve a Creado y se vuelve a avisar | 4 | M2, M5 |
+| **M7** | ✅ Contabilidad rechaza, y deja de necesitar "Ver todos" | 5 | M2, M5 |
 | **M8** | ✅ Un gasto rechazado no suma en viáticos ni en presupuesto | 6 | M2 |
 | **M9** | ✅ Esconder el botón de subir Excel | 7 | — |
-| **M10** | Exportar en Gastos: solo los seleccionados y los comprobantes | 8 | M1 |
+| **M10** | ✅ Exportar en Gastos: solo los seleccionados y los comprobantes | 8 | M1 |
 
 ### M1 — Candados de servidor (prerequisito)
 
@@ -260,10 +260,58 @@ Se registran porque el mapeo los encontró, no porque se vayan a hacer.
 | 1 | M9 + M3 | ✅ Hecho. `ec763e2` y `b20a9c4`. Suite en 1338 corridas, 0 fallos. Verificado en el navegador. |
 | 2 | M2 + M8 | ✅ Hecho (paso A). `272875a`. Suite en 1357 corridas, 0 fallos. Verificado en el navegador: la píldora roja y el filtro con tres opciones. Impacto medido en viáticos antes de escribir: **cero** gastos rechazados, cero centros, cero pesos. |
 | 3 | M5 (rechazar + correos) | ✅ Hecho. `63db9b0`. Suite en 1389 corridas, 0 fallos. Verificados en el navegador los dos caminos de rechazo, de punta a punta. |
-| 4 | M6 + M7 (reapertura al editar, Contabilidad) | Siguiente. |
+| 4 | M6 + M7 (reapertura al editar, Contabilidad) | ✅ Hecho. `f426954` y `d5b4e68`. Ver §6. |
+| 5 | M1 + M4 (candados y los dos permisos de aceptar) | ✅ Hecho. `3533de6`, con la migración `20261009000001`. |
+| 6 | M10 (exportar seleccionados y comprobantes) | ✅ Hecho. `3ff1795`. Suite en 1443 corridas, 0 fallos; E2E 48 verdes. |
+
+Además, en la misma tanda: `689f2ed` (la lista de Gastos dejaba de ser lenta: hacía un HEAD a S3
+por cada comprobante) y `f5833e3` (la semilla E2E de Contabilidad, rota desde el paso A).
 
 **Pendiente del paso B** (otro despliegue, días después de que el A esté en producción): borrar
 `is_acepted` de la tabla y dejarla solo como método derivado. Mientras la columna exista y
 `sincronizar_is_acepted` la escriba, revertir el código es suficiente.
 
-*Documento escrito el 2026-10-06 y actualizado con cada fase.*
+
+---
+
+## 6. Lo que se decidió o se encontró al cerrar (2026-10-09)
+
+**Decisiones nuevas**
+
+- **Adjuntar el comprobante NO reabre el gasto** (M6). El agente de WhatsApp crea el gasto y
+  después adjunta el comprobante en un segundo guardado: si contara como edición, todo gasto de
+  WhatsApp que nace aceptado volvería a "Creado" segundos después. Es una excepción a D4.
+- **Contabilidad no rechaza un gasto contabilizado** (M7): primero se retira la contabilización.
+- **El masivo de Gastos solo acepta los "Creado"**: antes des-rechazaba en silencio los
+  rechazados que cayeran en el filtro.
+- **La pantalla del centro de costo** pinta editar/eliminar/nuevo gasto con el permiso del centro
+  **y** el de Gastos (antes solo el del centro), para no mostrar botones que ahora dan 403.
+
+**Defectos encontrados y corregidos en el camino**
+
+- La reapertura corría **después** del redondeo de montos: aceptar o rechazar un gasto histórico
+  con ruido de coma flotante lo devolvía a "Creado" en el mismo clic. Ahora corre primero
+  (`before_validation, prepend: true`), lo que también arregla que la columna `is_acepted` y los
+  datos del rechazo quedaran desincronizados al reabrir.
+- Ningún camino de rechazo recalculaba los viáticos del centro (M8 quedaba a medias): ahora lo
+  hacen la tabla de Gastos y Contabilidad.
+
+**Lo que queda abierto**
+
+1. 🔴 **Antes de desplegar M4, consultar los roles de producción y AVISAR**: quien hoy acepta
+   gastos ajenos con "Aceptar gasto" deja de poder hasta que le asignen "Aceptar todos los
+   gastos", que la migración no le da a nadie (D3). Lo mismo con los candados de M1: quien edite,
+   elimine o exporte sin tener el permiso de Gastos recibe 403.
+2. El **rechazo por correo** no recalcula los viáticos del centro: corre sin sesión y
+   `recalculate_cost_center` usa `current_user` para las alertas. Queda desfasado hasta la
+   siguiente edición de un gasto del centro.
+3. **Tres E2E fallan desde antes de esta tanda** y no se tocaron: `rules.spec.js:53` (busca el
+   selector de usuarios; las reglas son por rol desde septiembre), `permissions.spec.js:94`
+   (espera en Contabilidad un gasto que la semilla deja en "Creado") y `receipt.spec.js:90`
+   (espera un botón en el visor de imagen y hay dos).
+4. **Paso B** del estado: borrar la columna `is_acepted`, días después de que el paso A esté en
+   producción.
+5. El puerto 3001 del E2E puede estar ocupado por otro proyecto: se corre levantando el server a
+   mano en otro puerto y `E2E_BASE_URL=http://127.0.0.1:<puerto>`.
+
+*Documento escrito el 2026-10-06 y actualizado con cada fase; cerrado el 2026-10-09.*
