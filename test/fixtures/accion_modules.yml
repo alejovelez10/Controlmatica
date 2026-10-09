@@ -46,6 +46,14 @@ gastos_aceptar:
   module_control: gastos
   user: admin
 
+# M4 (2026-10-09): "Aceptar gasto" alcanza los propios y los de los centros a
+# cargo; este acepta cualquiera. La migracion 20261009000001 no se lo asigna a
+# nadie: en los fixtures solo lo tiene `gerente`, que es el rol con todo.
+gastos_aceptar_todos:
+  name: Aceptar todos los gastos
+  module_control: gastos
+  user: admin
+
 gastos_exportar:
   name: Exportar a excel
   module_control: gastos

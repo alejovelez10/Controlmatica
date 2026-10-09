@@ -364,7 +364,11 @@ class ReportExpenseIndex extends React.Component {
         // un desplegable con los TRES estados, incluido el de volver un
         // rechazado a "Creado": una decision que no se puede deshacer desde la
         // misma pantalla donde se tomo obliga a entrar a la base de datos.
-        if (!props.estados.closed) {
+        //
+        // EL PERMISO ES POR FILA desde M4 (2026-10-09): con "Aceptar gasto" a
+        // secas solo se deciden los propios y los de los centros a cargo, y un
+        // desplegable en una fila ajena seria un 403 esperando a pasar.
+        if (!self.puedeDecidir(row)) {
           return React.createElement("div", { className: "cm-status-cell" },
             React.createElement("span", {
               className: "cm-status-pill" + (estado.isOk ? " cm-status-pill--ok" : "")
@@ -1416,12 +1420,26 @@ class ReportExpenseIndex extends React.Component {
 
   openMenu = function(e) { window.cmOpenMenu(e); }.bind(this);
 
+  // ¿Puede este usuario aceptar o rechazar ESTA fila? Es la misma regla que
+  // `puede_decidir?` del servidor, que es quien decide de verdad; aqui solo se
+  // usa para no pintar controles que el servidor va a rechazar.
+  //   * "Aceptar todos los gastos" (o administrador) -> cualquiera;
+  //   * "Aceptar gasto" -> los suyos (responsable) y los de sus centros.
+  puedeDecidir = function(row) {
+    var estados = this.props.estados;
+    if (estados.accept_all) return true;
+    if (!estados.closed) return false;
+    if (row.user_invoice_id === this.props.current_user.id) return true;
+    return (estados.owned_cost_center_ids || []).indexOf(row.cost_center_id) !== -1;
+  }.bind(this);
+
   getRowActions = function(row) {
     var self = this;
     var estados = this.props.estados;
 
-    // Solo mostrar acciones si no está aceptado o si tiene permiso closed
-    if (!operationalState(row).isOk || estados.closed) {
+    // Un gasto ACEPTADO solo lo edita o elimina quien podria decidirlo: editar
+    // lo devuelve a "Creado" (M6) y deshace la aceptacion de otro.
+    if (!operationalState(row).isOk || self.puedeDecidir(row)) {
       var hasEdit = estados.edit && row.cost_center && row.cost_center.execution_state !== "FINALIZADO";
       var hasDelete = estados.delete;
 

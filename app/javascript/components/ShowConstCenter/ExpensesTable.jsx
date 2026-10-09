@@ -913,15 +913,25 @@ class ExpensesTable extends Component {
 
   openMenu = (e) => { window.cmOpenMenu(e); };
 
-  renderActions = (row) => (
-    <div className="cm-dt-menu">
-      <button className="cm-dt-menu-trigger" onClick={this.openMenu}><i className="fas fa-ellipsis-v" /></button>
-      <div className="cm-dt-menu-dropdown">
-        {this.props.estados.cost_center_edit && <button onClick={() => this.edit(row)} className="cm-dt-menu-item"><i className="fas fa-pen" /> Editar</button>}
-        {this.props.estados.cost_center_edit && <button onClick={() => this.delete(row.id)} className="cm-dt-menu-item cm-dt-menu-item--danger"><i className="fas fa-trash" /> Eliminar</button>}
+  // LOS DOS PERMISOS A LA VEZ (M1, 2026-10-09): el del centro, que es el que
+  // esta pantalla pedia siempre, Y el de Gastos, que desde M1 es el que exige
+  // el servidor. Con solo el del centro se pintaban botones que ahora responden
+  // 403; con solo el de Gastos ganaria botones gente que hoy no los ve.
+  puedeGasto = (accion) => !!(this.props.estados.cost_center_edit && this.props.estados["expense_" + accion]);
+
+  renderActions = (row) => {
+    if (!this.puedeGasto("edit") && !this.puedeGasto("delete")) return null;
+
+    return (
+      <div className="cm-dt-menu">
+        <button className="cm-dt-menu-trigger" onClick={this.openMenu}><i className="fas fa-ellipsis-v" /></button>
+        <div className="cm-dt-menu-dropdown">
+          {this.puedeGasto("edit") && <button onClick={() => this.edit(row)} className="cm-dt-menu-item"><i className="fas fa-pen" /> Editar</button>}
+          {this.puedeGasto("delete") && <button onClick={() => this.delete(row.id)} className="cm-dt-menu-item cm-dt-menu-item--danger"><i className="fas fa-trash" /> Eliminar</button>}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Modal de previsualizacion. SIEMPRE contra /download_receipt/report_expenses/:id,
   // nunca contra la URL firmada. Si el iframe o la imagen no cargan (403, archivo
@@ -1043,8 +1053,8 @@ class ExpensesTable extends Component {
           onSearch={this.handleSearch} onSort={this.handleSort}
           actions={this.renderActions} stickyActions
           searchPlaceholder="Buscar gasto..." emptyMessage="No hay gastos registrados"
-          headerActions={this.props.estados.cost_center_edit ? <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={() => this.toogle("new")}><i className="fas fa-plus" /> Nuevo Gasto</button> : null}
-          emptyAction={this.props.estados.cost_center_edit ? <button onClick={() => this.toogle("new")} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}><i className="fas fa-plus" /> Nuevo Gasto</button> : null}
+          headerActions={this.puedeGasto("create") ? <button className="cm-btn cm-btn-accent cm-btn-sm" onClick={() => this.toogle("new")}><i className="fas fa-plus" /> Nuevo Gasto</button> : null}
+          emptyAction={this.puedeGasto("create") ? <button onClick={() => this.toogle("new")} className="cm-btn cm-btn-accent cm-btn-sm" style={{ marginTop: "8px" }}><i className="fas fa-plus" /> Nuevo Gasto</button> : null}
         />
       </React.Fragment>
     );

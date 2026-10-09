@@ -194,6 +194,10 @@ namespace :create_config do
             AccionModule.create(name: "Ver todos", module_control_id: report_expense.id, user_id: user.id)
 
             AccionModule.create(name: "Aceptar gasto", module_control_id: report_expense.id, user_id: user.id)
+            # M4 (2026-10-09): "Aceptar gasto" alcanza lo propio y lo de los
+            # centros a cargo; este acepta cualquiera. En una base existente lo
+            # crea la migracion 20261009000001.
+            AccionModule.create(name: "Aceptar todos los gastos", module_control_id: report_expense.id, user_id: user.id)
             AccionModule.create(name: "Exportar a excel", module_control_id: report_expense.id, user_id: user.id)
             AccionModule.create(name: "Cambiar responsable", module_control_id: report_expense.id, user_id: user.id)
         end

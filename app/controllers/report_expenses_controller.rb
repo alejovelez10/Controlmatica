@@ -21,7 +21,15 @@ class ReportExpensesController < ApplicationController
       create: is_admin? || has_menu_permission?("Gastos", "Crear"),
       edit: is_admin? || has_menu_permission?("Gastos", "Editar"),
       delete: is_admin? || has_menu_permission?("Gastos", "Eliminar"),
-      closed: is_admin? || has_menu_permission?("Gastos", "Aceptar gasto"),
+      # ACEPTAR TIENE DOS NIVELES (M4, 2026-10-09). `closed` dice si puede
+      # decidir ALGUN gasto; `accept_all` si puede decidir cualquiera. Con solo
+      # "Aceptar gasto", la tabla pinta el desplegable en las filas propias y en
+      # las de sus centros, que son las que el servidor le deja mover
+      # (`puede_decidir?`). La lista de centros viaja solo en ese caso: con
+      # "todos" sobra, y sin ningun permiso no hay nada que decidir.
+      closed: puede_aceptar_algo?,
+      accept_all: acepta_todos?,
+      owned_cost_center_ids: acepta_todos? || !acepta_los_suyos? ? [] : CostCenter.where(user_owner_id: current_user.id).pluck(:id),
       export: is_admin? || has_menu_permission?("Gastos", "Exportar a excel"),
       show_user: is_admin? || has_menu_permission?("Gastos", "Cambiar responsable"),
       # Importar y descargar la plantilla: SOLO administrador. El import salta el
@@ -126,6 +134,11 @@ class ReportExpensesController < ApplicationController
   # su causa.
   def update_state_report_expense
     report_expense = ReportExpense.find(params[:id])
+    # Aceptar, rechazar y devolver a "Creado" son la misma decision y piden el
+    # mismo permiso. Antes de M1 este endpoint no verificaba NADA: el boton se
+    # escondia en la pantalla y cualquiera con sesion podia aceptar por URL.
+    return forbidden! unless puede_decidir?(report_expense)
+
     estado_anterior = report_expense.operational_state
 
     estado = estado_operativo_pedido(params[:state])
@@ -189,6 +202,8 @@ class ReportExpensesController < ApplicationController
   # Nota sobre el `ReportExpense.create` + `.save` que habia antes (doble
   # escritura): desaparece como efecto del cableado, no como refactor aparte.
   def create
+    return forbidden! unless permiso_de_gastos?("Crear")
+
     report_expense = ReportExpense.new(report_expense_params_create)
     report_expense.agent_policy_verdict = agent_policy_verdict_param
     result = ExpenseBudgetService.persist_with_evaluation!(report_expense, actor: current_user)
@@ -223,10 +238,21 @@ class ReportExpensesController < ApplicationController
   end
 
   def update_filter_values
+    return forbidden! unless puede_aceptar_algo?
+
     # EL MISMO RECORTE QUE LA TABLA. Esta accion acepta TODO lo que casa con el
     # filtro, no solo la pagina visible: si la pestaña recorta la lista y esto
     # no, el usuario ve 3 filas de sus centros y acepta miles ajenos.
-    report_expenses = apply_expense_scope(ReportExpense.all)
+    #
+    # Y ENCIMA, LO QUE EL PERMISO ALCANZA (M4): con solo "Aceptar gasto", desde
+    # "Todos los gastos" el masivo acepta los propios y los de sus centros, no
+    # los que la pestaña le deja ver por "Ver todos".
+    #
+    # SOLO LOS "CREADO" (2026-10-09). Un rechazado es una decision explicita, y
+    # un "Aceptar gastos" sobre un filtro que lo incluya lo des-rechazaba en
+    # silencio, sin motivo y sin aviso a quien lo rechazo.
+    report_expenses = solo_lo_que_puede_decidir(apply_expense_scope(ReportExpense.all))
+                        .creados
                         .search(report_expense_search_filters)
                         .order(invoice_date: :desc)
 
@@ -259,6 +285,8 @@ class ReportExpensesController < ApplicationController
   end
 
   def update
+    return forbidden! unless permiso_de_gastos?("Editar")
+
     # LOS DOS `previous_*` SE CAPTURAN ANTES DEL assign_attributes. Si se leen
     # despues ya cambiaron, y el par (centro, responsable) de ORIGEN nunca se
     # reevalua: un gasto que estaba excedido alli se queda excedido para siempre
@@ -306,6 +334,8 @@ class ReportExpensesController < ApplicationController
   # gasto dejaba `viat_costo_real` inflado y a los gastos posteriores marcados
   # como `excedido` contra un cupo que ya estaba libre.
   def destroy
+    return forbidden! unless permiso_de_gastos?("Eliminar")
+
     # Se capturan ANTES de destruir: despues el objeto sigue en memoria pero
     # depender de eso es fragil, y `recalculate_cost_center` hace
     # `CostCenter.find(cost)` y reventaria con nil.
@@ -525,6 +555,8 @@ class ReportExpensesController < ApplicationController
   end
 
   def download_file
+    return forbidden! unless permiso_de_gastos?("Exportar a excel")
+
     # EL MISMO RECORTE QUE LA TABLA (permiso + pestaña). Antes estaba escrito
     # aqui otra vez, en dos ramas que repetian el `where(user_invoice_id:)`; con
     # la pestaña nueva serian seis. El Excel exporta lo que el usuario ve.
@@ -643,6 +675,55 @@ class ReportExpensesController < ApplicationController
   # Memoizado para evitar queries repetidas de rol (204ms -> ~0ms)
   def is_admin?
     @_is_admin ||= current_user.rol.name == "Administrador"
+  end
+
+  # === CANDADOS DE SERVIDOR (M1, 2026-10-09) ================================
+  #
+  # Hasta aqui crear, editar, eliminar, aceptar y exportar NO verificaban ningun
+  # permiso en el servidor: los botones se escondian en la pantalla y cualquiera
+  # con sesion podia hacerlo por URL. "El que tenga Ver todos solo no puede
+  # editar ni eliminar" (punto 9 del cliente) no era quitar un boton, era poner
+  # este candado. Mismo 403 en JSON que Contabilidad.
+  def forbidden!
+    render json: { type: "error", message: ["No tiene permiso para realizar esta acción"] },
+           status: :forbidden
+  end
+
+  def permiso_de_gastos?(accion)
+    is_admin? || has_menu_permission?("Gastos", accion)
+  end
+
+  # LOS DOS NIVELES DE ACEPTAR (M4). "Aceptar todos los gastos" decide
+  # cualquiera; "Aceptar gasto" solo los propios (responsable) y los de los
+  # centros de los que es dueño. Aceptar, rechazar y devolver a "Creado" son la
+  # misma decision y van por aqui las tres.
+  def acepta_todos?
+    permiso_de_gastos?("Aceptar todos los gastos")
+  end
+
+  def acepta_los_suyos?
+    has_menu_permission?("Gastos", "Aceptar gasto")
+  end
+
+  def puede_aceptar_algo?
+    acepta_todos? || acepta_los_suyos?
+  end
+
+  def puede_decidir?(gasto)
+    return true if acepta_todos?
+    return false unless acepta_los_suyos?
+
+    gasto.user_invoice_id == current_user.id || gasto.cost_center&.user_owner_id == current_user.id
+  end
+
+  # La misma regla que `puede_decidir?`, escrita como consulta para el masivo.
+  # Subconsulta y no `pluck` por lo mismo que `apply_expense_scope`: un dueño de
+  # 400 centros mandaria 400 enteros en cada aceptacion.
+  def solo_lo_que_puede_decidir(scope)
+    return scope if acepta_todos?
+
+    scope.where("report_expenses.user_invoice_id = :yo OR report_expenses.cost_center_id IN " \
+                "(SELECT id FROM cost_centers WHERE user_owner_id = :yo)", yo: current_user.id)
   end
 
   # Las reglas que el gasto incumple, en el formato plano que consume el
