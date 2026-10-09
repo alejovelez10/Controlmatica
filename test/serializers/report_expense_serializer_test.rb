@@ -62,6 +62,7 @@
 #  index_report_expenses_on_user_invoice_id                    (user_invoice_id)
 #
 require "test_helper"
+require "minitest/mock"
 
 # Forma del JSON de un gasto (contrato B.1 de 00-ARQUITECTURA.md).
 #
@@ -111,6 +112,24 @@ class ReportExpenseSerializerTest < ActiveSupport::TestCase
     assert_kind_of Hash, hash[:receipt_file]
     assert_kind_of String, hash[:receipt_file][:url]
     refute_empty hash[:receipt_file][:url]
+  end
+
+  test "saber si hay comprobante no le pregunta al almacenamiento" do
+    # EN PRODUCCION EL `blank?` DEL UPLOADER ES UN HEAD A S3 (CarrierWave con
+    # fog: `exists?` -> `directory.files.head`). Con el, cada fila con
+    # comprobante costaba un viaje por la red, en serie: una pagina de 50 gastos
+    # eran 50 consultas a S3 y la lista de Gastos tardaba segundos. En pruebas el
+    # almacenamiento es el disco y el viaje no se ve, por eso se prueba que no
+    # se pregunte en vez de medir cuanto tarda.
+    as_user(users(:admin)) do
+      @gasto.receipt_file = upload_fixture("comprobante.pdf")
+      @gasto.save!
+    end
+    gasto = ReportExpense.find(@gasto.id)
+
+    gasto.receipt_file.stub(:blank?, -> { flunk "el serializer le pregunto al almacenamiento si el archivo existe" }) do
+      refute_nil serializar(gasto)[:receipt_file]
+    end
   end
 
   test "expone los 13 campos nuevos" do

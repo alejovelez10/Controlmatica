@@ -254,8 +254,12 @@ class ReportExpense < ApplicationRecord
   # FIRMADA y expira a los 600 s desde el momento de serializar. Sirve para el
   # MCP y para saber si hay comprobante; la tabla del navegador debe usar
   # /download_receipt/report_expenses/:id, que firma en el clic.
+  #
+  # `self[:receipt_file]` Y NO `receipt_file.present?`: en produccion el
+  # segundo es un HEAD a S3, y el MCP pide este metodo por cada fila del
+  # listado. Ver el comentario de ReportExpenseSerializer#receipt_file.
   def receipt_file_url
-    receipt_file.present? ? receipt_file.url : nil
+    self[:receipt_file].present? ? receipt_file.url : nil
   end
 
   # === MULTIMONEDA (paquete 05) ============================================

@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 # Superficie de CONTABILIDAD y de COMPROBANTE en ReportExpense (paquete 06,
 # tareas A4 y B2).
@@ -93,6 +94,19 @@ class ReportExpenseAccountingTest < ActiveSupport::TestCase
     as_user(@actor) { gasto.save! }
 
     assert_match(/comprobante\.pdf/, gasto.reload.receipt_file_url)
+  end
+
+  test "receipt_file_url no le pregunta al almacenamiento si el archivo existe" do
+    # El MCP la pide por cada fila del listado: en produccion cada `blank?` del
+    # uploader es un HEAD a S3. Ver la prueba gemela del serializer.
+    gasto = crear_gasto
+    gasto.receipt_file = upload_fixture("comprobante.pdf")
+    as_user(@actor) { gasto.save! }
+    gasto = ReportExpense.find(gasto.id)
+
+    gasto.receipt_file.stub(:blank?, -> { flunk "receipt_file_url le pregunto al almacenamiento" }) do
+      assert_match(/comprobante\.pdf/, gasto.receipt_file_url)
+    end
   end
 
   test "el default de accounting_approved es false" do

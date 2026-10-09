@@ -127,8 +127,16 @@ class ReportExpenseSerializer < ActiveModel::Serializer
   # y el contrato B.1 dice `null` a secas. El frontend hace
   # `gasto.receipt_file && gasto.receipt_file.url`: con el hash vacio el boton de
   # "ver comprobante" aparece para gastos que no tienen ninguno.
+  #
+  # SE MIRA LA COLUMNA Y NO EL UPLOADER (2026-10-08). En produccion el
+  # comprobante vive en S3 y `object.receipt_file.present?` NO es gratis:
+  # CarrierWave con fog lo resuelve con un HEAD a S3 para ver si el archivo
+  # existe. Era un viaje por la red por cada fila con comprobante, en serie, y
+  # con la lista de Gastos a 50 por pagina eran 50 consultas a S3 antes de
+  # responder. La URL no tiene ese costo: con `fog_public = false` se firma en
+  # local, sin salir a la red.
   def receipt_file
-    return nil unless object.receipt_file.present?
+    return nil if object[:receipt_file].blank?
     { url: object.receipt_file.url }
   end
 end
