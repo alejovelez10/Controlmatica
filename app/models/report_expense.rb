@@ -598,6 +598,37 @@ class ReportExpense < ApplicationRecord
   # que no paso.
   after_update_commit :avisar_la_decision_al_responsable
 
+  # === REAPERTURA AL EDITAR (2026-10-06) ===================================
+  #
+  # Editar un gasto lo devuelve a "Creado" y vuelve a avisarle al dueño del
+  # centro. El motivo es que una decision se tomo sobre UNOS datos: si esos
+  # datos cambian, la decision ya no vale. Aceptar un gasto de $100.000 no es
+  # haber aceptado el mismo gasto cuando pasa a $900.000.
+  #
+  # CUALQUIER EDICION, por decision de producto (2026-10-06). Lo que NO cuenta
+  # es el cambio del propio estado y lo que escribe el servidor por su cuenta:
+  # ver `CAMPOS_QUE_NO_REABREN`. Sin esa lista, aceptar un gasto contaria como
+  # edicion y lo devolveria a "Creado" el mismo, en el mismo guardado.
+  #
+  # `before_validation` CON `prepend: true`, Y EL LUGAR NO ES UN DETALLE: tiene
+  # que ser LO PRIMERO que corre en el guardado, por dos motivos distintos.
+  #
+  #   * Antes de los `before_validation` de moneda y redondeo: el modelo
+  #     redondea los montos en CADA guardado, y hay gastos historicos con ruido
+  #     de coma flotante (1006416.3200000001). Mirando despues, ese redondeo
+  #     aparece en `changed` y aceptar o rechazar uno de esos gastos lo
+  #     devolveria a "Creado" en el mismo clic, sin ningun error. Mirando antes,
+  #     `changed` es solo lo que asigno quien llama.
+  #   * Antes de `normalizar_datos_del_rechazo` y `sincronizar_is_acepted`
+  #     (before_save): los dos leen el estado, y si corrieran antes de que la
+  #     reapertura lo mueva, el gasto quedaria en "Creado" con el motivo del
+  #     rechazo viejo y con la columna `is_acepted` todavia en true.
+  #
+  # `save(validate: false)` se salta la reapertura, igual que se salta las
+  # reglas. Ningun canal lo usa (web, MCP e import pasan por `save`).
+  before_validation :reabrir_si_se_edito, prepend: true
+  after_update_commit :avisar_la_reapertura
+
   # El import de Excel se excluye A MANO, igual que con el comprobante: un
   # archivo de 300 filas son 300 gastos sin presupuesto y serian hasta 300
   # correos de golpe. Un archivo no es 300 avisos.
@@ -1030,6 +1061,51 @@ class ReportExpense < ApplicationRecord
     self.rejected_at ||= Time.zone.now
   end
 
+  # Devuelve el gasto a "Creado" si la edicion toco algo que no sea del servidor.
+  #
+  # VA EN EL MODELO Y NO EN EL CONTROLLER para que cubra los tres canales de
+  # una sola vez —web, WhatsApp e import—, igual que el comprobante obligatorio y
+  # las reglas de gasto. Puesto en el controller cubriria uno solo y la asimetria
+  # no la notaria nadie. Por que en `before_validation` y no en `before_save`:
+  # ver el comentario donde se registra.
+  #
+  # EL IMPORT QUEDA EXCLUIDO con el mismo interruptor que los correos: una carga
+  # de 300 filas que ademas reabra 300 gastos ya decididos convierte una
+  # correccion masiva en 300 aprobaciones pendientes.
+  #
+  # `@reabierto` NO SE APAGA AL ENTRAR. Si alguien llama `valid?` antes del
+  # `save`, este metodo corre dos veces: la segunda ya encuentra el gasto en
+  # "Creado" y sale, y apagar la marca ahi se comeria el aviso de la primera. La
+  # apaga `avisar_la_reapertura`, despues del commit.
+  def reabrir_si_se_edito
+    return if new_record?
+    return if omitir_aviso_de_aprobacion
+    return if creado?
+    return if (changed - CAMPOS_QUE_NO_REABREN).empty?
+
+    @reabierto = true
+    self.operational_state = STATE_CREADO
+  end
+
+  # El aviso de la reapertura es el MISMO correo que el de un gasto nuevo sin
+  # aceptar: para el dueño del centro la situacion es identica —hay un gasto
+  # esperando su decision— y un segundo formato solo serviria para que tuviera
+  # que aprender a leer dos.
+  #
+  # `@reabierto` y no solo `saved_change_to_operational_state?`: volver a
+  # "Creado" a mano desde la tabla tambien cambia el estado, y eso no es una
+  # reapertura por edicion sino alguien deshaciendo su propia decision. Se piden
+  # LOS DOS porque la marca puede sobrevivir a un guardado que fallo la
+  # validacion, y una reapertura siempre mueve el estado: sin el segundo, el
+  # siguiente guardado del mismo objeto avisaria de algo que no paso en el.
+  def avisar_la_reapertura
+    return unless @reabierto && saved_change_to_operational_state?
+
+    avisar_al_dueno_del_centro
+  ensure
+    @reabierto = false
+  end
+
   def sincronizar_is_acepted
     self[:is_acepted] = aceptado?
   end
@@ -1039,6 +1115,32 @@ class ReportExpense < ApplicationRecord
 
     self.operational_state = STATE_ACEPTADO
   end
+
+  # LO QUE NO ES "EDITAR UN GASTO", y cada grupo esta por un motivo distinto:
+  #
+  #   * El estado y sus tres campos: mover el estado es la decision misma, no
+  #     una edicion. Sin esto, aceptar un gasto lo devolveria a "Creado" solo.
+  #   * `is_acepted`: la columna espejo que escribe `sincronizar_is_acepted` en
+  #     cada guardado.
+  #   * Los tres de presupuesto: los calcula ExpenseBudgetService, no una
+  #     persona. `evaluate!` los asigna ANTES del save en la misma transaccion,
+  #     asi que aparecen en `changed` de un guardado que el usuario no pidio.
+  #   * `rule_violations`: lo reescribe `apply_expense_rules` en CADA guardado.
+  #     Sin excluirlo, todo save reabriria el gasto.
+  #   * Los contables y `last_user_edited_id`: los escribe el servidor.
+  #   * `updated_at`: cambia siempre, por definicion.
+  #   * `receipt_file`, por decision de producto (2026-10-09) y no del
+  #     servidor: el agente de WhatsApp crea el gasto y DESPUES le adjunta el
+  #     comprobante en un segundo guardado. Si eso reabriera, todo gasto de
+  #     WhatsApp que nace aceptado por caber en el presupuesto volveria a
+  #     "Creado" segundos despues. Adjuntar el soporte no cambia lo que se
+  #     aprobo; cambiar el valor, el centro o la fecha si.
+  CAMPOS_QUE_NO_REABREN = %w[
+    operational_state rejected_at rejected_by_id rejection_reason is_acepted
+    budget_status budget_reason expense_budget_id rule_violations
+    accounting_approved accounting_approved_at accounting_approved_by_id
+    last_user_edited_id updated_at receipt_file
+  ].freeze
 
   # Ver el comentario del `after_create_commit`. Las cinco guardas, en orden de
   # lo mas barato a lo mas caro, y ninguna sobra:

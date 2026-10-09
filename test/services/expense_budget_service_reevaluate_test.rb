@@ -360,6 +360,15 @@ class ExpenseBudgetServiceReevaluateTest < ActiveSupport::TestCase
     primero.invoice_value = 90_000
     ExpenseBudgetService.persist_with_evaluation!(primero, actor: @admin)
 
+    # EL PASO DE VOLVER A ACEPTAR ES NUEVO (2026-10-06) Y NO ES RUIDO DE LA
+    # PRUEBA: editar un gasto lo devuelve a "Creado", y lo que consume cupo es
+    # la aceptacion, asi que mientras nadie lo revise el gasto editado NO
+    # compromete plata y el posterior no se pasa de nada. Es exactamente lo que
+    # hace una persona: sube el valor y alguien lo vuelve a aprobar.
+    assert primero.reload.creado?, "editar el valor tiene que reabrir el gasto"
+    as_user(@admin) { primero.update!(operational_state: ReportExpense::STATE_ACEPTADO) }
+    reevaluar
+
     assert_equal "aprobado", primero.reload.budget_status
     assert_equal "excedido", segundo.reload.budget_status
     assert_equal "Excede el presupuesto disponible en $50.000", segundo.reload.budget_reason
