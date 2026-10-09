@@ -470,7 +470,13 @@ if centros_e2e["ACC"]
     # la bandeja traia 5 o 6 filas mientras los specs del escenario 7 afirmaban
     # 11 y seleccionaban 10: nunca pudieron pasar. Nada mas en la suite depende de
     # que estos gastos alternen de estado (es el unico uso en todo el repo).
-    g.update_column(:is_acepted, true)
+    #
+    # LOS DOS CAMPOS (2026-10-09): desde el paso A del estado operativo la
+    # aplicacion LEE `operational_state` y solo escribe `is_acepted` como espejo.
+    # Con `update_column(:is_acepted, true)` a secas los 12 quedaban en "creado"
+    # y la bandeja de Contabilidad salia vacia: el escenario 7 entero en rojo
+    # desde el commit del estado, sin que la suite de Ruby lo notara.
+    g.update_columns(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO)
 
     acc_ids << g.id
   end
