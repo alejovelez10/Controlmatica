@@ -557,9 +557,11 @@ class AccountingExpenseIndex extends React.Component {
   }.bind(this);
 
 
-  // Rechazo desde Contabilidad (M7, 2026-10-09). Mismo dialogo que el rechazo
-  // de la pantalla de Gastos: el motivo se pide ANTES y es opcional, porque es
-  // lo unico que el correo le va a poder decir a quien reporto el gasto.
+  // Rechazo desde Contabilidad (M7, 2026-10-09). SIN MOTIVO (2026-10-10, a
+  // pedido del usuario): el contador rechaza y ya; el correo sale sin la
+  // seccion del motivo. Se conserva la confirmacion de si/no porque el rechazo
+  // sale de un <select>, que se cambia por error con la rueda o el teclado, y un
+  // rechazo accidental saca el gasto de la tabla y le escribe a la persona.
   //
   // El texto avisa que el gasto SALE de la tabla: esta pantalla solo muestra lo
   // aceptado, y un gasto que desaparece sin aviso se lee como un error.
@@ -568,9 +570,6 @@ class AccountingExpenseIndex extends React.Component {
 
     Swal.fire({
       title: "Rechazar este gasto",
-      input: "textarea",
-      inputLabel: "Motivo del rechazo (opcional)",
-      inputPlaceholder: "Por ejemplo: el comprobante no corresponde a la factura",
       text: "El gasto sale de Contabilidad, deja de consumir presupuesto y no suma en los viáticos del centro. Se le avisa a la persona que lo reportó.",
       icon: "warning",
       showCancelButton: true,
@@ -579,8 +578,6 @@ class AccountingExpenseIndex extends React.Component {
       confirmButtonText: "Sí, rechazar",
       cancelButtonText: "Cancelar",
     }).then(function(result) {
-      // `isConfirmed` y no `result.value`: confirmar sin escribir motivo deja
-      // el valor en "" y con `if (!result.value)` el rechazo se cancelaria solo.
       if (!result.isConfirmed) {
         // El <select> ya se pinto con "Rechazar gasto…": recargar lo devuelve al
         // estado real de la fila.
@@ -590,8 +587,7 @@ class AccountingExpenseIndex extends React.Component {
 
       fetch("/reject_accounting_expense/" + row.id, {
         method: "PATCH",
-        headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
-        body: JSON.stringify({ rejection_reason: result.value }),
+        headers: { "X-CSRF-Token": csrfToken() },
       })
         .then(function(res) {
           if (res.status === 403) {

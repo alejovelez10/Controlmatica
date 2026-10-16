@@ -425,7 +425,7 @@ test.describe("Contabilidad — rechazar un gasto (M7)", () => {
     reseedE2E("ACC");
   });
 
-  test("rechazar pide el motivo, lo manda y saca el gasto de la bandeja", async ({ page }) => {
+  test("rechazar pide solo confirmacion, sin motivo, y saca el gasto de la bandeja", async ({ page }) => {
     await abrirBandeja(page);
     await filtrarPorCentro(page);
     await verPestana(page, "pendientes");
@@ -434,7 +434,7 @@ test.describe("Contabilidad — rechazar un gasto (M7)", () => {
 
     await page.getByTestId(`accounting-approve-select-${id}`).selectOption("rechazar");
     await expect(page.locator(".swal2-title")).toContainText("Rechazar este gasto");
-    await page.locator(".swal2-textarea").fill("El comprobante no corresponde a la factura");
+    await expect(page.locator(".swal2-textarea")).toBeHidden();
 
     const [res] = await Promise.all([
       page.waitForResponse((r) => r.url().includes(`/reject_accounting_expense/${id}`)),
@@ -442,7 +442,7 @@ test.describe("Contabilidad — rechazar un gasto (M7)", () => {
     ]);
 
     expect(res.request().method()).toBe("PATCH");
-    expect(JSON.parse(res.request().postData()).rejection_reason).toBe("El comprobante no corresponde a la factura");
+    expect(res.request().postData()).toBeNull();
     expect((await res.json()).type).toBe("success");
     await expect(page.getByTestId(`accounting-ref-${id}`)).toHaveCount(0);
   });
