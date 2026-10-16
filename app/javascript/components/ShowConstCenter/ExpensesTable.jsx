@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import FormCreate from '../ReportExpense/FormCreate';
 import { CmDataTable, CmModal, CmButton } from '../../generalcomponents/ui';
 import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, esComprobanteImagen, operationalState } from '../../generalcomponents/expenseIndicators';
+import { veredictoParaGuardar } from "../../generalcomponents/agentVerdict";
 
 // Un solo literal: el cambio de tipo compara contra el para saber si puede borrarlo.
 const AVISO_COMPROBANTE = "Adjunte el comprobante: es obligatorio.";
@@ -445,7 +446,8 @@ class ExpensesTable extends Component {
         // quedaria a nombre de la persona anterior.
         invoice_name: this.nombreDeViatico(f, f.type_identification_id, this.etiquetaUsuario(opt), anterior),
       }),
-    });
+    // Otro responsable puede tener otras reglas, y una prohibirle el tipo elegido.
+    }, this.validarReglas);
     this.loadBudgetAvailability(opt ? opt.value : null, this.state.modeEdit ? this.state.id : null);
   };
 
@@ -463,7 +465,8 @@ class ExpensesTable extends Component {
         // un proveedor.
         invoice_name: this.nombreDeViatico(f, opt.value, responsable, responsable),
       }),
-    });
+    // El aviso de "no tiene permitido este tipo" sale al elegir el tipo.
+    }, this.validarReglas);
   };
   handleChangeAutocompleteReportExpenceOptionPaymentType = (opt) => { this.setState({ selectedOptionPaymentType: opt, formCreate: Object.assign({}, this.state.formCreate, { payment_type_id: opt.value }) }); };
 
@@ -632,6 +635,8 @@ class ExpensesTable extends Component {
         invoice_value: f.invoice_value,
         invoice_tax: f.invoice_tax,
         invoice_total: f.invoice_total,
+        // El tipo decide que reglas aplican y si alguna PROHIBE el gasto.
+        type_identification_id: f.type_identification_id,
       }),
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -714,6 +719,11 @@ class ExpensesTable extends Component {
     // digita puede no ser la persona por la que responde el gasto.
     if (this.state.formCreate.user_invoice_id) {
       fd.append("user_invoice_id", this.state.formCreate.user_invoice_id);
+    }
+    // Con el tipo ya elegido el agente juzga solo las reglas de ese tipo; sin el,
+    // las de todos, y el formulario filtra cuando se elija (hallazgosVigentes).
+    if (this.state.formCreate.type_identification_id) {
+      fd.append("type_identification_id", this.state.formCreate.type_identification_id);
     }
 
     this.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "loading" }) });
@@ -847,11 +857,8 @@ class ExpensesTable extends Component {
 
     // EL VEREDICTO VIAJA AL GUARDAR: quien lo aplica es el servidor
     // (ReportExpense#agent_policy_verdict). Sin esto el aviso seria decorativo.
-    var veredicto = (this.state.extraction || {}).policy;
-    if (veredicto && (veredicto.compliant === true || veredicto.compliant === false)) {
-      fd.append("policy_compliant", veredicto.compliant ? "true" : "false");
-      (veredicto.findings || []).forEach(function(m) { fd.append("policy_findings[]", m); });
-    }
+    var veredicto = veredictoParaGuardar((this.state.extraction || {}).policy);
+    if (veredicto) fd.append("policy_verdict", veredicto);
 
     var isEdit = this.state.modeEdit;
     var url = isEdit ? "/report_expenses/" + this.state.id : "/report_expenses";

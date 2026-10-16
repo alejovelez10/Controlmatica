@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_09_000001) do
+ActiveRecord::Schema.define(version: 2026_10_14_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -367,9 +367,39 @@ ActiveRecord::Schema.define(version: 2026_10_09_000001) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "mandatory", default: true, null: false
+    t.boolean "applies_to_all_roles", default: false, null: false
+    t.boolean "prohibits_expense", default: false, null: false
     t.index ["active"], name: "index_expense_rules_on_active"
     t.index ["is_default"], name: "index_expense_rules_on_is_default"
     t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"
+  end
+
+  create_table "expense_rules_excluded_rols", id: false, force: :cascade do |t|
+    t.bigint "expense_rule_id", null: false
+    t.bigint "rol_id", null: false
+    t.index ["expense_rule_id", "rol_id"], name: "index_expense_rules_excluded_rols_unique", unique: true
+    t.index ["rol_id"], name: "index_expense_rules_excluded_rols_on_rol_id"
+  end
+
+  create_table "expense_rules_excluded_types", id: false, force: :cascade do |t|
+    t.bigint "expense_rule_id", null: false
+    t.bigint "report_expense_option_id", null: false
+    t.index ["expense_rule_id", "report_expense_option_id"], name: "index_expense_rules_excluded_types_unique", unique: true
+    t.index ["report_expense_option_id"], name: "index_expense_rules_excluded_types_on_report_expense_option_id"
+  end
+
+  create_table "expense_rules_excluded_users", id: false, force: :cascade do |t|
+    t.bigint "expense_rule_id", null: false
+    t.bigint "user_id", null: false
+    t.index ["expense_rule_id", "user_id"], name: "index_expense_rules_excluded_users_unique", unique: true
+    t.index ["user_id"], name: "index_expense_rules_excluded_users_on_user_id"
+  end
+
+  create_table "expense_rules_included_types", id: false, force: :cascade do |t|
+    t.bigint "expense_rule_id", null: false
+    t.bigint "report_expense_option_id", null: false
+    t.index ["expense_rule_id", "report_expense_option_id"], name: "index_expense_rules_included_types_unique", unique: true
+    t.index ["report_expense_option_id"], name: "index_expense_rules_included_types_on_report_expense_option_id"
   end
 
   create_table "expense_rules_rols", id: false, force: :cascade do |t|
@@ -707,6 +737,14 @@ ActiveRecord::Schema.define(version: 2026_10_09_000001) do
   end
 
   add_foreign_key "documentation_files", "documentation_modules"
+  add_foreign_key "expense_rules_excluded_rols", "expense_rules", on_delete: :cascade
+  add_foreign_key "expense_rules_excluded_rols", "rols", on_delete: :cascade
+  add_foreign_key "expense_rules_excluded_types", "expense_rules", on_delete: :cascade
+  add_foreign_key "expense_rules_excluded_types", "report_expense_options", on_delete: :cascade
+  add_foreign_key "expense_rules_excluded_users", "expense_rules", on_delete: :cascade
+  add_foreign_key "expense_rules_excluded_users", "users", on_delete: :cascade
+  add_foreign_key "expense_rules_included_types", "expense_rules", on_delete: :cascade
+  add_foreign_key "expense_rules_included_types", "report_expense_options", on_delete: :cascade
   add_foreign_key "expense_rules_rols", "expense_rules"
   add_foreign_key "expense_rules_rols", "rols"
 end

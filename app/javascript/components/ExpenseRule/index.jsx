@@ -59,7 +59,36 @@ var EMPTY_FORM = {
   // un control y solo habria puesto un aviso.
   mandatory: true,
   agent_instructions: "",
+  // `false` en los dos: una regla nueva aplica a los roles que se elijan y no
+  // prohibe nada. Prohibir es un acto deliberado, igual que aflojar.
+  applies_to_all_roles: false,
+  prohibits_expense: false,
 };
+
+// Las cuatro listas del 2026-10-14, vacias. Van aparte de EMPTY_FORM porque son
+// opciones {value, label} de react-select y no valores del formulario.
+var LISTAS_VACIAS = {
+  selectedRoles: [],
+  selectedExcludedRoles: [],
+  selectedExcludedUsers: [],
+  selectedIncludedTypes: [],
+  selectedExcludedTypes: [],
+};
+
+function idsDe(opciones) {
+  return (opciones || []).map(function(o) { return o.value; });
+}
+
+// Busca la opcion {value, label} en el catalogo que llego por props. Si ya no
+// esta (un rol borrado, un tipo eliminado) se arma con el nombre que trajo el
+// serializer, para no perder la asignacion en silencio al guardar.
+function opcionDe(catalogo, item) {
+  var opciones = catalogo || [];
+  for (var i = 0; i < opciones.length; i++) {
+    if (opciones[i].value === item.id) return opciones[i];
+  }
+  return { value: item.id, label: item.name };
+}
 
 class ExpenseRuleIndex extends Component {
   constructor(props) {
@@ -72,7 +101,7 @@ class ExpenseRuleIndex extends Component {
       formCreate: Object.assign({}, EMPTY_FORM),
       // Opciones {value, label} de react-select, NO ids. Se guardan asi para
       // pintarlas sin buscar el label en cada render.
-      selectedRoles: [],
+      ...LISTAS_VACIAS,
     };
 
     // this.columns SE DECLARA COMPLETO AQUI, en el constructor: CmDataTable
@@ -126,9 +155,11 @@ class ExpenseRuleIndex extends Component {
       // `sortable: false`: el orden del cliente compara `row[key]` y aqui la
       // celda es un arreglo de objetos. Una flecha que no ordena es peor que
       // ninguna flecha.
-      { key: "rols", label: "Aplica a", width: "220px", sortable: false, render: (r) => {
-        var nombres = (r.rols || []).map(function(u) { return u.name; });
-        if (nombres.length === 0) {
+      { key: "rols", label: "Aplica a", width: "240px", sortable: false, render: (r) => {
+        var texto = this.alcancePorRol(r);
+        var excluidas = (r.excluded_users || []).map(function(u) { return u.name; });
+        if (excluidas.length) texto += " · Sin: " + excluidas.join(", ");
+        if (!texto) {
           // Se dice explicitamente. Una celda vacia se lee como "todos", que es
           // exactamente lo contrario de lo que significa.
           return (
@@ -138,13 +169,34 @@ class ExpenseRuleIndex extends Component {
           );
         }
         return (
-          <div className="cm-cell-truncate" data-tooltip={nombres.join(", ")}
-               data-testid={"rule-roles-" + r.id}>
-            <span className="cm-cell-truncate-text">{nombres.join(", ")}</span>
+          <div className="cm-cell-truncate" data-tooltip={texto} data-testid={"rule-roles-" + r.id}>
+            <span className="cm-cell-truncate-text">{texto}</span>
           </div>
         );
       } },
-      { key: "agent_instructions", label: "Instrucciones para el agente", width: "260px", sortable: false, render: (r) => (
+      // TIPOS Y PROHIBICION EN LA TABLA, no solo en el formulario: "esta regla
+      // prohibe Representacion" es lo primero que alguien busca al mirar la
+      // lista, y abrir regla por regla no lo hace nadie.
+      { key: "included_types", label: "Tipos de gasto", width: "220px", sortable: false, render: (r) => {
+        var solo = (r.included_types || []).map(function(t) { return t.name; });
+        var excepto = (r.excluded_types || []).map(function(t) { return t.name; });
+        var texto = solo.length ? "Solo: " + solo.join(", ") : "Todos";
+        if (excepto.length) texto += " · Excepto: " + excepto.join(", ");
+        return (
+          <div data-testid={"rule-types-" + r.id}>
+            {r.prohibits_expense && (
+              <span className="cm-badge cm-badge-danger" style={{ marginRight: 6 }}
+                    data-testid={"rule-prohibits-" + r.id}>
+                Prohíbe
+              </span>
+            )}
+            <span className="cm-cell-truncate" data-tooltip={texto}>
+              <span className="cm-cell-truncate-text">{texto}</span>
+            </span>
+          </div>
+        );
+      } },
+      { key: "agent_instructions", label: "No se acepta en el comprobante", width: "260px", sortable: false, render: (r) => (
         <div className="cm-cell-truncate" data-tooltip={r.agent_instructions || ""}>
           <span className="cm-cell-truncate-text">{r.agent_instructions || "—"}</span>
         </div>
@@ -203,23 +255,21 @@ class ExpenseRuleIndex extends Component {
 
   // --- Alta y edicion --------------------------------------------------------
 
-  // Busca la opcion {value, label} del catalogo que llego por props. Si el
-  // usuario ya no esta en el catalogo (desactivado, borrado) se arma una opcion
-  // con el nombre que trajo el serializer, para no perder la asignacion en
-  // silencio al guardar.
-  optionForRole = (u) => {
-    var opciones = this.props.roles || [];
-    for (var i = 0; i < opciones.length; i++) {
-      if (opciones[i].value === u.id) return opciones[i];
+  // "Ingeniero, Contador" o "Todos los roles, excepto Gerente". Vacio cuando
+  // la regla no aplica a ningun rol, para que la celda diga "Nadie".
+  alcancePorRol = (r) => {
+    if (r.applies_to_all_roles) {
+      var excepto = (r.excluded_rols || []).map(function(x) { return x.name; });
+      return excepto.length ? "Todos los roles, excepto " + excepto.join(", ") : "Todos los roles";
     }
-    return { value: u.id, label: u.names };
+    return (r.rols || []).map(function(x) { return x.name; }).join(", ");
   };
 
   openNew = () => {
     this.setState({
       modal: true, modeEdit: false, id: "", saving: false, formError: null,
       formCreate: Object.assign({}, EMPTY_FORM),
-      selectedRoles: [],
+      ...LISTAS_VACIAS,
     });
   };
 
@@ -243,8 +293,14 @@ class ExpenseRuleIndex extends Component {
         check_duplicates: !!row.check_duplicates,
         mandatory: !!row.mandatory,
         agent_instructions: row.agent_instructions || "",
+        applies_to_all_roles: !!row.applies_to_all_roles,
+        prohibits_expense: !!row.prohibits_expense,
       },
-      selectedRoles: (row.rols || []).map(function(u) { return self.optionForRole(u); }),
+      selectedRoles: (row.rols || []).map(function(x) { return opcionDe(self.props.roles, x); }),
+      selectedExcludedRoles: (row.excluded_rols || []).map(function(x) { return opcionDe(self.props.roles, x); }),
+      selectedExcludedUsers: (row.excluded_users || []).map(function(x) { return opcionDe(self.props.usuarios, x); }),
+      selectedIncludedTypes: (row.included_types || []).map(function(x) { return opcionDe(self.props.tipos, x); }),
+      selectedExcludedTypes: (row.excluded_types || []).map(function(x) { return opcionDe(self.props.tipos, x); }),
     });
   };
 
@@ -277,6 +333,16 @@ class ExpenseRuleIndex extends Component {
     this.setState({ selectedRoles: opts || [] });
   };
 
+  // Una sola funcion para las cuatro listas nuevas: el `|| []` es el mismo
+  // motivo de arriba y repetirlo cuatro veces es como se termina olvidando uno.
+  handleChangeLista = (clave) => (opts) => {
+    this.setState({ [clave]: opts || [] });
+  };
+
+  handleChangeRolesMode = (todos) => {
+    this.setState({ formCreate: Object.assign({}, this.state.formCreate, { applies_to_all_roles: todos }) });
+  };
+
   // UNICA definicion del motivo de bloqueo. El modal solo la pinta.
   blockReason = () => {
     var f = this.state.formCreate;
@@ -286,6 +352,20 @@ class ExpenseRuleIndex extends Component {
     }
     if (f.max_invoice_value !== "" && parseFloat(f.max_invoice_value) <= 0) {
       return "El tope de valor debe ser mayor a cero, o déjelo vacío para no tener tope";
+    }
+    // "Solo estos tipos" vacio es TODOS los tipos: prohibir sin tipos seria
+    // prohibir cualquier gasto. El servidor tambien lo rechaza.
+    if (f.prohibits_expense && (this.state.selectedIncludedTypes || []).length === 0) {
+      return "Para prohibir el gasto, elija al menos un tipo en «Solo estos tipos»";
+    }
+    var incluidos = idsDe(this.state.selectedIncludedTypes);
+    var cruzados = (this.state.selectedExcludedTypes || []).filter(function(o) { return incluidos.indexOf(o.value) !== -1; });
+    if (cruzados.length) {
+      return "Un tipo no puede estar en «Solo estos tipos» y en «Excepto estos» a la vez: " +
+        cruzados.map(function(o) { return o.label; }).join(", ");
+    }
+    if (f.is_default && f.applies_to_all_roles) {
+      return "Una regla para todos los roles ya aplica a todo el mundo: no puede ser además la regla por defecto";
     }
     return null;
   };
@@ -314,7 +394,15 @@ class ExpenseRuleIndex extends Component {
       // `params.key?(:rol_ids)`: mandar la lista vacia es la operacion
       // legitima "esta regla ya no aplica a nadie", y omitir la clave
       // significaria "no toques las asignaciones".
-      rol_ids: (this.state.selectedRoles || []).map(function(o) { return o.value; }),
+      rol_ids: idsDe(this.state.selectedRoles),
+      // Las dos listas de roles viajan siempre: el servidor vacia la que no
+      // corresponde al modo, para que no quede una asignacion escondida.
+      applies_to_all_roles: !!f.applies_to_all_roles,
+      excluded_rol_ids: idsDe(this.state.selectedExcludedRoles),
+      excluded_user_ids: idsDe(this.state.selectedExcludedUsers),
+      included_type_ids: idsDe(this.state.selectedIncludedTypes),
+      excluded_type_ids: idsDe(this.state.selectedExcludedTypes),
+      prohibits_expense: !!f.prohibits_expense,
     };
 
     this.setState({ saving: true, formError: null });
@@ -430,9 +518,11 @@ class ExpenseRuleIndex extends Component {
          style={{ marginBottom: 12 }}>
       <i className="fa fa-info-circle" />{" "}
       <span>
-        A cada persona le aplican <b>las reglas que tenga asignadas</b>; si no tiene ninguna, le
-        aplica la <b>regla por defecto</b>. Cuando alguien tiene varias, gana el límite más
-        restrictivo de cada tipo. Una regla sin usuarios asignados <b>no aplica a nadie</b>.
+        A cada persona le aplican <b>las reglas de su rol</b>; si no tiene ninguna, le aplica
+        la <b>regla por defecto</b>. Las reglas de <b>«Todos los roles»</b> se suman siempre y no
+        reemplazan a la por defecto. Cada regla aplica solo a los <b>tipos de gasto</b> que
+        tenga elegidos (sin tipos, a todos). Cuando alguien tiene varias, gana el límite más
+        restrictivo. Una regla sin roles asignados <b>no aplica a nadie</b>.
       </span>
     </div>
   );
@@ -479,7 +569,15 @@ class ExpenseRuleIndex extends Component {
             modeEdit={this.state.modeEdit}
             formValues={this.state.formCreate}
             roles={this.props.roles || []}
+            usuarios={this.props.usuarios || []}
+            tipos={this.props.tipos || []}
             selectedRoles={this.state.selectedRoles}
+            selectedExcludedRoles={this.state.selectedExcludedRoles}
+            selectedExcludedUsers={this.state.selectedExcludedUsers}
+            selectedIncludedTypes={this.state.selectedIncludedTypes}
+            selectedExcludedTypes={this.state.selectedExcludedTypes}
+            onChangeLista={this.handleChangeLista}
+            onChangeRolesMode={this.handleChangeRolesMode}
             onChangeForm={this.handleChangeForm}
             onChangeMoney={this.handleChangeMoney}
             onToggleBool={this.handleToggleBool}

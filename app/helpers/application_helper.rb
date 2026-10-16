@@ -43,7 +43,7 @@ module ApplicationHelper
     # Idem para Reglas de gastos (paquete 14): sin este branch el encabezado
     # dice "Proyectos", que es el `else` del final de la cadena.
     elsif controller == "expense_rules" && action == "index"
-      card = "<h1>" + " <i class='fas fa-gavel'></i> Reglas de gastos " + "</h1>" + "<p>" + "Antigüedad, tope, duplicados e instrucciones para el agente" + "</p>"
+      card = "<h1>" + " <i class='fas fa-gavel'></i> Reglas de gastos " + "</h1>" + "<p>" + "A quién y a qué tipos de gasto aplica, límites y qué no se acepta en el comprobante" + "</p>"
     elsif controller == "documentation_modules" && action == "index"
       card = "<h1>" + " <i class='fas fa-book'></i> Documentación " + "</h1>" + "<p>" + "Manuales, formatos y políticas de la empresa, a un clic" + "</p>"
     elsif controller == "shifts" && action == "index"
@@ -189,6 +189,19 @@ module ApplicationHelper
   # Misma forma que get_users_select, que es la que react-select exige.
   def get_rols_select
     Rol.order(:name).map { |r| { value: r.id, label: r.name } }
+  end
+
+  # Catalogos de las listas de excepciones de una regla de gasto (2026-10-14).
+  # Nombre COMPLETO de la persona y no solo `names`: para excluir a alguien hay
+  # que poder distinguir a dos personas con el mismo nombre de pila.
+  def get_expense_rule_users_select
+    User.order(:names, :last_names).map { |u| { value: u.id, label: ExpenseRule.nombre_de_persona(u) } }
+  end
+
+  # Solo la categoria "Tipo": la misma tabla guarda los medios de pago.
+  def get_expense_types_select
+    ReportExpenseOption.where(category: "Tipo").order(:name)
+                       .map { |t| { value: t.id, label: t.name.to_s.squish } }
   end
 
   def get_users_rol

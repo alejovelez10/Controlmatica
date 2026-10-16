@@ -1185,6 +1185,11 @@ class ReportExpense < ApplicationRecord
   # saltarse la validacion cuando una edicion no los toca.
   CAMPOS_DE_REGLAS = %w[invoice_value invoice_tax invoice_total invoice_date
                         invoice_number identification].freeze
+  # Los que deciden si una regla PROHIBE el gasto (2026-10-14). Van aparte de
+  # CAMPOS_DE_REGLAS a proposito: cambiar el tipo de un gasto viejo tiene que
+  # poder chocar con una prohibicion, pero no puede reevaluarle la antiguedad,
+  # o ningun gasto del año pasado se podria reclasificar.
+  CAMPOS_DE_PROHIBICION = %w[type_identification_id user_invoice_id].freeze
 
   def enforce_expense_rules
     # AL CREAR SIEMPRE; AL EDITAR, SOLO SI CAMBIO ALGO QUE LAS REGLAS MIRAN.
@@ -1196,8 +1201,14 @@ class ReportExpense < ApplicationRecord
     # aceptar ni aprobar contablemente nada, que son updates sobre gastos viejos.
     #
     # Lo que SI se sigue bloqueando al editar es subir el valor por encima del
-    # tope o mover la fecha fuera del plazo: ahi el campo cambio.
-    return if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
+    # tope o mover la fecha fuera del plazo: ahi el campo cambio. Y cambiarle el
+    # tipo o el responsable choca SOLO con las prohibiciones (2026-10-14).
+    if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
+      return if (changed & CAMPOS_DE_PROHIBICION).empty?
+
+      ExpenseRuleService.prohibitions_for(self)[:blocking].each { |v| errors.add(:base, v[:message]) }
+      return
+    end
 
     resultado = ExpenseRuleService.validate(self, agent_verdict: agent_policy_verdict).value
     # LA FOTO ES SIEMPRE COMPLETA Y LOS ERRORES SOLO LOS DUROS. Son dos listas

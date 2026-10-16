@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import NumberFormat from 'react-number-format';
 import Select from "react-select";
 import { CmModal, CmButton } from "../../generalcomponents/ui";
+import { hallazgosVigentes } from "../../generalcomponents/agentVerdict";
 
 const selectStyles = {
   control: (base, state) => ({
@@ -308,20 +309,26 @@ class FormCreate extends Component {
     // VEREDICTO DEL AGENTE sobre las instrucciones de la regla (texto libre que
     // el servidor no sabe evaluar). Es lo unico de esta lista que puede impedir
     // guardar, y por eso va en tono `danger` cuando frena.
+    //
+    // Solo los hallazgos de reglas que aplican al tipo elegido AHORA: el agente
+    // juzgo antes de que se eligiera, contra las reglas de todos los tipos.
     const pol = x.policy || {};
-    if (pol.compliant === false) {
+    const vigente = pol.compliant === false
+      ? hallazgosVigentes(pol, (this.props.formValues || {}).type_identification_id)
+      : null;
+    if (vigente && vigente.mostrar) {
       avisos.push({
         key: "pol",
-        tono: pol.blocking ? "danger" : "warn",
-        texto: pol.blocking
+        tono: vigente.frena ? "danger" : "warn",
+        texto: vigente.frena
           ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
           : "Incumple las instrucciones de la regla de gasto:",
         testid: "expense-policy-verdict",
       });
-      (pol.findings || []).forEach((m, i) => avisos.push({
+      vigente.hallazgos.forEach((h, i) => avisos.push({
         key: "pf" + i,
-        tono: pol.blocking ? "danger" : "warn",
-        texto: "— " + m,
+        tono: vigente.frena ? "danger" : "warn",
+        texto: "— " + h.message,
         testid: "expense-policy-finding-" + i,
       }));
     }

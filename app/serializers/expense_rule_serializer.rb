@@ -5,12 +5,14 @@
 #  id                   :bigint           not null, primary key
 #  active               :boolean          default(TRUE), not null
 #  agent_instructions   :text
+#  applies_to_all_roles :boolean          default(FALSE), not null
 #  check_duplicates     :boolean          default(TRUE), not null
 #  is_default           :boolean          default(FALSE), not null
 #  mandatory            :boolean          default(TRUE), not null
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
+#  prohibits_expense    :boolean          default(FALSE), not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
 #  last_user_edited_id  :integer
@@ -25,7 +27,9 @@
 class ExpenseRuleSerializer < ActiveModel::Serializer
   attributes :id, :name, :active, :is_default, :mandatory,
              :max_invoice_age_days, :max_invoice_value, :check_duplicates,
-             :agent_instructions, :rol_ids, :created_at, :updated_at
+             :agent_instructions, :rol_ids, :created_at, :updated_at,
+             :applies_to_all_roles, :prohibits_expense,
+             :excluded_rols, :excluded_users, :included_types, :excluded_types
 
   has_many :rols
   belongs_to :user,             serializer: UserSerializer   # quien la creo
@@ -36,5 +40,23 @@ class ExpenseRuleSerializer < ActiveModel::Serializer
   # la lista en cada render.
   def rol_ids
     object.rols.map(&:id)
+  end
+
+  # Las cuatro listas del 2026-10-14 como {id, name} planos y no como
+  # asociaciones serializadas: la pantalla solo necesita el nombre para pintar
+  # la tabla y el id para el multi-select, y UserSerializer completo mandaria
+  # el perfil entero de cada persona excluida.
+  def excluded_rols  = pares(object.excluded_rols)
+  def included_types = pares(object.included_types)
+  def excluded_types = pares(object.excluded_types)
+
+  def excluded_users
+    object.excluded_users.map { |u| { id: u.id, name: ExpenseRule.nombre_de_persona(u) } }
+  end
+
+  private
+
+  def pares(registros)
+    registros.map { |r| { id: r.id, name: r.name.to_s.squish } }
   end
 end

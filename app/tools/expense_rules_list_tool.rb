@@ -14,20 +14,24 @@ class ExpenseRulesListTool < ApplicationTool
   tool_name "expense_rules_list"
   description "Reglas de gasto aplicables a una persona, con los límites deterministas ya " \
               "resueltos (antigüedad máxima del comprobante, tope de valor, validación de " \
-              "duplicados) y las instrucciones en texto libre que escribió el administrador. " \
+              "duplicados), los tipos de gasto que tiene PROHIBIDOS y las instrucciones en texto " \
+              "libre que escribió el administrador. Cada regla dice a qué tipos de gasto aplica " \
+              "(only_types vacío = a todos; except_types = nunca a esos). Con " \
+              "type_identification_id devuelve solo las reglas de un gasto de ese tipo. " \
               "Si se omite user_id se usa la persona del actor (X-Actor-Phone / X-Actor-Email). " \
               "Las instrucciones de texto las aplica el agente: el servidor NO las evalúa."
   input_schema(
     properties: {
-      user_id: { type: "integer", description: "ID de la persona (opcional; por defecto el actor)" }
+      user_id: { type: "integer", description: "ID de la persona (opcional; por defecto el actor)" },
+      type_identification_id: { type: "integer", description: "ID del tipo de gasto (opcional): filtra las reglas a las de un gasto de ese tipo" }
     },
     required: []
   )
 
   KEYS = %i[id name active is_default max_invoice_age_days max_invoice_value check_duplicates
-            agent_instructions].freeze
+            agent_instructions prohibits_expense].freeze
 
-  def self.call(server_context:, user_id: nil)
+  def self.call(server_context:, user_id: nil, type_identification_id: nil)
     tenant = current_tenant(server_context)
     return unauthorized! unless tenant
 
@@ -37,11 +41,27 @@ class ExpenseRulesListTool < ApplicationTool
     persona = User.find_by(id: resolved_user_id)
     return not_found!("user #{resolved_user_id}") unless persona
 
-    reglas = ExpenseRule.aplicables_a(persona).to_a
+    reglas = if type_identification_id
+               ExpenseRule.para_gasto(persona, type_identification_id)
+             else
+               ExpenseRule.aplicables_a(persona).includes(:included_types, :excluded_types).to_a
+             end
     limites = ExpenseRuleService.effective_limits(reglas)
 
+    # LO PROHIBIDO VA APARTE Y YA RESUELTO: es lo primero que el agente tiene que
+    # saber —"tú no puedes registrar Representación"— y deducirlo regla por regla
+    # de only_types + prohibits_expense es justo el tipo de razonamiento en que
+    # un modelo chico se equivoca.
+    prohibidos = reglas.select(&:prohibe?).flat_map(&:included_types).uniq
+                       .map { |t| { id: t.id, name: t.name.to_s.squish } }
+
     json(user_id: persona.id,
-         rules: Mcp::Serialize.collection(reglas, KEYS),
+         prohibited_types: prohibidos,
+         rules: reglas.map { |r|
+           Mcp::Serialize.record(r, KEYS,
+                                 only_types: r.included_types.map { |t| t.name.to_s.squish },
+                                 except_types: r.excluded_types.map { |t| t.name.to_s.squish })
+         },
          limits: { max_invoice_age_days: limites[:max_invoice_age_days],
                    # to_s("F") por la misma razón de siempre: BigDecimal#to_s
                    # devuelve notación científica.

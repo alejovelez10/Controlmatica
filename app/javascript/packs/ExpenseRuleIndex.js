@@ -16,6 +16,8 @@ class ExpenseRuleIndex extends React.Component {
           current_user={this.props.current_user}
           estados={this.props.estados}
           roles={this.props.roles}
+          usuarios={this.props.usuarios}
+          tipos={this.props.tipos}
         />
       </React.Fragment>
     );

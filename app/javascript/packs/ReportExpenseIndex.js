@@ -5,6 +5,7 @@ import Select from "react-select";
 import NumberFormat from "react-number-format";
 import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
 import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, operationalState } from "../generalcomponents/expenseIndicators";
+import { hallazgosVigentes, veredictoParaGuardar } from "../generalcomponents/agentVerdict";
 import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
@@ -116,6 +117,7 @@ function escaparHtml(texto) {
 // gasto (el texto libre que el servidor no sabe evaluar). null = nadie lo
 // juzgo, que NO es lo mismo que "lo cumple".
 var EXTRACTION_VACIA = { status: "idle", message: null, filled: [], confidence: {}, warnings: [], policy: null };
+
 var EXCHANGE_VACIO = { status: "idle", message: null, rate_date: null, requested_date: null, source: null };
 var DISPONIBLE_VACIO = { loading: false, error: null, has_budget: false, assigned: "0.0", spent: "0.0", available: "0.0" };
 
@@ -1091,6 +1093,10 @@ class ReportExpenseIndex extends React.Component {
         invoice_value: f.invoice_value,
         invoice_tax: f.invoice_tax,
         invoice_total: f.invoice_total,
+        // El tipo decide que reglas aplican y si alguna PROHIBE el gasto
+        // (2026-10-14): sin el, "no tiene permitido este tipo" solo se sabria
+        // al pulsar Guardar.
+        type_identification_id: f.type_identification_id,
       }),
     })
       .then(function(r) { return r.ok ? r.json() : null; })
@@ -1205,6 +1211,9 @@ class ReportExpenseIndex extends React.Component {
     // EL RESPONSABLE DECIDE QUE REGLAS SE JUZGAN: se asignan por rol, y quien
     // digita puede no ser la persona por la que responde el gasto.
     if (this.state.form.user_invoice_id) fd.append("user_invoice_id", this.state.form.user_invoice_id);
+    // Con el tipo ya elegido el agente juzga solo las reglas de ese tipo; sin el,
+    // las de todos, y la pantalla filtra cuando se elija (hallazgosVigentes).
+    if (this.state.form.type_identification_id) fd.append("type_identification_id", this.state.form.type_identification_id);
 
     this.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "loading" }) });
 
@@ -1375,11 +1384,8 @@ class ReportExpenseIndex extends React.Component {
     // seria decorativo y el gasto se guardaria igual. Solo se manda si el
     // agente juzgo de verdad: sin veredicto no se manda la clave, porque
     // ausente significa "nadie lo juzgo" y no frena nada.
-    var veredicto = (this.state.extraction || {}).policy;
-    if (veredicto && (veredicto.compliant === true || veredicto.compliant === false)) {
-      fd.append("policy_compliant", veredicto.compliant ? "true" : "false");
-      (veredicto.findings || []).forEach(function(m) { fd.append("policy_findings[]", m); });
-    }
+    var veredicto = veredictoParaGuardar((this.state.extraction || {}).policy);
+    if (veredicto) fd.append("policy_verdict", veredicto);
 
     this.setState({ saving: true });
 
@@ -1886,13 +1892,14 @@ class ReportExpenseIndex extends React.Component {
     // intencion aunque se pinte aqui: es lo unico de esta lista que puede
     // impedir guardar.
     var pol = x.policy || {};
-    if (pol.compliant === false) {
-      var cabeza = pol.blocking
+    var vigente = pol.compliant === false ? hallazgosVigentes(pol, this.state.form.type_identification_id) : null;
+    if (vigente && vigente.mostrar) {
+      var cabeza = vigente.frena
         ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
         : "Incumple las instrucciones de la regla de gasto:";
       avisos.push({ key: "pol", tono: "warn", texto: cabeza, testid: "expense-policy-verdict" });
-      (pol.findings || []).forEach(function(m, i) {
-        avisos.push({ key: "pf" + i, tono: "warn", texto: "— " + m, testid: "expense-policy-finding-" + i });
+      vigente.hallazgos.forEach(function(h, i) {
+        avisos.push({ key: "pf" + i, tono: "warn", texto: "— " + h.message, testid: "expense-policy-finding-" + i });
       });
     }
 
@@ -2230,6 +2237,9 @@ class ReportExpenseIndex extends React.Component {
                         }),
                       }, function() {
                         self.loadBudgetAvailability(opt ? opt.value : null, self.state.modeEdit ? self.state.editId : null);
+                        // Otro responsable puede tener otras reglas, y una de
+                        // ellas prohibirle el tipo ya elegido.
+                        self.validarReglas();
                       });
                     },
                     placeholder: "Seleccionar...",
@@ -2263,6 +2273,9 @@ class ReportExpenseIndex extends React.Component {
                 React.createElement("label", { className: "cm-label" },
                   "Tipo"
                 ),
+                // Envoltorio con data-testid: react-select no lo propaga al DOM,
+                // y la prueba E2E de las prohibiciones elige el tipo por aqui.
+                React.createElement("div", { "data-testid": "expense-type-select" },
                 React.createElement(Select, {
                   options: self.typeOptions,
                   value: self.state.selectedType,
@@ -2281,13 +2294,15 @@ class ReportExpenseIndex extends React.Component {
                         // campo de un gasto que ya factura un proveedor.
                         invoice_name: self.nombreDeViatico(form, tipoId, responsable, responsable),
                       }),
-                    });
+                    // El aviso de "no tiene permitido este tipo" sale al elegir
+                    // el tipo, no al pulsar Guardar.
+                    }, self.validarReglas);
                   },
                   placeholder: "Seleccionar tipo...",
                   isClearable: true,
                   styles: selectStyles,
                   menuPortalTarget: document.body,
-                }),
+                })),
                 self.state.selectedType && self.state.selectedType.label ? React.createElement("div", {
                   className: "cm-field-hint cm-field-hint--copyable",
                   onClick: function() { navigator.clipboard.writeText(self.state.selectedType.label); self.setState({ copyMessage: "Tipo copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }

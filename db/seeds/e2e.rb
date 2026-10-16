@@ -196,6 +196,12 @@ end
 pago = ReportExpenseOption.find_or_create_by!(name: "Efectivo", category: "Medio de pago") do |o|
   o.user_id = admin.id
 end
+# Segundo tipo, solo para las reglas que prohiben un tipo de gasto
+# (specs/rules-alcance.spec.js): con un unico tipo no hay forma de probar que la
+# prohibicion frena ESE tipo y deja pasar los demas.
+ReportExpenseOption.find_or_create_by!(name: "Representacion E2E", category: "Tipo") do |o|
+  o.user_id = admin.id
+end
 
 # --- 8. Reset de datos transaccionales del centro E2E -------------------
 # destroy y NO delete_all: los callbacks de auditoria tienen que correr, y para

@@ -206,6 +206,7 @@ class ReportExpensesController < ApplicationController
 
     report_expense = ReportExpense.new(report_expense_params_create)
     report_expense.agent_policy_verdict = agent_policy_verdict_param
+    juzgar_al_guardar!(report_expense)
     result = ExpenseBudgetService.persist_with_evaluation!(report_expense, actor: current_user)
 
     if result.ok?
@@ -463,12 +464,25 @@ class ReportExpensesController < ApplicationController
     # el gasto. Si todavia no se eligio responsable se usan las de quien esta en
     # pantalla, que es lo que el formulario trae precargado.
     responsable = User.find_by(id: params[:user_invoice_id].presence) || current_user
-    reglas      = ExpenseRule.aplicables_a(responsable).to_a
+    # QUE SE JUZGA (2026-10-14). Con el tipo ya elegido, las reglas de ese
+    # gasto. Sin tipo —lo normal: el comprobante va primero en el formulario—,
+    # las de TODOS los tipos de la persona: al guardar, cuando ya se conoce el
+    # tipo, el servidor suelta los hallazgos de las reglas que no le apliquen
+    # (cada hallazgo vuelve con su regla). Juzgar solo las "sin tipo" dejaria
+    # sin juzgar justo las reglas de un tipo concreto.
+    tipo        = ReportExpenseOption.find_by(id: params[:type_identification_id].presence, category: "Tipo")
+    reglas      = if tipo
+                    ExpenseRule.para_gasto(responsable, tipo.id)
+                  else
+                    ExpenseRule.aplicables_a(responsable).includes(:included_types, :excluded_types).to_a
+                  end
     limites     = ExpenseRuleService.effective_limits(reglas)
-    duros       = ExpenseRuleService.effective_limits(reglas.select(&:mandatory))
+    juzgadas    = reglas.select { |r| r.agent_instructions.to_s.strip.present? }
 
     result = ReceiptExtractionService.extract(params[:file], cost_center_code: center&.code,
-                                                             agent_instructions: limites[:agent_instructions])
+                                                             agent_instructions: limites[:agent_instructions],
+                                                             reglas: ExpenseRuleService.reglas_para_el_agente(juzgadas),
+                                                             tipo_de_gasto: tipo&.name)
     return render json: { type: "error", message: [result.error_message] } unless result.ok?
 
     # LA EXTRACCION YA NO EVALUA REGLAS (decision de producto, 2026-08-29). Era
@@ -493,12 +507,26 @@ class ReportExpensesController < ApplicationController
     # agente tiene el comprobante delante. `blocking` dice si ademas frena el
     # guardado, que depende de que alguna regla obligatoria traiga
     # instrucciones.
+    #
+    # `blocking` sale del MISMO motor que decide al guardar, regla por regla.
+    # `findings_detail`, `judged_rule_ids` y `rules` son para el formulario:
+    # con ellos, al elegir el tipo despues de leer, esconde los hallazgos de las
+    # reglas que no aplican a ese tipo y reenvia al guardar que reglas se
+    # juzgaron, para que el servidor sepa si hace falta volver a juzgar.
+    veredicto = { compliant: result.policy_compliant, findings: Array(result.policy_findings_detail) }
+    preview   = ExpenseRuleService.agent_verdict_preview(veredicto, juzgadas)
     policy = {
       compliant: result.policy_compliant,
       findings: Array(result.policy_findings),
-      blocking: result.policy_compliant == false && duros[:agent_instructions].present?,
+      findings_detail: Array(result.policy_findings_detail),
+      blocking: preview[:blocking].any?,
       instructions: limites[:agent_instructions],
-      applied_rules: reglas.map(&:name)
+      applied_rules: reglas.map(&:name),
+      judged_rule_ids: juzgadas.map(&:id),
+      rules: juzgadas.map do |r|
+        { id: r.id, name: r.name, mandatory: r.mandatory,
+          included_type_ids: r.included_type_ids, excluded_type_ids: r.excluded_type_ids }
+      end
     }
 
     render json: { type: "success", fields: fields, confidence: result.confidence,
@@ -1079,6 +1107,14 @@ class ReportExpensesController < ApplicationController
   # El formulario manda multipart (lleva el archivo), asi que `true`/`false`
   # llegan como texto.
   def agent_policy_verdict_param
+    # EL FORMATO DE HOY (2026-10-14): un JSON con los hallazgos y la regla de
+    # la que sale cada uno, y las reglas que se juzgaron. Los campos sueltos de
+    # abajo siguen valiendo para quien todavia los mande.
+    if params[:policy_verdict].present?
+      datos = JSON.parse(params[:policy_verdict].to_s) rescue nil
+      return veredicto_desde_json(datos) if datos.is_a?(Hash)
+    end
+
     bruto = params[:policy_compliant]
     return nil if bruto.nil? || bruto == "" || bruto == "null"
 
@@ -1086,6 +1122,64 @@ class ReportExpensesController < ApplicationController
     return nil if cumple.nil?
 
     { compliant: cumple, findings: Array(params[:policy_findings]).map(&:to_s) }
+  end
+
+  def veredicto_desde_json(datos)
+    cumple = datos["compliant"]
+    return nil unless [true, false].include?(cumple)
+
+    hallazgos = Array(datos["findings"]).filter_map do |h|
+      next { rule_id: nil, message: h.to_s } unless h.is_a?(Hash)
+
+      { rule_id: h["rule_id"], message: h["message"].to_s }
+    end
+    { compliant: cumple, findings: hallazgos,
+      judged_rule_ids: Array(datos["judged_rule_ids"]).map(&:to_i) }
+  end
+
+  # EL COMPROBANTE QUE NADIE JUZGO SE JUZGA AL GUARDAR (2026-10-14).
+  #
+  # Sin esto, el texto de las reglas solo se revisaba si la persona pulsaba
+  # "Extraer datos": quien subia el archivo y llenaba a mano registraba el gasto
+  # sin que nadie leyera el comprobante, aunque el comprobante sea obligatorio.
+  # Tambien se vuelve a juzgar si el veredicto que llega no cubre todas las
+  # reglas que aplican AHORA: el responsable se cambio despues de leer, y la
+  # persona nueva tiene reglas que el agente nunca vio.
+  #
+  # FALLA ABIERTO, igual que la lectura: sin IA configurada, con un timeout o
+  # con la IA caida el gasto se guarda como hasta hoy, sin veredicto. Convertir
+  # una caida del proveedor en "nadie puede registrar gastos" seria peor que el
+  # hueco que esto cierra. Cuesta unos segundos al guardar, y solo cuando la
+  # persona tiene reglas con texto que aplican a este gasto.
+  def juzgar_al_guardar!(report_expense)
+    archivo = params[:receipt_file]
+    return unless archivo.respond_to?(:read)
+    return unless ReceiptExtractionService.enabled? && ReceiptExtractionService.configured?
+
+    con_texto = ExpenseRule.para_gasto(report_expense.user_invoice, report_expense.type_identification_id)
+                           .select { |r| r.agent_instructions.to_s.strip.present? }
+    return if con_texto.empty?
+
+    actual = report_expense.agent_policy_verdict
+    if actual.present?
+      juzgadas = Array(actual[:judged_rule_ids])
+      # Sin la lista (el formato de antes) se asume que cubria todo.
+      return if juzgadas.empty? || (con_texto.map(&:id) - juzgadas).empty?
+    end
+
+    result = ReceiptExtractionService.extract(
+      archivo, cost_center_code: report_expense.cost_center&.code,
+               reglas: ExpenseRuleService.reglas_para_el_agente(con_texto),
+               tipo_de_gasto: report_expense.type_identification&.name
+    )
+    archivo.rewind if archivo.respond_to?(:rewind)
+    return unless result.ok? && [true, false].include?(result.policy_compliant)
+
+    report_expense.agent_policy_verdict = { compliant: result.policy_compliant,
+                                            findings: Array(result.policy_findings_detail),
+                                            judged_rule_ids: con_texto.map(&:id) }
+  rescue StandardError => e
+    Rails.logger.error("[report_expenses] juicio al guardar: #{e.class}: #{e.message}")
   end
 
   def report_expense_params_create

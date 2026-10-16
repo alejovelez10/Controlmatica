@@ -26,8 +26,13 @@ class ReceiptExtractionService
   # Su unico consumidor es la accion `extract_receipt`, que la escribe este
   # mismo paquete. Fuera de aqui, un `result.error` singular sigue siendo señal
   # de desvio: el resto del proyecto usa `ok/value/errors` con errors ARRAY.
+  # `policy_findings` son los motivos en texto, como siempre; `policy_findings_detail`
+  # los mismos con la regla de la que salio cada uno ({ rule_id:, message: },
+  # 2026-10-14). Van los dos porque el texto lo pintan la pantalla y las pruebas
+  # de siempre, y la regla solo la necesita quien decide si el hallazgo aplica.
   Result = Struct.new(:ok, :fields, :confidence, :error, :error_message, :model, :usage,
-                      :policy_compliant, :policy_findings, keyword_init: true) do
+                      :policy_compliant, :policy_findings, :policy_findings_detail,
+                      keyword_init: true) do
     def ok?    = !!ok
     def error? = !ok
 
@@ -107,7 +112,20 @@ class ReceiptExtractionService
       # solo tienen sentido cuando el payload lleva instrucciones que juzgar, y
       # un agente que las ignore tiene que seguir validando contra el esquema.
       policy_compliant: { type: %w[boolean null] },
-      policy_findings:  { type: "array", items: { type: "string" } },
+      # CADA HALLAZGO CON SU REGLA (2026-10-14). En la web el agente juzga antes
+      # de que se elija el tipo de gasto, contra las reglas de TODOS los tipos;
+      # al guardar, el servidor descarta los hallazgos de las reglas que no
+      # aplican al tipo elegido. Sin el numero de regla no podria saber cual es
+      # cual y tendria que frenar o soltar todos juntos.
+      policy_findings:  {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: %w[rule_id reason],
+          properties: { rule_id: { type: %w[integer null] }, reason: { type: "string" } }
+        }
+      },
       confidence: {
         type: "object",
         additionalProperties: false,
@@ -139,8 +157,13 @@ class ReceiptExtractionService
     Politica de gasto:
     - Si el mensaje del usuario trae un bloque "Instrucciones de la politica de gasto", juzgalo
       contra lo que ves en el comprobante y responde policy_compliant (true si lo cumple, false si
-      lo incumple) y policy_findings con un motivo corto por cada incumplimiento, citando lo que
-      viste en el documento.
+      lo incumple) y policy_findings con un objeto por cada incumplimiento: rule_id es el numero
+      de la regla que incumple (cada regla viene marcada asi: [Regla 12]) y reason un motivo
+      corto citando lo que viste en el documento.
+    - Cada regla dice lo que NO se acepta en el comprobante. Si lo ves en el documento, es un
+      incumplimiento de esa regla.
+    - Juzga cada regla por separado. Si una regla habla de un tipo de gasto y el mensaje no dice
+      el tipo, no la des por incumplida por eso: el sistema aplica esa parte por su cuenta.
     - Si NO hay bloque de instrucciones, o si el documento no alcanza para juzgarlas, devuelve
       policy_compliant en null y policy_findings vacio. Un false frena el registro del gasto, asi
       que no lo uses ante la duda.
@@ -496,12 +519,32 @@ class ReceiptExtractionService
     # sabe evaluar ("no se aceptan licores, ni propinas superiores al 10%").
     # Antes solo las veia el agente de WhatsApp, asi que el mismo comprobante se
     # juzgaba por un canal y por el otro no.
-    instrucciones = @context[:agent_instructions].to_s.strip
+    tipo = @context[:tipo_de_gasto].to_s.squish
+    partes << "El tipo de gasto elegido es «#{tipo}»." if tipo.present?
+
+    # UNA REGLA POR BLOQUE, CON SU NUMERO (2026-10-14): es lo que deja al agente
+    # decir de que regla sale cada hallazgo. El texto pelado de antes se sigue
+    # aceptando para quien no tenga las reglas a mano.
+    instrucciones = instrucciones_etiquetadas.presence || @context[:agent_instructions].to_s.strip
     if instrucciones.present?
       partes << "\n\nInstrucciones de la politica de gasto:\n#{instrucciones}"
     end
 
     partes.join(" ")
+  end
+
+  # [{ id:, nombre:, instrucciones: }] -> "[Regla 12 · Sin licor]\ntexto\n\n[Regla 15 ...]".
+  def instrucciones_etiquetadas
+    Array(@context[:reglas]).filter_map do |regla|
+      texto = regla[:instrucciones].to_s.strip
+      next if texto.empty?
+
+      # "No se acepta" va escrito porque es lo que la pantalla le pide al
+      # administrador: que liste lo prohibido ("bebidas alcoholicas, propinas
+      # mayores al 10%"). Sin el encabezado, esa lista suelta se puede leer como
+      # lo contrario, como lo que el comprobante deberia tener.
+      "[Regla #{regla[:id]} · #{regla[:nombre].to_s.squish}] No se acepta en el comprobante:\n#{texto}"
+    end.join("\n\n")
   end
 
   # ---- post-proceso de la respuesta del modelo -------------------------------
@@ -514,6 +557,7 @@ class ReceiptExtractionService
 
     confidence = normalize_confidence(data["confidence"])
     fields     = build_fields(data, confidence)
+    detalle    = normalize_policy_findings(data["policy_findings"])
 
     Result.new(ok: true, fields: fields, confidence: confidence, error: nil, error_message: nil,
                model: self.class.model, usage: data["_usage"],
@@ -521,7 +565,8 @@ class ReceiptExtractionService
                # que todavia no implementa el veredicto) y un null explicito son
                # el mismo caso —nadie lo juzgo—, pero conviene que se lea.
                policy_compliant: normalize_policy_compliant(data["policy_compliant"]),
-               policy_findings: normalize_policy_findings(data["policy_findings"]))
+               policy_findings: detalle.map { |h| h[:message] },
+               policy_findings_detail: detalle)
   end
 
   # SOLO `true` Y `false` CUENTAN. Cualquier otra cosa —la clave ausente, un
@@ -535,8 +580,43 @@ class ReceiptExtractionService
     nil
   end
 
+  # => [{ rule_id: 12 | nil, message: "..." }]
+  #
+  # Acepta las tres formas que puede devolver el agente: el objeto del esquema
+  # actual, el texto suelto de antes del 2026-10-14 y el texto con prefijo
+  # "[Regla 12] ...". `rule_id` nil significa "no se sabe de que regla salio", y
+  # el servidor lo trata como un hallazgo que aplica (ExpenseRuleService), que
+  # es lo prudente: no se puede soltar un incumplimiento solo porque no trae
+  # etiqueta.
   def normalize_policy_findings(raw)
-    Array(raw).map { |m| m.to_s.strip }.reject(&:empty?).first(10)
+    Array(raw).filter_map do |item|
+      if item.is_a?(Hash)
+        h = item.stringify_keys
+        motivo = (h["reason"] || h["message"]).to_s.strip
+        regla  = entero_o_nil(h["rule_id"])
+      else
+        regla, motivo = separar_prefijo_de_regla(item.to_s.strip)
+      end
+      next if motivo.empty?
+
+      { rule_id: regla, message: motivo }
+    end.first(10)
+  end
+
+  PREFIJO_DE_REGLA = /\A\[\s*regla\s*#?\s*(\d+)[^\]]*\]\s*[:\-–·]?\s*/i.freeze
+
+  def separar_prefijo_de_regla(texto)
+    m = PREFIJO_DE_REGLA.match(texto)
+    return [nil, texto] if m.nil?
+
+    [m[1].to_i, texto[m.end(0)..].to_s.strip]
+  end
+
+  def entero_o_nil(valor)
+    return valor if valor.is_a?(Integer)
+    return valor.to_i if valor.is_a?(String) && valor.strip.match?(/\A\d+\z/)
+
+    nil
   end
 
   def normalize_confidence(raw)

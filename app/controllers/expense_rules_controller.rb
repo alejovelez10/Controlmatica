@@ -47,7 +47,8 @@ class ExpenseRulesController < ApplicationController
   def get_expense_rules
     return deny! unless rule_permission?
 
-    scope = ExpenseRule.includes(:rols, :user, :last_user_edited)
+    scope = ExpenseRule.includes(:rols, :excluded_rols, :excluded_users, :included_types,
+                                 :excluded_types, :user, :last_user_edited)
     scope = scope.where(active: params[:only_active] == "true") if params[:only_active].present?
 
     if params[:q].present?
@@ -98,7 +99,11 @@ class ExpenseRulesController < ApplicationController
       identification: params[:identification],
       invoice_value: params[:invoice_value].to_f,
       invoice_tax: params[:invoice_tax].to_f,
-      invoice_total: params[:invoice_total].to_f
+      invoice_total: params[:invoice_total].to_f,
+      # El tipo decide que reglas aplican y si alguna PROHIBE el gasto: sin el,
+      # la pantalla no podria avisar "no tiene permitido este tipo" hasta que la
+      # persona pulsara Guardar.
+      type_identification_id: params[:type_identification_id].presence
     )
     # `id` para que la regla de duplicados no se encuentre a si misma al editar.
     candidato.id = params[:id] if params[:id].present?
@@ -123,7 +128,14 @@ class ExpenseRulesController < ApplicationController
     # Las reglas se resuelven UNA vez y de ahi salen los dos juegos de limites y
     # los nombres. Antes se llamaba a `limits_for` y a `aplicables_a` por
     # separado, que son dos consultas para la misma lista.
-    reglas = ExpenseRule.aplicables_a(user).to_a
+    #
+    # Con `type_identification_id`, las del GASTO de ese tipo; sin el, todas las
+    # de la persona, como antes del filtro por tipo (2026-10-14).
+    reglas = if params.key?(:type_identification_id)
+               ExpenseRule.para_gasto(user, params[:type_identification_id])
+             else
+               ExpenseRule.aplicables_a(user).to_a
+             end
     limites = ExpenseRuleService.effective_limits(reglas)
 
     render json: {
@@ -148,7 +160,7 @@ class ExpenseRulesController < ApplicationController
 
     rule = ExpenseRule.new(expense_rule_params)
     rule.user_id = current_user.id
-    rule.rols = roles_del_body if params.key?(:rol_ids)
+    asignar_alcance(rule)
 
     if guardar(rule)
       render json: { success: "¡La regla fue creada con exito!", type: "success",
@@ -161,13 +173,17 @@ class ExpenseRulesController < ApplicationController
   def update
     return deny! unless rule_permission?("Editar")
 
-    @expense_rule.assign_attributes(expense_rule_params)
-    # `params.key?` y no `params[:rol_ids].present?`: mandar la lista VACIA es
-    # una operacion legitima ("esta regla ya no aplica a nadie") y con
-    # `.present?` seria indistinguible de no mandar el campo.
-    @expense_rule.rols = roles_del_body if params.key?(:rol_ids)
+    # EN UNA TRANSACCION, y no es por costumbre: en un registro ya guardado,
+    # asignar una lista HABTM escribe en la base EN ESE MOMENTO, antes de
+    # validar. Sin la transaccion, una prohibicion a la que se le quitan todos los
+    # tipos fallaria la validacion... con los tipos ya borrados de la base.
+    guardado = ExpenseRule.transaction do
+      @expense_rule.assign_attributes(expense_rule_params)
+      asignar_alcance(@expense_rule)
+      guardar(@expense_rule) || raise(ActiveRecord::Rollback)
+    end
 
-    if guardar(@expense_rule)
+    if guardado
       render json: { success: "¡La regla fue actualizada con exito!", type: "success",
                      register: ActiveModelSerializers::SerializableResource.new(@expense_rule, serializer: ExpenseRuleSerializer) }
     else
@@ -236,12 +252,44 @@ class ExpenseRulesController < ApplicationController
     false
   end
 
-  # Un multi-select vacio significa "ninguno", NO "todos". Para "todos" esta el
-  # switch de regla por defecto. Es la confusion obvia de la pantalla, y aqui se
+  # A QUIEN Y A QUE TIPOS APLICA LA REGLA.
+  #
+  # `params.key?` y no `.present?` en cada lista: mandar la lista VACIA es una
+  # operacion legitima ("esta regla ya no aplica a nadie", "ya no excluye a
+  # nadie") y con `.present?` seria indistinguible de no mandar el campo, que
+  # significa "no toques eso".
+  #
+  # Un multi-select de roles vacio significa "ninguno", NO "todos". Para "todos"
+  # esta "Todos los roles". Es la confusion obvia de la pantalla, y aqui se
   # respeta literalmente: lista vacia => la regla no aplica a nadie.
-  def roles_del_body
-    ids = params.permit(rol_ids: [])[:rol_ids] || []
-    Rol.where(id: ids)
+  #
+  # EL MODO DECIDE CUAL LISTA DE ROLES VALE, Y LA OTRA SE VACIA. Si quedaran las
+  # dos llenas, la pantalla mostraria una y la base guardaria otra que nadie ve;
+  # y el dia que alguien cambie el modo de vuelta, reapareceria una asignacion
+  # vieja que ya nadie recuerda haber hecho.
+  def asignar_alcance(rule)
+    rule.rols           = Rol.where(id: ids_del_body(:rol_ids))                 if params.key?(:rol_ids)
+    rule.excluded_rols  = Rol.where(id: ids_del_body(:excluded_rol_ids))        if params.key?(:excluded_rol_ids)
+    rule.excluded_users = User.where(id: ids_del_body(:excluded_user_ids))      if params.key?(:excluded_user_ids)
+    rule.included_types = tipos_de_gasto(ids_del_body(:included_type_ids))      if params.key?(:included_type_ids)
+    rule.excluded_types = tipos_de_gasto(ids_del_body(:excluded_type_ids))      if params.key?(:excluded_type_ids)
+
+    if rule.applies_to_all_roles
+      rule.rols = [] if rule.rols.any?
+    elsif rule.excluded_rols.any?
+      rule.excluded_rols = []
+    end
+  end
+
+  def ids_del_body(clave)
+    params.permit(clave => [])[clave] || []
+  end
+
+  # Solo opciones de la categoria "Tipo": la tabla guarda tambien los medios de
+  # pago, y un "EFECTIVO" colado en "Solo estos tipos" haria que la regla no le
+  # aplicara a ningun gasto sin que nada lo avise.
+  def tipos_de_gasto(ids)
+    ReportExpenseOption.where(category: "Tipo", id: ids)
   end
 
   # `user_id` y `last_user_edited_id` NO estan y no pueden estar: el creador lo
@@ -249,6 +297,7 @@ class ExpenseRulesController < ApplicationController
   # modelo. Permitirlos dejaria atribuirle a otro una regla propia.
   def expense_rule_params
     params.permit(:name, :active, :is_default, :mandatory, :max_invoice_age_days,
-                  :max_invoice_value, :check_duplicates, :agent_instructions)
+                  :max_invoice_value, :check_duplicates, :agent_instructions,
+                  :applies_to_all_roles, :prohibits_expense)
   end
 end

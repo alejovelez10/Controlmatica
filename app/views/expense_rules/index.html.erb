@@ -3,6 +3,9 @@
     `roles` viaja como catalogo {value, label} y no como User.all serializado:
     el multi-select del formulario es react-select, que exige exactamente esa
     forma. Mandar los registros completos serializaria la tabla entera de
-    roles en el HTML de la pagina por nada. %>
+    roles en el HTML de la pagina por nada. `usuarios` y `tipos` (2026-10-14)
+    alimentan las listas de excepciones y los filtros por tipo de gasto, con la
+    misma forma. %>
 <%= javascript_pack_tag 'ExpenseRuleIndex' %>
-<%= react_component('ExpenseRuleIndex', current_user: get_current_user, estados: @estados, roles: get_rols_select) %>
+<%= react_component('ExpenseRuleIndex', current_user: get_current_user, estados: @estados, roles: get_rols_select,
+                     usuarios: get_expense_rule_users_select, tipos: get_expense_types_select) %>

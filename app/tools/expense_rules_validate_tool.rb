@@ -9,14 +9,17 @@
 class ExpenseRulesValidateTool < ApplicationTool
   tool_name "expense_rules_validate"
   description "Valida un gasto candidato contra las reglas de negocio de Controlmatica " \
-              "(antigüedad del comprobante, tope por gasto, duplicados) y, opcionalmente, contra " \
-              "el presupuesto disponible. NO guarda nada. Llámala SIEMPRE antes de " \
-              "report_expenses_create. Una violación con blocking: true significa que el gasto NO " \
+              "(tipos de gasto prohibidos para la persona, antigüedad del comprobante, tope por " \
+              "gasto, duplicados) y, opcionalmente, contra el presupuesto disponible. NO guarda " \
+              "nada. Llámala SIEMPRE antes de report_expenses_create y SIEMPRE con " \
+              "type_identification_id: las reglas dependen del tipo de gasto, y sin él no se sabe " \
+              "cuáles aplican. Una violación con blocking: true significa que el gasto NO " \
               "se puede registrar: no lo intentes, explícale el motivo a la persona y pídele " \
               "corregir el comprobante. Una con blocking: false sí se registra, pero el gasto " \
               "queda \"sin aprobar\" con ese motivo: avísaselo antes de crearlo. " \
               "El campo agent_instructions trae las reglas que escribió el administrador en texto " \
-              "libre: aplícalas tú, el servidor no las evalúa."
+              "libre, ya filtradas por la persona y el tipo de gasto: aplícalas tú, el servidor no " \
+              "las evalúa."
   input_schema(
     properties: {
       cost_center_id:     { type: "integer", description: "ID del centro de costo (requerido)" },
@@ -34,6 +37,7 @@ class ExpenseRulesValidateTool < ApplicationTool
       foreign_total:      { type: "number",  description: "Total en la moneda del comprobante" },
       exchange_rate:      { type: "number",  description: "Tasa a COP de 1 unidad de currency" },
       description:        { type: "string",  description: "Descripción del gasto" },
+      type_identification_id: { type: "integer", description: "ID del tipo de gasto (categoría \"Tipo\" de report_expense_options_list). Mándalo siempre: decide qué reglas aplican y si el tipo está prohibido para la persona." },
       exclude_expense_id: { type: "integer", description: "ID del gasto que se está editando, para no compararlo contra sí mismo" },
       include_budget:     { type: "boolean", description: "Incluir el bloque de presupuesto (default true)" }
     },
@@ -42,7 +46,8 @@ class ExpenseRulesValidateTool < ApplicationTool
 
   CANDIDATE_FIELDS = %i[cost_center_id user_invoice_id invoice_name identification invoice_number
                         invoice_date invoice_value invoice_tax invoice_total currency
-                        foreign_value foreign_tax foreign_total exchange_rate description].freeze
+                        foreign_value foreign_tax foreign_total exchange_rate description
+                        type_identification_id].freeze
 
   def self.call(cost_center_id:, server_context:, user_invoice_id: nil, exclude_expense_id: nil,
                 include_budget: true, **args)
@@ -77,11 +82,16 @@ class ExpenseRulesValidateTool < ApplicationTool
     # Se comparan por `code` y no por objeto: son hashes construidos en dos
     # pasadas distintas del servicio y el mensaje puede citar topes distintos
     # (el efectivo en la foto, el obligatorio en el que frena).
-    codigos_que_frenan = violations.value[:blocking_violations].map { |v| v[:code] }
+    #
+    # Por `code` Y `rule`: los topes llegan con `rule` nil en las dos listas y se
+    # siguen emparejando por codigo, pero las prohibiciones (2026-10-14) son una
+    # por regla y comparten codigo; sin la regla, una prohibicion blanda saldria
+    # como bloqueante solo porque otra regla obligatoria tambien prohibe.
+    frenan = violations.value[:blocking_violations].map { |v| [v[:code], v[:rule]] }
 
     lista = violations.value[:violations].map do |v|
       { rule: v[:rule], code: v[:code], message: v[:message],
-        blocking: codigos_que_frenan.include?(v[:code]) }
+        blocking: frenan.include?([v[:code], v[:rule]]) }
     end
 
     presupuesto = nil

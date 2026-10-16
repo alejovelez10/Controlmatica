@@ -27,6 +27,10 @@ class ExpenseRuleService
   # `agent_instructions`, no lo calcula este servidor. Llega por parametro y se
   # traduce a una violacion mas para que los dos canales lo traten igual.
   CODE_AGENT      = "agent_instructions".freeze
+  # La regla le prohibe a esta persona este tipo de gasto (2026-10-14). Es
+  # determinista: quien registra y el tipo los sabe el servidor, no hay nada que
+  # interpretar.
+  CODE_PROHIBITED = "expense_prohibited".freeze
 
   # Result canonico del proyecto, identico al de ExpenseBudgetService
   # (00-ARQUITECTURA.md §4.2). `errors` es SIEMPRE un array.
@@ -62,7 +66,8 @@ class ExpenseRuleService
   # obligatorias y evaluar contra esos.
   # `agent_verdict` es el juicio del agente sobre las `agent_instructions` —el
   # texto libre que este servidor NO sabe evaluar—, con la forma
-  # `{ compliant: true/false/nil, findings: ["motivo", ...] }`. Entra por
+  # `{ compliant: true/false/nil, findings: ["motivo", ...] }` —o, desde el
+  # 2026-10-14, `findings: [{ rule_id:, message: }]`—. Entra por
   # parametro porque quien lo produce es el agente de Taimes: la web se lo pide
   # al leer el comprobante y lo reenvia al guardar. `nil` (o `compliant` nil)
   # significa "nadie lo juzgo" y no genera violacion: un gasto escrito a mano,
@@ -70,7 +75,11 @@ class ExpenseRuleService
   # hizo.
   def self.validate(expense, user: nil, agent_verdict: nil)
     responsable = user || expense&.user_invoice
-    reglas = ExpenseRule.aplicables_a(responsable).to_a
+    # LAS REGLAS DEL GASTO, NO SOLO LAS DE LA PERSONA (2026-10-14): una regla de
+    # "Solo estos tipos" o "Excepto estos" se filtra aqui por el tipo del gasto,
+    # asi que una regla que no aplica a este tipo no aporta limites, ni
+    # instrucciones, ni prohibicion.
+    reglas = ExpenseRule.para_gasto(responsable, expense&.type_identification_id)
 
     limites = effective_limits(reglas)
     # Segundo juego de limites, con el mismo minimo pero solo sobre las reglas
@@ -81,6 +90,12 @@ class ExpenseRuleService
 
     violations = []
     blocking   = []
+
+    # Las prohibiciones van primero: si el gasto no se permite, es lo primero
+    # que la persona tiene que leer, antes que una fecha o un tope.
+    prohibiciones = check_prohibitions(expense, reglas)
+    violations.concat(prohibiciones[:violations])
+    blocking.concat(prohibiciones[:blocking])
 
     # Antiguedad y valor son calculo puro: evaluarlos dos veces no cuesta una
     # consulta y evita tener que adivinar de que regla salio cada violacion.
@@ -99,12 +114,12 @@ class ExpenseRuleService
       blocking.concat(duplicado) if limites_duros[:check_duplicates]
     end
 
-    # El veredicto del agente FRENA solo si alguna regla obligatoria trae
-    # instrucciones: `mandatory` describe la consecuencia de incumplir ESA
-    # regla, y una regla blanda con instrucciones avisa pero deja guardar.
-    semanticas = check_agent_policy(agent_verdict)
-    violations.concat(semanticas)
-    blocking.concat(semanticas) if limites_duros[:agent_instructions].present?
+    # El veredicto del agente sobre el texto libre. Ver `check_agent_policy`:
+    # desde el 2026-10-14 cada hallazgo trae la regla de la que salio, y eso
+    # decide si aplica a este gasto y si frena.
+    semanticas = check_agent_policy(agent_verdict, reglas)
+    violations.concat(semanticas[:violations])
+    blocking.concat(semanticas[:blocking])
 
     valor = {
       ok: violations.empty?,
@@ -146,7 +161,62 @@ class ExpenseRuleService
     effective_limits(ExpenseRule.aplicables_a(user).to_a)
   end
 
+  # El veredicto del agente contra un juego de reglas dado, sin el resto de la
+  # validacion: `{ violations:, blocking: }`. Lo usa la lectura del comprobante
+  # para avisar ANTES de guardar, cuando todavia no hay gasto que validar y,
+  # si no se eligio tipo, con las reglas de todos los tipos de la persona.
+  def self.agent_verdict_preview(verdict, reglas)
+    check_agent_policy(verdict, Array(reglas))
+  end
+
+  # Las reglas con texto para el agente, en la forma que espera
+  # ReceiptExtractionService (`context[:reglas]`): una por bloque, con su numero,
+  # para que cada hallazgo vuelva diciendo de que regla salio.
+  def self.reglas_para_el_agente(reglas)
+    Array(reglas).filter_map do |r|
+      texto = r.agent_instructions.to_s.strip
+      { id: r.id, nombre: r.name, instrucciones: texto } if texto.present?
+    end
+  end
+
+  # Solo las prohibiciones de un gasto, sin topes ni duplicados ni veredicto.
+  #
+  # Existe para la EDICION (ReportExpense#enforce_expense_rules): al editar un
+  # gasto viejo no se reevaluan los limites si no cambio un campo que ellos
+  # miran —seria dejar ilegible un gasto del año pasado por un tope de hoy—,
+  # pero cambiarle el tipo o el responsable SI tiene que poder chocar con una
+  # prohibicion. Si no, cualquiera la saltaria creando el gasto con otro tipo y
+  # cambiandoselo despues.
+  def self.prohibitions_for(expense, user: nil)
+    responsable = user || expense&.user_invoice
+    check_prohibitions(expense, ExpenseRule.para_gasto(responsable, expense&.type_identification_id))
+  end
+
   # --- Reglas deterministas --------------------------------------------------
+
+  # UNA VIOLACION POR REGLA, CON SU NOMBRE. A diferencia de los topes —que se
+  # colapsan en un minimo y por eso no tienen regla dueña—, una prohibicion es de
+  # una regla concreta, y decirle a la persona cual es lo unico que le permite
+  # preguntar a quien corresponde. Frena si ESA regla es obligatoria.
+  #
+  # `reglas` ya viene filtrado por persona y por tipo (ExpenseRule.para_gasto):
+  # si una regla que prohibe llego hasta aqui, es que aplica a este gasto.
+  def self.check_prohibitions(expense, reglas)
+    tipo = expense&.type_identification&.name.to_s.squish.presence || "este tipo"
+    violations = []
+    blocking   = []
+
+    reglas.select(&:prohibe?).each do |regla|
+      v = violation(CODE_PROHIBITED,
+                    "No tiene permitido registrar gastos de tipo «#{tipo}» (regla «#{regla.name}»)",
+                    rule: regla.name)
+      violations << v
+      blocking << v if regla.mandatory
+    end
+
+    { violations: violations, blocking: blocking }
+  end
+  private_class_method :check_prohibitions
 
   # ANTIGUEDAD MEDIDA CONTRA Date.current, NUNCA CONTRA created_at. Si se midiera
   # contra la fecha de registro, una factura vieja registrada tarde pasaria el
@@ -205,9 +275,18 @@ class ExpenseRuleService
 
   # DUPLICADO SOLO CON invoice_number E identification AMBOS PRESENTES. Con
   # campos vacios, media base de datos seria "duplicada" entre si.
+  #
+  # Y NUNCA EN UN VIATICO NI CON UN NUMERO DE RELLENO (2026-10-14). Un viatico
+  # no tiene factura: la gente escribe "N/A" o su cedula en el numero, y en el
+  # NIT la cedula de quien lo recibe, asi que el segundo viatico de la misma
+  # persona chocaba con el primero y no habia forma de registrarlo. El mismo
+  # "N/A" en cualquier otro tipo es un numero que no existe, no una factura que
+  # se repite.
   def self.check_duplicate(expense)
     return [] if expense.blank?
     return [] if expense.invoice_number.blank? || expense.identification.blank?
+    return [] if expense.type_identification&.viatico?
+    return [] if numero_de_relleno?(expense)
 
     scope = ReportExpense.where(invoice_number: expense.invoice_number,
                                 identification: expense.identification)
@@ -222,6 +301,28 @@ class ExpenseRuleService
                "Ya existe el gasto ##{otro.id} con esa factura de ese proveedor")]
   end
 
+  # Lo que la gente escribe cuando el comprobante no tiene numero. Se comparan
+  # sin tildes, espacios ni signos: "N/A", "n.a.", "No aplica" y "S/N" son el
+  # mismo relleno.
+  NUMEROS_DE_RELLENO = %w[NA NOAPLICA SN SINNUMERO SINFACTURA NOTIENE NINGUNO NULL NONE].freeze
+
+  # Tambien es relleno un numero hecho solo de ceros, o igual al NIT/cedula del
+  # mismo gasto: es quien recibe el viatico copiando su documento en el campo
+  # del numero, no un numero de factura.
+  def self.numero_de_relleno?(expense)
+    numero = solo_letras_y_digitos(expense.invoice_number)
+    return true if NUMEROS_DE_RELLENO.include?(numero) || numero.match?(/\A0+\z/)
+
+    documento = solo_letras_y_digitos(expense.identification)
+    documento.present? && numero == documento
+  end
+  private_class_method :numero_de_relleno?
+
+  def self.solo_letras_y_digitos(texto)
+    I18n.transliterate(texto.to_s).upcase.gsub(/[^A-Z0-9]/, "")
+  end
+  private_class_method :solo_letras_y_digitos
+
   # `rule` se deja en nil porque el limite efectivo puede venir de la
   # combinacion de varias reglas y atribuirselo a una sola seria mentir; los
   # nombres de todas van en `applied_rules`.
@@ -232,19 +333,87 @@ class ExpenseRuleService
   # Sin motivos pero con `compliant: false` se emite una violacion generica: que
   # el agente no explique por que no puede traducirse en "entonces no pasa
   # nada", o bastaria con devolver el veredicto pelado para saltarse la regla.
-  def self.check_agent_policy(verdict)
-    return [] if verdict.blank?
+  #
+  # CADA HALLAZGO TRAE SU REGLA (2026-10-14), `{ rule_id:, message: }`, y eso
+  # cambia dos cosas:
+  #
+  #   * QUE APLICA. En la web el agente juzga al extraer, antes de que se elija
+  #     el tipo, contra las reglas de TODOS los tipos de la persona. Un hallazgo
+  #     de una regla que existe pero no le aplica a este gasto —el licor en uno
+  #     de representacion— se suelta: habla de una regla que aqui no rige.
+  #   * QUE FRENA. Antes cualquier hallazgo frenaba si ALGUNA regla obligatoria
+  #     tenia texto, asi que una regla blanda no podia ser blanda al lado de una
+  #     dura. Ahora frena si su regla es obligatoria.
+  #
+  # Un hallazgo SIN regla (el formato de antes, o un agente que no la dijo) se
+  # trata como antes: aplica, y frena si alguna regla obligatoria tiene texto.
+  # No se puede soltar un incumplimiento solo porque no trae etiqueta.
+  #
+  # `reglas` son las del gasto, ya filtradas por persona y tipo.
+  def self.check_agent_policy(verdict, reglas)
+    vacio = { violations: [], blocking: [] }
+    con_texto = reglas.select { |r| r.agent_instructions.to_s.strip.present? }
+    # Sin instrucciones que apliquen, no hay nada que el veredicto pueda decir.
+    return vacio if verdict.blank? || con_texto.empty?
 
     v = verdict.respond_to?(:with_indifferent_access) ? verdict.with_indifferent_access : verdict
     # nil es "nadie lo juzgo"; solo false es un incumplimiento.
-    return [] unless v[:compliant] == false
+    return vacio unless v[:compliant] == false
 
-    motivos = Array(v[:findings]).map { |m| m.to_s.strip }.reject(&:empty?)
-    return [violation(CODE_AGENT, "El comprobante no cumple las instrucciones de la regla de gasto")] if motivos.empty?
+    por_id    = con_texto.index_by(&:id)
+    hallazgos = normalizar_hallazgos(v[:findings])
 
-    motivos.map { |motivo| violation(CODE_AGENT, motivo) }
+    vigentes = if hallazgos.empty?
+                 [{ rule_id: nil, message: "El comprobante no cumple las instrucciones de la regla de gasto" }]
+               else
+                 descartar_reglas_que_no_aplican(hallazgos, por_id)
+               end
+    # Todos los motivos eran de reglas que a este gasto no le aplican.
+    return vacio if vigentes.empty?
+
+    alguna_obligatoria = con_texto.any?(&:mandatory)
+    vigentes.each_with_object(vacio) do |h, acc|
+      regla = por_id[h[:rule_id]]
+      hallazgo = violation(CODE_AGENT, h[:message], rule: regla&.name)
+      acc[:violations] << hallazgo
+      acc[:blocking] << hallazgo if regla ? regla.mandatory : alguna_obligatoria
+    end
   end
   private_class_method :check_agent_policy
+
+  # Acepta motivos sueltos (el formato de antes del 2026-10-14) y objetos
+  # `{ rule_id:, message: }`. Un `rule_id` que no es un entero se pierde: es un
+  # hallazgo sin regla, no un error.
+  def self.normalizar_hallazgos(crudos)
+    Array(crudos).filter_map do |h|
+      if h.respond_to?(:to_h) && !h.is_a?(String)
+        h = h.to_h.with_indifferent_access
+        mensaje = h[:message].to_s.strip
+        regla = h[:rule_id].to_s.strip.match?(/\A\d+\z/) ? h[:rule_id].to_i : nil
+      else
+        mensaje = h.to_s.strip
+        regla = nil
+      end
+      { rule_id: regla, message: mensaje } unless mensaje.empty?
+    end
+  end
+  private_class_method :normalizar_hallazgos
+
+  # Suelta los hallazgos de reglas que EXISTEN pero no estan entre las de este
+  # gasto. Un `rule_id` que no es de ninguna regla (el agente se invento el
+  # numero) se queda como hallazgo sin regla: soltarlo seria dejar pasar un
+  # incumplimiento por un error de etiqueta.
+  def self.descartar_reglas_que_no_aplican(hallazgos, por_id)
+    ajenas = hallazgos.filter_map { |h| h[:rule_id] }.uniq - por_id.keys
+    existentes = ajenas.any? ? ExpenseRule.where(id: ajenas).pluck(:id) : []
+
+    hallazgos.filter_map do |h|
+      next if h[:rule_id] && existentes.include?(h[:rule_id])
+
+      por_id.key?(h[:rule_id]) ? h : h.merge(rule_id: nil)
+    end
+  end
+  private_class_method :descartar_reglas_que_no_aplican
 
   def self.violation(code, message, rule: nil)
     { rule: rule, code: code, message: message }
