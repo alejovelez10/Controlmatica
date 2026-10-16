@@ -215,11 +215,11 @@ module ApplicationHelper
     end
   end
 
-  # Roles que pueden ser PROPIETARIO de un centro de costos (y que alimentan los
-  # selects de usuario de la pantalla del centro). Ser propietario no es
-  # cosmetico: administra las partidas de su centro sin necesitar el permiso
-  # "Ver todos" (ExpenseBudgetsController#owner_or_show_all?) y es quien recibe
-  # el correo de aprobacion de gastos (ReportExpense#avisar_al_dueno_del_centro).
+  # Roles que alimentan los selects de usuario de las pestanas de la pantalla
+  # del centro (gastos, reportes, tableristas). YA NO DECIDEN QUIEN PUEDE SER
+  # PROPIETARIO: eso lo decide la casilla "Puede ser propietario" del rol (ver
+  # `get_owner_users_json`). La lista se conserva para que esos selects no
+  # cambien de contenido sin que nadie lo haya pedido.
   #
   # Se compara en MINUSCULAS y sin tilde porque el nombre del rol es texto libre
   # escrito a mano: `db/seeds_staging.rb:148` siembra "ADMINISTRADOR" en
@@ -236,6 +236,21 @@ module ApplicationHelper
         :id => user.id,
         :name => user.names,
       }
+    end
+  end
+
+  # Opciones del select de PROPIETARIO del centro de costos: los usuarios cuyo
+  # rol tiene la casilla "Puede ser propietario" (User.pueden_ser_propietarios).
+  # Ser propietario no es cosmetico: administra las partidas de su centro sin
+  # necesitar "Ver todos" (ExpenseBudgetsController#owner_or_show_all?) y es
+  # quien recibe el correo de aprobacion de gastos
+  # (ReportExpense#avisar_al_dueno_del_centro).
+  #
+  # Misma forma que `get_users_json` ({ id, name }): los formularios del centro
+  # leen `item.name` e `item.id`.
+  def get_owner_users_json
+    User.pueden_ser_propietarios.order(:names).map do |user|
+      { id: user.id, name: user.names }
     end
   end
 

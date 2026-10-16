@@ -157,6 +157,7 @@ class Show extends React.Component {
       dataContact: [],
       clients: [],
       users: [],
+      owners: [],
     };
   }
 
@@ -164,10 +165,15 @@ class Show extends React.Component {
     var arryUsers = [];
     this.props.users.map(function(item) { arryUsers.push({ label: item.name, value: item.id }); });
 
+    // El select de PROPIETARIO no usa `users`: sale de get_owner_users_json,
+    // los roles con la casilla "Puede ser propietario". `users` sigue siendo la
+    // lista de las pestanas.
+    var arryOwners = (this.props.owners || []).map(function(item) { return { label: item.name, value: item.id }; });
+
     var array = [];
     this.props.clientes.map(function(item) { array.push({ label: item.name, value: item.id }); });
 
-    this.setState({ users: arryUsers, clients: array });
+    this.setState({ users: arryUsers, owners: arryOwners, clients: array });
     this.getValues();
   }
 
@@ -594,7 +600,7 @@ class Show extends React.Component {
                 formAutocompleteContact={this.state.selectedOptionContact}
                 formAutocompleteUserOwner={this.state.selectedOptionUserOwner}
                 onChangeAutocompleteUserOwner={this.handleChangeAutocompleteUserOwner}
-                users={this.state.users}
+                users={this.state.owners}
                 estados={this.props.estados}
               />
             )}
@@ -604,7 +610,8 @@ class Show extends React.Component {
                 la pestana de Presupuesto. `users` NO sirve para el select de
                 beneficiario de una partida: sale de get_users_json, que filtra
                 a los roles de ROLES_PROPIETARIOS (application_helper.rb), y el
-                beneficiario tipico es un ingeniero. */}
+                beneficiario tipico es un ingeniero. Los PROPIETARIOS tampoco
+                salen de ahi: van en `owners`. */}
             <div className="cm-tabs">
               <TabContentShow
                 loadData={this.loadData}

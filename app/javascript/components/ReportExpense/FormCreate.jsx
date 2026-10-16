@@ -559,11 +559,47 @@ class FormCreate extends Component {
         }
       >
         <form onSubmit={this.handleSubmit}>
-              {/* EL COMPROBANTE VA PRIMERO (2026-09-10). Estaba al final, debajo del
-                  total, y es el campo que manda: es obligatorio, y cuando se adjunta
-                  se validan las reglas de gasto contra lo que ya haya en el
-                  formulario. Pedirlo de ultimo invitaba a llenar diez campos para
-                  enterarse al final de que la factura no cumplia. */}
+              {/* EL TIPO VA PRIMERO, ANTES DEL COMPROBANTE (2026-10-16). Decide si
+                  el comprobante es obligatorio (un viatico no lo exige) y que
+                  reglas juzga el agente al extraer: sin tipo juzga las de TODOS
+                  los tipos de la persona y marca de mas. Elegido al final, una
+                  prohibicion se veia despues de haber subido el archivo. */}
+              <div className="cm-form-group">
+                <input
+                  type="hidden"
+                  name="type_identification_id"
+                  value={this.props.selectedOptionTypeIndentification.type_identification_id}
+                />
+                <label className="cm-label">
+                  <i className="fa fa-tag"></i> Tipo
+                </label>
+                <Select
+                  onChange={this.props.handleChangeAutocompleteReportExpenceOptionType}
+                  options={this.props.report_expense_options_type}
+                  autoFocus={false}
+                  styles={selectStyles}
+                  menuPortalTarget={document.body}
+                  className={`${
+                    !this.props.errorValues &&
+                    this.props.formValues.type_identification_id === ""
+                      ? "error-class"
+                      : ""
+                  }`}
+                  value={this.props.selectedOptionTypeIndentification}
+                  placeholder="Seleccionar tipo..."
+                />
+                {this.props.selectedOptionTypeIndentification && this.props.selectedOptionTypeIndentification.label ? (
+                  <div className="cm-field-hint cm-field-hint--copyable" onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")}>
+                    <i className="fa fa-copy"></i> {this.props.selectedOptionTypeIndentification.label}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* EL COMPROBANTE VA JUSTO DESPUES DEL TIPO (2026-09-10: estaba al
+                  final, debajo del total). Es el campo que manda: es obligatorio,
+                  y cuando se adjunta se validan las reglas de gasto contra lo que
+                  ya haya en el formulario. Pedirlo de ultimo invitaba a llenar diez
+                  campos para enterarse al final de que la factura no cumplia. */}
               {this.renderReceiptBlock()}
 
               {this.state.showMessage && (
@@ -742,38 +778,7 @@ class FormCreate extends Component {
                 </div>
               </div>
 
-              <div className="cm-form-grid-3">
-                <div className="cm-form-group">
-                  <input
-                    type="hidden"
-                    name="type_identification_id"
-                    value={this.props.selectedOptionTypeIndentification.type_identification_id}
-                  />
-                  <label className="cm-label">
-                    <i className="fa fa-tag"></i> Tipo
-                  </label>
-                  <Select
-                    onChange={this.props.handleChangeAutocompleteReportExpenceOptionType}
-                    options={this.props.report_expense_options_type}
-                    autoFocus={false}
-                    styles={selectStyles}
-                    menuPortalTarget={document.body}
-                    className={`${
-                      !this.props.errorValues &&
-                      this.props.formValues.type_identification_id === ""
-                        ? "error-class"
-                        : ""
-                    }`}
-                    value={this.props.selectedOptionTypeIndentification}
-                    placeholder="Seleccionar tipo..."
-                  />
-                  {this.props.selectedOptionTypeIndentification && this.props.selectedOptionTypeIndentification.label ? (
-                    <div className="cm-field-hint cm-field-hint--copyable" onClick={() => this.copyQuestion(this.props.selectedOptionTypeIndentification.label, "Tipo")}>
-                      <i className="fa fa-copy"></i> {this.props.selectedOptionTypeIndentification.label}
-                    </div>
-                  ) : null}
-                </div>
-
+              <div className="cm-form-grid-2">
                 <div className="cm-form-group">
                   <input
                     type="hidden"

@@ -17,6 +17,7 @@ class ConstCenterShow extends React.Component {
                     estados={this.props.estados}
                     clientes={this.props.clientes}
                     users={this.props.users}
+                    owners={this.props.owners}
                     providers={this.props.providers}
                     report_expense_options={this.props.report_expense_options}
                 />

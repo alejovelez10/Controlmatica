@@ -74,6 +74,25 @@ class User < ApplicationRecord
   # agente de WhatsApp para saber quien reporta).
   scope :by_normalized_phone, ->(key) { where(phone_normalized: key) }
 
+  # Los que el rol habilita como PROPIETARIO de un centro de costos: la casilla
+  # "Puede ser propietario" del modulo Centro de Costos en la pantalla de Roles.
+  # Alimenta el select de propietario del formulario del centro.
+  #
+  # Por permiso y no por nombre de rol (como `ROLES_PROPIETARIOS`, que sigue
+  # alimentando los demas selects de esa pantalla): el nombre del rol es texto
+  # libre, y habilitar a alguien nuevo exigia tocar codigo.
+  #
+  # Sin bypass de administrador, a proposito: ser propietario no es un acceso
+  # sino un papel —recibe el correo de aprobacion de gastos y administra las
+  # partidas de su centro—, y un admin que no lo quiera no tiene por que
+  # aparecer en la lista.
+  scope :pueden_ser_propietarios, -> {
+    joins(rol: { accion_modules: :module_control })
+      .where(module_controls: { name: CostCenter::MODULO_PERMISOS },
+             accion_modules: { name: CostCenter::ACCION_PUEDE_SER_PROPIETARIO })
+      .distinct
+  }
+
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 

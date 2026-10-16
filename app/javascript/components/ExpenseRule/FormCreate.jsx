@@ -96,6 +96,27 @@ class ExpenseRuleFormCreate extends Component {
               data-testid="rule-name"
             />
           </div>
+
+          {/* Descripcion para quien administra. NO la lee el servidor ni la
+              IA: lo que la IA revisa en el comprobante va en su propio campo,
+              mas abajo. */}
+          <div className="cm-form-group">
+            <label className="cm-label">
+              <i className="fa fa-comment-dots" /> Observaciones
+            </label>
+            <textarea
+              rows="2"
+              name="observations"
+              className="cm-input cm-textarea"
+              value={f.observations || ""}
+              onChange={p.onChangeForm}
+              placeholder="Para qué es la regla, quién la pidió…"
+              data-testid="rule-observations"
+            />
+            <div className="cm-field-hint">
+              Opcional. Es solo una descripción para quien administra: no cambia lo que hace la regla.
+            </div>
+          </div>
         </div>
 
         <div className="cm-form-grid-2">
@@ -314,7 +335,7 @@ class ExpenseRuleFormCreate extends Component {
                 <i className="fa fa-exclamation-triangle" />{" "}
                 <span>
                   Dejar esta lista vacía significa <b>que la regla no aplica a nadie</b>, no que aplica
-                  a todos. Para que aplique a todo el mundo, elija <b>«Todos los roles, excepto…»</b>.
+                  a todos. Para que aplique a todos, elija <b>«Todos los roles, excepto…»</b>.
                 </span>
               </div>
 

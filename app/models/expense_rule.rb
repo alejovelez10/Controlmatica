@@ -12,6 +12,7 @@
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
+#  observations         :text
 #  prohibits_expense    :boolean          default(FALSE), not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
@@ -301,6 +302,7 @@ class ExpenseRule < ApplicationRecord
                                etiqueta_si_no(prohibits_expense_change[1]))                     if prohibits_expense_changed?
     partes << segmento_edicion("Aplica a", etiqueta_modo_roles(applies_to_all_roles_change[0]),
                                etiqueta_modo_roles(applies_to_all_roles_change[1]))             if applies_to_all_roles_changed?
+    partes << segmento_edicion("Observaciones", observations_change[0], observations_change[1]) if observations_changed?
 
     return if partes.empty?
 
@@ -309,6 +311,7 @@ class ExpenseRule < ApplicationRecord
 
   def cuerpo_completo
     "<p>Nombre: <b>#{name}</b></p>" \
+      "<p>Observaciones: <b>#{observations.presence || "Ninguna"}</b></p>" \
       "<p>Estado: <b>#{etiqueta_estado(active)}</b></p>" \
       "<p>Regla por defecto: <b>#{etiqueta_si_no(is_default)}</b></p>" \
       "<p>Antigüedad máxima: <b>#{limite_antiguedad_label}</b></p>" \
@@ -363,7 +366,7 @@ class ExpenseRule < ApplicationRecord
     return unless is_default && applies_to_all_roles
 
     errors.add(:is_default,
-               "una regla para todos los roles ya aplica a todo el mundo; no puede ser además " \
+               "una regla para todos los roles ya aplica a todos; no puede ser además " \
                "la regla por defecto")
   end
 

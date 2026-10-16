@@ -53,7 +53,8 @@ class ExpenseRulesController < ApplicationController
 
     if params[:q].present?
       term = "%#{params[:q].to_s.downcase.strip}%"
-      scope = scope.where("LOWER(expense_rules.name) LIKE :t OR LOWER(expense_rules.agent_instructions) LIKE :t", t: term)
+      scope = scope.where("LOWER(expense_rules.name) LIKE :t OR LOWER(expense_rules.agent_instructions) LIKE :t " \
+                          "OR LOWER(expense_rules.observations) LIKE :t", t: term)
     end
 
     scope = if SORT_COLUMNS.include?(params[:sort])
@@ -298,6 +299,6 @@ class ExpenseRulesController < ApplicationController
   def expense_rule_params
     params.permit(:name, :active, :is_default, :mandatory, :max_invoice_age_days,
                   :max_invoice_value, :check_duplicates, :agent_instructions,
-                  :applies_to_all_roles, :prohibits_expense)
+                  :applies_to_all_roles, :prohibits_expense, :observations)
   end
 end

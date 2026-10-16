@@ -250,6 +250,49 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[creo edito elimino], tipos
   end
 
+  # --- Observaciones (2026-10-16) ---------------------------------------------
+  #
+  # Descripcion libre para quien administra. No cambia lo que hace la regla,
+  # pero si se pierde en el camino —params, serializer— el campo se ve vacio al
+  # volver a abrir la regla y nadie sabe por que.
+
+  test "las observaciones se guardan al crear y al editar, y el serializer las devuelve" do
+    sign_in_as @admin
+
+    post expense_rules_path, params: params_regla(name: "Con observaciones",
+                                                  observations: "La pidio gerencia en octubre")
+    assert_json_success
+    creada = ExpenseRule.find_by!(name: "Con observaciones")
+    assert_equal "La pidio gerencia en octubre", creada.observations
+
+    patch expense_rule_path(creada), params: { observations: "Revisar en enero" }
+
+    assert_json_success
+    assert_equal "Revisar en enero", creada.reload.observations
+    assert_equal "Revisar en enero", json_body["register"]["observations"]
+  end
+
+  test "editar las observaciones queda en la auditoria con el antes y el despues" do
+    sign_in_as @admin
+    @regla.update_columns(observations: "Texto viejo")
+
+    patch expense_rule_path(@regla), params: { observations: "Texto nuevo" }
+
+    descripcion = RegisterEdit.where(module: "Reglas de gastos").order(:id).last.description
+    assert_match "Observaciones", descripcion
+    assert_match "Texto nuevo", descripcion
+    assert_match "Texto viejo", descripcion
+  end
+
+  test "get_expense_rules tambien busca en las observaciones" do
+    sign_in_as @admin
+    @regla.update_columns(observations: "Pedida por la junta directiva")
+
+    get "/get_expense_rules", params: { q: "junta" }
+
+    assert_equal [@regla.id], assert_json_list.map { |r| r["id"] }
+  end
+
   # --- Limites resueltos de un usuario ---------------------------------------
 
   test "get_expense_rules_for_user devuelve los limites ya combinados" do

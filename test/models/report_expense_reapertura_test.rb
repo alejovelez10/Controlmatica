@@ -19,6 +19,11 @@ class ReportExpenseReaperturaTest < ActiveSupport::TestCase
     # CostCenter#change_state multiplica hour_cotizada * eng_hours sin guarda de
     # nil y revienta al recalcular el centro.
     @centro.update_columns(hour_cotizada: 0.0, eng_hours: 0.0)
+
+    # `deliveries` NO se vacia sola entre pruebas: sin esto, `deliveries.last`
+    # puede ser el correo que dejo otra prueba y un aviso que no salio pasa por
+    # bueno. Asi fue como el bug de la reapertura por la pantalla paso en verde.
+    ActionMailer::Base.deliveries.clear
   end
 
   def crear(**overrides)
@@ -186,6 +191,34 @@ class ReportExpenseReaperturaTest < ActiveSupport::TestCase
     correo = ActionMailer::Base.deliveries.last
     assert_not_nil correo, "Reabrir con el flag encendido tiene que mandar el aviso"
     assert_equal [@dueno.email], correo.to
+  end
+
+  test "editar por el camino de la pantalla tambien le avisa al dueño del centro" do
+    # LA PRUEBA DE ARRIBA GUARDA CON `update!`, y ni la web ni el MCP guardan
+    # asi: los dos pasan por `persist_with_evaluation!`, que despues del save
+    # corre el reevaluo FIFO y hace `reload` DENTRO de la misma transaccion. El
+    # aviso corre despues del commit, y en Rails 6.1 `reload` borra
+    # `saved_changes`: mirando solo eso, el correo de la reapertura no salia
+    # nunca desde la pantalla de Gastos.
+    gasto = aceptado
+    gasto.assign_attributes(invoice_name: "Hotel corregido")
+
+    con_aviso_de_aprobacion do
+      perform_enqueued_jobs do
+        as_user(@admin) do
+          resultado = ExpenseBudgetService.persist_with_evaluation!(
+            gasto, actor: @admin,
+            previous_cost_center_id: @centro.id, previous_user_invoice_id: users(:ingeniero).id
+          )
+          assert resultado.ok?, resultado.errors.inspect
+        end
+      end
+    end
+
+    assert gasto.reload.creado?
+    assert_equal 1, ActionMailer::Base.deliveries.size,
+                 "Editar desde la pantalla con el flag encendido tiene que mandar UN aviso"
+    assert_equal [@dueno.email], ActionMailer::Base.deliveries.last.to
   end
 
   test "con el flag apagado reabre pero no manda correo" do

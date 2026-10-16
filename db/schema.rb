@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_14_000001) do
+ActiveRecord::Schema.define(version: 2026_10_16_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -369,6 +369,7 @@ ActiveRecord::Schema.define(version: 2026_10_14_000001) do
     t.boolean "mandatory", default: true, null: false
     t.boolean "applies_to_all_roles", default: false, null: false
     t.boolean "prohibits_expense", default: false, null: false
+    t.text "observations"
     t.index ["active"], name: "index_expense_rules_on_active"
     t.index ["is_default"], name: "index_expense_rules_on_is_default"
     t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"

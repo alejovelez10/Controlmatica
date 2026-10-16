@@ -488,6 +488,15 @@ class ReportExpenseIndex extends React.Component {
         );
       }},
       { key: "description", label: "Descripcion", width: "200px" },
+      // Texto libre de quien registra el gasto: sin el recorte a dos lineas una
+      // observacion larga estira la fila entera. El texto completo queda en el
+      // tooltip. sortable: false porque `observations` no esta en
+      // EXPENSE_SORT_COLUMNS (mismo caso que `foreign_total`).
+      { key: "observations", label: "Observaciones", width: "220px", sortable: false, render: function(row) {
+        if (!row.observations) return "—";
+        return React.createElement("div", { className: "cm-cell-truncate", "data-tooltip": row.observations, "data-testid": "expense-observations-" + row.id },
+          React.createElement("span", { className: "cm-cell-truncate-text" }, row.observations));
+      }},
       { key: "identification", label: "NIT / CEDULA", width: "120px" },
       { key: "invoice_number", label: "#Factura", width: "140px" },
       {
@@ -1505,7 +1514,6 @@ class ReportExpenseIndex extends React.Component {
       input: "textarea",
       inputLabel: "Motivo del rechazo (opcional)",
       inputPlaceholder: "Por ejemplo: la factura no corresponde a este centro de costos",
-      text: "El gasto no pasa a Contabilidad y no consume presupuesto. Se le avisa a la persona que lo reportó.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc3545",
@@ -2175,11 +2183,57 @@ class ReportExpenseIndex extends React.Component {
         ),
         React.createElement("form", null,
           React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
-            // EL COMPROBANTE VA PRIMERO. Es el campo que manda: al adjuntarlo se
-            // evaluan las reglas contra lo que ya haya en el formulario, y con
-            // EXPENSE_RECEIPT_REQUIRED encendido sin el no se guarda. Pedirlo de
-            // ultimo invitaba a llenar diez campos para enterarse al final de que
-            // la factura no servia.
+            // EL TIPO VA PRIMERO, ANTES DEL COMPROBANTE (2026-10-16). Decide dos
+            // cosas que el archivo necesita saber: si el comprobante es
+            // obligatorio (un viatico no lo exige) y que reglas juzga el agente
+            // al extraer (sin tipo juzga las de TODOS los tipos de la persona y
+            // marca de mas). Elegido al final, una prohibicion se veia despues
+            // de haber subido el archivo.
+            React.createElement("div", { className: "cm-form-group" },
+              React.createElement("label", { className: "cm-label" },
+                "Tipo"
+              ),
+              // Envoltorio con data-testid: react-select no lo propaga al DOM,
+              // y la prueba E2E de las prohibiciones elige el tipo por aqui.
+              React.createElement("div", { "data-testid": "expense-type-select" },
+              React.createElement(Select, {
+                options: self.typeOptions,
+                value: self.state.selectedType,
+                // Al pasar a viaticos el aviso de "comprobante obligatorio"
+                // deja de ser cierto; cualquier otro error del archivo se queda.
+                onChange: function(opt) {
+                  var tipoId = opt ? opt.value : "";
+                  var responsable = self.state.selectedUser ? self.state.selectedUser.label : "";
+                  self.setState({
+                    selectedType: opt,
+                    receiptError: self.state.receiptError === AVISO_COMPROBANTE ? null : self.state.receiptError,
+                    form: Object.assign({}, form, {
+                      type_identification_id: tipoId,
+                      // El nombre propuesto entra y sale con el tipo: al dejar
+                      // de ser viatico se limpia, o quedaria una persona en el
+                      // campo de un gasto que ya factura un proveedor.
+                      invoice_name: self.nombreDeViatico(form, tipoId, responsable, responsable),
+                    }),
+                  // El aviso de "no tiene permitido este tipo" sale al elegir
+                  // el tipo, no al pulsar Guardar.
+                  }, self.validarReglas);
+                },
+                placeholder: "Seleccionar tipo...",
+                isClearable: true,
+                styles: selectStyles,
+                menuPortalTarget: document.body,
+              })),
+              self.state.selectedType && self.state.selectedType.label ? React.createElement("div", {
+                className: "cm-field-hint cm-field-hint--copyable",
+                onClick: function() { navigator.clipboard.writeText(self.state.selectedType.label); self.setState({ copyMessage: "Tipo copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
+              }, self.state.selectedType.label) : null
+            ),
+
+            // EL COMPROBANTE VA JUSTO DESPUES DEL TIPO y antes de los datos. Es
+            // el campo que manda: al adjuntarlo se evaluan las reglas contra lo
+            // que ya haya en el formulario, y con EXPENSE_RECEIPT_REQUIRED
+            // encendido sin el no se guarda. Pedirlo de ultimo invitaba a llenar
+            // diez campos para enterarse al final de que la factura no servia.
             self.renderReceiptBlock(),
 
             // El divider va JUSTO DEBAJO DEL COMPROBANTE y no al final del
@@ -2267,46 +2321,6 @@ class ReportExpenseIndex extends React.Component {
                     menuPortalTarget: document.body,
                   })
                 )
-              ),
-              // Tipo
-              React.createElement("div", { className: "cm-form-group" },
-                React.createElement("label", { className: "cm-label" },
-                  "Tipo"
-                ),
-                // Envoltorio con data-testid: react-select no lo propaga al DOM,
-                // y la prueba E2E de las prohibiciones elige el tipo por aqui.
-                React.createElement("div", { "data-testid": "expense-type-select" },
-                React.createElement(Select, {
-                  options: self.typeOptions,
-                  value: self.state.selectedType,
-                  // Al pasar a viaticos el aviso de "comprobante obligatorio"
-                  // deja de ser cierto; cualquier otro error del archivo se queda.
-                  onChange: function(opt) {
-                    var tipoId = opt ? opt.value : "";
-                    var responsable = self.state.selectedUser ? self.state.selectedUser.label : "";
-                    self.setState({
-                      selectedType: opt,
-                      receiptError: self.state.receiptError === AVISO_COMPROBANTE ? null : self.state.receiptError,
-                      form: Object.assign({}, form, {
-                        type_identification_id: tipoId,
-                        // El nombre propuesto entra y sale con el tipo: al dejar
-                        // de ser viatico se limpia, o quedaria una persona en el
-                        // campo de un gasto que ya factura un proveedor.
-                        invoice_name: self.nombreDeViatico(form, tipoId, responsable, responsable),
-                      }),
-                    // El aviso de "no tiene permitido este tipo" sale al elegir
-                    // el tipo, no al pulsar Guardar.
-                    }, self.validarReglas);
-                  },
-                  placeholder: "Seleccionar tipo...",
-                  isClearable: true,
-                  styles: selectStyles,
-                  menuPortalTarget: document.body,
-                })),
-                self.state.selectedType && self.state.selectedType.label ? React.createElement("div", {
-                  className: "cm-field-hint cm-field-hint--copyable",
-                  onClick: function() { navigator.clipboard.writeText(self.state.selectedType.label); self.setState({ copyMessage: "Tipo copiado" }); setTimeout(function() { self.setState({ copyMessage: "" }); }, 2000); }
-                }, self.state.selectedType.label) : null
               ),
               // Nombre. En un viatico es el de la PERSONA, no el de un
               // proveedor: lo dice el placeholder, que cambia con el tipo. La

@@ -598,6 +598,10 @@ class ReportExpense < ApplicationRecord
   # que no paso.
   after_update_commit :avisar_la_decision_al_responsable
 
+  # Los dos avisos de `after_update_commit` leen la marca que deja este callback
+  # y no `saved_change_to_operational_state?`. Ver el metodo.
+  after_update :recordar_si_cambio_el_estado
+
   # === REAPERTURA AL EDITAR (2026-10-06) ===================================
   #
   # Editar un gasto lo devuelve a "Creado" y vuelve a avisarle al dueño del
@@ -1031,7 +1035,7 @@ class ReportExpense < ApplicationRecord
   # guardado exitoso en un 500.
   def avisar_la_decision_al_responsable
     return unless self.class.aviso_de_aprobacion?
-    return unless saved_change_to_operational_state?
+    return unless @estado_cambio_al_guardar
     return unless [STATE_ACEPTADO, STATE_RECHAZADO].include?(operational_state)
     return if omitir_aviso_de_aprobacion
 
@@ -1092,18 +1096,34 @@ class ReportExpense < ApplicationRecord
   # esperando su decision— y un segundo formato solo serviria para que tuviera
   # que aprender a leer dos.
   #
-  # `@reabierto` y no solo `saved_change_to_operational_state?`: volver a
-  # "Creado" a mano desde la tabla tambien cambia el estado, y eso no es una
-  # reapertura por edicion sino alguien deshaciendo su propia decision. Se piden
-  # LOS DOS porque la marca puede sobrevivir a un guardado que fallo la
-  # validacion, y una reapertura siempre mueve el estado: sin el segundo, el
-  # siguiente guardado del mismo objeto avisaria de algo que no paso en el.
+  # `@reabierto` y no solo el cambio de estado: volver a "Creado" a mano desde
+  # la tabla tambien cambia el estado, y eso no es una reapertura por edicion
+  # sino alguien deshaciendo su propia decision. Se piden LOS DOS porque la
+  # marca puede sobrevivir a un guardado que fallo la validacion, y una
+  # reapertura siempre mueve el estado: sin el segundo, el siguiente guardado
+  # del mismo objeto avisaria de algo que no paso en el.
   def avisar_la_reapertura
-    return unless @reabierto && saved_change_to_operational_state?
+    return unless @reabierto && @estado_cambio_al_guardar
 
     avisar_al_dueno_del_centro
   ensure
     @reabierto = false
+  end
+
+  # POR QUE UNA MARCA PROPIA Y NO `saved_change_to_operational_state?` EN EL
+  # COMMIT (bug del 2026-10-16): cuando corre un `after_commit` el objeto puede
+  # venir de un `reload`. `persist_with_evaluation!` —el camino de la pantalla
+  # de Gastos y del MCP— guarda, reevalua el FIFO y recarga DENTRO de la misma
+  # transaccion, y en Rails 6.1 `reload` borra `saved_changes`. Leyendolo en el
+  # commit, editar un gasto aceptado lo reabria pero el correo al dueño del
+  # centro no salia nunca; las pruebas no lo veian porque guardaban con
+  # `update!`, que no recarga.
+  #
+  # `after_update` corre dentro del guardado, antes de cualquier `reload`. Se
+  # ASIGNA y no se acumula: el siguiente guardado sin cambio de estado la
+  # vuelve a false, asi que no puede avisar dos veces de lo mismo.
+  def recordar_si_cambio_el_estado
+    @estado_cambio_al_guardar = saved_change_to_operational_state?
   end
 
   def sincronizar_is_acepted

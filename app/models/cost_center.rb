@@ -110,6 +110,13 @@ class CostCenter < ApplicationRecord
   belongs_to :last_user_edited, :class_name => "User", optional: :true
   belongs_to :user_owner, :class_name => "User", optional: :true
 
+  # La casilla de la pantalla de Roles que habilita a un usuario para ser
+  # PROPIETARIO de un centro. Literales y case-sensitive: asi los guarda la
+  # rake task `permissions_propietario_centro:install` y asi los compara
+  # `User.pueden_ser_propietarios`.
+  MODULO_PERMISOS = "Centro de Costos".freeze
+  ACCION_PUEDE_SER_PROPIETARIO = "Puede ser propietario".freeze
+
   before_create :create_code
   after_create :create_quotation
   before_update :change_state

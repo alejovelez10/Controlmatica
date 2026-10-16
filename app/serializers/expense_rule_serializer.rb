@@ -12,6 +12,7 @@
 #  max_invoice_age_days :integer
 #  max_invoice_value    :decimal(15, 2)
 #  name                 :string           not null
+#  observations         :text
 #  prohibits_expense    :boolean          default(FALSE), not null
 #  created_at           :datetime         not null
 #  updated_at           :datetime         not null
@@ -29,7 +30,8 @@ class ExpenseRuleSerializer < ActiveModel::Serializer
              :max_invoice_age_days, :max_invoice_value, :check_duplicates,
              :agent_instructions, :rol_ids, :created_at, :updated_at,
              :applies_to_all_roles, :prohibits_expense,
-             :excluded_rols, :excluded_users, :included_types, :excluded_types
+             :excluded_rols, :excluded_users, :included_types, :excluded_types,
+             :observations
 
   has_many :rols
   belongs_to :user,             serializer: UserSerializer   # quien la creo

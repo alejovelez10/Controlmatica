@@ -63,6 +63,7 @@ var EMPTY_FORM = {
   // prohibe nada. Prohibir es un acto deliberado, igual que aflojar.
   applies_to_all_roles: false,
   prohibits_expense: false,
+  observations: "",
 };
 
 // Las cuatro listas del 2026-10-14, vacias. Van aparte de EMPTY_FORM porque son
@@ -120,6 +121,13 @@ class ExpenseRuleIndex extends Component {
             </span>
           )}
         </span>
+      ) },
+      // Junto al nombre porque es su descripcion. Dos lineas como maximo, con
+      // el texto completo en el tooltip, igual que las demas celdas de texto.
+      { key: "observations", label: "Observaciones", width: "240px", sortable: false, render: (r) => (
+        <div className="cm-cell-truncate" data-tooltip={r.observations || ""} data-testid={"rule-observations-" + r.id}>
+          <span className="cm-cell-truncate-text">{r.observations || "—"}</span>
+        </div>
       ) },
       { key: "active", label: "Estado", width: "110px", render: (r) => (
         r.active
@@ -295,6 +303,7 @@ class ExpenseRuleIndex extends Component {
         agent_instructions: row.agent_instructions || "",
         applies_to_all_roles: !!row.applies_to_all_roles,
         prohibits_expense: !!row.prohibits_expense,
+        observations: row.observations || "",
       },
       selectedRoles: (row.rols || []).map(function(x) { return opcionDe(self.props.roles, x); }),
       selectedExcludedRoles: (row.excluded_rols || []).map(function(x) { return opcionDe(self.props.roles, x); }),
@@ -365,7 +374,7 @@ class ExpenseRuleIndex extends Component {
         cruzados.map(function(o) { return o.label; }).join(", ");
     }
     if (f.is_default && f.applies_to_all_roles) {
-      return "Una regla para todos los roles ya aplica a todo el mundo: no puede ser además la regla por defecto";
+      return "Una regla para todos los roles ya aplica a todos: no puede ser además la regla por defecto";
     }
     return null;
   };
@@ -403,6 +412,7 @@ class ExpenseRuleIndex extends Component {
       included_type_ids: idsDe(this.state.selectedIncludedTypes),
       excluded_type_ids: idsDe(this.state.selectedExcludedTypes),
       prohibits_expense: !!f.prohibits_expense,
+      observations: f.observations || "",
     };
 
     this.setState({ saving: true, formError: null });
