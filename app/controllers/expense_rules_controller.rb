@@ -280,6 +280,10 @@ class ExpenseRulesController < ApplicationController
     elsif rule.excluded_rols.any?
       rule.excluded_rols = []
     end
+
+    # Mismo criterio para los tipos: en una prohibicion "Solo estos tipos" son
+    # los tipos PROHIBIDOS y "Excepto estos" no existe en la pantalla.
+    rule.excluded_types = [] if rule.prohibits_expense && rule.excluded_types.any?
   end
 
   def ids_del_body(clave)

@@ -144,14 +144,19 @@ class ExpenseRuleService
   #   * check_duplicates: activo si ALGUNA lo pide.
   #   * agent_instructions: se concatenan todas las no vacias, en orden de
   #     `name`, cada una en su propio parrafo.
+  #
+  # LAS PROHIBICIONES NO APORTAN LIMITES (2026-10-16). La pantalla las separa de
+  # las reglas de limites y en ese modo no muestra antiguedad, tope, duplicados
+  # ni texto; una regla vieja que aun los tenga guardados no puede seguir
+  # frenando con algo que nadie ve. Lo suyo lo evalua `check_prohibitions`.
   def self.effective_limits(reglas)
-    reglas = Array(reglas)
+    reglas = Array(reglas).reject(&:prohibits_expense)
 
     { max_invoice_age_days: reglas.map(&:max_invoice_age_days).compact.min,
       max_invoice_value: reglas.map(&:max_invoice_value).compact.min,
       check_duplicates: reglas.any?(&:check_duplicates),
       agent_instructions: reglas.sort_by { |r| r.name.to_s }
-                                .map { |r| r.agent_instructions.to_s.strip }
+                                .map(&:texto_para_el_agente)
                                 .reject(&:empty?)
                                 .join("\n\n") }
   end
@@ -174,7 +179,7 @@ class ExpenseRuleService
   # para que cada hallazgo vuelva diciendo de que regla salio.
   def self.reglas_para_el_agente(reglas)
     Array(reglas).filter_map do |r|
-      texto = r.agent_instructions.to_s.strip
+      texto = r.texto_para_el_agente
       { id: r.id, nombre: r.name, instrucciones: texto } if texto.present?
     end
   end
@@ -352,7 +357,7 @@ class ExpenseRuleService
   # `reglas` son las del gasto, ya filtradas por persona y tipo.
   def self.check_agent_policy(verdict, reglas)
     vacio = { violations: [], blocking: [] }
-    con_texto = reglas.select { |r| r.agent_instructions.to_s.strip.present? }
+    con_texto = reglas.select { |r| r.texto_para_el_agente.present? }
     # Sin instrucciones que apliquen, no hay nada que el veredicto pueda decir.
     return vacio if verdict.blank? || con_texto.empty?
 

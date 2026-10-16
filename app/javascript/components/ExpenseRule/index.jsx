@@ -134,30 +134,34 @@ class ExpenseRuleIndex extends Component {
           ? <span className="cm-badge cm-badge-success">Activa</span>
           : <span className="cm-badge cm-badge-danger">Inactiva</span>
       ) },
+      // EN UNA PROHIBICION LOS LIMITES NO APLICAN y la celda lo dice con un
+      // guion: una regla vieja puede tener valores guardados que el servidor ya
+      // no usa (ExpenseRuleService.effective_limits), y mostrarlos haria creer
+      // que siguen frenando.
       { key: "max_invoice_age_days", label: "Antigüedad máx.", width: "140px", render: (r) => (
-        r.max_invoice_age_days ? r.max_invoice_age_days + " días" : "Sin límite"
+        r.prohibits_expense ? "—" : (r.max_invoice_age_days ? r.max_invoice_age_days + " días" : "No se revisa")
       ) },
       { key: "max_invoice_value", label: "Tope de valor", width: "150px", render: (r) => (
-        r.max_invoice_value
+        r.prohibits_expense ? "—" : r.max_invoice_value
           ? <NumberFormat value={parseFloat(r.max_invoice_value)} displayType="text" thousandSeparator={true} prefix="$" />
-          : "Sin tope"
+          : "No se revisa"
       ) },
-      { key: "check_duplicates", label: "Duplicados", width: "120px", render: (r) => (
-        r.check_duplicates
-          ? <span className="cm-badge cm-badge-success">Se validan</span>
-          : <span className="cm-badge cm-badge-warning">No se validan</span>
+      { key: "check_duplicates", label: "Repetidas", width: "120px", render: (r) => (
+        r.prohibits_expense ? "—" : r.check_duplicates
+          ? <span className="cm-badge cm-badge-success">Se frenan</span>
+          : <span className="cm-badge cm-badge-warning">No se revisan</span>
       ) },
       // VA EN LA TABLA Y NO SOLO EN EL FORMULARIO: es lo primero que alguien
       // necesita saber al mirar la lista —cual de estas reglas rechaza gastos y
       // cual solo los marca— y averiguarlo abriendo una por una no lo hace
       // nadie. El texto dice la consecuencia, no el nombre del campo.
-      { key: "mandatory", label: "Al incumplirse", width: "170px", render: (r) => (
+      { key: "mandatory", label: "Al frenar un gasto", width: "170px", render: (r) => (
         r.mandatory
           ? <span className="cm-badge cm-badge-danger" data-testid={"rule-mandatory-" + r.id}>
-              No deja crear el gasto
+              No se guarda
             </span>
           : <span className="cm-badge cm-badge-warning" data-testid={"rule-mandatory-" + r.id}>
-              Deja crear y avisa
+              Se guarda sin aprobar
             </span>
       ) },
       // `sortable: false`: el orden del cliente compara `row[key]` y aqui la
@@ -186,10 +190,17 @@ class ExpenseRuleIndex extends Component {
       // prohibe Representacion" es lo primero que alguien busca al mirar la
       // lista, y abrir regla por regla no lo hace nadie.
       { key: "included_types", label: "Tipos de gasto", width: "220px", sortable: false, render: (r) => {
+        // Los tipos dicen cosas distintas en cada clase de regla: en una
+        // prohibicion son LOS QUE SE FRENAN; en una de limites, DONDE se revisan.
         var solo = (r.included_types || []).map(function(t) { return t.name; });
         var excepto = (r.excluded_types || []).map(function(t) { return t.name; });
-        var texto = solo.length ? "Solo: " + solo.join(", ") : "Todos";
-        if (excepto.length) texto += " · Excepto: " + excepto.join(", ");
+        var texto;
+        if (r.prohibits_expense) {
+          texto = "Frena: " + (solo.join(", ") || "—");
+        } else {
+          texto = "Revisa en: " + (solo.length ? solo.join(", ") : "todos");
+          if (excepto.length) texto += " · Excepto: " + excepto.join(", ");
+        }
         return (
           <div data-testid={"rule-types-" + r.id}>
             {r.prohibits_expense && (
@@ -204,11 +215,16 @@ class ExpenseRuleIndex extends Component {
           </div>
         );
       } },
-      { key: "agent_instructions", label: "No se acepta en el comprobante", width: "260px", sortable: false, render: (r) => (
-        <div className="cm-cell-truncate" data-tooltip={r.agent_instructions || ""}>
-          <span className="cm-cell-truncate-text">{r.agent_instructions || "—"}</span>
-        </div>
-      ) },
+      { key: "agent_instructions", label: "Frena si el comprobante trae", width: "260px", sortable: false, render: (r) => {
+        // Mismo criterio que ExpenseRule#texto_para_el_agente: en una
+        // prohibicion el texto no se usa aunque este guardado.
+        var texto = r.prohibits_expense ? "" : (r.agent_instructions || "");
+        return (
+          <div className="cm-cell-truncate" data-tooltip={texto}>
+            <span className="cm-cell-truncate-text">{texto || "—"}</span>
+          </div>
+        );
+      } },
       { key: "updated_at", label: "Actualizada", width: "180px", render: (r) => formatDate(r.updated_at) },
     ];
   }
@@ -348,6 +364,12 @@ class ExpenseRuleIndex extends Component {
     this.setState({ [clave]: opts || [] });
   };
 
+  // Los radios de «¿Que frena esta regla?» y «Cuando esta regla frena un
+  // gasto…» escriben un booleano con nombre; un evento de checkbox no sirve.
+  handleSetField = (name, value) => {
+    this.setState({ formCreate: Object.assign({}, this.state.formCreate, { [name]: value }) });
+  };
+
   handleChangeRolesMode = (todos) => {
     this.setState({ formCreate: Object.assign({}, this.state.formCreate, { applies_to_all_roles: todos }) });
   };
@@ -356,20 +378,21 @@ class ExpenseRuleIndex extends Component {
   blockReason = () => {
     var f = this.state.formCreate;
     if (!f.name || !String(f.name).trim()) return "La regla necesita un nombre";
-    if (f.max_invoice_age_days !== "" && parseInt(f.max_invoice_age_days, 10) <= 0) {
+    var prohibe = !!f.prohibits_expense;
+    if (!prohibe && f.max_invoice_age_days !== "" && parseInt(f.max_invoice_age_days, 10) <= 0) {
       return "La antigüedad máxima debe ser mayor a cero, o déjela vacía para no tener límite";
     }
-    if (f.max_invoice_value !== "" && parseFloat(f.max_invoice_value) <= 0) {
+    if (!prohibe && f.max_invoice_value !== "" && parseFloat(f.max_invoice_value) <= 0) {
       return "El tope de valor debe ser mayor a cero, o déjelo vacío para no tener tope";
     }
     // "Solo estos tipos" vacio es TODOS los tipos: prohibir sin tipos seria
     // prohibir cualquier gasto. El servidor tambien lo rechaza.
-    if (f.prohibits_expense && (this.state.selectedIncludedTypes || []).length === 0) {
-      return "Para prohibir el gasto, elija al menos un tipo en «Solo estos tipos»";
+    if (prohibe && (this.state.selectedIncludedTypes || []).length === 0) {
+      return "Elija al menos un tipo de gasto que prohibir";
     }
     var incluidos = idsDe(this.state.selectedIncludedTypes);
     var cruzados = (this.state.selectedExcludedTypes || []).filter(function(o) { return incluidos.indexOf(o.value) !== -1; });
-    if (cruzados.length) {
+    if (!prohibe && cruzados.length) {
       return "Un tipo no puede estar en «Solo estos tipos» y en «Excepto estos» a la vez: " +
         cruzados.map(function(o) { return o.label; }).join(", ");
     }
@@ -387,6 +410,13 @@ class ExpenseRuleIndex extends Component {
     var isEdit = this.state.modeEdit;
     var url = isEdit ? "/expense_rules/" + this.state.id : "/expense_rules";
 
+    // UNA PROHIBICION NO MANDA LIMITES, TEXTO NI «EXCEPTO ESTOS»: la pantalla
+    // no los muestra en ese modo y no pueden viajar escondidos. El estado del
+    // formulario si los conserva, para no perderlos si se vuelve al otro modo
+    // antes de guardar. El servidor los vacia igual
+    // (ExpenseRule#limpiar_lo_que_una_prohibicion_no_usa).
+    var prohibe = !!f.prohibits_expense;
+
     var body = {
       name: String(f.name).trim(),
       active: !!f.active,
@@ -394,11 +424,11 @@ class ExpenseRuleIndex extends Component {
       // `null` explicito y no `""`: el controller hace `params.permit`, y un
       // string vacio llegaria como "" que ActiveRecord castea a 0 en un
       // integer. 0 no es "sin limite", es un limite imposible.
-      max_invoice_age_days: f.max_invoice_age_days === "" ? null : parseInt(f.max_invoice_age_days, 10),
-      max_invoice_value: f.max_invoice_value === "" ? null : parseFloat(f.max_invoice_value),
-      check_duplicates: !!f.check_duplicates,
+      max_invoice_age_days: prohibe || f.max_invoice_age_days === "" ? null : parseInt(f.max_invoice_age_days, 10),
+      max_invoice_value: prohibe || f.max_invoice_value === "" ? null : parseFloat(f.max_invoice_value),
+      check_duplicates: !prohibe && !!f.check_duplicates,
       mandatory: !!f.mandatory,
-      agent_instructions: f.agent_instructions || "",
+      agent_instructions: prohibe ? "" : (f.agent_instructions || ""),
       // SIEMPRE se manda, incluso vacio. El controller distingue con
       // `params.key?(:rol_ids)`: mandar la lista vacia es la operacion
       // legitima "esta regla ya no aplica a nadie", y omitir la clave
@@ -410,7 +440,7 @@ class ExpenseRuleIndex extends Component {
       excluded_rol_ids: idsDe(this.state.selectedExcludedRoles),
       excluded_user_ids: idsDe(this.state.selectedExcludedUsers),
       included_type_ids: idsDe(this.state.selectedIncludedTypes),
-      excluded_type_ids: idsDe(this.state.selectedExcludedTypes),
+      excluded_type_ids: prohibe ? [] : idsDe(this.state.selectedExcludedTypes),
       prohibits_expense: !!f.prohibits_expense,
       observations: f.observations || "",
     };
@@ -588,6 +618,7 @@ class ExpenseRuleIndex extends Component {
             selectedExcludedTypes={this.state.selectedExcludedTypes}
             onChangeLista={this.handleChangeLista}
             onChangeRolesMode={this.handleChangeRolesMode}
+            onSetField={this.handleSetField}
             onChangeForm={this.handleChangeForm}
             onChangeMoney={this.handleChangeMoney}
             onToggleBool={this.handleToggleBool}

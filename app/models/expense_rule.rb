@@ -92,6 +92,15 @@ class ExpenseRule < ApplicationRecord
                                            join_table: "expense_rules_excluded_types",
                                            association_foreign_key: "report_expense_option_id"
 
+  # DOS CLASES DE REGLA (2026-10-16): la que pone LIMITES (antiguedad, tope,
+  # duplicados, lo que la IA no acepta) y la que PROHIBE tipos de gasto. La
+  # pantalla las separa arriba del todo y en modo prohibir esconde los limites,
+  # porque sobre un tipo prohibido no hay nada mas que revisar. Lo que no se ve
+  # no puede quedar actuando: la regla de Representacion del cliente tenia un
+  # texto para la IA ("solo administradores…") que la IA no podia verificar y
+  # frenaba gastos con ese mismo texto como motivo.
+  before_validation :limpiar_lo_que_una_prohibicion_no_usa
+
   validates :name, presence: true
   # Unico ENTRE ACTIVAS y no en toda la tabla: desactivar una regla es la forma
   # de archivarla, y el nombre tiene que poder reutilizarse despues.
@@ -199,6 +208,15 @@ class ExpenseRule < ApplicationRecord
   # gasto"; ante una regla rota, frenar a toda la empresa es el peor error.
   def prohibe?
     prohibits_expense && included_type_ids.any?
+  end
+
+  # Lo que la IA busca en el comprobante. VACIO EN UNA PROHIBICION aunque la
+  # columna traiga texto: las reglas guardadas antes del 2026-10-16 pueden
+  # tenerlo, y la pantalla ya no lo muestra en ese modo. Es la UNICA lectura del
+  # texto para el agente; leer `agent_instructions` directo devolveria el texto
+  # escondido.
+  def texto_para_el_agente
+    prohibits_expense ? "" : agent_instructions.to_s.strip
   end
 
   # Nombre completo para la pantalla, la auditoria y el catalogo del
@@ -346,8 +364,21 @@ class ExpenseRule < ApplicationRecord
     return if included_types.any?
 
     errors.add(:prohibits_expense,
-               "una regla que prohíbe el gasto necesita al menos un tipo en «Solo estos tipos»; " \
+               "una regla que prohíbe necesita al menos un tipo de gasto que prohibir; " \
                "sin tipos prohibiría todos los gastos")
+  end
+
+  # Una prohibicion no usa limites ni texto para la IA: se vacian al guardar,
+  # para que la base diga lo mismo que la pantalla. `check_duplicates` a false y
+  # no a nil: la columna es NOT NULL. Los tipos de "Excepto estos" los vacia el
+  # controller, que es quien asigna las listas.
+  def limpiar_lo_que_una_prohibicion_no_usa
+    return unless prohibits_expense
+
+    self.max_invoice_age_days = nil
+    self.max_invoice_value    = nil
+    self.check_duplicates     = false
+    self.agent_instructions   = nil
   end
 
   def tipos_sin_cruce

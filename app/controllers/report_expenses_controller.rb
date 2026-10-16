@@ -477,7 +477,7 @@ class ReportExpensesController < ApplicationController
                     ExpenseRule.aplicables_a(responsable).includes(:included_types, :excluded_types).to_a
                   end
     limites     = ExpenseRuleService.effective_limits(reglas)
-    juzgadas    = reglas.select { |r| r.agent_instructions.to_s.strip.present? }
+    juzgadas    = reglas.select { |r| r.texto_para_el_agente.present? }
 
     result = ReceiptExtractionService.extract(params[:file], cost_center_code: center&.code,
                                                              agent_instructions: limites[:agent_instructions],
@@ -1157,7 +1157,7 @@ class ReportExpensesController < ApplicationController
     return unless ReceiptExtractionService.enabled? && ReceiptExtractionService.configured?
 
     con_texto = ExpenseRule.para_gasto(report_expense.user_invoice, report_expense.type_identification_id)
-                           .select { |r| r.agent_instructions.to_s.strip.present? }
+                           .select { |r| r.texto_para_el_agente.present? }
     return if con_texto.empty?
 
     actual = report_expense.agent_policy_verdict

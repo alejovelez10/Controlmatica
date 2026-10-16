@@ -74,7 +74,7 @@ test.describe("reglas por rol, persona y tipo de gasto", () => {
 
     // Sin tipos el boton no deja guardar: prohibir sin tipos seria prohibir todo.
     await page.getByTestId("rule-prohibits-expense").check();
-    await expect(page.getByTestId("rule-block-message")).toContainText("Solo estos tipos");
+    await expect(page.getByTestId("rule-block-message")).toContainText("tipo de gasto que prohibir");
     await expect(page.getByTestId("rule-submit")).toBeDisabled();
 
     await elegirSelect(page, "rule-included-types-select", TIPO_PROHIBIDO);

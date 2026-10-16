@@ -276,4 +276,53 @@ class ExpenseRuleAlcanceTest < ActiveSupport::TestCase
 
     as_user(@admin) { assert gasto.update(description: "Cena con cliente"), gasto.errors.full_messages.join }
   end
+
+  # --- Una prohibicion solo prohibe (2026-10-16) --------------------------------
+  #
+  # La pantalla separa las reglas de LIMITES de las que PROHIBEN tipos, y en modo
+  # prohibir no muestra limites ni texto para la IA. Lo que no se ve no puede
+  # seguir frenando: la regla de Representacion del cliente tenia un texto para
+  # la IA ("solo administradores…") que la IA no podia verificar y frenaba
+  # gastos con ese mismo texto como motivo.
+
+  test "al guardar una prohibicion se vacian los limites y el texto para la IA" do
+    r = regla(applies_to_all_roles: true, included_types: [@representacion], prohibits_expense: true,
+              max_invoice_age_days: 30, max_invoice_value: 50_000, check_duplicates: true,
+              agent_instructions: "Solo administradores pueden cargar representacion")
+
+    assert_nil r.max_invoice_age_days
+    assert_nil r.max_invoice_value
+    refute r.check_duplicates
+    assert_nil r.agent_instructions
+  end
+
+  test "una prohibicion vieja con texto guardado no se lo pasa a la IA ni pone limites" do
+    # update_columns: asi quedaron las reglas guardadas antes de esta fecha, sin
+    # pasar por la limpieza del modelo.
+    r = regla(applies_to_all_roles: true, included_types: [@representacion], prohibits_expense: true)
+    r.update_columns(agent_instructions: "Solo administradores", max_invoice_value: 1_000)
+
+    limites = ExpenseRuleService.effective_limits([r.reload])
+    assert_equal "", limites[:agent_instructions]
+    assert_nil limites[:max_invoice_value]
+    assert_empty ExpenseRuleService.reglas_para_el_agente([r])
+  end
+
+  test "una prohibicion vieja con texto sigue prohibiendo, pero sin el veredicto de la IA" do
+    r = regla(applies_to_all_roles: true, included_types: [@representacion], prohibits_expense: true,
+              mandatory: true)
+    r.update_columns(agent_instructions: "Solo administradores")
+    veredicto = { compliant: false, findings: [{ rule_id: r.id, message: "Solo administradores" }] }
+
+    v = resultado(gasto_nuevo(type_identification: @representacion), agent_verdict: veredicto)
+
+    assert_equal [ExpenseRuleService::CODE_PROHIBITED], codigos(v[:violations])
+  end
+
+  test "una regla de limites sigue pasandole su texto a la IA" do
+    r = regla(applies_to_all_roles: true, agent_instructions: "Bebidas alcoholicas")
+
+    assert_equal "Bebidas alcoholicas", ExpenseRuleService.effective_limits([r])[:agent_instructions]
+    assert_equal [r.id], ExpenseRuleService.reglas_para_el_agente([r]).map { |x| x[:id] }
+  end
 end

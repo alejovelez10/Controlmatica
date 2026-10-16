@@ -80,7 +80,7 @@ class ExpenseRulesAlcanceControllerTest < ActionDispatch::IntegrationTest
 
     cuerpo = JSON.parse(response.body)
     assert_equal "error", cuerpo["type"]
-    assert_match "Solo estos tipos", cuerpo["message"].join
+    assert_match "tipo de gasto que prohibir", cuerpo["message"].join
     assert_equal [@representacion.id], r.reload.included_types.map(&:id)
   end
 
@@ -135,5 +135,21 @@ class ExpenseRulesAlcanceControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes props["tipos"].map { |t| t["label"] }, "Efectivo"
     assert_includes props["usuarios"].map { |u| u["label"] },
                     ExpenseRule.nombre_de_persona(users(:ingeniero))
+  end
+
+  test "una prohibicion no guarda tipos en «Excepto estos»" do
+    # En modo prohibir la pantalla no muestra esa lista: si llegara llena, la
+    # base guardaria algo que nadie ve.
+    sign_in_as @admin
+    otro = ReportExpenseOption.create!(name: "Otro tipo", category: "Tipo", user_id: @admin.id)
+
+    post expense_rules_path, as: :json, params: {
+      name: "Prohibe con excepto", active: true, applies_to_all_roles: true, prohibits_expense: true,
+      included_type_ids: [@representacion.id], excluded_type_ids: [otro.id]
+    }
+
+    r = ExpenseRule.find_by!(name: "Prohibe con excepto")
+    assert_equal [@representacion.id], r.included_types.map(&:id)
+    assert_empty r.excluded_types
   end
 end

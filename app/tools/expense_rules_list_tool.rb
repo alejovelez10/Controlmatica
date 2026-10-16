@@ -59,6 +59,9 @@ class ExpenseRulesListTool < ApplicationTool
          prohibited_types: prohibidos,
          rules: reglas.map { |r|
            Mcp::Serialize.record(r, KEYS,
+                                 # El texto que de verdad juzga: vacio en una
+                                 # prohibicion aunque la columna traiga uno viejo.
+                                 agent_instructions: r.texto_para_el_agente,
                                  only_types: r.included_types.map { |t| t.name.to_s.squish },
                                  except_types: r.excluded_types.map { |t| t.name.to_s.squish })
          },
