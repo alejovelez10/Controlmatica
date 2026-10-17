@@ -322,7 +322,7 @@ class FormCreate extends Component {
         tono: vigente.frena ? "danger" : "warn",
         texto: vigente.frena
           ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
-          : "Incumple las instrucciones de la regla de gasto:",
+          : "Incumple las instrucciones de la regla de gasto: se guardará, pero no se aprueba automáticamente:",
         testid: "expense-policy-verdict",
       });
       vigente.hallazgos.forEach((h, i) => avisos.push({
@@ -504,18 +504,6 @@ class FormCreate extends Component {
                 <i className="fa fa-trash"></i> Quitar
               </button>
             ) : null}
-          </div>
-        ) : null}
-
-        {/* Reglas incumplidas, evaluadas al adjuntar. Es un AVISO: quien rechaza
-            es el servidor al guardar. Verlo con la factura en la mano permite
-            corregir o desistir antes de llenar el resto del formulario. */}
-        {(this.props.ruleViolations || []).length > 0 ? (
-          <div className="cm-alert cm-alert-warning" data-testid="expense-rule-violations">
-            <div><i className="fa fa-exclamation-triangle"></i> Este gasto incumple las reglas y será rechazado al guardar:</div>
-            <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-              {this.props.ruleViolations.map((v, i) => <li key={i}>{v.message}</li>)}
-            </ul>
           </div>
         ) : null}
 

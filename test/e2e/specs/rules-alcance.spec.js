@@ -39,25 +39,26 @@ async function abrirReglas(page) {
 }
 
 // Abre el gasto en el centro de la regla, con Bruno (rol Ingeniero E2E) de
-// responsable, y elige el tipo esperando la validacion en vivo que dispara.
+// responsable, y elige el tipo. Desde el 2026-10-16 elegir el tipo NO dispara
+// ninguna validacion: las reglas solo se avisan al guardar y en el panel de la
+// IA.
 async function gastoDeBrunoConTipo(page, tipo) {
   await page.goto("/report_expenses");
   await abrirModalGasto(page);
   await elegirCentro(page, CODIGO);
   await elegirSelect(page, "expense-user-select", "Bruno E2E");
-
-  // Solo la validacion que ya trae tipo: elegir al responsable tambien dispara
-  // una, con el tipo vacio, y puede llegar tarde.
-  const validacion = page.waitForResponse((r) => {
-    if (!r.url().includes("/validate_expense_rules")) return false;
-    try {
-      return !!JSON.parse(r.request().postData() || "{}").type_identification_id;
-    } catch (e) {
-      return false;
-    }
-  });
   await elegirSelect(page, "expense-type-select", tipo);
-  return (await validacion).json();
+}
+
+function datosDeGasto(numero) {
+  return {
+    invoice_name: "Restaurante con cliente",
+    invoice_date: new Date().toISOString().slice(0, 10),
+    identification: "900555666",
+    invoice_number: numero,
+    invoice_value: 80000,
+    invoice_tax: 0,
+  };
 }
 
 test.describe("reglas por rol, persona y tipo de gasto", () => {
@@ -94,32 +95,26 @@ test.describe("reglas por rol, persona y tipo de gasto", () => {
     await expect(page.getByTestId(`rule-types-${id}`)).toContainText(TIPO_PROHIBIDO);
   });
 
-  test("el formulario avisa al elegir el tipo prohibido y no deja guardar", async ({ page }) => {
-    const validacion = await gastoDeBrunoConTipo(page, TIPO_PROHIBIDO);
+  test("elegir el tipo prohibido no avisa nada; al guardar no deja y dice por que", async ({ page }) => {
+    await gastoDeBrunoConTipo(page, TIPO_PROHIBIDO);
+    await expect(page.getByTestId("expense-rule-violations")).toHaveCount(0);
 
-    expect(validacion.blocking_violations.map((v) => v.code)).toContain("expense_prohibited");
-    await expect(page.getByTestId("expense-rule-violations")).toContainText("No tiene permitido");
-
-    await llenarGasto(page, {
-      invoice_name: "Restaurante con cliente",
-      invoice_date: new Date().toISOString().slice(0, 10),
-      identification: "900555666",
-      invoice_number: "FE-E2E-PROH-001",
-      invoice_value: 80000,
-      invoice_tax: 0,
-    });
+    await llenarGasto(page, datosDeGasto("FE-E2E-PROH-001"));
     const { body } = await guardarGasto(page);
 
     expect(body.type).toBe("error");
-    expect(body.message.join(" ")).toContain(TIPO_PROHIBIDO);
-    expect(body.message.join(" ")).toContain(REGLA);
+    expect(body.blocking_rule_violations.map((v) => v.code)).toContain("expense_prohibited");
+    await expect(page.locator(".swal2-title")).toContainText("No se puede guardar");
+    await expect(page.locator(".swal2-html-container")).toContainText("No tiene permitido");
   });
 
-  test("otro tipo de gasto pasa sin aviso", async ({ page }) => {
-    const validacion = await gastoDeBrunoConTipo(page, "Alimentacion");
+  test("otro tipo de gasto se guarda sin aviso de reglas", async ({ page }) => {
+    await gastoDeBrunoConTipo(page, "Alimentacion");
+    await llenarGasto(page, datosDeGasto("FE-E2E-OK-001"));
+    const { body } = await guardarGasto(page);
 
-    expect(validacion.violations.map((v) => v.code)).not.toContain("expense_prohibited");
-    await expect(page.getByTestId("expense-rule-violations")).toHaveCount(0);
+    expect(body.type).toBe("success");
+    expect(body.rule_violations).toEqual([]);
   });
 
   // "Sin licor, excepto en Representacion". El agente lee ANTES de que se
@@ -189,5 +184,33 @@ test.describe("reglas por rol, persona y tipo de gasto", () => {
     expect(res.request().postData()).toContain("policy_verdict");
     expect(body.type).toBe("error");
     expect(body.message.join(" ")).toContain("Incluye cerveza");
+  });
+
+  // Una regla SIN «Impedir guardar» que pone un tipo como no permitido
+  // («todo gasto de representacion debe ser aprobado»): el gasto se guarda y se
+  // avisa que no se aprueba solo. Nunca como si fuera una regla dura.
+  test("una regla que deja guardar avisa al guardar que no se aprueba solo", async ({ page }) => {
+    await abrirReglas(page);
+    await page.evaluate(async () => {
+      const props = JSON.parse(document.querySelector("[data-react-class='ExpenseRuleIndex']").dataset.reactProps);
+      const tipo = props.tipos.find((t) => t.label === "Alimentacion");
+      const csrf = document.querySelector('meta[name="csrf-token"]').content;
+      await fetch("/expense_rules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+        body: JSON.stringify({ name: "E2E Alimentacion con aprobacion", active: true, applies_to_all_roles: true,
+                               mandatory: false, check_duplicates: false, included_type_ids: [tipo.value] }),
+      });
+    });
+
+    await gastoDeBrunoConTipo(page, "Alimentacion");
+    await expect(page.getByTestId("expense-rule-violations")).toHaveCount(0);
+    await llenarGasto(page, datosDeGasto("FE-E2E-BLANDA-001"));
+    const { body } = await guardarGasto(page);
+
+    expect(body.type).toBe("success");
+    expect(body.blocking_rule_violations).toEqual([]);
+    await expect(page.locator(".swal2-title")).toContainText("no se aprueba automáticamente");
+    await expect(page.locator(".swal2-html-container")).toContainText("necesitan aprobación");
   });
 });

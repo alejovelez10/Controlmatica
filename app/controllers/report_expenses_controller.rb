@@ -223,6 +223,7 @@ class ReportExpensesController < ApplicationController
                # invariante #7, a arrastrar un jsonb hasta el Excel de export y
                # el mapeo del import, donde no significa nada.
                rule_violations: reglas_incumplidas(result.value),
+               blocking_rule_violations: reglas_que_frenan(result.value),
              }
     else
       render :json => {
@@ -234,6 +235,7 @@ class ReportExpensesController < ApplicationController
                # muestra como una lista de reglas y se deja el modal abierto para
                # corregir; lo segundo es un error generico.
                rule_violations: reglas_incumplidas(report_expense_del_resultado(result)),
+               blocking_rule_violations: reglas_que_frenan(report_expense_del_resultado(result)),
              }
     end
   end
@@ -315,6 +317,7 @@ class ReportExpensesController < ApplicationController
                register: ActiveModelSerializers::SerializableResource.new(result.value, each_serializer: ReportExpenseSerializer),
                type: "success",
                rule_violations: reglas_incumplidas(result.value),
+               blocking_rule_violations: reglas_que_frenan(result.value),
              }
     else
       render :json => {
@@ -326,6 +329,7 @@ class ReportExpensesController < ApplicationController
                # muestra como una lista de reglas y se deja el modal abierto para
                # corregir; lo segundo es un error generico.
                rule_violations: reglas_incumplidas(report_expense_del_resultado(result)),
+               blocking_rule_violations: reglas_que_frenan(report_expense_del_resultado(result)),
              }
     end
   end
@@ -803,6 +807,15 @@ class ReportExpensesController < ApplicationController
   # resultado distinto del que motivo el rechazo.
   def reglas_incumplidas(expense)
     Array(expense&.violaciones_de_reglas).map do |v|
+      { code: v[:code] || v["code"], message: v[:message] || v["message"] }
+    end
+  end
+
+  # Solo las que impidieron guardar. La pantalla muestra «No se puede guardar»
+  # con ESTAS y no con la lista completa: una regla sin «Impedir guardar» no
+  # es la causa de que el gasto no se haya guardado.
+  def reglas_que_frenan(expense)
+    Array(expense&.violaciones_que_frenan).map do |v|
       { code: v[:code] || v["code"], message: v[:message] || v["message"] }
     end
   end

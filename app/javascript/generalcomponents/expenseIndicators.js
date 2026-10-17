@@ -199,3 +199,4 @@ export function esComprobanteImagen(pista) {
   var limpia = String(pista || "").split("?")[0].split("#")[0].toLowerCase();
   return /\.(jpe?g|png|webp|heic|gif)$/.test(limpia);
 }
+

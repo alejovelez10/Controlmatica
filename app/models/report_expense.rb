@@ -417,6 +417,10 @@ class ReportExpense < ApplicationRecord
   # controller pueda mostrarselas al usuario cuando el guardado se rechaza (ahi
   # la columna `rule_violations` no existe todavia: el gasto no se guardo).
   attr_reader :violaciones_de_reglas
+  # Solo las que IMPIDEN GUARDAR. Van aparte para que la pantalla no presente
+  # como bloqueo una regla que deja guardar (2026-10-16): la lista completa
+  # trae tambien las que solo dejan el gasto sin aprobar.
+  attr_reader :violaciones_que_frenan
 
   # AQUI VIVIA `reglas_confirmadas_por_el_usuario` Y SE RETIRO EL 2026-09-15.
   #
@@ -1226,7 +1230,8 @@ class ReportExpense < ApplicationRecord
     if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
       return if (changed & CAMPOS_DE_PROHIBICION).empty?
 
-      ExpenseRuleService.prohibitions_for(self)[:blocking].each { |v| errors.add(:base, v[:message]) }
+      @violaciones_que_frenan = ExpenseRuleService.prohibitions_for(self)[:blocking]
+      @violaciones_que_frenan.each { |v| errors.add(:base, v[:message]) }
       return
     end
 
@@ -1237,7 +1242,8 @@ class ReportExpense < ApplicationRecord
     # necesita ver para decidir—, mientras que al usuario solo se le cierra la
     # puerta por las reglas marcadas como obligatorias.
     @violaciones_de_reglas = resultado[:violations]
-    resultado[:blocking_violations].each { |v| errors.add(:base, v[:message]) }
+    @violaciones_que_frenan = resultado[:blocking_violations]
+    @violaciones_que_frenan.each { |v| errors.add(:base, v[:message]) }
   rescue StandardError => e
     # Un fallo del motor de reglas NO puede impedir registrar un gasto: seria
     # convertir un error nuestro en una puerta cerrada para el usuario.

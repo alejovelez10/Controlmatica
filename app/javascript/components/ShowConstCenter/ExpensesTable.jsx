@@ -107,7 +107,6 @@ class ExpensesTable extends Component {
       // saber si lo adjuntado es imagen cuando se EDITA un gasto.
       receiptExistingUrl: "",
       // Violaciones de reglas del gasto en curso, evaluadas al adjuntar.
-      ruleViolations: [],
       receiptError: null,
       receiptPreview: { open: false, id: null, name: "" },
       receiptPreviewError: false,
@@ -446,8 +445,7 @@ class ExpensesTable extends Component {
         // quedaria a nombre de la persona anterior.
         invoice_name: this.nombreDeViatico(f, f.type_identification_id, this.etiquetaUsuario(opt), anterior),
       }),
-    // Otro responsable puede tener otras reglas, y una prohibirle el tipo elegido.
-    }, this.validarReglas);
+    });
     this.loadBudgetAvailability(opt ? opt.value : null, this.state.modeEdit ? this.state.id : null);
   };
 
@@ -465,8 +463,7 @@ class ExpensesTable extends Component {
         // un proveedor.
         invoice_name: this.nombreDeViatico(f, opt.value, responsable, responsable),
       }),
-    // El aviso de "no tiene permitido este tipo" sale al elegir el tipo.
-    }, this.validarReglas);
+    });
   };
   handleChangeAutocompleteReportExpenceOptionPaymentType = (opt) => { this.setState({ selectedOptionPaymentType: opt, formCreate: Object.assign({}, this.state.formCreate, { payment_type_id: opt.value }) }); };
 
@@ -609,41 +606,11 @@ class ExpensesTable extends Component {
     }
     // EL VEREDICTO MUERE CON EL ARCHIVO: es el juicio sobre UN comprobante.
     this.setState({ receiptFile: file, receiptFileName: file.name, receiptError: null,
-                    extraction: Object.assign({}, EXTRACTION_VACIA) },
-                  this.validarReglas);
+                    extraction: Object.assign({}, EXTRACTION_VACIA) });
   };
 
-  // Espejo de `validarReglas` del indice de Gastos. Delega en
-  // /validate_expense_rules, que corre el MISMO ExpenseRuleService que la
-  // validacion del modelo: evaluarlas aqui en JavaScript las dejaria
-  // contradiciendose con el servidor, y la de duplicados ni siquiera es
-  // evaluable sin consultar la base.
-  validarReglas = () => {
-    var f = this.state.formCreate;
-    if (!f.user_invoice_id) return;
-
-    fetch("/validate_expense_rules", {
-      method: "POST",
-      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: this.state.modeEdit ? this.state.id : null,
-        user_invoice_id: f.user_invoice_id,
-        cost_center_id: f.cost_center_id,
-        invoice_date: f.invoice_date,
-        invoice_number: f.invoice_number,
-        identification: f.identification,
-        invoice_value: f.invoice_value,
-        invoice_tax: f.invoice_tax,
-        invoice_total: f.invoice_total,
-        // El tipo decide que reglas aplican y si alguna PROHIBE el gasto.
-        type_identification_id: f.type_identification_id,
-      }),
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      // Un fallo del chequeo no estorba: el servidor valida igual al guardar.
-      .then((data) => this.setState({ ruleViolations: (data && data.violations) || [] }))
-      .catch(() => this.setState({ ruleViolations: [] }));
-  };
+  // Las reglas no se avisan en vivo (2026-10-16): solo al guardar y en el
+  // panel de la IA. Ver el comentario en packs/ReportExpenseIndex.js.
 
   handleDeleteReceipt = () => {
     var self = this;
@@ -873,12 +840,9 @@ class ExpensesTable extends Component {
         if (data.type === "error") {
           self.setState({ saving: false });
 
-          // LAS REGLAS DE GASTO SON DURAS: el servidor RECHAZA el gasto y este
-          // modal se queda abierto con los datos puestos, para corregir sin
-          // volver a escribirlo todo. Se separa del error generico porque no es
-          // un fallo del sistema sino una decision de negocio, y el usuario
-          // necesita leer QUE regla incumplio, no "ocurrió un error".
-          var violaciones = data.rule_violations || [];
+          // Solo las reglas con «Impedir guardar» explican el rechazo: una que
+          // deja guardar no es la causa (2026-10-16). Ver ReportExpenseIndex.js.
+          var violaciones = data.blocking_rule_violations || [];
           if (violaciones.length > 0) {
             Swal.fire({
               icon: "warning",
@@ -898,6 +862,21 @@ class ExpensesTable extends Component {
         self.setState({ modal: false, saving: false });
         self.loadData(isEdit ? undefined : 1);
         self.clearValues();
+
+        // Guardado, pero con reglas que lo dejan sin aprobar: se dice y por que.
+        var avisos = data.rule_violations || [];
+        if (avisos.length > 0) {
+          Swal.fire({
+            icon: "info",
+            title: "Gasto guardado, pero no se aprueba automáticamente",
+            html: "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
+                  avisos.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
+                  "</ul>",
+            confirmButtonColor: "#2a3f53",
+            confirmButtonText: "Entendido",
+          });
+          return;
+        }
 
         Swal.fire({ position: "center", icon: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
       })
@@ -1030,7 +1009,6 @@ class ExpensesTable extends Component {
             receiptFileName={this.state.receiptFileName}
             receiptExistingId={this.state.receiptExistingId}
             receiptError={this.state.receiptError}
-            ruleViolations={this.state.ruleViolations}
             receiptRequired={this.comprobanteObligatorio(this.state.formCreate.type_identification_id)}
             receiptOptional={!!this.props.estados.receipt_required && !this.comprobanteObligatorio(this.state.formCreate.type_identification_id)}
             esViatico={this.esViatico(this.state.formCreate.type_identification_id)}

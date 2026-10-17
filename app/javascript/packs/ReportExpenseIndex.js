@@ -199,7 +199,6 @@ function estadoComprobanteVacio() {
     // Violaciones de reglas del gasto EN CURSO. Se llenan al adjuntar el
     // comprobante; el Guardar las vuelve a validar en el servidor, que es quien
     // manda. Esto solo adelanta el aviso.
-    ruleViolations: [],
     receiptError: null,
     extraction: Object.assign({}, EXTRACTION_VACIA),
     exchange: Object.assign({}, EXCHANGE_VACIO),
@@ -1068,54 +1067,14 @@ class ReportExpenseIndex extends React.Component {
     // se adjunta otro, dejarlo puesto significaria bloquear (o dejar pasar) el
     // nuevo por lo que decia el anterior.
     this.setState({ receiptFile: file, receiptFileName: file.name, receiptSize: file.size, receiptError: null,
-                    extraction: Object.assign({}, EXTRACTION_VACIA) },
-                  this.validarReglas);
+                    extraction: Object.assign({}, EXTRACTION_VACIA) });
   }.bind(this);
 
-  // Evalua las reglas de gasto contra lo que hay AHORA en el formulario.
-  //
-  // Se dispara al adjuntar el comprobante porque ese es el momento en que la
-  // persona tiene la factura delante: enterarse ahi de que tiene 90 dias, o de
-  // que supera el tope, le permite arreglarlo o desistir antes de llenar el
-  // resto. Al pulsar Guardar se vuelve a validar EN EL SERVIDOR, que es quien
-  // rechaza; esto no sustituye nada, solo adelanta el aviso.
-  //
-  // Delega en /validate_expense_rules, que corre el MISMO ExpenseRuleService
-  // que la validacion del modelo. Evaluar las reglas aqui en JavaScript las
-  // dejaria contradiciendose con el servidor en cuanto una cambiara, y la de
-  // duplicados ni siquiera es evaluable sin consultar la base.
-  validarReglas = function() {
-    var self = this;
-    var f = this.state.form;
-    if (!f.user_invoice_id) return;
-
-    fetch("/validate_expense_rules", {
-      method: "POST",
-      headers: { "X-CSRF-Token": csrfToken(), "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: self.state.modeEdit ? self.state.editId : null,
-        user_invoice_id: f.user_invoice_id,
-        cost_center_id: f.cost_center_id,
-        invoice_date: f.invoice_date,
-        invoice_number: f.invoice_number,
-        identification: f.identification,
-        invoice_value: f.invoice_value,
-        invoice_tax: f.invoice_tax,
-        invoice_total: f.invoice_total,
-        // El tipo decide que reglas aplican y si alguna PROHIBE el gasto
-        // (2026-10-14): sin el, "no tiene permitido este tipo" solo se sabria
-        // al pulsar Guardar.
-        type_identification_id: f.type_identification_id,
-      }),
-    })
-      .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(data) {
-        // Un fallo del chequeo NO puede estorbar: el servidor valida igual al
-        // guardar. Se limpia el aviso y ya.
-        self.setState({ ruleViolations: (data && data.violations) || [] });
-      })
-      .catch(function() { self.setState({ ruleViolations: [] }); });
-  }.bind(this);
+  // LAS REGLAS NO SE AVISAN EN VIVO (2026-10-16). Antes se evaluaban al elegir
+  // el tipo, el responsable o el comprobante, y el aviso salia mientras la
+  // persona todavia llenaba el formulario. El cliente pidio que solo aparezcan
+  // AL GUARDAR (el servidor las evalua y responde) y cuando la IA lee el
+  // comprobante (su propio panel). /validate_expense_rules sigue existiendo.
 
   // --- Arrastrar y soltar ----------------------------------------------------
   //
@@ -1409,12 +1368,15 @@ class ReportExpenseIndex extends React.Component {
         if (data.type === "error") {
           self.setState({ saving: false });
 
-          // LAS REGLAS DE GASTO SON DURAS: el servidor RECHAZA el gasto y este
-          // modal se queda abierto con los datos puestos, para corregir sin
-          // volver a escribirlo todo. Se separa del error generico porque no es
-          // un fallo del sistema sino una decision de negocio, y el usuario
-          // necesita leer QUE regla incumplio, no "ocurrió un error".
-          var violaciones = data.rule_violations || [];
+          // UNA REGLA CON «IMPEDIR GUARDAR» RECHAZO EL GASTO: este modal se
+          // queda abierto con los datos puestos, para corregir sin volver a
+          // escribirlo todo. Se separa del error generico porque no es un fallo
+          // del sistema sino una decision de negocio.
+          //
+          // SOLO LAS QUE FRENAN (`blocking_rule_violations`), no la lista
+          // completa: una regla que deja guardar no es la causa del rechazo, y
+          // mostrarla aqui la hacia pasar por regla dura (2026-10-16).
+          var violaciones = data.blocking_rule_violations || [];
           if (violaciones.length > 0) {
             Swal.fire({
               icon: "warning",
@@ -1433,6 +1395,22 @@ class ReportExpenseIndex extends React.Component {
         }
         self.setState({ modal: false, saving: false });
         self.loadData();
+
+        // GUARDADO, PERO CON REGLAS SIN «IMPEDIR GUARDAR»: se dice que no se
+        // aprueba solo y por que. Es la unica vez que la persona lo ve.
+        var avisos = data.rule_violations || [];
+        if (avisos.length > 0) {
+          Swal.fire({
+            icon: "info",
+            title: "Gasto guardado, pero no se aprueba automáticamente",
+            html: "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
+                  avisos.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
+                  "</ul>",
+            confirmButtonColor: "#2a3f53",
+            confirmButtonText: "Entendido",
+          });
+          return;
+        }
 
         Swal.fire({ position: "center", icon: "success", title: data.success || (isEdit ? "Actualizado" : "Creado"), showConfirmButton: false, timer: 1500 });
       })
@@ -1904,7 +1882,7 @@ class ReportExpenseIndex extends React.Component {
     if (vigente && vigente.mostrar) {
       var cabeza = vigente.frena
         ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
-        : "Incumple las instrucciones de la regla de gasto:";
+        : "Incumple las instrucciones de la regla de gasto: se guardará, pero no se aprueba automáticamente:";
       avisos.push({ key: "pol", tono: "warn", texto: cabeza, testid: "expense-policy-verdict" });
       vigente.hallazgos.forEach(function(h, i) {
         avisos.push({ key: "pf" + i, tono: "warn", texto: "— " + h.message, testid: "expense-policy-finding-" + i });
@@ -2073,22 +2051,6 @@ class ReportExpenseIndex extends React.Component {
         ? React.createElement("div", { className: "cm-alert cm-alert-danger", "data-testid": "expense-receipt-error" }, self.state.receiptError)
         : null,
 
-      // Reglas incumplidas, evaluadas al adjuntar. Es un AVISO, no un bloqueo:
-      // quien rechaza es el servidor al guardar. Pintarlo aqui le da a la
-      // persona la oportunidad de corregir con la factura todavia en la mano.
-      self.state.ruleViolations.length > 0
-        ? React.createElement("div", { className: "cm-alert cm-alert-warning", "data-testid": "expense-rule-violations" },
-            React.createElement("div", null,
-              React.createElement("i", { className: "fa fa-exclamation-triangle" }),
-              " Este gasto incumple las reglas y será rechazado al guardar:"),
-            React.createElement("ul", { style: { margin: "6px 0 0", paddingLeft: 18 } },
-              self.state.ruleViolations.map(function(v, i) {
-                return React.createElement("li", { key: i }, v.message);
-              })
-            )
-          )
-        : null,
-
       self.renderExtraction()
     );
   }.bind(this);
@@ -2214,9 +2176,7 @@ class ReportExpenseIndex extends React.Component {
                       // campo de un gasto que ya factura un proveedor.
                       invoice_name: self.nombreDeViatico(form, tipoId, responsable, responsable),
                     }),
-                  // El aviso de "no tiene permitido este tipo" sale al elegir
-                  // el tipo, no al pulsar Guardar.
-                  }, self.validarReglas);
+                  });
                 },
                 placeholder: "Seleccionar tipo...",
                 isClearable: true,
@@ -2291,9 +2251,6 @@ class ReportExpenseIndex extends React.Component {
                         }),
                       }, function() {
                         self.loadBudgetAvailability(opt ? opt.value : null, self.state.modeEdit ? self.state.editId : null);
-                        // Otro responsable puede tener otras reglas, y una de
-                        // ellas prohibirle el tipo ya elegido.
-                        self.validarReglas();
                       });
                     },
                     placeholder: "Seleccionar...",
