@@ -1396,22 +1396,9 @@ class ReportExpenseIndex extends React.Component {
         self.setState({ modal: false, saving: false });
         self.loadData();
 
-        // GUARDADO, PERO CON REGLAS SIN «IMPEDIR GUARDAR»: se dice que no se
-        // aprueba solo y por que. Es la unica vez que la persona lo ve.
-        var avisos = data.rule_violations || [];
-        if (avisos.length > 0) {
-          Swal.fire({
-            icon: "info",
-            title: "Gasto guardado, pero no se aprueba automáticamente",
-            html: "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
-                  avisos.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
-                  "</ul>",
-            confirmButtonColor: "#2a3f53",
-            confirmButtonText: "Entendido",
-          });
-          return;
-        }
-
+        // UNA REGLA QUE DEJA GUARDAR NO SE AVISA AQUI (2026-10-17): el gasto se
+        // guardo y eso es lo que se dice. Que quede sin aprobar se ve en la
+        // tabla (estado presupuestal y motivo), no en un modal.
         Swal.fire({ position: "center", icon: "success", title: data.success || (isEdit ? "Actualizado" : "Creado"), showConfirmButton: false, timer: 1500 });
       })
       .catch(function() {
@@ -1879,10 +1866,10 @@ class ReportExpenseIndex extends React.Component {
     // impedir guardar.
     var pol = x.policy || {};
     var vigente = pol.compliant === false ? hallazgosVigentes(pol, this.state.form.type_identification_id) : null;
-    if (vigente && vigente.mostrar) {
-      var cabeza = vigente.frena
-        ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
-        : "Incumple las instrucciones de la regla de gasto: se guardará, pero no se aprueba automáticamente:";
+    // SOLO SI FRENA (2026-10-17): lo que encuentra la IA por una regla que deja
+    // guardar no se muestra, igual que al guardar.
+    if (vigente && vigente.mostrar && vigente.frena) {
+      var cabeza = "Incumple las instrucciones de la regla de gasto y no se podrá guardar:";
       avisos.push({ key: "pol", tono: "warn", texto: cabeza, testid: "expense-policy-verdict" });
       vigente.hallazgos.forEach(function(h, i) {
         avisos.push({ key: "pf" + i, tono: "warn", texto: "— " + h.message, testid: "expense-policy-finding-" + i });

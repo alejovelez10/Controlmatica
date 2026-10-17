@@ -863,21 +863,9 @@ class ExpensesTable extends Component {
         self.loadData(isEdit ? undefined : 1);
         self.clearValues();
 
-        // Guardado, pero con reglas que lo dejan sin aprobar: se dice y por que.
-        var avisos = data.rule_violations || [];
-        if (avisos.length > 0) {
-          Swal.fire({
-            icon: "info",
-            title: "Gasto guardado, pero no se aprueba automáticamente",
-            html: "<ul style=\"text-align:left;margin:8px auto;max-width:26em\">" +
-                  avisos.map(function(v) { return "<li>" + escaparHtml(v.message || "") + "</li>"; }).join("") +
-                  "</ul>",
-            confirmButtonColor: "#2a3f53",
-            confirmButtonText: "Entendido",
-          });
-          return;
-        }
-
+        // UNA REGLA QUE DEJA GUARDAR NO SE AVISA AQUI (2026-10-17): el gasto se
+        // guardo y eso es lo que se dice. Que quede sin aprobar se ve en la
+        // tabla (estado presupuestal y motivo), no en un modal.
         Swal.fire({ position: "center", icon: "success", title: data.success || "Guardado", showConfirmButton: false, timer: 1500 });
       })
       .catch(function() {

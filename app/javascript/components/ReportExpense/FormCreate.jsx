@@ -316,13 +316,13 @@ class FormCreate extends Component {
     const vigente = pol.compliant === false
       ? hallazgosVigentes(pol, (this.props.formValues || {}).type_identification_id)
       : null;
-    if (vigente && vigente.mostrar) {
+    // SOLO SI FRENA (2026-10-17): lo que encuentra la IA por una regla que deja
+    // guardar no se muestra, igual que al guardar.
+    if (vigente && vigente.mostrar && vigente.frena) {
       avisos.push({
         key: "pol",
-        tono: vigente.frena ? "danger" : "warn",
-        texto: vigente.frena
-          ? "Incumple las instrucciones de la regla de gasto y no se podrá guardar:"
-          : "Incumple las instrucciones de la regla de gasto: se guardará, pero no se aprueba automáticamente:",
+        tono: "danger",
+        texto: "Incumple las instrucciones de la regla de gasto y no se podrá guardar:",
         testid: "expense-policy-verdict",
       });
       vigente.hallazgos.forEach((h, i) => avisos.push({

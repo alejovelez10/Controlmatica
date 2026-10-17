@@ -187,9 +187,10 @@ test.describe("reglas por rol, persona y tipo de gasto", () => {
   });
 
   // Una regla SIN «Impedir guardar» que pone un tipo como no permitido
-  // («todo gasto de representacion debe ser aprobado»): el gasto se guarda y se
-  // avisa que no se aprueba solo. Nunca como si fuera una regla dura.
-  test("una regla que deja guardar avisa al guardar que no se aprueba solo", async ({ page }) => {
+  // («todo gasto de representacion debe ser aprobado»): el gasto se guarda con
+  // el aviso normal de «Creado». No se muestra ninguna regla (2026-10-17); que
+  // quede sin aprobar lo dice la respuesta del servidor y la tabla.
+  test("una regla que deja guardar no muestra nada al guardar", async ({ page }) => {
     await abrirReglas(page);
     await page.evaluate(async () => {
       const props = JSON.parse(document.querySelector("[data-react-class='ExpenseRuleIndex']").dataset.reactProps);
@@ -204,13 +205,13 @@ test.describe("reglas por rol, persona y tipo de gasto", () => {
     });
 
     await gastoDeBrunoConTipo(page, "Alimentacion");
-    await expect(page.getByTestId("expense-rule-violations")).toHaveCount(0);
     await llenarGasto(page, datosDeGasto("FE-E2E-BLANDA-001"));
     const { body } = await guardarGasto(page);
 
     expect(body.type).toBe("success");
     expect(body.blocking_rule_violations).toEqual([]);
-    await expect(page.locator(".swal2-title")).toContainText("no se aprueba automáticamente");
-    await expect(page.locator(".swal2-html-container")).toContainText("necesitan aprobación");
+    expect(body.register.budget_status).not.toBe("aprobado");
+    await expect(page.locator(".swal2-icon-success")).toBeVisible();
+    await expect(page.locator(".swal2-title")).not.toContainText("no se aprueba");
   });
 });
