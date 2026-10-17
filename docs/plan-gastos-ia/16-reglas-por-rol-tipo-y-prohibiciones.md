@@ -63,7 +63,7 @@ Resolución (`ExpenseRule.aplicables_a` + `para_gasto`):
 
 Canales: el formulario de Gastos y el del centro de costos avisan apenas se elige el tipo
 (`/validate_expense_rules` recibe `type_identification_id`). En el MCP, `expense_rules_validate`
-recibe el tipo y `expense_rules_list` devuelve `prohibited_types`, `only_types` y `except_types`.
+recibe el tipo y `expense_rules_list` devuelve `prohibited_types` y `except_types` (ver §7).
 
 ### Entrega 2 — el veredicto del agente regla por regla
 
@@ -132,4 +132,21 @@ decide el servidor.
 - WhatsApp: el servidor sigue sin aplicar el veredicto semántico del agente (el agente decide);
   las prohibiciones sí las aplica el create.
 
-*Documento escrito el 2026-10-15.*
+## 7. Cambio del 2026-10-16: los tipos de una regla son los prohibidos
+
+La regla 67 de producción («CREAR GASTOS DE REPRESENTACION») tenía el tipo elegido en «Solo estos
+tipos» y «Prohibir el gasto» sin marcar: con el significado de §3 eso solo acotaba los límites, y
+como no tenía límites no frenaba nada. El cliente lee los tipos como «lo que no se deja crear».
+
+- `included_types` = **tipos que no se pueden registrar**. `prohibits_expense` se deriva
+  (`ExpenseRule#prohibir_si_tiene_tipos`) y la casilla desaparece de la pantalla.
+- Los **límites** (antigüedad, tope, duplicados, texto para la IA) se revisan en **todos** los
+  gastos de la persona, salvo los tipos de `excluded_types` («Excepto en estos tipos», dentro de la
+  sección de límites). Una regla puede prohibir tipos y tener límites a la vez.
+- Desaparece «Solo estos tipos» como alcance de los límites. En producción ninguna regla lo usaba
+  así salvo la 67, que era justo el error.
+- Migración `20261016000002`: pone `prohibits_expense` según tenga tipos. En producción solo cambia
+  la 67.
+- MCP: en `expense_rules_list`, cada regla trae `prohibited_types` en vez de `only_types`.
+
+*Documento escrito el 2026-10-15; §7 agregado el 2026-10-16.*

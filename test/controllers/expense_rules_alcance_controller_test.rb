@@ -76,11 +76,12 @@ class ExpenseRulesAlcanceControllerTest < ActionDispatch::IntegrationTest
     )
     r = ExpenseRule.order(:id).last
 
-    patch expense_rule_path(r), as: :json, params: { included_type_ids: [] }
+    # Quitar los tipos ya es valido (la regla deja de prohibir); lo que hace
+    # fallar la validacion aqui es el nombre vacio.
+    patch expense_rule_path(r), as: :json, params: { included_type_ids: [], name: "" }
 
     cuerpo = JSON.parse(response.body)
     assert_equal "error", cuerpo["type"]
-    assert_match "tipo de gasto que prohibir", cuerpo["message"].join
     assert_equal [@representacion.id], r.reload.included_types.map(&:id)
   end
 
@@ -113,18 +114,19 @@ class ExpenseRulesAlcanceControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "get_expense_rules_for_user filtra por el tipo cuando se lo dan" do
+    # Los limites se revisan en todos los tipos salvo los de «excepto».
     post expense_rules_path, as: :json, params: params_regla(
-      name: "Tope representación", applies_to_all_roles: true, max_invoice_value: 50_000,
-      included_type_ids: [@representacion.id]
+      name: "Tope excepto representación", applies_to_all_roles: true, max_invoice_value: 50_000,
+      excluded_type_ids: [@representacion.id]
     )
 
     get "/get_expense_rules_for_user", params: { user_id: users(:ingeniero).id,
                                                  type_identification_id: @alimentacion.id }
-    assert_nil JSON.parse(response.body)["max_invoice_value"]
+    assert_equal "50000.0", JSON.parse(response.body)["max_invoice_value"].to_s
 
     get "/get_expense_rules_for_user", params: { user_id: users(:ingeniero).id,
                                                  type_identification_id: @representacion.id }
-    assert_equal "50000.0", JSON.parse(response.body)["max_invoice_value"].to_s
+    assert_nil JSON.parse(response.body)["max_invoice_value"]
   end
 
   test "las props de la pantalla traen los catalogos de personas y de tipos" do
@@ -137,19 +139,20 @@ class ExpenseRulesAlcanceControllerTest < ActionDispatch::IntegrationTest
                     ExpenseRule.nombre_de_persona(users(:ingeniero))
   end
 
-  test "una prohibicion no guarda tipos en «Excepto estos»" do
-    # En modo prohibir la pantalla no muestra esa lista: si llegara llena, la
-    # base guardaria algo que nadie ve.
+  test "una regla puede prohibir un tipo y exceptuar otro de sus limites" do
+    # Los tipos prohibidos y la excepcion de los limites son dos cosas: una
+    # regla puede tener las dos, con tipos distintos.
     sign_in_as @admin
     otro = ReportExpenseOption.create!(name: "Otro tipo", category: "Tipo", user_id: @admin.id)
 
     post expense_rules_path, as: :json, params: {
-      name: "Prohibe con excepto", active: true, applies_to_all_roles: true, prohibits_expense: true,
+      name: "Prohibe con excepto", active: true, applies_to_all_roles: true,
       included_type_ids: [@representacion.id], excluded_type_ids: [otro.id]
     }
 
     r = ExpenseRule.find_by!(name: "Prohibe con excepto")
+    assert r.prohibits_expense, "Con tipos elegidos la regla prohibe aunque no se mande la marca"
     assert_equal [@representacion.id], r.included_types.map(&:id)
-    assert_empty r.excluded_types
+    assert_equal [otro.id], r.excluded_types.map(&:id)
   end
 end

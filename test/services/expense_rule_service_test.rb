@@ -437,6 +437,53 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     assert_equal ExpenseRuleService::CODE_TOO_OLD, gasto.rule_violations.first["code"]
   end
 
+  # Los dos lados de la casilla «Impedir guardar el gasto» con un TIPO NO
+  # PERMITIDO (2026-10-16): marcada no se guarda; desmarcada se guarda pero no
+  # queda aprobado, aunque quepa en la partida.
+  test "un tipo no permitido sin impedir guardar se guarda pero no queda aprobado" do
+    tipo = ReportExpenseOption.create!(name: "Representación", category: "Tipo", user_id: @admin.id)
+    as_user(@admin) do
+      r = regla(name: "Regla general", is_default: true, mandatory: false)
+      r.included_types = [tipo]
+      r.save!
+    end
+
+    gasto = ReportExpense.new(
+      omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+      type_identification: tipo, invoice_name: "Cena", invoice_date: Date.current,
+      invoice_number: "FE-REPR-1", identification: "900111222",
+      invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
+
+    resultado = ExpenseBudgetService.persist_with_evaluation!(gasto, actor: @admin)
+
+    assert resultado.ok?, resultado.errors.inspect
+    gasto.reload
+    refute_equal "aprobado", gasto.budget_status
+    refute gasto.aceptado?
+    assert_equal [ExpenseRuleService::CODE_PROHIBITED], gasto.rule_violations.map { |v| v["code"] }
+  end
+
+  test "un tipo no permitido impidiendo guardar no se guarda" do
+    tipo = ReportExpenseOption.create!(name: "Representación", category: "Tipo", user_id: @admin.id)
+    as_user(@admin) do
+      r = regla(name: "Regla general", is_default: true, mandatory: true)
+      r.included_types = [tipo]
+      r.save!
+    end
+
+    gasto = ReportExpense.new(
+      omitir_comprobante_obligatorio: true, user: @admin, cost_center: @centro, user_invoice: @ingeniero,
+      type_identification: tipo, invoice_name: "Cena", invoice_date: Date.current,
+      invoice_number: "FE-REPR-2", identification: "900111222",
+      invoice_value: 10_000, invoice_tax: 0, invoice_total: 10_000)
+
+    resultado = ExpenseBudgetService.persist_with_evaluation!(gasto, actor: @admin)
+
+    refute resultado.ok?
+    assert_match "No tiene permitido registrar gastos de tipo", resultado.errors.join(" ")
+    refute gasto.persisted?
+  end
+
   test "un gasto sin violaciones si queda aprobado y con rule_violations vacio" do
     regla(name: "Regla general", is_default: true, max_invoice_age_days: 90)
 

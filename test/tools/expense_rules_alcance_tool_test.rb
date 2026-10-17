@@ -92,7 +92,7 @@ class ExpenseRulesAlcanceToolTest < ActiveSupport::TestCase
     with_mcp_key do
       cuerpo = tool_json(ExpenseRulesListTool.call(server_context: ctx, user_id: @ingeniero.id))
       assert_equal [{ "id" => @representacion.id, "name" => "Representación" }], cuerpo["prohibited_types"]
-      assert_equal ["Representación"], cuerpo["rules"].first["only_types"]
+      assert_equal ["Representación"], cuerpo["rules"].first["prohibited_types"]
     end
   end
 

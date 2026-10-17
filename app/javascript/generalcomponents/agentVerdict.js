@@ -25,11 +25,13 @@ export function hallazgosVigentes(pol, tipoId) {
   var tipo = tipoId ? parseInt(tipoId, 10) : null;
   var porId = {};
   pol.rules.forEach(function(r) { porId[r.id] = r; });
+  // Lo que la IA juzga (los limites de la regla) se revisa en todos los tipos
+  // menos los exceptuados. Los tipos «incluidos» son los PROHIBIDOS desde el
+  // 2026-10-16 y no acotan el texto de la IA: eso lo decide el servidor
+  // (ExpenseRule#aplica_al_tipo?), y aqui se repite el mismo criterio.
   var aplica = function(r) {
     if (tipo === null) return true;
-    if ((r.excluded_type_ids || []).indexOf(tipo) !== -1) return false;
-    var incluidos = r.included_type_ids || [];
-    return incluidos.length === 0 || incluidos.indexOf(tipo) !== -1;
+    return (r.excluded_type_ids || []).indexOf(tipo) === -1;
   };
   var algunaObligatoria = pol.rules.some(function(r) { return r.mandatory && aplica(r); });
 

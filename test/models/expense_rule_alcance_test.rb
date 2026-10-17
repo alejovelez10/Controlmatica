@@ -116,21 +116,23 @@ class ExpenseRuleAlcanceTest < ActiveSupport::TestCase
   end
 
   # --- Filtro por tipo -------------------------------------------------------
+  #
+  # Desde el 2026-10-16 los tipos de la regla son los PROHIBIDOS y no acotan
+  # sus limites: la regla aplica a todos los gastos de la persona, salvo los
+  # tipos de «excepto».
 
-  test "solo estos tipos aplica a esos tipos y a ningun otro" do
-    solo_representacion = regla(applies_to_all_roles: true, included_types: [@representacion])
+  test "una regla con tipos prohibidos aplica tambien a los gastos de otros tipos" do
+    prohibe_representacion = regla(applies_to_all_roles: true, included_types: [@representacion])
 
-    assert_includes ExpenseRule.para_gasto(@ingeniero, @representacion.id), solo_representacion
-    assert_not_includes ExpenseRule.para_gasto(@ingeniero, @alimentacion.id), solo_representacion
+    assert_includes ExpenseRule.para_gasto(@ingeniero, @representacion.id), prohibe_representacion
+    assert_includes ExpenseRule.para_gasto(@ingeniero, @alimentacion.id), prohibe_representacion
   end
 
-  test "sin tipo elegido no aplica una regla de solo estos tipos" do
-    solo_representacion = regla(applies_to_all_roles: true, included_types: [@representacion])
-    sin_filtro = regla(applies_to_all_roles: true)
+  test "sin tipo elegido la regla aplica, pero no prohibe nada" do
+    prohibe_representacion = regla(applies_to_all_roles: true, included_types: [@representacion])
 
-    aplicables = ExpenseRule.para_gasto(@ingeniero, nil)
-    assert_not_includes aplicables, solo_representacion
-    assert_includes aplicables, sin_filtro
+    assert_includes ExpenseRule.para_gasto(@ingeniero, nil), prohibe_representacion
+    assert_empty resultado(gasto_nuevo(type_identification: nil))[:violations]
   end
 
   test "excepto estos tipos aplica a todos los demas, tambien sin tipo elegido" do
@@ -141,19 +143,24 @@ class ExpenseRuleAlcanceTest < ActiveSupport::TestCase
     assert_includes ExpenseRule.para_gasto(@ingeniero, nil), sin_licor
   end
 
-  test "un tope de una regla de otro tipo no frena el gasto" do
+  test "el tope de una regla que prohibe otro tipo si frena los demas gastos" do
+    # Los limites y los tipos son cosas distintas: prohibir Representacion no
+    # hace que el tope deje de revisarse en Alimentacion.
     regla(applies_to_all_roles: true, included_types: [@representacion], max_invoice_value: 1_000)
 
-    assert_empty resultado(gasto_nuevo(invoice_value: 50_000, invoice_total: 50_000))[:violations]
+    v = resultado(gasto_nuevo(invoice_value: 50_000, invoice_total: 50_000))
+    assert_equal [ExpenseRuleService::CODE_VALUE], codigos(v[:violations])
   end
 
   # --- Validaciones de la regla ------------------------------------------------
 
-  test "una prohibicion sin tipos no se puede guardar" do
-    r = ExpenseRule.new(name: "Prohibe todo", applies_to_all_roles: true, prohibits_expense: true)
+  test "prohibits_expense se deriva de los tipos: sin tipos no prohibe" do
+    # Sin tipos, prohibir seria prohibirlo todo. La marca ya no se elige: la
+    # deciden los tipos.
+    r = regla(applies_to_all_roles: true, prohibits_expense: true)
 
-    assert_not r.valid?
-    assert r.errors[:prohibits_expense].any?
+    refute r.prohibits_expense
+    refute r.prohibe?
   end
 
   test "un tipo no puede estar incluido y excluido a la vez" do
@@ -277,52 +284,39 @@ class ExpenseRuleAlcanceTest < ActiveSupport::TestCase
     as_user(@admin) { assert gasto.update(description: "Cena con cliente"), gasto.errors.full_messages.join }
   end
 
-  # --- Una prohibicion solo prohibe (2026-10-16) --------------------------------
+  # --- Los tipos de la regla son los prohibidos (2026-10-16) -------------------
   #
-  # La pantalla separa las reglas de LIMITES de las que PROHIBEN tipos, y en modo
-  # prohibir no muestra limites ni texto para la IA. Lo que no se ve no puede
-  # seguir frenando: la regla de Representacion del cliente tenia un texto para
-  # la IA ("solo administradores…") que la IA no podia verificar y frenaba
-  # gastos con ese mismo texto como motivo.
+  # La regla 67 de produccion («CREAR GASTOS DE REPRESENTACION») tenia el tipo
+  # elegido y la casilla «Prohibir el gasto» sin marcar, y dejaba crear los
+  # gastos que el cliente queria frenar. Ahora el tipo elegido ES la
+  # prohibicion.
 
-  test "al guardar una prohibicion se vacian los limites y el texto para la IA" do
-    r = regla(applies_to_all_roles: true, included_types: [@representacion], prohibits_expense: true,
-              max_invoice_age_days: 30, max_invoice_value: 50_000, check_duplicates: true,
-              agent_instructions: "Solo administradores pueden cargar representacion")
+  test "una regla con tipos prohibe aunque no se haya marcado prohibir" do
+    r = regla(applies_to_all_roles: true, excluded_rols: [@gerente.rol], included_types: [@representacion],
+              prohibits_expense: false, mandatory: true)
 
-    assert_nil r.max_invoice_age_days
-    assert_nil r.max_invoice_value
-    refute r.check_duplicates
-    assert_nil r.agent_instructions
+    assert r.prohibits_expense
+    v = resultado(gasto_nuevo(type_identification: @representacion))
+    assert_equal [ExpenseRuleService::CODE_PROHIBITED], codigos(v[:blocking_violations])
   end
 
-  test "una prohibicion vieja con texto guardado no se lo pasa a la IA ni pone limites" do
-    # update_columns: asi quedaron las reglas guardadas antes de esta fecha, sin
-    # pasar por la limpieza del modelo.
-    r = regla(applies_to_all_roles: true, included_types: [@representacion], prohibits_expense: true)
-    r.update_columns(agent_instructions: "Solo administradores", max_invoice_value: 1_000)
+  test "el rol excluido de esa regla si puede registrar el tipo" do
+    regla(applies_to_all_roles: true, excluded_rols: [@gerente.rol], included_types: [@representacion])
 
-    limites = ExpenseRuleService.effective_limits([r.reload])
-    assert_equal "", limites[:agent_instructions]
-    assert_nil limites[:max_invoice_value]
-    assert_empty ExpenseRuleService.reglas_para_el_agente([r])
+    assert_empty resultado(gasto_nuevo(type_identification: @representacion, user_invoice: @gerente))[:violations]
   end
 
-  test "una prohibicion vieja con texto sigue prohibiendo, pero sin el veredicto de la IA" do
-    r = regla(applies_to_all_roles: true, included_types: [@representacion], prohibits_expense: true,
-              mandatory: true)
-    r.update_columns(agent_instructions: "Solo administradores")
-    veredicto = { compliant: false, findings: [{ rule_id: r.id, message: "Solo administradores" }] }
-
-    v = resultado(gasto_nuevo(type_identification: @representacion), agent_verdict: veredicto)
-
-    assert_equal [ExpenseRuleService::CODE_PROHIBITED], codigos(v[:violations])
-  end
-
-  test "una regla de limites sigue pasandole su texto a la IA" do
-    r = regla(applies_to_all_roles: true, agent_instructions: "Bebidas alcoholicas")
+  test "una regla puede prohibir un tipo y ademas pasarle su texto a la IA" do
+    r = regla(applies_to_all_roles: true, included_types: [@representacion], agent_instructions: "Bebidas alcoholicas")
 
     assert_equal "Bebidas alcoholicas", ExpenseRuleService.effective_limits([r])[:agent_instructions]
     assert_equal [r.id], ExpenseRuleService.reglas_para_el_agente([r]).map { |x| x[:id] }
+  end
+
+  test "los limites no se revisan en los tipos de excepto" do
+    regla(applies_to_all_roles: true, excluded_types: [@representacion], max_invoice_value: 1_000)
+
+    gasto = gasto_nuevo(type_identification: @representacion, invoice_value: 50_000, invoice_total: 50_000)
+    assert_empty resultado(gasto)[:violations]
   end
 end

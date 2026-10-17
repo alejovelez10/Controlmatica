@@ -144,13 +144,8 @@ class ExpenseRuleService
   #   * check_duplicates: activo si ALGUNA lo pide.
   #   * agent_instructions: se concatenan todas las no vacias, en orden de
   #     `name`, cada una en su propio parrafo.
-  #
-  # LAS PROHIBICIONES NO APORTAN LIMITES (2026-10-16). La pantalla las separa de
-  # las reglas de limites y en ese modo no muestra antiguedad, tope, duplicados
-  # ni texto; una regla vieja que aun los tenga guardados no puede seguir
-  # frenando con algo que nadie ve. Lo suyo lo evalua `check_prohibitions`.
   def self.effective_limits(reglas)
-    reglas = Array(reglas).reject(&:prohibits_expense)
+    reglas = Array(reglas)
 
     { max_invoice_age_days: reglas.map(&:max_invoice_age_days).compact.min,
       max_invoice_value: reglas.map(&:max_invoice_value).compact.min,
@@ -211,10 +206,19 @@ class ExpenseRuleService
     violations = []
     blocking   = []
 
-    reglas.select(&:prohibe?).each do |regla|
-      v = violation(CODE_PROHIBITED,
-                    "No tiene permitido registrar gastos de tipo «#{tipo}» (regla «#{regla.name}»)",
-                    rule: regla.name)
+    # Los tipos de la regla son los prohibidos (2026-10-16): frena la que tenga
+    # entre ellos el tipo de ESTE gasto.
+    #
+    # EL MENSAJE DEPENDE DE «IMPEDIR GUARDAR»: sin ella el gasto SI se guarda y
+    # solo queda sin aprobar («todo gasto de representacion debe ser aprobado»),
+    # y decirle a la persona que no tiene permitido registrarlo seria falso.
+    reglas.select { |r| r.prohibe_el_tipo?(expense&.type_identification_id) }.each do |regla|
+      mensaje = if regla.mandatory
+                  "No tiene permitido registrar gastos de tipo «#{tipo}» (regla «#{regla.name}»)"
+                else
+                  "Los gastos de tipo «#{tipo}» necesitan aprobación (regla «#{regla.name}»)"
+                end
+      v = violation(CODE_PROHIBITED, mensaje, rule: regla.name)
       violations << v
       blocking << v if regla.mandatory
     end

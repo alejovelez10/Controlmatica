@@ -72,12 +72,11 @@ test.describe("reglas por rol, persona y tipo de gasto", () => {
     await expect(page.getByTestId("rule-roles-todos-hint")).toContainText("se suma");
     await elegirSelect(page, "rule-excluded-roles-select", "Administrador");
 
-    // Sin tipos el boton no deja guardar: prohibir sin tipos seria prohibir todo.
-    await page.getByTestId("rule-prohibits-expense").check();
-    await expect(page.getByTestId("rule-block-message")).toContainText("tipo de gasto que prohibir");
-    await expect(page.getByTestId("rule-submit")).toBeDisabled();
-
+    // Elegir el tipo YA es prohibirlo (2026-10-16): no hay casilla aparte que
+    // marcar, y el aviso lo dice apenas se elige.
+    await expect(page.getByTestId("rule-prohibits-hint")).toHaveCount(0);
     await elegirSelect(page, "rule-included-types-select", TIPO_PROHIBIDO);
+    await expect(page.getByTestId("rule-prohibits-hint")).toContainText("no podrá registrar");
     await expect(page.getByTestId("rule-block-message")).toHaveCount(0);
 
     const [res] = await Promise.all([

@@ -92,14 +92,17 @@ class ExpenseRule < ApplicationRecord
                                            join_table: "expense_rules_excluded_types",
                                            association_foreign_key: "report_expense_option_id"
 
-  # DOS CLASES DE REGLA (2026-10-16): la que pone LIMITES (antiguedad, tope,
-  # duplicados, lo que la IA no acepta) y la que PROHIBE tipos de gasto. La
-  # pantalla las separa arriba del todo y en modo prohibir esconde los limites,
-  # porque sobre un tipo prohibido no hay nada mas que revisar. Lo que no se ve
-  # no puede quedar actuando: la regla de Representacion del cliente tenia un
-  # texto para la IA ("solo administradores…") que la IA no podia verificar y
-  # frenaba gastos con ese mismo texto como motivo.
-  before_validation :limpiar_lo_que_una_prohibicion_no_usa
+  # LOS TIPOS DE UNA REGLA SON LOS QUE NO SE PUEDEN REGISTRAR (2026-10-16).
+  # `included_types` ya no dice «en que tipos aplica la regla»: dice que tipos
+  # de gasto se le frenan a quien le aplique. Los limites (antiguedad, tope,
+  # duplicados, lo que la IA no acepta) son otra cosa y se revisan en todos los
+  # tipos, salvo los de `excluded_types`. El cliente lo leia asi y configuro la
+  # regla de Representacion con el tipo elegido y sin marcar «Prohibir el
+  # gasto»: con el significado anterior no frenaba nada.
+  #
+  # `prohibits_expense` queda como columna derivada —la leen el serializer, la
+  # tabla y el MCP— y se recalcula en cada guardado.
+  before_validation :prohibir_si_tiene_tipos
 
   validates :name, presence: true
   # Unico ENTRE ACTIVAS y no en toda la tabla: desactivar una regla es la forma
@@ -110,7 +113,6 @@ class ExpenseRule < ApplicationRecord
   validates :active, :is_default, :check_duplicates, :mandatory, :applies_to_all_roles,
             :prohibits_expense, inclusion: { in: [true, false] }
   validate  :una_sola_default_activa
-  validate  :prohibicion_con_tipos
   validate  :tipos_sin_cruce
   validate  :por_defecto_no_es_para_todos
 
@@ -169,13 +171,14 @@ class ExpenseRule < ApplicationRecord
     where(id: base.select(:id)).or(where(id: generales.select(:id)))
   end
 
-  # Las reglas que aplican a UN gasto: las de la persona, filtradas por el tipo
-  # de gasto. Devuelve un Array con los tipos ya precargados, porque quien lo usa
-  # vuelve a preguntar por ellos (prohibiciones, etiquetas para el agente).
+  # Las reglas que aplican a UN gasto: las de la persona, menos las que
+  # exceptuan ese tipo de sus limites. Devuelve un Array con los tipos ya
+  # precargados, porque quien lo usa vuelve a preguntar por ellos (prohibiciones,
+  # etiquetas para el agente).
   #
-  # `tipo_id` nil es "todavia no se eligio": aplican las reglas sin "Solo estos
-  # tipos" y NO las que si lo tienen, porque afirmar que un gasto sin tipo es de
-  # combustible seria inventarlo.
+  # Los tipos PROHIBIDOS no filtran aqui: una regla que prohibe Representacion
+  # tambien le pone sus limites a los demas gastos de la persona. Si el gasto es
+  # de un tipo prohibido lo dice `prohibe_el_tipo?`.
   def self.para_gasto(user, tipo_id)
     aplicables_a(user).includes(:included_types, :excluded_types).to_a
                       .select { |regla| regla.aplica_al_tipo?(tipo_id) }
@@ -188,35 +191,32 @@ class ExpenseRule < ApplicationRecord
   end
   private_class_method :sin_excluir_a_la_persona
 
-  # Excluir gana: un tipo que estuviera en las dos listas no aplica. La
-  # validacion `tipos_sin_cruce` impide guardarlo asi, pero la evaluacion no
-  # depende de que nadie lo haya colado por consola.
+  # Si los limites de la regla se revisan en un gasto de este tipo. Sin tipo
+  # elegido, si: todavia no hay excepcion que aplicar.
   def aplica_al_tipo?(tipo_id)
     tipo_id = tipo_id.presence&.to_i
-    return false if tipo_id && excluded_type_ids.include?(tipo_id)
-
-    incluidos = included_type_ids
-    return true if incluidos.empty?
-
-    !tipo_id.nil? && incluidos.include?(tipo_id)
+    !(tipo_id && excluded_type_ids.include?(tipo_id))
   end
 
-  # UNA PROHIBICION SIN TIPOS NO PROHIBE NADA. La pantalla exige al menos un tipo
-  # (`prohibicion_con_tipos`), pero los tipos se pueden borrar despues desde
-  # Parametrizaciones y la FK los quita de la regla en cascada. Quedarse sin
-  # tipos convertiria "no se permite combustible" en "no se permite ningun
-  # gasto"; ante una regla rota, frenar a toda la empresa es el peor error.
+  # Si la regla frena un gasto de este tipo por ser un tipo prohibido. Sin tipo
+  # elegido, no: afirmar que un gasto sin tipo es de Representacion seria
+  # inventarlo.
+  def prohibe_el_tipo?(tipo_id)
+    tipo_id = tipo_id.presence&.to_i
+    !tipo_id.nil? && included_type_ids.include?(tipo_id)
+  end
+
+  # Prohibe si tiene tipos, y solo entonces. Mira la lista y no la columna: si
+  # los tipos se borran despues desde Parametrizaciones (la FK los quita en
+  # cascada), la regla deja de prohibir en vez de prohibirlo todo.
   def prohibe?
-    prohibits_expense && included_type_ids.any?
+    included_type_ids.any?
   end
 
-  # Lo que la IA busca en el comprobante. VACIO EN UNA PROHIBICION aunque la
-  # columna traiga texto: las reglas guardadas antes del 2026-10-16 pueden
-  # tenerlo, y la pantalla ya no lo muestra en ese modo. Es la UNICA lectura del
-  # texto para el agente; leer `agent_instructions` directo devolveria el texto
-  # escondido.
+  # Lo que la IA busca en el comprobante. Es la unica lectura del texto para el
+  # agente, para que todos los caminos (extraccion, guardado, MCP) lo lean igual.
   def texto_para_el_agente
-    prohibits_expense ? "" : agent_instructions.to_s.strip
+    agent_instructions.to_s.strip
   end
 
   # Nombre completo para la pantalla, la auditoria y el catalogo del
@@ -339,8 +339,8 @@ class ExpenseRule < ApplicationRecord
       "<p>Prohíbe el gasto: <b>#{etiqueta_si_no(prohibits_expense)}</b></p>" \
       "<p>Aplica a: <b>#{alcance_por_rol_label}</b></p>" \
       "<p>Personas excluidas: <b>#{excluded_users.map { |u| self.class.nombre_de_persona(u) }.sort.join(", ").presence || "Ninguna"}</b></p>" \
-      "<p>Solo estos tipos: <b>#{nombres(included_types).presence || "Todos"}</b></p>" \
-      "<p>Excepto estos tipos: <b>#{nombres(excluded_types).presence || "Ninguno"}</b></p>"
+      "<p>Tipos que no se pueden registrar: <b>#{nombres(included_types).presence || "Ninguno"}</b></p>" \
+      "<p>Los límites no se revisan en: <b>#{nombres(excluded_types).presence || "Ninguno"}</b></p>"
   end
 
   def alcance_por_rol_label
@@ -356,29 +356,8 @@ class ExpenseRule < ApplicationRecord
     registros.map { |r| r.name.to_s.squish }.sort.join(", ")
   end
 
-  # SIN TIPOS, PROHIBIR SERIA PROHIBIRLO TODO: "Solo estos tipos" vacio significa
-  # todos los tipos. Nadie que marca "prohibir" quiere eso, y si lo quisiera, lo
-  # que corresponde es desactivar el modulo, no una regla.
-  def prohibicion_con_tipos
-    return unless prohibits_expense
-    return if included_types.any?
-
-    errors.add(:prohibits_expense,
-               "una regla que prohíbe necesita al menos un tipo de gasto que prohibir; " \
-               "sin tipos prohibiría todos los gastos")
-  end
-
-  # Una prohibicion no usa limites ni texto para la IA: se vacian al guardar,
-  # para que la base diga lo mismo que la pantalla. `check_duplicates` a false y
-  # no a nil: la columna es NOT NULL. Los tipos de "Excepto estos" los vacia el
-  # controller, que es quien asigna las listas.
-  def limpiar_lo_que_una_prohibicion_no_usa
-    return unless prohibits_expense
-
-    self.max_invoice_age_days = nil
-    self.max_invoice_value    = nil
-    self.check_duplicates     = false
-    self.agent_instructions   = nil
+  def prohibir_si_tiene_tipos
+    self.prohibits_expense = included_types.any?
   end
 
   def tipos_sin_cruce
@@ -387,7 +366,7 @@ class ExpenseRule < ApplicationRecord
 
     nombres_cruzados = included_types.select { |t| cruzados.include?(t.id) }.map(&:name).join(", ")
     errors.add(:excluded_types,
-               "un tipo no puede estar a la vez en «Solo estos tipos» y en «Excepto estos»: #{nombres_cruzados}")
+               "un tipo no puede estar prohibido y a la vez exceptuado de los límites: #{nombres_cruzados}")
   end
 
   # La regla por defecto aplica a quien NO tiene reglas; una de "Todos los
