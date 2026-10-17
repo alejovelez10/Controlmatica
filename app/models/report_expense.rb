@@ -1089,10 +1089,28 @@ class ReportExpense < ApplicationRecord
     return if new_record?
     return if omitir_aviso_de_aprobacion
     return if creado?
-    return if (changed - CAMPOS_QUE_NO_REABREN).empty?
+    return if campos_editados.empty?
 
     @reabierto = true
     self.operational_state = STATE_CREADO
+  end
+
+  # Lo que la persona cambio de verdad. VACIO A VACIO NO ES EDITAR (bug del
+  # 2026-10-17): el formulario de Gastos manda TODOS los campos y los vacios
+  # como "", asi que abrir un gasto aceptado y darle "Guardar" sin tocar nada
+  # marcaba `description` nil -> "" y el IVA 0.0 -> nil (el `|| ""` de
+  # JavaScript se come el cero), y el gasto volvia a "Creado" con correo al
+  # dueño incluido. Cero cuenta como vacio por ese mismo IVA; pasar de 100 a 0
+  # sigue siendo una edicion, porque 100 no es vacio.
+  def campos_editados
+    (changed - CAMPOS_QUE_NO_REABREN).reject do |campo|
+      antes, ahora = attribute_change(campo)
+      sin_valor?(antes) && sin_valor?(ahora)
+    end
+  end
+
+  def sin_valor?(valor)
+    valor.blank? || (valor.is_a?(Numeric) && valor.zero?)
   end
 
   # El aviso de la reapertura es el MISMO correo que el de un gasto nuevo sin
