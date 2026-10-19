@@ -1243,8 +1243,11 @@ class ReportExpense < ApplicationRecord
     # aceptar ni aprobar contablemente nada, que son updates sobre gastos viejos.
     #
     # Lo que SI se sigue bloqueando al editar es subir el valor por encima del
-    # tope o mover la fecha fuera del plazo: ahi el campo cambio. Y cambiarle el
-    # tipo o el responsable choca SOLO con las prohibiciones (2026-10-14).
+    # tope o mover la fecha fuera del plazo: ahi el campo cambio. El plazo se
+    # cuenta hasta el dia en que se registro el gasto, no hasta hoy, y la
+    # antiguedad solo frena si cambio la fecha (ExpenseRuleService.check_age).
+    # Cambiarle el tipo o el responsable choca SOLO con las prohibiciones
+    # (2026-10-14).
     if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
       return if (changed & CAMPOS_DE_PROHIBICION).empty?
 

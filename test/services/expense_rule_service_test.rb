@@ -104,14 +104,62 @@ class ExpenseRuleServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "la antiguedad se mide contra Date_current y no contra created_at" do
+  # Factura vieja REGISTRADA HOY: es el fraude que la regla quiere evitar, y
+  # contar hasta el dia del registro lo sigue viendo.
+  test "una factura vieja registrada hoy sigue fuera de plazo" do
     regla_del_ingeniero(max_invoice_age_days: 10)
-    # Gasto viejo REGISTRADO HOY: si se midiera contra created_at pasaria el
-    # filtro, que es exactamente el fraude que la regla quiere evitar.
     gasto = gasto_infractor(invoice_date: Date.current - 60)
-    gasto.update_columns(created_at: Time.current)
 
     assert_includes codigos(gasto.reload), ExpenseRuleService::CODE_TOO_OLD
+  end
+
+  # LA ANTIGUEDAD SE CUENTA HASTA EL DIA DEL REGISTRO (2026-10-19). Contada
+  # hasta hoy, un gasto registrado a tiempo se volvia infractor con solo dejar
+  # pasar los dias, y despues no se podia ni editar.
+  test "el paso del tiempo no vuelve infractor a un gasto registrado a tiempo" do
+    regla_del_ingeniero(max_invoice_age_days: 60)
+    gasto = gasto_infractor(invoice_date: Date.current - 31)
+
+    travel 61.days do
+      assert_empty codigos(gasto.reload)
+    end
+  end
+
+  test "un gasto guardado cuenta los dias hasta su registro y lo dice" do
+    regla_del_ingeniero(max_invoice_age_days: 10)
+    gasto = gasto_infractor(invoice_date: Date.current - 15)
+
+    travel 30.days do
+      assert_equal ["El comprobante tenía 15 días cuando se registró el gasto y el máximo son 10"],
+                   violaciones(gasto.reload).map { |v| v[:message] }
+    end
+  end
+
+  # AL EDITAR SOLO FRENA SI CAMBIO LA FECHA. Un gasto que ya se registro fuera
+  # de plazo, con una regla que despues se volvio obligatoria, se tiene que
+  # poder corregir; la foto lo sigue anotando.
+  test "al editar, la antiguedad anota pero no frena si la fecha no cambio" do
+    regla_del_ingeniero(max_invoice_age_days: 10, mandatory: true)
+    gasto = gasto_infractor(invoice_date: Date.current - 15).reload
+    gasto.invoice_value = 12_000
+
+    valor = ExpenseRuleService.validate(gasto).value
+
+    assert_equal [ExpenseRuleService::CODE_TOO_OLD], valor[:violations].map { |v| v[:code] }
+    assert_empty valor[:blocking_violations]
+  end
+
+  # Sin esto bastaria registrar el gasto con la fecha de hoy y moverla despues.
+  test "al editar, correr la fecha hacia atras fuera del plazo si frena" do
+    regla_del_ingeniero(max_invoice_age_days: 60, mandatory: true)
+    gasto = gasto_infractor(invoice_date: Date.current - 5)
+
+    travel 90.days do
+      gasto.reload.invoice_date = gasto.created_at.to_date - 70
+
+      assert_equal [ExpenseRuleService::CODE_TOO_OLD],
+                   ExpenseRuleService.validate(gasto).value[:blocking_violations].map { |v| v[:code] }
+    end
   end
 
   # --- Tope de valor ---------------------------------------------------------

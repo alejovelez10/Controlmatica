@@ -100,7 +100,7 @@ class ExpenseRuleService
     # Antiguedad y valor son calculo puro: evaluarlos dos veces no cuesta una
     # consulta y evita tener que adivinar de que regla salio cada violacion.
     violations.concat(check_age(expense, limites[:max_invoice_age_days]))
-    blocking.concat(check_age(expense, limites_duros[:max_invoice_age_days]))
+    blocking.concat(check_age(expense, limites_duros[:max_invoice_age_days])) if antiguedad_frena?(expense)
     violations.concat(check_value(expense, limites[:max_invoice_value]))
     blocking.concat(check_value(expense, limites_duros[:max_invoice_value]))
 
@@ -227,20 +227,52 @@ class ExpenseRuleService
   end
   private_class_method :check_prohibitions
 
-  # ANTIGUEDAD MEDIDA CONTRA Date.current, NUNCA CONTRA created_at. Si se midiera
-  # contra la fecha de registro, una factura vieja registrada tarde pasaria el
-  # filtro, que es exactamente el fraude que la regla quiere evitar.
+  # LA ANTIGUEDAD ES LA QUE TENIA EL COMPROBANTE EL DIA EN QUE SE REGISTRO EL
+  # GASTO, NO LA DE HOY (2026-10-19). Medida siempre contra hoy, el paso del
+  # tiempo volvia infractor a un gasto registrado a tiempo: una factura de 31
+  # dias registrada con una regla de 60, abierta dos meses despues, ya "tenia 92
+  # dias" y no se podia ni corregirle la descripcion. Al crear, el dia del
+  # registro es hoy, asi que para un gasto nuevo nada cambia.
+  #
+  # Sigue cerrando el fraude que la regla quiere evitar —registrar tarde una
+  # factura vieja— y tambien el de registrarla con la fecha de hoy y moverla
+  # despues: correr la fecha hacia atras suma dias al registro.
   def self.check_age(expense, max_days)
     return [] if max_days.blank?
     # `invoice_date` nula: no se evalua y no se inventa una fecha. Un gasto sin
     # fecha es un dato incompleto, no una infraccion.
     return [] if expense&.invoice_date.blank?
 
-    dias = (Date.current - expense.invoice_date.to_date).to_i
+    dias = (fecha_de_registro(expense) - expense.invoice_date.to_date).to_i
     return [] if dias <= max_days
 
-    [violation(CODE_TOO_OLD, "El comprobante tiene #{dias} días y el máximo son #{max_days}")]
+    mensaje = if expense.new_record?
+                "El comprobante tiene #{dias} días y el máximo son #{max_days}"
+              else
+                "El comprobante tenía #{dias} días cuando se registró el gasto y el máximo son #{max_days}"
+              end
+    [violation(CODE_TOO_OLD, mensaje)]
   end
+
+  # Hoy para un gasto nuevo; `created_at` para uno guardado, que no se mueve.
+  # Un gasto nuevo usa hoy aunque traiga `created_at` asignado: fechar el
+  # registro hacia atras no puede servir para que una factura vieja pase.
+  def self.fecha_de_registro(expense)
+    return Date.current if expense.new_record? || expense.created_at.blank?
+
+    expense.created_at.in_time_zone.to_date
+  end
+  private_class_method :fecha_de_registro
+
+  # AL EDITAR, LA ANTIGUEDAD SOLO FRENA SI CAMBIO LA FECHA. Contada al dia del
+  # registro ya no la mueve el tiempo, pero un gasto que se registro fuera de
+  # plazo —con una regla blanda que despues se endurecio, o un historico de
+  # antes de la regla— quedaria sin poder corregirle el valor por una
+  # antiguedad que nadie esta tocando. La foto (`violations`) la sigue anotando.
+  def self.antiguedad_frena?(expense)
+    expense.nil? || expense.new_record? || expense.invoice_date_changed?
+  end
+  private_class_method :antiguedad_frena?
 
   # El tope es INCLUSIVO: un gasto exactamente igual al tope NO viola. Un tope de
   # $200.000 que rechaza un gasto de $200.000 es incomprensible para quien lo
