@@ -162,6 +162,8 @@ class AccountingExpensesController < ApplicationController
                             message: ["El gasto ya está contabilizado. Retire primero la contabilización y después recháce el gasto."] }
     end
 
+    # Con una o con dos aprobaciones, igual (2026-10-18): el gasto queda
+    # "Rechazado" y pierde las firmas (ReportExpense#resolver_doble_aprobacion).
     expense.rechazar(actor: current_user, motivo: params[:rejection_reason])
 
     # `validate: false` POR EL MISMO MOTIVO QUE `update_accounting_state` usa

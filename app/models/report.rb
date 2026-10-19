@@ -58,6 +58,18 @@ class Report < ApplicationRecord
   belongs_to :user, optional: :true
   before_create :coste_center_verify
   after_destroy :calculate_cost_destroy
+
+  # PROPIETARIO DEL CENTRO QUE SE CREA SOLO (2026-10-18). Un reporte sin centro
+  # de costos crea uno nuevo (`coste_center_verify`), y hasta hoy le ponia como
+  # propietario a quien hizo el reporte. El propietario es quien recibe los
+  # correos para aprobar los gastos del centro, asi que esos correos le
+  # llegaban a la persona equivocada. Ahora quien crea el reporte elige el
+  # propietario, entre las personas cuyo rol tiene «Puede ser propietario».
+  #
+  # Atributo VIRTUAL y no una columna: el dato vive en el centro
+  # (`user_owner_id`); en el reporte solo hace falta para crearlo.
+  attr_accessor :cost_center_owner_id
+  validate :propietario_del_centro_nuevo, on: :create
   after_save :calculatate_update
   before_update :create_edit_register
   after_create :create_create_register
@@ -103,7 +115,7 @@ class Report < ApplicationRecord
 
   def coste_center_verify
     if self.cost_center_id == nil || self.cost_center_id == 0
-      costcenter = CostCenter.create(user_id: self.user_id, user_owner_id: self.user_id ,contact_id: self.contact_id, customer_id: self.customer_id, service_type: "SERVICIO", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, hour_real: 0.0, hour_cotizada: 0.0, quotation_value: 0, execution_state: "EJECUCION", work_force_contractor: 0.0, hours_contractor: 0.0, hours_contractor_invoices: 0.0, hours_contractor_real: 0.0, materials_value: 0.0, sum_materials: 0.0, sum_contractors: 0.0, sum_executed: 0.0, sum_viatic: self.viatic_value, sum_materials_costo: 0.0, sum_materials_cot: 0.0, contractor_total_costo: 0.0, sum_contractor_costo: 0.0, sum_contractor_cot: 0.0, sum_materials_value: 0.0, ingenieria_total_costo: 0.0, description: "SIN INFORMACIÓN")
+      costcenter = CostCenter.create(user_id: self.user_id, user_owner_id: cost_center_owner_id.presence || self.user_id ,contact_id: self.contact_id, customer_id: self.customer_id, service_type: "SERVICIO", create_type: false, viatic_value: 0, engineering_value: 0, eng_hours: 0, hour_real: 0.0, hour_cotizada: 0.0, quotation_value: 0, execution_state: "EJECUCION", work_force_contractor: 0.0, hours_contractor: 0.0, hours_contractor_invoices: 0.0, hours_contractor_real: 0.0, materials_value: 0.0, sum_materials: 0.0, sum_contractors: 0.0, sum_executed: 0.0, sum_viatic: self.viatic_value, sum_materials_costo: 0.0, sum_materials_cot: 0.0, contractor_total_costo: 0.0, sum_contractor_costo: 0.0, sum_contractor_cot: 0.0, sum_materials_value: 0.0, ingenieria_total_costo: 0.0, description: "SIN INFORMACIÓN")
       self.cost_center_id = costcenter.id
 
       count = Report.where(customer_id: self.customer_id).maximum(:count)
@@ -112,6 +124,18 @@ class Report < ApplicationRecord
       self.code_report = "REP-" + customer_prefix + "-" + self.count.to_s + "-" + self.report_date.year.to_s
     else
       CostCenter.find(self.cost_center_id).update(execution_state: "EJECUCION")
+    end
+  end
+
+  # Sin centro de costos se va a crear uno: hace falta su propietario, y tiene
+  # que ser alguien que pueda serlo. Con centro no se pide nada.
+  def propietario_del_centro_nuevo
+    return if cost_center_id.present? && cost_center_id.to_i != 0
+
+    if cost_center_owner_id.blank?
+      errors.add(:base, "Elija el propietario del centro de costos que se va a crear")
+    elsif !User.pueden_ser_propietarios.where(id: cost_center_owner_id).exists?
+      errors.add(:base, "La persona elegida no puede ser propietaria de un centro de costos")
     end
   end
 

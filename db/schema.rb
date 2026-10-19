@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_16_000002) do
+ActiveRecord::Schema.define(version: 2026_10_18_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -370,6 +370,9 @@ ActiveRecord::Schema.define(version: 2026_10_16_000002) do
     t.boolean "applies_to_all_roles", default: false, null: false
     t.boolean "prohibits_expense", default: false, null: false
     t.text "observations"
+    t.boolean "requires_second_approval", default: false, null: false
+    t.integer "second_approver_rol_id"
+    t.integer "second_approver_user_id"
     t.index ["active"], name: "index_expense_rules_on_active"
     t.index ["is_default"], name: "index_expense_rules_on_is_default"
     t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"
@@ -585,6 +588,11 @@ ActiveRecord::Schema.define(version: 2026_10_16_000002) do
     t.datetime "rejected_at"
     t.integer "rejected_by_id"
     t.text "rejection_reason"
+    t.jsonb "second_approval_rules", default: [], null: false
+    t.integer "first_approved_by_id"
+    t.datetime "first_approved_at"
+    t.integer "second_approved_by_id"
+    t.datetime "second_approved_at"
     t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
     t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"

@@ -52,6 +52,12 @@ export function operationalState(row) {
       return { label: "Aceptado", value: "aceptado", isOk: true, isRejected: false };
     case "rechazado":
       return { label: "Rechazado", value: "rechazado", isOk: false, isRejected: true };
+    // DOBLE APROBACION (2026-10-18): ya tiene la primera firma y espera la
+    // segunda. No es "ok" —no llega a Contabilidad— ni rechazado. "Pendiente
+    // 2ª" y no la frase completa: la columna del estado mide 150 px y la
+    // pildora se cortaba. Quien falta va en el tooltip de la celda.
+    case "pendiente_segunda":
+      return { label: "Pendiente 2ª", value: "pendiente_segunda", isOk: false, isRejected: false, isPendingSecond: true };
     default:
       return { label: "Creado", value: "creado", isOk: false, isRejected: false };
   }

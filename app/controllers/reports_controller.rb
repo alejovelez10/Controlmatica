@@ -360,7 +360,10 @@ class ReportsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   def report_params_create
     defaults = { user_id: current_user.id }
-    params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id, :customer_name, :contact_name, :contact_email, :contact_phone, :contact_position, :customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user).reverse_merge(defaults)
+    # `cost_center_owner_id` (2026-10-18): el propietario del centro que se crea
+    # cuando el reporte no trae centro. Ver Report#propietario_del_centro_nuevo.
+    params.permit(:report_date, :user_id, :working_time, :work_description, :viatic_value, :viatic_description, :total_value, :cost_center_id, :report_code, :report_execute_id, :working_value, :contact_id, :customer_name, :contact_name, :contact_email, :contact_phone, :contact_position, :customer_id, :count, :displacement_hours, :value_displacement_hours, :update_user,
+                  :cost_center_owner_id).reverse_merge(defaults)
   end
 
   def apply_report_filters(scope)

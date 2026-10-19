@@ -36,8 +36,37 @@ module ExpenseApprovalToken
   def self.find_expense(token)
     id = verificador.verified(token.to_s, purpose: PROPOSITO)
     return nil if id.blank?
+    # Un token de segunda aprobacion firmado con este proposito no existe, pero
+    # si algun dia llegara un Hash aqui no puede convertirse en un `find_by`.
+    return nil unless id.is_a?(Integer) || id.to_s.match?(/\A\d+\z/)
 
     ReportExpense.find_by(id: id)
+  end
+
+  # --- Segunda aprobacion (2026-10-18) ---------------------------------------
+  #
+  # OTRO PROPOSITO Y CON LA PERSONA ADENTRO. El enlace del dueño del centro no
+  # puede servir para la segunda firma —seria la misma persona firmando dos
+  # veces— y el de la segunda tiene que decir QUIEN firma: el pedido no tiene
+  # sesion, y sin la persona en el token cualquiera que reciba el correo
+  # reenviado firmaria en nombre del aprobador.
+  PROPOSITO_SEGUNDA = "expense_second_approval"
+
+  def self.generate_segunda(expense, user)
+    verificador.generate({ "e" => expense.id, "u" => user.id },
+                         purpose: PROPOSITO_SEGUNDA, expires_in: CADUCIDAD)
+  end
+
+  # => [ReportExpense, User], o nil si el enlace ya no sirve. Nunca lanza.
+  def self.find_segunda(token)
+    datos = verificador.verified(token.to_s, purpose: PROPOSITO_SEGUNDA)
+    return nil unless datos.is_a?(Hash)
+
+    gasto = ReportExpense.find_by(id: datos["e"])
+    persona = User.find_by(id: datos["u"])
+    return nil if gasto.nil? || persona.nil?
+
+    [gasto, persona]
   end
 
   # VA EN LA QUERY STRING Y NO EN EL PATH. `MessageVerifier` firma con

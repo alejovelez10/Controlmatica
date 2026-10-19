@@ -2,22 +2,25 @@
 #
 # Table name: expense_rules
 #
-#  id                   :bigint           not null, primary key
-#  active               :boolean          default(TRUE), not null
-#  agent_instructions   :text
-#  applies_to_all_roles :boolean          default(FALSE), not null
-#  check_duplicates     :boolean          default(TRUE), not null
-#  is_default           :boolean          default(FALSE), not null
-#  mandatory            :boolean          default(TRUE), not null
-#  max_invoice_age_days :integer
-#  max_invoice_value    :decimal(15, 2)
-#  name                 :string           not null
-#  observations         :text
-#  prohibits_expense    :boolean          default(FALSE), not null
-#  created_at           :datetime         not null
-#  updated_at           :datetime         not null
-#  last_user_edited_id  :integer
-#  user_id              :integer
+#  id                       :bigint           not null, primary key
+#  active                   :boolean          default(TRUE), not null
+#  agent_instructions       :text
+#  applies_to_all_roles     :boolean          default(FALSE), not null
+#  check_duplicates         :boolean          default(TRUE), not null
+#  is_default               :boolean          default(FALSE), not null
+#  mandatory                :boolean          default(TRUE), not null
+#  max_invoice_age_days     :integer
+#  max_invoice_value        :decimal(15, 2)
+#  name                     :string           not null
+#  observations             :text
+#  prohibits_expense        :boolean          default(FALSE), not null
+#  requires_second_approval :boolean          default(FALSE), not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  last_user_edited_id      :integer
+#  second_approver_rol_id   :integer
+#  second_approver_user_id  :integer
+#  user_id                  :integer
 #
 # Indexes
 #
@@ -31,7 +34,11 @@ class ExpenseRuleSerializer < ActiveModel::Serializer
              :agent_instructions, :rol_ids, :created_at, :updated_at,
              :applies_to_all_roles, :prohibits_expense,
              :excluded_rols, :excluded_users, :included_types, :excluded_types,
-             :observations
+             :observations,
+             # Doble aprobacion (2026-10-18). `second_approver_label` es lo que
+             # pinta la tabla: "Cargo: Gerencia" o "Usuario: Ana Perez".
+             :requires_second_approval, :second_approver_rol_id, :second_approver_user_id,
+             :second_approver_label
 
   has_many :rols
   belongs_to :user,             serializer: UserSerializer   # quien la creo
@@ -54,6 +61,10 @@ class ExpenseRuleSerializer < ActiveModel::Serializer
 
   def excluded_users
     object.excluded_users.map { |u| { id: u.id, name: ExpenseRule.nombre_de_persona(u) } }
+  end
+
+  def second_approver_label
+    object.requires_second_approval ? object.segundo_aprobador_label : nil
   end
 
   private

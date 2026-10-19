@@ -12,6 +12,7 @@
 #  exchange_rate             :decimal(18, 6)
 #  exchange_rate_date        :date
 #  exchange_rate_source      :string
+#  first_approved_at         :datetime
 #  foreign_tax               :decimal(15, 2)
 #  foreign_total             :decimal(15, 2)
 #  foreign_value             :decimal(15, 2)
@@ -31,15 +32,19 @@
 #  rejected_at               :datetime
 #  rejection_reason          :text
 #  rule_violations           :jsonb            not null
+#  second_approval_rules     :jsonb            not null
+#  second_approved_at        :datetime
 #  type_identification       :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  accounting_approved_by_id :integer
 #  cost_center_id            :integer
 #  expense_budget_id         :integer
+#  first_approved_by_id      :integer
 #  last_user_edited_id       :integer
 #  payment_type_id           :integer
 #  rejected_by_id            :integer
+#  second_approved_by_id     :integer
 #  type_identification_id    :integer
 #  user_id                   :integer
 #  user_invoice_id           :integer
@@ -77,6 +82,10 @@ class ReportExpense < ApplicationRecord
   # Quien aprobo contablemente el gasto. Opcional porque el 99% de los gastos
   # nunca pasa por contabilidad y porque desaprobar lo vuelve a dejar en NULL.
   belongs_to :accounting_approved_by, class_name: "User", optional: true
+  # Doble aprobacion (2026-10-18): quien dio cada una. Opcionales: la inmensa
+  # mayoria de los gastos no las tiene.
+  belongs_to :first_approved_by,  class_name: "User", optional: true
+  belongs_to :second_approved_by, class_name: "User", optional: true
   include RegisterAuditable
 
   # COMPROBANTE ADJUNTO (paquete 06).
@@ -122,14 +131,23 @@ class ReportExpense < ApplicationRecord
   STATE_CREADO    = "creado".freeze
   STATE_ACEPTADO  = "aceptado".freeze
   STATE_RECHAZADO = "rechazado".freeze
-  OPERATIONAL_STATES = [STATE_CREADO, STATE_ACEPTADO, STATE_RECHAZADO].freeze
+  # DOBLE APROBACION (2026-10-18): ya tiene la primera y espera la segunda. No
+  # es "Aceptado", asi que no llega a Contabilidad ni consume presupuesto, y no
+  # es "Creado", asi que el dueño del centro no lo vuelve a ver como pendiente.
+  # Solo existe en gastos cuya foto de reglas pide segunda aprobacion.
+  STATE_PENDIENTE_SEGUNDA = "pendiente_segunda".freeze
+  OPERATIONAL_STATES = [STATE_CREADO, STATE_ACEPTADO, STATE_RECHAZADO, STATE_PENDIENTE_SEGUNDA].freeze
+  # Los que una persona puede PEDIR. "Pendiente 2ª aprobación" no se elige: es
+  # a donde llega un "Aceptado" cuando el gasto necesita una segunda firma.
+  ESTADOS_QUE_SE_PIDEN = [STATE_CREADO, STATE_ACEPTADO, STATE_RECHAZADO].freeze
 
   # Mismo criterio que BUDGET_STATUS_LABELS: las etiquetas viven en el dueño de
   # la columna y no en cada consumidor. Las leen las dos plantillas axlsx y la
   # pantalla.
   OPERATIONAL_STATE_LABELS = { STATE_CREADO    => "Creado",
                                STATE_ACEPTADO  => "Aceptado",
-                               STATE_RECHAZADO => "Rechazado" }.freeze
+                               STATE_RECHAZADO => "Rechazado",
+                               STATE_PENDIENTE_SEGUNDA => "Pendiente 2ª aprobación" }.freeze
 
   # LO QUE SUMA EN VIATICOS Y EN EL AIU DEL CENTRO (2026-10-06).
   #
@@ -151,12 +169,71 @@ class ReportExpense < ApplicationRecord
   scope :aceptados,  -> { where(operational_state: STATE_ACEPTADO) }
   scope :rechazados, -> { where(operational_state: STATE_RECHAZADO) }
   scope :creados,    -> { where(operational_state: STATE_CREADO) }
+  scope :pendientes_de_segunda, -> { where(operational_state: STATE_PENDIENTE_SEGUNDA) }
+
+  # Los gastos en los que `user` figura como segundo aprobador, por persona o
+  # por cargo. Contencion de jsonb (`@>`): la foto es una lista de objetos.
+  scope :para_segundo_aprobador, ->(user) {
+    condicion = where("second_approval_rules @> ?", [{ user_id: user.id }].to_json)
+    user.rol_id ? condicion.or(where("second_approval_rules @> ?", [{ rol_id: user.rol_id }].to_json)) : condicion
+  }
 
   validates :operational_state, inclusion: { in: OPERATIONAL_STATES }
 
   def aceptado?  = operational_state == STATE_ACEPTADO
   def rechazado? = operational_state == STATE_RECHAZADO
   def creado?    = operational_state == STATE_CREADO
+  def pendiente_segunda? = operational_state == STATE_PENDIENTE_SEGUNDA
+
+  # === DOBLE APROBACION (2026-10-18) =========================================
+  #
+  # ADITIVA: un gasto entra a este circuito SOLO si su foto de reglas
+  # (`second_approval_rules`) tiene algo, y la foto solo se llena al registrar o
+  # editar un gasto que incumple una regla con «Pedir doble aprobación». Los
+  # gastos de antes tienen la foto vacia y se aprueban exactamente igual que
+  # siempre, aunque despues alguien configure la doble aprobacion.
+  #
+  #   Creado --"Aceptado" (1ª)--> Pendiente 2ª aprobación --"Aceptado" (2ª)--> Aceptado
+  #
+  # RECHAZAR ES IGUAL CON UNA O CON DOS FIRMAS (2026-10-18, pedido del usuario):
+  # lo rechace el segundo aprobador o Contabilidad, el gasto queda "Rechazado" y
+  # pierde las firmas, como cualquier otro.
+  #
+  # El paso lo hace el MODELO y no cada pantalla (`resolver_doble_aprobacion`):
+  # el desplegable de la tabla, el "Aceptar gastos" masivo y el enlace del
+  # correo piden "Aceptado" como siempre, y es aqui donde se decide si eso es la
+  # primera o la segunda firma. Asi ningun camino se la puede saltar.
+  def pide_segunda_aprobacion? = second_approval_rules.present?
+
+  def segundos_aprobadores_ids = Array(second_approval_rules).filter_map { |r| r["user_id"] }.uniq
+  def segundos_aprobadores_rol_ids = Array(second_approval_rules).filter_map { |r| r["rol_id"] }.uniq
+
+  # "Cargo: Gerencia · Usuario: Ana Perez", para la pantalla y el correo.
+  def segundos_aprobadores_label
+    Array(second_approval_rules).map { |r| r["approver"] }.compact.uniq.join(" · ")
+  end
+
+  # Si `user` puede dar la segunda aprobacion de ESTE gasto: figura en la foto,
+  # por persona o por cargo, y NO dio la primera. La misma persona firmando dos
+  # veces no es un segundo control.
+  def puede_dar_segunda_aprobacion?(user)
+    return false if user.nil? || !pide_segunda_aprobacion?
+    return false if first_approved_by_id.present? && first_approved_by_id == user.id
+
+    segundos_aprobadores_ids.include?(user.id) ||
+      (user.rol_id.present? && segundos_aprobadores_rol_ids.include?(user.rol_id))
+  end
+
+  # Las personas a las que se les avisa que hay una segunda aprobacion
+  # esperando: las elegidas por nombre y todas las del cargo, menos quien dio la
+  # primera.
+  def personas_para_segunda_aprobacion
+    personas = User.where(id: segundos_aprobadores_ids)
+    personas = personas.or(User.where(rol_id: segundos_aprobadores_rol_ids)) if segundos_aprobadores_rol_ids.any?
+    personas = personas.where.not(id: first_approved_by_id) if first_approved_by_id
+    personas.to_a
+  end
+
 
   def operational_state_label = OPERATIONAL_STATE_LABELS[operational_state]
 
@@ -636,6 +713,26 @@ class ReportExpense < ApplicationRecord
   # reglas. Ningun canal lo usa (web, MCP e import pasan por `save`).
   before_validation :reabrir_si_se_edito, prepend: true
   after_update_commit :avisar_la_reapertura
+
+  # === DOBLE APROBACION: LOS CALLBACKS (2026-10-18) ==========================
+  #
+  #   1. `marcar_si_recalcula_la_segunda` (before_validation, PREPEND): decide si
+  #      este guardado vuelve a sacar la foto de reglas. Solo al crear o cuando
+  #      una persona cambio algo, y por eso va donde la reapertura, ANTES del
+  #      redondeo: aprobar un gasto viejo con ruido de coma flotante no puede
+  #      contar como edicion y pedirle una segunda firma que nunca necesito.
+  #   2. `segunda_aprobacion_permitida` (validate): la segunda firma solo la da
+  #      quien figura en la foto y no dio la primera.
+  #   3. `resolver_doble_aprobacion` (before_save, PREPEND): saca la foto si toca
+  #      y convierte el "Aceptado" pedido en primera o segunda firma. PREPEND
+  #      porque `normalizar_datos_del_rechazo` y `sincronizar_is_acepted` leen
+  #      el estado: tienen que ver el definitivo, o `is_acepted` quedaria en
+  #      true en un gasto que todavia espera la segunda firma.
+  #   4. Los avisos, despues del commit, como todos los demas correos.
+  before_validation :marcar_si_recalcula_la_segunda, prepend: true
+  validate :segunda_aprobacion_permitida
+  before_save :resolver_doble_aprobacion, prepend: true
+  after_commit :avisar_segunda_aprobacion, on: [:create, :update]
 
   # El import de Excel se excluye A MANO, igual que con el comprobante: un
   # archivo de 300 filas son 300 gastos sin presupuesto y serian hasta 300
@@ -1154,9 +1251,100 @@ class ReportExpense < ApplicationRecord
 
   def auto_accept_if_within_budget
     return unless budget_status == ExpenseBudgetService::STATUS_APROBADO
+    # Un gasto que pide segunda aprobacion nunca nace aceptado solo. Hoy no
+    # llega aqui —incumplir una regla ya lo baja de `aprobado`—, pero este es el
+    # unico "Aceptado" que no pasa por `resolver_doble_aprobacion`.
+    return if pide_segunda_aprobacion?
 
     self.operational_state = STATE_ACEPTADO
   end
+
+  # --- Doble aprobacion (ver el bloque de callbacks) -------------------------
+
+  # `||=` y no `=`: si alguien llama `valid?` antes del `save`, la segunda
+  # pasada ya ve el redondeo en `changed` y no puede apagar lo que la primera
+  # vio, ni encender lo que la primera no vio por culpa de ese redondeo... salvo
+  # que de verdad haya un cambio. La apaga `resolver_doble_aprobacion`.
+  def marcar_si_recalcula_la_segunda
+    @recalcular_segunda ||= new_record? || campos_editados.any? || agent_policy_verdict.present?
+  end
+
+  def segunda_aprobacion_permitida
+    return unless operational_state_changed?
+
+    if pendiente_segunda?
+      errors.add(:base, "«Pendiente 2ª aprobación» no se elige: se llega aceptando el gasto")
+      return
+    end
+    return unless aceptado? && operational_state_was == STATE_PENDIENTE_SEGUNDA
+
+    quien = User.current
+    return if puede_dar_segunda_aprobacion?(quien)
+
+    mensaje = if quien && quien.id == first_approved_by_id
+                "Usted dio la primera aprobación de este gasto: la segunda la tiene que dar otra persona " \
+                "(#{segundos_aprobadores_label})"
+              else
+                "La segunda aprobación de este gasto le corresponde a #{segundos_aprobadores_label}"
+              end
+    errors.add(:base, mensaje)
+  end
+
+  def resolver_doble_aprobacion
+    if @recalcular_segunda
+      @recalcular_segunda = false
+      self.second_approval_rules = ExpenseRuleService.segunda_aprobacion(
+        self, agent_verdict: agent_policy_verdict, previa: second_approval_rules
+      )
+    end
+    return unless operational_state_changed?
+
+    ahora = Time.zone.now
+    case operational_state
+    when STATE_ACEPTADO
+      if pide_segunda_aprobacion? && operational_state_was == STATE_PENDIENTE_SEGUNDA
+        self.second_approved_by_id = User.current&.id
+        self.second_approved_at = ahora
+      else
+        # Una sola aprobacion, o la primera de dos. Anotar quien la dio es un
+        # dato nuevo y no cambia nada del circuito de una sola firma.
+        self.first_approved_by_id = User.current&.id
+        self.first_approved_at = ahora
+        self.second_approved_by_id = nil
+        self.second_approved_at = nil
+        if pide_segunda_aprobacion?
+          self.operational_state = STATE_PENDIENTE_SEGUNDA
+          @pide_segunda = true
+        end
+      end
+    when STATE_CREADO, STATE_RECHAZADO
+      # Volver al principio, o rechazar, borra las firmas: una aprobacion se dio
+      # sobre una decision que ya no esta en pie.
+      self.first_approved_by_id = nil
+      self.first_approved_at = nil
+      self.second_approved_by_id = nil
+      self.second_approved_at = nil
+    end
+  end
+
+  # Mismas guardas que los otros avisos: el flag del correo, el import y el
+  # `rescue`, que aqui tambien convierte un guardado exitoso en un 500 si falta.
+  def avisar_segunda_aprobacion
+    return unless @pide_segunda && pendiente_segunda?
+    return unless self.class.aviso_de_aprobacion?
+    return if omitir_aviso_de_aprobacion
+
+    personas_para_segunda_aprobacion.each do |persona|
+      next if persona.email.blank?
+
+      ExpenseApprovalMailer.pending_second_approval(self, persona).deliver_later
+    end
+  rescue StandardError => e
+    Rails.logger.error("[report_expense] aviso de segunda aprobacion ##{id}: #{e.class}: #{e.message}")
+  ensure
+    @pide_segunda = false
+  end
+
 
   # LO QUE NO ES "EDITAR UN GASTO", y cada grupo esta por un motivo distinto:
   #
@@ -1177,11 +1365,15 @@ class ReportExpense < ApplicationRecord
   #     WhatsApp que nace aceptado por caber en el presupuesto volveria a
   #     "Creado" segundos despues. Adjuntar el soporte no cambia lo que se
   #     aprobo; cambiar el valor, el centro o la fecha si.
+  #   * Los de la doble aprobacion (2026-10-18): la foto de reglas y las firmas
+  #     los escribe el servidor al decidir, igual que el estado.
   CAMPOS_QUE_NO_REABREN = %w[
     operational_state rejected_at rejected_by_id rejection_reason is_acepted
     budget_status budget_reason expense_budget_id rule_violations
     accounting_approved accounting_approved_at accounting_approved_by_id
     last_user_edited_id updated_at receipt_file
+    second_approval_rules first_approved_by_id first_approved_at
+    second_approved_by_id second_approved_at
   ].freeze
 
   # Ver el comentario del `after_create_commit`. Las cinco guardas, en orden de

@@ -2,22 +2,25 @@
 #
 # Table name: expense_rules
 #
-#  id                   :bigint           not null, primary key
-#  active               :boolean          default(TRUE), not null
-#  agent_instructions   :text
-#  applies_to_all_roles :boolean          default(FALSE), not null
-#  check_duplicates     :boolean          default(TRUE), not null
-#  is_default           :boolean          default(FALSE), not null
-#  mandatory            :boolean          default(TRUE), not null
-#  max_invoice_age_days :integer
-#  max_invoice_value    :decimal(15, 2)
-#  name                 :string           not null
-#  observations         :text
-#  prohibits_expense    :boolean          default(FALSE), not null
-#  created_at           :datetime         not null
-#  updated_at           :datetime         not null
-#  last_user_edited_id  :integer
-#  user_id              :integer
+#  id                       :bigint           not null, primary key
+#  active                   :boolean          default(TRUE), not null
+#  agent_instructions       :text
+#  applies_to_all_roles     :boolean          default(FALSE), not null
+#  check_duplicates         :boolean          default(TRUE), not null
+#  is_default               :boolean          default(FALSE), not null
+#  mandatory                :boolean          default(TRUE), not null
+#  max_invoice_age_days     :integer
+#  max_invoice_value        :decimal(15, 2)
+#  name                     :string           not null
+#  observations             :text
+#  prohibits_expense        :boolean          default(FALSE), not null
+#  requires_second_approval :boolean          default(FALSE), not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  last_user_edited_id      :integer
+#  second_approver_rol_id   :integer
+#  second_approver_user_id  :integer
+#  user_id                  :integer
 #
 # Indexes
 #
@@ -92,6 +95,13 @@ class ExpenseRule < ApplicationRecord
                                            join_table: "expense_rules_excluded_types",
                                            association_foreign_key: "report_expense_option_id"
 
+  # DOBLE APROBACION (2026-10-18). Una regla que deja guardar puede pedir,
+  # ademas de la aprobacion de siempre, una SEGUNDA de un cargo o de una persona
+  # antes de que el gasto llegue a Contabilidad. Ver
+  # ReportExpense#resolver_doble_aprobacion para el circuito.
+  belongs_to :second_approver_rol,  class_name: "Rol",  optional: true
+  belongs_to :second_approver_user, class_name: "User", optional: true
+
   # LOS TIPOS DE UNA REGLA SON LOS QUE NO SE PUEDEN REGISTRAR (2026-10-16).
   # `included_types` ya no dice «en que tipos aplica la regla»: dice que tipos
   # de gasto se le frenan a quien le aplique. Los limites (antiguedad, tope,
@@ -103,6 +113,7 @@ class ExpenseRule < ApplicationRecord
   # `prohibits_expense` queda como columna derivada —la leen el serializer, la
   # tabla y el MCP— y se recalcula en cada guardado.
   before_validation :prohibir_si_tiene_tipos
+  before_validation :limpiar_segundo_aprobador
 
   validates :name, presence: true
   # Unico ENTRE ACTIVAS y no en toda la tabla: desactivar una regla es la forma
@@ -111,10 +122,11 @@ class ExpenseRule < ApplicationRecord
   validates :max_invoice_age_days, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :max_invoice_value,    numericality: { greater_than: 0 }, allow_nil: true
   validates :active, :is_default, :check_duplicates, :mandatory, :applies_to_all_roles,
-            :prohibits_expense, inclusion: { in: [true, false] }
+            :prohibits_expense, :requires_second_approval, inclusion: { in: [true, false] }
   validate  :una_sola_default_activa
   validate  :tipos_sin_cruce
   validate  :por_defecto_no_es_para_todos
+  validate  :segunda_aprobacion_coherente
 
   scope :activas, -> { where(active: true) }
   scope :default_activa, -> { activas.where(is_default: true) }
@@ -219,6 +231,27 @@ class ExpenseRule < ApplicationRecord
     agent_instructions.to_s.strip
   end
 
+  # Si un gasto que incumpla esta regla necesita una segunda aprobacion. Mira
+  # tambien `mandatory`: una regla que impide guardar no deja ningun gasto que
+  # aprobar, y la validacion ya no deja guardarlas juntas, pero una fila vieja o
+  # escrita por consola no puede abrir un circuito que no existe.
+  def pide_segunda_aprobacion?
+    requires_second_approval && !mandatory &&
+      (second_approver_rol_id.present? || second_approver_user_id.present?)
+  end
+
+  # "Cargo: Gerencia" o "Usuario: Ana Perez". Lo leen la tabla, la auditoria y
+  # la foto que queda en el gasto.
+  def segundo_aprobador_label
+    if second_approver_user
+      "Usuario: #{self.class.nombre_de_persona(second_approver_user)}"
+    elsif second_approver_rol
+      "Cargo: #{second_approver_rol.name.to_s.squish}"
+    else
+      ""
+    end
+  end
+
   # Nombre completo para la pantalla, la auditoria y el catalogo del
   # multi-select. `names` solo no alcanza para excluir a alguien: es el nombre
   # de pila, y dos personas que se llamen igual serian indistinguibles.
@@ -321,6 +354,9 @@ class ExpenseRule < ApplicationRecord
     partes << segmento_edicion("Aplica a", etiqueta_modo_roles(applies_to_all_roles_change[0]),
                                etiqueta_modo_roles(applies_to_all_roles_change[1]))             if applies_to_all_roles_changed?
     partes << segmento_edicion("Observaciones", observations_change[0], observations_change[1]) if observations_changed?
+    if requires_second_approval_changed? || second_approver_rol_id_changed? || second_approver_user_id_changed?
+      partes << segmento_edicion("Doble aprobación", doble_aprobacion_label_anterior, doble_aprobacion_label)
+    end
 
     return if partes.empty?
 
@@ -340,7 +376,51 @@ class ExpenseRule < ApplicationRecord
       "<p>Aplica a: <b>#{alcance_por_rol_label}</b></p>" \
       "<p>Personas excluidas: <b>#{excluded_users.map { |u| self.class.nombre_de_persona(u) }.sort.join(", ").presence || "Ninguna"}</b></p>" \
       "<p>Tipos que no se pueden registrar: <b>#{nombres(included_types).presence || "Ninguno"}</b></p>" \
-      "<p>Los límites no se revisan en: <b>#{nombres(excluded_types).presence || "Ninguno"}</b></p>"
+      "<p>Los límites no se revisan en: <b>#{nombres(excluded_types).presence || "Ninguno"}</b></p>" \
+      "<p>Doble aprobación: <b>#{doble_aprobacion_label}</b></p>"
+  end
+
+  def doble_aprobacion_label
+    requires_second_approval ? "Sí, la da #{segundo_aprobador_label}" : "No"
+  end
+
+  # La misma etiqueta con los valores de ANTES del cambio, para la auditoria.
+  def doble_aprobacion_label_anterior
+    return "No" unless requires_second_approval_was
+
+    if second_approver_user_id_was
+      persona = User.find_by(id: second_approver_user_id_was)
+      "Sí, la da Usuario: #{persona ? self.class.nombre_de_persona(persona) : "(borrado)"}"
+    else
+      cargo = Rol.find_by(id: second_approver_rol_id_was)
+      "Sí, la da Cargo: #{cargo ? cargo.name.to_s.squish : "(borrado)"}"
+    end
+  end
+
+  # Sin doble aprobacion no queda aprobador guardado: un cargo escondido en una
+  # regla que no lo usa reaparece el dia que alguien marca la casilla. Y con
+  # una PERSONA elegida se olvida el cargo, y al reves: el formulario elige uno
+  # de los dos y el que no se eligio no puede quedarse vivo.
+  def limpiar_segundo_aprobador
+    unless requires_second_approval
+      self.second_approver_rol_id = nil
+      self.second_approver_user_id = nil
+      return
+    end
+
+    self.second_approver_rol_id = nil if second_approver_user_id.present?
+  end
+
+  def segunda_aprobacion_coherente
+    return unless requires_second_approval
+
+    if mandatory
+      errors.add(:requires_second_approval,
+                 "una regla que impide guardar el gasto no puede pedir doble aprobación: el gasto no llega a guardarse")
+    end
+    if second_approver_rol_id.blank? && second_approver_user_id.blank?
+      errors.add(:requires_second_approval, "elija el cargo o la persona que da la segunda aprobación")
+    end
   end
 
   def alcance_por_rol_label

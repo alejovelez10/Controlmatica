@@ -6,7 +6,7 @@
   <div class="cm-card" style="background: #fff; border: 1px solid var(--cm-border); border-radius: 12px; padding: 28px;">
 
     <h1 style="font-family: 'Poppins', sans-serif; font-size: 20px; margin: 0 0 6px;">
-      Gasto pendiente de su decisión
+      <%= @segunda ? "Gasto pendiente de su segunda aprobación" : "Gasto pendiente de su decisión" %>
     </h1>
     <p class="cm-hint" style="margin: 0 0 22px;">
       Centro de costos <strong><%= @expense.cost_center&.code || "—" %></strong>
@@ -38,6 +38,19 @@
       <% end %>
     </dl>
 
+    <%# DOBLE APROBACION (2026-10-18): quien dio la primera y por que hace falta
+        la segunda. Es lo que el segundo aprobador necesita para decidir. %>
+    <% if @segunda && @expense.pide_segunda_aprobacion? %>
+      <div class="cm-alert cm-alert-info" style="margin-bottom: 20px;">
+        <% if @expense.first_approved_by %>
+          <div>Primera aprobación: <strong><%= @expense.first_approved_by.names %></strong></div>
+        <% end %>
+        <% Array(@expense.second_approval_rules).each do |r| %>
+          <div>Regla «<%= r["rule"] %>»<% motivos = Array(r["reasons"]) + Array(r["ia_reasons"]) %><% if motivos.any? %>: <%= motivos.join(" · ") %><% end %></div>
+        <% end %>
+      </div>
+    <% end %>
+
     <% if @expense.motivo_de_retencion.present? %>
       <div class="cm-alert cm-alert-warning" style="margin-bottom: 20px;">
         <strong>Motivo:</strong> <%= @expense.motivo_de_retencion %>
@@ -47,12 +60,25 @@
     <%# YA DECIDIDO: se dice antes de ofrecer los botones, no despues de
         pulsarlos. Pasa cuando alguien ya lo movio desde la pantalla de Gastos
         entre que salio el correo y se abrio el enlace. %>
-    <% unless @expense.creado? %>
+    <% if !@esperando %>
       <div class="cm-alert <%= @expense.rechazado? ? "cm-alert-warning" : "cm-alert-success" %>" style="margin: 0;">
         <%# Mismo criterio que `done`: el verbo de esta pagina es "aprobar",
             aunque la columna del estado se llame "Aceptado". %>
-        Este gasto ya fue <%= @expense.rechazado? ? "rechazado" : "aprobado" %>.
-        No hay nada pendiente por hacer.
+        <% if @expense.pendiente_segunda? %>
+          Este gasto ya tiene la primera aprobación y espera la segunda
+          (<%= @expense.segundos_aprobadores_label %>). No hay nada pendiente por hacer aquí.
+        <% else %>
+          Este gasto ya fue <%= @expense.rechazado? ? "rechazado" : "aprobado" %>.
+          No hay nada pendiente por hacer.
+        <% end %>
+      </div>
+    <% elsif @segunda && !@expense.puede_dar_segunda_aprobacion?(@firmante) %>
+      <div class="cm-alert cm-alert-warning" style="margin: 0;">
+        <% if @expense.first_approved_by_id == @firmante&.id %>
+          Usted dio la primera aprobación de este gasto: la segunda la tiene que dar otra persona.
+        <% else %>
+          Este enlace ya no le permite aprobar el gasto. Entre a Controlmatica para revisarlo.
+        <% end %>
       </div>
     <% else %>
       <%# DOS FORMULARIOS Y NO UNO CON DOS BOTONES: cada uno apunta a su propia
@@ -62,7 +88,7 @@
       <%= form_with url: expense_approval_path, method: :post, local: true do %>
         <%= hidden_field_tag :t, @token %>
         <button type="submit" class="cm-btn cm-btn-success" style="width: 100%; justify-content: center; padding: 12px;">
-          <i class="fas fa-check"></i> Aprobar este gasto
+          <i class="fas fa-check"></i> <%= @segunda ? "Dar la segunda aprobación" : "Aprobar este gasto" %>
         </button>
       <% end %>
 

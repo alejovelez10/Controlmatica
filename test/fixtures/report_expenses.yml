@@ -12,6 +12,7 @@
 #  exchange_rate             :decimal(18, 6)
 #  exchange_rate_date        :date
 #  exchange_rate_source      :string
+#  first_approved_at         :datetime
 #  foreign_tax               :decimal(15, 2)
 #  foreign_total             :decimal(15, 2)
 #  foreign_value             :decimal(15, 2)
@@ -31,15 +32,19 @@
 #  rejected_at               :datetime
 #  rejection_reason          :text
 #  rule_violations           :jsonb            not null
+#  second_approval_rules     :jsonb            not null
+#  second_approved_at        :datetime
 #  type_identification       :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  accounting_approved_by_id :integer
 #  cost_center_id            :integer
 #  expense_budget_id         :integer
+#  first_approved_by_id      :integer
 #  last_user_edited_id       :integer
 #  payment_type_id           :integer
 #  rejected_by_id            :integer
+#  second_approved_by_id     :integer
 #  type_identification_id    :integer
 #  user_id                   :integer
 #  user_invoice_id           :integer

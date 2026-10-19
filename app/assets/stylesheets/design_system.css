@@ -2562,6 +2562,14 @@ select.cm-input {
   color: #c82333;
 }
 
+/* Gasto PENDIENTE DE LA SEGUNDA APROBACION (2026-10-18). Ambar: tiene la
+   primera firma —ya no es el gris de "Creado"— pero todavia no es el verde de
+   "Aceptado", que es lo que llega a Contabilidad. */
+.cm-status-pill--pending {
+  background: #fff3cd;
+  color: #8a6d0b;
+}
+
 .cm-status-select {
   appearance: none;
   -webkit-appearance: none;
@@ -2589,6 +2597,11 @@ select.cm-input {
   background-color: #d4edda;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23155724' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color: #155724;
+}
+
+.cm-status-select--pending {
+  background-color: #fff3cd;
+  color: #8a6d0b;
 }
 
 .cm-status-select:hover {

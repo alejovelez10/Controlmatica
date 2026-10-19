@@ -192,6 +192,83 @@ class ExpenseRuleService
     check_prohibitions(expense, ExpenseRule.para_gasto(responsable, expense&.type_identification_id))
   end
 
+  # --- Doble aprobacion (2026-10-18) -------------------------------------------
+
+  # Las reglas que le piden a ESTE gasto una segunda aprobacion, con quien la da.
+  # Es la foto que se guarda en `ReportExpense#second_approval_rules`:
+  #
+  #   [{ "rule_id" => 7, "rule" => "Montos altos", "rol_id" => 3, "user_id" => nil,
+  #      "approver" => "Cargo: Gerencia", "reasons" => ["El valor supera..."],
+  #      "ia_reasons" => [] }]
+  #
+  # REGLA POR REGLA Y NO CON `validate`: ahi los topes se colapsan en un minimo
+  # y la violacion no sabe de que regla salio (`rule: nil`). Aqui se pregunta a
+  # cada regla con doble aprobacion si ELLA, con sus propios limites, se
+  # incumple. Sin reglas con doble aprobacion no se consulta nada mas, que es el
+  # caso de hoy: los gastos de siempre no pagan nada por esto.
+  #
+  # LO QUE ENCONTRO LA IA SOBREVIVE A UNA EDICION SIN COMPROBANTE NUEVO: sin
+  # veredicto en este guardado (`agent_verdict` nil) se conservan los motivos de
+  # IA de la foto anterior (`previa`). Si no, corregir la descripcion de un gasto
+  # con licor le quitaria la segunda aprobacion.
+  def self.segunda_aprobacion(expense, agent_verdict: nil, previa: [])
+    return [] if expense.blank?
+
+    reglas = ExpenseRule.para_gasto(expense.user_invoice, expense.type_identification_id)
+                        .select(&:pide_segunda_aprobacion?)
+    return [] if reglas.empty?
+
+    ia = if agent_verdict.present?
+           motivos_de_ia_por_regla(agent_verdict, reglas, expense)
+         else
+           Array(previa).each_with_object({}) { |f, acc| acc[f["rule_id"]] = Array(f["ia_reasons"]) }
+         end
+    duplicado = nil
+
+    reglas.filter_map do |regla|
+      motivos = []
+      if regla.prohibe_el_tipo?(expense.type_identification_id)
+        motivos << "El tipo «#{expense.type_identification&.name.to_s.squish}» necesita aprobación"
+      end
+      motivos.concat(check_age(expense, regla.max_invoice_age_days).map { |v| v[:message] })
+      motivos.concat(check_value(expense, regla.max_invoice_value).map { |v| v[:message] })
+      if regla.check_duplicates
+        duplicado = check_duplicate(expense) if duplicado.nil?
+        motivos.concat(duplicado.map { |v| v[:message] })
+      end
+      motivos_ia = Array(ia[regla.id])
+      next if motivos.empty? && motivos_ia.empty?
+
+      { "rule_id" => regla.id, "rule" => regla.name, "rol_id" => regla.second_approver_rol_id,
+        "user_id" => regla.second_approver_user_id, "approver" => regla.segundo_aprobador_label,
+        "reasons" => motivos, "ia_reasons" => motivos_ia }
+    end
+  end
+
+  # {rule_id => [motivo, ...]} de lo que encontro la IA. Un hallazgo SIN regla
+  # solo se le atribuye a una regla con doble aprobacion si es la UNICA regla
+  # del gasto con texto para la IA: con dos, adivinar de cual salio seria pedir
+  # una aprobacion que ninguna regla pidio.
+  def self.motivos_de_ia_por_regla(verdict, reglas_dobles, expense)
+    v = verdict.respond_to?(:with_indifferent_access) ? verdict.with_indifferent_access : verdict
+    return {} unless v[:compliant] == false
+
+    con_texto = ExpenseRule.para_gasto(expense.user_invoice, expense.type_identification_id)
+                           .select { |r| r.texto_para_el_agente.present? }
+    hallazgos = normalizar_hallazgos(v[:findings])
+    unica = con_texto.size == 1 ? con_texto.first : nil
+    if hallazgos.empty? && unica
+      hallazgos = [{ rule_id: unica.id, message: "El comprobante no cumple las instrucciones de la regla" }]
+    end
+
+    ids_dobles = reglas_dobles.map(&:id)
+    hallazgos.each_with_object(Hash.new { |h, k| h[k] = [] }) do |h, acc|
+      regla_id = h[:rule_id] || unica&.id
+      acc[regla_id] << h[:message] if ids_dobles.include?(regla_id)
+    end
+  end
+  private_class_method :motivos_de_ia_por_regla
+
   # --- Reglas deterministas --------------------------------------------------
 
   # UNA VIOLACION POR REGLA, CON SU NOMBRE. A diferencia de los topes —que se

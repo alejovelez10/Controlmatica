@@ -495,10 +495,16 @@ if centros_e2e["PERM"]
     cost_center_id: centros_e2e["PERM"].id, user_id: usuarios_e2e["benef_a"].id, amount: 400_000.0,
     notes: "Partida E2E permisos", active: true, created_by_id: admin.id
   )
-  gastos_e2e["PERM_001"] = gasto_e2e!(centro: centros_e2e["PERM"], responsable: usuarios_e2e["benef_a"],
-                                      numero: "FE-E2E-PERM-001", nombre: "Gasto de permisos",
-                                      valor: 120_000.0, fecha: Date.new(2026, 6, 10),
-                                      tipo: tipo, pago: pago).id
+  gasto_perm = gasto_e2e!(centro: centros_e2e["PERM"], responsable: usuarios_e2e["benef_a"],
+                          numero: "FE-E2E-PERM-001", nombre: "Gasto de permisos",
+                          valor: 120_000.0, fecha: Date.new(2026, 6, 10),
+                          tipo: tipo, pago: pago)
+  # ACEPTADO, como los de ACC: permissions.spec.js lo busca en la bandeja de
+  # Contabilidad, que desde el 2026-10-06 solo muestra los aceptados. Creado,
+  # la lectura del dueño no lo encontraba y el escenario fallaba por eso y no
+  # por el permiso que prueba.
+  gasto_perm.update_columns(is_acepted: true, operational_state: ReportExpense::STATE_ACEPTADO)
+  gastos_e2e["PERM_001"] = gasto_perm.id
 end
 
 if centros_e2e["RULE"]

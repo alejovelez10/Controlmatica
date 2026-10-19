@@ -135,6 +135,34 @@ class FormCreate extends React.Component {
                   </div>
                 )}
 
+                {/* PROPIETARIO DEL CENTRO NUEVO (2026-10-18). Sin centro elegido,
+                    al guardar se crea uno; su propietario es quien aprueba los
+                    gastos de ese centro, asi que se elige aqui y no queda quien
+                    hizo el reporte. Solo personas con «Puede ser propietario». */}
+                {!props.cost_center_id && !props.modeEdit && !props.formValues.cost_center_id && (
+                  <div className="cm-form-group" data-testid="report-owner-group">
+                    <label className="cm-label">
+                      <i className="fa fa-user-tie"></i> Propietario del centro de costos que se va a crear <span className="cm-required">*</span>
+                    </label>
+                    <div data-testid="report-owner-select">
+                      <Select
+                        onChange={props.onChangeOwner}
+                        options={props.owners || []}
+                        styles={selectStyles}
+                        menuPortalTarget={document.body}
+                        value={props.selectedOwner}
+                        isClearable
+                        placeholder="Elija el propietario…"
+                        noOptionsMessage={function() { return "Nadie tiene el permiso «Puede ser propietario»"; }}
+                      />
+                    </div>
+                    <p className="cm-hint" style={{ margin: "6px 0 0 0", fontSize: "12px" }}>
+                      Como no eligió centro de costos, se va a crear uno nuevo. El propietario es quien
+                      aprueba sus gastos.
+                    </p>
+                  </div>
+                )}
+
                 {/* Cliente & Contacto */}
                 <div className="cm-form-grid-2">
                   <div className="cm-form-group">

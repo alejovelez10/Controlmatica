@@ -149,7 +149,9 @@ class ExpensesTable extends Component {
         <div className="cm-status-cell">
           <span className={"cm-status-pill"
                            + (operationalState(r).isOk ? " cm-status-pill--ok" : "")
-                           + (operationalState(r).isRejected ? " cm-status-pill--danger" : "")}>
+                           + (operationalState(r).isRejected ? " cm-status-pill--danger" : "")
+                           + (operationalState(r).isPendingSecond ? " cm-status-pill--pending" : "")}
+                title={r.double_approval ? "2ª aprobación de: " + r.double_approval.approvers : undefined}>
             {operationalState(r).label}
           </span>
           {budgetWarningIcon(r)}

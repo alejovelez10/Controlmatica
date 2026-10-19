@@ -12,6 +12,7 @@
 #  exchange_rate             :decimal(18, 6)
 #  exchange_rate_date        :date
 #  exchange_rate_source      :string
+#  first_approved_at         :datetime
 #  foreign_tax               :decimal(15, 2)
 #  foreign_total             :decimal(15, 2)
 #  foreign_value             :decimal(15, 2)
@@ -31,15 +32,19 @@
 #  rejected_at               :datetime
 #  rejection_reason          :text
 #  rule_violations           :jsonb            not null
+#  second_approval_rules     :jsonb            not null
+#  second_approved_at        :datetime
 #  type_identification       :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  accounting_approved_by_id :integer
 #  cost_center_id            :integer
 #  expense_budget_id         :integer
+#  first_approved_by_id      :integer
 #  last_user_edited_id       :integer
 #  payment_type_id           :integer
 #  rejected_by_id            :integer
+#  second_approved_by_id     :integer
 #  type_identification_id    :integer
 #  user_id                   :integer
 #  user_invoice_id           :integer
@@ -95,7 +100,11 @@ class ReportExpenseSerializer < ActiveModel::Serializer
              # `is_acepted` sigue arriba y sigue viajando: lo lee el frontend que
              # todavia no migro y lo recibe el agente de Taimes por el MCP. Es un
              # metodo derivado del modelo, no la columna.
-             :operational_state, :rejected_at, :rejection_reason
+             :operational_state, :rejected_at, :rejection_reason,
+             # --- doble aprobacion (2026-10-18) ---
+             # AL FINAL, por lo mismo. `double_approval` es nil en los gastos
+             # que no la piden, que hoy son todos: la pantalla no pinta nada.
+             :double_approval
 
   belongs_to :cost_center, serializer: CostCenterSerializer
 
@@ -138,5 +147,26 @@ class ReportExpenseSerializer < ActiveModel::Serializer
   def receipt_file
     return nil if object[:receipt_file].blank?
     { url: object.receipt_file.url }
+  end
+
+  # Lo que la tabla necesita para pintar y decidir la doble aprobacion: quien
+  # puede dar la segunda (ids de persona y de cargo, para el desplegable), por
+  # que la pide y quien firmo cada una.
+  def double_approval
+    return nil unless object.pide_segunda_aprobacion?
+
+    reglas = Array(object.second_approval_rules)
+    { approvers: object.segundos_aprobadores_label,
+      user_ids: object.segundos_aprobadores_ids,
+      rol_ids: object.segundos_aprobadores_rol_ids,
+      reasons: reglas.map { |r| "Regla «#{r["rule"]}»: #{(Array(r["reasons"]) + Array(r["ia_reasons"])).join(" · ")}" },
+      first_by: persona(object.first_approved_by), first_at: object.first_approved_at,
+      second_by: persona(object.second_approved_by), second_at: object.second_approved_at }
+  end
+
+  private
+
+  def persona(user)
+    user && { id: user.id, names: user.names }
   end
 end
