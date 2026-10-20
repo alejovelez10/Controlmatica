@@ -2,6 +2,13 @@ Rails.application.routes.draw do
   # MCP server (official `mcp` SDK, Streamable HTTP, stateless) — additive, para Taimes
   match '/mcp', to: 'mcp#handle', via: %i[post get delete]
 
+  # Canal propio de WhatsApp (paquete 17): GET de alta y POST de Meta.
+  get  "webhooks/whatsapp", to: "webhooks/whatsapp#verify"
+  post "webhooks/whatsapp", to: "webhooks/whatsapp#receive"
+
+  # Politica de privacidad publica: Meta la exige para publicar la app.
+  get "privacidad", to: "paginas_publicas#privacidad", as: :privacidad
+
   namespace :api do
     namespace :v1 do
       resources :cost_centers, only: [:index]
