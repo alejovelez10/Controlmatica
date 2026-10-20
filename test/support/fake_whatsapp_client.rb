@@ -27,6 +27,10 @@ class FakeWhatsappClient
     anotar(:lista, destino, texto: texto, boton: boton, filas: filas)
   end
 
+  def enviar_plantilla(destino, nombre, idioma: "es", parametros: [])
+    anotar(:plantilla, destino, nombre: nombre, idioma: idioma, parametros: parametros, texto: nil)
+  end
+
   def marcar_leido(wamid, escribiendo: true)
     levantar_si(:marcar_leido)
     @leidos << wamid

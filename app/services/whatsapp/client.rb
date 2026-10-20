@@ -99,6 +99,18 @@ module Whatsapp
       enviar(destino, { type: "interactive", interactive: interactivo }, responder_a: responder_a)
     end
 
+    # Plantilla aprobada por Meta: lo unico que se puede mandar fuera de la
+    # ventana de 24 h desde el ultimo mensaje de la persona. `parametros`
+    # reemplaza, en orden, los {{1}}, {{2}}... del cuerpo.
+    def enviar_plantilla(destino, nombre, idioma: "es", parametros: [])
+      plantilla = { name: nombre, language: { code: idioma } }
+      if parametros.any?
+        plantilla[:components] = [{ type: "body",
+                                    parameters: parametros.map { |p| { type: "text", text: p.to_s } } }]
+      end
+      enviar(destino, { type: "template", template: plantilla })
+    end
+
     # Marca el mensaje como leido y, si se pide, muestra "escribiendo..." (Meta
     # lo quita al responder o a los 25 s).
     def marcar_leido(wamid, escribiendo: true)

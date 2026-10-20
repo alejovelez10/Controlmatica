@@ -1045,7 +1045,12 @@ class ReportExpense < ApplicationRecord
 
     decisor = User.current
     return if decisor.present? && decisor.id == user_invoice_id
-    return if user_invoice.nil? || user_invoice.email.blank?
+    return if user_invoice.nil?
+
+    # El aviso por WhatsApp va ANTES de la guarda del correo: el personal de
+    # campo es justo el que a veces no tiene correo (paquete 17).
+    Whatsapp::Avisos.avisar("decision", self, user_invoice, decisor)
+    return if user_invoice.email.blank?
 
     ExpenseApprovalMailer.decision(self, decisor).deliver_later
   rescue StandardError => e
@@ -1204,7 +1209,10 @@ class ReportExpense < ApplicationRecord
     return if omitir_aviso_de_aprobacion
 
     dueno = cost_center&.user_owner
-    return if dueno.nil? || dueno.email.blank?
+    return if dueno.nil?
+
+    Whatsapp::Avisos.avisar("pendiente", self, dueno) # paquete 17
+    return if dueno.email.blank?
 
     # `deliver_later` y no `deliver`: el correo sale del hilo del request, que
     # es el que tiene al usuario esperando el modal de "gasto creado".
