@@ -113,7 +113,15 @@ gem "bootsnap", "~> 1.16.0", require: false
 # Agregar estas gemas explícitamente para compatibilidad
 gem 'logger', '~> 1.5'
 gem 'activesupport', '~> 6.1.7.6'
-gem 'concurrent-ruby', '~> 1.2.2'
+# 1.3.4 EXACTA (paquete 17): GoodJob exige >= 1.3.1, y la 1.3.5 dejo de
+# requerir `logger`, que es justo lo que Rails 6.1 asume cargado al arrancar
+# (ActiveSupport::LoggerThreadSafeLevel). config/boot.rb ya hace el require por
+# si alguien la sube, pero no hay razon para pisar esa mina.
+gem 'concurrent-ruby', '1.3.4'
+
+# Cola de trabajos en Postgres (paquete 17): el canal de WhatsApp responde 200
+# al instante y procesa en un worker. Sin Redis; la 4.x soporta Rails 6.1.
+gem 'good_job', '~> 4.22'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console

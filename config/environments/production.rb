@@ -61,9 +61,22 @@ Rails.application.configure do
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
 
-  # Use a real queuing backend for Active Job (and separate queues per environment)
-  # config.active_job.queue_adapter     = :resque
-  # config.active_job.queue_name_prefix = "Controlmatica_#{Rails.env}"
+  # COLA DE TRABAJOS: GoodJob sobre el mismo Postgres (paquete 17). Antes no
+  # habia adaptador y ActiveJob corria en :async, en memoria: un reinicio del
+  # dyno se llevaba los correos en cola.
+  #
+  # El modo arranca en :async (los trabajos corren DENTRO del dyno web, pero
+  # guardados en Postgres) para que un despliegue sin dyno worker no deje la
+  # cola sin nadie que la atienda. Con el worker del Procfile escalado, poner
+  # GOOD_JOB_EXECUTION_MODE=external en el web para que deje de ejecutarlos.
+  # El proceso `good_job start` siempre corre en :external, sin importar esto.
+  config.active_job.queue_adapter = :good_job
+  config.good_job.execution_mode = ENV.fetch("GOOD_JOB_EXECUTION_MODE", "async").to_sym
+  # UN hilo por defecto: en :async se suma a los 5 de Puma sobre el pool de 5
+  # conexiones que Heroku arma desde DATABASE_URL (database.yml no se versiona),
+  # y un turno del agente retiene la suya mientras espera a Claude. Con el
+  # worker aparte, su pool es propio y se puede subir.
+  config.good_job.max_threads = ENV.fetch("GOOD_JOB_MAX_THREADS", 1).to_i
 
   config.action_mailer.perform_caching = false
 

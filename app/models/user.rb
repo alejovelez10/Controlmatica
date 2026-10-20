@@ -24,6 +24,7 @@
 #  reset_password_token   :string
 #  rol_user               :string
 #  sign_in_count          :integer          default(0), not null
+#  whatsapp_user_id       :string
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null
 #  rol_id                 :integer
@@ -34,6 +35,7 @@
 #  index_users_on_phone_normalized      (phone_normalized)
 #  index_users_on_reset_password_token  (reset_password_token) UNIQUE
 #  index_users_on_rol_id                (rol_id)
+#  index_users_on_whatsapp_user_id      (whatsapp_user_id)
 #
 
 class User < ApplicationRecord
