@@ -39,7 +39,7 @@ module Agente
       return reiniciar if COMANDOS_REINICIO.include?(texto.downcase)
       return atender_boton_del_borrador if @mensaje.boton_id.to_s.start_with?("borrador:")
       return confirmar_por_texto if confirmacion_escrita?(texto)
-      return @respondedor.texto(SIN_VOZ_TODAVIA) if @mensaje.message_type == "audio"
+      return conversar_por_voz if @mensaje.message_type == "audio"
 
       conversar
     end
@@ -70,6 +70,34 @@ module Agente
 
     def confirmar_por_texto
       Borrador.new(@conversacion, @usuario, @respondedor).confirmar!(Borrador.pendiente(@conversacion)["id"])
+    end
+
+    # La nota de voz se transcribe y le llega al modelo marcada, para que la
+    # muestre en el resumen ("Entendí: ..."): una transcripcion mala es la causa
+    # numero uno de gastos con el valor equivocado.
+    def conversar_por_voz
+      unless Voz::Transcriptor.configurado? && @mensaje.media_file.present?
+        return @respondedor.texto(SIN_VOZ_TODAVIA)
+      end
+
+      texto = Voz::Transcriptor.new.transcribir(@mensaje.media_file.read.to_s.b, mime: @mensaje.media_mime,
+                                                                                terminos: terminos_de_voz)
+      @mensaje.update!(body: texto, payload: @mensaje.payload.merge("transcripcion" => texto))
+      conversar("#{PREFIJO_VOZ} #{texto}")
+    rescue Voz::Transcriptor::Error => e
+      Rails.logger.warn("[agente] nota de voz #{@mensaje.wamid}: #{e.message}")
+      @respondedor.texto(VOZ_ILEGIBLE)
+    end
+
+    PREFIJO_VOZ = "[Nota de voz transcrita]".freeze
+    VOZ_ILEGIBLE = "No pude entender la nota de voz. ¿Me lo escribes, o me mandas la foto del comprobante?".freeze
+
+    # Los codigos de los centros donde la persona registro algo hace poco: son
+    # los que va a dictar, y el transcriptor los escribe tal cual si los conoce.
+    def terminos_de_voz
+      recientes = ReportExpense.where(user_invoice_id: @usuario.id).where("created_at > ?", 120.days.ago)
+                               .select(:cost_center_id)
+      CostCenter.where(id: recientes).order(updated_at: :desc).limit(Voz::Transcriptor::MAX_TERMINOS).pluck(:code)
     end
 
     # --- Con el modelo -------------------------------------------------------
@@ -171,6 +199,8 @@ module Agente
                 "(#{ahora.strftime('%Y-%m-%d')}), hora de Colombia #{ahora.strftime('%H:%M')}."]
       previo = ultimo_registro
       lineas << "Lo último que registró por aquí: #{previo}." if previo
+      contacto = ENV["WHATSAPP_CONTACTO_HUMANO"].presence
+      lineas << "Si la persona necesita hablar con alguien, el contacto es: #{contacto}." if contacto
       lineas.join(" ")
     end
 

@@ -167,6 +167,12 @@ module Whatsapp
       post("#{@phone_number_id}/register", { messaging_product: "whatsapp", pin: pin.to_s })
     end
 
+    # Sin esta suscripcion la app no recibe los webhooks de la cuenta de
+    # WhatsApp, aunque la URL del webhook este configurada en la app.
+    def suscribir_app(waba_id)
+      post("#{waba_id}/subscribed_apps", {})
+    end
+
     private
 
     def enviar(destino, contenido, responder_a: nil)

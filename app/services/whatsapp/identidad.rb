@@ -43,7 +43,20 @@ module Whatsapp
     end
 
     def mensaje_para(motivo)
-      motivo == :ambiguo ? AMBIGUO : NO_REGISTRADO
+      return AMBIGUO if motivo == :ambiguo
+
+      [NO_REGISTRADO, pista_de_vinculo].compact.join("\n\n")
+    end
+
+    # Para quien SI tiene usuario pero escribe con un nombre de usuario de
+    # WhatsApp (sin telefono) o con un numero distinto al registrado.
+    def pista_de_vinculo
+      return nil unless Vinculo.numero_publico
+
+      opciones = Rails.application.config.action_mailer.default_url_options || {}
+      url = Rails.application.routes.url_helpers.whatsapp_vincular_url(**opciones)
+      "Si ya tienes usuario en Controlmatica, abre #{url} desde este celular con tu sesión iniciada y " \
+        "envía el mensaje que se abre."
     end
 
     # update_column y no save: los callbacks de User escriben auditoria con

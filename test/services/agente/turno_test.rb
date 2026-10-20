@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "minitest/mock"
 
 # El agente de WhatsApp (paquete 17) con un Claude falso: cero red y cero
 # tokens. Las tools del MCP corren de verdad, en proceso, contra la base de
@@ -307,9 +308,52 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     assert_equal [Agente::Turno::REINICIADO], @whatsapp.textos
   end
 
-  test "una nota de voz recibe el aviso de que todavia no se escucha" do
-    turno(entrante("", tipo: "audio"))
+  def nota_de_voz
+    mensaje = entrante("", tipo: "audio", media_id: "media-voz", media_mime: "audio/ogg", media_filename: "nota.ogg")
+    Tempfile.create(["nota", ".ogg"], binmode: true) do |archivo|
+      archivo.write("OggS audio falso")
+      archivo.rewind
+      mensaje.media_file = CarrierWave::SanitizedFile.new(tempfile: archivo, filename: "nota.ogg",
+                                                          content_type: "audio/ogg")
+      mensaje.save!
+    end
+    mensaje
+  end
+
+  def con_openai(valor)
+    previa = ENV["OPENAI_API_KEY"]
+    valor ? ENV["OPENAI_API_KEY"] = valor : ENV.delete("OPENAI_API_KEY")
+    yield
+  ensure
+    ENV["OPENAI_API_KEY"] = previa
+  end
+
+  test "sin transcriptor configurado, una nota de voz recibe el aviso de que todavia no se escucha" do
+    con_openai(nil) { turno(nota_de_voz) }
     assert_equal [Agente::Turno::SIN_VOZ_TODAVIA], @whatsapp.textos
+  end
+
+  test "una nota de voz se transcribe y le llega al modelo marcada como tal" do
+    transcriptor = Object.new
+    def transcriptor.transcribir(_bytes, mime:, terminos:) = "almuerzo ochenta mil pesos hoy"
+    mensaje = nota_de_voz
+    con_openai("sk-x") do
+      Voz::Transcriptor.stub(:new, transcriptor) { turno(mensaje, FakeClaudeClient.texto("¿En qué centro de costo?")) }
+    end
+
+    enviado = @claude.pedidos.first[:cuerpo][:messages].last["content"].last["text"]
+    assert_equal "#{Agente::Turno::PREFIJO_VOZ} almuerzo ochenta mil pesos hoy", enviado
+    assert_equal "almuerzo ochenta mil pesos hoy", mensaje.reload.body
+    assert_equal ["¿En qué centro de costo?"], @whatsapp.textos
+  end
+
+  test "si la transcripcion falla, pide que lo escriba" do
+    transcriptor = Object.new
+    def transcriptor.transcribir(*) = raise(Voz::Transcriptor::Error, "HTTP 500")
+    con_openai("sk-x") do
+      Voz::Transcriptor.stub(:new, transcriptor) { turno(nota_de_voz) }
+    end
+    assert_equal [Agente::Turno::VOZ_ILEGIBLE], @whatsapp.textos
   end
 
   # ---- fallos ---------------------------------------------------------------

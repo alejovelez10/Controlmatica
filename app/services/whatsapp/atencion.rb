@@ -25,6 +25,15 @@ module Whatsapp
       respondedor = Respondedor.new(destino: destino, client: @client)
       respondedor.marcar_leido(@mensaje.wamid)
 
+      # "vincular <token>" va ANTES de identificar: justo lo manda quien todavia
+      # no se puede identificar (fase 4, Whatsapp::Vinculo).
+      if Vinculo.pedido?(@mensaje.body)
+        vinculado, respuesta = Vinculo.vincular(@mensaje)
+        @mensaje.update!(user: vinculado) if vinculado
+        respondedor.texto(respuesta)
+        return terminar!(nil)
+      end
+
       identidad = Identidad.resolver(wa_id: @mensaje.wa_id, bsuid: @mensaje.bsuid)
       unless identidad.encontrado?
         respondedor.texto(Identidad.mensaje_para(identidad.motivo))

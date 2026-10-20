@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   # Canal propio de WhatsApp (paquete 17): GET de alta y POST de Meta.
   get  "webhooks/whatsapp", to: "webhooks/whatsapp#verify"
   post "webhooks/whatsapp", to: "webhooks/whatsapp#receive"
+  get  "whatsapp/vincular", to: "whatsapp_vinculos#show", as: :whatsapp_vincular
 
   # Politica de privacidad publica: Meta la exige para publicar la app.
   get "privacidad", to: "paginas_publicas#privacidad", as: :privacidad
