@@ -1,25 +1,21 @@
 require "test_helper"
 require "minitest/mock"
 
-# Piezas internas del seam `call_vision_model` (la llamada al agente extractor
-# de Taimes). CERO RED: los privados que abren socket (s3_connection,
-# upload_temp_object, taimes_invoke, delete_temp_object) se reemplazan con
-# Minitest#stub — WebMock sigue prohibido (00-ARQUITECTURA 6.7). Lo que se
-# prueba es la traduccion payload -> invoke -> Hash crudo, el mapeo de fallos y
-# el ensure que borra el temporal de S3.
+# El seam `call_vision_model` contra la API de Claude (paquete 17). CERO RED: el
+# cliente HTTP se arma sobre el adaptador de prueba de Faraday, asi que lo que se
+# prueba es exactamente lo que se le manda a /v1/messages y como se lee lo que
+# vuelve. WebMock sigue prohibido (00-ARQUITECTURA 6.7).
 class ReceiptExtractionSeamTest < ActiveSupport::TestCase
   include WithFakeExtractor
 
-  ENV_CLAVES = %w[TAIMES_INVOKE_URL TAIMES_AGENT_ID TAIMES_API_KEY
-                  RECEIPT_EXTRACTION_ENABLED AWS_BUCKET].freeze
+  ENV_CLAVES = %w[ANTHROPIC_API_KEY RECEIPT_EXTRACTION_ENABLED RECEIPT_EXTRACTION_MODEL].freeze
 
   def setup
     @env_previo = ENV.to_hash.slice(*ENV_CLAVES)
-    ENV["TAIMES_INVOKE_URL"]          = "http://taimes.invalid"
-    ENV["TAIMES_AGENT_ID"]            = "agente-extractor"
-    ENV["TAIMES_API_KEY"]             = "kmz_de-mentira"
+    ENV["ANTHROPIC_API_KEY"] = "sk-ant-de-mentira"
     ENV["RECEIPT_EXTRACTION_ENABLED"] = "true"
-    ENV["AWS_BUCKET"] ||= "bucket-de-mentira"
+    ENV.delete("RECEIPT_EXTRACTION_MODEL")
+    @stubs = Faraday::Adapter::Test::Stubs.new
   end
 
   def teardown
@@ -28,129 +24,142 @@ class ReceiptExtractionSeamTest < ActiveSupport::TestCase
     end
   end
 
-  # Payload REAL armado por el servicio (payload_for es privado de instancia):
-  # asi el round-trip document_block -> document_source_from se prueba contra la
-  # forma verdadera, no contra una copia escrita a mano.
-  def payload_real(fixture = "comprobante_factura.jpg", context = {})
-    servicio = ReceiptExtractionService.new(upload_fixture(fixture), context)
-    source   = servicio.send(:build_source)
-    servicio.send(:payload_for, source)
+  def cliente_de_prueba
+    conexion = Faraday.new(url: Claude::API_HOST) { |f| f.adapter :test, @stubs }
+    Claude::Client.new(api_key: "sk-ant-de-mentira", conexion: conexion)
   end
 
-  # Ejecuta el bloque con los cuatro privados de red reemplazados. `respuesta`
-  # es lo que devuelve (o lanza) taimes_invoke; `borrados` acumula las keys que
-  # pasaron por delete_temp_object, para poder afirmar el ensure.
-  def con_red_stubeada(respuesta, borrados = [])
-    invoke = lambda do |*_args, **_kwargs|
-      raise respuesta if respuesta.is_a?(Exception) || (respuesta.is_a?(Class) && respuesta <= Exception)
+  # Respuesta con la forma real: puede traer un bloque `thinking` vacio antes
+  # del texto, y el JSON viene en el bloque de texto.
+  def respuesta_de_claude(datos, stop_reason: "end_turn")
+    {
+      id: "msg_1", type: "message", role: "assistant", model: "claude-opus-5-5",
+      content: [{ type: "thinking", thinking: "", signature: "sig" },
+                { type: "text", text: datos.is_a?(String) ? datos : datos.to_json }],
+      stop_reason: stop_reason,
+      usage: { input_tokens: 1500, output_tokens: 300 }
+    }.to_json
+  end
 
-      respuesta
-    end
-
-    ReceiptExtractionService.stub(:s3_connection, :fake_s3) do
-      ReceiptExtractionService.stub(:upload_temp_object, ->(*_a) { "uploads/tmp/extract/x/comprobante.jpg" }) do
-        ReceiptExtractionService.stub(:presign_get, ->(*_a) { "https://s3.invalid/firmada?X-Amz-Signature=x" }) do
-          ReceiptExtractionService.stub(:delete_temp_object, ->(*a) { borrados << a.last; true }) do
-            ReceiptExtractionService.stub(:taimes_invoke, invoke) do
-              yield
-            end
-          end
-        end
-      end
+  def extraer(fixture = "comprobante_factura.jpg")
+    ReceiptExtractionService.stub(:cliente_claude, cliente_de_prueba) do
+      ReceiptExtractionService.extract(upload_fixture(fixture))
     end
   end
 
-  # ---- document_source_from -------------------------------------------------
-
-  test "document_source_from recupera los bytes y el media type del payload real" do
-    bytes   = File.binread(Rails.root.join("test/fixtures/files/comprobante_factura.jpg"))
-    payload = payload_real("comprobante_factura.jpg")
-
-    source = ReceiptExtractionService.send(:document_source_from, payload)
-
-    assert_equal bytes, source[:bytes]
-    assert_equal "image/jpeg", source[:media_type]
-  end
-
-  test "document_source_from devuelve nil sin bloque de documento" do
-    assert_nil ReceiptExtractionService.send(:document_source_from, { model: "x" })
-    assert_nil ReceiptExtractionService.send(:document_source_from, {})
-  end
-
-  # ---- parse_invoke_response ------------------------------------------------
-
-  test "parse_invoke_response entrega los datos crudos con el uso como _usage" do
-    body = { "resumen" => "ok", "datos" => payload_modelo, "uso" => { "input_tokens" => 10 } }
-
-    crudo = ReceiptExtractionService.send(:parse_invoke_response, body)
-
-    assert_equal "Distribuidora El Sol SAS", crudo["provider_name"]
-    assert_equal 10, crudo["_usage"]["input_tokens"]
-  end
-
-  test "parse_invoke_response repara una confidence serializada como string" do
-    # Peculiaridad real de Gemini con el dict libre de `datos` (2026-08-18).
-    body = { "datos" => payload_modelo.merge("confidence" => confianza_alta.to_json) }
-
-    crudo = ReceiptExtractionService.send(:parse_invoke_response, body)
-
-    assert_kind_of Hash, crudo["confidence"]
-    assert_in_delta 0.95, crudo["confidence"]["provider_name"]
-  end
-
-  test "parse_invoke_response tolera datos como string json y claves en ingles" do
-    body = { "data" => payload_modelo.to_json, "usage" => { "output_tokens" => 3 } }
-
-    crudo = ReceiptExtractionService.send(:parse_invoke_response, body)
-
-    assert_equal "FE-4821", crudo["invoice_number"]
-    assert_equal 3, crudo["_usage"]["output_tokens"]
-  end
-
-  test "parse_invoke_response devuelve nil con datos ausentes, vacios o invalidos" do
-    [{ "resumen" => "x" }, { "datos" => {} }, { "datos" => "no-es-json" },
-     { "datos" => [1, 2] }, "no-hash", nil].each do |body|
-      assert_nil ReceiptExtractionService.send(:parse_invoke_response, body),
-                 "esperaba nil para #{body.inspect}"
+  test "el camino feliz llega a /v1/messages y devuelve los campos con el uso" do
+    enviado = nil
+    cabeceras = nil
+    @stubs.post("/v1/messages") do |env|
+      enviado = JSON.parse(env.body)
+      cabeceras = env.request_headers
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude(payload_modelo)]
     end
+
+    resultado = extraer
+
+    assert resultado.ok?
+    assert_equal "Distribuidora El Sol SAS", resultado.fields[:provider_name]
+    assert_equal 1500, resultado.usage["input_tokens"]
+    assert_equal "sk-ant-de-mentira", cabeceras["x-api-key"]
+    assert_equal Claude::API_VERSION, cabeceras["anthropic-version"]
+    assert_equal "claude-opus-5-5", enviado["model"]
+    assert_equal "json_schema", enviado.dig("output_config", "format", "type")
+    assert_equal "image", enviado.dig("messages", 0, "content", 0, "type")
   end
 
-  # ---- invoke_input ---------------------------------------------------------
+  test "los tipos que admiten null viajan como anyOf, sin cambiar el esquema del servicio" do
+    enviado = nil
+    @stubs.post("/v1/messages") do |env|
+      enviado = JSON.parse(env.body)
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude(payload_modelo)]
+    end
 
-  test "invoke_input lleva la URL firmada y el hint del centro de costos" do
-    payload = payload_real("comprobante_factura.jpg", cost_center_code: "CC-9")
-
-    input = ReceiptExtractionService.send(:invoke_input, payload, "https://s3.invalid/firmada")
-
-    assert_includes input, "https://s3.invalid/firmada"
-    assert_includes input, "CC-9"
+    extraer
+    proveedor = enviado.dig("output_config", "format", "schema", "properties", "provider_name")
+    assert_equal [{ "type" => "string" }, { "type" => "null" }], proveedor["anyOf"]
+    assert_equal %w[string null], ReceiptExtractionService::SCHEMA.dig(:properties, :provider_name, :type)
   end
 
-  # ---- configured? ----------------------------------------------------------
+  test "con Opus 5.5 pide el fallback del servidor ante un rechazo" do
+    cabeceras = nil
+    enviado = nil
+    @stubs.post("/v1/messages") do |env|
+      cabeceras = env.request_headers
+      enviado = JSON.parse(env.body)
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude(payload_modelo)]
+    end
 
-  test "configured? exige las tres variables de Taimes" do
+    extraer
+    assert_equal "default", enviado["fallbacks"]
+    assert_includes cabeceras["anthropic-beta"], Claude::BETA_FALLBACK
+  end
+
+  test "con Haiku no manda fallbacks, que ese modelo no acepta" do
+    ENV["RECEIPT_EXTRACTION_MODEL"] = "claude-haiku-5-5"
+    enviado = nil
+    cabeceras = nil
+    @stubs.post("/v1/messages") do |env|
+      enviado = JSON.parse(env.body)
+      cabeceras = env.request_headers
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude(payload_modelo)]
+    end
+
+    extraer
+    refute enviado.key?("fallbacks")
+    assert_nil cabeceras["anthropic-beta"]
+  end
+
+  test "un rechazo de los clasificadores termina en :refusal" do
+    @stubs.post("/v1/messages") do
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude("", stop_reason: "refusal")]
+    end
+
+    resultado = extraer
+    refute resultado.ok?
+    assert_equal :refusal, resultado.error
+  end
+
+  test "una respuesta sin JSON utilizable termina en :provider_error" do
+    @stubs.post("/v1/messages") do
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude("esto no es json")]
+    end
+
+    assert_equal :provider_error, extraer.error
+  end
+
+  test "un error HTTP de la API termina en :provider_error" do
+    @stubs.post("/v1/messages") do
+      [529, { "Content-Type" => "application/json" },
+       { type: "error", error: { type: "overloaded_error", message: "Overloaded" } }.to_json]
+    end
+
+    assert_equal :provider_error, extraer.error
+  end
+
+  test "un timeout termina en :timeout" do
+    @stubs.post("/v1/messages") { raise Faraday::TimeoutError, "lento" }
+
+    assert_equal :timeout, extraer.error
+  end
+
+  test "un PDF viaja como bloque document" do
+    enviado = nil
+    @stubs.post("/v1/messages") do |env|
+      enviado = JSON.parse(env.body)
+      [200, { "Content-Type" => "application/json" }, respuesta_de_claude(payload_modelo)]
+    end
+
+    extraer("comprobante_factura.pdf")
+    bloque = enviado.dig("messages", 0, "content", 0)
+    assert_equal "document", bloque["type"]
+    assert_equal "application/pdf", bloque.dig("source", "media_type")
+  end
+
+  test "configured? exige la api key de Anthropic" do
     assert ReceiptExtractionService.configured?
-
-    ReceiptExtractionService::TAIMES_ENV_KEYS.each do |clave|
-      valor = ENV.delete(clave)
-      refute ReceiptExtractionService.configured?, "sin #{clave} deberia ser false"
-      ENV[clave] = valor
-    end
-  end
-
-  # ---- fixes del review adversarial (2026-08-17) ----------------------------
-
-  test "la conexion S3 del seam lleva timeouts cortos y un solo intento" do
-    capturado = nil
-    Fog::Storage.stub(:new, ->(opts) { capturado = opts; :conn }) do
-      ReceiptExtractionService.send(:s3_connection)
-    end
-
-    opciones = capturado[:connection_options]
-    assert_equal 1, opciones[:retry_limit], "sin reintentos: fog-aws marca put/delete idempotentes"
-    assert opciones[:connect_timeout] <= 2
-    assert opciones[:read_timeout] <= 5
-    assert opciones[:write_timeout] <= 5
+    ENV.delete("ANTHROPIC_API_KEY")
+    refute ReceiptExtractionService.configured?
   end
 
   test "un archivo gigante se rechaza SIN leerlo a memoria" do
@@ -161,53 +170,5 @@ class ReceiptExtractionSeamTest < ActiveSupport::TestCase
     resultado = ReceiptExtractionService.extract(gigante)
 
     assert_equal :too_large, resultado.error
-  end
-
-  # ---- el seam completo, con la red reemplazada -----------------------------
-
-  test "el camino feliz atraviesa el seam y borra el temporal" do
-    borrados  = []
-    respuesta = { "resumen" => "ok", "datos" => payload_modelo, "uso" => { "input_tokens" => 5 } }
-
-    con_red_stubeada(respuesta, borrados) do
-      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.jpg"))
-
-      assert resultado.ok?
-      assert_equal "Distribuidora El Sol SAS", resultado.fields[:provider_name]
-      assert_equal 5, resultado.usage["input_tokens"]
-    end
-
-    assert_equal ["uploads/tmp/extract/x/comprobante.jpg"], borrados
-  end
-
-  test "un timeout de la llamada a Taimes termina en :timeout y el temporal se borra igual" do
-    borrados = []
-
-    con_red_stubeada(Net::ReadTimeout.new, borrados) do
-      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.jpg"))
-
-      refute resultado.ok?
-      assert_equal :timeout, resultado.error
-    end
-
-    assert_equal 1, borrados.size, "el ensure debe borrar el temporal aunque el invoke lance"
-  end
-
-  test "un HTTP distinto de 200 del invoke termina en :provider_error" do
-    con_red_stubeada(ReceiptExtractionService::TaimesError.new("invoke HTTP 502")) do
-      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.jpg"))
-
-      refute resultado.ok?
-      assert_equal :provider_error, resultado.error
-    end
-  end
-
-  test "una respuesta de Taimes sin datos utilizables termina en :provider_error" do
-    con_red_stubeada({ "resumen" => "no pude", "datos" => {} }) do
-      resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.jpg"))
-
-      refute resultado.ok?
-      assert_equal :provider_error, resultado.error
-    end
   end
 end

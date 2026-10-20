@@ -12,7 +12,7 @@ require "minitest/mock"
 class ReportExpensesJuicioPorReglaTest < ActionDispatch::IntegrationTest
   include WithFakeExtractor
 
-  ENV_CLAVES = %w[TAIMES_INVOKE_URL TAIMES_AGENT_ID TAIMES_API_KEY RECEIPT_EXTRACTION_ENABLED].freeze
+  ENV_CLAVES = %w[ANTHROPIC_API_KEY RECEIPT_EXTRACTION_ENABLED].freeze
 
   setup do
     @env_previo = ENV.to_hash.slice(*ENV_CLAVES)
@@ -49,9 +49,7 @@ class ReportExpensesJuicioPorReglaTest < ActionDispatch::IntegrationTest
   end
 
   def encender_lectura!
-    ENV["TAIMES_INVOKE_URL"]          = "http://taimes.invalid"
-    ENV["TAIMES_AGENT_ID"]            = "agente-extractor"
-    ENV["TAIMES_API_KEY"]             = "kmz_de-mentira"
+    ENV["ANTHROPIC_API_KEY"]          = "sk-ant-de-mentira-no-se-usa"
     ENV["RECEIPT_EXTRACTION_ENABLED"] = "true"
   end
 

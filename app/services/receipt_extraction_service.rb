@@ -3,20 +3,21 @@
 # Nunca guarda nada y nunca puede impedir el registro manual (00-ARQUITECTURA
 # Bloque D.1 y riesgo 12 del paquete 10): si esto falla, el usuario digita.
 #
-# ============ ESTADO: COMPLETO — LA EXTRACCION CORRE EN TAIMES ============
+# ============ ESTADO: LA EXTRACCION LE HABLA A CLAUDE DIRECTO ============
+# Desde el paquete 17 (2026-10-19) Controlmatica dejo de usar Taimes:
+# `call_vision_model` manda el payload a la API de Claude (Claude::Client) y lee
+# la respuesta estructurada. Entre el 2026-08-17 y esa fecha iba al agente
+# "Extractor de Comprobantes" de Taimes por su endpoint invoke.
+#
 # El contrato interno no cambio: validacion de entrada, normalizacion del
 # archivo, armado del payload, JSON Schema de salida, umbrales de confianza,
 # normalizacion de los campos leidos, mapeo de errores y Result son los mismos.
 #
-# `call_vision_model` esta implementado (2026-08-17): sube el comprobante a un
-# S3 temporal, genera una URL firmada y se la manda al agente "Extractor de
-# Comprobantes" de Taimes por el endpoint invoke. Ver el bloque del seam.
-#
-# Config: TAIMES_INVOKE_URL + TAIMES_AGENT_ID + TAIMES_API_KEY (sin ellas el
-# servicio responde `:not_configured`) y el kill switch
-# RECEIPT_EXTRACTION_ENABLED. La ruta `POST /extract_receipt/report_expenses`
-# (accion `ReportExpensesController#extract_receipt`, contrato D.1) es quien
-# orquesta esto desde el formulario de gasto.
+# Config: ANTHROPIC_API_KEY (sin ella el servicio responde `:not_configured`),
+# RECEIPT_EXTRACTION_MODEL opcional y el kill switch RECEIPT_EXTRACTION_ENABLED.
+# La ruta `POST /extract_receipt/report_expenses` (accion
+# `ReportExpensesController#extract_receipt`, contrato D.1) es quien orquesta
+# esto desde el formulario de gasto.
 # ========================================================================
 class ReceiptExtractionService
   # 🟡 UNICA EXCEPCION DOCUMENTADA al Result canonico del proyecto
@@ -56,7 +57,7 @@ class ReceiptExtractionService
   # Sobreescribible por RECEIPT_EXTRACTION_MODEL para poder cambiar de modelo (o
   # bajar de costo) sin desplegar codigo. Es decision del cliente, no del
   # implementador, y por eso es ENV y no constante.
-  DEFAULT_MODEL = "claude-opus-5".freeze
+  DEFAULT_MODEL = "claude-opus-5-5".freeze
 
   # Umbrales de confianza AUTO-REPORTADA por el modelo (riesgo 5 del paquete):
   # un 0.94 no es "94% de probabilidad de estar bien". Por eso el umbral de
@@ -172,24 +173,12 @@ class ReceiptExtractionService
   # Punto de entrada unico. NUNCA lanza una excepcion: siempre devuelve Result.
   def self.extract(file, context = {}) = new(file, context).call
 
-  # Kill switch de produccion (00-ARQUITECTURA 7.9).
-  #
-  # DESVIACION DELIBERADA del valor por defecto que traia el plan ("true"):
-  # arranca APAGADO porque el seam `call_vision_model` todavia no existe y
-  # encenderlo por omision solo produciria errores. Cuando Taimes complete la
-  # extraccion, se enciende con RECEIPT_EXTRACTION_ENABLED=true.
+  # Kill switch de produccion (00-ARQUITECTURA 7.9). Arranca APAGADO: se
+  # enciende con RECEIPT_EXTRACTION_ENABLED=true una vez cargada la api key.
   def self.enabled? = ENV.fetch("RECEIPT_EXTRACTION_ENABLED", "false").to_s.strip.casecmp("true").zero?
 
-  # Las tres variables que apuntan al agente extractor de Taimes:
-  #   TAIMES_INVOKE_URL: base del gateway (sgi), p.ej. https://taimes.example.com
-  #   TAIMES_AGENT_ID:   uuid del agente "Extractor de Comprobantes"
-  #   TAIMES_API_KEY:    API key del tenant Controlmatica (kmz_...)
-  TAIMES_ENV_KEYS = %w[TAIMES_INVOKE_URL TAIMES_AGENT_ID TAIMES_API_KEY].freeze
+  def self.configured? = Claude.configurado?
 
-  def self.configured? = TAIMES_ENV_KEYS.all? { |clave| ENV[clave].present? }
-
-  # Solo informativo desde que la extraccion corre en Taimes: viaja en el payload
-  # y en Result.model para trazabilidad, pero el modelo real lo decide el agente.
   def self.model = ENV["RECEIPT_EXTRACTION_MODEL"].presence || DEFAULT_MODEL
 
   # ==========================================================================
@@ -199,187 +188,58 @@ class ReceiptExtractionService
   # `ReceiptExtractionService.stub(:call_vision_model, ...)` y el initializer de
   # E2E del paquete 12 le hace `prepend`. NO recibe el cliente por parametro.
   #
-  # ---------------- IMPLEMENTADO: LA EXTRACCION CORRE EN TAIMES -------------
-  # Decision del usuario (2026-08-17): en vez del SDK de Anthropic, el seam le
-  # habla al agente "Extractor de Comprobantes" de Taimes por el endpoint invoke
-  # (POST {TAIMES_INVOKE_URL}/api/public/agents/{TAIMES_AGENT_ID}/invoke, header
-  # X-API-Key con la key kmz_ del tenant). El agente descarga el comprobante con
-  # su tool read_url desde una URL firmada de S3 y responde {resumen, datos,
-  # uso} con las claves del SCHEMA dentro de `datos`.
-  #
-  # El payload Anthropic-shaped que arma `payload_for` SE CONSERVA como interfaz
-  # interna (los tests de contrato y el digesto del stub E2E dependen de su
-  # forma); de el se extraen los bytes del documento y el hint del usuario.
+  # -------------- IMPLEMENTADO: LA EXTRACCION LE HABLA A CLAUDE -------------
+  # Paquete 17 (2026-10-19): el payload que arma `payload_for` ya tiene la forma
+  # de la API de Claude (modelo, system, output_config con el JSON Schema y el
+  # comprobante en base64), asi que va tal cual a /v1/messages. Lo unico que se
+  # ajusta es el esquema: los tipos que admiten null pasan a `anyOf`
+  # (Claude::Esquema), sin cambiar su significado.
   #
   # CONTRATO DE RETORNO (intacto respecto del plan original):
-  #   - el Hash CRUDO con las claves del SCHEMA, opcionalmente con "_usage";
-  #   - nil si Taimes no devolvio `datos` utilizables;
-  #   - puede lanzar: `call` rescata todo y lo mapea (Net::OpenTimeout /
-  #     Net::ReadTimeout -> :timeout; TaimesError y el resto -> :provider_error).
-  #   El simbolo :refusal sigue siendo un retorno valido del contrato, pero esta
-  #   implementacion no lo produce: un rechazo del agente llega como `datos`
-  #   vacio y termina en :provider_error.
+  #   - el Hash CRUDO con las claves del SCHEMA, con "_usage" (tokens);
+  #   - :refusal si los clasificadores de seguridad declinaron;
+  #   - nil si la respuesta no trae un JSON utilizable;
+  #   - puede lanzar: `call` rescata todo y lo mapea (Claude::Client::Timeout
+  #     -> :timeout; el resto -> :provider_error).
   #
-  # PRESUPUESTO DE TIEMPO: open 2 s + read 16 s = 18 s, el mismo techo del plan
-  # original (D.1 da 20 s totales y Puma tiene 5 hilos: no subirlo). Cero
-  # reintentos y prohibido `Timeout.timeout`, igual que siempre.
-  #
-  # El objeto S3 temporal (uploads/tmp/extract/<uuid>/...) se borra en el ensure
-  # best-effort; la red de seguridad es la regla de lifecycle de 1 dia sobre el
-  # prefijo uploads/tmp/ (runbook de despliegue).
+  # PRESUPUESTO DE TIEMPO: open 2 s + read 25 s. Con Taimes eran 16 s de
+  # lectura, medidos para Gemini flash-lite; Claude leyendo una imagen con
+  # razonamiento corto tarda mas, y el techo real es el router de Heroku (30 s).
+  # Cero reintentos y prohibido `Timeout.timeout`, igual que siempre: con 5
+  # hilos de Puma, una lectura colgada no puede retener uno indefinidamente.
   # ==========================================================================
-  class TaimesError < StandardError; end
+  OPEN_TIMEOUT = 2
+  READ_TIMEOUT = 25
 
-  TMP_PREFIX          = "uploads/tmp/extract".freeze
-  TMP_URL_TTL_SECONDS = 600
-  INVOKE_OPEN_TIMEOUT = 2
-  INVOKE_READ_TIMEOUT = 16
-
-  EXTENSION_POR_TIPO = {
-    "image/jpeg" => ".jpg", "image/png" => ".png", "image/webp" => ".webp",
-    "image/gif" => ".gif", SUPPORTED_PDF_TYPE => ".pdf"
-  }.freeze
+  # Un payload sin el comprobante es un error de programacion: se corta ANTES
+  # de abrir un socket y de gastar un token.
+  class PayloadInvalido < StandardError; end
 
   def self.call_vision_model(payload)
-    source = document_source_from(payload)
-    raise TaimesError, "payload sin bloque de documento" if source.nil?
-    raise TaimesError, "almacenamiento S3 sin configurar (AWS_BUCKET)" if ENV["AWS_BUCKET"].blank?
-
-    s3  = s3_connection
-    key = upload_temp_object(s3, source)
-    begin
-      url = presign_get(s3, key)
-      parse_invoke_response(taimes_invoke(
-        input: invoke_input(payload, url),
-        context: invoke_context(source),
-        # El JSON Schema del payload viaja al invoke: Taimes lo usa como
-        # output_type TIPADO (sin él, el modelo colapsa el dict libre — llegó a
-        # devolver la matriz de confianzas COMO datos, 2026-08-18).
-        esquema: payload.to_h.dig(:output_config, :format, :schema)
-      ))
-    ensure
-      delete_temp_object(s3, key)
-    end
-  end
-
-  # Inversa exacta de `document_block`: bytes y media_type del payload, o nil.
-  def self.document_source_from(payload)
     bloque = payload.to_h.dig(:messages, 0, :content, 0)
-    fuente = bloque.is_a?(Hash) ? bloque[:source] : nil
-    return nil unless fuente.is_a?(Hash) && fuente[:data].present?
-
-    { bytes: Base64.strict_decode64(fuente[:data]), media_type: fuente[:media_type].to_s }
-  end
-  private_class_method :document_source_from
-
-  # Timeouts cortos y UN solo intento (hallazgo del review 2026-08-17):
-  # fog-aws marca put_object/delete_object como idempotentes y con los defaults
-  # de Excon (connect/read/write 60 s x retry_limit 5) una degradacion de S3
-  # retendria un hilo de Puma VARIOS MINUTOS — con 5 hilos, cinco clicks en
-  # "Extraer" congelan la app entera, incluido el registro manual que D.1
-  # promete no bloquear. El comprobante pesa <=20 MB: si S3 no responde en
-  # segundos, se aborta y la persona captura a mano.
-  S3_CONNECTION_OPTIONS = {
-    connect_timeout: 2, read_timeout: 5, write_timeout: 5,
-    retry_limit: 1, retry_interval: 0
-  }.freeze
-
-  # Mismo patron que Mcp::S3DirectUpload.connection: no se memoiza entre
-  # requests (un socket muerto de Puma falla al primer uso); dentro de UNA
-  # llamada al seam si se reusa la misma conexion.
-  def self.s3_connection
-    Fog::Storage.new(
-      CarrierWave::Uploader::Base.fog_credentials.merge(connection_options: S3_CONNECTION_OPTIONS)
-    )
-  end
-  private_class_method :s3_connection
-
-  def self.upload_temp_object(s3, source)
-    extension = EXTENSION_POR_TIPO.fetch(source[:media_type], "")
-    key = "#{TMP_PREFIX}/#{SecureRandom.uuid}/comprobante#{extension}"
-    s3.put_object(ENV["AWS_BUCKET"], key, source[:bytes], "Content-Type" => source[:media_type])
-    key
-  end
-  private_class_method :upload_temp_object
-
-  # Firmar es local: no abre socket.
-  def self.presign_get(s3, key)
-    s3.get_object_url(ENV["AWS_BUCKET"], key, (Time.now + TMP_URL_TTL_SECONDS).to_i)
-  end
-  private_class_method :presign_get
-
-  # Best effort: un temporal huerfano (lo barre la regla de lifecycle) es
-  # preferible a convertir en error una extraccion que si funciono.
-  def self.delete_temp_object(s3, key)
-    s3.delete_object(ENV["AWS_BUCKET"], key)
-    true
-  rescue StandardError
-    false
-  end
-  private_class_method :delete_temp_object
-
-  def self.invoke_input(payload, url)
-    hint = payload.to_h.dig(:messages, 0, :content, 1, :text).presence ||
-           "Extrae los datos de este comprobante."
-    "#{hint}\nComprobante (URL firmada; descargala tal cual): #{url}"
-  end
-  private_class_method :invoke_input
-
-  def self.invoke_context(source)
-    { "proposito" => "extraccion_comprobante", "media_type" => source[:media_type] }
-  end
-  private_class_method :invoke_context
-
-  # Cero reintentos y sin `Timeout.timeout`. En el error NUNCA va el body ni la
-  # URL firmada (riesgo 13 del paquete: ahi viajan la factura y la firma).
-  def self.taimes_invoke(input:, context:, esquema: nil)
-    url = "#{ENV['TAIMES_INVOKE_URL'].to_s.chomp('/')}/api/public/agents/#{ENV['TAIMES_AGENT_ID']}/invoke"
-    respuesta = HTTParty.post(url,
-                              headers: { "X-API-Key" => ENV["TAIMES_API_KEY"],
-                                         "Content-Type" => "application/json" },
-                              body: { input: input, context: context,
-                                      esquema: esquema }.compact.to_json,
-                              open_timeout: INVOKE_OPEN_TIMEOUT,
-                              timeout: INVOKE_READ_TIMEOUT)
-    raise TaimesError, "invoke HTTP #{respuesta.code}" unless respuesta.code.to_i == 200
-
-    JSON.parse(respuesta.body.to_s)
-  end
-  private_class_method :taimes_invoke
-
-  # {resumen, datos, uso} -> el Hash crudo que espera `parse`, o nil. Se tolera
-  # {summary, data, usage} por si el gateway algun dia alinea sus claves con su
-  # doc en ingles.
-  def self.parse_invoke_response(body)
-    return nil unless body.is_a?(Hash)
-
-    datos = body["datos"] || body["data"]
-    if datos.is_a?(String)
-      begin
-        datos = JSON.parse(datos)
-      rescue JSON::ParserError
-        return nil
-      end
+    unless bloque.is_a?(Hash) && %w[image document].include?(bloque[:type].to_s)
+      raise PayloadInvalido, "payload sin bloque de documento"
     end
+
+    cuerpo = payload.to_h.deep_dup
+    esquema = cuerpo.dig(:output_config, :format, :schema)
+    cuerpo[:output_config][:format][:schema] = Claude::Esquema.compatible(esquema) if esquema
+
+    respuesta = cliente_claude.mensajes(cuerpo)
+    return :refusal if respuesta["stop_reason"] == "refusal"
+
+    datos = JSON.parse(Claude.texto_de(respuesta).to_s)
     return nil unless datos.is_a?(Hash) && datos.present?
 
-    # Gemini a veces serializa el objeto ANIDADO como string JSON dentro del
-    # dict libre de `datos` (visto en vivo 2026-08-18). Se repara aquí para no
-    # perder las confianzas por campo; si no parsea, normalize_confidence lo
-    # degrada a {} y los campos igual llegan.
-    conf = datos["confidence"]
-    if conf.is_a?(String)
-      begin
-        datos = datos.merge("confidence" => JSON.parse(conf))
-      rescue JSON::ParserError
-        nil
-      end
-    end
-
-    uso = body["uso"] || body["usage"]
-    uso.is_a?(Hash) ? datos.merge("_usage" => uso) : datos
+    respuesta["usage"].is_a?(Hash) ? datos.merge("_usage" => respuesta["usage"]) : datos
+  rescue JSON::ParserError
+    nil
   end
-  private_class_method :parse_invoke_response
+
+  def self.cliente_claude
+    Claude::Client.new(open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT)
+  end
+  private_class_method :cliente_claude
 
   def initialize(file, context = {})
     @file    = file
@@ -492,12 +352,15 @@ class ReceiptExtractionService
   def payload_for(source)
     {
       model: self.class.model,
-      max_tokens: 2048,
+      # 8192 y no 2048: en los modelos actuales el razonamiento esta siempre
+      # encendido y CUENTA contra max_tokens; con 2048 una factura larga podia
+      # quedarse sin espacio para el JSON.
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       # effort "low": leer campos de una factura no exige razonamiento profundo
-      # y el presupuesto de latencia del contrato D.1 es de 20 s. No se pasa
-      # thinking: { type: "disabled" }: tiene modos de falla conocidos y bajar
-      # el effort ya da el ahorro.
+      # y el presupuesto de latencia del contrato D.1 es corto. No se pasa
+      # thinking: { type: "disabled" }: en Claude Opus 5.5 es un 400, y bajar
+      # el effort es el control que queda.
       output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
       messages: [{ role: "user", content: [document_block(source), { type: "text", text: user_hint }] }]
     }
@@ -717,11 +580,12 @@ class ReceiptExtractionService
 
   def flag_true?(valor) = [true, "true", "1", 1].include?(valor)
 
-  # El mapeo se hace por NOMBRE de clase, no por constante: el SDK de Anthropic
-  # todavia no esta instalado (lo instala Taimes con el seam) y referenciar
-  # `Anthropic::Errors::APIConnectionError` aqui reventaria con NameError, que es
-  # exactamente lo contrario de lo que promete este servicio.
+  # El mapeo se hace por NOMBRE de clase, no por constante: asi una clase que no
+  # este cargada (la gema oficial `anthropic`, cuando se suba Ruby) no revienta
+  # con NameError, que es exactamente lo contrario de lo que promete este
+  # servicio.
   TIMEOUT_ERROR_NAMES = %w[
+    Claude::Client::Timeout
     Anthropic::Errors::APIConnectionError
     Anthropic::Errors::APITimeoutError
     Excon::Error::Timeout

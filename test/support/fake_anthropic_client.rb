@@ -2,10 +2,9 @@
 # arquitectura (6.7) decidio no meter WebMock, asi que el aislamiento se logra
 # reemplazando el UNICO seam del servicio, `ReceiptExtractionService.call_vision_model`.
 #
-# Ningun test construye un `Anthropic::Client` ni abre un socket. De hecho el SDK
-# de Anthropic ni siquiera esta instalado: lo instalara el agente de Taimes
-# cuando implemente el seam (ver la cabecera de
-# app/services/receipt_extraction_service.rb).
+# Ningun test que use este doble abre un socket. La traduccion del payload a la
+# API de Claude (paquete 17) se prueba aparte, contra el adaptador de prueba de
+# Faraday, en test/services/receipt_extraction_seam_test.rb.
 #
 # Se autocarga con el `Dir[test/support/**/*.rb]` que test_helper.rb (paquete 01)
 # ya recorre: PROHIBIDO agregar un require_relative en un test.

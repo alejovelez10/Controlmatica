@@ -3,7 +3,7 @@
 // ACTIVO desde 2026-08-17: el seam `call_vision_model` esta implementado (llama
 // al agente extractor de Taimes) y la ruta `POST /extract_receipt/report_expenses`
 // existe. En esta corrida NADA sale a internet:
-//   - el webServer corre con RECEIPT_EXTRACTION_ENABLED=true y TAIMES_* dummies
+//   - el webServer corre con RECEIPT_EXTRACTION_ENABLED=true y ANTHROPIC_API_KEY dummy
 //     (playwright.config.js) para que el boton se pinte y `configured?` pase;
 //   - el prepend de config/initializers/e2e_stubs.rb atiende `call_vision_model`
 //     ANTES de que el seam real abra un socket, eligiendo la fixture por el

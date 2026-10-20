@@ -9,24 +9,22 @@ require "minitest/mock"
 # `with_fake_extractor` reemplaza con el doble de
 # test/support/fake_anthropic_client.rb.
 #
-# ALCANCE: el seam real llama al agente extractor de Taimes (ver el bloque del
-# seam en el servicio); sus piezas internas se prueban en
+# ALCANCE: el seam real llama a la API de Claude (ver el bloque del seam en el
+# servicio); esa traduccion se prueba en
 # test/services/receipt_extraction_seam_test.rb. Lo que se prueba aqui es TODO
 # lo que rodea a esa llamada: contrato del Result, validacion de entrada, armado
 # del payload, umbrales de confianza, normalizacion y mapeo de errores.
 class ReceiptExtractionServiceTest < ActiveSupport::TestCase
   include WithFakeExtractor
 
-  ENV_CLAVES = %w[TAIMES_INVOKE_URL TAIMES_AGENT_ID TAIMES_API_KEY
+  ENV_CLAVES = %w[ANTHROPIC_API_KEY
                   RECEIPT_EXTRACTION_ENABLED RECEIPT_EXTRACTION_MODEL].freeze
 
   def setup
     # El servicio arranca APAGADO por defecto (kill switch). Los tests del camino
     # feliz lo encienden a proposito; los de configuracion lo vuelven a apagar.
     @env_previo = ENV.to_hash.slice(*ENV_CLAVES)
-    ENV["TAIMES_INVOKE_URL"]          = "http://taimes.invalid"
-    ENV["TAIMES_AGENT_ID"]            = "agente-de-mentira"
-    ENV["TAIMES_API_KEY"]             = "kmz_de-mentira-no-se-usa"
+    ENV["ANTHROPIC_API_KEY"]          = "sk-ant-de-mentira-no-se-usa"
     ENV["RECEIPT_EXTRACTION_ENABLED"] = "true"
     ENV.delete("RECEIPT_EXTRACTION_MODEL")
   end
@@ -139,8 +137,8 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
     with_fake_extractor(payload_modelo) do |fake|
       resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
 
-      assert_equal "claude-opus-5", fake.calls.first[:model]
-      assert_equal "claude-opus-5", resultado.model
+      assert_equal "claude-opus-5-5", fake.calls.first[:model]
+      assert_equal "claude-opus-5-5", resultado.model
     end
   end
 
@@ -162,7 +160,7 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
 
       assert_equal "json_schema", formato[:type]
       assert_equal ReceiptExtractionService::SCHEMA, formato[:schema]
-      assert_equal 2048, fake.calls.first[:max_tokens]
+      assert_equal 8192, fake.calls.first[:max_tokens]
       assert_includes fake.calls.first[:system], "extractor de datos de comprobantes"
     end
   end
@@ -255,7 +253,7 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
     end
   end
 
-  # ---- el seam que implementa Taimes ---------------------------------------
+  # ---- el seam de red (Claude, paquete 17) ---------------------------------
 
   test "el seam de red es call_vision_model y el seam viejo no existe" do
     assert_respond_to ReceiptExtractionService, :call_vision_model
@@ -263,10 +261,10 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
     refute_respond_to ReceiptExtractionService, :reset_api_client!
   end
 
-  # El seam ya esta implementado (llama a Taimes): un payload sin bloque de
-  # documento se rechaza ANTES de abrir cualquier socket.
+  # Un payload sin bloque de documento se rechaza ANTES de abrir cualquier
+  # socket.
   test "call_vision_model exige un payload con bloque de documento" do
-    error = assert_raises(ReceiptExtractionService::TaimesError) do
+    error = assert_raises(ReceiptExtractionService::PayloadInvalido) do
       ReceiptExtractionService.call_vision_model(model: "x")
     end
 
@@ -276,7 +274,7 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
   # Y a traves de `extract`, ese mismo fallo termina en el error estandar: el
   # contrato D.1 dice que extraer nunca puede impedir registrar a mano.
   test "un fallo del seam se mapea a provider_error y no revienta" do
-    ReceiptExtractionService.stub(:call_vision_model, ->(_payload) { raise ReceiptExtractionService::TaimesError, "invoke HTTP 500" }) do
+    ReceiptExtractionService.stub(:call_vision_model, ->(_payload) { raise Claude::Client::Error.new("HTTP 500", status: 500) }) do
       resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
 
       refute resultado.ok?
@@ -286,8 +284,8 @@ class ReceiptExtractionServiceTest < ActiveSupport::TestCase
 
   # ---- configuracion --------------------------------------------------------
 
-  test "sin la api key de Taimes devuelve not_configured y no revienta" do
-    ENV.delete("TAIMES_API_KEY")
+  test "sin la api key de Anthropic devuelve not_configured y no revienta" do
+    ENV.delete("ANTHROPIC_API_KEY")
 
     with_fake_extractor(payload_modelo) do |fake|
       resultado = ReceiptExtractionService.extract(upload_fixture("comprobante_factura.pdf"))
