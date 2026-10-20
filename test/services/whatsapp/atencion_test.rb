@@ -8,14 +8,17 @@ class Whatsapp::AtencionTest < ActiveSupport::TestCase
   include WhatsappTestHelpers
 
   # Estas pruebas son de la fase 1 ("Recibido"). Sin la api key de Claude, la
-  # atencion no llama al agente aunque el entorno de quien corre la suite la
-  # tenga cargada.
+  # atencion no llama al agente, y sin el numero publico el aviso de "no
+  # registrado" no trae el enlace de vinculacion, aunque el entorno de quien
+  # corre la suite los tenga cargados.
+  VARIABLES_DEL_ENTORNO = %w[ANTHROPIC_API_KEY WHATSAPP_NUMERO_PUBLICO].freeze
+
   setup do
-    @anthropic_previa = ENV.delete("ANTHROPIC_API_KEY")
+    @entorno_previo = VARIABLES_DEL_ENTORNO.to_h { |clave| [clave, ENV.delete(clave)] }
   end
 
   teardown do
-    ENV["ANTHROPIC_API_KEY"] = @anthropic_previa if @anthropic_previa
+    @entorno_previo.each { |clave, valor| ENV[clave] = valor if valor }
   end
 
   def entrante(wamid: "wamid.in.1", wa_id: "573001234567", bsuid: "CO.bsuid", tipo: "text", **extra)
