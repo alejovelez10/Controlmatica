@@ -150,7 +150,17 @@ Suite al cerrar: 1646 corridas, 0 fallos (`NODE_OPTIONS=--openssl-legacy-provide
   privacidad que pide es `https://controlmatica.herokuapp.com/privacidad` (revisar el texto con
   quien responda por datos personales en Controlmatica).
 - No tocar el **+57 316 505 7782**: está conectado y no es de este proyecto. El webhook ignora sus
-  mensajes aunque lleguen.
+  mensajes aunque lleguen, y el cuerpo del webhook no queda en el log (`filter_parameter_logging`).
+
+**Al 2026-10-20**, con `bin/rails whatsapp:estado`: el 318 ya está **verificado**
+(`code_verification_status: VERIFIED`) con el nombre **"Controlmatica HK"** aprobado
+(`AVAILABLE_WITHOUT_REVIEW`); falta solo registrarlo (`status: PENDING`). David aprobó el token del
+usuario de sistema `controlmatica-bot` (no vence), pero es el de la solicitud equivocada: trae
+`whatsapp_business_management` y `whatsapp_business_manage_events`, sin
+`whatsapp_business_messaging`, y `whatsapp:registrar` responde `(#200) You do not have permission
+to access this field`. Hay que generar otro token con los dos permisos correctos y revocar este. La
+cuenta no tenía plantillas ni apps suscritas; la app Controlmatica IA ya quedó suscrita
+(`whatsapp:suscribir`).
 
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
