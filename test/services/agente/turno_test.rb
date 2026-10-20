@@ -155,6 +155,19 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     assert_equal 0, ReportExpense.where(invoice_name: "Restaurante El Sol").count, "proponer no guarda"
   end
 
+  test "un aviso que el modelo ya puso en su resumen no se repite" do
+    as_user(users(:admin)) do
+      ExpenseRule.create!(name: "Tope", active: true, applies_to_all_roles: true, check_duplicates: false,
+                          mandatory: false, max_invoice_value: 10_000)
+    end
+    resumen = "Voy a registrar este gasto:\n\n⚠️ El valor supera el tope de $10.000"
+    turno(entrante("listo"), FakeClaudeClient.tools(["proponer_gasto", args_de_gasto(resumen: resumen)]))
+
+    texto = @whatsapp.enviados.last[:texto]
+    assert_equal 1, texto.scan("supera el tope").size
+    assert_equal "pendiente", borrador["estado"]
+  end
+
   test "proponer_gasto con una moneda invalida no manda botones y le explica al modelo" do
     turno(entrante("listo"), FakeClaudeClient.tools(["proponer_gasto", args_de_gasto(currency: "XYZ")]),
           FakeClaudeClient.texto("¿En qué moneda?"))

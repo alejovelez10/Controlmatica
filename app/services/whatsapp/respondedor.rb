@@ -38,8 +38,16 @@ module Whatsapp
 
     private
 
+    # Si el mensaje YA SALIO y lo que falla es anotarlo en la base, se loguea y
+    # se sigue: levantar haria que el agente creyera que el envio fallo y lo
+    # mandara otra vez (visto en la prueba real del 2026-10-19).
     def registrar(tipo, cuerpo, extra = {})
       wamid = yield
+      anotar_saliente(wamid, tipo, cuerpo, extra)
+      wamid
+    end
+
+    def anotar_saliente(wamid, tipo, cuerpo, extra)
       WhatsappMessage.create!(
         wamid: wamid.presence || "local-#{SecureRandom.uuid}",
         direction: WhatsappMessage::SALIENTE,
@@ -48,7 +56,8 @@ module Whatsapp
         message_type: tipo, body: cuerpo, payload: extra,
         status: "enviado", processed_at: Time.current
       )
-      wamid
+    rescue ActiveRecord::ActiveRecordError => e
+      Rails.logger.error("[whatsapp] mensaje #{wamid} enviado pero no anotado: #{e.class}: #{e.message}")
     end
   end
 end

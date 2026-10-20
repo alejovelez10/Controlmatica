@@ -194,7 +194,10 @@ module Agente
 
     def guardar_y_enviar(tipo, datos, resumen, avisos, veredicto: nil, archivo_id: nil)
       texto = Formato.para_whatsapp(resumen)
-      texto = [texto, *avisos.map { |a| "⚠️ #{a}" }].join("\n\n") if avisos.any?
+      # Los avisos que el modelo ya puso en su resumen no se repiten (visto en
+      # la prueba real del 2026-10-19: el del tope salia dos veces).
+      faltantes = avisos.reject { |aviso| texto.include?(aviso.to_s.delete_suffix(".")) }
+      texto = [texto, *faltantes.map { |a| "⚠️ #{a}" }].join("\n\n") if faltantes.any?
       borrador = { "id" => SecureRandom.hex(6), "tipo" => tipo, "args" => datos, "veredicto" => veredicto,
                    "archivo_id" => archivo_id, "creado_en" => Time.current.iso8601, "estado" => "pendiente" }
       actualizar(borrador)
