@@ -160,7 +160,10 @@ usuario de sistema `controlmatica-bot` (no vence), pero es el de la solicitud eq
 `whatsapp_business_messaging`, y `whatsapp:registrar` responde `(#200) You do not have permission
 to access this field`. Hay que generar otro token con los dos permisos correctos y revocar este. La
 cuenta no tenía plantillas ni apps suscritas; la app Controlmatica IA ya quedó suscrita
-(`whatsapp:suscribir`).
+(`whatsapp:suscribir`). El mismo día David aprobó un segundo token con
+`whatsapp_business_messaging` y **el 318 quedó registrado**: `status: CONNECTED`,
+`platform_type: CLOUD_API`. El PIN de verificación en dos pasos quedó en `WHATSAPP_PIN`; sin él
+no se puede volver a registrar el número. El primer token se revoca.
 
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
