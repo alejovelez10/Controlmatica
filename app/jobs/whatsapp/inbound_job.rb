@@ -19,6 +19,25 @@ module Whatsapp
       job.marcar_fallido(error)
     end
 
+    # Claude saturado o con limite de velocidad (Agente::Turno solo deja subir
+    # los transitorios). Nada del turno se guardo, asi que repetirlo es seguro.
+    retry_on Claude::Client::Error, wait: :exponentially_longer, attempts: 4 do |job, error|
+      job.marcar_fallido(error)
+      job.avisar_fallo
+    end
+
+    # Si Claude no se recupero en los reintentos, que la persona no se quede
+    # esperando una respuesta que no va a llegar.
+    def avisar_fallo
+      mensaje = WhatsappMessage.find_by(id: arguments.first)
+      return unless mensaje
+
+      Whatsapp::Respondedor.new(destino: { wa_id: mensaje.wa_id, bsuid: mensaje.bsuid }, usuario: mensaje.user)
+                           .texto(Agente::Turno::FALLO)
+    rescue Whatsapp::Client::Error => e
+      Rails.logger.error("[whatsapp] no se pudo avisar el fallo: #{e.message}")
+    end
+
     def perform(whatsapp_message_id, _remitente = nil)
       mensaje = WhatsappMessage.find_by(id: whatsapp_message_id)
       return if mensaje.nil? || mensaje.procesado?

@@ -1,10 +1,22 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "minitest/mock"
 
 # Atencion de un mensaje entrante (paquete 17, fase 1).
 class Whatsapp::AtencionTest < ActiveSupport::TestCase
   include WhatsappTestHelpers
+
+  # Estas pruebas son de la fase 1 ("Recibido"). Sin la api key de Claude, la
+  # atencion no llama al agente aunque el entorno de quien corre la suite la
+  # tenga cargada.
+  setup do
+    @anthropic_previa = ENV.delete("ANTHROPIC_API_KEY")
+  end
+
+  teardown do
+    ENV["ANTHROPIC_API_KEY"] = @anthropic_previa if @anthropic_previa
+  end
 
   def entrante(wamid: "wamid.in.1", wa_id: "573001234567", bsuid: "CO.bsuid", tipo: "text", **extra)
     WhatsappMessage.create!({ wamid: wamid, direction: WhatsappMessage::ENTRANTE, wa_id: wa_id, bsuid: bsuid,
@@ -81,5 +93,21 @@ class Whatsapp::AtencionTest < ActiveSupport::TestCase
     cliente = FakeWhatsappClient.new(error_en: { marcar_leido: Whatsapp::Client::Error.new("x", http_status: 400) })
     Whatsapp::Atencion.new(entrante, client: cliente).call
     assert_equal [Whatsapp::Atencion::RECIBIDO], cliente.textos
+  end
+
+  test "con Claude y el MCP configurados, el mensaje lo atiende el agente" do
+    llamado = nil
+    agente = Object.new
+    agente.define_singleton_method(:call) { llamado = true }
+    ENV["ANTHROPIC_API_KEY"] = "sk-ant-x"
+    mcp_previa = ENV["MCP_API_KEY"]
+    ENV["MCP_API_KEY"] = "k"
+    Agente::Turno.stub(:new, ->(**_kw) { agente }) do
+      Whatsapp::Atencion.new(entrante, client: FakeWhatsappClient.new).call
+    end
+    assert llamado
+  ensure
+    ENV.delete("ANTHROPIC_API_KEY")
+    ENV["MCP_API_KEY"] = mcp_previa
   end
 end

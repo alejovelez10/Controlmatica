@@ -82,4 +82,15 @@ class WhatsappMessage < ApplicationRecord
   def datos
     (payload || {}).with_indifferent_access
   end
+
+  # El id del boton o de la fila de lista que la persona toco (lo pone quien
+  # envia el mensaje interactivo), o el payload de una respuesta rapida.
+  def boton_id
+    datos.dig(:interactive, :button_reply, :id) || datos.dig(:interactive, :list_reply, :id) ||
+      datos.dig(:button, :payload)
+  end
+
+  def imagen_o_pdf?
+    media_file.present? && (media_mime.to_s.start_with?("image/") || media_mime == "application/pdf")
+  end
 end

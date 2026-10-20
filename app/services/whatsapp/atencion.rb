@@ -65,8 +65,13 @@ module Whatsapp
 
     private
 
-    def responder(respondedor, _usuario, _conversacion)
-      respondedor.texto(RECIBIDO)
+    # Sin la api key de Claude (o sin MCP_API_KEY) el canal sigue vivo y
+    # contesta "Recibido": asi se puede encender el numero antes que el agente.
+    def responder(respondedor, usuario, conversacion)
+      return respondedor.texto(RECIBIDO) unless Agente.configurado?
+
+      Agente::Turno.new(mensaje: @mensaje, usuario: usuario, conversacion: conversacion,
+                        respondedor: respondedor).call
     end
 
     # La URL de Meta vence a los 5 minutos: se baja en cuanto se atiende el

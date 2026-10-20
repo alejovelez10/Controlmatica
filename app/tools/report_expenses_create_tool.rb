@@ -35,7 +35,11 @@ class ReportExpensesCreateTool < ApplicationTool
       foreign_total:          { type: "number",  description: "Total en la moneda del comprobante" },
       exchange_rate:          { type: "number",  description: "Tasa a COP: cuantos COP vale 1 unidad de currency. Usa exchange_rates_get para obtenerla." },
       exchange_rate_date:     { type: "string",  description: "Fecha de la tasa aplicada, YYYY-MM-DD. Normalmente = invoice_date." },
-      confirm_rule_violations: { type: "boolean", description: "OBSOLETO desde 2026-09-15, se ignora. Cada regla decide si frena (blocking: true, y entonces no hay confirmación posible) o si solo deja el gasto sin aprobar. Se sigue aceptando para no romper conversaciones en curso." }
+      confirm_rule_violations: { type: "boolean", description: "OBSOLETO desde 2026-09-15, se ignora. Cada regla decide si frena (blocking: true, y entonces no hay confirmación posible) o si solo deja el gasto sin aprobar. Se sigue aceptando para no romper conversaciones en curso." },
+      policy_compliant:       { type: "boolean", description: "Veredicto sobre las agent_instructions de las reglas, juzgadas contra el comprobante: false si incumple alguna, true si las cumple. Omítelo si no juzgaste. Un false de una regla obligatoria impide registrar el gasto, igual que en la web." },
+      policy_findings:        { type: "array", description: "Un objeto por incumplimiento, con el número de la regla de la que sale ([Regla 12] → 12) y un motivo corto que cite lo que se ve en el comprobante.",
+                                items: { type: "object",
+                                         properties: { rule_id: { type: "integer" }, reason: { type: "string" } } } }
     },
     required: %w[cost_center_id type_identification_id]
   )
@@ -132,6 +136,11 @@ class ReportExpensesCreateTool < ApplicationTool
       # suba primero y mande el `upload_key` al crear), y eso es una decision de
       # producto sobre el contrato con Taimes, no un ajuste de validacion.
       re.omitir_comprobante_obligatorio = true
+      # VEREDICTO DEL AGENTE (paquete 17): las reglas en texto libre las juzga
+      # quien ve el comprobante. Antes esta tool no lo recibia y una regla
+      # obligatoria de ese tipo no frenaba nada por WhatsApp (adenda D de
+      # ESTADO.md, puerta 3); en la web si.
+      re.agent_policy_verdict = veredicto_del_agente(args)
       re.exchange_rate_source = resolve_rate_source(re)
       re.user_id = creator.id
       # GUARD DE REGLAS DE NEGOCIO — antes de guardar nada (§7.5). El motor es
@@ -146,7 +155,7 @@ class ReportExpensesCreateTool < ApplicationTool
       # administrador marca la regla como obligatoria para que el gasto no
       # exista, y una confirmación del agente le devolveria la decisión a quien
       # esta reportando.
-      veredicto = ExpenseRuleService.validate(re).value
+      veredicto = ExpenseRuleService.validate(re, agent_verdict: re.agent_policy_verdict).value
       if veredicto[:blocking_violations].any?
         return json(type: "error",
                     message: veredicto[:blocking_violations].map { |v| v[:message] },
@@ -211,6 +220,22 @@ class ReportExpensesCreateTool < ApplicationTool
     fila.rate_to_cop.to_d.round(6) == re.exchange_rate.to_d.round(6) ? fila.source : "manual"
   end
   private_class_method :resolve_rate_source
+
+  # { compliant:, findings: [{ rule_id:, message: }] } o nil si no hubo juicio.
+  # Solo true y false cuentan: cualquier otra cosa es "nadie lo juzgó", que no
+  # es lo mismo que "lo cumple" (mismo criterio que la lectura de la web).
+  def self.veredicto_del_agente(args)
+    return nil unless [true, false].include?(args[:policy_compliant])
+
+    hallazgos = Array(args[:policy_findings]).filter_map do |hallazgo|
+      next unless hallazgo.respond_to?(:to_h)
+
+      h = hallazgo.to_h.with_indifferent_access
+      { rule_id: h[:rule_id], message: (h[:reason] || h[:message]).to_s.strip }
+    end
+    { compliant: args[:policy_compliant], findings: hallazgos }
+  end
+  private_class_method :veredicto_del_agente
 
   # nil si el id es válido para su categoría (u omitido); el mensaje de rechazo
   # si no. `find_by` y no `find`: las tools nunca levantan. La comparación de
