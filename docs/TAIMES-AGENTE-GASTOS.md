@@ -1,3 +1,5 @@
+> **Histórico (2026-10-19).** Controlmatica dejó de usar Taimes: el agente y la lectura de comprobantes son propios (docs/plan-gastos-ia/17-agente-whatsapp-propio.md). Este documento describe el acuerdo anterior.
+
 # Agente de gastos por WhatsApp — especificación para configurarlo en Taimes
 
 Este documento describe **cómo debe comportarse el agente** que registra gastos de

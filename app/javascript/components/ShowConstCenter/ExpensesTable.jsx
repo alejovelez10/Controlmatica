@@ -24,10 +24,9 @@ function currencyOptions() {
 
 // KILL SWITCH DE LA CAPTURA ASISTIDA.
 //
-// Arranca APAGADO a proposito: el endpoint POST /extract_receipt/report_expenses
-// todavia no existe (la llamada al modelo de vision la completa Taimes, ver
-// docs/plan-gastos-ia/ESTADO.md "Frontera de alcance"). El boton queda
-// construido y probado, pero no se pinta hasta que alguien publique el flag.
+// Arranca APAGADO a proposito: la lectura del comprobante le habla a Claude
+// (paquete 17) y solo se enciende con RECEIPT_EXTRACTION_ENABLED una vez cargada
+// la api key. Mientras tanto el boton no se pinta.
 //
 // Para encenderlo hace falta UNA linea en layouts/user.html.erb —
 //   window.CM_RECEIPT_EXTRACTION_ENABLED = <%= ReceiptExtractionService.enabled? %>;

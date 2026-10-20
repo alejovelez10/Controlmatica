@@ -1,3 +1,5 @@
+> **Histórico (2026-10-19).** Controlmatica dejó de usar Taimes: el agente y la lectura de comprobantes son propios (docs/plan-gastos-ia/17-agente-whatsapp-propio.md). Este documento describe el acuerdo anterior.
+
 # Agente "Extractor de Comprobantes" — qué cambia para aplicar las reglas desde la web
 
 **Para quién es**: quien configura el agente extractor en Taimes.

@@ -289,9 +289,8 @@ class FormCreate extends Component {
   };
 
   renderExtraction = () => {
-    // KILL SWITCH: sin el flag, el boton no se pinta. El endpoint de extraccion
-    // lo completa Taimes (ver ESTADO.md, "Frontera de alcance"), asi que arranca
-    // apagado y el formulario se llena a mano, que es lo que se hace hoy.
+    // KILL SWITCH: sin el flag, el boton no se pinta y el formulario se llena
+    // a mano. La lectura le habla a Claude (paquete 17).
     if (!this.props.extractionEnabled) return null;
 
     const x = this.props.extraction ||

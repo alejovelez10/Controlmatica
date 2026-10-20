@@ -68,7 +68,7 @@ class ExpenseRuleService
   # texto libre que este servidor NO sabe evaluar—, con la forma
   # `{ compliant: true/false/nil, findings: ["motivo", ...] }` —o, desde el
   # 2026-10-14, `findings: [{ rule_id:, message: }]`—. Entra por
-  # parametro porque quien lo produce es el agente de Taimes: la web se lo pide
+  # parametro porque quien lo produce es el agente de IA: la web se lo pide
   # al leer el comprobante y lo reenvia al guardar. `nil` (o `compliant` nil)
   # significa "nadie lo juzgo" y no genera violacion: un gasto escrito a mano,
   # sin comprobante, no puede quedar bloqueado por una pregunta que nunca se

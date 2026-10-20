@@ -763,3 +763,26 @@ pantalla, se nota en la auditoría contable. Si algún día se le pone monitoreo
 `Rails.logger.error("[report_expense] reglas: ...")` es la línea que hay que vigilar.
 
 *Adenda escrita el 2026-10-05. Suite completa en verde al cerrarla: 1327 corridas, 0 fallos.*
+
+---
+
+# Adenda E — 2026-10-19: la IA pasa a ser propia; Taimes sale
+
+**Cambia la frontera de alcance de §1 y §5.** El usuario decidió dejar de consumir Taimes:
+el canal de WhatsApp, el agente que registra gastos y reportes de servicio, y la lectura de
+comprobantes del formulario web viven ahora en este repositorio, con Claude (Anthropic) y la
+Cloud API de Meta directo. Todo está en
+[`17-agente-whatsapp-propio.md`](17-agente-whatsapp-propio.md), rama
+`feature/agente-whatsapp-propio`.
+
+Lo que esto le responde a pendientes anteriores:
+
+- **§5 "lo que falta del lado Taimes"** deja de aplicar: no hay lado Taimes.
+- **Puerta 3 de la adenda D** (la regla semántica obligatoria no frenaba por WhatsApp): cerrada.
+  `report_expenses_create` recibe el veredicto del agente.
+- **Pendiente 4 de septiembre** (el comprobante por WhatsApp se adjuntaba aparte): el adjunto va
+  en el mismo paso de la creación. El comprobante sigue sin exigirse por ese canal.
+- **"Sin Procfile = migrar a mano"**: el Procfile nuevo corre `db:migrate` en la fase release.
+- **La transcripción de voz "sin verificar" de §5.1**: ahora es propia (OpenAI `gpt-transcribe`).
+
+Los documentos `docs/TAIMES-*.md` quedan como histórico.

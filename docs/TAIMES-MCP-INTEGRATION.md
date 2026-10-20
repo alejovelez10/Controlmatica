@@ -1,3 +1,5 @@
+> **Histórico (2026-10-19).** Controlmatica dejó de usar Taimes: el agente y la lectura de comprobantes son propios (docs/plan-gastos-ia/17-agente-whatsapp-propio.md). Este documento describe el acuerdo anterior.
+
 # Integración MCP — Controlmatica ⇄ Taimes
 
 Guía para que **Taimes** consuma el servidor **MCP** (Model Context Protocol) de

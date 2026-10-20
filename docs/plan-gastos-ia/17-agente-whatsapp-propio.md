@@ -7,7 +7,9 @@ consumir Taimes; vamos a construir nuestra propia IA que haga lo mismo que hace 
 queda fuera por decisión del cliente, y lo completa Taimes"). Desde este paquete, la IA vive dentro
 de este repositorio: el canal de WhatsApp, el agente que conversa y la lectura de comprobantes.
 
-Rama: `feature/agente-whatsapp-propio`, sacada de `feature/gastos-presupuesto-ia` (858d25a).
+Rama: `feature/agente-whatsapp-propio`, sacada de `feature/gastos-presupuesto-ia` (858d25a). **No
+incluye** la doble aprobación (`feature/doble-aprobacion-zip-propietario`): al fusionar las dos hay
+que reconciliar `report_expense.rb` y `db/schema.rb`.
 
 ---
 
@@ -16,35 +18,36 @@ Rama: `feature/agente-whatsapp-propio`, sacada de `feature/gastos-presupuesto-ia
 Revisado en `~/Documents/kmizen-sgi/kmizen-ai-service` y `~/Documents/kmizen-sgi/ops` el
 2026-10-19. Taimes es Python/FastAPI con Pydantic AI y Gemini (`gemini-3.1-flash-lite`).
 
-| Pieza de Taimes | Qué hace | Cómo queda aquí |
+| Pieza de Taimes | Qué hacía | Cómo quedó aquí |
 |---|---|---|
-| **Asistente de Gastos** | Registra gastos por WhatsApp (foto, PDF, voz, texto), 15 tools del MCP | `Agente::Runner` + las mismas tools, en proceso |
-| **Reportes de Servicio** | Registra horas, desplazamiento y viáticos sobre un centro, 9 tools | Segundo flujo del mismo agente |
-| **Extractor de Comprobantes** | El botón "Extraer" del formulario web (`invoke` + `read_url`) | `ReceiptExtractionService.call_vision_model` le habla a Claude directo |
+| **Asistente de Gastos** | Gastos por WhatsApp (foto, PDF, voz, texto), 15 tools del MCP | `Agente::Turno` + las mismas tools, en proceso |
+| **Reportes de Servicio** | Horas, desplazamiento y viáticos sobre un centro, 9 tools | El mismo agente, segundo flujo del prompt |
+| **Extractor de Comprobantes** | El botón "Extraer" del formulario web (`invoke` + `read_url`) | `ReceiptExtractionService.call_vision_model` le habla a Claude |
 | Canal WhatsApp (Twilio) | Recibir, responder, botones, menú de agentes | Meta Cloud API directo (`Whatsapp::Client`) |
-| Notas de voz | Opus → Vorbis con ffmpeg y el audio a Gemini | Fase 4: transcripción + Claude |
-| Historial | Tope de 40 mensajes; corte del hilo tras cada registro; `@limpiar` | Igual (§4.4), adaptado a la regla de "solo agregar" de Claude |
-| Prompts | `ops/body_gastos_controlmatica.md`, `body_reportes_servicio_controlmatica.md`, `body_extractor_comprobantes.md` | Se portan a `app/prompts/agente/` |
+| Notas de voz | Opus → Vorbis con ffmpeg y el audio a Gemini | Transcripción con OpenAI `gpt-transcribe` + Claude |
+| Historial | Tope de 40 mensajes, corte tras cada registro, `@limpiar` | Corte tras cada registro, `@limpiar`, 2 h de inactividad (§4.4) |
+| Prompts | `ops/body_*_controlmatica.md`, `body_extractor_comprobantes.md` | `app/prompts/agente/sistema.md` |
 
-Lo que **no** se copia porque es de Taimes como plataforma: su propia tabla de usuarios con
-contraseñas y verificación OTP (aquí manda `users.phone`, y Meta ya garantiza el remitente),
-multi-empresa, medición de cobro, BigQuery, gráficos y la bandeja de "tomar la conversación".
+Lo que **no** se copió porque es de Taimes como plataforma: su tabla de usuarios con contraseñas y
+verificación por código (aquí manda `users.phone`, y Meta garantiza el remitente), multi-empresa,
+medición de cobro, BigQuery, gráficos y la bandeja para que una persona tome la conversación.
 
 ## 2. Decisiones
 
 | Decisión | Valor | Por qué |
 |---|---|---|
 | Número | **+57 318 926 2630** ("Controlmatica HK"), cuenta de WhatsApp Business `2318917928941844`, phone number ID `1282550828280577` | Confirmado por el usuario. Estaba "Pendiente": se iba a conectar con Twilio y nunca se hizo |
-| Canal | **Meta Cloud API directo**, sin BSP | Menos de USD 2/mes; Twilio cobra por cada mensaje y amarra al formato de su API |
-| Versión de la Graph API | `v25.0` por ENV (`WHATSAPP_GRAPH_VERSION`) | Disponible hasta jul-2028 |
-| Modelo | `claude-opus-5-5` por ENV (`AGENTE_MODELO`) | El valor por defecto de la guía de Anthropic. Se mide el costo real y se decide si se baja a Sonnet 5.5 o Haiku 5.5 |
-| Cliente de Claude | **HTTP directo con Faraday** | La gema oficial `anthropic` exige Ruby ≥ 3.2 y el proyecto está en 3.1.2 |
-| Cola de trabajos | **GoodJob** | Funciona con Rails 6.1 + Ruby 3.1, usa el Postgres que ya existe. Sidekiq 8 exige rack ≥ 3.1 (aquí 2.2) |
-| Chat web | Fuera de la primera versión | Lo usaban pocos; se agrega después |
+| Canal | **Meta Cloud API directo**, sin intermediario | Menos de USD 2/mes; Twilio cobra por mensaje y amarra al formato de su API |
+| Graph API | `v25.0` por ENV (`WHATSAPP_GRAPH_VERSION`) | Disponible hasta jul-2028 |
+| Modelo | `claude-opus-5-5` por ENV (`AGENTE_MODELO`, `RECEIPT_EXTRACTION_MODEL`) | El valor por defecto de Anthropic; medir con `whatsapp:costos` y decidir si se baja |
+| Cliente de Claude | **HTTP directo con Faraday** | La gema oficial `anthropic` exige Ruby ≥ 3.2; el proyecto está en 3.1.2 |
+| Voz | OpenAI `gpt-transcribe` por HTTP (HTTParty) | Recibe el OGG de WhatsApp sin convertir; acepta términos literales; no entrena con los datos |
+| Cola | **GoodJob** (Postgres) | Funciona con Rails 6.1 + Ruby 3.1; Sidekiq 8 exige rack ≥ 3.1 |
+| Chat web | Fuera de esta versión | Se agrega después si hace falta |
 
-**Pendiente aparte (no bloquea):** subir Ruby a 3.3/3.4 junto con Puma antes del 1-may-2027,
-cuando Heroku deja de permitir builds en heroku-22 (la app está ahí). Entonces el cliente HTTP de
-Claude se cambia por la gema oficial.
+**Pendiente aparte (no bloquea):** subir Ruby a 3.3/3.4 y Puma antes del 1-may-2027, cuando Heroku
+deja de permitir builds en heroku-22 (la app está ahí). Entonces `Claude::Client` y
+`Voz::Transcriptor` se cambian por las gemas oficiales.
 
 ## 3. Arquitectura
 
@@ -55,120 +58,177 @@ Meta ──POST──> /webhooks/whatsapp      Webhooks::WhatsappController
                    │  firma X-Hub-Signature-256, guarda en whatsapp_messages
                    │  (wamid único), encola y responde 200 al instante
                    ▼
-            Whatsapp::InboundJob        (GoodJob, un mensaje a la vez por persona)
+            Whatsapp::InboundJob        GoodJob, un mensaje a la vez por persona
+            Whatsapp::Atencion
+                   ├─ "vincular <token>" → Whatsapp::Vinculo
                    ├─ Whatsapp::Identidad  → User (BSUID o teléfono; dos usuarios = nadie)
-                   ├─ descarga el archivo (la URL de Meta vence a los 5 min) → S3
-                   ├─ Agente::Runner       → Claude + tools de app/tools en proceso
-                   └─ Whatsapp::Client     → responde (texto, botones, lista)
+                   ├─ baja el archivo (la URL de Meta vence a los 5 min) → S3
+                   └─ Agente::Turno
+                        ├─ sin el modelo: @limpiar, botones del borrador, "sí" escrito
+                        ├─ nota de voz → Voz::Transcriptor
+                        └─ ciclo con Claude ↔ Agente::Herramientas
+                              ├─ 15 tools del MCP en proceso (Agente::McpEnProceso)
+                              └─ ofrecer_opciones, proponer_gasto, proponer_reporte,
+                                 adjuntar_comprobante
+ReportExpense (aprobado / rechazado / pendiente) → Whatsapp::Avisos → AvisoJob
 ```
 
-**Las tools se llaman dentro del mismo proceso** a través de `MCP::Server#handle`, no por HTTP.
-Así se conservan sin cambios la validación de argumentos, la identificación estricta del actor,
-`User.current`, las reglas y el presupuesto. El `server_context` lleva `actor_phone` y, si
-existe, `actor_email` del usuario ya identificado.
+Las tools del MCP se llaman **en proceso** con `MCP::Server#handle`, no por HTTP: así se conservan
+la validación de argumentos, el actor estricto (correo y teléfono del usuario ya identificado),
+`User.current`, las reglas y el presupuesto. Por eso el agente necesita `MCP_API_KEY`.
 
 ## 4. Diseño del agente
 
 ### 4.1 La confirmación la controla el código, no el modelo
 
-En Taimes el modelo llamaba `report_expenses_create` después de un "Sí". Aquí el modelo **no
-tiene** la tool de creación. Tiene `proponer_gasto` / `proponer_reporte`: guardan un borrador en
-la conversación, corren `expense_rules_validate` y la app envía el resumen con los botones
-**Confirmar / Corregir / Cancelar**. Solo el botón Confirmar crea el registro, desde código, con
-el borrador. Consecuencias:
+El modelo **no tiene** la tool de crear. Llama `proponer_gasto` / `proponer_reporte`: el código
+valida, guarda un borrador en `whatsapp_conversations.estado["borrador"]` y manda el resumen con
+**Confirmar / Corregir / Cancelar**. Solo Confirmar (o un "sí" escrito con un borrador pendiente)
+crea el registro, desde código. El borrador vence a los 15 minutos y su id evita duplicar si el
+worker se reinicia a mitad.
 
-- El modelo no puede crear nada sin el toque de la persona.
-- El id del borrador es la llave de idempotencia: si Heroku reinicia el worker a mitad de la
-  creación, el reintento no duplica.
-- El borrador vence a los 15 minutos (igual que el instructivo de campo).
+### 4.2 Dos huecos que se cerraron por tener los dos lados
 
-### 4.2 Dos huecos que se cierran por tener los dos lados
+1. **Comprobante:** se adjunta en el mismo paso de la creación. Ya no queda un gasto creado al que
+   le falló el adjunto aparte. (Sigue sin exigirse comprobante por WhatsApp: un gasto contado por
+   texto se puede registrar sin foto, como antes.)
+2. **Reglas en texto libre obligatorias:** `report_expenses_create` acepta `policy_compliant` y
+   `policy_findings`; el agente juzga las `agent_instructions` contra la foto y el veredicto frena
+   igual que en la web. Cierra la puerta 3 de la adenda D de `ESTADO.md`.
 
-1. **Comprobante:** el archivo ya está en S3 antes de crear, así que se adjunta en el mismo paso
-   (hoy, con Taimes, se crea primero y se adjunta después, y si el adjunto falla el gasto queda
-   sin archivo).
-2. **Reglas en texto libre que son obligatorias:** el veredicto de la lectura del comprobante
-   (`policy_compliant` / `policy_findings`) viaja al crear y frena igual que en la web (adenda D
-   de `ESTADO.md`, puerta 3).
+### 4.3 Reportes de servicio: el servidor ya valida
 
-### 4.3 Validaciones de reportes que pasan al servidor
-
-El prompt de Taimes las exigía porque el servidor las dejaba pasar (probado en vivo por Taimes):
-horas o valores negativos, un cliente que no es el del centro, un contacto de otro cliente y
-fechas en texto libre. Aquí van en el servidor.
+El prompt de Taimes exigía cosas que el servidor dejaba pasar (horas negativas, un cliente o un
+contacto de otro cliente, fechas en texto libre). Al revisar `reports_create` el 2026-10-19 ya las
+rechaza todas; no hubo que agregar nada.
 
 ### 4.4 Historial: solo se agrega, nunca se edita
 
-Claude liga cada bloque de razonamiento a la conversación exacta que lo produjo; editar o recortar
-turnos anteriores invalida la conversación (400 en cuentas creadas desde el 2026-08-31). Reglas:
+Claude liga su razonamiento a la conversación exacta que lo produjo; editar o recortar turnos
+invalida la conversación (400 en las cuentas nuevas). Por eso:
 
-- `system` y `tools` se congelan al abrir la conversación (`prompt_version`). Si cambian por un
-  despliegue, la próxima conversación arranca nueva.
-- **Corte tras cada registro guardado** (lección de Taimes: un hilo de 20 días llegó a 125.691
-  tokens en un turno): se cierra la conversación y la siguiente arranca con un resumen corto como
-  primer mensaje. Es "compactación simple", compatible con la regla.
-- `@limpiar`, `@olvidar`, `@borrar` y 2 horas sin escribir también abren una conversación nueva.
-- Las imágenes se guardan como referencia al archivo en S3 y se reenvían en base64 con los mismos
-  bytes en cada turno.
-- Red de seguridad: `prefix_mismatch_behavior: "drop_block"` (beta
-  `thinking-binding-controls-2026-08-01`) para degradar en vez de fallar.
+- `system` y `tools` quedan fijos por conversación (`prompt_version`). Si un despliegue los cambia,
+  la conversación se cierra y la siguiente arranca con la versión nueva.
+- **Se cierra la conversación** tras cada registro guardado, con `@limpiar`, tras 2 horas sin
+  escribir, tras un rechazo del modelo o al pasarse del tope. La siguiente arranca con el último
+  registro como contexto.
+- Las fotos se guardan como referencia al archivo en S3 y se reenvían con los mismos bytes.
+- Red de seguridad: `prefix_mismatch_behavior: "drop_block"`.
 
-### 4.5 Topes por turno (de Taimes)
+### 4.5 Topes y costo
 
-12 pasos y 15 llamadas a tools por turno en Gastos; 10 y 12 en Reportes. Al pasarse, el turno se
-corta con un mensaje honesto ("no pude terminar, intenta de nuevo") y queda en el log.
+12 llamadas al modelo y 15 llamadas a tools por turno (los de Taimes). El cache cubre el prompt, las
+herramientas y el historial. Cada conversación guarda sus tokens; `bin/rails whatsapp:costos`
+estima el costo de los últimos días.
 
 ## 5. Fases
 
-| Fase | Qué incluye | Cómo se prueba | Estado |
+| Fase | Qué incluye | Commit | Estado |
 |---|---|---|---|
-| **0. Meta** | App "Controlmatica IA" (ID `1642751460907407`), número registrado, token permanente, verificación del negocio, publicar la app | Mensaje real al 318 | En curso (§6) |
-| **1. Canal** | GoodJob + Procfile, tablas, webhook con firma, `Whatsapp::Client`, identificación, archivo a S3, respuesta "Recibido", página `/privacidad` | Suite; mensaje real cuando el número esté registrado | — |
-| **2. Agente** | Cliente de Claude, extractor propio (`call_vision_model`), `Agente::Runner`, prompts portados, borrador + botones, Reportes de Servicio, validaciones al servidor | Suite con Claude falso; gastos reales de prueba | — |
-| **3. Avisos** | WhatsApp junto a los correos de aprobado/rechazado/pendiente; plantillas utility fuera de la ventana de 24 h | Aprobar un gasto desde la web | — |
-| **4. Voz y casos especiales** | Transcripción de notas de voz, vinculación por BSUID (usernames de WhatsApp), escalamiento a una persona, costo por conversación | Notas de voz reales | — |
-| **5. Corte** | Avisar el número nuevo (instructivo de campo), apagar Taimes, rotar `MCP_API_KEY`, borrar `TAIMES_*` | Taimes apagado | — |
+| 0. Meta | App "Controlmatica IA" (`1642751460907407`), número, token, verificación, publicar | — | **En curso (§6)** |
+| 1. Canal | GoodJob + Procfile, tablas, webhook, `Whatsapp::Client`, identidad, archivo a S3, `/privacidad` | 5ae942f, 11f71c0 | Hecha |
+| 2. Agente | Extractor con Claude, `Agente::*`, prompt portado, borrador + botones, veredicto al crear | 988e621, 43df7fa | Hecha |
+| 3. Avisos | WhatsApp junto a los correos de aprobación; plantillas fuera de la ventana de 24 h | 1e783b4 | Hecha (falta crear las plantillas en Meta, §7) |
+| 4. Voz y casos especiales | Transcripción, vinculación por enlace, contacto humano, tareas de registro y costos | ed4fb47 | Hecha |
+| 5. Corte | Instructivo de campo, comentarios, docs; apagar Taimes y rotar `MCP_API_KEY` | este commit | Código hecho; lo operativo en §9 |
+
+Suite al cerrar: 1646 corridas, 0 fallos (`NODE_OPTIONS=--openssl-legacy-provider TZ=UTC bin/rails test`).
+**Nada probado contra Meta ni contra Claude de verdad todavía**: todo con dobles.
 
 ## 6. Estado en Meta al 2026-10-19
 
 - Portafolio Controlmatica **sin verificar** → tope de 2 números (por eso no se pudo pedir número
   de prueba). Verificar el negocio sube el tope a 20.
 - El 318 está **"No registrado"**. El botón Registrar devolvió un error genérico y el cambio de PIN
-  también: Meta no deja poner PIN a un número sin registrar. Siguiente paso: consultar su estado
-  por la API y hacer `request_code` → `verify_code` → `register` con el token.
+  también (Meta no deja poner PIN a un número sin registrar). Siguiente paso: las tareas
+  `whatsapp:*` de §9, que muestran el error exacto.
 - El token permanente del usuario de sistema exige que **otro administrador lo apruebe** (David
-  Londoño, gerencia@controlmatica.com.co). La primera solicitud tenía los permisos equivocados.
+  Londoño, gerencia@controlmatica.com.co). La primera solicitud tenía permisos equivocados; los
+  correctos son `whatsapp_business_messaging` y `whatsapp_business_management`.
 - El medio de pago ya existe en la cuenta.
-- La app está **sin publicar**: Meta solo entrega webhooks de prueba hasta publicarla, y para
-  publicar pide una URL de política de privacidad (la fase 1 agrega `/privacidad`).
-- No tocar el **+57 316 505 7782**: está conectado, no es de este proyecto.
+- La app está **sin publicar**: Meta solo entrega webhooks de prueba hasta publicarla. La URL de
+  privacidad que pide es `https://controlmatica.herokuapp.com/privacidad` (revisar el texto con
+  quien responda por datos personales en Controlmatica).
+- No tocar el **+57 316 505 7782**: está conectado y no es de este proyecto. El webhook ignora sus
+  mensajes aunque lleguen.
 
-## 7. Variables de entorno
+## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
-| Variable | Para qué |
-|---|---|
-| `WHATSAPP_TOKEN` | Token del usuario de sistema (`whatsapp_business_messaging` + `whatsapp_business_management`) |
-| `WHATSAPP_PHONE_NUMBER_ID` | `1282550828280577` |
-| `WHATSAPP_WABA_ID` | `2318917928941844` |
-| `WHATSAPP_VERIFY_TOKEN` | Lo inventamos nosotros; Meta lo repite en el GET de alta del webhook |
-| `META_APP_SECRET` | Firma de cada POST del webhook |
-| `WHATSAPP_GRAPH_VERSION` | `v25.0` |
-| `WHATSAPP_ENABLED` | Kill switch del canal (arranca en `false`) |
-| `ANTHROPIC_API_KEY` | Fase 2 |
-| `AGENTE_MODELO` | Fase 2, por defecto `claude-opus-5-5` |
+Fuera de la ventana de 24 h desde el último mensaje de la persona, Meta solo deja mandar plantillas
+aprobadas. Categoría **Utilidad**, idioma **Español (es)**. El texto puede cambiar; lo que no puede
+cambiar es la cantidad y el orden de las variables, que salen de
+`Whatsapp::Avisos.parametros_de_plantilla`.
 
-`WHATSAPP_PIN` solo se usa para registrar el número; no hace falta en Heroku.
+| ENV | Nombre sugerido | Cuerpo |
+|---|---|---|
+| `WHATSAPP_PLANTILLA_DECISION` | `aviso_decision_gasto` | Hola {{1}}, tu gasto #{{2}} ({{3}}) fue {{4}} por {{5}}. Puedes ver el detalle en Controlmatica. |
+| `WHATSAPP_PLANTILLA_PENDIENTE` | `aviso_gasto_pendiente` | Hola {{1}}, tienes un gasto por aprobar: #{{2}} de {{3}} ({{4}}) en el centro {{5}}. Revísalo en Controlmatica. |
 
-## 8. Riesgos
+Sin la plantilla, fuera de la ventana no se manda nada: el correo ya salió.
 
-1. **El webhook vive en Heroku**: si la cuenta se suspende (aviso del 20-oct), el canal se cae.
-2. **Usernames de WhatsApp**: desde abril de 2026 un mensaje puede llegar sin teléfono, solo con
-   el BSUID. La identidad busca primero por BSUID y lo guarda en `users.whatsapp_user_id` la
-   primera vez que la persona escribe con teléfono. La vinculación sin teléfono es fase 4.
-3. **Límite de 1 mensaje cada 6 s a la misma persona** y orden de entrega no garantizado: un solo
-   mensaje rico por paso.
-4. **Política de IA de Meta**: un asistente de la empresa para sus empleados está permitido (la IA
-   es auxiliar). El bot no debe funcionar como chat de propósito general y debe ofrecer hablar con
-   una persona.
-5. **Costo del modelo**: con Opus 5.5 (USD 4/20 por millón) un gasto puede costar varias veces lo
-   que costaba con Gemini flash-lite. Se registra el uso de cada turno desde el primer día.
+## 8. Variables de entorno
+
+| Variable | Para qué | Obligatoria |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Agente y lectura del formulario | Sí, para la IA |
+| `MCP_API_KEY` | El agente llama las tools en proceso y autorizan contra ella | Sí (ya existe) |
+| `WHATSAPP_TOKEN` | Token del usuario de sistema | Sí |
+| `WHATSAPP_PHONE_NUMBER_ID` | `1282550828280577` | Sí |
+| `WHATSAPP_WABA_ID` | `2318917928941844` (solo para `whatsapp:suscribir`) | Para activar |
+| `META_APP_SECRET` | Firma de cada POST del webhook | Sí |
+| `WHATSAPP_VERIFY_TOKEN` | Clave larga al azar; se repite en el panel de Meta | Sí |
+| `WHATSAPP_ENABLED` | Kill switch del canal (arranca en `false`) | — |
+| `WHATSAPP_NUMERO_PUBLICO` | `573189262630`, para el enlace de vinculación | Recomendada |
+| `WHATSAPP_CONTACTO_HUMANO` | A quién deriva el agente ("contabilidad@… o +57 …") | Recomendada |
+| `OPENAI_API_KEY` | Notas de voz; sin ella se pide escribir | Para voz |
+| `WHATSAPP_AVISOS` | Avisos por WhatsApp (además de `EXPENSE_APPROVAL_EMAIL`) | — |
+| `WHATSAPP_PLANTILLA_DECISION` / `_PENDIENTE` / `_IDIOMA` | §7 | — |
+| `RECEIPT_EXTRACTION_ENABLED` | Botón "Extraer" del formulario web | — |
+| `AGENTE_MODELO`, `AGENTE_EFFORT`, `RECEIPT_EXTRACTION_MODEL`, `TRANSCRIPCION_MODELO` | Cambiar modelos sin desplegar | — |
+| `GOOD_JOB_EXECUTION_MODE`, `GOOD_JOB_MAX_THREADS` | `external` en el web cuando haya worker | — |
+| `WHATSAPP_GRAPH_VERSION` | Por defecto `v25.0` | — |
+
+`WHATSAPP_PIN` solo se usa para registrar el número (`heroku run`), no se deja en Heroku.
+
+## 9. Puesta en marcha, en orden
+
+1. **Heroku al día.** El aviso de suspensión del 20-oct tumba el webhook y el resto de la app.
+2. **Desplegar la rama.** El Procfile nuevo corre `db:migrate` en la fase release: las migraciones
+   de este paquete (GoodJob y tablas de WhatsApp) entran solas.
+3. **Worker:** `heroku ps:scale worker=1` (web + worker en Basic: unos USD 14/mes) y
+   `GOOD_JOB_EXECUTION_MODE=external` en el web. Sin worker, los trabajos corren dentro del web.
+4. **Variables** de §8 (con `WHATSAPP_ENABLED=false` todavía).
+5. **Registrar el 318**, leyendo cada respuesta antes de seguir (máximo 10 intentos en 72 h):
+   ```
+   heroku run bin/rails whatsapp:estado
+   heroku run bin/rails "whatsapp:solicitar_codigo[SMS]"
+   heroku run bin/rails "whatsapp:verificar_codigo[123456]"
+   heroku run "WHATSAPP_PIN=###### bin/rails whatsapp:registrar"
+   ```
+6. **Webhook en la app de Meta:** URL `https://controlmatica.herokuapp.com/webhooks/whatsapp`,
+   el token de `WHATSAPP_VERIFY_TOKEN`, suscribir el campo `messages`, y
+   `heroku run bin/rails whatsapp:suscribir`.
+7. **Publicar la app** con la URL de privacidad.
+8. `WHATSAPP_ENABLED=true` y probar con un usuario real: texto, foto de un comprobante, Confirmar.
+9. **Avisos:** crear las plantillas de §7, y cuando estén aprobadas, `WHATSAPP_AVISOS=true`.
+10. **Corte con Taimes:** repartir el instructivo de campo con el número nuevo, apagar los agentes
+    de Controlmatica en Taimes, **rotar `MCP_API_KEY`** (Taimes la tiene) y borrar las tres
+    `TAIMES_*` de Heroku. Pedirle a Taimes el historial de conversaciones si se quiere conservar.
+
+## 10. Riesgos
+
+1. **Nada se probó contra Meta ni Claude reales.** El primer mensaje de verdad puede destapar
+   diferencias de forma (un campo del webhook, un parámetro de la API). Probar con una persona
+   antes de repartir el número.
+2. **Usernames de WhatsApp**: un mensaje puede llegar sin teléfono. La identidad busca primero por
+   BSUID; quien no se reconoce recibe el enlace de `/whatsapp/vincular` si
+   `WHATSAPP_NUMERO_PUBLICO` está cargado.
+3. **1 mensaje cada 6 s a la misma persona** y orden no garantizado: el agente manda un solo
+   mensaje por paso.
+4. **Política de IA de Meta**: un asistente de la empresa para sus empleados está permitido; el
+   prompt lo limita a gastos y reportes, y `WHATSAPP_CONTACTO_HUMANO` da la salida a una persona.
+5. **Costo del modelo**: con Opus 5.5 (USD 4/20 por millón) un gasto cuesta varias veces lo que
+   costaba con Gemini flash-lite. Medir con `whatsapp:costos` antes de decidir si se baja a Sonnet
+   5.5 o Haiku 5.5 (`AGENTE_MODELO`).
+6. **La política de privacidad** la escribió el desarrollo; conviene que la revise quien responda
+   por datos personales en Controlmatica.

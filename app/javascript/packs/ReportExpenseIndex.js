@@ -206,10 +206,10 @@ function estadoComprobanteVacio() {
   };
 }
 
-// KILL SWITCH de la captura asistida. Arranca APAGADO: el endpoint
-// POST /extract_receipt/report_expenses todavia no existe (la llamada al modelo
-// de vision la completa Taimes). Encenderlo es una linea en layouts/user.html.erb,
-// archivo con dueno por bloque, asi que no se escribe desde aqui.
+// KILL SWITCH de la captura asistida. Arranca APAGADO: la lectura le habla a
+// Claude (paquete 17) y se enciende con RECEIPT_EXTRACTION_ENABLED una vez
+// cargada la api key. El flag lo publica layouts/user.html.erb, archivo con
+// dueno por bloque, asi que no se escribe desde aqui.
 function receiptExtractionEnabled() {
   return window.CM_RECEIPT_EXTRACTION_ENABLED === true;
 }
@@ -1843,8 +1843,8 @@ class ReportExpenseIndex extends React.Component {
 
   renderExtraction = function() {
     var self = this;
-    // KILL SWITCH: sin el flag el boton no se pinta. El endpoint de extraccion
-    // lo completa Taimes; mientras tanto el formulario se llena a mano.
+    // KILL SWITCH: sin el flag el boton no se pinta y el formulario se llena
+    // a mano.
     if (!receiptExtractionEnabled()) return null;
 
     var x = this.state.extraction || EXTRACTION_VACIA;

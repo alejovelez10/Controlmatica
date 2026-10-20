@@ -93,7 +93,7 @@ class ReportExpenseSerializer < ActiveModel::Serializer
              :observations,
              # --- estado operativo (2026-10-06) ---
              # `is_acepted` sigue arriba y sigue viajando: lo lee el frontend que
-             # todavia no migro y lo recibe el agente de Taimes por el MCP. Es un
+             # todavia no migro y lo reciben las tools del MCP. Es un
              # metodo derivado del modelo, no la columna.
              :operational_state, :rejected_at, :rejection_reason
 

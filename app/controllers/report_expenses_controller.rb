@@ -444,7 +444,7 @@ class ReportExpensesController < ApplicationController
   #
   # Excepcion documentada de dueño (§7.2): esta accion es del paquete 10; el
   # resto del archivo sigue siendo del 07. Recibe el comprobante multipart, se
-  # lo pasa a ReceiptExtractionService (que llama al agente de Taimes) y
+  # lo pasa a ReceiptExtractionService (que le habla a Claude) y
   # devuelve los campos para PRE-CARGAR el formulario.
   #
   # NUNCA guarda nada: no instancia con save, no llama recalculate_cost_center.

@@ -35,7 +35,7 @@
 #     tiene 40 dias o no los tiene. Vive aqui para que un gasto que entra por la
 #     web se valide exactamente igual que uno que entra por WhatsApp.
 #   * SEMANTICA (agent_instructions): texto libre que este modelo NO evalua
-#     nunca. Lo juzga el agente de Taimes, que si tiene criterio, y el servidor
+#     nunca. Lo juzga el agente de IA, que si tiene criterio, y el servidor
 #     solo APLICA el veredicto que el agente le devuelve
 #     (ReportExpense#agent_policy_verdict).
 #
@@ -44,7 +44,7 @@
 #
 # LOS DOS CANALES JUZGAN EL TEXTO LIBRE (2026-10-03). Antes solo lo veia el
 # agente de WhatsApp; ahora la web tambien se lo manda al agente extractor al
-# pulsar "Extraer datos del comprobante" (docs/TAIMES-EXTRACTOR-COMPROBANTES.md).
+# pulsar "Extraer datos del comprobante" (desde el paquete 17, Claude directo).
 # Un gasto escrito a mano, sin esa lectura, sigue sin veredicto y se registra
 # igual: el servidor no sabe evaluar estas instrucciones y no puede frenar un
 # gasto por una pregunta que nadie hizo.

@@ -66,7 +66,7 @@ module Whatsapp
     end
 
     # Los parametros de la plantilla, en el orden de sus {{1}}, {{2}}...
-    # (docs/plan-gastos-ia/17-agente-whatsapp-propio.md §6.1).
+    # (docs/plan-gastos-ia/17-agente-whatsapp-propio.md §7).
     def parametros_de_plantilla(tipo, gasto, decisor)
       if tipo == "decision"
         [nombre(gasto.user_invoice), gasto.id.to_s, detalle(gasto),

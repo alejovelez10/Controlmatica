@@ -190,9 +190,9 @@ class ReportExpense < ApplicationRecord
   before_save :normalizar_datos_del_rechazo
 
   # `is_acepted` SOBREVIVE COMO LECTURA DERIVADA, y no es nostalgia: el MCP se lo
-  # expone al agente de Taimes (report_expenses_list_tool.rb) y el serializer se
-  # lo manda al frontend. Si desapareciera de golpe habria que cambiar el
-  # contrato con Taimes en el mismo despliegue que el estado, que es exactamente
+  # expone a quien consuma las tools (report_expenses_list_tool.rb) y el
+  # serializer se lo manda al frontend. Si desapareciera de golpe habria que
+  # cambiar ese contrato en el mismo despliegue que el estado, que es exactamente
   # la clase de cambio que no se puede revertir por partes.
   #
   # Se lee del campo NUEVO y no de la columna: asi un objeto en memoria al que le

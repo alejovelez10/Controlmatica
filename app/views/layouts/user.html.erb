@@ -1370,9 +1370,9 @@ window.CM_CURRENCIES = <%= raw get_currencies.to_json %>;
 // que la pantalla de Contabilidad no mencione el pack de Gastos.
 //
 // El valor lo manda el servidor: ReceiptExtractionService.enabled? lee el ENV
-// RECEIPT_EXTRACTION_ENABLED, que ARRANCA APAGADO a proposito (el seam
-// call_vision_model todavia no existe; lo completa Taimes). Encenderlo es
-// cambiar la variable de entorno, no tocar codigo.
+// RECEIPT_EXTRACTION_ENABLED, que ARRANCA APAGADO a proposito: la lectura le
+// habla a Claude (paquete 17) y se enciende una vez cargada la api key.
+// Encenderlo es cambiar la variable de entorno, no tocar codigo.
 window.CM_RECEIPT_EXTRACTION_ENABLED = <%= receipt_extraction_enabled? %>;
 
 // Global openMenu for cm-dt-menu dropdowns (used by all table components)
