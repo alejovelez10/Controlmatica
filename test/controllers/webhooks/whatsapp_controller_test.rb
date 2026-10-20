@@ -111,6 +111,16 @@ class Webhooks::WhatsappControllerTest < ActionDispatch::IntegrationTest
     assert_equal "read", saliente.reload.status
   end
 
+  test "el cuerpo del webhook no queda en el log" do
+    filtro = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
+    filtrado = filtro.filter("whatsapp" => { "object" => "whatsapp_business_account",
+                                             "entry" => [{ "id" => "1", "changes" => [] }] },
+                             "entry_date" => "2026-10-20")
+    assert_equal "[FILTERED]", filtrado["whatsapp"]["entry"]
+    assert_equal "whatsapp_business_account", filtrado["whatsapp"]["object"]
+    assert_equal "2026-10-20", filtrado["entry_date"]
+  end
+
   test "un cuerpo que no es JSON igual responde 200" do
     con_whatsapp do
       cuerpo = "esto no es json"
