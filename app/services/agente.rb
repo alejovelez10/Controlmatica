@@ -3,7 +3,12 @@
 # Gastos" y "Reportes de Servicio" de Taimes; sus prompts se portaron a
 # app/prompts/agente/sistema.md.
 module Agente
-  MODELO_POR_DEFECTO = "claude-opus-5-5".freeze
+  # Sonnet 5.5 y no Opus: con la misma conversacion de prueba (ticket en MXN
+  # hasta el bloqueo por tope, 2026-10-20) Opus tardo 13,8 s por respuesta y
+  # Sonnet 6,1 s, con el mismo resultado y a menos de la mitad del costo.
+  # Haiku 5.5 tambien acerto (6,9 s, unas 15 veces mas barato que Sonnet):
+  # se cambia con AGENTE_MODELO, sin desplegar.
+  MODELO_POR_DEFECTO = "claude-sonnet-5-5".freeze
 
   # Topes por turno (de Taimes, step_limits.py: "Asistente de Gastos" 12/15).
   # El peor turno legitimo es una foto: centros + reglas + tipos + medios +

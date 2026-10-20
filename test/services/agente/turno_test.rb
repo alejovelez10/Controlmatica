@@ -83,7 +83,7 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     turno(entrante("hola"), FakeClaudeClient.texto("ok"))
     cuerpo = @claude.pedidos.first[:cuerpo]
 
-    assert_equal "claude-opus-5-5", cuerpo[:model]
+    assert_equal "claude-sonnet-5-5", cuerpo[:model]
     assert_equal({ type: "ephemeral" }, cuerpo[:system].first[:cache_control])
     assert_equal({ type: "ephemeral" }, cuerpo[:cache_control])
     assert_equal "drop_block", cuerpo.dig(:thinking, :block_binding, :prefix_mismatch_behavior)

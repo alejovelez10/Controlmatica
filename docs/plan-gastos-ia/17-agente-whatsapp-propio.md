@@ -39,7 +39,7 @@ medición de cobro, BigQuery, gráficos y la bandeja para que una persona tome l
 | Número | **+57 318 926 2630** ("Controlmatica HK"), cuenta de WhatsApp Business `2318917928941844`, phone number ID `1282550828280577` | Confirmado por el usuario. Estaba "Pendiente": se iba a conectar con Twilio y nunca se hizo |
 | Canal | **Meta Cloud API directo**, sin intermediario | Menos de USD 2/mes; Twilio cobra por mensaje y amarra al formato de su API |
 | Graph API | `v25.0` por ENV (`WHATSAPP_GRAPH_VERSION`) | Disponible hasta jul-2028 |
-| Modelo | `claude-opus-5-5` por ENV (`AGENTE_MODELO`, `RECEIPT_EXTRACTION_MODEL`) | El valor por defecto de Anthropic; medir con `whatsapp:costos` y decidir si se baja |
+| Modelo | Agente: `claude-sonnet-5-5` (`AGENTE_MODELO`). Formulario: `claude-opus-5-5` (`RECEIPT_EXTRACTION_MODEL`) | Opus tardaba 13,8 s por respuesta del agente; Sonnet 6,1 s y Haiku 6,9 s con el mismo resultado (prueba del 2026-10-20). Se cambia sin desplegar |
 | Cliente de Claude | **HTTP directo con Faraday** | La gema oficial `anthropic` exige Ruby ≥ 3.2; el proyecto está en 3.1.2 |
 | Voz | OpenAI `gpt-transcribe` por HTTP (HTTParty) | Recibe el OGG de WhatsApp sin convertir; acepta términos literales; no entrena con los datos |
 | Cola | **GoodJob** (Postgres) | Funciona con Rails 6.1 + Ruby 3.1; Sidekiq 8 exige rack ≥ 3.1 |
@@ -240,8 +240,9 @@ Sin la plantilla, fuera de la ventana no se manda nada: el correo ya salió.
    mensaje por paso.
 4. **Política de IA de Meta**: un asistente de la empresa para sus empleados está permitido; el
    prompt lo limita a gastos y reportes, y `WHATSAPP_CONTACTO_HUMANO` da la salida a una persona.
-5. **Costo del modelo**: con Opus 5.5 (USD 4/20 por millón) un gasto cuesta varias veces lo que
-   costaba con Gemini flash-lite. Medir con `whatsapp:costos` antes de decidir si se baja a Sonnet
-   5.5 o Haiku 5.5 (`AGENTE_MODELO`).
+5. **Costo y tiempo del modelo**: la misma conversación de prueba (ticket en MXN hasta el bloqueo
+   por tope) costó unos USD 0,20 con Opus 5.5, 0,09 con Sonnet 5.5 y 0,006 con Haiku 5.5, a 13,8,
+   6,1 y 6,9 s por respuesta. Los tres acertaron. El agente arranca con Sonnet; con
+   `whatsapp:costos` y conversaciones reales se decide si baja a Haiku (`AGENTE_MODELO`).
 6. **La política de privacidad** la escribió el desarrollo; conviene que la revise quien responda
    por datos personales en Controlmatica.
