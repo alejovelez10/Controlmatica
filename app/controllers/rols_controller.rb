@@ -58,7 +58,10 @@ class RolsController < ApplicationController
   end
 
   def get_modules_with_actions
-    modules = ModuleControl.includes(:accion_modules).order(:name)
+    # La seccion del agente de WhatsApp va de ultima y no en su lugar
+    # alfabetico. partition y no sort_by: conserva el orden de los demas.
+    modules = ModuleControl.includes(:accion_modules).order(:name).to_a
+                           .partition { |m| m.name != Agente::Permisos::MODULO }.flatten
     render json: modules.as_json(
       only: [:id, :name],
       include: { accion_modules: { only: [:id, :name] } }

@@ -46,7 +46,9 @@ gerente:
 ingeniero:
   name: Ingeniero
   description: Solo crea y edita sus propios gastos
-  accion_modules: gastos_ingreso, gastos_crear, gastos_editar, reportes_ingreso
+  # El paquete 17 AGREGA las dos acciones del agente: es el rol de las pruebas de WhatsApp.
+  accion_modules: gastos_ingreso, gastos_crear, gastos_editar, reportes_ingreso,
+                  agente_registrar_gasto, agente_registrar_reporte
 
 contador:
   name: Contador

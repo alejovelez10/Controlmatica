@@ -115,13 +115,85 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     assert resultado["is_error"]
   end
 
-  test "records_search sobre users se niega" do
-    turno(entrante("busca usuarios"),
-          FakeClaudeClient.tools(["records_search", { entity: "users", q: "a" }]),
+  # ---- solo registra, no consulta (2026-10-20) --------------------------------
+
+  test "el modelo solo ve herramientas de creacion, ninguna de consulta" do
+    turno(entrante("hola"), FakeClaudeClient.texto("ok"))
+    nombres = @claude.pedidos.first[:cuerpo][:tools].map { |t| t["name"] }
+
+    assert_includes nombres, "proponer_gasto"
+    assert_includes nombres, "proponer_reporte"
+    %w[report_expenses_list report_expenses_get reports_list reports_get records_aggregate
+       expense_budgets_available expense_budgets_list].each { |consulta| refute_includes nombres, consulta }
+  end
+
+  test "una consulta que el modelo intente igual se niega" do
+    turno(entrante("que gastos registre"),
+          FakeClaudeClient.tools(["report_expenses_list", {}]),
           FakeClaudeClient.texto("No puedo"))
     resultado = @claude.pedidos.last[:cuerpo][:messages].last["content"].first
     assert resultado["is_error"]
-    assert_includes resultado["content"], "usuarios"
+    assert_includes resultado["content"], "no está disponible"
+  end
+
+  test "records_search solo busca centros de costo y clientes" do
+    %w[users commissions customer_invoices report_expenses].each do |entidad|
+      turno(entrante("busca"), FakeClaudeClient.tools(["records_search", { entity: entidad, q: "a" }]),
+            FakeClaudeClient.texto("No puedo"))
+      resultado = @claude.pedidos.last[:cuerpo][:messages].last["content"].first
+      assert resultado["is_error"], "#{entidad} deberia negarse"
+      assert_includes resultado["content"], "no responde consultas"
+    end
+  end
+
+  test "de un centro de costo el modelo recibe solo lo que necesita para registrar" do
+    turno(entrante("es del centro"),
+          FakeClaudeClient.tools(["cost_centers_get", { id: @centro.id }]),
+          FakeClaudeClient.texto("ok"))
+    resultado = @claude.pedidos.last[:cuerpo][:messages].last["content"].first
+    datos = JSON.parse(resultado["content"])
+
+    assert_equal @centro.id, datos["id"]
+    assert datos.key?("hour_real")
+    refute datos.key?("quotation_value")
+    refute datos.key?("total_expenses")
+    refute datos.key?("counts")
+  end
+
+  test "sin el permiso de Ingresar viaticos un reporte con viaticos se rechaza" do
+    contacto = Contact.create!(name: "Laura Gómez", customer_id: @centro.customer_id, user_id: users(:admin).id)
+    args = { cost_center_id: @centro.id, contact_id: contacto.id, report_date: Date.current.iso8601,
+             working_time: 2, displacement_hours: 1, viatic_value: 50_000, work_description: "Mantenimiento",
+             resumen: "Voy a registrar este reporte de servicio:" }
+    turno(entrante("listo"), FakeClaudeClient.tools(["proponer_reporte", args]), FakeClaudeClient.texto("ok"))
+
+    assert_nil borrador
+    resultado = @claude.pedidos.last[:cuerpo][:messages].last["content"].first
+    assert_includes resultado["content"], "no registra viáticos"
+  end
+
+  test "si le quitan el permiso al rol con el resumen pendiente, Confirmar no guarda nada" do
+    turno(entrante("listo"), FakeClaudeClient.tools(["proponer_gasto", args_de_gasto]))
+    id = borrador["id"]
+    @usuario.rol.accion_modules.delete(accion_modules(:agente_registrar_gasto))
+
+    assert_no_difference -> { ReportExpense.count } do
+      turno(boton("borrador:confirmar:#{id}", "Confirmar"))
+    end
+    assert_includes @whatsapp.textos.last, "no tiene habilitado registrar gastos"
+    assert_equal "cancelado", borrador["estado"]
+  end
+
+  test "con solo el permiso de gastos el modelo no ve las herramientas de reportes" do
+    @usuario.rol.accion_modules.delete(accion_modules(:agente_registrar_reporte))
+    turno(entrante("hola"), FakeClaudeClient.texto("ok"))
+    nombres = @claude.pedidos.first[:cuerpo][:tools].map { |t| t["name"] }
+
+    assert_includes nombres, "proponer_gasto"
+    refute_includes nombres, "proponer_reporte"
+    refute_includes nombres, "contacts_list"
+    contexto = @claude.pedidos.first[:cuerpo][:messages].last["content"].first["text"]
+    assert_includes contexto, "NO puede registrar reportes de servicio"
   end
 
   test "ofrecer_opciones manda botones y termina el turno sin volver a llamar al modelo" do

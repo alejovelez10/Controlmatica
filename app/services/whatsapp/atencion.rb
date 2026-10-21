@@ -15,6 +15,12 @@ module Whatsapp
 
     TIPOS_SOPORTADOS = %w[text image document audio interactive button].freeze
 
+    # Su rol no tiene ninguna accion de la seccion "Agente de WhatsApp" de Roles.
+    SIN_PERMISO = (
+      "Tu rol en Controlmatica no tiene habilitado el asistente de WhatsApp. Si lo necesitas, " \
+      "pídele al administrador que te lo active."
+    ).freeze
+
     def initialize(mensaje, client: Client.new)
       @mensaje = mensaje
       @client = client
@@ -41,6 +47,14 @@ module Whatsapp
       end
 
       usuario = identidad.usuario
+      # Antes de abrir conversacion o bajar el archivo: sin permiso no se gasta
+      # nada, ni siquiera una llamada al modelo.
+      unless Agente::Permisos.para(usuario).alguno?
+        @mensaje.update!(user: usuario)
+        respondedor.texto(SIN_PERMISO)
+        return terminar!(nil)
+      end
+
       conversacion = WhatsappConversation.vigente_para(user: usuario, wa_id: @mensaje.wa_id,
                                                       bsuid: @mensaje.bsuid)
       conversacion.update!(last_inbound_at: Time.current, user: usuario)

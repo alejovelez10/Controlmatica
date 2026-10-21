@@ -5,23 +5,43 @@ module Agente
   # Las del MCP pasan por MCP::Server#handle y no se invocan a mano: asi se
   # conservan la validacion de argumentos contra el esquema, la identificacion
   # estricta del actor (server_context con su telefono y su correo),
-  # User.current en las escrituras, las reglas y el presupuesto. Son las mismas
-  # que usaban los agentes de Taimes, menos las de crear y adjuntar: crear lo
-  # hace el boton Confirmar (Agente::Borrador), no el modelo.
+  # User.current en las escrituras, las reglas y el presupuesto. Crear lo hace
+  # el boton Confirmar (Agente::Borrador), no el modelo.
+  #
+  # EL AGENTE SOLO REGISTRA, NO CONSULTA (decision del 2026-10-20): aqui estan
+  # unicamente las busquedas que la creacion necesita, cada persona ve solo las
+  # de lo que su rol le permite registrar (Agente::Permisos), y de cada
+  # respuesta el modelo recibe solo los CAMPOS que la creacion usa. Que el
+  # prompt diga "no respondas consultas" no es una barrera; esto si.
   class Herramientas
-    DEL_MCP = [
-      CostCentersListTool, CostCentersGetTool, RecordsSearchTool, RecordsAggregateTool,
-      ReportExpenseOptionsListTool, ExpenseRulesListTool, ExpenseRulesValidateTool,
-      ExpenseBudgetsAvailableTool, ExpenseBudgetsListTool, ExchangeRatesGetTool,
-      ReportExpensesListTool, ReportExpensesGetTool,
-      ContactsListTool, ReportsListTool, ReportsGetTool
-    ].freeze
+    # Encontrar el centro de costo, por codigo, por nombre o por el cliente.
+    PARA_EL_CENTRO = [CostCentersListTool, RecordsSearchTool].freeze
+    # Tipos y medios de pago, las reglas de la persona, validarlas y la tasa.
+    PARA_GASTOS = [ReportExpenseOptionsListTool, ExpenseRulesListTool, ExpenseRulesValidateTool,
+                   ExchangeRatesGetTool].freeze
+    # La tarifa hora del centro y los contactos del cliente.
+    PARA_REPORTES = [CostCentersGetTool, ContactsListTool].freeze
+    DEL_MCP = (PARA_EL_CENTRO + PARA_GASTOS + PARA_REPORTES).freeze
+
+    # records_search solo para encontrar el centro: por su nombre o por el
+    # nombre del cliente.
+    ENTIDADES_DE_BUSQUEDA = %w[cost_centers customers].freeze
+
+    # Lo unico que el modelo recibe de cada respuesta. Lo demas (valor
+    # cotizado, estados de facturacion y ventas, gastos del centro, NIT y
+    # telefonos de clientes y contactos) no lo necesita para registrar.
+    CAMPOS_DEL_CENTRO = %w[id code description service_type execution_state customer_id customer_name].freeze
+    CAMPOS = {
+      "cost_centers_list" => CAMPOS_DEL_CENTRO,
+      "cost_centers_get" => CAMPOS_DEL_CENTRO + %w[hour_real],
+      "records_search:cost_centers" => CAMPOS_DEL_CENTRO,
+      "records_search:customers" => %w[id name code],
+      "contacts_list" => %w[id name position customer_id]
+    }.freeze
 
     # Terminan el turno: mandan su propio mensaje a la persona y despues no se
     # vuelve a llamar al modelo.
     TERMINALES = %w[ofrecer_opciones proponer_gasto proponer_reporte].freeze
-
-    ENTIDADES_PROHIBIDAS = %w[users].freeze
 
     PROPIAS = [
       {
@@ -122,8 +142,27 @@ module Agente
 
     Resultado = Struct.new(:contenido, :error, :terminal, keyword_init: true)
 
-    def self.definiciones
-      @definiciones ||= (DEL_MCP.map { |tool| definicion_mcp(tool) } + PROPIAS.map(&:deep_stringify_keys)).freeze
+    # Las que ve el modelo, segun lo que la persona puede registrar. Una por
+    # combinacion de permisos: el prompt cacheado y la VERSION dependen de esto.
+    def self.definiciones(permisos)
+      clave = [permisos.registrar_gasto?, permisos.registrar_reporte?]
+      @definiciones ||= {}
+      @definiciones[clave] ||= nombres_permitidos(permisos).then do |nombres|
+        (DEL_MCP.map { |tool| definicion_mcp(tool) } + PROPIAS.map(&:deep_stringify_keys))
+          .select { |definicion| nombres.include?(definicion["name"]) }.freeze
+      end
+    end
+
+    def self.nombres_permitidos(permisos)
+      tools = []
+      tools += PARA_EL_CENTRO if permisos.alguno?
+      tools += PARA_GASTOS if permisos.registrar_gasto?
+      tools += PARA_REPORTES if permisos.registrar_reporte?
+      propias = []
+      propias << "ofrecer_opciones" if permisos.alguno?
+      propias += %w[proponer_gasto adjuntar_comprobante] if permisos.registrar_gasto?
+      propias << "proponer_reporte" if permisos.registrar_reporte?
+      tools.map(&:tool_name) + propias
     end
 
     # El esquema que publica la gema trae "$schema"; Claude no lo necesita.
@@ -133,16 +172,25 @@ module Agente
         "input_schema" => datos[:inputSchema].deep_stringify_keys.except("$schema") }
     end
 
-    def initialize(usuario:, mensaje:, conversacion:, respondedor:)
+    def initialize(usuario:, mensaje:, conversacion:, respondedor:, permisos: Permisos.para(usuario))
       @usuario = usuario
       @mensaje = mensaje
       @conversacion = conversacion
       @respondedor = respondedor
+      @permisos = permisos
     end
 
     # => Resultado(contenido: String, error: Boolean, terminal: Boolean)
     def ejecutar(nombre, argumentos)
       argumentos = (argumentos || {}).deep_stringify_keys
+      # Se vuelve a mirar aqui y no solo en la lista que ve el modelo: un
+      # nombre inventado, o una conversacion que empezo antes de que le
+      # quitaran el permiso, no pasan.
+      unless self.class.nombres_permitidos(@permisos).include?(nombre)
+        return Resultado.new(contenido: "La herramienta #{nombre} no está disponible para esta persona.",
+                             error: true, terminal: false)
+      end
+
       case nombre
       when "ofrecer_opciones" then ofrecer_opciones(argumentos)
       when "proponer_gasto" then Borrador.new(@conversacion, @usuario, @respondedor).proponer_gasto(argumentos, @mensaje)
@@ -164,15 +212,30 @@ module Agente
       unless self.class.del_mcp?(nombre)
         return Resultado.new(contenido: "No existe la herramienta #{nombre}.", error: true, terminal: false)
       end
-      if nombre.start_with?("records_") && ENTIDADES_PROHIBIDAS.include?(argumentos["entity"].to_s)
-        return Resultado.new(contenido: "No se consultan usuarios desde aquí.", error: true, terminal: false)
+      if nombre == "records_search" && !ENTIDADES_DE_BUSQUEDA.include?(argumentos["entity"].to_s)
+        return Resultado.new(contenido: "Aquí solo se busca para encontrar el centro de costo: entity " \
+                                        "\"cost_centers\" o \"customers\". El agente no responde consultas.",
+                             error: true, terminal: false)
       end
 
       respuesta = McpEnProceso.llamar(nombre, argumentos, usuario: @usuario, wa_id: @mensaje.wa_id)
-      Resultado.new(contenido: respuesta[:texto], error: respuesta[:error], terminal: false)
+      clave = nombre == "records_search" ? "#{nombre}:#{argumentos['entity']}" : nombre
+      Resultado.new(contenido: recortar(respuesta[:texto], CAMPOS[clave]), error: respuesta[:error], terminal: false)
     end
 
     private
+
+    # Deja en cada registro de la respuesta solo los campos permitidos. Un
+    # texto que no es JSON (un error) pasa tal cual.
+    def recortar(texto, campos)
+      return texto if campos.nil?
+
+      datos = JSON.parse(texto)
+      filtrar = ->(registro) { registro.is_a?(Hash) ? registro.slice(*campos, "count") : registro }
+      JSON.generate(datos.is_a?(Array) ? datos.map(&filtrar) : filtrar.call(datos))
+    rescue JSON::ParserError
+      texto
+    end
 
     def ofrecer_opciones(argumentos)
       texto = Formato.para_whatsapp(argumentos["texto"])

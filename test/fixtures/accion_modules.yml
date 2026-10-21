@@ -156,3 +156,15 @@ reglas_eliminar:
   name: Eliminar
   module_control: reglas_gastos
   user: admin
+
+# --- Paquete 17 (agente de WhatsApp) ----------------------------------------
+# Las dos acciones que Agente::Permisos referencia POR NOMBRE.
+agente_registrar_gasto:
+  name: Registrar gasto
+  module_control: agente_whatsapp
+  user: admin
+
+agente_registrar_reporte:
+  name: Registrar reporte de servicios
+  module_control: agente_whatsapp
+  user: admin

@@ -185,6 +185,27 @@ portafolio (sin ella Meta bloquea los envíos, error 141006); esa es la cuenta q
 socio: no usarla. Prueba del 2026-10-20 22:15: envío `200` y los tres avisos (enviado, entregado,
 leído) llegaron al webhook.
 
+## 6.1 Permisos por rol: el agente solo registra (2026-10-20)
+
+Decisión del usuario: **el agente no consulta nada, solo hace el proceso de creación**, y lo que
+cada persona puede registrar lo decide su rol en una sección propia de la pantalla de Roles,
+**"Agente de WhatsApp"** (de última, no en su lugar alfabético), con dos acciones: **Registrar
+gasto** y **Registrar reporte de servicios**. Se crea con `rake permissions_agente_whatsapp:install`
+(idempotente; la primera vez se la asigna solo a Administrador). Aquí Administrador **no** es un
+bypass: sin la casilla no usa el agente.
+
+- Sin ninguna de las dos: `Whatsapp::Atencion` contesta `SIN_PERMISO` y no llama al modelo.
+- Con una: el modelo solo ve las herramientas de eso (`Agente::Herramientas.definiciones(permisos)`)
+  y el `[Contexto]` le dice qué no puede. Se vuelve a revisar al ejecutar cada herramienta y al
+  tocar Confirmar (le pueden quitar el permiso con el resumen pendiente).
+- Las herramientas de consulta salieron (`report_expenses_*`, `reports_*`, `records_aggregate`,
+  `expense_budgets_*`); `records_search` solo acepta `cost_centers` y `customers` (para encontrar
+  el centro), y de cada respuesta el modelo recibe solo los campos que la creación usa
+  (`Herramientas::CAMPOS`): nada de valor cotizado, estados de facturación, gastos del centro, NIT ni
+  teléfonos.
+- Viáticos de un reporte: la misma regla de la web (`ReportsController`): Administrador o
+  "Reportes de servicios → Ingresar viaticos". Sin eso, un reporte con viáticos se rechaza.
+
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
 Fuera de la ventana de 24 h desde el último mensaje de la persona, Meta solo deja mandar plantillas
@@ -242,7 +263,8 @@ Sin la plantilla, fuera de la ventana no se manda nada: el correo ya salió.
    el token de `WHATSAPP_VERIFY_TOKEN`, suscribir el campo `messages`, y
    `heroku run bin/rails whatsapp:suscribir`.
 7. **Publicar la app** con la URL de privacidad.
-8. `WHATSAPP_ENABLED=true` y probar con un usuario real: texto, foto de un comprobante, Confirmar.
+8. `heroku run rake permissions_agente_whatsapp:install` y marcar en Roles quién usa el agente (§6.1).
+   Luego `WHATSAPP_ENABLED=true` y probar con un usuario real: texto, foto de un comprobante, Confirmar.
 9. **Avisos:** crear las plantillas de §7, y cuando estén aprobadas, `WHATSAPP_AVISOS=true`.
 10. **Corte con Taimes:** repartir el instructivo de campo con el número nuevo, apagar los agentes
     de Controlmatica en Taimes, **rotar `MCP_API_KEY`** (Taimes la tiene) y borrar las tres

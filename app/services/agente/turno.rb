@@ -32,6 +32,7 @@ module Agente
       @conversacion = conversacion
       @respondedor = respondedor
       @claude = claude || Claude::Client.new(read_timeout: 120)
+      @permisos = Permisos.para(usuario)
     end
 
     def call
@@ -103,13 +104,13 @@ module Agente
     # --- Con el modelo -------------------------------------------------------
 
     def conversar(texto_forzado = nil)
-      herramientas = Herramientas.definiciones
+      herramientas = Herramientas.definiciones(@permisos)
       version = Prompt.version(herramientas)
       renovar_si_cambio_la_version(version)
 
       mensajes = @conversacion.messages + [{ "role" => "user", "content" => contenido_del_usuario(texto_forzado) }]
       ejecutor = Herramientas.new(usuario: @usuario, mensaje: @mensaje, conversacion: @conversacion,
-                                  respondedor: @respondedor)
+                                  respondedor: @respondedor, permisos: @permisos)
       resultado = ciclo(mensajes, herramientas, ejecutor)
 
       case resultado[:fin]
@@ -197,6 +198,7 @@ module Agente
       ahora = Time.current.in_time_zone("America/Bogota")
       lineas = ["[Contexto] Te escribe #{nombre_del_usuario}. Hoy es #{fecha_larga(ahora)} " \
                 "(#{ahora.strftime('%Y-%m-%d')}), hora de Colombia #{ahora.strftime('%H:%M')}."]
+      lineas << @permisos.descripcion
       previo = ultimo_registro
       lineas << "Lo último que registró por aquí: #{previo}." if previo
       contacto = ENV["WHATSAPP_CONTACTO_HUMANO"].presence

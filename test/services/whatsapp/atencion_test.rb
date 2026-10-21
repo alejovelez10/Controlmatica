@@ -50,6 +50,19 @@ class Whatsapp::AtencionTest < ActiveSupport::TestCase
     assert mensaje.reload.procesado?
   end
 
+  # El rol administrador de los fixtures no tiene las acciones del agente: en
+  # el agente, Administrador no es un bypass.
+  test "si su rol no tiene la seccion del agente, se le avisa y no se abre conversacion" do
+    cliente = FakeWhatsappClient.new
+    mensaje = entrante(wa_id: "573105550000", bsuid: nil)
+    assert_no_difference -> { WhatsappConversation.count } do
+      Whatsapp::Atencion.new(mensaje, client: cliente).call
+    end
+    assert_equal [Whatsapp::Atencion::SIN_PERMISO], cliente.textos
+    assert_equal users(:admin), mensaje.reload.user
+    assert mensaje.procesado?
+  end
+
   test "un numero repetido en dos usuarios recibe el aviso de ambiguo" do
     cliente = FakeWhatsappClient.new
     Whatsapp::Atencion.new(entrante(wa_id: "573009999999", bsuid: nil), client: cliente).call

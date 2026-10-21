@@ -60,3 +60,11 @@ reglas_gastos:
   name: Reglas de gastos
   description: Reglas configurables de antiguedad, tope y duplicados de los gastos
   user: admin
+
+# --- Paquete 17 (agente de WhatsApp) ----------------------------------------
+# Se AGREGA la etiqueta (matriz §7.2). Lo que cada rol puede registrar por
+# WhatsApp; el nombre lo lee Agente::Permisos::MODULO.
+agente_whatsapp:
+  name: Agente de WhatsApp
+  description: Lo que la persona puede registrar por WhatsApp
+  user: admin

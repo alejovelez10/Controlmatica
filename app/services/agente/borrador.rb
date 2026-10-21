@@ -25,6 +25,7 @@ module Agente
       @conversacion = conversacion
       @usuario = usuario
       @respondedor = respondedor
+      @permisos = Permisos.para(usuario)
     end
 
     def self.pendiente(conversacion)
@@ -56,6 +57,11 @@ module Agente
       datos = args.slice(*CAMPOS_REPORTE).compact
       error = error_de_reporte(datos)
       return rechazo(error) if error
+      if viaticos_sin_permiso?(datos)
+        return rechazo("Esta persona no registra viáticos en los reportes (igual que en el sistema). Propón " \
+                       "con viatic_value 0 y sin viatic_description, y dile que los viáticos los carga " \
+                       "quien tiene ese permiso.")
+      end
 
       guardar_y_enviar("reporte", datos, args["resumen"], [])
     end
@@ -73,6 +79,8 @@ module Agente
         return responder("Ese resumen venció (pasaron más de 15 minutos) y no guardé nada. " \
                          "Envíame de nuevo el comprobante o los datos y lo armamos otra vez.")
       end
+
+      return sin_permiso!(borrador) unless permitido?(borrador)
 
       borrador["tipo"] == "reporte" ? crear_reporte!(borrador) : crear_gasto!(borrador)
     end
@@ -188,6 +196,29 @@ module Agente
       lineas = ["✅ Listo, quedó registrado el reporte *#{codigo}*."]
       lineas << "Valor: #{ExpenseBudgetService.money(reporte['total_value'].to_d)}" if reporte["total_value"].present?
       terminar!(borrador, reporte["id"], lineas.join("\n"), "reporte #{codigo}")
+    end
+
+    # --- Permisos ------------------------------------------------------------
+
+    # Se mira otra vez al confirmar, no solo al proponer: le pueden quitar el
+    # permiso al rol mientras el resumen espera el boton.
+    def permitido?(borrador)
+      if borrador["tipo"] == "reporte"
+        @permisos.registrar_reporte? && !viaticos_sin_permiso?(borrador["args"] || {})
+      else
+        @permisos.registrar_gasto?
+      end
+    end
+
+    def viaticos_sin_permiso?(datos)
+      datos["viatic_value"].to_f.positive? && !@permisos.ingresar_viaticos?
+    end
+
+    def sin_permiso!(borrador)
+      actualizar(borrador.merge("estado" => "cancelado"))
+      que = borrador["tipo"] == "reporte" ? "reportes de servicio" : "gastos"
+      responder("Tu rol no tiene habilitado registrar #{que} por aquí, así que no guardé nada. " \
+                "Si lo necesitas, pídeselo al administrador.")
     end
 
     # --- Comun ---------------------------------------------------------------

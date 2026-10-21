@@ -11,7 +11,10 @@
 
 - **Registrar un gasto**: mande la foto del comprobante (o el PDF), una nota de voz o un texto.
 - **Registrar un reporte de servicio**: escriba "reporte" y el asistente le pide los datos.
-- **Consultar**: "¿qué gastos registré esta semana?", "¿cuánto me queda de presupuesto?".
+
+Por aquí **solo se registra**: las consultas (sus gastos, sus reportes, el presupuesto) se hacen
+en el sistema, como siempre. Lo que cada persona puede registrar depende de su rol; si el
+asistente le dice que su rol no lo tiene habilitado, pídaselo al administrador.
 
 Lo más rápido y confiable para un gasto es **la foto del comprobante**: completa, derecha y con
 buena luz. Puede mandar la foto **y** un texto o una nota de voz con lo que falte.
