@@ -1,7 +1,7 @@
 # El agente de WhatsApp de Controlmatica (paquete 17): registra gastos y
 # reportes de servicio conversando. Reemplaza a los agentes "Asistente de
 # Gastos" y "Reportes de Servicio" de Taimes; sus prompts se portaron a
-# app/prompts/agente/sistema.md.
+# app/prompts/agente/sistema.markdown.
 module Agente
   # Sonnet 5.5 y no Opus: con la misma conversacion de prueba (ticket en MXN
   # hasta el bloqueo por tope, 2026-10-20) Opus tardo 13,8 s por respuesta y

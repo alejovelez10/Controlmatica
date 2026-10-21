@@ -49,6 +49,16 @@ module Whatsapp
       raise if e.transitorio?
 
       marcar_fallido(e)
+    rescue Claude::Client::Error
+      raise
+    rescue StandardError => e
+      # Un error que no es de Meta ni de Claude es un bug: reintentarlo no lo
+      # arregla, pero la persona no puede quedarse esperando en silencio (visto
+      # el 2026-10-20: faltaba el prompt en produccion y no le llego nada). Se
+      # vuelve a levantar para que quede en GoodJob.
+      marcar_fallido(e)
+      avisar_fallo
+      raise
     end
 
     def marcar_fallido(error)

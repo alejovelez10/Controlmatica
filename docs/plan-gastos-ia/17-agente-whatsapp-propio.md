@@ -26,7 +26,7 @@ Revisado en `~/Documents/kmizen-sgi/kmizen-ai-service` y `~/Documents/kmizen-sgi
 | Canal WhatsApp (Twilio) | Recibir, responder, botones, menú de agentes | Meta Cloud API directo (`Whatsapp::Client`) |
 | Notas de voz | Opus → Vorbis con ffmpeg y el audio a Gemini | Transcripción con OpenAI `gpt-transcribe` + Claude |
 | Historial | Tope de 40 mensajes, corte tras cada registro, `@limpiar` | Corte tras cada registro, `@limpiar`, 2 h de inactividad (§4.4) |
-| Prompts | `ops/body_*_controlmatica.md`, `body_extractor_comprobantes.md` | `app/prompts/agente/sistema.md` |
+| Prompts | `ops/body_*_controlmatica.md`, `body_extractor_comprobantes.md` | `app/prompts/agente/sistema.markdown` |
 
 Lo que **no** se copió porque es de Taimes como plataforma: su tabla de usuarios con contraseñas y
 verificación por código (aquí manda `users.phone`, y Meta garantiza el remitente), multi-empresa,
