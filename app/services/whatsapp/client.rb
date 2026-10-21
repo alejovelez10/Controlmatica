@@ -45,6 +45,26 @@ module Whatsapp
     MAX_DESCRIPCION_FILA = 72
     MAX_BYTES_ARCHIVO = 20.megabytes
 
+    # Faraday desarma la query de la URL y la vuelve a armar ORDENADA
+    # (sort_params). La URL del archivo (lookaside.fbsbx.com) viene firmada y
+    # con el orden cambiado Meta responde 401: visto el 2026-10-20 con la
+    # primera foto real. Este codificador la arma en el mismo orden.
+    module QueryEnOrden
+      module_function
+
+      def decode(query)
+        Faraday::FlatParamsEncoder.decode(query)
+      end
+
+      def encode(params)
+        return nil if params.nil? || params.empty?
+
+        params.map do |clave, valor|
+          valor.nil? ? Faraday::Utils.escape(clave) : "#{Faraday::Utils.escape(clave)}=#{Faraday::Utils.escape(valor)}"
+        end.join("&")
+      end
+    end
+
     TIMEOUT_CONEXION = 3
     TIMEOUT_LECTURA = 20
 
@@ -133,6 +153,7 @@ module Whatsapp
       respuesta = @conexion.get(info["url"]) do |req|
         req.headers["Authorization"] = "Bearer #{@token}"
         req.options.timeout = 60
+        req.options.params_encoder = QueryEnOrden
       end
       unless respuesta.success?
         raise Error.new("Meta no entrego el archivo (HTTP #{respuesta.status})", http_status: respuesta.status)

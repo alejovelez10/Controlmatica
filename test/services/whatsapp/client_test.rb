@@ -82,6 +82,21 @@ class Whatsapp::ClientTest < ActiveSupport::TestCase
     assert_equal "application/pdf", descarga[:mime]
   end
 
+  # Visto el 2026-10-20 con la primera foto real: Faraday ordenaba la query
+  # (ext, hash, mid, source) y Meta, que firma la URL, respondia 401.
+  test "la URL del archivo se pide con los parametros en el orden en que la manda Meta" do
+    url = "https://lookaside.fbsbx.com/whatsapp_business/attachments/?mid=9&source=getMedia&ext=17&hash=AbC-_9x"
+    @stubs.get("/v25.0/media-3") do
+      [200, { "Content-Type" => "application/json" }, { url: url, mime_type: "image/jpeg", file_size: 3 }.to_json]
+    end
+    @stubs.get(url) do |env|
+      assert_equal "mid=9&source=getMedia&ext=17&hash=AbC-_9x", env.url.query
+      [200, { "Content-Type" => "image/jpeg" }, "jpg"]
+    end
+
+    assert_equal "jpg", @client.descargar_media("media-3")[:bytes]
+  end
+
   test "un archivo de mas de 20 MB se rechaza sin descargarlo" do
     @stubs.get("/v25.0/media-2") do
       [200, { "Content-Type" => "application/json" },
