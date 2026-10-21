@@ -165,6 +165,22 @@ cuenta no tenía plantillas ni apps suscritas; la app Controlmatica IA ya quedó
 `platform_type: CLOUD_API`. El PIN de verificación en dos pasos quedó en `WHATSAPP_PIN`; sin él
 no se puede volver a registrar el número. El primer token se revoca.
 
+**La trampa de las cuentas (2026-10-20, noche).** Con la app publicada, enviar daba `code 10,
+subcode 2593181: You do not have the necessary permissions to send messages on behalf of this
+WhatsApp Business Account` y los mensajes al 318 llegaban a Meta (doble chulito) pero nunca al
+webhook. Causa: hay dos cuentas llamadas "Controlmatica". El 318 estaba **vinculado** a la ficha
+del 316 dentro de la cuenta de mensajes `1019106677520170`, que tiene a **Zoho Corporation como
+socio con control total** (la "otra aplicación" del 316); Meta solo deja enviar "en nombre de"
+esa cuenta a la app del socio. El `2318917928941844` que se usó al principio es la ficha del 316,
+no la cuenta del 318 (`GET /{phone_number_id}?fields=health_status` dice la cuenta real).
+Arreglo: en Configuración del negocio → Cuentas de WhatsApp → ficha del 316 → Linked WhatsApp
+accounts → ⋯ del 318 → **Unlink number → Move this number to its own WhatsApp account** (no lo
+desconecta ni cambia su phone number ID). El 318 quedó en su propia cuenta **`1446442884115097`**,
+sin socios: `WHATSAPP_WABA_ID` apunta ahí, la app está suscrita solo ahí y los webhooks empezaron a
+llegar. Se quitó la suscripción de la app de `1019106677520170` y `2318917928941844`. Falta
+agregarle una cuenta de mensajes con medio de pago (sin ella Meta bloquea las conversaciones que
+inicia la empresa, error 141006).
+
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
 Fuera de la ventana de 24 h desde el último mensaje de la persona, Meta solo deja mandar plantillas
@@ -187,7 +203,7 @@ Sin la plantilla, fuera de la ventana no se manda nada: el correo ya salió.
 | `MCP_API_KEY` | El agente llama las tools en proceso y autorizan contra ella | Sí (ya existe) |
 | `WHATSAPP_TOKEN` | Token del usuario de sistema | Sí |
 | `WHATSAPP_PHONE_NUMBER_ID` | `1282550828280577` | Sí |
-| `WHATSAPP_WABA_ID` | `2318917928941844` (solo para `whatsapp:suscribir`) | Para activar |
+| `WHATSAPP_WABA_ID` | `1446442884115097`, la cuenta propia del 318 (solo para `whatsapp:suscribir`) | Para activar |
 | `META_APP_SECRET` | Firma de cada POST del webhook | Sí |
 | `WHATSAPP_VERIFY_TOKEN` | Clave larga al azar; se repite en el panel de Meta | Sí |
 | `WHATSAPP_ENABLED` | Kill switch del canal (arranca en `false`) | — |
