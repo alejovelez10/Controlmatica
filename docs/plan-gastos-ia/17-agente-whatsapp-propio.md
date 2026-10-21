@@ -177,9 +177,13 @@ Arreglo: en Configuración del negocio → Cuentas de WhatsApp → ficha del 316
 accounts → ⋯ del 318 → **Unlink number → Move this number to its own WhatsApp account** (no lo
 desconecta ni cambia su phone number ID). El 318 quedó en su propia cuenta **`1446442884115097`**,
 sin socios: `WHATSAPP_WABA_ID` apunta ahí, la app está suscrita solo ahí y los webhooks empezaron a
-llegar. Se quitó la suscripción de la app de `1019106677520170` y `2318917928941844`. Falta
-agregarle una cuenta de mensajes con medio de pago (sin ella Meta bloquea las conversaciones que
-inicia la empresa, error 141006).
+llegar. Se quitó la suscripción de la app de `1019106677520170` y `2318917928941844`. Después se le
+creó la cuenta de mensajes propia **"Controlmatica IA" (`1658749665964154`)** con la Mastercard del
+portafolio (sin ella Meta bloquea los envíos, error 141006); esa es la cuenta que reporta
+`health_status` y la que va en `WHATSAPP_WABA_ID`, con la app suscrita. Ojo: la moneda quedó en
+**AED** y no se puede cambiar. La otra "Controlmatica" (`1622289719622646`) tiene a **Twilio** de
+socio: no usarla. Prueba del 2026-10-20 22:15: envío `200` y los tres avisos (enviado, entregado,
+leído) llegaron al webhook.
 
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
@@ -203,7 +207,7 @@ Sin la plantilla, fuera de la ventana no se manda nada: el correo ya salió.
 | `MCP_API_KEY` | El agente llama las tools en proceso y autorizan contra ella | Sí (ya existe) |
 | `WHATSAPP_TOKEN` | Token del usuario de sistema | Sí |
 | `WHATSAPP_PHONE_NUMBER_ID` | `1282550828280577` | Sí |
-| `WHATSAPP_WABA_ID` | `1446442884115097`, la cuenta propia del 318 (solo para `whatsapp:suscribir`) | Para activar |
+| `WHATSAPP_WABA_ID` | `1658749665964154`, la cuenta de mensajes del 318 (solo para `whatsapp:suscribir`) | Para activar |
 | `META_APP_SECRET` | Firma de cada POST del webhook | Sí |
 | `WHATSAPP_VERIFY_TOKEN` | Clave larga al azar; se repite en el panel de Meta | Sí |
 | `WHATSAPP_ENABLED` | Kill switch del canal (arranca en `false`) | — |
