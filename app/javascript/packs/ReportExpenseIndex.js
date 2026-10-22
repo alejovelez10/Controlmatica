@@ -420,7 +420,12 @@ class ReportExpenseIndex extends React.Component {
           estado.isPendingSecond
             ? React.createElement("option", { value: "pendiente_segunda", disabled: true }, "Pendiente 2ª")
             : null,
-          React.createElement("option", { value: "aceptado" }, estado.isPendingSecond ? "Aceptado (2ª aprobación)" : "Aceptado"),
+          // La segunda firma solo se le ofrece a quien le toca. Quien dio la
+          // primera tambien puede decidir la fila (por ejemplo, el dueño del
+          // centro) y el servidor se la rechazaria.
+          !estado.isPendingSecond || self.puedeDarSegunda(row)
+            ? React.createElement("option", { value: "aceptado" }, estado.isPendingSecond ? "Aceptado (2ª aprobación)" : "Aceptado")
+            : null,
           React.createElement("option", { value: "rechazado" }, "Rechazado")
         ),
           aviso

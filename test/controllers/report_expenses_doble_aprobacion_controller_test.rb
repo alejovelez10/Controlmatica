@@ -110,6 +110,23 @@ class ReportExpensesDobleAprobacionControllerTest < ActionDispatch::IntegrationT
     assert_empty json["data"]
   end
 
+  # El dueño del centro que ademas es del cargo aprobador: da la primera firma y
+  # la segunda le toca a otro del cargo, no a el.
+  test "quien dio la primera firma no ve el gasto en su pestaña de segunda aprobacion" do
+    @dueno.update_columns(rol_id: @gerente.rol_id)
+    post expense_approval_path, params: { t: ExpenseApprovalToken.generate(@gasto) }
+    assert @gasto.reload.pendiente_segunda?
+    assert_equal @dueno.id, @gasto.first_approved_by_id
+
+    sign_in_as @dueno
+    get get_report_expenses_path, params: { scope: "second_approval" }
+    assert_empty json["data"]
+
+    sign_in_as @gerente
+    get get_report_expenses_path, params: { scope: "second_approval" }
+    assert_equal [@gasto.id], json["data"].map { |r| r["id"] }
+  end
+
   test "los gastos sin doble aprobacion no traen nada nuevo en la fila" do
     sign_in_as @admin
     get get_report_expenses_path, params: { scope: "all" }

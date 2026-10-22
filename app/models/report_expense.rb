@@ -173,9 +173,14 @@ class ReportExpense < ApplicationRecord
 
   # Los gastos en los que `user` figura como segundo aprobador, por persona o
   # por cargo. Contencion de jsonb (`@>`): la foto es una lista de objetos.
+  #
+  # Menos los que el mismo firmo primero, igual que `puede_dar_segunda_aprobacion?`
+  # (2026-10-22): el dueño del centro que es tambien del cargo aprobador veia en
+  # su pestaña un gasto que el servidor no le deja aprobar.
   scope :para_segundo_aprobador, ->(user) {
     condicion = where("second_approval_rules @> ?", [{ user_id: user.id }].to_json)
-    user.rol_id ? condicion.or(where("second_approval_rules @> ?", [{ rol_id: user.rol_id }].to_json)) : condicion
+    condicion = condicion.or(where("second_approval_rules @> ?", [{ rol_id: user.rol_id }].to_json)) if user.rol_id
+    condicion.where("report_expenses.first_approved_by_id IS DISTINCT FROM ?", user.id)
   }
 
   validates :operational_state, inclusion: { in: OPERATIONAL_STATES }
