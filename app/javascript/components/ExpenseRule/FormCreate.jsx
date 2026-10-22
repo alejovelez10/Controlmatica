@@ -292,6 +292,63 @@ class ExpenseRuleFormCreate extends Component {
           </div>
         </div>
 
+        {/* --- 5. Doble aprobacion (2026-10-18) ---------------------------------
+            Solo en reglas que dejan guardar: si la regla impide guardar, el
+            gasto no existe y no hay nada que aprobar dos veces. */}
+        <div className="cm-form-section" style={{ marginTop: 12 }}>
+          <div className="cm-form-section-title">
+            <i className="fa fa-user-check" /> Doble aprobación
+          </div>
+          <label className="cm-label" style={{ opacity: impide ? 0.55 : 1 }}>
+            <input type="checkbox" name="requires_second_approval" checked={!!f.requires_second_approval}
+                   disabled={impide && !f.requires_second_approval}
+                   onChange={p.onToggleBool} data-testid="rule-second-approval" />
+            {" "}Pedir una segunda aprobación antes de pasar a Contabilidad
+          </label>
+          {impide && (
+            <div className="cm-field-hint" data-testid="rule-second-approval-disabled-hint">
+              Solo para reglas que dejan guardar: desmarque «Impedir guardar el gasto» para usarla.
+            </div>
+          )}
+          {f.requires_second_approval && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 8 }}>
+                <label className="cm-label" style={{ margin: 0 }}>
+                  <input type="radio" name="second_approver_kind" checked={f.second_approver_kind !== "user"}
+                         onChange={() => p.onChangeSecondApproverKind("rol")} data-testid="rule-second-approver-kind-rol" />
+                  {" "}Un cargo
+                </label>
+                <label className="cm-label" style={{ margin: 0 }}>
+                  <input type="radio" name="second_approver_kind" checked={f.second_approver_kind === "user"}
+                         onChange={() => p.onChangeSecondApproverKind("user")} data-testid="rule-second-approver-kind-user" />
+                  {" "}Una persona
+                </label>
+              </div>
+              {f.second_approver_kind === "user" ? (
+                <div data-testid="rule-second-approver-user-select">
+                  <Select name="second_approver_user_id" options={p.usuarios || []} isClearable
+                          value={p.selectedSecondApproverUser} onChange={p.onChangeSecondApprover("selectedSecondApproverUser")}
+                          styles={selectStyles} menuPortalTarget={document.body} placeholder="Elija la persona…"
+                          noOptionsMessage={() => "No hay personas"} />
+                </div>
+              ) : (
+                <div data-testid="rule-second-approver-rol-select">
+                  <Select name="second_approver_rol_id" options={p.roles || []} isClearable
+                          value={p.selectedSecondApproverRol} onChange={p.onChangeSecondApprover("selectedSecondApproverRol")}
+                          styles={selectStyles} menuPortalTarget={document.body} placeholder="Elija el cargo…"
+                          noOptionsMessage={() => "No hay cargos"} />
+                </div>
+              )}
+              <div className="cm-field-hint" data-testid="rule-second-approval-hint">
+                Cuando un gasto incumpla esta regla, después de la aprobación de siempre queda en
+                «Pendiente 2ª aprobación» y <b>solo pasa a Contabilidad cuando la dé</b>{" "}
+                {f.second_approver_kind === "user" ? "esa persona" : "alguien de ese cargo"}. Quien dio
+                la primera aprobación no puede dar la segunda.
+              </div>
+            </div>
+          )}
+        </div>
+
         {sinNada && (
           <div className="cm-alert cm-alert-warning" data-testid="rule-no-limits-hint" style={{ marginTop: 12 }}>
             <i className="fa fa-exclamation-triangle" /> Así como está, esta regla no revisa nada.

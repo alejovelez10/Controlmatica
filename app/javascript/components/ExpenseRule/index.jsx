@@ -64,6 +64,11 @@ var EMPTY_FORM = {
   applies_to_all_roles: false,
   prohibits_expense: false,
   observations: "",
+  // DOBLE APROBACION (2026-10-18). `false`: ninguna regla la pide si no se
+  // marca. `second_approver_kind` no viaja al servidor: elige cual de los dos
+  // selects se pinta, y el que no se eligio se manda en null.
+  requires_second_approval: false,
+  second_approver_kind: "rol",
 };
 
 // Las cuatro listas del 2026-10-14, vacias. Van aparte de EMPTY_FORM porque son
@@ -74,6 +79,10 @@ var LISTAS_VACIAS = {
   selectedExcludedUsers: [],
   selectedIncludedTypes: [],
   selectedExcludedTypes: [],
+  // Un solo valor cada uno (no multi): la segunda aprobacion la da UN cargo o
+  // UNA persona.
+  selectedSecondApproverRol: null,
+  selectedSecondApproverUser: null,
 };
 
 function idsDe(opciones) {
@@ -159,6 +168,14 @@ class ExpenseRuleIndex extends Component {
           : <span className="cm-badge cm-badge-warning" data-testid={"rule-mandatory-" + r.id}>
               No, queda sin aprobar
             </span>
+      ) },
+      // DOBLE APROBACION (2026-10-18): quien da la segunda firma, a la vista.
+      { key: "requires_second_approval", label: "Doble aprobación", width: "200px", sortable: false, render: (r) => (
+        r.requires_second_approval
+          ? <div className="cm-cell-truncate" data-tooltip={r.second_approver_label || ""} data-testid={"rule-second-approval-" + r.id}>
+              <span className="cm-cell-truncate-text">{r.second_approver_label}</span>
+            </div>
+          : <span data-testid={"rule-second-approval-" + r.id}>—</span>
       ) },
       // `sortable: false`: el orden del cliente compara `row[key]` y aqui la
       // celda es un arreglo de objetos. Una flecha que no ordena es peor que
@@ -311,7 +328,13 @@ class ExpenseRuleIndex extends Component {
         applies_to_all_roles: !!row.applies_to_all_roles,
         prohibits_expense: !!row.prohibits_expense,
         observations: row.observations || "",
+        requires_second_approval: !!row.requires_second_approval,
+        second_approver_kind: row.second_approver_user_id ? "user" : "rol",
       },
+      selectedSecondApproverRol: row.second_approver_rol_id
+        ? opcionDe(self.props.roles, { id: row.second_approver_rol_id, name: row.second_approver_label }) : null,
+      selectedSecondApproverUser: row.second_approver_user_id
+        ? opcionDe(self.props.usuarios, { id: row.second_approver_user_id, name: row.second_approver_label }) : null,
       selectedRoles: (row.rols || []).map(function(x) { return opcionDe(self.props.roles, x); }),
       selectedExcludedRoles: (row.excluded_rols || []).map(function(x) { return opcionDe(self.props.roles, x); }),
       selectedExcludedUsers: (row.excluded_users || []).map(function(x) { return opcionDe(self.props.usuarios, x); }),
@@ -355,6 +378,15 @@ class ExpenseRuleIndex extends Component {
     this.setState({ [clave]: opts || [] });
   };
 
+  // Un solo valor: react-select devuelve la opcion o null al limpiar.
+  handleChangeSecondApprover = (clave) => (opt) => {
+    this.setState({ [clave]: opt || null });
+  };
+
+  handleChangeSecondApproverKind = (kind) => {
+    this.setState({ formCreate: Object.assign({}, this.state.formCreate, { second_approver_kind: kind }) });
+  };
+
   handleChangeRolesMode = (todos) => {
     this.setState({ formCreate: Object.assign({}, this.state.formCreate, { applies_to_all_roles: todos }) });
   };
@@ -377,6 +409,14 @@ class ExpenseRuleIndex extends Component {
     }
     if (f.is_default && f.applies_to_all_roles) {
       return "Una regla para todos los roles ya aplica a todos: no puede ser además la regla por defecto";
+    }
+    if (f.requires_second_approval) {
+      if (f.mandatory) {
+        return "Una regla que impide guardar no puede pedir doble aprobación: desmarque «Impedir guardar el gasto»";
+      }
+      var aprobador = f.second_approver_kind === "user"
+        ? this.state.selectedSecondApproverUser : this.state.selectedSecondApproverRol;
+      if (!aprobador) return "Elija el cargo o la persona que da la segunda aprobación";
     }
     return null;
   };
@@ -417,6 +457,13 @@ class ExpenseRuleIndex extends Component {
       // (ExpenseRule#prohibir_si_tiene_tipos).
       prohibits_expense: idsDe(this.state.selectedIncludedTypes).length > 0,
       observations: f.observations || "",
+      // Solo el aprobador del tipo elegido; el otro en null para que el
+      // servidor no conserve uno escondido.
+      requires_second_approval: !!f.requires_second_approval,
+      second_approver_rol_id: f.requires_second_approval && f.second_approver_kind !== "user" && this.state.selectedSecondApproverRol
+        ? this.state.selectedSecondApproverRol.value : null,
+      second_approver_user_id: f.requires_second_approval && f.second_approver_kind === "user" && this.state.selectedSecondApproverUser
+        ? this.state.selectedSecondApproverUser.value : null,
     };
 
     this.setState({ saving: true, formError: null });
@@ -596,6 +643,10 @@ class ExpenseRuleIndex extends Component {
             onChangeMoney={this.handleChangeMoney}
             onToggleBool={this.handleToggleBool}
             onChangeRoles={this.handleChangeRoles}
+            selectedSecondApproverRol={this.state.selectedSecondApproverRol}
+            selectedSecondApproverUser={this.state.selectedSecondApproverUser}
+            onChangeSecondApprover={this.handleChangeSecondApprover}
+            onChangeSecondApproverKind={this.handleChangeSecondApproverKind}
             submitForm={this.submit}
             saving={this.state.saving}
             blockReason={this.blockReason()}

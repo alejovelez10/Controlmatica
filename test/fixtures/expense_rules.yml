@@ -2,22 +2,25 @@
 #
 # Table name: expense_rules
 #
-#  id                   :bigint           not null, primary key
-#  active               :boolean          default(TRUE), not null
-#  agent_instructions   :text
-#  applies_to_all_roles :boolean          default(FALSE), not null
-#  check_duplicates     :boolean          default(TRUE), not null
-#  is_default           :boolean          default(FALSE), not null
-#  mandatory            :boolean          default(TRUE), not null
-#  max_invoice_age_days :integer
-#  max_invoice_value    :decimal(15, 2)
-#  name                 :string           not null
-#  observations         :text
-#  prohibits_expense    :boolean          default(FALSE), not null
-#  created_at           :datetime         not null
-#  updated_at           :datetime         not null
-#  last_user_edited_id  :integer
-#  user_id              :integer
+#  id                       :bigint           not null, primary key
+#  active                   :boolean          default(TRUE), not null
+#  agent_instructions       :text
+#  applies_to_all_roles     :boolean          default(FALSE), not null
+#  check_duplicates         :boolean          default(TRUE), not null
+#  is_default               :boolean          default(FALSE), not null
+#  mandatory                :boolean          default(TRUE), not null
+#  max_invoice_age_days     :integer
+#  max_invoice_value        :decimal(15, 2)
+#  name                     :string           not null
+#  observations             :text
+#  prohibits_expense        :boolean          default(FALSE), not null
+#  requires_second_approval :boolean          default(FALSE), not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  last_user_edited_id      :integer
+#  second_approver_rol_id   :integer
+#  second_approver_user_id  :integer
+#  user_id                  :integer
 #
 # Indexes
 #

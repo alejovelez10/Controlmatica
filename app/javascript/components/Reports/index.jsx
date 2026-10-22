@@ -34,6 +34,9 @@ var EMPTY_FORM = {
   displacement_hours: "",
   value_displacement_hours: "",
   user_id: "",
+  // PROPIETARIO DEL CENTRO NUEVO (2026-10-18): solo se pide y se manda cuando
+  // el reporte no trae centro de costos y por eso se va a crear uno.
+  cost_center_owner_id: "",
 };
 
 var EMPTY_CONTACT = {
@@ -393,6 +396,11 @@ class index extends React.Component {
 
   validationForm = function () {
     var form = this.state.form;
+    // Sin centro se crea uno, y hace falta su propietario (2026-10-18).
+    if (!this.state.modeEdit && !form.cost_center_id && !form.cost_center_owner_id) {
+      this.setState({ ErrorValues: false });
+      return false;
+    }
     if (this.props.estados.viatics) {
       if (
         form.customer_id !== "" &&
@@ -461,8 +469,18 @@ class index extends React.Component {
       selectedOption: { value: "", label: "Buscar cliente" },
       selectedOptionContact: { value: "", label: "Seleccionar Contacto" },
       selectedOptionCentro: { value: "", label: "Centro de costo" },
+      selectedOwner: null,
       dataContact: [],
       dataCostCenter: [],
+    });
+  }.bind(this);
+
+  // El propietario del centro que se va a crear. react-select devuelve null al
+  // limpiar.
+  handleChangeOwner = function (opt) {
+    this.setState({
+      selectedOwner: opt || null,
+      form: Object.assign({}, this.state.form, { cost_center_owner_id: opt ? opt.value : "" }),
     });
   }.bind(this);
 
@@ -666,6 +684,15 @@ class index extends React.Component {
       .then(function (res) { return res.json(); })
       .catch(function (error) { console.error("Error:", error); })
       .then(function (data) {
+        // EL ERROR DEL SERVIDOR SE LEE Y EL MODAL SE QUEDA ABIERTO (2026-10-18):
+        // antes se cerraba con "no fue creado" y la persona perdia lo escrito
+        // sin saber por que.
+        if (data && data.type === "error") {
+          self.setState({ saving: false });
+          Swal.fire({ icon: "error", title: data.message || "¡Ocurrió un error!",
+                      text: (data.message_error || []).join(" "), confirmButtonColor: "#2a3f53" });
+          return;
+        }
         self.setState({ modalOpen: false, saving: false });
         self.loadData(self.state.modeEdit ? undefined : 1);
         try {
@@ -1021,6 +1048,11 @@ class index extends React.Component {
         onSearchCentro: self.handleFormCostCenterSearch,
         formAutocompleteCentro: self.state.selectedOptionCentro,
         rol: self.props.rol,
+        // Propietario del centro que se crea cuando no se elige centro.
+        modeEdit: self.state.modeEdit,
+        owners: (self.props.owners || []).map(function (o) { return { value: o.id, label: o.name }; }),
+        selectedOwner: self.state.selectedOwner,
+        onChangeOwner: self.handleChangeOwner,
       }) : null
     );
   }

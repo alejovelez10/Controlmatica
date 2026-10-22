@@ -48,7 +48,8 @@ class ExpenseRulesController < ApplicationController
     return deny! unless rule_permission?
 
     scope = ExpenseRule.includes(:rols, :excluded_rols, :excluded_users, :included_types,
-                                 :excluded_types, :user, :last_user_edited)
+                                 :excluded_types, :user, :last_user_edited,
+                                 :second_approver_rol, :second_approver_user)
     scope = scope.where(active: params[:only_active] == "true") if params[:only_active].present?
 
     if params[:q].present?
@@ -299,6 +300,9 @@ class ExpenseRulesController < ApplicationController
   def expense_rule_params
     params.permit(:name, :active, :is_default, :mandatory, :max_invoice_age_days,
                   :max_invoice_value, :check_duplicates, :agent_instructions,
-                  :applies_to_all_roles, :prohibits_expense, :observations)
+                  :applies_to_all_roles, :prohibits_expense, :observations,
+                  # Doble aprobacion (2026-10-18): la casilla y QUIEN, cargo o
+                  # persona. El modelo limpia el que no se eligio.
+                  :requires_second_approval, :second_approver_rol_id, :second_approver_user_id)
   end
 end

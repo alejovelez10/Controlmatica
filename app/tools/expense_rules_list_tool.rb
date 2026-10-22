@@ -64,7 +64,11 @@ class ExpenseRulesListTool < ApplicationTool
                                  # prohibicion aunque la columna traiga uno viejo.
                                  agent_instructions: r.texto_para_el_agente,
                                  prohibited_types: r.included_types.map { |t| t.name.to_s.squish },
-                                 except_types: r.excluded_types.map { |t| t.name.to_s.squish })
+                                 except_types: r.excluded_types.map { |t| t.name.to_s.squish },
+                                 # Doble aprobacion (2026-10-18): nil si la
+                                 # regla no la pide. Solo informativo para el
+                                 # agente: la decide el servidor al aprobar.
+                                 second_approval: r.pide_segunda_aprobacion? ? r.segundo_aprobador_label : nil)
          },
          limits: { max_invoice_age_days: limites[:max_invoice_age_days],
                    # to_s("F") por la misma razón de siempre: BigDecimal#to_s

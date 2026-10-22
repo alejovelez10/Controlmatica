@@ -9,7 +9,9 @@
     persona dice "pendiente de su aprobación": cambiarle el verbo a mitad del
     camino hace dudar de si se hizo lo que se pidio. El vocabulario de esta
     pagina es el de la accion, no el de la columna. %>
-<% ya_estaba = @expense.rechazado? ? "rechazado" : "aprobado" %>
+<% ya_estaba = if @expense.rechazado? then "rechazado"
+               elsif @expense.pendiente_segunda? then "aprobado por usted y espera la segunda aprobación"
+               else "aprobado" end %>
 <div class="cm-page" style="max-width: 560px; margin: 40px auto; padding: 0 16px;">
   <div style="background: #fff; border: 1px solid var(--cm-border); border-radius: 12px; padding: 28px; text-align: center;">
 
@@ -40,6 +42,11 @@
         <% if rechazo %>
           No pasa a Contabilidad y no consume presupuesto. Le avisamos a
           <%= @expense.user_invoice&.names || "la persona que lo reportó" %>.
+        <% elsif @expense.pendiente_segunda? %>
+          <%# DOBLE APROBACION: la primera firma no lo manda a Contabilidad. %>
+          Este gasto necesita además una segunda aprobación
+          (<%= @expense.segundos_aprobadores_label %>). Ya le avisamos; cuando la
+          dé, pasa a Contabilidad. Puede cerrar esta página.
         <% else %>
           Ya puede pasar a Contabilidad. Puede cerrar esta página.
         <% end %>

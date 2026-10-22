@@ -1,0 +1,73 @@
+<%# Doble aprobacion (2026-10-18). Mismas reglas que pending_approval.html.erb:
+    estilos EN LINEA y tablas, porque Outlook y Gmail descartan el <style>. %>
+<div style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #212529; line-height: 1.5; max-width: 560px; padding: 8px;">
+  <p>Hola <%= @approver.names %>,</p>
+
+  <p>
+    Un gasto del centro de costos
+    <strong><%= @cost_center&.code || "(sin centro)" %></strong> ya tiene la
+    primera aprobación<% if @primera %> (de <%= @primera.names %>)<% end %> y
+    <strong>necesita su segunda aprobación</strong> para pasar a Contabilidad.
+  </p>
+
+  <table cellpadding="0" cellspacing="0" border="0" style="width: 100%; max-width: 520px; border: 1px solid #e2e5ea; border-radius: 8px; margin: 18px 0;">
+    <tr>
+      <td style="padding: 16px 18px;">
+        <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">
+          <%= @expense.invoice_name %>
+        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="font-size: 13px; color: #6c757d;">
+          <tr>
+            <td style="padding: 2px 12px 2px 0;">Valor</td>
+            <td style="padding: 2px 0; color: #212529;">
+              <strong><%= ExpenseBudgetService.money(@expense.invoice_total) %></strong>
+              <%= @expense.currency unless @expense.currency == "COP" %>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 2px 12px 2px 0;">Responsable</td>
+            <td style="padding: 2px 0; color: #212529;"><%= @responsable&.names || "—" %></td>
+          </tr>
+          <tr>
+            <td style="padding: 2px 12px 2px 0;">Fecha</td>
+            <td style="padding: 2px 0; color: #212529;"><%= @expense.invoice_date&.strftime("%d/%m/%Y") || "—" %></td>
+          </tr>
+          <tr>
+            <td style="padding: 2px 12px 2px 0;">Factura</td>
+            <td style="padding: 2px 0; color: #212529;"><%= @expense.invoice_number.presence || "—" %></td>
+          </tr>
+        </table>
+
+        <% if @reglas.any? %>
+          <div style="margin-top: 14px; padding: 10px 12px; background: #fff8e6; border-left: 3px solid #f5a623; font-size: 13px;">
+            <strong>Por qué necesita segunda aprobación:</strong>
+            <% @reglas.each do |r| %>
+              <div style="margin-top: 4px;">
+                Regla «<%= r["rule"] %>»<% motivos = Array(r["reasons"]) + Array(r["ia_reasons"]) %><% if motivos.any? %>: <%= motivos.join(" · ") %><% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin-bottom: 10px;">
+    <a href="<%= @url_aprobar %>"
+       style="display: inline-block; text-decoration: none; background: #28a745; padding: 12px 26px; color: #ffffff; border-radius: 6px; font-weight: bold;">
+      Revisar y dar la segunda aprobación
+    </a>
+  </p>
+
+  <p>
+    <a href="<%= @url_lista %>" style="color: #2a3f53; font-size: 13px;">
+      Ver todos los gastos pendientes de mi segunda aprobación &rsaquo;
+    </a>
+  </p>
+
+  <p style="font-size: 12px; color: #6c757d;">
+    El enlace es personal: le muestra el gasto y le pide confirmar antes de
+    aprobarlo. Caduca en <%= ExpenseApprovalToken.caducidad_en_dias %> días;
+    después de eso puede aprobarlo entrando a Controlmatica como siempre.
+  </p>
+</div>

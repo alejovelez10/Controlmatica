@@ -63,6 +63,10 @@ class ReportExpensesController < ApplicationController
       # tabla vacia que parece un error.
       show_all: is_admin? || has_menu_permission?("Gastos", "Ver todos"),
       owns_cost_centers: CostCenter.where(user_owner_id: current_user.id).exists?,
+      # DOBLE APROBACION (2026-10-18): pinta la pestaña "Por aprobar (2ª)" a
+      # quien tiene algo esperando su segunda firma, o a quien una regla activa
+      # nombra segundo aprobador (aunque hoy no tenga nada pendiente).
+      second_approver: segundo_aprobador?,
     }
   end
 
@@ -74,7 +78,8 @@ class ReportExpensesController < ApplicationController
     # Base query con includes para evitar N+1. `accounting_approved_by` entra al
     # includes porque el serializer lo emite desde que el paquete 07 lo agrego:
     # sin el, una pagina de 50 gastos aprobados cuesta 50 consultas de mas.
-    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by)
+    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by,
+                                        :first_approved_by, :second_approved_by)
 
     # Recorte de visibilidad: permiso + pestaña elegida. UNICO sitio donde se
     # decide, compartido con el Excel y con la aceptacion masiva.
@@ -100,7 +105,8 @@ class ReportExpensesController < ApplicationController
 
   def get_cost_center_report_expenses
     # Base query con includes para evitar N+1
-    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by)
+    base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by,
+                                        :first_approved_by, :second_approved_by)
                               .where(cost_center_id: params[:id])
 
     # Aplicar filtros de búsqueda. Ya no hace falta la guarda previa de "¿hay
@@ -137,7 +143,11 @@ class ReportExpensesController < ApplicationController
     # Aceptar, rechazar y devolver a "Creado" son la misma decision y piden el
     # mismo permiso. Antes de M1 este endpoint no verificaba NADA: el boton se
     # escondia en la pantalla y cualquiera con sesion podia aceptar por URL.
-    return forbidden! unless puede_decidir?(report_expense)
+    #
+    # DOBLE APROBACION (2026-10-18): el segundo aprobador de ESTE gasto tambien
+    # decide, aunque no tenga "Aceptar gasto" ni sea del centro: la regla lo
+    # nombro a el. Que de verdad le toque la segunda firma lo valida el modelo.
+    return forbidden! unless puede_decidir?(report_expense) || report_expense.puede_dar_segunda_aprobacion?(current_user)
 
     estado_anterior = report_expense.operational_state
 
@@ -181,10 +191,16 @@ class ReportExpensesController < ApplicationController
 
     if update_status
       render :json => {
-        success: "¡El registro fue actualizado con exito!",
+        success: mensaje_del_cambio_de_estado(report_expense),
         register: ActiveModelSerializers::SerializableResource.new(report_expense, each_serializer: ReportExpenseSerializer),
         type: "success",
       }
+    else
+      # Antes no habia rama de error: el estado no fallaba nunca. Con la doble
+      # aprobacion si puede —la segunda firma no le corresponde a quien la
+      # pidio— y la persona tiene que leer por que.
+      render :json => { success: "¡Ocurrió un error!", type: "error",
+                        message: report_expense.errors.full_messages }
     end
   end
 
@@ -263,7 +279,11 @@ class ReportExpensesController < ApplicationController
     # siendo el mismo, pero traerlos aqui evita repetir la consulta de filtro.
     pares = report_expenses.pluck(:cost_center_id, :user_invoice_id).uniq.reject { |c, u| c.blank? || u.blank? }
 
+    ids = report_expenses.pluck(:id)
     update_status = report_expenses.update(operational_state: ReportExpense::STATE_ACEPTADO)
+    # Los que necesitan segunda aprobacion quedaron esperandola y no aceptados:
+    # se dice cuantos, o la persona creeria que todos pasaron a Contabilidad.
+    en_segunda = ReportExpense.where(id: ids).pendientes_de_segunda.count
 
     # Mismo motivo que en update_state_report_expense: aceptar compromete cupo.
     # Se reevalua UNA vez por par, no una por gasto.
@@ -275,8 +295,13 @@ class ReportExpensesController < ApplicationController
     end
 
     if update_status
+      exito = "Los registros fue actualizados con exito!"
+      if en_segunda.positive?
+        exito = "Gastos aceptados. #{en_segunda} #{en_segunda == 1 ? "quedó pendiente" : "quedaron pendientes"} " \
+                "de la segunda aprobación."
+      end
       render :json => {
-               success: "Los registros fue actualizados con exito!",
+               success: exito,
                type: "success",
              }
     else
@@ -780,6 +805,24 @@ class ReportExpensesController < ApplicationController
     acepta_todos? || acepta_los_suyos?
   end
 
+  def segundo_aprobador?
+    return true if ReportExpense.pendientes_de_segunda.para_segundo_aprobador(current_user).exists?
+
+    reglas = ExpenseRule.activas.where(requires_second_approval: true)
+    reglas.where(second_approver_user_id: current_user.id)
+          .or(reglas.where(second_approver_rol_id: current_user.rol_id.presence || -1))
+          .exists?
+  end
+
+  # Lo que se le dice a quien cambio el estado. Si su "Aceptado" fue la primera
+  # de dos firmas, hay que decirlo: si no, cree que el gasto ya va para
+  # Contabilidad.
+  def mensaje_del_cambio_de_estado(gasto)
+    return "¡El registro fue actualizado con exito!" unless gasto.pendiente_segunda?
+
+    "Primera aprobación registrada. Falta la segunda aprobación (#{gasto.segundos_aprobadores_label})."
+  end
+
   def puede_decidir?(gasto)
     return true if acepta_todos?
     return false unless acepta_los_suyos?
@@ -845,7 +888,9 @@ class ReportExpensesController < ApplicationController
 
     return ReportExpense::STATE_ACEPTADO if texto == "true"
     return ReportExpense::STATE_CREADO   if texto == "false"
-    return texto if ReportExpense::OPERATIONAL_STATES.include?(texto)
+    # ESTADOS_QUE_SE_PIDEN y no OPERATIONAL_STATES: "Pendiente 2ª aprobación"
+    # no se elige, se llega aceptando un gasto que la necesita.
+    return texto if ReportExpense::ESTADOS_QUE_SE_PIDEN.include?(texto)
 
     nil
   end
@@ -1010,6 +1055,11 @@ class ReportExpensesController < ApplicationController
       # Subconsulta y no `pluck`: con 400 centros el `IN (...)` explicito manda
       # 400 enteros en cada peticion de cada pagina.
       scope.where(cost_center_id: CostCenter.where(user_owner_id: current_user.id).select(:id))
+    when "second_approval"
+      # DOBLE APROBACION (2026-10-18): los que esperan MI segunda firma. No pide
+      # "Ver todos": la regla me nombro aprobador de estos gastos, y sin verlos
+      # no los podria aprobar.
+      scope.pendientes_de_segunda.para_segundo_aprobador(current_user)
     else
       # Sin pestaña —o con una que no existe— manda el permiso, igual que antes
       # de que hubiera pestañas.

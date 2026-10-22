@@ -42,3 +42,5 @@ en:
               format: "El tope de valor %{message}"
               greater_than: "debe ser mayor a %{count}, o déjelo vacío para no tener tope"
               not_a_number: "debe ser un valor numérico"
+            requires_second_approval:
+              format: "%{message}"

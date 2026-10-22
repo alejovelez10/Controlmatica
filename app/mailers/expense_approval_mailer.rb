@@ -45,6 +45,26 @@ class ExpenseApprovalMailer < ApplicationMailer
          subject: asunto)
   end
 
+  # DOBLE APROBACION (2026-10-18): al segundo aprobador, cuando el gasto ya
+  # tiene la primera firma. Si el aprobador es un cargo, sale uno por persona del
+  # cargo, cada uno con SU enlace: el token dice quien firma, y por eso no se
+  # puede reenviar para que firme otro.
+  def pending_second_approval(expense, approver)
+    @expense = expense
+    @approver = approver
+    @cost_center = expense.cost_center
+    @responsable = expense.user_invoice
+    @primera = expense.first_approved_by
+    @reglas = Array(expense.second_approval_rules)
+    @url_aprobar = expense_approval_url(t: ExpenseApprovalToken.generate_segunda(expense, approver))
+    @url_lista = report_expenses_url(scope: "second_approval")
+
+    codigo = @cost_center&.code.presence || "sin centro"
+    mail(to: approver.email,
+         from: self.class.remitente,
+         subject: "Gasto pendiente de su segunda aprobación · #{codigo}")
+  end
+
   # La respuesta al que reporto el gasto: se lo aprobaron o se lo rechazaron.
   #
   # VA AL RESPONSABLE (`user_invoice`) Y NO A QUIEN LO CREO. Son casi siempre la

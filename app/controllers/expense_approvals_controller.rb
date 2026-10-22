@@ -13,57 +13,43 @@
 # Con un GET que muta, el gasto se aprobaria solo, sin que nadie hiciera clic, y
 # nadie entenderia por que. Aqui el GET solo PINTA el gasto y la aprobacion
 # viaja en un POST desde el boton, que ningun escaner dispara.
+#
+# DOS ENLACES DISTINTOS DESDE LA DOBLE APROBACION (2026-10-18):
+#   * el del DUEÑO DEL CENTRO (`ExpenseApprovalToken.generate`), que da la
+#     primera firma. Si el gasto pide segunda aprobacion, el modelo lo deja en
+#     "Pendiente 2ª aprobación" en vez de "Aceptado";
+#   * el del SEGUNDO APROBADOR (`generate_segunda`), que dice quien firma y solo
+#     sirve mientras el gasto espera la segunda firma.
+# Las mismas tres acciones atienden a los dos; `cargar_gasto` decide cual es.
 class ExpenseApprovalsController < ApplicationController
   layout "application"
 
   # Paso 1: el enlace del correo. No cambia nada.
   def show
-    @expense = ExpenseApprovalToken.find_expense(params[:t])
-    return render :invalid, status: :not_found if @expense.nil?
-
-    @token = params[:t]
+    return render :invalid, status: :not_found unless cargar_gasto
   end
 
   # Paso 2: el boton de la pantalla anterior.
   def create
-    @expense = ExpenseApprovalToken.find_expense(params[:t])
-    return render :invalid, status: :not_found if @expense.nil?
+    return render :invalid, status: :not_found unless cargar_gasto
 
     @accion = :aprobado
+    return segunda_firma if @segunda
 
     # IDEMPOTENTE. Si el gasto ya estaba aceptado no se vuelve a escribir ni se
     # reevalua el presupuesto: es el caso de quien hace doble clic, de quien
     # abre el mismo correo dos veces y de quien lo reenvia. Y es tambien lo que
-    # hace tolerable un token que no se puede revocar.
-    if @expense.aceptado?
+    # hace tolerable un token que no se puede revocar. Un gasto que ya tiene la
+    # primera firma y espera la segunda tambien esta "ya aprobado" para el
+    # dueño del centro.
+    if @expense.aceptado? || @expense.pendiente_segunda?
       @ya_estaba = true
       return render :done
     end
 
-    aprobador = @expense.cost_center&.user_owner
-
-    # El actor de la auditoria es el dueño del centro y no `nil`: los callbacks
-    # del modelo leen `User.current`, que en una peticion sin sesion viene
-    # vacio, y el registro de edicion quedaria sin autor. Se restaura en el
-    # `ensure` porque `User.current` es estado de hilo y el hilo se reutiliza.
-    previo = User.current
-    begin
-      User.current = aprobador
-      @resuelto = @expense.update(operational_state: ReportExpense::STATE_ACEPTADO)
-    ensure
-      User.current = previo
+    decidir(@expense.cost_center&.user_owner) do
+      @expense.update(operational_state: ReportExpense::STATE_ACEPTADO)
     end
-
-    # Mismo motivo que en `update_state_report_expense`: aceptar compromete
-    # cupo, asi que el par (centro, responsable) hay que reevaluarlo en FIFO o
-    # el disponible de las pantallas se queda como estaba.
-    if @resuelto && @expense.cost_center_id.present? && @expense.user_invoice_id.present?
-      ExpenseBudgetService.reevaluate_center_user!(cost_center_id: @expense.cost_center_id,
-                                                   user_id: @expense.user_invoice_id,
-                                                   actor: aprobador)
-      @expense.reload
-    end
-
     render :done
   end
 
@@ -79,47 +65,93 @@ class ExpenseApprovalsController < ApplicationController
   # daño es peor que el de una aprobacion automatica, porque el gasto sale de
   # circulacion y nadie entiende por que.
   def reject
-    @expense = ExpenseApprovalToken.find_expense(params[:t])
-    return render :invalid, status: :not_found if @expense.nil?
+    return render :invalid, status: :not_found unless cargar_gasto
 
     @accion = :rechazado
 
-    # IDEMPOTENTE, igual que aprobar, y ademas CERRADO: si el gasto ya no esta en
-    # "Creado" no se toca. Cubre el doble clic y tambien el caso de verdad: que
-    # alguien ya lo acepto desde la pantalla de Gastos entre que salio el correo
-    # y se abrio el enlace. Rechazar por encima de una aceptacion que ya movio
-    # presupuesto, desde un correo de hace seis dias, seria pisar una decision
-    # mas nueva con uno mas viejo.
-    unless @expense.creado?
+    # IDEMPOTENTE, igual que aprobar, y ademas CERRADO: si el gasto ya no esta
+    # esperando a QUIEN abrio el enlace no se toca. Cubre el doble clic y tambien
+    # el caso de verdad: que alguien ya lo decidio desde la pantalla de Gastos
+    # entre que salio el correo y se abrio el enlace. Rechazar por encima de una
+    # aceptacion que ya movio presupuesto, desde un correo de hace seis dias,
+    # seria pisar una decision mas nueva con uno mas viejo.
+    unless @esperando
+      @ya_estaba = true
+      return render :done
+    end
+    return render(:invalid, status: :forbidden) if @segunda && !@expense.puede_dar_segunda_aprobacion?(@firmante)
+
+    decidir(@firmante) do
+      @expense.rechazar(actor: @firmante, motivo: params[:rejection_reason])
+      @expense.save
+    end
+    render :done
+  end
+
+  private
+
+  # Carga el gasto y QUIEN decide segun el enlace. => false si no sirve.
+  #
+  #   @segunda   - el enlace es del segundo aprobador;
+  #   @firmante  - la persona a nombre de quien queda la decision;
+  #   @esperando - si el gasto esta esperando justo a esta persona (los botones
+  #                se pintan solo entonces).
+  def cargar_gasto
+    @token = params[:t]
+
+    segunda = ExpenseApprovalToken.find_segunda(@token)
+    if segunda
+      @expense, @firmante = segunda
+      @segunda = true
+      @esperando = @expense.pendiente_segunda?
+      return true
+    end
+
+    @expense = ExpenseApprovalToken.find_expense(@token)
+    return false if @expense.nil?
+
+    @firmante = @expense.cost_center&.user_owner
+    @esperando = @expense.creado?
+    true
+  end
+
+  def segunda_firma
+    unless @expense.pendiente_segunda?
       @ya_estaba = true
       return render :done
     end
 
-    quien_rechaza = @expense.cost_center&.user_owner
+    decidir(@firmante) do
+      @expense.update(operational_state: ReportExpense::STATE_ACEPTADO)
+    end
+    render :done
+  end
 
-    # Mismo motivo que en `create`: los callbacks del modelo leen `User.current`
-    # y en una peticion sin sesion viene vacio, asi que la auditoria quedaria sin
-    # autor. Se restaura en el `ensure` porque es estado de hilo.
+  # Guarda la decision a nombre de `actor` y reevalua el presupuesto.
+  #
+  # El actor de la auditoria es quien decide y no `nil`: los callbacks del
+  # modelo leen `User.current`, que en una peticion sin sesion viene vacio, y el
+  # registro de edicion quedaria sin autor (y la doble aprobacion no sabria
+  # quien firma). Se restaura en el `ensure` porque `User.current` es estado de
+  # hilo y el hilo se reutiliza.
+  #
+  # Aceptar compromete cupo y rechazar lo libera, asi que el par (centro,
+  # responsable) hay que reevaluarlo en FIFO o el disponible de las pantallas
+  # se queda como estaba.
+  def decidir(actor)
     previo = User.current
     begin
-      User.current = quien_rechaza
-      @expense.rechazar(actor: quien_rechaza, motivo: params[:rejection_reason])
-      @resuelto = @expense.save
+      User.current = actor
+      @resuelto = yield
     ensure
       User.current = previo
     end
 
-    # Rechazar tambien mueve presupuesto, por la otra punta: un gasto que estaba
-    # aceptado libera cupo, y uno que nunca lo consumio deja de aparecer en las
-    # cuentas del centro. Se reevalua el par igual que al aprobar o el disponible
-    # de las pantallas se queda viejo.
-    if @resuelto && @expense.cost_center_id.present? && @expense.user_invoice_id.present?
-      ExpenseBudgetService.reevaluate_center_user!(cost_center_id: @expense.cost_center_id,
-                                                   user_id: @expense.user_invoice_id,
-                                                   actor: quien_rechaza)
-      @expense.reload
-    end
+    return unless @resuelto && @expense.cost_center_id.present? && @expense.user_invoice_id.present?
 
-    render :done
+    ExpenseBudgetService.reevaluate_center_user!(cost_center_id: @expense.cost_center_id,
+                                                 user_id: @expense.user_invoice_id,
+                                                 actor: actor)
+    @expense.reload
   end
 end

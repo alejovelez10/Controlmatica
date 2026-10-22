@@ -6,6 +6,7 @@ import NumberFormat from "react-number-format";
 import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
 import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, operationalState } from "../generalcomponents/expenseIndicators";
 import { hallazgosVigentes, veredictoParaGuardar } from "../generalcomponents/agentVerdict";
+import { prepararLote, ACCEPT_LOTE, MAX_COMPROBANTES } from "../generalcomponents/receiptBatch";
 import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
@@ -48,6 +49,8 @@ function scopeInicial(estados) {
   if (pedido === "mine") return "mine";
   if (pedido === "owned_centers" && estados.owns_cost_centers) return "owned_centers";
   if (pedido === "all" && estados.show_all) return "all";
+  // DOBLE APROBACION (2026-10-18): el correo del segundo aprobador aterriza aqui.
+  if (pedido === "second_approval" && estados.second_approver) return "second_approval";
   return porDefecto;
 }
 
@@ -284,6 +287,10 @@ class ReportExpenseIndex extends React.Component {
       selectedUser: { value: props.current_user.id, label: props.current_user.names },
       selectedType: null,
       selectedPayment: null,
+      // CARGA DE VARIOS COMPROBANTES (2026-10-18). null fuera del lote. Ver
+      // `handleArchivosLote`.
+      lote: null,
+      preparandoLote: false,
       // Estado inline edit
       editingStatusId: null,
       // Copy hint
@@ -370,6 +377,7 @@ class ReportExpenseIndex extends React.Component {
         // el icono no empuje la pildora ni el desplegable.
         var aviso = budgetWarningIcon(row);
         var estado = operationalState(row);
+        var doble = self.notaDobleAprobacion(row);
 
         // Sin permiso, el estado es una pildora de solo lectura. Con permiso es
         // un desplegable con los TRES estados, incluido el de volver un
@@ -379,20 +387,26 @@ class ReportExpenseIndex extends React.Component {
         // EL PERMISO ES POR FILA desde M4 (2026-10-09): con "Aceptar gasto" a
         // secas solo se deciden los propios y los de los centros a cargo, y un
         // desplegable en una fila ajena seria un 403 esperando a pasar.
-        if (!self.puedeDecidir(row)) {
+        //
+        // DOBLE APROBACION (2026-10-18): en un gasto que espera la segunda firma
+        // decide tambien el segundo aprobador, aunque no tenga "Aceptar gasto".
+        if (!self.puedeDecidir(row) && !self.puedeDarSegunda(row)) {
           return React.createElement("div", { className: "cm-status-cell" },
             React.createElement("span", {
               className: "cm-status-pill" + (estado.isOk ? " cm-status-pill--ok" : "")
-                         + (estado.isRejected ? " cm-status-pill--danger" : ""),
+                         + (estado.isRejected ? " cm-status-pill--danger" : "")
+                         + (estado.isPendingSecond ? " cm-status-pill--pending" : ""),
               "data-testid": "expense-status-" + row.id,
+              title: doble || undefined,
             }, estado.label),
             aviso
           );
         }
 
-        return React.createElement("div", { className: "cm-status-cell" },
+        return React.createElement("div", { className: "cm-status-cell", title: doble || undefined },
         React.createElement("select", {
-          className: "cm-status-select" + (estado.isOk ? " cm-status-select--ok" : ""),
+          className: "cm-status-select" + (estado.isOk ? " cm-status-select--ok" : "")
+                     + (estado.isPendingSecond ? " cm-status-select--pending" : ""),
           value: estado.value,
           onChange: function(e) { self.updateStatus(e, row); },
           // stopPropagation SIGUE SIENDO OBLIGATORIO: el clic en la fila abre el
@@ -401,7 +415,12 @@ class ReportExpenseIndex extends React.Component {
           "data-testid": "expense-status-select-" + row.id,
         },
           React.createElement("option", { value: "creado" }, "Creado"),
-          React.createElement("option", { value: "aceptado" }, "Aceptado"),
+          // Solo se pinta en la fila que ya esta ahi: no se elige, se llega
+          // aceptando un gasto que necesita dos firmas.
+          estado.isPendingSecond
+            ? React.createElement("option", { value: "pendiente_segunda", disabled: true }, "Pendiente 2ª")
+            : null,
+          React.createElement("option", { value: "aceptado" }, estado.isPendingSecond ? "Aceptado (2ª aprobación)" : "Aceptado"),
           React.createElement("option", { value: "rechazado" }, "Rechazado")
         ),
           aviso
@@ -521,9 +540,11 @@ class ReportExpenseIndex extends React.Component {
 
   componentDidMount() {
     this.loadData();
+    window.addEventListener("beforeunload", this.avisarSiHayLotePendiente);
   }
 
   componentWillUnmount() {
+    window.removeEventListener("beforeunload", this.avisarSiHayLotePendiente);
     // El debounce del disponible presupuestal sobrevive al desmontaje y su
     // callback hace setState: sin este clear, React avisa por consola y el
     // fetch sale igual con el formulario ya cerrado.
@@ -843,7 +864,30 @@ class ReportExpenseIndex extends React.Component {
     return encontrada || { value: code, label: code };
   }.bind(this);
 
-  closeModal = function() { this.setState({ modal: false }); }.bind(this);
+  closeModal = function() {
+    var self = this;
+    var lote = this.state.lote;
+    // EN EL LOTE, cerrar con comprobantes sin registrar se confirma: lo que no
+    // se guardo hay que volver a subirlo.
+    if (lote && lote.paso === "revisar") {
+      var faltan = this.pendientesDelLote(lote).length;
+      if (faltan > 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Quedan " + faltan + " comprobante" + (faltan === 1 ? "" : "s") + " sin registrar",
+          text: "Lo que ya guardó queda guardado. Los que faltan tendrá que volver a subirlos.",
+          showCancelButton: true,
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#2a3f53",
+          confirmButtonText: "Cerrar de todas formas",
+          cancelButtonText: "Seguir registrando",
+        }).then(function(r) { if (r.isConfirmed) self.cerrarLote(); });
+        return;
+      }
+    }
+    if (lote) return this.cerrarLote();
+    this.setState({ modal: false });
+  }.bind(this);
 
   handleFormChange = function(e) {
     var self = this;
@@ -1188,41 +1232,334 @@ class ReportExpenseIndex extends React.Component {
     fetch("/extract_receipt/report_expenses", { method: "POST", body: fd, headers: { "X-CSRF-Token": csrfToken() } })
       .then(function(r) { return r.json(); })
       .then(function(d) {
-        if (d.type === "error") {
-          // El registro manual NUNCA se bloquea por un fallo de la lectura.
-          self.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "error", message: (d.message || []).join(" ") }) });
-          return;
-        }
-        // WHITELIST de 15 claves. `budget_status`, `accounting_*`,
-        // `expense_budget_id`, `is_acepted`, `cost_center_id` y
-        // `user_invoice_id` no se sobreescriben jamas desde la extraccion.
-        var allowed = ["invoice_name", "identification", "invoice_number", "invoice_date", "description",
-                       "currency", "foreign_value", "foreign_tax", "foreign_total",
-                       "exchange_rate", "exchange_rate_date", "exchange_rate_source",
-                       "invoice_value", "invoice_tax", "invoice_total"];
-        var f = Object.assign({}, self.state.form);
-        var filled = [];
-        allowed.forEach(function(k) {
-          var v = d.fields ? d.fields[k] : null;
-          // null deja el input VACIO: no se rellena con "—", "N/A" ni con el
-          // valor previo.
-          if (v === null || v === undefined || v === "") return;
-          f[k] = v; filled.push(k);
-        });
-
-        var newState = {
-          form: f,
-          extraction: { status: "done", message: null, filled: filled,
-                        confidence: d.confidence || {}, warnings: d.warnings || [],
-                        policy: d.policy || null },
-        };
-        if (f.currency && f.currency !== "COP") newState.selectedCurrency = self.currencyOption(f.currency);
-        // NADA SE GUARDA SOLO: la extraccion precarga y la persona pulsa Guardar.
-        self.setState(newState);
+        // El registro manual NUNCA se bloquea por un fallo de la lectura.
+        if (d.type === "error") return self.aplicarLecturaAlFormulario({ error: (d.message || []).join(" ") });
+        self.aplicarLecturaAlFormulario({ datos: d });
       })
       .catch(function() {
         self.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "error", message: "No se pudo leer el comprobante. Complete los datos manualmente." }) });
       });
+  }.bind(this);
+
+
+  // Pone en el formulario lo que leyo la IA de un comprobante. Lo usan el boton
+  // "Extraer datos" y la carga de varios comprobantes, que lee por adelantado
+  // y aplica la lectura cuando la persona llega a ese comprobante.
+  //
+  // `resultado` es `{ datos: <respuesta de /extract_receipt> }` o
+  // `{ error: "mensaje" }`.
+  aplicarLecturaAlFormulario = function(resultado) {
+    var self = this;
+    if (!resultado || resultado.error) {
+      self.setState({ extraction: Object.assign({}, EXTRACTION_VACIA, { status: "error",
+        message: (resultado && resultado.error) || "No se pudo leer el comprobante. Complete los datos manualmente." }) });
+      return;
+    }
+    var d = resultado.datos || {};
+
+    // WHITELIST de 15 claves. `budget_status`, `accounting_*`,
+    // `expense_budget_id`, `is_acepted`, `cost_center_id` y
+    // `user_invoice_id` no se sobreescriben jamas desde la extraccion.
+    var allowed = ["invoice_name", "identification", "invoice_number", "invoice_date", "description",
+                   "currency", "foreign_value", "foreign_tax", "foreign_total",
+                   "exchange_rate", "exchange_rate_date", "exchange_rate_source",
+                   "invoice_value", "invoice_tax", "invoice_total"];
+    var f = Object.assign({}, self.state.form);
+    var filled = [];
+    allowed.forEach(function(k) {
+      var v = d.fields ? d.fields[k] : null;
+      // null deja el input VACIO: no se rellena con "—", "N/A" ni con el
+      // valor previo.
+      if (v === null || v === undefined || v === "") return;
+      f[k] = v; filled.push(k);
+    });
+
+    var newState = {
+      form: f,
+      extraction: { status: "done", message: null, filled: filled,
+                    confidence: d.confidence || {}, warnings: d.warnings || [],
+                    policy: d.policy || null },
+    };
+    if (f.currency && f.currency !== "COP") newState.selectedCurrency = self.currencyOption(f.currency);
+    // NADA SE GUARDA SOLO: la extraccion precarga y la persona pulsa Guardar.
+    self.setState(newState);
+  }.bind(this);
+
+  // === CARGA DE VARIOS COMPROBANTES (2026-10-18) ===============================
+  //
+  // Un ZIP o varios archivos a la vez. El recorrido es el MISMO modal de crear
+  // gasto, un comprobante a la vez, con el formulario ya lleno por la lectura de
+  // la IA: la persona revisa, completa lo que falte y guarda, y el modal pasa
+  // solo al siguiente. Cada gasto se guarda por el camino de siempre
+  // (handleSubmit), asi que comprobante obligatorio, reglas, presupuesto y
+  // correos funcionan igual que con uno solo.
+  //
+  //   paso "inicio"  -> los archivos que entraron y los que no, y los datos
+  //                     comunes (centro, responsable, tipo, forma de pago);
+  //   paso "revisar" -> el formulario, comprobante por comprobante;
+  //   paso "resumen" -> cuantos se guardaron y cuales quedaron sin registrar.
+  //
+  // LA LECTURA VA POR ADELANTADO, DOS A LA VEZ: mientras la persona revisa uno,
+  // ya se estan leyendo los siguientes, y no tiene que esperar a la IA en cada
+  // comprobante. Dos y no todos: cada lectura es una llamada a la IA, y diez en
+  // paralelo serian diez peticiones largas compitiendo por el mismo servidor.
+  //
+  // Estado de cada comprobante: "cola" -> "leyendo" -> "listo" -> "guardado"
+  // u "omitido". Un error al guardar no lo saca de "listo": se anota en
+  // `error` y se puede corregir.
+
+  abrirSelectorLote = function() {
+    if (this._inputLote) this._inputLote.click();
+  }.bind(this);
+
+  handleArchivosLote = function(e) {
+    var self = this;
+    // Copia ANTES de vaciar el input: `files` es una lista viva y vaciarlo la
+    // deja en cero. Vaciarlo es lo que permite volver a elegir el mismo ZIP.
+    var archivos = Array.prototype.slice.call((e.target && e.target.files) || []);
+    if (e.target) e.target.value = "";
+    if (!archivos.length) return;
+
+    self.setState({ preparandoLote: true });
+    prepararLote(archivos).then(function(res) {
+      self.setState({ preparandoLote: false });
+      if (!res.items.length) {
+        Swal.fire({ icon: "warning", title: "No hay comprobantes para registrar",
+                    html: self.listaDeIgnorados(res.ignorados), confirmButtonColor: "#2a3f53" });
+        return;
+      }
+      var items = res.items.map(function(it) {
+        return Object.assign({}, it, { estado: "cola", lectura: null, error: null, gastoId: null });
+      });
+      self.setState(Object.assign({
+        lote: { id: Date.now(), paso: "inicio", items: items, ignorados: res.ignorados, actual: 0, comunes: {} },
+        modal: true, modeEdit: false, editId: null, ErrorValues: true, saving: false,
+        form: Object.assign({}, EMPTY_FORM, { user_invoice_id: self.props.current_user.id }),
+        selectedCostCenter: null, formCostCenterOptions: [],
+        selectedUser: { value: self.props.current_user.id, label: self.props.current_user.names },
+        selectedType: null, selectedPayment: null,
+        selectedCurrency: self.currencyOption("COP"),
+      }, estadoComprobanteVacio()));
+    }).catch(function() {
+      self.setState({ preparandoLote: false });
+      Swal.fire({ icon: "error", title: "No se pudieron abrir los archivos", confirmButtonColor: "#2a3f53" });
+    });
+  }.bind(this);
+
+  listaDeIgnorados = function(ignorados) {
+    if (!ignorados || !ignorados.length) return "";
+    return "<ul style=\"text-align:left;margin:8px auto;max-width:28em\">" +
+      ignorados.map(function(i) { return "<li><b>" + escaparHtml(i.name) + "</b>: " + escaparHtml(i.motivo) + "</li>"; }).join("") +
+      "</ul>";
+  }.bind(this);
+
+  // Lo que todavia falta por resolver: ni guardado ni omitido.
+  pendientesDelLote = function(lote) {
+    return ((lote && lote.items) || []).filter(function(i) { return i.estado !== "guardado" && i.estado !== "omitido"; });
+  }.bind(this);
+
+  // Los datos comunes salen del formulario: en el paso "inicio" y despues de
+  // cada guardado, para que el siguiente comprobante llegue con lo mismo que el
+  // anterior (casi siempre es el mismo centro, responsable y forma de pago).
+  comunesDelFormulario = function() {
+    var f = this.state.form;
+    return {
+      cost_center_id: f.cost_center_id || "", user_invoice_id: f.user_invoice_id || "",
+      type_identification_id: f.type_identification_id || "", payment_type_id: f.payment_type_id || "",
+      selectedCostCenter: this.state.selectedCostCenter, selectedUser: this.state.selectedUser,
+      selectedType: this.state.selectedType, selectedPayment: this.state.selectedPayment,
+    };
+  }.bind(this);
+
+  empezarLote = function() {
+    var self = this;
+    var lote = Object.assign({}, this.state.lote, { paso: "revisar", comunes: this.comunesDelFormulario() });
+    this.setState({ lote: lote }, function() { self.cargarItemDelLote(0); });
+  }.bind(this);
+
+  // Cambia UN comprobante del lote. Por funcion de estado previo y con el id del
+  // lote: las lecturas terminan cuando quieren, y una que llega tarde no puede
+  // escribir en un lote que ya se cerro o en otro que se abrio despues.
+  actualizarItem = function(loteId, idx, cambios, cb) {
+    this.setState(function(prev) {
+      if (!prev.lote || prev.lote.id !== loteId || !prev.lote.items[idx]) return null;
+      var items = prev.lote.items.slice();
+      items[idx] = Object.assign({}, items[idx], cambios);
+      return { lote: Object.assign({}, prev.lote, { items: items }) };
+    }, cb);
+  }.bind(this);
+
+  bombearLecturas = function() {
+    var lote = this.state.lote;
+    if (!lote || lote.paso !== "revisar") return;
+    var self = this;
+
+    // Sin la lectura de la IA encendida no hay nada que leer: se llenan a mano.
+    if (!receiptExtractionEnabled()) {
+      lote.items.forEach(function(it, idx) {
+        if (it.estado === "cola") self.actualizarItem(lote.id, idx, { estado: "listo" });
+      });
+      return;
+    }
+
+    var leyendo = lote.items.filter(function(i) { return i.estado === "leyendo"; }).length;
+    var n = lote.items.length;
+    // Desde el que se esta revisando hacia adelante: el siguiente que la
+    // persona va a ver es el primero que tiene que estar listo.
+    for (var k = 0; k < n && leyendo < 2; k++) {
+      var idx = (lote.actual + k) % n;
+      if (lote.items[idx].estado === "cola" && !self.lecturaIniciada(lote.id, idx)) {
+        self.leerItemDelLote(lote.id, idx);
+        leyendo++;
+      }
+    }
+  }.bind(this);
+
+  leerItemDelLote = function(loteId, idx) {
+    var self = this;
+    var lote = this.state.lote;
+    var item = lote.items[idx];
+    var c = lote.comunes || {};
+    // Se anota aparte y de inmediato, no solo en el estado: setState puede
+    // llegar despues de que otro `bombearLecturas` del mismo tick lo vea en
+    // "cola", y la IA leeria el mismo comprobante dos veces.
+    this._lecturasIniciadas = this._lecturasIniciadas || {};
+    this._lecturasIniciadas[loteId + ":" + idx] = true;
+    this.actualizarItem(loteId, idx, { estado: "leyendo" });
+
+    var fd = new FormData();
+    fd.append("file", item.file);
+    if (c.cost_center_id) fd.append("cost_center_id", c.cost_center_id);
+    if (c.user_invoice_id) fd.append("user_invoice_id", c.user_invoice_id);
+    if (c.type_identification_id) fd.append("type_identification_id", c.type_identification_id);
+
+    fetch("/extract_receipt/report_expenses", { method: "POST", body: fd, headers: { "X-CSRF-Token": csrfToken() } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        self.alTerminarLectura(loteId, idx, d.type === "error"
+          ? { error: (d.message || []).join(" ") || "No se pudo leer el comprobante. Complete los datos manualmente." }
+          : { datos: d });
+      })
+      .catch(function() {
+        self.alTerminarLectura(loteId, idx, { error: "No se pudo leer el comprobante. Complete los datos manualmente." });
+      });
+  }.bind(this);
+
+  lecturaIniciada = function(loteId, idx) {
+    return !!(this._lecturasIniciadas && this._lecturasIniciadas[loteId + ":" + idx]);
+  }.bind(this);
+
+  alTerminarLectura = function(loteId, idx, resultado) {
+    var self = this;
+    // Solo pasa a "listo" si seguia leyendose: un comprobante que la persona
+    // omitio (o ya guardo a mano) mientras la IA lo leia se queda como esta.
+    var item = this.state.lote && this.state.lote.id === loteId ? this.state.lote.items[idx] : null;
+    var cambios = { lectura: resultado };
+    if (item && item.estado === "leyendo") cambios.estado = "listo";
+    this.actualizarItem(loteId, idx, cambios, function() {
+      var lote = self.state.lote;
+      if (!lote || lote.id !== loteId) return;
+      // Si la persona ya esta en este comprobante, la lectura entra al
+      // formulario en cuanto llega.
+      if (lote.paso === "revisar" && lote.actual === idx && self.state.modal) self.aplicarLecturaAlFormulario(resultado);
+      self.bombearLecturas();
+    });
+  }.bind(this);
+
+  // Abre en el formulario el comprobante `idx`: los datos comunes, el archivo
+  // ya adjunto y, si ya se leyo, lo que encontro la IA.
+  cargarItemDelLote = function(idx) {
+    var self = this;
+    var lote = this.state.lote;
+    var item = lote.items[idx];
+    var c = lote.comunes || {};
+    var responsable = c.selectedUser || { value: self.props.current_user.id, label: self.props.current_user.names };
+    var form = Object.assign({}, EMPTY_FORM, {
+      cost_center_id: c.cost_center_id || "",
+      user_invoice_id: c.user_invoice_id || self.props.current_user.id,
+      type_identification_id: c.type_identification_id || "",
+      payment_type_id: c.payment_type_id || "",
+    });
+    // Un viatico propone a la persona responsable como nombre, igual que al
+    // elegir el tipo en el formulario.
+    form.invoice_name = self.nombreDeViatico(form, form.type_identification_id, responsable.label, responsable.label);
+
+    this.setState(Object.assign({
+      lote: Object.assign({}, lote, { actual: idx }),
+      modal: true, modeEdit: false, editId: null, ErrorValues: true, saving: false,
+      form: form,
+      selectedCostCenter: c.selectedCostCenter || null,
+      formCostCenterOptions: c.selectedCostCenter ? [c.selectedCostCenter] : [],
+      selectedUser: responsable,
+      selectedType: c.selectedType || null,
+      selectedPayment: c.selectedPayment || null,
+      selectedCurrency: self.currencyOption("COP"),
+    }, estadoComprobanteVacio(), {
+      receiptFile: item.file, receiptFileName: item.name, receiptSize: item.file.size, receiptError: null,
+      extraction: Object.assign({}, EXTRACTION_VACIA, item.estado === "leyendo" || item.estado === "cola" ? { status: "loading" } : {}),
+    }), function() {
+      if (item.lectura) self.aplicarLecturaAlFormulario(item.lectura);
+      self.loadBudgetAvailability(form.user_invoice_id, null);
+      self.bombearLecturas();
+    });
+  }.bind(this);
+
+  // El siguiente sin resolver, dando la vuelta: los omitidos y los guardados
+  // no vuelven a salir. Sin ninguno, el resumen.
+  irAlSiguienteDelLote = function() {
+    var lote = this.state.lote;
+    if (!lote) return;
+    var n = lote.items.length;
+    for (var k = 1; k <= n; k++) {
+      var idx = (lote.actual + k) % n;
+      var estado = lote.items[idx].estado;
+      if (estado !== "guardado" && estado !== "omitido") return this.cargarItemDelLote(idx);
+    }
+    this.setState(Object.assign({ lote: Object.assign({}, lote, { paso: "resumen" }), saving: false }, estadoComprobanteVacio()));
+  }.bind(this);
+
+  irAItemDelLote = function(idx) {
+    var lote = this.state.lote;
+    if (!lote || lote.paso === "inicio" || this.state.saving) return;
+    if (lote.items[idx].estado === "guardado") return;
+    if (lote.items[idx].estado === "omitido") this.actualizarItem(lote.id, idx, { estado: lote.items[idx].lectura ? "listo" : "cola" });
+    this.setState({ lote: Object.assign({}, this.state.lote, { paso: "revisar" }) }, this.cargarItemDelLote.bind(this, idx));
+  }.bind(this);
+
+  omitirItemDelLote = function() {
+    var self = this;
+    var lote = this.state.lote;
+    this.actualizarItem(lote.id, lote.actual, { estado: "omitido" }, function() { self.irAlSiguienteDelLote(); });
+  }.bind(this);
+
+  // Despues de guardar un comprobante del lote: queda "guardado", lo que se
+  // puso en el formulario pasa a ser lo comun del siguiente, y se avanza.
+  alGuardarItemDelLote = function(data) {
+    var self = this;
+    var lote = this.state.lote;
+    var items = lote.items.slice();
+    items[lote.actual] = Object.assign({}, items[lote.actual], {
+      estado: "guardado", error: null, gastoId: data && data.register ? data.register.id : null,
+    });
+    this.setState({ saving: false, lote: Object.assign({}, lote, { items: items, comunes: this.comunesDelFormulario() }) },
+                  function() {
+                    self.loadData();
+                    self.irAlSiguienteDelLote();
+                  });
+  }.bind(this);
+
+  cerrarLote = function() {
+    this.setState(Object.assign({ modal: false, lote: null, saving: false }, estadoComprobanteVacio()));
+  }.bind(this);
+
+  // Cerrar la pestaña con comprobantes sin registrar los pierde: el navegador
+  // pregunta antes. Lo guardado ya esta guardado.
+  avisarSiHayLotePendiente = function(e) {
+    var lote = this.state.lote;
+    if (!lote || lote.paso !== "revisar" || !this.pendientesDelLote(lote).length) return undefined;
+    e.preventDefault();
+    e.returnValue = "";
+    return "";
   }.bind(this);
 
   // --- Disponible presupuestal (informativo, nunca bloquea) ------------------
@@ -1367,6 +1704,12 @@ class ReportExpenseIndex extends React.Component {
         // modal no se cierra y el mensaje del servidor se muestra tal cual.
         if (data.type === "error") {
           self.setState({ saving: false });
+          // En el lote, el error queda anotado en el comprobante para la lista.
+          if (self.state.lote && !isEdit) {
+            var motivoLote = (data.blocking_rule_violations || []).map(function(v) { return v.message; }).join(" ") ||
+                             (data.message || []).join(" ");
+            self.actualizarItem(self.state.lote.id, self.state.lote.actual, { error: motivoLote || "No se pudo guardar" });
+          }
 
           // UNA REGLA CON «IMPEDIR GUARDAR» RECHAZO EL GASTO: este modal se
           // queda abierto con los datos puestos, para corregir sin volver a
@@ -1391,6 +1734,13 @@ class ReportExpenseIndex extends React.Component {
           }
 
           Swal.fire({ icon: "error", title: "¡Ocurrió un error!", text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+          return;
+        }
+        // EN EL LOTE NO SE CIERRA: pasa al siguiente comprobante.
+        if (self.state.lote && !isEdit) {
+          self.alGuardarItemDelLote(data);
+          Swal.fire({ position: "top-end", icon: "success", title: "Gasto guardado", toast: true,
+                      showConfirmButton: false, timer: 1200 });
           return;
         }
         self.setState({ modal: false, saving: false });
@@ -1457,6 +1807,13 @@ class ReportExpenseIndex extends React.Component {
         if (data && data.type === "error") {
           Swal.fire({ icon: "error", title: "No se pudo cambiar el estado",
                       text: (data.message || []).join(" "), confirmButtonColor: "#2a3f53" });
+          return;
+        }
+        // DOBLE APROBACION: el "Aceptado" fue la primera de dos firmas. Se dice,
+        // o la persona cree que el gasto ya va para Contabilidad.
+        if (data && data.register && data.register.operational_state === "pendiente_segunda") {
+          Swal.fire({ icon: "info", title: "Primera aprobación registrada",
+                      text: data.success, confirmButtonColor: "#2a3f53" });
         }
       });
   }.bind(this);
@@ -1514,13 +1871,41 @@ class ReportExpenseIndex extends React.Component {
     return (estados.owned_cost_center_ids || []).indexOf(row.cost_center_id) !== -1;
   }.bind(this);
 
+  // ¿Puede este usuario dar la segunda aprobacion de ESTA fila? Misma regla que
+  // `puede_dar_segunda_aprobacion?` del modelo: figura en la regla (por persona
+  // o por cargo) y no dio la primera. Solo para no pintar un desplegable que el
+  // servidor va a rechazar; quien decide de verdad es el servidor.
+  puedeDarSegunda = function(row) {
+    var doble = row.double_approval;
+    if (!doble || row.operational_state !== "pendiente_segunda") return false;
+    var yo = this.props.current_user || {};
+    if (doble.first_by && doble.first_by.id === yo.id) return false;
+    return (doble.user_ids || []).indexOf(yo.id) !== -1 || (doble.rol_ids || []).indexOf(yo.rol_id) !== -1;
+  }.bind(this);
+
+  // El texto del tooltip del estado: quien dio cada firma y quien falta. null
+  // en los gastos de siempre.
+  notaDobleAprobacion = function(row) {
+    var partes = [];
+    var doble = row.double_approval;
+    if (doble) {
+      if (doble.first_by) partes.push("1ª aprobación: " + doble.first_by.names);
+      if (doble.second_by) partes.push("2ª aprobación: " + doble.second_by.names);
+      else partes.push("2ª aprobación de: " + doble.approvers);
+      (doble.reasons || []).forEach(function(r) { partes.push(r); });
+    }
+    return partes.length ? partes.join("\n") : null;
+  }.bind(this);
+
   getRowActions = function(row) {
     var self = this;
     var estados = this.props.estados;
 
     // Un gasto ACEPTADO solo lo edita o elimina quien podria decidirlo: editar
-    // lo devuelve a "Creado" (M6) y deshace la aceptacion de otro.
-    if (!operationalState(row).isOk || self.puedeDecidir(row)) {
+    // lo devuelve a "Creado" (M6) y deshace la aceptacion de otro. Lo mismo un
+    // gasto que espera la segunda aprobacion: ya tiene una firma.
+    var estadoFila = operationalState(row);
+    if ((!estadoFila.isOk && !estadoFila.isPendingSecond) || self.puedeDecidir(row)) {
       var hasEdit = estados.edit && row.cost_center && row.cost_center.execution_state !== "FINALIZADO";
       var hasDelete = estados.delete;
 
@@ -1563,6 +1948,11 @@ class ReportExpenseIndex extends React.Component {
     }
     if (estados.show_all) {
       tabs.push({ value: "all", label: "Todos los gastos", icon: "fas fa-list-ul" });
+    }
+    // DOBLE APROBACION (2026-10-18): lo que espera MI segunda firma. Solo a
+    // quien una regla nombra segundo aprobador o tiene algo pendiente.
+    if (estados.second_approver) {
+      tabs.push({ value: "second_approval", label: "Por aprobar (2ª)", icon: "fas fa-user-check" });
     }
 
     if (tabs.length < 2) return null;
@@ -1662,6 +2052,7 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("option", { value: "" }, "Todos"),
               React.createElement("option", { value: "creado" }, "Creado"),
               React.createElement("option", { value: "aceptado" }, "Aceptado"),
+              React.createElement("option", { value: "pendiente_segunda" }, "Pendiente 2ª aprobación"),
               React.createElement("option", { value: "rechazado" }, "Rechazado")
             )
           ),
@@ -2108,22 +2499,206 @@ class ReportExpenseIndex extends React.Component {
     );
   }.bind(this);
 
+
+  // La barra del lote encima del formulario: el avance y un chip por
+  // comprobante con su estado. Se puede saltar a cualquiera que no este
+  // guardado.
+  renderBarraDelLote = function() {
+    var self = this;
+    var lote = this.state.lote;
+    if (!lote) return null;
+    var total = lote.items.length;
+    var guardados = lote.items.filter(function(i) { return i.estado === "guardado"; }).length;
+    var omitidos = lote.items.filter(function(i) { return i.estado === "omitido"; }).length;
+    var avance = Math.round(((guardados + omitidos) / total) * 100);
+
+    var ICONO = { cola: "far fa-clock", leyendo: "fas fa-spinner fa-spin", listo: "far fa-file-alt",
+                  guardado: "fas fa-check-circle", omitido: "fas fa-forward" };
+    var COLOR = { guardado: "#155724", omitido: "#6c757d" };
+
+    return React.createElement("div", { className: "cm-batch-bar", "data-testid": "batch-bar", style: { marginBottom: 14 } },
+      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 } },
+        React.createElement("strong", { "data-testid": "batch-progress" }, guardados + " de " + total + " guardados"),
+        omitidos ? React.createElement("span", { className: "cm-hint" }, omitidos + " omitido" + (omitidos === 1 ? "" : "s")) : null
+      ),
+      React.createElement("div", { style: { height: 6, background: "#e9ecef", borderRadius: 4, overflow: "hidden" } },
+        React.createElement("div", { style: { width: avance + "%", height: "100%", background: "#28a745", transition: "width .3s" } })
+      ),
+      React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", padding: "8px 0 2px" } },
+        lote.items.map(function(it, idx) {
+          var actual = idx === lote.actual;
+          var titulo = it.name + (it.error ? " — " + it.error : "");
+          return React.createElement("button", {
+            key: it.id, type: "button", title: titulo,
+            onClick: function() { if (!actual) self.irAItemDelLote(idx); },
+            disabled: it.estado === "guardado",
+            "data-testid": "batch-item-" + idx,
+            "data-estado": it.estado,
+            style: {
+              flex: "0 0 auto", maxWidth: 170, display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "3px 9px", borderRadius: 999, fontSize: 12, cursor: it.estado === "guardado" ? "default" : "pointer",
+              border: actual ? "2px solid #f5a623" : "1px solid #e2e5ea",
+              background: it.estado === "guardado" ? "#d4edda" : it.error ? "#fdf2f3" : "#fff",
+              color: COLOR[it.estado] || (it.error ? "#c82333" : "#333"),
+            },
+          },
+            React.createElement("i", { className: it.error && it.estado !== "guardado" ? "fas fa-exclamation-circle" : ICONO[it.estado] }),
+            React.createElement("span", { style: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, it.name)
+          );
+        })
+      )
+    );
+  }.bind(this);
+
+  // El inicio y el resumen del lote.
+  renderModalDelLote = function() {
+    var self = this;
+    var lote = this.state.lote;
+    var esInicio = lote.paso === "inicio";
+    var guardados = lote.items.filter(function(i) { return i.estado === "guardado"; });
+    var sinRegistrar = lote.items.filter(function(i) { return i.estado !== "guardado"; });
+
+    var cuerpo = esInicio ? this.renderInicioDelLote() : React.createElement("div", { "data-testid": "batch-summary" },
+      React.createElement("div", { className: "cm-alert cm-alert-success", style: { marginBottom: 12 } },
+        React.createElement("i", { className: "fas fa-check-circle" }),
+        " Se registraron ", React.createElement("strong", { "data-testid": "batch-summary-saved" }, guardados.length),
+        " de " + lote.items.length + " comprobantes."
+      ),
+      sinRegistrar.length ? React.createElement("div", null,
+        React.createElement("p", { className: "cm-label", style: { marginBottom: 6 } }, "Quedaron sin registrar:"),
+        React.createElement("ul", { style: { paddingLeft: 18, margin: 0 } },
+          sinRegistrar.map(function(it) {
+            var idx = lote.items.indexOf(it);
+            return React.createElement("li", { key: it.id, style: { marginBottom: 4 } },
+              it.name, it.error ? React.createElement("span", { className: "cm-hint" }, " — " + it.error) : null, " ",
+              React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline", style: { padding: "1px 8px", fontSize: 12 },
+                                              onClick: function() { self.irAItemDelLote(idx); } }, "Registrar")
+            );
+          })
+        )
+      ) : null,
+      lote.ignorados.length ? React.createElement("div", { style: { marginTop: 12 } },
+        React.createElement("p", { className: "cm-label", style: { marginBottom: 6 } }, "No se cargaron:"),
+        React.createElement("ul", { style: { paddingLeft: 18, margin: 0 } },
+          lote.ignorados.map(function(i, k) {
+            return React.createElement("li", { key: k }, i.name, React.createElement("span", { className: "cm-hint" }, " — " + i.motivo));
+          })
+        )
+      ) : null
+    );
+
+    return React.createElement(Modal, { isOpen: true, toggle: self.closeModal, className: "modal-dialog-centered modal-lg", backdrop: "static" },
+      React.createElement("div", { className: "cm-modal-container", "data-testid": "batch-modal" },
+        React.createElement("div", { className: "cm-modal-header" },
+          React.createElement("div", { className: "cm-modal-header-content" },
+            React.createElement("div", null,
+              React.createElement("h2", { className: "cm-modal-title" }, esInicio ? "Subir varios comprobantes" : "Lote terminado"),
+              React.createElement("p", { className: "cm-modal-subtitle" },
+                esInicio ? lote.items.length + " comprobante" + (lote.items.length === 1 ? "" : "s") + " para registrar"
+                         : "Así quedó el lote")
+            )
+          ),
+          React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeModal },
+            React.createElement("i", { className: "fa fa-times" })
+          )
+        ),
+        React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" }, cuerpo),
+        React.createElement("div", { className: "cm-modal-footer" },
+          React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
+            esInicio ? "Cancelar" : "Cerrar"
+          ),
+          esInicio ? React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.empezarLote,
+                                                     "data-testid": "batch-start" },
+            "Empezar"
+          ) : null
+        )
+      )
+    );
+  }.bind(this);
+
+  // Los archivos que entraron, los que no y por que, y los datos comunes. Los
+  // datos son los MISMOS campos del formulario (mismo estado): lo que se elija
+  // aqui llega puesto en cada comprobante, y se puede cambiar en cualquiera.
+  renderInicioDelLote = function() {
+    var self = this;
+    var lote = this.state.lote;
+    var form = this.state.form;
+
+    var campo = function(label, testid, select) {
+      return React.createElement("div", { className: "cm-form-group" },
+        React.createElement("label", { className: "cm-label" }, label),
+        React.createElement("div", { "data-testid": testid }, select)
+      );
+    };
+
+    return React.createElement("div", { "data-testid": "batch-start-step" },
+      React.createElement("div", { className: "cm-alert cm-alert-info", style: { marginBottom: 12 } },
+        React.createElement("i", { className: "fas fa-info-circle" }),
+        " Se abrirá el formulario de crear gasto con cada comprobante ya leído. Revise, complete lo que falte y guarde: ",
+        "pasa solo al siguiente. Lo que elija aquí abajo queda puesto en todos (se puede cambiar en cada uno)."
+      ),
+      lote.ignorados.length ? React.createElement("div", { className: "cm-alert cm-alert-warning", style: { marginBottom: 12 }, "data-testid": "batch-ignored" },
+        React.createElement("strong", null, lote.ignorados.length + " archivo" + (lote.ignorados.length === 1 ? "" : "s") + " no se cargaron:"),
+        React.createElement("ul", { style: { margin: "6px 0 0", paddingLeft: 18 } },
+          lote.ignorados.map(function(i, k) { return React.createElement("li", { key: k }, i.name + ": " + i.motivo); })
+        )
+      ) : null,
+      React.createElement("div", { className: "cm-form-grid-2" },
+        campo("Centro de costo (3 letras)", "batch-cost-center-select", React.createElement(Select, {
+          options: self.state.formCostCenterOptions, value: self.state.selectedCostCenter,
+          onChange: function(opt) { self.setState({ selectedCostCenter: opt, form: Object.assign({}, form, { cost_center_id: opt ? opt.value : "" }) }); },
+          onInputChange: self.handleFormCostCenterSearch, isLoading: self.state.formCostCenterLoading,
+          placeholder: "Buscar centro de costo...", noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
+          isClearable: true, styles: selectStyles, menuPortalTarget: document.body,
+        })),
+        campo("Responsable", "batch-user-select", React.createElement(Select, {
+          options: self.userOptions, value: self.state.selectedUser,
+          onChange: function(opt) { self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }); },
+          placeholder: "Seleccionar...", styles: selectStyles, menuPortalTarget: document.body,
+        })),
+        campo("Tipo", "batch-type-select", React.createElement(Select, {
+          options: self.typeOptions, value: self.state.selectedType,
+          onChange: function(opt) { self.setState({ selectedType: opt, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
+          placeholder: "Varía en cada uno (opcional)", isClearable: true, styles: selectStyles, menuPortalTarget: document.body,
+        })),
+        campo("Medio de pago", "batch-payment-select", React.createElement(Select, {
+          options: self.paymentOptions, value: self.state.selectedPayment,
+          onChange: function(opt) { self.setState({ selectedPayment: opt, form: Object.assign({}, form, { payment_type_id: opt ? opt.value : "" }) }); },
+          placeholder: "Varía en cada uno (opcional)", isClearable: true, styles: selectStyles, menuPortalTarget: document.body,
+        }))
+      ),
+      React.createElement("p", { className: "cm-hint", style: { margin: "4px 0 0" } },
+        "Cada comprobante se lee con la inteligencia artificial (una lectura por comprobante). Máximo " + MAX_COMPROBANTES + " por lote."
+      )
+    );
+  }.bind(this);
+
   renderModal = function() {
     var self = this;
     var form = this.state.form;
     var isEdit = this.state.modeEdit;
     var title = isEdit ? "Editar Gasto" : "Nuevo Gasto";
+    var subtitle = "Complete los campos para gestionar el gasto";
     var hasError = function(field) { return self.state.ErrorValues === false && !form[field]; };
 
     if (!this.state.modal) return null;
+
+    // CARGA DE VARIOS COMPROBANTES: el inicio y el resumen tienen su propio
+    // modal; el recorrido usa este mismo formulario.
+    var lote = this.state.lote;
+    if (lote && lote.paso !== "revisar") return this.renderModalDelLote();
+    if (lote) {
+      title = "Comprobante " + (lote.actual + 1) + " de " + lote.items.length;
+      subtitle = lote.items[lote.actual].name;
+    }
 
     return React.createElement(Modal, { isOpen: true, toggle: self.closeModal, className: "modal-dialog-centered modal-lg", backdrop: "static" },
       React.createElement("div", { className: "cm-modal-container" },
         React.createElement("div", { className: "cm-modal-header" },
           React.createElement("div", { className: "cm-modal-header-content" },
             React.createElement("div", null,
-              React.createElement("h2", { className: "cm-modal-title" }, title),
-              React.createElement("p", { className: "cm-modal-subtitle" }, "Complete los campos para gestionar el gasto")
+              React.createElement("h2", { className: "cm-modal-title", "data-testid": lote ? "batch-title" : undefined }, title),
+              React.createElement("p", { className: "cm-modal-subtitle" }, subtitle)
             )
           ),
           React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeModal },
@@ -2132,6 +2707,7 @@ class ReportExpenseIndex extends React.Component {
         ),
         React.createElement("form", null,
           React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" },
+            self.renderBarraDelLote(),
             // EL TIPO VA PRIMERO, ANTES DEL COMPROBANTE (2026-10-16). Decide dos
             // cosas que el archivo necesita saber: si el comprobante es
             // obligatorio (un viatico no lo exige) y que reglas juzga el agente
@@ -2363,12 +2939,19 @@ class ReportExpenseIndex extends React.Component {
           ),
           React.createElement("div", { className: "cm-modal-footer" },
             React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
-              "Cancelar"
+              lote ? "Cerrar" : "Cancelar"
             ),
-            React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit, disabled: !!self.state.saving },
+            // En el lote, saltar un comprobante sin registrarlo: queda en el
+            // resumen como omitido y se puede volver a el.
+            lote ? React.createElement("button", { type: "button", className: "cm-btn cm-btn-outline", onClick: self.omitirItemDelLote,
+                                                   disabled: !!self.state.saving, "data-testid": "batch-skip" },
+              "Omitir"
+            ) : null,
+            React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.handleSubmit, disabled: !!self.state.saving,
+                                            "data-testid": lote ? "batch-save" : undefined },
               self.state.saving
                 ? React.createElement("span", null, React.createElement("i", { className: "fa fa-spinner fa-spin" }), " Guardando…")
-                : isEdit ? "Actualizar" : "Crear"
+                : lote ? "Guardar y siguiente" : isEdit ? "Actualizar" : "Crear"
             )
           )
         )
@@ -2611,6 +3194,30 @@ class ReportExpenseIndex extends React.Component {
           React.createElement("i", { className: "fas fa-check" }),
           " Aceptar gastos"
         )
+      );
+    }
+
+    // SUBIR VARIOS COMPROBANTES (2026-10-18): un ZIP o varios archivos. Mismo
+    // permiso que crear un gasto: es crear gastos, uno por uno, por el mismo
+    // formulario.
+    if (this.props.estados.create) {
+      buttons.push(
+        React.createElement("button", {
+          key: "batch",
+          onClick: self.abrirSelectorLote,
+          className: "cm-btn cm-btn-outline",
+          disabled: !!self.state.preparandoLote,
+          "data-testid": "expense-batch-upload",
+        },
+          React.createElement("i", { className: self.state.preparandoLote ? "fas fa-spinner fa-spin" : "fas fa-file-archive" }),
+          self.state.preparandoLote ? " Abriendo…" : " Subir varios"
+        ),
+        React.createElement("input", {
+          key: "batch-input", type: "file", multiple: true, accept: ACCEPT_LOTE, style: { display: "none" },
+          ref: function(el) { self._inputLote = el; },
+          onChange: self.handleArchivosLote,
+          "data-testid": "expense-batch-input",
+        })
       );
     }
 

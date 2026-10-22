@@ -1,0 +1,26 @@
+Hola <%= @approver.names %>,
+
+Un gasto del centro de costos <%= @cost_center&.code || "(sin centro)" %> ya tiene la primera aprobación<% if @primera %> (de <%= @primera.names %>)<% end %>
+y necesita su segunda aprobación para pasar a Contabilidad.
+
+<%= @expense.invoice_name %>
+Valor:       <%= ExpenseBudgetService.money(@expense.invoice_total) %><%= " #{@expense.currency}" unless @expense.currency == "COP" %>
+Responsable: <%= @responsable&.names || "—" %>
+Fecha:       <%= @expense.invoice_date&.strftime("%d/%m/%Y") || "—" %>
+Factura:     <%= @expense.invoice_number.presence || "—" %>
+<% if @reglas.any? -%>
+
+Por qué necesita segunda aprobación:
+<% @reglas.each do |r| -%>
+- Regla «<%= r["rule"] %>»<% motivos = Array(r["reasons"]) + Array(r["ia_reasons"]) %><% if motivos.any? %>: <%= motivos.join(" · ") %><% end %>
+<% end -%>
+<% end -%>
+
+Revisar y dar la segunda aprobación:
+<%= @url_aprobar %>
+
+Ver todos los gastos pendientes de mi segunda aprobación:
+<%= @url_lista %>
+
+El enlace es personal: le muestra el gasto y le pide confirmar antes de aprobarlo.
+Caduca en <%= ExpenseApprovalToken.caducidad_en_dias %> días; después de eso puede aprobarlo entrando a Controlmatica como siempre.

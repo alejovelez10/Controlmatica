@@ -143,4 +143,20 @@ class ReportExpensesAntiguedadAlEditarTest < ActionDispatch::IntegrationTest
       assert_not_includes gasto.budget_reason.to_s, "reglas de gasto"
     end
   end
+
+  # La doble aprobacion vuelve a sacar la foto en cada edicion: contada hasta
+  # hoy, corregir la descripcion le pedia una segunda firma por el tiempo.
+  test "editarlo dos meses despues no le pide segunda aprobacion por antiguedad" do
+    regla(mandatory: false, requires_second_approval: true, second_approver_user_id: @admin.id)
+    gasto = gasto_registrado_a_tiempo(operational_state: ReportExpense::STATE_CREADO)
+    assert_empty gasto.second_approval_rules
+
+    travel_to(DOS_MESES_DESPUES) do
+      sign_in_as @admin
+      assert_guarda(gasto, description: "Hotel, segunda noche")
+
+      assert_empty gasto.second_approval_rules
+      assert_empty gasto.rule_violations
+    end
+  end
 end
