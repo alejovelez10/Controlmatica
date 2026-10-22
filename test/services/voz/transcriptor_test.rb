@@ -38,6 +38,26 @@ class Voz::TranscriptorTest < ActiveSupport::TestCase
     assert_equal "Bearer sk-openai-de-mentira", enviado[:headers]["Authorization"]
   end
 
+  # Visto el 2026-10-21 con la primera nota de voz real: con HTTParty.post
+  # reemplazado el multipart nunca se armaba, y al armarlo de verdad un audio
+  # binario junto al prompt con tildes reventaba con Encoding::CompatibilityError.
+  test "el multipart se arma con un audio binario de verdad y textos con tildes" do
+    cuerpo_armado = nil
+    post = lambda do |_url, headers:, body:, timeout:|
+      cuerpo_armado = HTTParty::Request::Body.new(body).call
+      Respuesta.new(200, { "text" => "Viáticos cincuenta mil" })
+    end
+
+    texto = HTTParty.stub(:post, post) do
+      Voz::Transcriptor.new.transcribir("OggS\x00\x02\xFF\xFE\xC3\x9Faudio".b, mime: "audio/ogg",
+                                        terminos: ["PRO-DÑB-2-2026"])
+    end
+
+    assert_equal "Viáticos cincuenta mil", texto
+    assert_includes cuerpo_armado, "ingenier".b
+    assert_includes cuerpo_armado, "\xFF\xFE".b
+  end
+
   test "un error HTTP levanta Error" do
     HTTParty.stub(:post, ->(*_a, **_k) { Respuesta.new(500, {}) }) do
       assert_raises(Voz::Transcriptor::Error) { Voz::Transcriptor.new.transcribir("x".b) }

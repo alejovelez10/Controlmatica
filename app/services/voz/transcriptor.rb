@@ -34,10 +34,14 @@ module Voz
       Tempfile.create(["nota", extension_para(mime)], binmode: true) do |archivo|
         archivo.write(bytes)
         archivo.rewind
-        cuerpo = { file: archivo, model: self.class.modelo, "languages" => ["es"], prompt: PROMPT,
+        # Los textos van como bytes (.b), igual que el audio: HTTParty pega las
+        # partes del multipart como strings, y un audio binario junto a un
+        # prompt UTF-8 con tildes revienta con Encoding::CompatibilityError
+        # (visto el 2026-10-21 con la primera nota de voz real).
+        cuerpo = { file: archivo, model: self.class.modelo, "languages" => ["es"], prompt: PROMPT.b,
                    response_format: "json" }
         palabras = Array(terminos).map(&:to_s).map(&:strip).reject(&:blank?).uniq.first(MAX_TERMINOS)
-        cuerpo["keywords"] = palabras if palabras.any?
+        cuerpo["keywords"] = palabras.map(&:b) if palabras.any?
         respuesta = HTTParty.post(URL, headers: { "Authorization" => "Bearer #{ENV['OPENAI_API_KEY']}" },
                                        body: cuerpo, timeout: TIMEOUT)
         raise Error, "transcripcion HTTP #{respuesta.code}" unless respuesta.success?
