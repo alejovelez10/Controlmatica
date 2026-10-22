@@ -10,7 +10,10 @@
 ## 1. Qué puede hacer por aquí
 
 - **Registrar un gasto**: mande la foto del comprobante (o el PDF), una nota de voz o un texto.
-- **Registrar un reporte de servicio**: escriba "reporte" y el asistente le pide los datos.
+- **Registrar un reporte de servicio**: escriba "reporte" y el asistente le pide los datos. Si el
+  servicio todavía no tiene centro de costo, dígalo: se registra igual, se crea un centro nuevo y
+  el asistente le pide el cliente y quién será el propietario de ese centro (quien aprueba sus
+  gastos), como en el sistema.
 
 Por aquí **solo se registra**: las consultas (sus gastos, sus reportes, el presupuesto) se hacen
 en el sistema, como siempre. Lo que cada persona puede registrar depende de su rol; si el

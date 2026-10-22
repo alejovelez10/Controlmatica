@@ -220,6 +220,22 @@ WhatsApp, el BSUID ligado se borra y se vuelve a ligar con el dato nuevo. Si no 
 aviso le dice a la persona cuál es su @usuario para que se lo pase al administrador. El enlace de
 vinculación sigue funcionando como alternativa.
 
+## 6.3 Reporte de servicio sin centro de costo (2026-10-22)
+
+Igual que en el formulario web: sin centro, al confirmar se crea uno nuevo (servicio, en ejecución,
+"SIN INFORMACIÓN", código `SER-<cliente>-<n>-<año>`, tarifa hora por defecto de las
+parametrizaciones) y la persona elige su **propietario** entre `User.pueden_ser_propietarios` (la
+casilla «Puede ser propietario» de Centro de Costos), con la herramienta propia
+`propietarios_list` (solo id y nombre). El cliente sí se pregunta (records_search de clientes) y el
+contacto sale de ese cliente. `reports_create` ya no exige `cost_center_id`: sin él exige
+`customer_id` y `cost_center_owner_id`. El agente solo toma este camino si la persona dice que el
+servicio no tiene centro, nunca porque una búsqueda no encontró nada.
+
+Hallazgo: `Report#create_total` (before_save) valoriza antes de que `coste_center_verify`
+(before_create) cree el centro, así que el reporte nacía en $0. La web lo tapa sin querer
+guardando dos veces (`ReportsController#create`), lo que además deja una "edición" en la
+auditoría; `reports_create` lo recalcula con la misma fórmula sin pasar por ella.
+
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
 Fuera de la ventana de 24 h desde el último mensaje de la persona, Meta solo deja mandar plantillas

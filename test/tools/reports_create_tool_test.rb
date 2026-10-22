@@ -282,10 +282,87 @@ class ReportsCreateToolTest < ActiveSupport::TestCase
     end
   end
 
+  # --- Sin centro de costo: se crea uno, como en el formulario web ------------
+  # (2026-10-22, para el agente de WhatsApp). Mismo modelo que la web:
+  # Report#coste_center_verify crea el centro con el propietario elegido.
+
+  def puede_ser_propietario!(usuario)
+    accion = AccionModule.find_or_create_by!(name: CostCenter::ACCION_PUEDE_SER_PROPIETARIO,
+                                             module_control: module_controls(:centro_costos)) do |a|
+      a.user = users(:admin)
+    end
+    usuario.rol.accion_modules << accion unless usuario.rol.accion_modules.include?(accion)
+    # CostCenter#create_code toma de aqui el valor hora del centro nuevo.
+    ["HORA HOMBRE COSTO", "HORA HOMBRE COTIZADA", "HORA DESPLAZAMIENTO"].each do |nombre|
+      Parameterization.find_or_create_by!(name: nombre) { |p| p.money_value = 50_000; p.user_id = users(:admin).id }
+    end
+  end
+
+  def sin_centro(**extra)
+    ReportsCreateTool.call(server_context: ctx(actor_phone: "+57 300 123 4567"),
+                           report_date: "2026-09-08", working_time: 4.0, work_description: "Montaje",
+                           customer_id: customers(:cliente_uno).id, contact_id: @contacto_del_cliente.id,
+                           **extra)
+  end
+
+  test "sin centro y con cliente, contacto y propietario crea el reporte y un centro nuevo a nombre del propietario" do
+    puede_ser_propietario!(users(:gerente))
+    with_mcp_key do
+      cuerpo = nil
+      assert_difference(-> { Report.count } => 1, -> { CostCenter.count } => 1) do
+        cuerpo = tool_json(sin_centro(cost_center_owner_id: users(:gerente).id))
+      end
+      centro = CostCenter.find(cuerpo["cost_center_id"])
+      assert_equal users(:gerente).id, centro.user_owner_id
+      assert_equal customers(:cliente_uno).id, centro.customer_id
+      reporte = Report.find(cuerpo["id"])
+      assert_equal users(:ingeniero).id, reporte.report_execute_id
+      # 4 horas x la tarifa del centro nuevo (HORA HOMBRE COSTO = 50.000), no $0.
+      assert_equal 200_000.0, reporte.total_value
+      assert_equal 200_000.0, cuerpo["total_value"].to_f
+      assert_equal 200_000.0, centro.reload.sum_materials_costo
+    end
+  end
+
+  test "sin centro y sin propietario no crea nada" do
+    with_mcp_key do
+      assert_no_difference(["Report.count", "CostCenter.count"]) do
+        assert_tool_error sin_centro, "cost_center_owner_id"
+      end
+    end
+  end
+
+  test "sin centro, un propietario sin la casilla Puede ser propietario se rechaza" do
+    with_mcp_key do
+      assert_no_difference(["Report.count", "CostCenter.count"]) do
+        assert_tool_error sin_centro(cost_center_owner_id: users(:ingeniero_dos).id), "no puede ser propietario"
+      end
+    end
+  end
+
+  test "sin centro y sin cliente no crea nada" do
+    puede_ser_propietario!(users(:gerente))
+    with_mcp_key do
+      respuesta = ReportsCreateTool.call(server_context: ctx(actor_phone: "+57 300 123 4567"),
+                                         report_date: "2026-09-08", cost_center_owner_id: users(:gerente).id)
+      assert_tool_error respuesta, "customer_id"
+    end
+  end
+
+  test "sin centro, un contacto de otro cliente se rechaza" do
+    puede_ser_propietario!(users(:gerente))
+    with_mcp_key do
+      assert_no_difference("Report.count") do
+        assert_tool_error sin_centro(cost_center_owner_id: users(:gerente).id, contact_id: @contacto_ajeno.id),
+                          "no pertenece al cliente"
+      end
+    end
+  end
+
   # --- Contrato del schema ----------------------------------------------------
 
-  test "el input_schema solo exige cost_center_id y report_date" do
-    assert_equal %w[cost_center_id report_date], ReportsCreateTool.input_schema.to_h[:required]
+  test "el input_schema solo exige report_date: sin centro de costo se crea uno" do
+    assert_equal %w[report_date], ReportsCreateTool.input_schema.to_h[:required]
   end
 
   test "el input_schema documenta report_execute_id como opcional" do

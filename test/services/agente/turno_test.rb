@@ -363,6 +363,72 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     assert_equal @usuario.id, Report.order(:id).last.report_execute_id
   end
 
+  # ---- reporte sin centro de costo (2026-10-22) -----------------------------
+
+  def puede_ser_propietario!(usuario)
+    accion = AccionModule.find_or_create_by!(name: CostCenter::ACCION_PUEDE_SER_PROPIETARIO,
+                                             module_control: module_controls(:centro_costos)) do |a|
+      a.user = users(:admin)
+    end
+    usuario.rol.accion_modules << accion unless usuario.rol.accion_modules.include?(accion)
+    ["HORA HOMBRE COSTO", "HORA HOMBRE COTIZADA", "HORA DESPLAZAMIENTO"].each do |nombre|
+      Parameterization.find_or_create_by!(name: nombre) { |p| p.money_value = 50_000; p.user_id = users(:admin).id }
+    end
+  end
+
+  def args_sin_centro(extra = {})
+    contacto = Contact.create!(name: "Laura Gómez", customer_id: customers(:cliente_uno).id, user_id: users(:admin).id)
+    { customer_id: customers(:cliente_uno).id, contact_id: contacto.id, report_date: Date.current.iso8601,
+      working_time: 2, displacement_hours: 1, viatic_value: 0, work_description: "Montaje nuevo",
+      resumen: "Voy a registrar este reporte de servicio:" }.merge(extra)
+  end
+
+  test "propietarios_list devuelve solo el nombre de quienes pueden ser propietarios" do
+    puede_ser_propietario!(users(:gerente))
+    turno(entrante("no tiene centro"), FakeClaudeClient.tools(["propietarios_list", {}]), FakeClaudeClient.texto("ok"))
+    resultado = @claude.pedidos.last[:cuerpo][:messages].last["content"].first
+    personas = JSON.parse(resultado["content"])
+
+    assert_equal [users(:gerente).id], personas.map { |p| p["id"] }
+    assert_equal %w[id nombre], personas.first.keys.sort
+  end
+
+  test "un reporte sin centro y sin propietario no se propone" do
+    turno(entrante("listo"), FakeClaudeClient.tools(["proponer_reporte", args_sin_centro]), FakeClaudeClient.texto("ok"))
+    assert_nil borrador
+    resultado = @claude.pedidos.last[:cuerpo][:messages].last["content"].first
+    assert_includes resultado["content"], "falta su propietario"
+  end
+
+  test "sin centro, quien no puede ser propietario se rechaza" do
+    args = args_sin_centro(cost_center_owner_id: users(:ingeniero_dos).id)
+    turno(entrante("listo"), FakeClaudeClient.tools(["proponer_reporte", args]), FakeClaudeClient.texto("ok"))
+    assert_nil borrador
+  end
+
+  test "sin centro, Confirmar crea el reporte y un centro nuevo a nombre del propietario elegido" do
+    puede_ser_propietario!(users(:gerente))
+    turno(entrante("listo"),
+          FakeClaudeClient.tools(["proponer_reporte", args_sin_centro(cost_center_owner_id: users(:gerente).id)]))
+
+    assert_difference(-> { Report.count } => 1, -> { CostCenter.count } => 1) do
+      turno(boton("borrador:confirmar:#{borrador['id']}", "Confirmar"))
+    end
+    centro = Report.order(:id).last.cost_center
+    assert_equal users(:gerente).id, centro.user_owner_id
+    assert_equal customers(:cliente_uno).id, centro.customer_id
+    assert_includes @whatsapp.textos.last, "Se creó el centro de costo *#{centro.code}*"
+    assert_includes @whatsapp.textos.last, users(:gerente).names
+  end
+
+  test "con centro, el cliente y el propietario que mande el modelo se ignoran" do
+    contacto = Contact.create!(name: "Laura Gómez", customer_id: @centro.customer_id, user_id: users(:admin).id)
+    args = args_sin_centro(cost_center_id: @centro.id, contact_id: contacto.id, cost_center_owner_id: users(:gerente).id)
+    turno(entrante("listo"), FakeClaudeClient.tools(["proponer_reporte", args]))
+    refute borrador["args"].key?("cost_center_owner_id")
+    refute borrador["args"].key?("customer_id")
+  end
+
   # ---- archivos -------------------------------------------------------------
 
   test "la foto viaja al modelo en base64 y en la base queda solo la referencia" do

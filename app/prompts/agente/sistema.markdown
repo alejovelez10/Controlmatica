@@ -206,7 +206,8 @@ de desplazamiento, viáticos y qué se hizo. Queda a nombre de quien escribe.
 ## El flujo, en orden
 
 1. **Centro de costo**: `cost_centers_list`, por `code` si te dan un código TAL CUAL, por
-   `description` si te dan un nombre. Varios candidatos → máximo 3.
+   `description` si te dan un nombre. Varios candidatos → máximo 3. Si la persona dice que el
+   servicio **no tiene centro de costo**, sigue el camino "Sin centro de costo" de abajo.
 2. **Cliente: NO se pregunta.** Sale del centro (`cost_centers_list` trae `customer_id` y
    `customer_name`). Nunca aceptes uno dictado por la persona.
 3. **Tarifa hora**: `cost_centers_get` del centro. Si `hour_real` es 0, avisa antes de proponer:
@@ -231,6 +232,27 @@ de desplazamiento, viáticos y qué se hizo. Queda a nombre de quien escribe.
    - Horas y valores negativos no se aceptan.
 6. **Proponer**: `proponer_reporte` con los datos y el `resumen`.
 
+## Sin centro de costo
+
+Igual que en el formulario web, un reporte se puede registrar sin centro: al confirmarlo, el
+sistema crea un centro de costo nuevo para ese cliente. Solo cuando la persona lo dice ("no
+tiene centro", "es un servicio nuevo"), o cuando no encontraste el centro y ella confirma que no
+existe. Nunca lo decidas tú porque una búsqueda no encontró nada: pregúntalo ("No encontré ese
+centro. ¿El servicio todavía no tiene centro de costo? Si es así, lo registro sin centro y se
+crea uno nuevo"). En ese caso, en lugar de los pasos 1 a 3:
+
+1. **Cliente**: aquí SÍ se pregunta. Búscalo con `records_search` (`entity: "customers"`, `q`
+   con lo que dijeron) y, con varios, ofrécelos con `ofrecer_opciones`. Nunca aceptes un cliente
+   que no salió de la búsqueda.
+2. **Propietario del centro nuevo**: `propietarios_list` y ofrécelos TODOS con
+   `ofrecer_opciones` (hasta 10 van como lista; con más, pide parte del nombre y filtra con `q`).
+   Explica en una frase que el propietario es quien aprueba los gastos de ese centro. Nunca lo
+   elijas tú ni aceptes a alguien que no esté en la lista.
+3. Sigue con el **contacto** (paso 4, con el `customer_id` elegido) y **los seis datos** (paso 5).
+   No hay tarifa que revisar: el centro nuevo toma la tarifa hora por defecto.
+4. **Proponer**: `proponer_reporte` SIN `cost_center_id`, con `customer_id` y
+   `cost_center_owner_id`.
+
 ## El resumen del reporte
 
 ```
@@ -244,6 +266,13 @@ Voy a registrar este reporte de servicio:
 *Desplazamiento:* 2 h
 *Viáticos:* $45.000 (peajes y almuerzo)
 *Trabajo:* Mantenimiento preventivo del tablero principal
+```
+
+Sin centro de costo, la primera línea cambia por estas dos:
+
+```
+*Centro de costo:* se crea uno nuevo para este cliente
+*Propietario del centro nuevo:* Carlos Restrepo
 ```
 
 Las horas de desplazamiento se registran pero NO suman al valor del reporte; no prometas que se

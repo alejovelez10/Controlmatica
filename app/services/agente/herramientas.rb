@@ -108,13 +108,16 @@ module Agente
         name: "proponer_reporte",
         description: "Propone el reporte de servicio a la persona. El sistema le muestra tu resumen " \
                      "con los botones Confirmar / Corregir / Cancelar y SOLO el botón Confirmar lo " \
-                     "guarda. Llámala cuando tengas el centro, el contacto y los seis datos. " \
+                     "guarda. Llámala cuando tengas el centro (o, si el servicio no tiene centro, el " \
+                     "cliente y el propietario del centro nuevo), el contacto y los seis datos. " \
                      "Después no escribas nada más.",
         input_schema: {
           type: "object", additionalProperties: false,
           properties: {
-            cost_center_id: { type: "integer" },
-            contact_id: { type: "integer", description: "De contacts_list del cliente del centro" },
+            cost_center_id: { type: "integer", description: "Omítelo SOLO si el servicio no tiene centro: se crea uno nuevo" },
+            customer_id: { type: "integer", description: "Solo sin centro: el cliente, de records_search entity customers" },
+            cost_center_owner_id: { type: "integer", description: "Solo sin centro: el propietario del centro nuevo, de propietarios_list" },
+            contact_id: { type: "integer", description: "De contacts_list del cliente" },
             report_date: { type: "string", description: "YYYY-MM-DD" },
             working_time: { type: "number", description: "Horas trabajadas" },
             displacement_hours: { type: "number", description: "Horas de desplazamiento" },
@@ -123,8 +126,18 @@ module Agente
             work_description: { type: "string", description: "Qué trabajo se hizo" },
             resumen: { type: "string" }
           },
-          required: %w[cost_center_id contact_id report_date working_time displacement_hours viatic_value
-                       work_description resumen]
+          required: %w[contact_id report_date working_time displacement_hours viatic_value work_description resumen]
+        }
+      },
+      {
+        name: "propietarios_list",
+        description: "Las personas que pueden ser propietarias de un centro de costo (su rol tiene " \
+                     "«Puede ser propietario»). Úsala SOLO para un reporte de servicio SIN centro de " \
+                     "costo: se crea un centro nuevo y la persona elige su propietario, que es quien " \
+                     "aprueba los gastos del centro.",
+        input_schema: {
+          type: "object", additionalProperties: false,
+          properties: { q: { type: "string", description: "Parte del nombre, para filtrar (opcional)" } }
         }
       },
       {
@@ -161,7 +174,7 @@ module Agente
       propias = []
       propias << "ofrecer_opciones" if permisos.alguno?
       propias += %w[proponer_gasto adjuntar_comprobante] if permisos.registrar_gasto?
-      propias << "proponer_reporte" if permisos.registrar_reporte?
+      propias += %w[proponer_reporte propietarios_list] if permisos.registrar_reporte?
       tools.map(&:tool_name) + propias
     end
 
@@ -196,6 +209,7 @@ module Agente
       when "proponer_gasto" then Borrador.new(@conversacion, @usuario, @respondedor).proponer_gasto(argumentos, @mensaje)
       when "proponer_reporte" then Borrador.new(@conversacion, @usuario, @respondedor).proponer_reporte(argumentos)
       when "adjuntar_comprobante" then adjuntar_comprobante(argumentos)
+      when "propietarios_list" then propietarios_list(argumentos)
       else del_mcp(nombre, argumentos)
       end
     rescue StandardError => e
@@ -252,6 +266,16 @@ module Agente
       end
       Resultado.new(contenido: "Mensaje enviado con las opciones. Espera la respuesta de la persona.",
                     error: false, terminal: true)
+    end
+
+    # La misma lista del formulario web (ApplicationHelper#get_owner_users_json):
+    # solo id y nombre, nada mas de esas personas.
+    def propietarios_list(argumentos)
+      personas = User.pueden_ser_propietarios.order(:names)
+      q = argumentos["q"].to_s.strip
+      personas = personas.where("names ILIKE ?", "%#{User.sanitize_sql_like(q)}%") if q.present?
+      datos = personas.limit(30).map { |u| { id: u.id, nombre: u.names } }
+      Resultado.new(contenido: JSON.generate(datos), error: false, terminal: false)
     end
 
     def adjuntar_comprobante(argumentos)

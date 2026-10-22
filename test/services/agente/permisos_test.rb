@@ -39,11 +39,13 @@ class Agente::PermisosTest < ActiveSupport::TestCase
     assert_includes nombres, "report_expense_options_list"
     refute_includes nombres, "proponer_reporte"
     refute_includes nombres, "contacts_list"
+    refute_includes nombres, "propietarios_list"
 
     reporte = Agente::Permisos.para(usuario_con(rol_con(:agente_registrar_reporte)))
     nombres = Agente::Herramientas.definiciones(reporte).map { |d| d["name"] }
     assert_includes nombres, "proponer_reporte"
     assert_includes nombres, "contacts_list"
+    assert_includes nombres, "propietarios_list"
     refute_includes nombres, "proponer_gasto"
     refute_includes nombres, "adjuntar_comprobante"
   end

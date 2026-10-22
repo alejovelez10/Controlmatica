@@ -17,7 +17,9 @@ module Agente
                       foreign_value foreign_tax foreign_total exchange_rate exchange_rate_date description].freeze
 
     CAMPOS_REPORTE = %w[cost_center_id contact_id report_date working_time displacement_hours viatic_value
-                        viatic_description work_description].freeze
+                        viatic_description work_description customer_id cost_center_owner_id].freeze
+    # Solo cuando el servicio no tiene centro y se crea uno (como en la web).
+    CAMPOS_SIN_CENTRO = %w[customer_id cost_center_owner_id].freeze
 
     FECHA = /\A\d{4}-\d{2}-\d{2}\z/.freeze
 
@@ -55,6 +57,8 @@ module Agente
 
     def proponer_reporte(args)
       datos = args.slice(*CAMPOS_REPORTE).compact
+      # Con centro, el cliente sale del centro y no hay centro nuevo que crear.
+      datos = datos.except(*CAMPOS_SIN_CENTRO) if datos["cost_center_id"].present?
       error = error_de_reporte(datos)
       return rechazo(error) if error
       if viaticos_sin_permiso?(datos)
@@ -177,11 +181,36 @@ module Agente
     # --- Reporte -------------------------------------------------------------
 
     def error_de_reporte(datos)
-      return "Falta el centro de costo." if datos["cost_center_id"].blank?
+      if datos["cost_center_id"].blank?
+        error = error_sin_centro(datos)
+        return error if error
+      end
       return "Falta el contacto (de contacts_list del cliente del centro)." if datos["contact_id"].blank?
       return "La fecha va en formato YYYY-MM-DD." unless datos["report_date"].to_s.match?(FECHA)
       return "Ninguna hora ni valor puede ser negativo." if %w[working_time displacement_hours viatic_value].any? { |c| datos[c].to_f.negative? }
       return "Falta qué trabajo se hizo." if datos["work_description"].blank?
+
+      nil
+    end
+
+    # Sin centro se crea uno: hacen falta el cliente y su propietario, con las
+    # mismas reglas del formulario web (Report#propietario_del_centro_nuevo).
+    def error_sin_centro(datos)
+      if datos["customer_id"].blank?
+        return "Sin centro de costo se crea uno nuevo y falta el cliente (de records_search entity customers)."
+      end
+      unless Customer.exists?(datos["customer_id"])
+        return "Ese cliente no existe: búscalo con records_search entity customers."
+      end
+      if datos["cost_center_owner_id"].blank?
+        return "Sin centro de costo se crea uno nuevo y falta su propietario: pregúntalo con propietarios_list."
+      end
+      unless User.pueden_ser_propietarios.where(id: datos["cost_center_owner_id"]).exists?
+        return "Esa persona no puede ser propietaria de un centro: elige una de propietarios_list."
+      end
+      if datos["contact_id"].present? && !Contact.exists?(id: datos["contact_id"], customer_id: datos["customer_id"])
+        return "Ese contacto no es del cliente elegido: usa contacts_list con su customer_id."
+      end
 
       nil
     end
@@ -195,6 +224,8 @@ module Agente
       codigo = reporte["code_report"].presence || "##{reporte['id']}"
       lineas = ["✅ Listo, quedó registrado el reporte *#{codigo}*."]
       lineas << "Valor: #{ExpenseBudgetService.money(reporte['total_value'].to_d)}" if reporte["total_value"].present?
+      centro_nuevo = centro_creado(borrador, reporte)
+      lineas << centro_nuevo if centro_nuevo
       terminar!(borrador, reporte["id"], lineas.join("\n"), "reporte #{codigo}")
     end
 
@@ -219,6 +250,16 @@ module Agente
       que = borrador["tipo"] == "reporte" ? "reportes de servicio" : "gastos"
       responder("Tu rol no tiene habilitado registrar #{que} por aquí, así que no guardé nada. " \
                 "Si lo necesitas, pídeselo al administrador.")
+    end
+
+    def centro_creado(borrador, reporte)
+      return nil if borrador.dig("args", "cost_center_id").present?
+
+      centro = CostCenter.find_by(id: reporte["cost_center_id"])
+      return nil unless centro
+
+      propietario = User.find_by(id: centro.user_owner_id)&.names
+      "Se creó el centro de costo *#{centro.code}*#{" con #{propietario} como propietario" if propietario}."
     end
 
     # --- Comun ---------------------------------------------------------------
