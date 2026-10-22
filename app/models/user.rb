@@ -24,10 +24,11 @@
 #  reset_password_token   :string
 #  rol_user               :string
 #  sign_in_count          :integer          default(0), not null
-#  whatsapp_user_id       :string
+#  whatsapp_username      :string
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null
 #  rol_id                 :integer
+#  whatsapp_user_id       :string
 #
 # Indexes
 #
@@ -36,6 +37,7 @@
 #  index_users_on_reset_password_token  (reset_password_token) UNIQUE
 #  index_users_on_rol_id                (rol_id)
 #  index_users_on_whatsapp_user_id      (whatsapp_user_id)
+#  index_users_on_whatsapp_username     (whatsapp_username) UNIQUE WHERE (whatsapp_username IS NOT NULL)
 #
 
 class User < ApplicationRecord
@@ -71,6 +73,12 @@ class User < ApplicationRecord
   # :create_edit_register y no conviene meterse en el orden de validaciones de
   # Devise.
   before_save :set_phone_normalized
+  before_save :olvidar_vinculo_de_whatsapp
+
+  # Usuario de WhatsApp (paquete 17): para quien oculta su numero con un nombre
+  # de usuario. Va normalizado como lo compara el agente: sin "@", en minusculas.
+  FORMATO_USUARIO_WHATSAPP = /\A[a-z0-9._]{1,50}\z/.freeze
+  validate :usuario_de_whatsapp_valido
 
   # Busqueda del usuario por la llave normalizada del telefono (la usa el
   # agente de WhatsApp para saber quien reporta).
@@ -108,6 +116,16 @@ class User < ApplicationRecord
 
   def self.current=(user)
     Thread.current[:user] = user
+  end
+
+  # "@Juan.Perez " -> "juan.perez" ; "" -> nil. La misma llave para lo que
+  # escribe el administrador y para lo que manda Meta en el webhook.
+  def self.normalize_whatsapp_username(raw)
+    raw.to_s.strip.delete_prefix("@").strip.downcase.presence
+  end
+
+  def whatsapp_username=(valor)
+    super(self.class.normalize_whatsapp_username(valor))
   end
 
   # Deja el telefono en una llave comparable de hasta 10 digitos.
@@ -155,6 +173,29 @@ class User < ApplicationRecord
   end
 
   private
+
+  def usuario_de_whatsapp_valido
+    return if whatsapp_username.nil?
+
+    unless whatsapp_username.match?(FORMATO_USUARIO_WHATSAPP)
+      return errors.add(:base, "El usuario de WhatsApp solo puede tener letras, números, puntos y guiones bajos.")
+    end
+
+    otro = User.where(whatsapp_username: whatsapp_username).where.not(id: id).first
+    errors.add(:base, "El usuario de WhatsApp @#{whatsapp_username} ya está en #{otro.names}.") if otro
+  end
+
+  # Si el administrador cambia el telefono o el usuario de WhatsApp, el
+  # identificador que WhatsApp ya habia ligado (whatsapp_user_id) se olvida: si
+  # el dato estaba mal y se lo corrige, la otra persona no puede seguir
+  # entrando a nombre de este usuario. El siguiente mensaje lo vuelve a ligar
+  # con el dato nuevo.
+  def olvidar_vinculo_de_whatsapp
+    return if new_record?
+    return unless will_save_change_to_phone? || will_save_change_to_whatsapp_username?
+
+    self.whatsapp_user_id = nil
+  end
 
   # Mantiene phone_normalized sincronizado con phone. La segunda condicion
   # rellena los registros viejos que todavia no tienen la llave calculada.

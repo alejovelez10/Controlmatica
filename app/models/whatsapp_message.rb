@@ -14,12 +14,13 @@
 #  payload                  :jsonb            not null
 #  processed_at             :datetime
 #  status                   :string           default("recibido"), not null
-#  wa_id                    :string
+#  username                 :string
 #  wamid                    :string           not null
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  media_id                 :string
 #  user_id                  :bigint
+#  wa_id                    :string
 #  whatsapp_conversation_id :bigint
 #
 # Indexes
@@ -56,7 +57,7 @@ class WhatsappMessage < ApplicationRecord
   def self.registrar_entrante(datos, payload)
     create!(
       wamid: datos[:wamid], direction: ENTRANTE,
-      wa_id: datos[:wa_id], bsuid: datos[:bsuid],
+      wa_id: datos[:wa_id], bsuid: datos[:bsuid], username: datos[:username],
       message_type: datos[:tipo], body: datos[:texto],
       media_id: datos[:media_id], media_mime: datos[:media_mime],
       media_filename: datos[:media_filename],

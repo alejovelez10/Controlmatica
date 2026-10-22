@@ -206,6 +206,20 @@ bypass: sin la casilla no usa el agente.
 - Viáticos de un reporte: la misma regla de la web (`ReportsController`): Administrador o
   "Reportes de servicios → Ingresar viaticos". Sin eso, un reporte con viáticos se rechaza.
 
+## 6.2 Quien oculta su número: campo "Usuario de WhatsApp" (2026-10-22)
+
+Con nombre de usuario en WhatsApp, Meta deja de mandar el teléfono: solo llega el BSUID
+(`from_user_id`) y el usuario (`contacts[].profile.username`). Visto el 22-oct con el primer número
+distinto al del administrador. En el formulario de usuarios hay un campo **Usuario de WhatsApp** al
+lado del teléfono (columna `users.whatsapp_username`, normalizada sin "@" y en minúsculas, única);
+con uno de los dos basta. `Whatsapp::Identidad` busca en este orden: BSUID ya ligado, teléfono,
+usuario de WhatsApp, y al identificar guarda el BSUID. Dos protecciones: si ese usuario de
+Controlmatica ya estaba ligado a **otro** BSUID, el nombre de usuario no basta (alguien pudo tomar
+un usuario que soltó otra persona); y si el administrador cambia el teléfono o el usuario de
+WhatsApp, el BSUID ligado se borra y se vuelve a ligar con el dato nuevo. Si no lo encuentra, el
+aviso le dice a la persona cuál es su @usuario para que se lo pase al administrador. El enlace de
+vinculación sigue funcionando como alternativa.
+
 ## 7. Plantillas para los avisos (crear en WhatsApp Manager)
 
 Fuera de la ventana de 24 h desde el último mensaje de la persona, Meta solo deja mandar plantillas

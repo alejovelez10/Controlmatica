@@ -38,6 +38,8 @@ module Whatsapp
         wamid: mensaje["id"],
         wa_id: mensaje["from"].presence || contacto["wa_id"].presence,
         bsuid: mensaje["from_user_id"].presence || contacto["user_id"].presence,
+        # Solo llega si la persona tiene nombre de usuario en WhatsApp.
+        username: User.normalize_whatsapp_username(contacto.dig("profile", "username")),
         nombre: contacto.dig("profile", "name"),
         tipo: tipo,
         contexto_id: mensaje.dig("context", "id"),

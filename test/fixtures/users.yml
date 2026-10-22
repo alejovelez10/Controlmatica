@@ -3,6 +3,7 @@
 # Table name: users
 #
 #  id                     :bigint           not null, primary key
+#  actual_user            :integer
 #  avatar                 :string
 #  birthday               :date
 #  current_sign_in_at     :datetime
@@ -23,10 +24,11 @@
 #  reset_password_token   :string
 #  rol_user               :string
 #  sign_in_count          :integer          default(0), not null
+#  whatsapp_username      :string
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null
-#  actual_user            :integer
 #  rol_id                 :integer
+#  whatsapp_user_id       :string
 #
 # Indexes
 #
@@ -34,6 +36,8 @@
 #  index_users_on_phone_normalized      (phone_normalized)
 #  index_users_on_reset_password_token  (reset_password_token) UNIQUE
 #  index_users_on_rol_id                (rol_id)
+#  index_users_on_whatsapp_user_id      (whatsapp_user_id)
+#  index_users_on_whatsapp_username     (whatsapp_username) UNIQUE WHERE (whatsapp_username IS NOT NULL)
 #
 
 # Los 8 usuarios canonicos. Todos comparten la misma contrasena

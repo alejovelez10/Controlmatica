@@ -42,7 +42,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     render json: {
       data: paginated.map do |user|
         user.as_json(
-          only: [:id, :names, :email, :document_type, :number_document, :phone, :rol_id],
+          only: [:id, :names, :email, :document_type, :number_document, :phone, :whatsapp_username, :rol_id],
           include: { rol: { only: [:id, :name] } }
         ).merge(
           # El avatar es adorno; la lista es la función. `present?`/`url` van a
@@ -102,10 +102,10 @@ class Users::RegistrationsController < Devise::RegistrationsController
   end
 
   def user_update_params
-    params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :phone, :rol_user, :actual_user)
+    params.permit(:email, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :phone, :whatsapp_username, :rol_user, :actual_user)
   end
 
   def user_params
-    params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :phone, :rol_user, :actual_user)
+    params.permit(:email, :password, :password_confirmation, :names, :last_names, :birthday, :avatar, :rol_id, :document_type, :number_document, :phone, :whatsapp_username, :rol_user, :actual_user)
   end
 end

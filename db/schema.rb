@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_19_000002) do
+ActiveRecord::Schema.define(version: 2026_10_22_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -859,11 +859,13 @@ ActiveRecord::Schema.define(version: 2026_10_19_000002) do
     t.string "phone"
     t.string "phone_normalized"
     t.string "whatsapp_user_id"
+    t.string "whatsapp_username"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["phone_normalized"], name: "index_users_on_phone_normalized"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["rol_id"], name: "index_users_on_rol_id"
     t.index ["whatsapp_user_id"], name: "index_users_on_whatsapp_user_id"
+    t.index ["whatsapp_username"], name: "index_users_on_whatsapp_username", unique: true, where: "(whatsapp_username IS NOT NULL)"
   end
 
   create_table "whatsapp_conversations", force: :cascade do |t|
@@ -906,6 +908,7 @@ ActiveRecord::Schema.define(version: 2026_10_19_000002) do
     t.datetime "processed_at"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "username"
     t.index ["user_id"], name: "index_whatsapp_messages_on_user_id"
     t.index ["wa_id", "created_at"], name: "index_whatsapp_messages_on_wa_id_and_created_at"
     t.index ["wamid"], name: "index_whatsapp_messages_on_wamid", unique: true

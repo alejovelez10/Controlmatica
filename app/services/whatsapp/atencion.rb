@@ -40,9 +40,9 @@ module Whatsapp
         return terminar!(nil)
       end
 
-      identidad = Identidad.resolver(wa_id: @mensaje.wa_id, bsuid: @mensaje.bsuid)
+      identidad = Identidad.resolver(wa_id: @mensaje.wa_id, bsuid: @mensaje.bsuid, username: @mensaje.username)
       unless identidad.encontrado?
-        respondedor.texto(Identidad.mensaje_para(identidad.motivo))
+        respondedor.texto(Identidad.mensaje_para(identidad.motivo, username: @mensaje.username))
         return terminar!(nil)
       end
 

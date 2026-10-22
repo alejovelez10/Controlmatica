@@ -4,7 +4,7 @@ import { CmDataTable, CmPageActions, CmModal } from "../../generalcomponents/ui"
 
 const EMPTY_FORM = {
   names: "", email: "", document_type: "", number_document: "",
-  phone: "", rol_id: "", password: "", password_confirmation: "",
+  phone: "", whatsapp_username: "", rol_id: "", password: "", password_confirmation: "",
 };
 
 const DOC_TYPES = [
@@ -46,7 +46,11 @@ class index extends React.Component {
       { key: "rol", label: "Rol", render: (row) => (row.rol ? row.rol.name : "Sin rol"), sortable: false },
       { key: "document_type", label: "Tipo documento" },
       { key: "number_document", label: "Documento" },
-      { key: "phone", label: "Teléfono", render: (row) => (row.phone ? row.phone : "Sin teléfono") },
+      {
+        key: "phone", label: "Teléfono / WhatsApp",
+        render: (row) => [row.phone, row.whatsapp_username && `@${row.whatsapp_username}`]
+          .filter(Boolean).join(" · ") || "Sin teléfono",
+      },
     ];
   }
 
@@ -105,6 +109,7 @@ class index extends React.Component {
         names: row.names || "", email: row.email || "",
         document_type: row.document_type || "", number_document: row.number_document || "",
         phone: row.phone || "",
+        whatsapp_username: row.whatsapp_username ? `@${row.whatsapp_username}` : "",
         rol_id: row.rol_id || "", password: "", password_confirmation: "",
       },
     });
@@ -152,6 +157,7 @@ class index extends React.Component {
     formData.append("document_type", form.document_type);
     formData.append("number_document", form.number_document);
     formData.append("phone", form.phone);
+    formData.append("whatsapp_username", form.whatsapp_username);
     formData.append("rol_id", form.rol_id);
     if (form.password) {
       formData.append("password", form.password);
@@ -434,6 +440,26 @@ class index extends React.Component {
                   onChange={(e) => this.handleFormChange("phone", e.target.value)}
                   style={inputStyle}
                 />
+              </div>
+              <div>
+                <label className="cm-label" style={labelStyle} htmlFor="user-whatsapp-username">
+                  <i className="fab fa-whatsapp" style={labelIconStyle} />
+                  Usuario de WhatsApp
+                </label>
+                <input
+                  id="user-whatsapp-username"
+                  type="text"
+                  className="cm-input"
+                  placeholder="@usuario"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  value={form.whatsapp_username}
+                  onChange={(e) => this.handleFormChange("whatsapp_username", e.target.value)}
+                  style={inputStyle}
+                />
+                <small style={{ display: "block", marginTop: "4px", color: "#6b7280", fontSize: "12px", lineHeight: 1.4 }}>
+                  Solo si la persona oculta su número en WhatsApp. Con el teléfono o con el usuario basta.
+                </small>
               </div>
               <div>
                 <label className="cm-label" style={labelStyle}>

@@ -23,6 +23,19 @@ class Users::RegistrationsControllerPhoneTest < ActionDispatch::IntegrationTest
     assert_equal "3001234567", user.phone_normalized
   end
 
+  test "update_user guarda el usuario de WhatsApp normalizado y la lista lo devuelve" do
+    user = users(:ingeniero)
+
+    patch update_user_path(user.id), params: { names: user.names, email: user.email, whatsapp_username: "@Juan.CM" }
+
+    assert_response :success
+    assert_equal "juan.cm", user.reload.whatsapp_username
+
+    get "/get_users", params: { name: user.names }
+    fila = json_body["data"].find { |u| u["id"] == user.id }
+    assert_equal "juan.cm", fila["whatsapp_username"]
+  end
+
   test "update_user con contrasena tambien persiste el telefono" do
     user = users(:ingeniero)
     nueva = "otraClave456"

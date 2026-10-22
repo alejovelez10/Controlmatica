@@ -69,6 +69,7 @@ nota de voz mal entendida es la causa número uno de gastos con el valor equivoc
 | Mensaje | Qué pasó | Qué hacer |
 |---|---|---|
 | *"No encuentro tu número en Controlmatica"* | Su celular no está en su usuario | Pídale al administrador que lo registre. Si ya tiene usuario, abra el enlace que le llega en ese mensaje desde su celular, con su sesión de Controlmatica iniciada, y envíe el mensaje que se abre |
+| *"No te encuentro… Tu usuario de WhatsApp es @…"* | Usted oculta su número en WhatsApp con un nombre de usuario | Pásele ese @usuario al administrador para que lo ponga en su usuario de Controlmatica, en el campo **Usuario de WhatsApp** |
 | *"Tu número está registrado en más de un usuario"* | El número está en dos personas | El administrador debe dejarlo en una sola |
 | *"No se puede registrar así: …"* | Una regla de la empresa (factura repetida, comprobante vencido, tope superado, tipo de gasto no permitido) | Corrija el dato si fue un error. Las excepciones se piden al administrador, no al asistente |
 | *"Este gasto supera tu disponible…"* | No es un error: se puede registrar | Confirme si es correcto y avísele al responsable del centro de costos |

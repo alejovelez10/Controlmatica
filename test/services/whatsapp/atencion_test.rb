@@ -63,6 +63,22 @@ class Whatsapp::AtencionTest < ActiveSupport::TestCase
     assert mensaje.procesado?
   end
 
+  test "quien oculta su numero y tiene su usuario de WhatsApp registrado es atendido" do
+    users(:ingeniero).update_column(:whatsapp_username, "juan.cm")
+    cliente = FakeWhatsappClient.new
+    mensaje = entrante(wa_id: nil, bsuid: "CO.oculto", username: "juan.cm")
+    Whatsapp::Atencion.new(mensaje, client: cliente).call
+
+    assert_equal users(:ingeniero), mensaje.reload.user
+    assert_equal [Whatsapp::Atencion::RECIBIDO], cliente.textos
+  end
+
+  test "quien oculta su numero y no esta registrado recibe su usuario de WhatsApp para pasarselo al administrador" do
+    cliente = FakeWhatsappClient.new
+    Whatsapp::Atencion.new(entrante(wa_id: nil, bsuid: "CO.oculto", username: "pedro.gomez"), client: cliente).call
+    assert_includes cliente.textos.first, "*@pedro.gomez*"
+  end
+
   test "un numero repetido en dos usuarios recibe el aviso de ambiguo" do
     cliente = FakeWhatsappClient.new
     Whatsapp::Atencion.new(entrante(wa_id: "573009999999", bsuid: nil), client: cliente).call

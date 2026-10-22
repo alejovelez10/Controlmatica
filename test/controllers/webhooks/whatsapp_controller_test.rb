@@ -56,6 +56,19 @@ class Webhooks::WhatsappControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "de quien oculta su numero se guarda el BSUID y el usuario de WhatsApp" do
+    payload = webhook_de_mensaje(mensaje_de_texto("hola", id: "wamid.usuario.1"), wa_id: nil, bsuid: "CO.oculto")
+    payload[:entry][0][:changes][0][:value][:contacts][0][:profile][:username] = "@Pedro.Gomez"
+    payload[:entry][0][:changes][0][:value][:messages][0].delete(:from)
+
+    con_whatsapp { post_webhook(payload) }
+
+    mensaje = WhatsappMessage.find_by!(wamid: "wamid.usuario.1")
+    assert_nil mensaje.wa_id
+    assert_equal "CO.oculto", mensaje.bsuid
+    assert_equal "pedro.gomez", mensaje.username
+  end
+
   test "un reintento de Meta con el mismo wamid no se guarda ni se encola dos veces" do
     con_whatsapp do
       post_webhook(webhook_de_mensaje(mensaje_de_texto("hola")))
