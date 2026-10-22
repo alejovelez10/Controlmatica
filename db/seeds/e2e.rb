@@ -84,7 +84,9 @@ SCOPES_ACTIVOS = (SCOPE == "ALL" ? E2E_SCOPES.keys - ["SMOKE"] : [SCOPE] - ["SMO
 MODULOS = {
   "Gastos" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Aceptar gasto",
                "Exportar a excel", "Ver todos", "Cambiar responsable"],
-  "Centro de Costos" => ["Ingreso al modulo", "Editar"],
+  # «Puede ser propietario» llena el select de propietario del reporte sin
+  # centro (specs/report-owner.spec.js).
+  "Centro de Costos" => ["Ingreso al modulo", "Editar", "Puede ser propietario"],
   "Presupuesto de gastos" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
   "Contabilidad" => ["Ingreso al modulo", "Contabilizar", "Exportar a excel", "Ver todos"],
   "Reportes de servicios" => ["Ingreso al modulo"],

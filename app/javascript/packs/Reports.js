@@ -11,7 +11,11 @@ class Reports extends React.Component {
                 clientes: this.props.clientes,
                 estados: this.props.estados,
                 cost_centers: this.props.cost_centers,
-                rol: this.props.rol
+                rol: this.props.rol,
+                // Propietarios para el centro que se crea cuando el reporte va
+                // sin centro (2026-10-18). Sin pasarlo, el select salia vacio
+                // y no se podia guardar un reporte sin centro.
+                owners: this.props.owners
             })
         );
     }
