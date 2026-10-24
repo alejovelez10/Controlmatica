@@ -344,8 +344,6 @@ class ReportExpenseIndex extends React.Component {
       { key: "id", label: "ID", width: "80px", render: function(row) {
         return React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id);
       }},
-      // Junto al ID para que se vea sin arrastrar la barra.
-      { key: "origen", label: "Origen", width: "110px", render: function(row) { return celdaDeOrigen(row, "expense-origen-" + row.id); } },
       { key: "invoice_date", label: "Fecha de factura", width: "120px" },
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
       { key: "user_invoice_name", label: "Responsable", width: "150px", render: function(row) { return row.user_invoice ? row.user_invoice.names : ""; } },
@@ -535,6 +533,7 @@ class ReportExpenseIndex extends React.Component {
       }},
       { key: "identification", label: "NIT / CEDULA", width: "120px" },
       { key: "invoice_number", label: "#Factura", width: "140px" },
+      { key: "origen", label: "Origen", width: "110px", render: function(row) { return celdaDeOrigen(row, "expense-origen-" + row.id); } },
       {
         key: "created_at", label: "Creación", width: "220px",
         render: function(row) {
