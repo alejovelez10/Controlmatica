@@ -68,7 +68,18 @@ var EMPTY_FILTERS = {
   budget_status: "",
   currency: "",
   accounting_approved: "",
+  origen: "",
 };
+
+// Marca de lo que entro por el agente de WhatsApp (2026-10-23). "web" no lleva
+// marca: es lo de siempre.
+function marcaDeWhatsapp(row, testId) {
+  if (row.origen !== "whatsapp") return null;
+  return React.createElement("i", {
+    className: "fab fa-whatsapp", title: "Registrado por WhatsApp", "aria-label": "Registrado por WhatsApp",
+    "data-testid": testId, style: { color: "#1fa855", marginLeft: 6, fontSize: "1.05em" }
+  });
+}
 
 var EMPTY_FORM = {
   cost_center_id: "",
@@ -331,7 +342,10 @@ class ReportExpenseIndex extends React.Component {
       // soporte y lo que el buscador acepta desde que C.2/F.1 metieron
       // `id::text` en el LIKE.
       { key: "id", label: "ID", width: "80px", render: function(row) {
-        return React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id);
+        return React.createElement("span", { style: { whiteSpace: "nowrap" } },
+          React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id),
+          marcaDeWhatsapp(row, "expense-origen-" + row.id)
+        );
       }},
       { key: "invoice_date", label: "Fecha de factura", width: "120px" },
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
@@ -578,6 +592,7 @@ class ReportExpenseIndex extends React.Component {
     if (f.budget_status) out.push("budget_status=" + f.budget_status);
     if (f.currency) out.push("currency=" + f.currency);
     if (f.accounting_approved) out.push("accounting_approved=" + f.accounting_approved);
+    if (f.origen) out.push("origen=" + f.origen);
     return out;
   }.bind(this);
 
@@ -2096,6 +2111,17 @@ class ReportExpenseIndex extends React.Component {
               React.createElement("option", { value: "" }, "Todos"),
               React.createElement("option", { value: "true" }, "Contabilizado"),
               React.createElement("option", { value: "false" }, "No contabilizado")
+            )
+          ),
+          React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0 } },
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fab fa-whatsapp", style: { marginRight: 6, opacity: 0.5 } }),
+              "Origen"
+            ),
+            React.createElement("select", { name: "origen", className: "cm-input", value: f.origen, onChange: self.handleFilterChange, "data-testid": "filter-origen" },
+              React.createElement("option", { value: "" }, "Todos"),
+              React.createElement("option", { value: "web" }, "Web"),
+              React.createElement("option", { value: "whatsapp" }, "WhatsApp")
             )
           ),
           React.createElement("div", { style: { gridColumn: "1 / -1", display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 10 } },

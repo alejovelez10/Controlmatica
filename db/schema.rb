@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_22_000001) do
+ActiveRecord::Schema.define(version: 2026_10_23_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -712,6 +712,7 @@ ActiveRecord::Schema.define(version: 2026_10_22_000001) do
     t.datetime "first_approved_at"
     t.integer "second_approved_by_id"
     t.datetime "second_approved_at"
+    t.string "origen", default: "web", null: false
     t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
     t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
@@ -722,6 +723,7 @@ ActiveRecord::Schema.define(version: 2026_10_22_000001) do
     t.index ["invoice_number", "identification"], name: "index_report_expenses_on_invoice_number_and_identification"
     t.index ["is_acepted"], name: "index_report_expenses_on_is_acepted"
     t.index ["operational_state"], name: "index_report_expenses_on_operational_state"
+    t.index ["origen"], name: "index_report_expenses_on_origen"
     t.index ["payment_type_id"], name: "index_report_expenses_on_payment_type_id"
     t.index ["type_identification_id"], name: "index_report_expenses_on_type_identification_id"
     t.index ["user_id"], name: "index_report_expenses_on_user_id"
@@ -756,12 +758,14 @@ ActiveRecord::Schema.define(version: 2026_10_22_000001) do
     t.float "value_displacement_hours"
     t.integer "update_user"
     t.integer "last_user_edited_id"
+    t.string "origen", default: "web", null: false
     t.index "EXTRACT(year FROM report_date)", name: "index_reports_on_report_date_year"
     t.index "EXTRACT(year FROM report_date), EXTRACT(month FROM report_date)", name: "index_reports_on_report_date_year_month"
     t.index ["contact_id"], name: "index_reports_on_contact_id"
     t.index ["cost_center_id"], name: "index_reports_on_cost_center_id"
     t.index ["customer_id"], name: "index_reports_on_customer_id"
     t.index ["last_user_edited_id"], name: "index_reports_on_last_user_edited_id"
+    t.index ["origen"], name: "index_reports_on_origen"
     t.index ["report_date"], name: "index_reports_on_report_date"
     t.index ["report_execute_id"], name: "index_reports_on_report_execute_id"
     t.index ["report_sate"], name: "index_reports_on_report_sate"

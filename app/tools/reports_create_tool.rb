@@ -125,7 +125,7 @@ class ReportsCreateTool < ApplicationTool
       User.current = creator
       attrs = args.slice(*WRITABLE).merge(
         cost_center_id: cost_center_id, customer_id: resolved_customer_id,
-        report_execute_id: resolved_user_id, report_date: fecha
+        report_execute_id: resolved_user_id, report_date: fecha, origen: origen_de(server_context)
       )
       attrs[:working_time] = attrs[:working_time].to_f
       attrs[:displacement_hours] = attrs[:displacement_hours].to_f

@@ -376,6 +376,7 @@ class ReportsController < ApplicationController
     scope = scope.where("report_date >= ?", params[:date_desde]) if params[:date_desde].present?
     scope = scope.where("report_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
     scope = scope.where("code_report ILIKE ?", "%#{params[:code_report]}%") if params[:code_report].present?
+    scope = scope.where(origen: params[:origen]) if Report::ORIGENES.include?(params[:origen])
     scope
   end
 

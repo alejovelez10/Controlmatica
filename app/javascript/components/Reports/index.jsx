@@ -94,6 +94,7 @@ class index extends React.Component {
         date_desde: "",
         date_hasta: "",
         code_report: "",
+        origen: "",
       },
       costCenterOptions: [],
       costCenterLoading: false,
@@ -120,7 +121,19 @@ class index extends React.Component {
     };
 
     this.columns = [
-      { key: "code_report", label: "Codigo", width: "130px" },
+      {
+        key: "code_report", label: "Codigo", width: "150px",
+        // Marca de lo que entro por el agente de WhatsApp (2026-10-23).
+        render: function (row) {
+          return React.createElement("span", { style: { whiteSpace: "nowrap" } },
+            row.code_report,
+            row.origen === "whatsapp" && React.createElement("i", {
+              className: "fab fa-whatsapp", title: "Registrado por WhatsApp", "aria-label": "Registrado por WhatsApp",
+              style: { color: "#1fa855", marginLeft: 6 }
+            })
+          );
+        },
+      },
       {
         key: "cost_center_code",
         label: "Centro de Costos",
@@ -304,6 +317,7 @@ class index extends React.Component {
             date_desde: "",
             date_hasta: "",
             code_report: "",
+            origen: "",
           },
           costCenterOptions: [],
         }, function () {
@@ -385,6 +399,7 @@ class index extends React.Component {
         date_desde: "",
         date_hasta: "",
         code_report: "",
+        origen: "",
       },
       costCenterOptions: [],
     }, function () {
@@ -972,8 +987,8 @@ class index extends React.Component {
             })
           )
         ),
-        // Row 3: Busqueda por codigo | Buttons
-        React.createElement("div", { className: "cm-filter-row", style: { gridTemplateColumns: "1fr 1fr" } },
+        // Row 3: Busqueda por codigo | Origen | Buttons
+        React.createElement("div", { className: "cm-filter-row", style: { gridTemplateColumns: "1fr 1fr 1fr" } },
           React.createElement("div", { className: "cm-form-group" },
             React.createElement("label", { className: "cm-label" },
               React.createElement("i", { className: "fas fa-barcode" }), " Código de reporte"
@@ -983,6 +998,19 @@ class index extends React.Component {
               value: self.state.filters.code_report, onChange: self.handleFilterChange,
               placeholder: "Buscar por código..."
             })
+          ),
+          React.createElement("div", { className: "cm-form-group" },
+            React.createElement("label", { className: "cm-label" },
+              React.createElement("i", { className: "fab fa-whatsapp" }), " Origen"
+            ),
+            React.createElement("select", {
+              className: "cm-input", name: "origen",
+              value: self.state.filters.origen, onChange: self.handleFilterChange
+            },
+              React.createElement("option", { value: "" }, "Todos"),
+              React.createElement("option", { value: "web" }, "Web"),
+              React.createElement("option", { value: "whatsapp" }, "WhatsApp")
+            )
           ),
           React.createElement("div", { className: "cm-form-group", style: { display: "flex", alignItems: "flex-end", justifyContent: "flex-end", gap: "8px" } },
             React.createElement("button", {

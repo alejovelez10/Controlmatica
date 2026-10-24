@@ -270,10 +270,16 @@ class ReportExpensesController < ApplicationController
     # SOLO LOS "CREADO" (2026-10-09). Un rechazado es una decision explicita, y
     # un "Aceptar gastos" sobre un filtro que lo incluya lo des-rechazaba en
     # silencio, sin motivo y sin aviso a quien lo rechazo.
-    report_expenses = solo_lo_que_puede_decidir(apply_expense_scope(ReportExpense.all))
-                        .creados
-                        .search(report_expense_search_filters)
-                        .order(invoice_date: :desc)
+    #
+    # Y LOS MISMOS FILTROS QUE LA TABLA (2026-10-23): hasta hoy esto ignoraba
+    # moneda, estado presupuestal, contabilidad, partida y el buscador, y al
+    # sumar el filtro de origen "Aceptar gastos" con "WhatsApp" habria aceptado
+    # tambien los de la web.
+    report_expenses = apply_free_text(apply_expense_filters(
+      solo_lo_que_puede_decidir(apply_expense_scope(ReportExpense.all))
+        .creados
+        .search(report_expense_search_filters)
+    )).order(invoice_date: :desc)
 
     # Los pares afectados se capturan ANTES del update: despues el scope sigue
     # siendo el mismo, pero traerlos aqui evita repetir la consulta de filtro.
@@ -1093,6 +1099,7 @@ class ReportExpensesController < ApplicationController
     scope = scope.where(budget_status: params[:budget_status])             if params[:budget_status].present?
     scope = scope.where(accounting_approved: params[:accounting_approved]) if params[:accounting_approved].present?
     scope = scope.where(expense_budget_id: params[:expense_budget_id])     if params[:expense_budget_id].present?
+    scope = scope.where(origen: params[:origen])                           if ReportExpense::ORIGENES.include?(params[:origen])
     scope
   end
 

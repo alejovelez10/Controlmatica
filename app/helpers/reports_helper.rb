@@ -5,6 +5,7 @@ module ReportsHelper
       {
         :id => report.id,
         :code_report => report.code_report,
+        :origen => report.origen,
         :contact => report.contact.present? ? { id: report.contact.id, name: report.contact.name } : nil,
         :contact_email => report.contact_email,
         :contact_id => report.contact_id,
@@ -54,6 +55,7 @@ module ReportsHelper
     {
       :id => report.id,
       :code_report => report.code_report,
+      :origen => report.origen,
       :contact => report.contact.present? ? { id: report.contact.id, name: report.contact.name } : nil,
       :contact_email => report.contact_email,
       :contact_id => report.contact_id,

@@ -257,6 +257,7 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     end
 
     gasto = ReportExpense.order(:id).last
+    assert_equal "whatsapp", gasto.origen
     assert_equal @usuario.id, gasto.user_invoice_id
     assert_equal "Restaurante El Sol", gasto.invoice_name
     assert gasto.receipt_file.present?, "la foto de la conversacion queda como comprobante"
@@ -361,6 +362,7 @@ class Agente::TurnoTest < ActiveSupport::TestCase
     end
     assert_includes @whatsapp.textos.last, "quedó registrado el reporte"
     assert_equal @usuario.id, Report.order(:id).last.report_execute_id
+    assert_equal "whatsapp", Report.order(:id).last.origen
   end
 
   # ---- reporte sin centro de costo (2026-10-22) -----------------------------

@@ -27,6 +27,7 @@
 #  is_acepted                :boolean          default(FALSE)
 #  observations              :text
 #  operational_state         :string           default("creado"), not null
+#  origen                    :string           default("web"), not null
 #  payment_type              :string
 #  receipt_file              :string
 #  rejected_at               :datetime
@@ -61,6 +62,7 @@
 #  index_report_expenses_on_invoice_number_and_identification  (invoice_number,identification)
 #  index_report_expenses_on_is_acepted                         (is_acepted)
 #  index_report_expenses_on_operational_state                  (operational_state)
+#  index_report_expenses_on_origen                             (origen)
 #  index_report_expenses_on_payment_type_id                    (payment_type_id)
 #  index_report_expenses_on_type_identification_id             (type_identification_id)
 #  index_report_expenses_on_user_id                            (user_id)
@@ -116,6 +118,11 @@ class ReportExpense < ApplicationRecord
   scope :no_excedidos,         -> { where.not(budget_status: "excedido") }
 
   validates :budget_status, inclusion: { in: %w[sin_presupuesto aprobado excedido] }
+
+  # Por donde entro (paquete 17): "web" por defecto, tambien para lo historico;
+  # "whatsapp" lo pone el agente al crear (ApplicationTool.origen_de).
+  ORIGENES = %w[web whatsapp].freeze
+  validates :origen, inclusion: { in: ORIGENES }
 
   # === ESTADO OPERATIVO (2026-10-06) =======================================
   #

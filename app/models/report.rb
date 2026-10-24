@@ -11,6 +11,7 @@
 #  count                    :integer
 #  customer_name            :string
 #  displacement_hours       :float
+#  origen                   :string           default("web"), not null
 #  report_code              :integer
 #  report_date              :date
 #  report_sate              :boolean
@@ -37,6 +38,7 @@
 #  index_reports_on_cost_center_id          (cost_center_id)
 #  index_reports_on_customer_id             (customer_id)
 #  index_reports_on_last_user_edited_id     (last_user_edited_id)
+#  index_reports_on_origen                  (origen)
 #  index_reports_on_report_date             (report_date)
 #  index_reports_on_report_date_year        (EXTRACT(year FROM report_date))
 #  index_reports_on_report_date_year_month  (EXTRACT(year FROM report_date), EXTRACT(month FROM report_date))
@@ -70,6 +72,11 @@ class Report < ApplicationRecord
   # (`user_owner_id`); en el reporte solo hace falta para crearlo.
   attr_accessor :cost_center_owner_id
   validate :propietario_del_centro_nuevo, on: :create
+
+  # Por donde entro (paquete 17): "web" por defecto, tambien para lo historico;
+  # "whatsapp" lo pone el agente al crear (ApplicationTool.origen_de).
+  ORIGENES = %w[web whatsapp].freeze
+  validates :origen, inclusion: { in: ORIGENES }
   after_save :calculatate_update
   before_update :create_edit_register
   after_create :create_create_register

@@ -67,6 +67,13 @@ class ApplicationTool < MCP::Tool
         User.order(:id).first
     end
 
+    # Por donde entra lo que se crea: el agente de WhatsApp llama las tools en
+    # proceso con server_context[:canal] = "whatsapp" (Agente::McpEnProceso);
+    # todo lo demas queda "web", el default de la columna.
+    def origen_de(server_context)
+      server_context && server_context[:canal].to_s == "whatsapp" ? "whatsapp" : "web"
+    end
+
     # Telefono del actor recibido en el server_context, ya normalizado, o nil.
     def actor_phone(server_context)
       User.normalize_phone(server_context && server_context[:actor_phone])

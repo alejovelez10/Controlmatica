@@ -15,7 +15,8 @@ module Agente
       servidor = MCP::Server.new(
         name: "controlmatica-agente", version: "1.0.0",
         tools: McpController.mcp_tools,
-        server_context: { api_key: ENV["MCP_API_KEY"], actor_email: usuario&.email, actor_phone: wa_id }
+        server_context: { api_key: ENV["MCP_API_KEY"], actor_email: usuario&.email, actor_phone: wa_id,
+                          canal: "whatsapp" }
       )
       respuesta = servidor.handle({ jsonrpc: "2.0", id: SecureRandom.uuid, method: "tools/call",
                                     params: { name: nombre, arguments: argumentos } })

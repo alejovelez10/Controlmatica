@@ -11,6 +11,7 @@
 #  count                    :integer
 #  customer_name            :string
 #  displacement_hours       :float
+#  origen                   :string           default("web"), not null
 #  report_code              :integer
 #  report_date              :date
 #  report_sate              :boolean
@@ -37,6 +38,7 @@
 #  index_reports_on_cost_center_id          (cost_center_id)
 #  index_reports_on_customer_id             (customer_id)
 #  index_reports_on_last_user_edited_id     (last_user_edited_id)
+#  index_reports_on_origen                  (origen)
 #  index_reports_on_report_date             (report_date)
 #  index_reports_on_report_date_year        (EXTRACT(year FROM report_date))
 #  index_reports_on_report_date_year_month  (EXTRACT(year FROM report_date), EXTRACT(month FROM report_date))

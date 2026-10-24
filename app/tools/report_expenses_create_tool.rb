@@ -121,7 +121,8 @@ class ReportExpensesCreateTool < ApplicationTool
     begin
       User.current = creator
       attrs = args.slice(*WRITABLE).merge(cost_center_id: cost_center_id,
-                                          user_invoice_id: resolved_user_id)
+                                          user_invoice_id: resolved_user_id,
+                                          origen: origen_de(server_context))
       re = ReportExpense.new(attrs)
       # COMPROBANTE OBLIGATORIO: APAGADO EN ESTE CANAL, Y NO POR OLVIDO.
       #
