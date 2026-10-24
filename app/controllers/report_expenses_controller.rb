@@ -13,7 +13,7 @@ class ReportExpensesController < ApplicationController
   # columnas de `report_expenses` y se resuelven aparte, con su join.
   EXPENSE_SORT_COLUMNS = %w[id invoice_name invoice_date identification description invoice_number
                             invoice_value invoice_tax invoice_total is_acepted operational_state currency
-                            budget_status accounting_approved created_at updated_at].freeze
+                            budget_status accounting_approved origen created_at updated_at].freeze
 
   def index
     # Usar helpers memoizados - evita query de ModuleControl y accion_modules (785ms -> ~0ms)

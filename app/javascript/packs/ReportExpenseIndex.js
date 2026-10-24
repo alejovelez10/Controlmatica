@@ -71,14 +71,14 @@ var EMPTY_FILTERS = {
   origen: "",
 };
 
-// Marca de lo que entro por el agente de WhatsApp (2026-10-23). "web" no lleva
-// marca: es lo de siempre.
-function marcaDeWhatsapp(row, testId) {
-  if (row.origen !== "whatsapp") return null;
-  return React.createElement("i", {
-    className: "fab fa-whatsapp", title: "Registrado por WhatsApp", "aria-label": "Registrado por WhatsApp",
-    "data-testid": testId, style: { color: "#1fa855", marginLeft: 6, fontSize: "1.05em" }
-  });
+// Por donde entro el gasto (2026-10-23): "whatsapp" lo que crea el agente,
+// "web" todo lo demas, tambien lo historico.
+function celdaDeOrigen(row, testId) {
+  var porWhatsapp = row.origen === "whatsapp";
+  return React.createElement("span", { "data-testid": testId, style: { whiteSpace: "nowrap", color: porWhatsapp ? "#1fa855" : "#6c757d", fontWeight: porWhatsapp ? 600 : 400 } },
+    React.createElement("i", { className: porWhatsapp ? "fab fa-whatsapp" : "fas fa-globe", "aria-hidden": "true", style: { marginRight: 5 } }),
+    porWhatsapp ? "WhatsApp" : "Web"
+  );
 }
 
 var EMPTY_FORM = {
@@ -342,11 +342,10 @@ class ReportExpenseIndex extends React.Component {
       // soporte y lo que el buscador acepta desde que C.2/F.1 metieron
       // `id::text` en el LIKE.
       { key: "id", label: "ID", width: "80px", render: function(row) {
-        return React.createElement("span", { style: { whiteSpace: "nowrap" } },
-          React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id),
-          marcaDeWhatsapp(row, "expense-origen-" + row.id)
-        );
+        return React.createElement("span", { "data-testid": "expense-ref-" + row.id, style: { fontWeight: 600, color: "#6c757d" } }, "#" + row.id);
       }},
+      // Junto al ID para que se vea sin arrastrar la barra.
+      { key: "origen", label: "Origen", width: "110px", render: function(row) { return celdaDeOrigen(row, "expense-origen-" + row.id); } },
       { key: "invoice_date", label: "Fecha de factura", width: "120px" },
       { key: "cost_center_code", label: "Centro de costo", width: "150px", render: function(row) { return row.cost_center ? row.cost_center.code : ""; } },
       { key: "user_invoice_name", label: "Responsable", width: "150px", render: function(row) { return row.user_invoice ? row.user_invoice.names : ""; } },

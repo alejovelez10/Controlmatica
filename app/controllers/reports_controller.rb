@@ -6,7 +6,7 @@ class ReportsController < ApplicationController
   include ActionView::Helpers::NumberHelper
   include ReportsHelper
 
-  SORTABLE_COLUMNS = %w[code_report report_date working_time work_description viatic_value total_value].freeze
+  SORTABLE_COLUMNS = %w[code_report report_date working_time work_description viatic_value total_value origen].freeze
 
   # GET /reports
   # GET /reports.json

@@ -70,6 +70,18 @@ class OrigenWhatsappTest < ActionDispatch::IntegrationTest
     refute_includes ids_de(response), whatsapp.id
   end
 
+  # El de WhatsApp se crea primero: el orden por defecto (el mas nuevo arriba)
+  # lo dejaria de segundo.
+  test "la columna Origen de gastos se puede ordenar" do
+    whatsapp = gasto(origen: "whatsapp")
+    gasto
+    sign_in_as @admin
+
+    get get_report_expenses_path, params: { sort: "origen", dir: "desc" }
+    assert_response :success
+    assert_equal whatsapp.id, ids_de(response).first
+  end
+
   # El peor caso: filtrar "WhatsApp" y aceptar en masa aceptaba tambien los de
   # la web, porque esta accion ignoraba los filtros nuevos de la tabla.
   test "Aceptar gastos con el filtro WhatsApp acepta solo los de WhatsApp" do
@@ -115,5 +127,8 @@ class OrigenWhatsappTest < ActionDispatch::IntegrationTest
     filas = JSON.parse(response.body)["data"]
     assert_equal [@por_whatsapp.id], filas.map { |f| f["id"] }
     assert_equal "whatsapp", filas.first["origen"]
+
+    get "/get_reports", params: { sort: "origen", dir: "desc" }
+    assert_equal "whatsapp", JSON.parse(response.body)["data"].first["origen"]
   end
 end

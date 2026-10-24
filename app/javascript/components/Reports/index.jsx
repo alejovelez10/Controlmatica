@@ -121,16 +121,16 @@ class index extends React.Component {
     };
 
     this.columns = [
+      { key: "code_report", label: "Codigo", width: "130px" },
+      // Por donde entro el reporte (2026-10-23): "whatsapp" lo que crea el
+      // agente, "web" todo lo demas, tambien lo historico.
       {
-        key: "code_report", label: "Codigo", width: "150px",
-        // Marca de lo que entro por el agente de WhatsApp (2026-10-23).
+        key: "origen", label: "Origen", width: "110px",
         render: function (row) {
-          return React.createElement("span", { style: { whiteSpace: "nowrap" } },
-            row.code_report,
-            row.origen === "whatsapp" && React.createElement("i", {
-              className: "fab fa-whatsapp", title: "Registrado por WhatsApp", "aria-label": "Registrado por WhatsApp",
-              style: { color: "#1fa855", marginLeft: 6 }
-            })
+          var porWhatsapp = row.origen === "whatsapp";
+          return React.createElement("span", { style: { whiteSpace: "nowrap", color: porWhatsapp ? "#1fa855" : "#6c757d", fontWeight: porWhatsapp ? 600 : 400 } },
+            React.createElement("i", { className: porWhatsapp ? "fab fa-whatsapp" : "fas fa-globe", "aria-hidden": "true", style: { marginRight: 5 } }),
+            porWhatsapp ? "WhatsApp" : "Web"
           );
         },
       },
