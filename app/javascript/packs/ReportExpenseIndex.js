@@ -79,12 +79,11 @@ var EMPTY_FILTERS = {
 // "aprobados".
 var RULE_FILTERS_VACIOS = { rule_id: "", rule_state: "pendientes" };
 
-// Las reglas que incumplio el gasto, agrupadas por regla: el nombre y debajo
-// cada razon, como en el aviso que le llega al propietario.
-function celdaDeReglas(row) {
-  var hits = (row.rules_report && row.rules_report.hits) || [];
-  if (!hits.length) return React.createElement("div", { className: "cm-celda-vacia" }, "—");
-
+// Las reglas que incumplio el gasto: el nombre de cada regla con cuantas
+// razones tiene y, al frente, «Ver detalle», que despliega las razones debajo.
+// PLEGADO POR DEFECTO (2026-10-27): con cuatro diferencias de cotejo la celda
+// estiraba la fila y la tabla se volvia dificil de recorrer.
+function agruparPorRegla(hits) {
   var grupos = [];
   var porNombre = {};
   hits.forEach(function(h) {
@@ -95,20 +94,72 @@ function celdaDeReglas(row) {
     }
     g.motivos.push(h.message);
   });
+  return grupos;
+}
 
-  return React.createElement("div", { "data-testid": "expense-rule-hits-" + row.id, style: { minWidth: 280 } },
-    grupos.map(function(g, i) {
-      return React.createElement("div", { key: i, style: { marginTop: i ? 8 : 0 } },
-        React.createElement("div", { style: { fontWeight: 600, color: "var(--cm-primary, #2a3f53)" } },
-          React.createElement("i", { className: "fas fa-gavel", "aria-hidden": "true", style: { marginRight: 6, color: "#f5a623" } }),
-          g.rule
+class CeldaDeReglas extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { abierto: false };
+    this.alternar = this.alternar.bind(this);
+  }
+
+  // stopPropagation: el clic en la fila es de la tabla, no de este boton.
+  alternar(e) {
+    e.stopPropagation();
+    this.setState(function(s) { return { abierto: !s.abierto }; });
+  }
+
+  render() {
+    var row = this.props.row;
+    var hits = (row.rules_report && row.rules_report.hits) || [];
+    if (!hits.length) return React.createElement("div", { className: "cm-celda-vacia" }, "—");
+
+    var grupos = agruparPorRegla(hits);
+    var abierto = this.state.abierto;
+    var icono = React.createElement("i", { className: "fas fa-gavel", "aria-hidden": "true", style: { marginRight: 6, color: "#f5a623" } });
+
+    return React.createElement("div", { "data-testid": "expense-rule-hits-" + row.id, style: { minWidth: 260 } },
+      React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 } },
+        React.createElement("div", null,
+          grupos.map(function(g, i) {
+            return React.createElement("div", { key: i, style: { fontWeight: 600, color: "var(--cm-primary, #2a3f53)", marginTop: i ? 4 : 0 } },
+              icono,
+              g.rule,
+              React.createElement("span", { style: { fontWeight: 400, color: "#6c757d", marginLeft: 5 } }, "(" + g.motivos.length + ")")
+            );
+          })
         ),
-        g.motivos.map(function(m, j) {
-          return React.createElement("div", { key: j, style: { fontSize: 12, lineHeight: 1.4, marginTop: 2 } }, "• " + m);
-        })
-      );
-    })
-  );
+        React.createElement("button", {
+          type: "button",
+          onClick: this.alternar,
+          "aria-expanded": abierto,
+          "data-testid": "expense-rule-hits-toggle-" + row.id,
+          style: { flex: "none", background: "none", border: "none", padding: 0, cursor: "pointer", whiteSpace: "nowrap",
+                   fontSize: 12, fontWeight: 600, color: "#2a6fdb" },
+        },
+          abierto ? "Ocultar" : "Ver detalle",
+          React.createElement("i", { className: "fas fa-chevron-" + (abierto ? "up" : "down"), "aria-hidden": "true", style: { marginLeft: 5, fontSize: 10 } })
+        )
+      ),
+      abierto
+        ? React.createElement("div", { "data-testid": "expense-rule-hits-detail-" + row.id, style: { marginTop: 8, paddingTop: 8, borderTop: "1px dashed #dfe3e7" } },
+            grupos.map(function(g, i) {
+              return React.createElement("div", { key: i, style: { marginTop: i ? 8 : 0 } },
+                React.createElement("div", { style: { fontWeight: 600, fontSize: 12, color: "var(--cm-primary, #2a3f53)" } }, g.rule),
+                g.motivos.map(function(m, j) {
+                  return React.createElement("div", { key: j, style: { fontSize: 12, lineHeight: 1.4, marginTop: 2 } }, "• " + m);
+                })
+              );
+            })
+          )
+        : null
+    );
+  }
+}
+
+function celdaDeReglas(row) {
+  return React.createElement(CeldaDeReglas, { row: row });
 }
 
 // Quien decidio y cuando, o que falta. Un gasto rechazado lleva su motivo.

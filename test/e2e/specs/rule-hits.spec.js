@@ -79,11 +79,17 @@ test.describe("informe de reglas incumplidas", () => {
     await abrirInforme(page);
     await expect(page.getByTestId("expense-scope-rule_hits")).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByTestId("rule-hits-state")).toHaveValue("pendientes");
+    // Plegado: la regla con cuantas razones tiene; «Ver detalle» las despliega.
     const reglas = page.getByTestId(`expense-rule-hits-${gastoId}`);
-    await expect(reglas).toContainText(REGLA);
-    await expect(reglas).toContainText("El valor supera el tope de $50.000");
-    await expect(page.getByTestId(`expense-rule-decision-${gastoId}`)).toContainText("Pendiente de aprobación");
+    await expect(reglas).toContainText(REGLA + "(1)");
+    await expect(page.getByTestId(`expense-rule-hits-detail-${gastoId}`)).toHaveCount(0);
     await page.screenshot({ path: "test-results/rule-hits-pendientes.png", fullPage: true });
+
+    await page.getByTestId(`expense-rule-hits-toggle-${gastoId}`).click();
+    await expect(page.getByTestId(`expense-rule-hits-detail-${gastoId}`)).toContainText("El valor supera el tope de $50.000");
+    await expect(page.getByTestId(`expense-rule-hits-toggle-${gastoId}`)).toContainText("Ocultar");
+    await expect(page.getByTestId(`expense-rule-decision-${gastoId}`)).toContainText("Pendiente de aprobación");
+    await page.screenshot({ path: "test-results/rule-hits-detalle.png", fullPage: true });
   });
 
   test("se filtra por la regla", async ({ page }) => {
