@@ -315,7 +315,8 @@ class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_equal 1, fake.calls.size
     end
-    assert_equal ["El total del comprobante es $450.000 y se registró $500.000"],
+    assert_equal ["El valor antes de IVA del comprobante es $370.168 y se registró $420.168",
+                  "El total del comprobante es $450.000 y se registró $500.000"],
                  registro.reload.rule_hits.map(&:message)
   end
 end

@@ -40,9 +40,14 @@ class CotejoDelComprobante
 
   # Lo que se compara. El nombre del proveedor no: casi nunca se escribe igual
   # que en la factura («Restaurante El Sol» contra «INVERSIONES SOL S.A.S.») y
-  # todo gasto terminaria marcado. El valor antes de IVA tampoco: si el total y
-  # el IVA cuadran, cuadra.
-  CAMPOS = %w[total tax invoice_date identification invoice_number currency].freeze
+  # todo gasto terminaria marcado.
+  #
+  # El valor antes de IVA (`value`) se compara desde el 2026-10-27, y solo cuando
+  # se registro IVA: si la persona cambia el valor, el formulario recalcula el
+  # total y antes solo salia la diferencia del total, sin decir que el dato
+  # cambiado fue el valor. Las lecturas guardadas antes de esa fecha no lo
+  # traen y siguen comparando como antes.
+  CAMPOS = %w[value total tax invoice_date identification invoice_number currency].freeze
 
   # Un peso: la factura puede traer centavos y el gasto se guarda redondeado.
   TOLERANCIA_COP    = BigDecimal("1")
@@ -205,6 +210,34 @@ class CotejoDelComprobante
     end
 
     tolerancia = Currency.foreign?(moneda) ? TOLERANCIA_DIVISA : TOLERANCIA_COP
+    # En el orden del formulario —valor, IVA, total— para que quien lee vea
+    # primero el dato que se cambio y despues el total que se movio con el.
+
+    # EL VALOR Y EL IVA SOLO CUANDO SE REGISTRO IVA. Mucha gente pone todo en el
+    # valor y deja el IVA en cero: entonces el valor es el total, el total ya se
+    # compara, y marcar el valor o el IVA dejaria para revision casi todo.
+    iva = iva_del_formulario(expense, moneda)
+
+    valor_leido = monto(campos["value"])
+    valor = valor_del_formulario(expense, moneda)
+    if valor_leido && iva.positive? && valor.positive?
+      comparados += 1
+      if (valor_leido - valor).abs > tolerancia
+        diferencias << diferencia("value", valor_leido, valor,
+                                  "El valor antes de IVA del comprobante es #{dinero(valor_leido, moneda)} " \
+                                  "y se registró #{dinero(valor, moneda)}")
+      end
+    end
+
+    iva_leido = monto(campos["tax"])
+    if iva_leido && iva.positive?
+      comparados += 1
+      if (iva_leido - iva).abs > tolerancia
+        diferencias << diferencia("tax", iva_leido, iva,
+                                  "El IVA del comprobante es #{dinero(iva_leido, moneda)} " \
+                                  "y se registró #{dinero(iva, moneda)}")
+      end
+    end
 
     total_leido = monto(campos["total"])
     total = total_del_formulario(expense, moneda)
@@ -214,20 +247,6 @@ class CotejoDelComprobante
         diferencias << diferencia("total", total_leido, total,
                                   "El total del comprobante es #{dinero(total_leido, moneda)} " \
                                   "y se registró #{dinero(total, moneda)}")
-      end
-    end
-
-    # EL IVA SOLO CUANDO SE REGISTRO IVA. Mucha gente pone todo en el valor y
-    # deja el IVA en cero; si el total cuadra, eso no es una discrepancia del
-    # gasto, y marcarlo dejaria para revision casi todo.
-    iva_leido = monto(campos["tax"])
-    iva = iva_del_formulario(expense, moneda)
-    if iva_leido && iva.positive?
-      comparados += 1
-      if (iva_leido - iva).abs > tolerancia
-        diferencias << diferencia("tax", iva_leido, iva,
-                                  "El IVA del comprobante es #{dinero(iva_leido, moneda)} " \
-                                  "y se registró #{dinero(iva, moneda)}")
       end
     end
 
@@ -279,6 +298,11 @@ class CotejoDelComprobante
     end
   end
   private_class_method :total_del_formulario
+
+  def self.valor_del_formulario(expense, moneda)
+    Currency.foreign?(moneda) ? expense.foreign_value.to_d : expense.invoice_value.to_d
+  end
+  private_class_method :valor_del_formulario
 
   def self.iva_del_formulario(expense, moneda)
     Currency.foreign?(moneda) ? expense.foreign_tax.to_d : expense.invoice_tax.to_d

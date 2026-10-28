@@ -85,6 +85,28 @@ class CotejoDelComprobanteTest < ActiveSupport::TestCase
     assert_equal ["tax"], con_iva["diferencias"].map { |d| d["campo"] }
   end
 
+  # 2026-10-27: al cambiar el valor el formulario recalcula el total, y solo
+  # salia la diferencia del total, sin decir que el dato cambiado fue el valor.
+  test "cambiar el valor antes de IVA muestra el valor y el total" do
+    ferreteria = factura.merge(value: "250000.0", tax: "47500.0", total: "297500.0")
+
+    resultado = cotejar(gasto(invoice_value: 260_000, invoice_tax: 47_500, invoice_total: 307_500), leido(ferreteria))
+
+    assert_equal ["El valor antes de IVA del comprobante es $250.000 y se registró $260.000",
+                  "El total del comprobante es $297.500 y se registró $307.500"],
+                 CotejoDelComprobante.mensajes(resultado)
+  end
+
+  # Quien pone todo en el valor y deja el IVA en cero tiene el valor igual al
+  # total: con el total ya basta, un segundo aviso del valor seria ruido.
+  test "sin IVA registrado el valor no se compara aparte" do
+    ferreteria = factura.merge(value: "250000.0", tax: "47500.0", total: "297500.0")
+
+    resultado = cotejar(gasto(invoice_value: 297_500, invoice_tax: 0, invoice_total: 297_500), leido(ferreteria))
+
+    assert_equal CotejoDelComprobante::COINCIDE, resultado["estado"]
+  end
+
   test "en divisa se compara el total del documento y no el convertido a pesos" do
     en_dolares = gasto(currency: "USD", foreign_total: 120, foreign_value: 120, foreign_tax: 0,
                        invoice_total: 480_000, invoice_value: 480_000)
