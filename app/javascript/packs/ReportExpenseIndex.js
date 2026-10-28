@@ -2831,10 +2831,10 @@ class ReportExpenseIndex extends React.Component {
         React.createElement("div", { className: "cm-modal-header" },
           React.createElement("div", { className: "cm-modal-header-content" },
             React.createElement("div", null,
-              React.createElement("h2", { className: "cm-modal-title" }, esInicio ? "Subir varios comprobantes" : "Lote terminado"),
+              React.createElement("h2", { className: "cm-modal-title" }, esInicio ? "Carga masiva de comprobantes" : "Carga masiva terminada"),
               React.createElement("p", { className: "cm-modal-subtitle" },
                 esInicio ? lote.items.length + " comprobante" + (lote.items.length === 1 ? "" : "s") + " para registrar"
-                         : "Así quedó el lote")
+                         : "Así quedó la carga")
             )
           ),
           React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeModal },
@@ -2907,7 +2907,7 @@ class ReportExpenseIndex extends React.Component {
         }))
       ),
       React.createElement("p", { className: "cm-hint", style: { margin: "4px 0 0" } },
-        "Cada comprobante se lee con la inteligencia artificial (una lectura por comprobante). Máximo " + MAX_COMPROBANTES + " por lote."
+        "Cada comprobante se lee con la inteligencia artificial (una lectura por comprobante). Máximo " + MAX_COMPROBANTES + " por carga."
       )
     );
   }.bind(this);
@@ -3436,30 +3436,6 @@ class ReportExpenseIndex extends React.Component {
       );
     }
 
-    // SUBIR VARIOS COMPROBANTES (2026-10-18): un ZIP o varios archivos. Mismo
-    // permiso que crear un gasto: es crear gastos, uno por uno, por el mismo
-    // formulario.
-    if (this.props.estados.create) {
-      buttons.push(
-        React.createElement("button", {
-          key: "batch",
-          onClick: self.abrirSelectorLote,
-          className: "cm-btn cm-btn-outline",
-          disabled: !!self.state.preparandoLote,
-          "data-testid": "expense-batch-upload",
-        },
-          React.createElement("i", { className: self.state.preparandoLote ? "fas fa-spinner fa-spin" : "fas fa-file-archive" }),
-          self.state.preparandoLote ? " Abriendo…" : " Subir varios"
-        ),
-        React.createElement("input", {
-          key: "batch-input", type: "file", multiple: true, accept: ACCEPT_LOTE, style: { display: "none" },
-          ref: function(el) { self._inputLote = el; },
-          onChange: self.handleArchivosLote,
-          "data-testid": "expense-batch-input",
-        })
-      );
-    }
-
     // Importar. Va con `estados.import` —que el servidor calcula como "es
     // administrador"— y no con `estados.create`: crear un gasto por el
     // formulario y crear 300 por un Excel no son el mismo permiso. El import
@@ -3495,12 +3471,41 @@ class ReportExpenseIndex extends React.Component {
     return React.createElement("div", { style: { display: "flex", gap: "8px", flexWrap: "wrap" }}, buttons);
   }.bind(this);
 
+  // CARGA MASIVA (2026-10-18, antes «Subir varios»): un ZIP o varios archivos.
+  // Mismo permiso que crear un gasto: es crear gastos, uno por uno, por el
+  // mismo formulario. Va arriba, al lado de «Crear gasto» (2026-10-28): son las
+  // dos formas de registrar, y en la barra de la tabla se perdia entre las
+  // acciones sobre lo que ya existe.
+  renderBotonCargaMasiva = function() {
+    var self = this;
+    if (!this.props.estados.create) return null;
+
+    return React.createElement(React.Fragment, null,
+      React.createElement("button", {
+        onClick: self.abrirSelectorLote,
+        className: "cm-btn cm-btn-outline",
+        disabled: !!self.state.preparandoLote,
+        "data-testid": "expense-batch-upload",
+      },
+        React.createElement("i", { className: self.state.preparandoLote ? "fas fa-spinner fa-spin" : "fas fa-file-archive" }),
+        self.state.preparandoLote ? " Abriendo…" : " Carga masiva"
+      ),
+      React.createElement("input", {
+        type: "file", multiple: true, accept: ACCEPT_LOTE, style: { display: "none" },
+        ref: function(el) { self._inputLote = el; },
+        onChange: self.handleArchivosLote,
+        "data-testid": "expense-batch-input",
+      })
+    );
+  }.bind(this);
+
   render() {
     return React.createElement("div", { className: "cm-page", "data-testid": "page-report-expenses" },
       React.createElement(CmPageActions, {
         onNew: this.props.estados.create ? this.openNewModal : null,
         label: "Crear gasto",
         testId: "expense-new",
+        extra: this.renderBotonCargaMasiva(),
       }),
 
       this.renderScopeTabs(),

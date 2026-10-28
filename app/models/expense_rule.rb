@@ -356,7 +356,7 @@ class ExpenseRule < ApplicationRecord
                                etiqueta_obligatoriedad(mandatory_change[1]))                    if mandatory_changed?
     partes << segmento_edicion("Instrucciones para el agente", agent_instructions_change[0],
                                agent_instructions_change[1])                                    if agent_instructions_changed?
-    partes << segmento_edicion("Cotejar el comprobante", etiqueta_si_no(cross_check_receipt_change[0]),
+    partes << segmento_edicion("Verificar el comprobante", etiqueta_si_no(cross_check_receipt_change[0]),
                                etiqueta_si_no(cross_check_receipt_change[1]))                   if cross_check_receipt_changed?
     partes << segmento_edicion("Prohíbe el gasto", etiqueta_si_no(prohibits_expense_change[0]),
                                etiqueta_si_no(prohibits_expense_change[1]))                     if prohibits_expense_changed?
@@ -380,7 +380,7 @@ class ExpenseRule < ApplicationRecord
       "<p>Antigüedad máxima: <b>#{limite_antiguedad_label}</b></p>" \
       "<p>Tope de valor: <b>#{limite_valor_label}</b></p>" \
       "<p>Validar duplicados: <b>#{etiqueta_si_no(check_duplicates)}</b></p>" \
-      "<p>Cotejar el comprobante: <b>#{etiqueta_si_no(cross_check_receipt)}</b></p>" \
+      "<p>Verificar el comprobante: <b>#{etiqueta_si_no(cross_check_receipt)}</b></p>" \
       "<p>Al incumplirse: <b>#{obligatoriedad_label}</b></p>" \
       "<p>Prohíbe el gasto: <b>#{etiqueta_si_no(prohibits_expense)}</b></p>" \
       "<p>Aplica a: <b>#{alcance_por_rol_label}</b></p>" \

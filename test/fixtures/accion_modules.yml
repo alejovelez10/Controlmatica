@@ -69,6 +69,13 @@ gastos_responsable:
   module_control: gastos
   user: admin
 
+# 2026-10-28: la pestaña «Incumplen reglas». La migracion 20261028000001 no se
+# la asigna a nadie; en los fixtures la tiene `gerente`, que es el rol con todo.
+gastos_reglas_incumplidas:
+  name: Ver reglas incumplidas
+  module_control: gastos
+  user: admin
+
 presupuesto_ingreso:
   name: Ingreso al modulo
   module_control: presupuesto

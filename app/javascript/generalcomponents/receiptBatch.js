@@ -20,9 +20,10 @@
 export var EXTENSIONES = { pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg",
                            png: "image/png", webp: "image/webp", heic: "image/heic" };
 export var TOPE_ARCHIVO = 20 * 1024 * 1024;
-// Los del lote. 50 comprobantes son una tarde de trabajo y 50 lecturas de la IA;
-// mas que eso se parte en dos lotes.
-export var MAX_COMPROBANTES = 50;
+// Los del lote. Maximo 20 comprobantes por carga (2026-10-28, pedido del
+// usuario; antes 50): se revisan uno por uno, y mas que eso se parte en varias
+// cargas. Los que sobran quedan en la lista de «no entraron» con el motivo.
+export var MAX_COMPROBANTES = 20;
 export var TOPE_ZIP = 100 * 1024 * 1024;
 
 export var ACCEPT_LOTE = ".zip,.pdf,.jpg,.jpeg,.png,.webp,.heic";
@@ -158,7 +159,7 @@ export function prepararLote(archivos) {
         if (h && vistos[h]) return ignorados.push({ name: file.name, motivo: "es el mismo archivo que " + vistos[h] });
         if (h) vistos[h] = file.name;
         if (items.length >= MAX_COMPROBANTES) {
-          return ignorados.push({ name: file.name, motivo: "el lote admite " + MAX_COMPROBANTES + " comprobantes; súbalo en otro" });
+          return ignorados.push({ name: file.name, motivo: "la carga masiva admite " + MAX_COMPROBANTES + " comprobantes; súbalo en otra carga" });
         }
         items.push({ id: "c" + i, name: file.name, file: file });
       });

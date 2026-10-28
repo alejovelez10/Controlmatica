@@ -44,14 +44,24 @@ class CmPageActions extends React.Component {
     // arbol del pack, y no hay forma de anotarlo desde afuera (paquete 09,
     // Tarea 2 bis: `expense-new` es el selector con el que el paquete 12 abre el
     // modal de gasto en tres escenarios).
+    var boton = React.createElement("button", {
+      onClick: this.props.onNew,
+      style: newButtonStyle,
+      "data-testid": this.props.testId,
+    },
+      React.createElement("i", { className: "fas fa-plus" }),
+      " " + label
+    );
+
+    // `extra` (2026-10-28) va a la IZQUIERDA del boton principal, en la misma
+    // barra: en Gastos, «Carga masiva» al lado de «Crear gasto». Sin la prop
+    // el DOM queda identico al de siempre en las demas pantallas.
+    if (!this.props.extra) return ReactDOM.createPortal(boton, this.el);
+
     return ReactDOM.createPortal(
-      React.createElement("button", {
-        onClick: this.props.onNew,
-        style: newButtonStyle,
-        "data-testid": this.props.testId,
-      },
-        React.createElement("i", { className: "fas fa-plus" }),
-        " " + label
+      React.createElement("div", { style: { display: "inline-flex", alignItems: "center", gap: "8px" } },
+        this.props.extra,
+        boton
       ),
       this.el
     );
@@ -63,6 +73,7 @@ CmPageActions.propTypes = {
   onNew: PropTypes.func,
   label: PropTypes.string,
   testId: PropTypes.string,
+  extra: PropTypes.node,
 };
 
 export default CmPageActions;

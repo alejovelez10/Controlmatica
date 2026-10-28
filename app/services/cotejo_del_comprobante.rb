@@ -170,7 +170,7 @@ class CotejoDelComprobante
 
     case evaluacion["estado"]
     when DIFERENCIAS then Array(evaluacion["diferencias"]).map { |d| d["mensaje"] }
-    when SIN_COTEJAR then ["No se pudo cotejar el comprobante: #{MOTIVOS.fetch(evaluacion['motivo'].to_s, MOTIVO_POR_DEFECTO)}"]
+    when SIN_COTEJAR then ["No se pudo verificar el comprobante: #{MOTIVOS.fetch(evaluacion['motivo'].to_s, MOTIVO_POR_DEFECTO)}"]
     else []
     end
   end

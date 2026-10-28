@@ -175,7 +175,7 @@ class ReportExpenseReglasAplicadasTest < ActiveSupport::TestCase
 
     otro.reload
     assert_equal ReportExpense::STATE_CREADO, otro.operational_state
-    assert_equal ["No se pudo cotejar el comprobante: el gasto no tiene comprobante"], otro.rule_hits.map(&:message)
+    assert_equal ["No se pudo verificar el comprobante: el gasto no tiene comprobante"], otro.rule_hits.map(&:message)
   end
 
   # La misma instancia guardada dos veces: la lectura del primer guardado no

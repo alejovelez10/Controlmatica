@@ -37,6 +37,7 @@ gerente:
   description: Tiene TODOS los permisos por accion_modules (no es admin)
   accion_modules: gastos_ingreso, gastos_crear, gastos_editar, gastos_eliminar,
                   gastos_aceptar, gastos_aceptar_todos, gastos_exportar, gastos_ver_todos, gastos_responsable,
+                  gastos_reglas_incumplidas,
                   presupuesto_ingreso, presupuesto_crear, presupuesto_editar,
                   presupuesto_eliminar, presupuesto_ver_todos,
                   contabilidad_ingreso, contabilidad_aprobar, contabilidad_exportar,

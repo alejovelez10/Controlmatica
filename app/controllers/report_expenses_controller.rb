@@ -68,12 +68,12 @@ class ReportExpensesController < ApplicationController
       # nombra segundo aprobador (aunque hoy no tenga nada pendiente).
       second_approver: segundo_aprobador?,
     }
-    # INFORME «INCUMPLEN REGLAS» (2026-10-25): la pestaña la ve quien tiene algo
-    # que revisar —«Ver todos», propietario de un centro o segundo aprobador—,
-    # y cada uno ve ahi lo mismo que alcanza en las otras pestañas. Las reglas
-    # van todas, activas o no: un gasto de hace un mes pudo incumplir una regla
-    # que hoy esta apagada, y el filtro tiene que poder encontrarlo.
-    @estados[:rule_hits_tab] = @estados[:show_all] || @estados[:owns_cost_centers] || @estados[:second_approver]
+    # INFORME «INCUMPLEN REGLAS» (2026-10-25): la pestaña la decide el permiso
+    # «Ver reglas incumplidas» de Gastos (2026-10-28); adentro cada uno ve lo
+    # mismo que alcanza en las otras pestañas. Las reglas van todas, activas o
+    # no: un gasto de hace un mes pudo incumplir una regla que hoy esta
+    # apagada, y el filtro tiene que poder encontrarlo.
+    @estados[:rule_hits_tab] = ve_reglas_incumplidas?
     if @estados[:rule_hits_tab]
       @estados[:rule_options] = ExpenseRule.order(:name).pluck(:id, :name, :active)
                                            .map { |id, nombre, activa| { value: id, label: activa ? nombre : "#{nombre} (inactiva)" } }
@@ -1101,10 +1101,11 @@ class ReportExpensesController < ApplicationController
   # incumpliendo alguna regla. Los que una regla no dejo guardar no estan:
   # nunca existieron.
   #
-  # QUIEN VE QUE: con «Ver todos», todos. Sin el, los suyos, los de los
-  # centros de los que es propietario y los que esperan su segunda firma, que
-  # es lo mismo que alcanza sumando las otras pestañas. Ninguno sale de un
-  # parametro: todo sale de `current_user`.
+  # QUIEN VE QUE: hace falta el permiso «Ver reglas incumplidas». Con «Ver
+  # todos», todos. Sin el, los suyos, los de los centros de los que es
+  # propietario y los que esperan su segunda firma, que es lo mismo que alcanza
+  # sumando las otras pestañas. Ninguno sale de un parametro: todo sale de
+  # `current_user`.
   #
   # Los dos filtros propios van aqui y no en `apply_expense_filters` para que
   # el Excel y «Aceptar gastos» respeten lo mismo que la tabla:
@@ -1118,7 +1119,17 @@ class ReportExpensesController < ApplicationController
     "rechazados" => [ReportExpense::STATE_RECHAZADO]
   }.freeze
 
+  # El permiso de la pestaña (2026-10-28). Sin el, la pestaña no se pinta y el
+  # servidor no devuelve nada aunque se pida `scope=rule_hits` a mano.
+  PERMISO_REGLAS_INCUMPLIDAS = "Ver reglas incumplidas".freeze
+
+  def ve_reglas_incumplidas?
+    (is_admin? || has_menu_permission?("Gastos", PERMISO_REGLAS_INCUMPLIDAS)) == true
+  end
+
   def gastos_que_incumplen_reglas(scope)
+    return scope.none unless ve_reglas_incumplidas?
+
     hits = ReportExpenseRuleHit.all
     hits = hits.where(expense_rule_id: params[:rule_id]) if params[:rule_id].present?
     scope = scope.where(id: hits.select(:report_expense_id))

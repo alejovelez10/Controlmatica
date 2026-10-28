@@ -159,9 +159,9 @@ class ExpenseRuleIndex extends Component {
           ? <span className="cm-badge cm-badge-success">Se revisan</span>
           : <span className="cm-badge cm-badge-warning">No se revisan</span>
       ) },
-      { key: "cross_check_receipt", label: "Cotejo del comprobante", width: "170px", render: (r) => (
+      { key: "cross_check_receipt", label: "Verificación del comprobante", width: "170px", render: (r) => (
         r.cross_check_receipt
-          ? <span className="cm-badge cm-badge-success" data-testid={"rule-cross-check-" + r.id}>Se coteja</span>
+          ? <span className="cm-badge cm-badge-success" data-testid={"rule-cross-check-" + r.id}>Se verifica</span>
           : <span data-testid={"rule-cross-check-" + r.id}>—</span>
       ) },
       // VA EN LA TABLA Y NO SOLO EN EL FORMULARIO: es lo primero que alguien

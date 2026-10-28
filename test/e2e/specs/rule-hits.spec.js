@@ -77,6 +77,9 @@ test.describe("informe de reglas incumplidas", () => {
     gastoId = body.register.id;
 
     await abrirInforme(page);
+    // «Carga masiva» va arriba, al lado de «Crear gasto» (2026-10-28).
+    await expect(page.locator("#page-actions-portal")).toContainText("Carga masiva");
+    await page.screenshot({ path: "test-results/encabezado-carga-masiva.png", fullPage: true });
     await expect(page.getByTestId("expense-scope-rule_hits")).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByTestId("rule-hits-state")).toHaveValue("pendientes");
     // Plegado: la regla con cuantas razones tiene; «Ver detalle» las despliega.

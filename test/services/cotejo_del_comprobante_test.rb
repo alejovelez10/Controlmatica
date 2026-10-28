@@ -131,9 +131,9 @@ class CotejoDelComprobanteTest < ActiveSupport::TestCase
   # --- Cuando no se puede cotejar -------------------------------------------
 
   test "sin comprobante, o con uno que no se pudo leer, queda para revision con el motivo" do
-    assert_equal ["No se pudo cotejar el comprobante: el gasto no tiene comprobante"],
+    assert_equal ["No se pudo verificar el comprobante: el gasto no tiene comprobante"],
                  CotejoDelComprobante.mensajes(cotejar(gasto, CotejoDelComprobante.sin_comprobante))
-    assert_equal ["No se pudo cotejar el comprobante: el archivo no parece una factura o comprobante"],
+    assert_equal ["No se pudo verificar el comprobante: el archivo no parece una factura o comprobante"],
                  CotejoDelComprobante.mensajes(cotejar(gasto, { "estado" => "sin_lectura", "motivo" => "not_an_invoice" }))
   end
 

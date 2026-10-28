@@ -126,7 +126,7 @@ class Agente::CotejoTest < ActiveSupport::TestCase
       assert_empty fake.calls
     end
 
-    assert_equal ["No se pudo cotejar el comprobante: el gasto no tiene comprobante"],
+    assert_equal ["No se pudo verificar el comprobante: el gasto no tiene comprobante"],
                  ReportExpense.order(:id).last.rule_hits.map(&:message)
   end
 
@@ -137,7 +137,7 @@ class Agente::CotejoTest < ActiveSupport::TestCase
       turno(entrante, FakeClaudeClient.tools(["proponer_gasto", args_de_gasto]))
       confirmar!
       gasto = ReportExpense.order(:id).last
-      assert_equal ["No se pudo cotejar el comprobante: el gasto no tiene comprobante"], gasto.rule_hits.map(&:message)
+      assert_equal ["No se pudo verificar el comprobante: el gasto no tiene comprobante"], gasto.rule_hits.map(&:message)
 
       turno(foto, FakeClaudeClient.tools(["adjuntar_comprobante", { report_expense_id: gasto.id }]),
             FakeClaudeClient.texto("Listo, quedó adjunto."))
@@ -160,7 +160,7 @@ class Agente::CotejoTest < ActiveSupport::TestCase
 
     gasto = ReportExpense.find(tool_json(respuesta)["id"])
     refute gasto.aceptado?
-    assert_equal ["No se pudo cotejar el comprobante: el gasto no tiene comprobante"], gasto.rule_hits.map(&:message)
+    assert_equal ["No se pudo verificar el comprobante: el gasto no tiene comprobante"], gasto.rule_hits.map(&:message)
   end
 
   test "sin regla que pida el cotejo no se lee nada" do

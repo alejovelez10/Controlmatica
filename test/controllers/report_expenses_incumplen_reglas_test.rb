@@ -12,6 +12,7 @@ require "minitest/mock"
 #     de «Extraer datos» llega firmada para ese mismo archivo.
 class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
   include WithFakeExtractor
+  include PermissionHelpers
 
   ENV_CLAVES = %w[ANTHROPIC_API_KEY RECEIPT_EXTRACTION_ENABLED].freeze
 
@@ -127,12 +128,13 @@ class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
     assert_equal "No corresponde", fila.dig("rules_report", "rejection_reason")
   end
 
-  # dueno_centro no tiene «Ver todos»: ve lo de su centro aunque no sea suyo, y
-  # nada de un centro ajeno.
-  test "el propietario ve los de sus centros y no los ajenos" do
+  # dueno_centro no tiene «Ver todos»: con el permiso de la pestaña ve lo de su
+  # centro aunque no sea suyo, y nada de un centro ajeno.
+  test "con el permiso, el propietario ve los de sus centros y no los ajenos" do
     regla!(name: "Tope 500 mil", max_invoice_value: 500_000)
     del_centro = gasto!
     ajeno = gasto!(cost_center_id: cost_centers(:centro_ajeno).id)
+    grant_permission!(users(:dueno_centro).rol, "Gastos", "Ver reglas incumplidas")
     sign_in_as users(:dueno_centro)
 
     visibles = ids
@@ -158,7 +160,9 @@ class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
     refute sin_reglas.reload.aceptado?, "acepto uno que no incumple ninguna regla"
   end
 
-  test "la pestaña y sus reglas llegan a quien tiene algo que revisar" do
+  # 2026-10-28: la pestaña la decide el permiso «Ver reglas incumplidas» de
+  # Gastos. Ser propietario de un centro ya no alcanza.
+  test "la pestaña y sus reglas llegan solo a quien tiene el permiso" do
     regla!(name: "Tope 500 mil", max_invoice_value: 500_000)
 
     sign_in_as @admin
@@ -167,9 +171,22 @@ class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
     assert_equal true, estados["rule_hits_tab"]
     assert_includes estados["rule_options"].map { |o| o["label"] }, "Tope 500 mil"
 
-    sign_in_as @ingeniero
+    sign_in_as users(:dueno_centro)
     get report_expenses_path
     assert_equal false, react_props["estados"]["rule_hits_tab"]
+    assert_nil react_props["estados"]["rule_options"]
+
+    grant_permission!(users(:dueno_centro).rol, "Gastos", "Ver reglas incumplidas")
+    get report_expenses_path
+    assert_equal true, react_props["estados"]["rule_hits_tab"]
+  end
+
+  test "sin el permiso, pedir la pestaña a mano no devuelve nada" do
+    regla!(name: "Tope 500 mil", max_invoice_value: 500_000)
+    gasto!
+    sign_in_as users(:dueno_centro)
+
+    assert_empty ids
   end
 
   # --- El cotejo al guardar por la web --------------------------------------------
@@ -260,7 +277,7 @@ class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
       crear(parametros.except(:receipt_file))
       assert_empty fake.calls
     end
-    assert_equal ["No se pudo cotejar el comprobante: el gasto no tiene comprobante"],
+    assert_equal ["No se pudo verificar el comprobante: el gasto no tiene comprobante"],
                  ReportExpense.order(:id).last.rule_hits.map(&:message)
   end
 
@@ -299,7 +316,7 @@ class ReportExpensesIncumplenReglasTest < ActionDispatch::IntegrationTest
     ReceiptExtractionService.stub(:extract, ->(*) { raise "fallo inesperado" }) do
       assert_equal "success", crear(parametros)["type"]
     end
-    assert_equal ["No se pudo cotejar el comprobante: la lectura automática no respondió"],
+    assert_equal ["No se pudo verificar el comprobante: la lectura automática no respondió"],
                  ReportExpense.order(:id).last.rule_hits.map(&:message)
   end
 
