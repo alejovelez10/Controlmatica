@@ -69,6 +69,9 @@ var EMPTY_FORM = {
   // selects se pinta, y el que no se eligio se manda en null.
   requires_second_approval: false,
   second_approver_kind: "rol",
+  // COTEJO DEL COMPROBANTE (2026-10-25). `false`: ninguna regla lo pide si no
+  // se marca.
+  cross_check_receipt: false,
 };
 
 // Las cuatro listas del 2026-10-14, vacias. Van aparte de EMPTY_FORM porque son
@@ -155,6 +158,11 @@ class ExpenseRuleIndex extends Component {
         r.check_duplicates
           ? <span className="cm-badge cm-badge-success">Se revisan</span>
           : <span className="cm-badge cm-badge-warning">No se revisan</span>
+      ) },
+      { key: "cross_check_receipt", label: "Cotejo del comprobante", width: "170px", render: (r) => (
+        r.cross_check_receipt
+          ? <span className="cm-badge cm-badge-success" data-testid={"rule-cross-check-" + r.id}>Se coteja</span>
+          : <span data-testid={"rule-cross-check-" + r.id}>—</span>
       ) },
       // VA EN LA TABLA Y NO SOLO EN EL FORMULARIO: es lo primero que alguien
       // necesita saber al mirar la lista —cual de estas reglas rechaza gastos y
@@ -330,6 +338,7 @@ class ExpenseRuleIndex extends Component {
         observations: row.observations || "",
         requires_second_approval: !!row.requires_second_approval,
         second_approver_kind: row.second_approver_user_id ? "user" : "rol",
+        cross_check_receipt: !!row.cross_check_receipt,
       },
       selectedSecondApproverRol: row.second_approver_rol_id
         ? opcionDe(self.props.roles, { id: row.second_approver_rol_id, name: row.second_approver_label }) : null,
@@ -464,6 +473,7 @@ class ExpenseRuleIndex extends Component {
         ? this.state.selectedSecondApproverRol.value : null,
       second_approver_user_id: f.requires_second_approval && f.second_approver_kind === "user" && this.state.selectedSecondApproverUser
         ? this.state.selectedSecondApproverUser.value : null,
+      cross_check_receipt: !!f.cross_check_receipt,
     };
 
     this.setState({ saving: true, formError: null });

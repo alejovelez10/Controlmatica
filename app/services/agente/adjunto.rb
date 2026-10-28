@@ -7,8 +7,11 @@ module Agente
   module Adjunto
     module_function
 
+    # `contexto` viaja al server_context de la tool: el borrador pasa ahi la
+    # lectura que ya hizo de este mismo archivo, para no leerlo otra vez.
+    #
     # => { texto:, error: }
-    def adjuntar(report_expense_id, mensaje, usuario:)
+    def adjuntar(report_expense_id, mensaje, usuario:, contexto: {})
       bytes = mensaje.media_file.read.to_s.b
       return { texto: "El archivo de la conversación está vacío.", error: true } if bytes.empty?
 
@@ -16,7 +19,7 @@ module Agente
         "report_expenses_attach_receipt",
         { report_expense_id: report_expense_id, file_base64: Base64.strict_encode64(bytes),
           filename: mensaje.media_filename.presence || "comprobante", content_type: mensaje.media_mime },
-        usuario: usuario, wa_id: mensaje.wa_id
+        usuario: usuario, wa_id: mensaje.wa_id, contexto: contexto
       )
     rescue StandardError => e
       Rails.logger.error("[agente] adjunto #{report_expense_id}: #{e.class}: #{e.message}")

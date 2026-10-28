@@ -403,4 +403,23 @@ class ExpenseRulesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert ExpenseRule.table_exists?
   end
+
+  # --- Cotejo del comprobante (2026-10-25) ------------------------------------
+
+  test "la casilla de cotejar el comprobante se guarda, se lista y queda en la auditoria" do
+    sign_in_as @admin
+
+    post expense_rules_path, params: params_regla(name: "Discrepancia en el recibo", cross_check_receipt: true)
+    assert_json_success
+    creada = ExpenseRule.order(:id).last
+    assert creada.cross_check_receipt
+    assert_includes RegisterEdit.order(:id).last.description, "Cotejar el comprobante: <b>Sí</b>"
+
+    patch expense_rule_path(creada), params: { cross_check_receipt: false }
+    refute creada.reload.cross_check_receipt
+    assert_includes RegisterEdit.order(:id).last.description, "Cotejar el comprobante"
+
+    get "/get_expense_rules"
+    assert_includes response.body, "cross_check_receipt"
+  end
 end

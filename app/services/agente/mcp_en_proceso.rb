@@ -10,13 +10,18 @@ module Agente
   module McpEnProceso
     module_function
 
+    # `contexto` agrega claves al server_context. Solo existe en proceso: lo
+    # que llega por HTTP al McpController no puede ponerlas, asi que una tool
+    # puede confiar en ellas (la lectura del comprobante para el cotejo,
+    # 2026-10-25).
+    #
     # => { texto:, error: }
-    def llamar(nombre, argumentos, usuario:, wa_id: nil)
+    def llamar(nombre, argumentos, usuario:, wa_id: nil, contexto: {})
       servidor = MCP::Server.new(
         name: "controlmatica-agente", version: "1.0.0",
         tools: McpController.mcp_tools,
         server_context: { api_key: ENV["MCP_API_KEY"], actor_email: usuario&.email, actor_phone: wa_id,
-                          canal: "whatsapp" }
+                          canal: "whatsapp" }.merge(contexto)
       )
       respuesta = servidor.handle({ jsonrpc: "2.0", id: SecureRandom.uuid, method: "tools/call",
                                     params: { name: nombre, arguments: argumentos } })
@@ -31,8 +36,8 @@ module Agente
 
     # Lo mismo pero devolviendo el JSON ya leido, para las llamadas que hace el
     # codigo (crear, adjuntar) y no el modelo. nil si la tool no devolvio JSON.
-    def llamar_json(nombre, argumentos, usuario:, wa_id: nil)
-      respuesta = llamar(nombre, argumentos, usuario: usuario, wa_id: wa_id)
+    def llamar_json(nombre, argumentos, usuario:, wa_id: nil, contexto: {})
+      respuesta = llamar(nombre, argumentos, usuario: usuario, wa_id: wa_id, contexto: contexto)
       datos = begin
         JSON.parse(respuesta[:texto])
       rescue JSON::ParserError

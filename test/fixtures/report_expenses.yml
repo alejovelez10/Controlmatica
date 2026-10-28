@@ -29,6 +29,7 @@
 #  operational_state         :string           default("creado"), not null
 #  origen                    :string           default("web"), not null
 #  payment_type              :string
+#  receipt_check             :jsonb            not null
 #  receipt_file              :string
 #  rejected_at               :datetime
 #  rejection_reason          :text

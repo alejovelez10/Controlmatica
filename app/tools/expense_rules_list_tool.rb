@@ -30,7 +30,7 @@ class ExpenseRulesListTool < ApplicationTool
   )
 
   KEYS = %i[id name active is_default max_invoice_age_days max_invoice_value check_duplicates
-            agent_instructions prohibits_expense].freeze
+            agent_instructions prohibits_expense cross_check_receipt].freeze
 
   def self.call(server_context:, user_id: nil, type_identification_id: nil)
     tenant = current_tenant(server_context)

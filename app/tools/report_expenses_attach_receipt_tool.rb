@@ -73,7 +73,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
       # Al asignar el archivo, CarrierWave lo re-almacena en el store_dir
       # definitivo aplicando de nuevo extension_allowlist, content_type_allowlist
       # y size_range: LA VALIDACIÓN FINAL LA HACE EL UPLOADER, no esta tool.
-      resultado = escribir_archivo(re, cuerpo, File.basename(upload_key), meta[:content_type])
+      resultado = escribir_archivo(re, cuerpo, File.basename(upload_key), meta[:content_type], server_context)
       if resultado.nil?
         # Limpieza best-effort: si el borrado falla, queda un huérfano en S3 y
         # la respuesta sigue siendo de éxito, porque el adjunto sí funcionó.
@@ -128,7 +128,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
     as_actor_strict(tenant, server_context) do
       # La validación final (extensión, MIME, tamaño) la hace el ReceiptUploader
       # al asignar, igual que en los otros dos modos.
-      resultado = escribir_archivo(re, descarga[:bytes], File.basename(nombre.to_s), tipo.to_s)
+      resultado = escribir_archivo(re, descarga[:bytes], File.basename(nombre.to_s), tipo.to_s, server_context)
       if resultado.nil?
         json(Mcp::Serialize.record(re.reload, ReportExpensesListTool::KEYS))
       else
@@ -192,7 +192,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
     end
 
     as_actor_strict(tenant, server_context) do
-      resultado = escribir_archivo(re, binario, File.basename(filename.to_s), content_type.to_s)
+      resultado = escribir_archivo(re, binario, File.basename(filename.to_s), content_type.to_s, server_context)
       if resultado.nil?
         json(Mcp::Serialize.record(re.reload, ReportExpensesListTool::KEYS))
       else
@@ -209,7 +209,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
   # a su store_dir al asignar, así que dejarlo vivo solo llena /tmp del dyno.
   # Una excepción del uploader (extensión prohibida, tipo prohibido, tamaño) se
   # traduce a mensaje: es un dato malo del llamador, no un fallo del servidor.
-  def self.escribir_archivo(re, binario, filename, content_type)
+  def self.escribir_archivo(re, binario, filename, content_type, server_context = nil)
     archivo = Tempfile.new(["mcp_receipt", File.extname(filename.to_s)])
     begin
       archivo.binmode
@@ -219,6 +219,7 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
       re.receipt_file = CarrierWave::SanitizedFile.new(
         tempfile: archivo, filename: filename, content_type: content_type
       )
+      re.lectura_del_comprobante = lectura_para_cotejo(re, binario, filename, content_type, server_context)
       re.save ? nil : re.errors.full_messages.join(", ")
     rescue CarrierWave::IntegrityError, CarrierWave::ProcessingError => e
       e.message
@@ -228,4 +229,23 @@ class ReportExpensesAttachReceiptTool < ApplicationTool
     end
   end
   private_class_method :escribir_archivo
+
+  # COTEJO DEL COMPROBANTE (2026-10-25). Adjuntar es cambiar el comprobante: si
+  # una regla pide cotejarlo, se lee aqui y el gasto lo compara (y, si estaba
+  # aprobado y no cuadra, se reabre). Si quien llama ya lo leyo —el agente de
+  # WhatsApp al crear el gasto con esta misma foto— la lectura llega por el
+  # contexto en proceso y no se paga dos veces. nil si no hay nada que cotejar.
+  def self.lectura_para_cotejo(re, binario, filename, content_type, server_context)
+    previa = server_context && server_context[:lectura_del_comprobante]
+    return previa if previa.present?
+    return nil unless CotejoDelComprobante.aplica?(re, re.reglas_del_gasto)
+
+    CotejoDelComprobante.leer({ data: binario.to_s.b, media_type: content_type, filename: filename },
+                              cost_center_code: re.cost_center&.code,
+                              tipo_de_gasto: re.type_identification&.name)
+  rescue StandardError => e
+    Rails.logger.error("[report_expenses_attach_receipt] lectura para el cotejo: #{e.class}: #{e.message}")
+    { "estado" => CotejoDelComprobante::SIN_LECTURA, "motivo" => "provider_error" }
+  end
+  private_class_method :lectura_para_cotejo
 end

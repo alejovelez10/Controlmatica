@@ -7,6 +7,7 @@
 #  agent_instructions       :text
 #  applies_to_all_roles     :boolean          default(FALSE), not null
 #  check_duplicates         :boolean          default(TRUE), not null
+#  cross_check_receipt      :boolean          default(FALSE), not null
 #  is_default               :boolean          default(FALSE), not null
 #  mandatory                :boolean          default(TRUE), not null
 #  max_invoice_age_days     :integer

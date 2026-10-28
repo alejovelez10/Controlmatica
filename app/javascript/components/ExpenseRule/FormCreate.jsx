@@ -55,7 +55,7 @@ class ExpenseRuleFormCreate extends Component {
     // defecto—, pero quien la arma tiene que saberlo.
     var sinNada = (p.selectedIncludedTypes || []).length === 0 &&
                   !f.max_invoice_age_days && !f.max_invoice_value && !f.check_duplicates &&
-                  !String(f.agent_instructions || "").trim();
+                  !f.cross_check_receipt && !String(f.agent_instructions || "").trim();
 
     return (
       <CmModal
@@ -222,6 +222,22 @@ class ExpenseRuleFormCreate extends Component {
               {" "}Facturas duplicadas
             </label>
             <div className="cm-field-hint">Mismo número de factura y mismo NIT que otro gasto.</div>
+          </div>
+
+          {/* COTEJO DEL COMPROBANTE (2026-10-25). Nunca frena, aunque abajo se
+              marque «Impedir guardar»: lo que compara sale de una lectura de
+              IA. Se dice al lado para que nadie espere lo contrario. */}
+          <div className="cm-form-group">
+            <label className="cm-label">
+              <input type="checkbox" name="cross_check_receipt" checked={!!f.cross_check_receipt}
+                     onChange={p.onToggleBool} data-testid="rule-cross-check-receipt" />
+              {" "}Cotejar el comprobante con los datos del gasto
+            </label>
+            <div className="cm-field-hint" data-testid="rule-cross-check-hint">
+              La IA lee el comprobante y lo compara con el total, el IVA, la fecha, el NIT, el número de factura
+              y la moneda que se escribieron. Si algo no coincide, o no se puede leer, el gasto se guarda pero
+              <b> queda pendiente de aprobación</b>. Lo que coincide sigue su curso normal.
+            </div>
           </div>
 
           {/* LOS TIPOS DE LA REGLA SON LOS NO PERMITIDOS (2026-10-16): elegir uno

@@ -29,6 +29,7 @@
 #  operational_state         :string           default("creado"), not null
 #  origen                    :string           default("web"), not null
 #  payment_type              :string
+#  receipt_check             :jsonb            not null
 #  receipt_file              :string
 #  rejected_at               :datetime
 #  rejection_reason          :text
@@ -88,6 +89,12 @@ class ReportExpense < ApplicationRecord
   # mayoria de los gastos no las tiene.
   belongs_to :first_approved_by,  class_name: "User", optional: true
   belongs_to :second_approved_by, class_name: "User", optional: true
+  # Quien lo rechazo. La columna existe desde el estado operativo; la
+  # asociacion es del informe «Incumplen reglas» (2026-10-25), que lo muestra.
+  belongs_to :rejected_by, class_name: "User", optional: true
+  # Las reglas que incumplio al registrarse o editarse, una fila por motivo
+  # (2026-10-25). Ver `registrar_reglas_aplicadas`.
+  has_many :rule_hits, class_name: "ReportExpenseRuleHit", dependent: :delete_all
   include RegisterAuditable
 
   # COMPROBANTE ADJUNTO (paquete 06).
@@ -624,6 +631,34 @@ class ReportExpense < ApplicationRecord
   # poder pisarle el `aprobado`.
   before_save :apply_expense_rules
 
+  # LECTURA DEL COMPROBANTE PARA EL COTEJO (2026-10-25), en memoria como
+  # `agent_policy_verdict`. La dejan quienes tienen el archivo en la mano —la
+  # web al guardar, el agente de WhatsApp al confirmar— con la forma de
+  # CotejoDelComprobante.lectura_desde. `nil` es "nadie leyo": un gasto sin
+  # lectura no se coteja (el import, uno de antes de la regla).
+  attr_accessor :lectura_del_comprobante
+
+  # Las reglas de ESTE gasto, una sola vez por guardado: las piden el cotejo,
+  # el informe y la reapertura, y cada `para_gasto` son cuatro consultas. Se
+  # vuelven a buscar si cambia el responsable o el tipo, y se olvidan al
+  # terminar el guardado (`registrar_reglas_aplicadas`). Publico: las tools del
+  # MCP preguntan con ellas si hay que cotejar.
+  def reglas_del_gasto
+    clave = [user_invoice_id, type_identification_id]
+    @reglas_del_gasto = nil unless @reglas_del_gasto && @reglas_del_gasto[0] == clave
+    (@reglas_del_gasto ||= [clave, ExpenseRule.para_gasto(user_invoice, type_identification_id)])[1]
+  end
+
+  # Guarda en `receipt_check` la lectura y como salio el cotejo, para volver a
+  # comparar al editar sin leer el archivo otra vez.
+  before_save :guardar_cotejo
+  before_validation :olvidar_reglas_a_registrar
+
+  # El informe «Incumplen reglas» (2026-10-25): una fila por regla incumplida.
+  # `after_save` y no `after_commit`: dentro de la misma transaccion, para que
+  # un gasto nunca quede guardado sin sus filas ni las filas sin su gasto.
+  after_save :registrar_reglas_aplicadas
+
   # ACEPTACION AUTOMATICA. Un gasto que cabe en el presupuesto nace aceptado y
   # nadie tiene que tocarlo; el que se pasa, o el que no tiene partida, nace en
   # "Creado" y se queda ahi hasta que una persona lo revise.
@@ -724,6 +759,10 @@ class ReportExpense < ApplicationRecord
   # `save(validate: false)` se salta la reapertura, igual que se salta las
   # reglas. Ningun canal lo usa (web, MCP e import pasan por `save`).
   before_validation :reabrir_si_se_edito, prepend: true
+  # Antes de `reabrir_si_se_edito` (los `prepend` corren en orden inverso):
+  # quitar el comprobante tiene que verse como una lectura nueva al decidir si
+  # se reabre.
+  before_validation :lectura_al_quitar_el_comprobante, prepend: true
   after_update_commit :avisar_la_reapertura
 
   # === DOBLE APROBACION: LOS CALLBACKS (2026-10-18) ==========================
@@ -1203,10 +1242,39 @@ class ReportExpense < ApplicationRecord
     return if new_record?
     return if omitir_aviso_de_aprobacion
     return if creado?
-    return if campos_editados.empty?
+    return if campos_editados.empty? && !comprobante_nuevo_que_no_cuadra?
 
     @reabierto = true
     self.operational_state = STATE_CREADO
+  end
+
+  # CAMBIAR EL COMPROBANTE NO REABRE, SALVO QUE EL NUEVO NO CUADRE (2026-10-25).
+  # Adjuntar el soporte sigue sin reabrir (ver CAMPOS_QUE_NO_REABREN), pero si
+  # una regla pide cotejarlo y el comprobante nuevo dice otra cosa que el gasto
+  # —o no se pudo leer, o se quito—, lo que se aprobo ya no esta respaldado y
+  # alguien tiene que volver a mirarlo. Solo con una lectura recien hecha: sin
+  # ella no hay nada nuevo que comparar.
+  #
+  # SOLO LO APROBADO (o a medio aprobar). Un rechazado no se reabre por esto:
+  # subirle otro comprobante que tampoco cuadra no puede devolverlo a «Creado»
+  # borrando el motivo del rechazo. Y nunca en el guardado que es la decision
+  # misma (aceptar o rechazar con la lectura todavia en memoria).
+  def comprobante_nuevo_que_no_cuadra?
+    return false if lectura_del_comprobante.blank?
+    return false unless aceptado? || pendiente_segunda?
+    return false if operational_state_changed?
+
+    CotejoDelComprobante.mensajes(CotejoDelComprobante.evaluar(self, reglas_del_gasto)).any?
+  end
+
+  # QUITAR EL COMPROBANTE ES UNA LECTURA NUEVA: «sin comprobante». Asi quitarlo
+  # —desde el formulario o con el boton de borrar— vuelve a cotejar y, en un
+  # gasto aprobado, lo reabre, igual que subir uno que no cuadra.
+  def lectura_al_quitar_el_comprobante
+    return if new_record? || lectura_del_comprobante.present?
+    return unless remove_receipt_file?
+
+    self.lectura_del_comprobante = CotejoDelComprobante.sin_comprobante
   end
 
   # Lo que la persona cambio de verdad. VACIO A VACIO NO ES EDITAR (bug del
@@ -1283,7 +1351,8 @@ class ReportExpense < ApplicationRecord
   # vio, ni encender lo que la primera no vio por culpa de ese redondeo... salvo
   # que de verdad haya un cambio. La apaga `resolver_doble_aprobacion`.
   def marcar_si_recalcula_la_segunda
-    @recalcular_segunda ||= new_record? || campos_editados.any? || agent_policy_verdict.present?
+    @recalcular_segunda ||= new_record? || campos_editados.any? || agent_policy_verdict.present? ||
+                            lectura_del_comprobante.present?
   end
 
   def segunda_aprobacion_permitida
@@ -1384,13 +1453,16 @@ class ReportExpense < ApplicationRecord
   #     aprobo; cambiar el valor, el centro o la fecha si.
   #   * Los de la doble aprobacion (2026-10-18): la foto de reglas y las firmas
   #     los escribe el servidor al decidir, igual que el estado.
+  #   * `receipt_check` (2026-10-25): la lectura del comprobante y el cotejo
+  #     los escribe el servidor. Un comprobante nuevo que no cuadra reabre por
+  #     su cuenta (`comprobante_nuevo_que_no_cuadra?`).
   CAMPOS_QUE_NO_REABREN = %w[
     operational_state rejected_at rejected_by_id rejection_reason is_acepted
     budget_status budget_reason expense_budget_id rule_violations
     accounting_approved accounting_approved_at accounting_approved_by_id
     last_user_edited_id updated_at receipt_file
     second_approval_rules first_approved_by_id first_approved_at
-    second_approved_by_id second_approved_at
+    second_approved_by_id second_approved_at receipt_check
   ].freeze
 
   # Ver el comentario del `after_create_commit`. Las cinco guardas, en orden de
@@ -1463,11 +1535,17 @@ class ReportExpense < ApplicationRecord
     if persisted? && (changed & CAMPOS_DE_REGLAS).empty?
       return if (changed & CAMPOS_DE_PROHIBICION).empty?
 
+      # Las filas del informe se recalculan TODAS: con otro tipo o con otro
+      # responsable aplican otras reglas, y una fila de un tope que ya no rige
+      # mostraria el gasto al filtrar por esa regla. No frenan nada, asi que
+      # volver a medirlas no deja ilegible ningun gasto viejo.
+      marcar_reglas_a_registrar(:todas)
       @violaciones_que_frenan = ExpenseRuleService.prohibitions_for(self)[:blocking]
       @violaciones_que_frenan.each { |v| errors.add(:base, v[:message]) }
       return
     end
 
+    marcar_reglas_a_registrar(:todas)
     resultado = ExpenseRuleService.validate(self, agent_verdict: agent_policy_verdict).value
     # LA FOTO ES SIEMPRE COMPLETA Y LOS ERRORES SOLO LOS DUROS. Son dos listas
     # distintas a proposito: `rule_violations` tiene que registrar tambien lo
@@ -1512,6 +1590,92 @@ class ReportExpense < ApplicationRecord
     # se pasa y Postgres corta la escritura entera. El detalle completo queda en
     # `rule_violations`, que es jsonb y no tiene ese limite.
     self.budget_reason = "No se aprueba por incumplir las reglas de gasto: #{motivo}".truncate(250)
+  end
+
+  # --- Informe «Incumplen reglas» y cotejo del comprobante (2026-10-25) ------
+
+  # QUE FILAS DE `rule_hits` SE REESCRIBEN EN ESTE GUARDADO. `:todas` cuando
+  # las reglas se evaluaron completas (al crear, o al editar algo que miran);
+  # si no, solo los codigos de lo que se volvio a mirar. Lo demas queda como
+  # estaba: aceptar un gasto no le recalcula las reglas con las de hoy.
+  def marcar_reglas_a_registrar(codigos)
+    return if @reglas_a_registrar == :todas
+
+    @reglas_a_registrar = codigos == :todas ? :todas : (Array(@reglas_a_registrar) | Array(codigos))
+  end
+
+  # Una marca de un guardado que fallo la validacion no puede reescribir el
+  # informe en el siguiente: cada guardado decide la suya.
+  def olvidar_reglas_a_registrar
+    @reglas_a_registrar = nil
+  end
+
+  def guardar_cotejo
+    # Al crear se registran siempre, aunque el guardado se salte la validacion.
+    marcar_reglas_a_registrar(:todas) if new_record?
+    marcar_reglas_a_registrar([ExpenseRuleService::CODE_RECEIPT]) if lectura_del_comprobante.present?
+    marcar_reglas_a_registrar([ExpenseRuleService::CODE_AGENT]) if agent_policy_verdict.present?
+    return if lectura_del_comprobante.blank? && @reglas_a_registrar.nil?
+
+    # En un savepoint propio por lo mismo que `registrar_reglas_aplicadas`: una
+    # consulta que falle aqui no puede dejar abortada la transaccion del gasto.
+    self.class.transaction(requires_new: true) do
+      evaluacion = CotejoDelComprobante.evaluar(self, reglas_del_gasto)
+      # Sin cotejo que hacer no se toca: una regla que hoy no aplica no borra la
+      # lectura que quedo de cuando aplicaba.
+      self.receipt_check = evaluacion if evaluacion
+    end
+  rescue StandardError => e
+    Rails.logger.error("[report_expense] cotejo del comprobante: #{e.class}: #{e.message}")
+  end
+
+  # Reescribe las filas del informe con lo que el gasto incumple AHORA.
+  #
+  # LO QUE ENCONTRO LA IA SOLO SE REEMPLAZA CON UN COMPROBANTE NUEVO. Al crear,
+  # o al editar subiendo otro archivo, el veredicto es de ese comprobante. Al
+  # editar sin archivo nuevo se conserva lo de antes, igual que en la foto de la
+  # doble aprobacion: corregir la descripcion de un gasto con licor no puede
+  # sacarlo del informe, y un veredicto que llegue suelto en esa edicion no
+  # habla de ningun comprobante.
+  #
+  # NUNCA TUMBA EL GUARDADO. Todo —tambien las consultas— va en un savepoint
+  # propio: si algo falla aqui, se pierde la fila del informe y no el gasto,
+  # que es lo que la persona estaba registrando.
+  #
+  # Al terminar se olvidan la lectura y las reglas en memoria: un segundo
+  # guardado del mismo objeto no puede volver a cotejar lo que ya se coteja.
+  def registrar_reglas_aplicadas
+    alcance = @reglas_a_registrar
+    @reglas_a_registrar = nil
+    return if alcance.blank?
+
+    codigos = alcance == :todas ? nil : alcance
+    comprobante_nuevo = previously_new_record? || saved_change_to_receipt_file?
+    conservar_ia = agent_policy_verdict.blank? || !comprobante_nuevo
+
+    self.class.transaction(requires_new: true) do
+      filas = ExpenseRuleService.incumplimientos_por_regla(self, agent_verdict: agent_policy_verdict,
+                                                                 reglas: reglas_del_gasto)
+      unless previously_new_record?
+        viejas = ReportExpenseRuleHit.where(report_expense_id: id)
+        viejas = viejas.where(code: codigos) if codigos
+        viejas = viejas.where.not(code: ExpenseRuleService::CODE_AGENT) if conservar_ia
+        viejas.delete_all
+      end
+
+      filas.each do |fila|
+        next if codigos && !codigos.include?(fila[:code])
+        next if conservar_ia && !previously_new_record? && fila[:code] == ExpenseRuleService::CODE_AGENT
+
+        rule_hits.create!(fila)
+      end
+    end
+  rescue StandardError => e
+    Rails.logger.error("[report_expense] reglas aplicadas ##{id}: #{e.class}: #{e.message}")
+  ensure
+    rule_hits.reset
+    @reglas_del_gasto = nil
+    self.lectura_del_comprobante = nil
   end
 end
 

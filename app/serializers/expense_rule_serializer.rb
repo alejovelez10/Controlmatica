@@ -7,6 +7,7 @@
 #  agent_instructions       :text
 #  applies_to_all_roles     :boolean          default(FALSE), not null
 #  check_duplicates         :boolean          default(TRUE), not null
+#  cross_check_receipt      :boolean          default(FALSE), not null
 #  is_default               :boolean          default(FALSE), not null
 #  mandatory                :boolean          default(TRUE), not null
 #  max_invoice_age_days     :integer
@@ -38,7 +39,9 @@ class ExpenseRuleSerializer < ActiveModel::Serializer
              # Doble aprobacion (2026-10-18). `second_approver_label` es lo que
              # pinta la tabla: "Cargo: Gerencia" o "Usuario: Ana Perez".
              :requires_second_approval, :second_approver_rol_id, :second_approver_user_id,
-             :second_approver_label
+             :second_approver_label,
+             # Cotejo del comprobante contra el formulario (2026-10-25).
+             :cross_check_receipt
 
   has_many :rols
   belongs_to :user,             serializer: UserSerializer   # quien la creo

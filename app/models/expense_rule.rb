@@ -7,6 +7,7 @@
 #  agent_instructions       :text
 #  applies_to_all_roles     :boolean          default(FALSE), not null
 #  check_duplicates         :boolean          default(TRUE), not null
+#  cross_check_receipt      :boolean          default(FALSE), not null
 #  is_default               :boolean          default(FALSE), not null
 #  mandatory                :boolean          default(TRUE), not null
 #  max_invoice_age_days     :integer
@@ -58,6 +59,11 @@
 # aprobar" con el motivo. Alcanza TAMBIEN al veredicto semantico desde el
 # 2026-10-03: una regla obligatoria cuyas instrucciones el agente da por
 # incumplidas frena el guardado.
+#
+# `cross_check_receipt` (2026-10-25) pide comparar lo que dice el comprobante
+# con lo que se escribio en el gasto (CotejoDelComprobante). Es la excepcion a
+# `mandatory`: el cotejo NUNCA frena, solo deja el gasto para aprobacion,
+# porque lo que compara sale de una lectura de IA.
 class ExpenseRule < ApplicationRecord
   # POR ROL Y NO POR USUARIO (2026-09-10). Mantener la lista persona por persona
   # es trabajo que nadie hace: cada usuario nuevo hay que acordarse de agregarlo,
@@ -122,7 +128,8 @@ class ExpenseRule < ApplicationRecord
   validates :max_invoice_age_days, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :max_invoice_value,    numericality: { greater_than: 0 }, allow_nil: true
   validates :active, :is_default, :check_duplicates, :mandatory, :applies_to_all_roles,
-            :prohibits_expense, :requires_second_approval, inclusion: { in: [true, false] }
+            :prohibits_expense, :requires_second_approval, :cross_check_receipt,
+            inclusion: { in: [true, false] }
   validate  :una_sola_default_activa
   validate  :tipos_sin_cruce
   validate  :por_defecto_no_es_para_todos
@@ -349,6 +356,8 @@ class ExpenseRule < ApplicationRecord
                                etiqueta_obligatoriedad(mandatory_change[1]))                    if mandatory_changed?
     partes << segmento_edicion("Instrucciones para el agente", agent_instructions_change[0],
                                agent_instructions_change[1])                                    if agent_instructions_changed?
+    partes << segmento_edicion("Cotejar el comprobante", etiqueta_si_no(cross_check_receipt_change[0]),
+                               etiqueta_si_no(cross_check_receipt_change[1]))                   if cross_check_receipt_changed?
     partes << segmento_edicion("Prohíbe el gasto", etiqueta_si_no(prohibits_expense_change[0]),
                                etiqueta_si_no(prohibits_expense_change[1]))                     if prohibits_expense_changed?
     partes << segmento_edicion("Aplica a", etiqueta_modo_roles(applies_to_all_roles_change[0]),
@@ -371,6 +380,7 @@ class ExpenseRule < ApplicationRecord
       "<p>Antigüedad máxima: <b>#{limite_antiguedad_label}</b></p>" \
       "<p>Tope de valor: <b>#{limite_valor_label}</b></p>" \
       "<p>Validar duplicados: <b>#{etiqueta_si_no(check_duplicates)}</b></p>" \
+      "<p>Cotejar el comprobante: <b>#{etiqueta_si_no(cross_check_receipt)}</b></p>" \
       "<p>Al incumplirse: <b>#{obligatoriedad_label}</b></p>" \
       "<p>Prohíbe el gasto: <b>#{etiqueta_si_no(prohibits_expense)}</b></p>" \
       "<p>Aplica a: <b>#{alcance_por_rol_label}</b></p>" \

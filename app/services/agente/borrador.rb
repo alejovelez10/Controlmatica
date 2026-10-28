@@ -42,17 +42,18 @@ module Agente
       error = error_de_gasto(datos)
       return rechazo(error) if error
 
+      archivo = @conversacion.whatsapp_messages.entrantes.order(:created_at).select(&:imagen_o_pdf?).last
+      archivo ||= mensaje if mensaje&.imagen_o_pdf?
       veredicto = veredicto_de(args["hallazgos_politica"])
-      reglas = juzgar_gasto(datos, veredicto)
+      lectura = lectura_para_cotejo(datos, archivo)
+      reglas = juzgar_gasto(datos, veredicto, lectura)
       if reglas[:bloqueantes].any?
         return rechazo("NO se puede registrar así (regla obligatoria). Explícale a la persona, con " \
                        "estas palabras: #{reglas[:bloqueantes].join(' | ')}")
       end
 
-      archivo = @conversacion.whatsapp_messages.entrantes.order(:created_at).select(&:imagen_o_pdf?).last
-      archivo ||= mensaje if mensaje&.imagen_o_pdf?
       guardar_y_enviar("gasto", datos, args["resumen"], reglas[:avisos],
-                       veredicto: veredicto, archivo_id: archivo&.id)
+                       veredicto: veredicto, archivo_id: archivo&.id, lectura: lectura)
     end
 
     def proponer_reporte(args)
@@ -114,16 +115,53 @@ module Agente
     end
 
     # El mismo candidato que arma expense_rules_validate, mas el veredicto del
-    # agente, para que lo que frena se sepa ANTES de mostrar los botones.
-    def juzgar_gasto(datos, veredicto)
+    # agente y la lectura del comprobante, para que lo que frena —y lo que no
+    # cuadra con el comprobante— se sepa ANTES de mostrar los botones.
+    def juzgar_gasto(datos, veredicto, lectura = nil)
       campos = ExpenseRulesValidateTool::CANDIDATE_FIELDS.map(&:to_s)
       candidato = ReportExpense.new(datos.slice(*campos).merge("user_invoice_id" => @usuario.id))
+      candidato.lectura_del_comprobante = lectura
       candidato.valid?
       resultado = ExpenseRuleService.validate(candidato, user: @usuario, agent_verdict: veredicto).value
       bloqueantes = resultado[:blocking_violations].map { |v| v[:message] }
       avisos = resultado[:violations].map { |v| v[:message] } - bloqueantes
+      if resultado[:violations].any? { |v| v[:code] == ExpenseRuleService::CODE_RECEIPT }
+        avisos << "Si lo confirmas así, el gasto quedará pendiente de aprobación por no cuadrar con el " \
+                  "comprobante. Si es un error, toca Corregir."
+      end
       avisos << aviso_de_presupuesto(candidato)
       { bloqueantes: bloqueantes, avisos: avisos.compact }
+    end
+
+    # COTEJO DEL COMPROBANTE (2026-10-25). Si una regla de la persona pide
+    # cotejarlo, la IA lee aqui el archivo de la conversacion y el resumen ya
+    # dice lo que no cuadra, cuando todavia se puede tocar Corregir. La lectura
+    # se guarda en el borrador y viaja al crear (`crear_gasto!`): el gasto la
+    # compara con lo que se confirme.
+    #
+    # Una correccion sobre el MISMO archivo no lo vuelve a leer: se reusa la
+    # lectura del borrador anterior si salio bien (una que fallo por un timeout
+    # se intenta otra vez). nil si a este gasto no se le coteja nada.
+    def lectura_para_cotejo(datos, archivo)
+      candidato = ReportExpense.new(type_identification_id: datos["type_identification_id"],
+                                    user_invoice_id: @usuario.id)
+      reglas = ExpenseRule.para_gasto(@usuario, datos["type_identification_id"])
+      return nil unless CotejoDelComprobante.aplica?(candidato, reglas)
+      return CotejoDelComprobante.sin_comprobante if archivo.nil?
+
+      previo = @conversacion.estado["borrador"]
+      previa = previo.is_a?(Hash) && previo["archivo_id"] == archivo.id ? previo["lectura"] : nil
+      return previa if previa.is_a?(Hash) && previa["estado"] == CotejoDelComprobante::LEIDO
+
+      CotejoDelComprobante.leer(
+        { data: archivo.media_file.read.to_s.b, media_type: archivo.media_mime,
+          filename: archivo.media_filename.presence || "comprobante" },
+        cost_center_code: CostCenter.find_by(id: datos["cost_center_id"])&.code,
+        tipo_de_gasto: ReportExpenseOption.find_by(id: datos["type_identification_id"])&.name
+      )
+    rescue StandardError => e
+      Rails.logger.error("[agente] lectura para el cotejo: #{e.class}: #{e.message}")
+      { "estado" => CotejoDelComprobante::SIN_LECTURA, "motivo" => "provider_error" }
     end
 
     def aviso_de_presupuesto(candidato)
@@ -154,8 +192,12 @@ module Agente
         argumentos["policy_findings"] = Array(veredicto["findings"]).map { |f| { "rule_id" => f["rule_id"], "reason" => f["message"] } }
       end
 
+      # La lectura del comprobante va por el contexto y no como argumento: ver
+      # ReportExpensesCreateTool.
+      contexto = borrador["lectura"].present? ? { lectura_del_comprobante: borrador["lectura"] } : {}
       creado = McpEnProceso.llamar_json("report_expenses_create", argumentos, usuario: @usuario,
-                                                                               wa_id: @conversacion.wa_id)
+                                                                               wa_id: @conversacion.wa_id,
+                                                                               contexto: contexto)
       gasto = creado[:datos]
       return fallo!(borrador, mensaje_de_error(creado)) if creado[:error] || !gasto.is_a?(Hash) || gasto["id"].blank?
 
@@ -163,16 +205,16 @@ module Agente
       lineas << gasto["budget_message"] if gasto["budget_message"].present?
       sin_aprobar = Array(gasto["rule_violations"]).filter_map { |v| v.is_a?(Hash) ? v["message"] : v.to_s }
       lineas << "Quedó sin aprobar porque: #{sin_aprobar.join(' ')}" if sin_aprobar.any?
-      lineas << adjuntar_comprobante(gasto["id"], borrador["archivo_id"])
+      lineas << adjuntar_comprobante(gasto["id"], borrador["archivo_id"], contexto)
       terminar!(borrador, gasto["id"], lineas.compact.join("\n\n"),
                 "gasto ##{gasto['id']} por #{gasto['invoice_total']} (#{gasto['invoice_name']})")
     end
 
-    def adjuntar_comprobante(gasto_id, archivo_id)
+    def adjuntar_comprobante(gasto_id, archivo_id, contexto = {})
       archivo = archivo_id && WhatsappMessage.find_by(id: archivo_id)
       return "Quedó sin comprobante; si tienes la foto, envíamela y la adjunto." unless archivo&.media_file.present?
 
-      resultado = Adjunto.adjuntar(gasto_id, archivo, usuario: @usuario)
+      resultado = Adjunto.adjuntar(gasto_id, archivo, usuario: @usuario, contexto: contexto)
       return "📎 Comprobante adjunto." unless resultado[:error]
 
       "No pude adjuntar el comprobante (#{resultado[:texto].to_s.delete_prefix('Error: ')}). Envíamelo de nuevo y lo adjunto."
@@ -264,14 +306,15 @@ module Agente
 
     # --- Comun ---------------------------------------------------------------
 
-    def guardar_y_enviar(tipo, datos, resumen, avisos, veredicto: nil, archivo_id: nil)
+    def guardar_y_enviar(tipo, datos, resumen, avisos, veredicto: nil, archivo_id: nil, lectura: nil)
       texto = Formato.para_whatsapp(resumen)
       # Los avisos que el modelo ya puso en su resumen no se repiten (visto en
       # la prueba real del 2026-10-19: el del tope salia dos veces).
       faltantes = avisos.reject { |aviso| texto.include?(aviso.to_s.delete_suffix(".")) }
       texto = [texto, *faltantes.map { |a| "⚠️ #{a}" }].join("\n\n") if faltantes.any?
       borrador = { "id" => SecureRandom.hex(6), "tipo" => tipo, "args" => datos, "veredicto" => veredicto,
-                   "archivo_id" => archivo_id, "creado_en" => Time.current.iso8601, "estado" => "pendiente" }
+                   "archivo_id" => archivo_id, "lectura" => lectura, "creado_en" => Time.current.iso8601,
+                   "estado" => "pendiente" }
       actualizar(borrador)
       @respondedor.botones(texto, [{ id: "borrador:confirmar:#{borrador['id']}", titulo: BOTON_CONFIRMAR },
                                    { id: "borrador:corregir:#{borrador['id']}", titulo: BOTON_CORREGIR },

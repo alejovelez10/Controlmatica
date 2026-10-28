@@ -29,6 +29,7 @@
 #  operational_state         :string           default("creado"), not null
 #  origen                    :string           default("web"), not null
 #  payment_type              :string
+#  receipt_check             :jsonb            not null
 #  receipt_file              :string
 #  rejected_at               :datetime
 #  rejection_reason          :text
@@ -108,7 +109,9 @@ class ReportExpenseSerializer < ActiveModel::Serializer
              # que no la piden, que hoy son todos: la pantalla no pinta nada.
              :double_approval,
              # --- origen (2026-10-23): "web" o "whatsapp". AL FINAL. ---
-             :origen
+             :origen,
+             # --- informe «Incumplen reglas» (2026-10-25). AL FINAL. ---
+             :rules_report
 
   belongs_to :cost_center, serializer: CostCenterSerializer
 
@@ -166,6 +169,23 @@ class ReportExpenseSerializer < ActiveModel::Serializer
       reasons: reglas.map { |r| "Regla «#{r["rule"]}»: #{(Array(r["reasons"]) + Array(r["ia_reasons"])).join(" · ")}" },
       first_by: persona(object.first_approved_by), first_at: object.first_approved_at,
       second_by: persona(object.second_approved_by), second_at: object.second_approved_at }
+  end
+
+  # Las reglas que incumplio y quien decidio, para la pestaña «Incumplen
+  # reglas». SOLO SI LA LISTA PRECARGO `rule_hits`: este serializer lo usan
+  # tambien Contabilidad y el centro de costo, y sin el `includes` cada fila
+  # costaria tres consultas de mas. Ahi viaja nil, igual que `double_approval`
+  # en un gasto que no la pide.
+  def rules_report
+    return nil unless object.association(:rule_hits).loaded?
+
+    { hits: object.rule_hits.sort_by(&:id).map do |h|
+              { rule_id: h.expense_rule_id, rule: h.rule_name, code: h.code, message: h.message }
+            end,
+      first_by: persona(object.first_approved_by), first_at: object.first_approved_at,
+      second_by: persona(object.second_approved_by), second_at: object.second_approved_at,
+      rejected_by: persona(object.rejected_by), rejected_at: object.rejected_at,
+      rejection_reason: object.rejection_reason }
   end
 
   private

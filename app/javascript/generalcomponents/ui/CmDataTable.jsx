@@ -90,6 +90,22 @@ class CmDataTable extends React.Component {
     });
   };
 
+  // Una columna que llega despues del montaje se muestra (2026-10-25): la
+  // pestaña «Incumplen reglas» de Gastos suma dos columnas a la misma tabla, y
+  // sin esto quedaban ocultas porque `visibleColumns` solo se arma al montar.
+  // Las que la persona oculto a mano siguen ocultas.
+  componentDidUpdate(prevProps) {
+    if (prevProps.columns === this.props.columns) return;
+
+    const antes = prevProps.columns.map((c) => c.key);
+    const nuevas = this.props.columns.map((c) => c.key).filter((k) => !antes.includes(k));
+    if (nuevas.length === 0) return;
+
+    this.setState((prev) => ({
+      visibleColumns: [...prev.visibleColumns, ...nuevas.filter((k) => !prev.visibleColumns.includes(k))],
+    }));
+  }
+
   // Filtrar y ordenar datos (solo cuando NO hay onSearch, búsqueda local)
   getProcessedData = () => {
     const { data, columns, onSearch } = this.props;

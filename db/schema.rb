@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_23_000001) do
+ActiveRecord::Schema.define(version: 2026_10_25_000001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -374,6 +374,7 @@ ActiveRecord::Schema.define(version: 2026_10_23_000001) do
     t.boolean "requires_second_approval", default: false, null: false
     t.integer "second_approver_rol_id"
     t.integer "second_approver_user_id"
+    t.boolean "cross_check_receipt", default: false, null: false
     t.index ["active"], name: "index_expense_rules_on_active"
     t.index ["is_default"], name: "index_expense_rules_on_is_default"
     t.index ["is_default"], name: "index_expense_rules_unique_default_active", unique: true, where: "(is_default AND active)"
@@ -666,6 +667,18 @@ ActiveRecord::Schema.define(version: 2026_10_23_000001) do
     t.boolean "used_by_ai", default: true, null: false
   end
 
+  create_table "report_expense_rule_hits", force: :cascade do |t|
+    t.bigint "report_expense_id", null: false
+    t.bigint "expense_rule_id"
+    t.string "rule_name", null: false
+    t.string "code", null: false
+    t.text "message", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["expense_rule_id", "report_expense_id"], name: "index_rule_hits_on_rule_and_expense"
+    t.index ["report_expense_id", "code"], name: "index_rule_hits_on_expense_and_code"
+  end
+
   create_table "report_expenses", force: :cascade do |t|
     t.integer "user_id"
     t.integer "cost_center_id"
@@ -713,6 +726,7 @@ ActiveRecord::Schema.define(version: 2026_10_23_000001) do
     t.integer "second_approved_by_id"
     t.datetime "second_approved_at"
     t.string "origen", default: "web", null: false
+    t.jsonb "receipt_check", default: {}, null: false
     t.index ["accounting_approved", "invoice_date"], name: "index_report_expenses_on_accounting_approved_and_date"
     t.index ["budget_status"], name: "index_report_expenses_on_budget_status"
     t.index ["cost_center_id"], name: "index_report_expenses_on_cost_center_id"
@@ -930,6 +944,8 @@ ActiveRecord::Schema.define(version: 2026_10_23_000001) do
   add_foreign_key "expense_rules_included_types", "report_expense_options", on_delete: :cascade
   add_foreign_key "expense_rules_rols", "expense_rules"
   add_foreign_key "expense_rules_rols", "rols"
+  add_foreign_key "report_expense_rule_hits", "expense_rules", on_delete: :nullify
+  add_foreign_key "report_expense_rule_hits", "report_expenses", on_delete: :cascade
   add_foreign_key "whatsapp_conversations", "users"
   add_foreign_key "whatsapp_messages", "users"
   add_foreign_key "whatsapp_messages", "whatsapp_conversations"

@@ -68,6 +68,16 @@ class ReportExpensesController < ApplicationController
       # nombra segundo aprobador (aunque hoy no tenga nada pendiente).
       second_approver: segundo_aprobador?,
     }
+    # INFORME «INCUMPLEN REGLAS» (2026-10-25): la pestaña la ve quien tiene algo
+    # que revisar —«Ver todos», propietario de un centro o segundo aprobador—,
+    # y cada uno ve ahi lo mismo que alcanza en las otras pestañas. Las reglas
+    # van todas, activas o no: un gasto de hace un mes pudo incumplir una regla
+    # que hoy esta apagada, y el filtro tiene que poder encontrarlo.
+    @estados[:rule_hits_tab] = @estados[:show_all] || @estados[:owns_cost_centers] || @estados[:second_approver]
+    if @estados[:rule_hits_tab]
+      @estados[:rule_options] = ExpenseRule.order(:name).pluck(:id, :name, :active)
+                                           .map { |id, nombre, activa| { value: id, label: activa ? nombre : "#{nombre} (inactiva)" } }
+    end
   end
 
   def indicators_expenses
@@ -80,6 +90,9 @@ class ReportExpensesController < ApplicationController
     # sin el, una pagina de 50 gastos aprobados cuesta 50 consultas de mas.
     base_query = ReportExpense.includes(:cost_center, :user_invoice, :type_identification, :payment_type, :last_user_edited, :user, :accounting_approved_by,
                                         :first_approved_by, :second_approved_by)
+    # La pestaña «Incumplen reglas» pinta las reglas y quien decidio: se
+    # precargan solo ahi (ReportExpenseSerializer#rules_report).
+    base_query = base_query.includes(:rule_hits, :rejected_by) if params[:scope] == "rule_hits"
 
     # Recorte de visibilidad: permiso + pestaña elegida. UNICO sitio donde se
     # decide, compartido con el Excel y con la aceptacion masiva.
@@ -222,7 +235,7 @@ class ReportExpensesController < ApplicationController
 
     report_expense = ReportExpense.new(report_expense_params_create)
     report_expense.agent_policy_verdict = agent_policy_verdict_param
-    juzgar_al_guardar!(report_expense)
+    leer_comprobante_al_guardar!(report_expense)
     result = ExpenseBudgetService.persist_with_evaluation!(report_expense, actor: current_user)
 
     if result.ok?
@@ -330,6 +343,9 @@ class ReportExpensesController < ApplicationController
 
     @report_expense.assign_attributes(report_expense_params_update)
     @report_expense.agent_policy_verdict = agent_policy_verdict_param
+    # Al editar solo se lee si llega un comprobante NUEVO y una regla pide
+    # cotejarlo; sin archivo nuevo el cotejo compara con la lectura guardada.
+    leer_comprobante_al_guardar!(@report_expense, juzgar: false)
     result = ExpenseBudgetService.persist_with_evaluation!(
       @report_expense, actor: current_user,
       previous_cost_center_id: prev_cost_center_id,
@@ -565,7 +581,11 @@ class ReportExpensesController < ApplicationController
     }
 
     render json: { type: "success", fields: fields, confidence: result.confidence,
-                   warnings: warnings, policy: policy }
+                   warnings: warnings, policy: policy,
+                   # COTEJO (2026-10-25): esta misma lectura, firmada y atada al
+                   # archivo, vuelve al guardar en `receipt_reading` para no
+                   # pagarle a la IA dos veces el mismo comprobante.
+                   reading_token: token_de_lectura(result) }
   end
 
   # PLANTILLA DE IMPORTACION. Se genera contra la base en cada descarga: las
@@ -1066,6 +1086,8 @@ class ReportExpensesController < ApplicationController
       # "Ver todos": la regla me nombro aprobador de estos gastos, y sin verlos
       # no los podria aprobar.
       scope.pendientes_de_segunda.para_segundo_aprobador(current_user)
+    when "rule_hits"
+      gastos_que_incumplen_reglas(scope)
     else
       # Sin pestaña —o con una que no existe— manda el permiso, igual que antes
       # de que hubiera pestañas.
@@ -1073,6 +1095,42 @@ class ReportExpensesController < ApplicationController
 
       scope.where(user_invoice_id: current_user.id)
     end
+  end
+
+  # INFORME «INCUMPLEN REGLAS» (2026-10-25): los gastos que se guardaron
+  # incumpliendo alguna regla. Los que una regla no dejo guardar no estan:
+  # nunca existieron.
+  #
+  # QUIEN VE QUE: con «Ver todos», todos. Sin el, los suyos, los de los
+  # centros de los que es propietario y los que esperan su segunda firma, que
+  # es lo mismo que alcanza sumando las otras pestañas. Ninguno sale de un
+  # parametro: todo sale de `current_user`.
+  #
+  # Los dos filtros propios van aqui y no en `apply_expense_filters` para que
+  # el Excel y «Aceptar gastos» respeten lo mismo que la tabla:
+  #   * `rule_id`: los que incumplieron esa regla.
+  #   * `rule_state`: pendientes (lo que falta decidir, el default),
+  #     aprobados, rechazados o todos. Aprobar no saca un gasto del informe,
+  #     lo pasa de pendientes a aprobados.
+  RULE_STATES = {
+    "pendientes" => [ReportExpense::STATE_CREADO, ReportExpense::STATE_PENDIENTE_SEGUNDA],
+    "aprobados"  => [ReportExpense::STATE_ACEPTADO],
+    "rechazados" => [ReportExpense::STATE_RECHAZADO]
+  }.freeze
+
+  def gastos_que_incumplen_reglas(scope)
+    hits = ReportExpenseRuleHit.all
+    hits = hits.where(expense_rule_id: params[:rule_id]) if params[:rule_id].present?
+    scope = scope.where(id: hits.select(:report_expense_id))
+
+    estado = params[:rule_state].presence || "pendientes"
+    scope = scope.where(operational_state: RULE_STATES[estado]) if RULE_STATES.key?(estado)
+
+    return scope if is_admin? || has_menu_permission?("Gastos", "Ver todos")
+
+    scope.where(user_invoice_id: current_user.id)
+         .or(scope.where(cost_center_id: CostCenter.where(user_owner_id: current_user.id).select(:id)))
+         .or(scope.where(id: ReportExpense.pendientes_de_segunda.para_segundo_aprobador(current_user).select(:id)))
   end
 
   # Filtros de la pantalla de Gastos. La lista canonica vive en el modelo
@@ -1221,20 +1279,42 @@ class ReportExpensesController < ApplicationController
   # una caida del proveedor en "nadie puede registrar gastos" seria peor que el
   # hueco que esto cierra. Cuesta unos segundos al guardar, y solo cuando la
   # persona tiene reglas con texto que aplican a este gasto.
-  def juzgar_al_guardar!(report_expense)
+  #
+  # Y EL COTEJO DEL COMPROBANTE (2026-10-25). Si una regla pide cotejarlo, aqui
+  # se consigue la lectura que el gasto compara con el formulario
+  # (CotejoDelComprobante). UNA SOLA LLAMADA A LA IA para las dos cosas, y
+  # ninguna si la persona ya pulso «Extraer datos»: esa lectura llega firmada
+  # en `receipt_reading` y se usa si es de este mismo archivo. Sin archivo, el
+  # gasto nuevo queda «sin comprobante» para el cotejo. `juzgar: false` (al
+  # editar) solo coteja: el juicio del texto libre al editar no existia y no se
+  # agrega aqui.
+  #
+  # SI ALGO FALLA A MITAD DE CAMINO con un cotejo pendiente, el gasto queda
+  # «sin lectura» y para revision: un error nuestro no puede dejar pasar sin
+  # cotejar un gasto que la regla pide cotejar. El juicio del texto libre sigue
+  # fallando abierto, como siempre.
+  def leer_comprobante_al_guardar!(report_expense, juzgar: true)
     archivo = params[:receipt_file]
-    return unless archivo.respond_to?(:read)
+    archivo = nil unless archivo.respond_to?(:read)
+    # Al editar sin archivo nuevo no hay nada que leer: quitar el comprobante
+    # lo resuelve el modelo (ReportExpense#lectura_al_quitar_el_comprobante).
+    return if archivo.nil? && report_expense.persisted?
     return unless ReceiptExtractionService.enabled? && ReceiptExtractionService.configured?
 
-    con_texto = ExpenseRule.para_gasto(report_expense.user_invoice, report_expense.type_identification_id)
-                           .select { |r| r.texto_para_el_agente.present? }
-    return if con_texto.empty?
+    reglas = ExpenseRule.para_gasto(report_expense.user_invoice, report_expense.type_identification_id)
+    cotejar = CotejoDelComprobante.aplica?(report_expense, reglas)
+    con_texto = juzgar && archivo ? reglas_por_juzgar(report_expense, reglas) : []
 
-    actual = report_expense.agent_policy_verdict
-    if actual.present?
-      juzgadas = Array(actual[:judged_rule_ids])
-      # Sin la lista (el formato de antes) se asume que cubria todo.
-      return if juzgadas.empty? || (con_texto.map(&:id) - juzgadas).empty?
+    if cotejar && archivo.nil?
+      report_expense.lectura_del_comprobante = CotejoDelComprobante.sin_comprobante if report_expense.new_record?
+      return
+    end
+    return unless cotejar || con_texto.any?
+
+    lectura = cotejar ? lectura_firmada(archivo) : nil
+    if lectura && con_texto.empty?
+      report_expense.lectura_del_comprobante = lectura
+      return
     end
 
     result = ReceiptExtractionService.extract(
@@ -1243,13 +1323,51 @@ class ReportExpensesController < ApplicationController
                tipo_de_gasto: report_expense.type_identification&.name
     )
     archivo.rewind if archivo.respond_to?(:rewind)
-    return unless result.ok? && [true, false].include?(result.policy_compliant)
+    report_expense.lectura_del_comprobante = lectura || CotejoDelComprobante.lectura_desde(result) if cotejar
+    return unless con_texto.any? && result.ok? && [true, false].include?(result.policy_compliant)
 
     report_expense.agent_policy_verdict = { compliant: result.policy_compliant,
                                             findings: Array(result.policy_findings_detail),
                                             judged_rule_ids: con_texto.map(&:id) }
   rescue StandardError => e
-    Rails.logger.error("[report_expenses] juicio al guardar: #{e.class}: #{e.message}")
+    Rails.logger.error("[report_expenses] lectura al guardar: #{e.class}: #{e.message}")
+    if cotejar && report_expense.lectura_del_comprobante.blank?
+      report_expense.lectura_del_comprobante = { "estado" => CotejoDelComprobante::SIN_LECTURA,
+                                                 "motivo" => "provider_error" }
+    end
+  end
+
+  # Las reglas con texto que nadie juzgo. Si el veredicto que llega no cubre
+  # todas las que aplican AHORA (se cambio el responsable despues de leer), se
+  # juzgan todas otra vez.
+  def reglas_por_juzgar(report_expense, reglas)
+    con_texto = reglas.select { |r| r.texto_para_el_agente.present? }
+    actual = report_expense.agent_policy_verdict
+    return con_texto if actual.blank?
+
+    juzgadas = Array(actual[:judged_rule_ids])
+    # Sin la lista (el formato de antes) se asume que cubria todo.
+    juzgadas.empty? || (con_texto.map(&:id) - juzgadas).empty? ? [] : con_texto
+  end
+
+  def token_de_lectura(result)
+    archivo = params[:file]
+    return nil unless archivo.respond_to?(:read)
+
+    archivo.rewind if archivo.respond_to?(:rewind)
+    CotejoDelComprobante.token(CotejoDelComprobante.lectura_desde(result), archivo.read)
+  rescue StandardError => e
+    Rails.logger.error("[report_expenses] token de lectura: #{e.class}: #{e.message}")
+    nil
+  end
+
+  # La lectura del boton «Extraer datos», si llego y es de este archivo.
+  def lectura_firmada(archivo)
+    return nil if params[:receipt_reading].blank?
+
+    bytes = archivo.read
+    archivo.rewind if archivo.respond_to?(:rewind)
+    CotejoDelComprobante.desde_token(params[:receipt_reading], bytes)
   end
 
   def report_expense_params_create

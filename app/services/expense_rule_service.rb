@@ -31,6 +31,9 @@ class ExpenseRuleService
   # determinista: quien registra y el tipo los sabe el servidor, no hay nada que
   # interpretar.
   CODE_PROHIBITED = "expense_prohibited".freeze
+  # Lo que dice el comprobante no coincide con el formulario, o no se pudo
+  # comprobar (2026-10-25, CotejoDelComprobante). NUNCA frena.
+  CODE_RECEIPT    = CotejoDelComprobante::CODE
 
   # Result canonico del proyecto, identico al de ExpenseBudgetService
   # (00-ARQUITECTURA.md §4.2). `errors` es SIEMPRE un array.
@@ -120,6 +123,10 @@ class ExpenseRuleService
     semanticas = check_agent_policy(agent_verdict, reglas)
     violations.concat(semanticas[:violations])
     blocking.concat(semanticas[:blocking])
+
+    # El cotejo del comprobante (2026-10-25). Solo a la foto, nunca a lo que
+    # frena: ver CotejoDelComprobante.
+    violations.concat(check_cotejo(expense, reglas))
 
     valor = {
       ok: violations.empty?,
@@ -224,6 +231,7 @@ class ExpenseRuleService
            Array(previa).each_with_object({}) { |f, acc| acc[f["rule_id"]] = Array(f["ia_reasons"]) }
          end
     duplicado = nil
+    cotejo = nil
 
     reglas.filter_map do |regla|
       motivos = []
@@ -235,6 +243,10 @@ class ExpenseRuleService
       if regla.check_duplicates
         duplicado = check_duplicate(expense) if duplicado.nil?
         motivos.concat(duplicado.map { |v| v[:message] })
+      end
+      if regla.cross_check_receipt
+        cotejo = CotejoDelComprobante.mensajes(CotejoDelComprobante.evaluar(expense, reglas)) if cotejo.nil?
+        motivos.concat(cotejo)
       end
       motivos_ia = Array(ia[regla.id])
       next if motivos.empty? && motivos_ia.empty?
@@ -268,6 +280,95 @@ class ExpenseRuleService
     end
   end
   private_class_method :motivos_de_ia_por_regla
+
+  # --- Reglas incumplidas, regla por regla (2026-10-25) ----------------------
+
+  # Lo que se guarda en `report_expense_rule_hits` para el informe «Incumplen
+  # reglas»: una fila por motivo, con la regla de la que sale.
+  #
+  #   [{ expense_rule_id: 7, rule_name: "Montos altos", code:, message: }]
+  #
+  # REGLA POR REGLA Y NO CON `validate`, por lo mismo que `segunda_aprobacion`:
+  # ahi los topes de varias reglas se colapsan en el mas estricto y la violacion
+  # no sabe de cual salio. Aqui cada regla se mide con SUS limites: con topes
+  # de $500.000 y de $1.000.000, un gasto de $700.000 incumple solo la primera,
+  # y filtrar el informe por la segunda no lo muestra.
+  #
+  # Un hallazgo de la IA que no dijo de que regla salio se le atribuye a la
+  # unica regla con texto, si hay una sola; con varias queda sin regla.
+  #
+  # `reglas` son las del gasto si quien llama ya las tiene (el gasto las busca
+  # una vez por guardado); si no, se buscan.
+  def self.incumplimientos_por_regla(expense, agent_verdict: nil, reglas: nil)
+    return [] if expense.blank?
+
+    reglas ||= ExpenseRule.para_gasto(expense.user_invoice, expense.type_identification_id)
+    return [] if reglas.empty?
+
+    ia = hallazgos_de_ia_por_regla(agent_verdict, reglas)
+    cotejo = CotejoDelComprobante.mensajes(CotejoDelComprobante.evaluar(expense, reglas))
+    duplicado = nil
+    filas = []
+
+    reglas.each do |regla|
+      motivos = check_prohibitions(expense, [regla])[:violations].map { |v| [v[:code], v[:message]] }
+      motivos.concat(check_age(expense, regla.max_invoice_age_days).map { |v| [v[:code], v[:message]] })
+      motivos.concat(check_value(expense, regla.max_invoice_value).map { |v| [v[:code], v[:message]] })
+      if regla.check_duplicates
+        duplicado = check_duplicate(expense) if duplicado.nil?
+        motivos.concat(duplicado.map { |v| [v[:code], v[:message]] })
+      end
+      motivos.concat(Array(ia[regla.id]).map { |m| [CODE_AGENT, m] })
+      motivos.concat(cotejo.map { |m| [CODE_RECEIPT, m] }) if regla.cross_check_receipt
+
+      motivos.each do |code, message|
+        filas << { expense_rule_id: regla.id, rule_name: regla.name, code: code, message: message }
+      end
+    end
+
+    Array(ia[nil]).each do |message|
+      filas << { expense_rule_id: nil, rule_name: "Lo que no se acepta en el comprobante (IA)",
+                 code: CODE_AGENT, message: message }
+    end
+    filas
+  end
+
+  # {rule_id => [motivo, ...]} de lo que encontro la IA, con los mismos
+  # criterios que `check_agent_policy`: se sueltan los hallazgos de reglas que
+  # no aplican a este gasto, y uno sin regla se le da a la unica regla con
+  # texto. La clave `nil` junta los que no se pudieron atribuir.
+  def self.hallazgos_de_ia_por_regla(verdict, reglas)
+    con_texto = reglas.select { |r| r.texto_para_el_agente.present? }
+    return {} if verdict.blank? || con_texto.empty?
+
+    v = verdict.respond_to?(:with_indifferent_access) ? verdict.with_indifferent_access : verdict
+    return {} unless v[:compliant] == false
+
+    por_id = con_texto.index_by(&:id)
+    hallazgos = normalizar_hallazgos(v[:findings])
+    vigentes = if hallazgos.empty?
+                 [{ rule_id: nil, message: "El comprobante no cumple las instrucciones de la regla de gasto" }]
+               else
+                 descartar_reglas_que_no_aplican(hallazgos, por_id)
+               end
+    unica = con_texto.size == 1 ? con_texto.first : nil
+
+    vigentes.each_with_object({}) do |h, acc|
+      (acc[h[:rule_id] || unica&.id] ||= []) << h[:message]
+    end
+  end
+  private_class_method :hallazgos_de_ia_por_regla
+
+  # El cotejo en la foto de `validate`. La violacion lleva el nombre de la regla
+  # que lo pide; si lo piden varias, todos.
+  def self.check_cotejo(expense, reglas)
+    mensajes = CotejoDelComprobante.mensajes(CotejoDelComprobante.evaluar(expense, reglas))
+    return [] if mensajes.empty?
+
+    nombre = reglas.select(&:cross_check_receipt).map(&:name).join(", ")
+    mensajes.map { |m| violation(CODE_RECEIPT, m, rule: nombre) }
+  end
+  private_class_method :check_cotejo
 
   # --- Reglas deterministas --------------------------------------------------
 
@@ -427,6 +528,9 @@ class ExpenseRuleService
   # Tambien es relleno un numero hecho solo de ceros, o igual al NIT/cedula del
   # mismo gasto: es quien recibe el viatico copiando su documento en el campo
   # del numero, no un numero de factura.
+  #
+  # Publico desde 2026-10-25: el cotejo del comprobante tampoco compara un
+  # numero de relleno con el de la factura.
   def self.numero_de_relleno?(expense)
     numero = solo_letras_y_digitos(expense.invoice_number)
     return true if NUMEROS_DE_RELLENO.include?(numero) || numero.match?(/\A0+\z/)
@@ -434,7 +538,6 @@ class ExpenseRuleService
     documento = solo_letras_y_digitos(expense.identification)
     documento.present? && numero == documento
   end
-  private_class_method :numero_de_relleno?
 
   def self.solo_letras_y_digitos(texto)
     I18n.transliterate(texto.to_s).upcase.gsub(/[^A-Z0-9]/, "")

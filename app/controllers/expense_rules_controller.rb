@@ -303,6 +303,8 @@ class ExpenseRulesController < ApplicationController
                   :applies_to_all_roles, :prohibits_expense, :observations,
                   # Doble aprobacion (2026-10-18): la casilla y QUIEN, cargo o
                   # persona. El modelo limpia el que no se eligio.
-                  :requires_second_approval, :second_approver_rol_id, :second_approver_user_id)
+                  :requires_second_approval, :second_approver_rol_id, :second_approver_user_id,
+                  # Cotejo del comprobante contra el formulario (2026-10-25).
+                  :cross_check_receipt)
   end
 end

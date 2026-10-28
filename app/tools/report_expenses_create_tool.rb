@@ -142,6 +142,17 @@ class ReportExpensesCreateTool < ApplicationTool
       # obligatoria de ese tipo no frenaba nada por WhatsApp (adenda D de
       # ESTADO.md, puerta 3); en la web si.
       re.agent_policy_verdict = veredicto_del_agente(args)
+      # COTEJO DEL COMPROBANTE (2026-10-25): la lectura la hace el agente de
+      # WhatsApp al proponer y llega por el server_context, que solo se arma en
+      # proceso (Agente::McpEnProceso). No es un argumento de la tool a
+      # proposito: quien llame por HTTP no puede traer una lectura que cuadre.
+      # Sin lectura, y con una regla que pide cotejar, el gasto nace «sin
+      # comprobante» —aqui todavia no hay archivo— y no se aprueba solo; al
+      # adjuntarlo (report_expenses_attach_receipt) se lee y se coteja.
+      re.lectura_del_comprobante = server_context && server_context[:lectura_del_comprobante]
+      if re.lectura_del_comprobante.blank? && CotejoDelComprobante.aplica?(re, re.reglas_del_gasto)
+        re.lectura_del_comprobante = CotejoDelComprobante.sin_comprobante
+      end
       re.exchange_rate_source = resolve_rate_source(re)
       re.user_id = creator.id
       # GUARD DE REGLAS DE NEGOCIO — antes de guardar nada (§7.5). El motor es

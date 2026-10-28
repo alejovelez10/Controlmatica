@@ -51,6 +51,8 @@ function scopeInicial(estados) {
   if (pedido === "all" && estados.show_all) return "all";
   // DOBLE APROBACION (2026-10-18): el correo del segundo aprobador aterriza aqui.
   if (pedido === "second_approval" && estados.second_approver) return "second_approval";
+  // INFORME «INCUMPLEN REGLAS» (2026-10-25).
+  if (pedido === "rule_hits" && estados.rule_hits_tab) return "rule_hits";
   return porDefecto;
 }
 
@@ -70,6 +72,68 @@ var EMPTY_FILTERS = {
   accounting_approved: "",
   origen: "",
 };
+
+// INFORME «INCUMPLEN REGLAS» (2026-10-25). Filtros propios de la pestaña: la
+// regla y en que va la decision. Abre en "pendientes", que es lo que alguien
+// tiene que revisar; aprobar no saca el gasto del informe, lo pasa a
+// "aprobados".
+var RULE_FILTERS_VACIOS = { rule_id: "", rule_state: "pendientes" };
+
+// Las reglas que incumplio el gasto, agrupadas por regla: el nombre y debajo
+// cada razon, como en el aviso que le llega al propietario.
+function celdaDeReglas(row) {
+  var hits = (row.rules_report && row.rules_report.hits) || [];
+  if (!hits.length) return React.createElement("div", { className: "cm-celda-vacia" }, "—");
+
+  var grupos = [];
+  var porNombre = {};
+  hits.forEach(function(h) {
+    var g = porNombre[h.rule];
+    if (!g) {
+      g = porNombre[h.rule] = { rule: h.rule, motivos: [] };
+      grupos.push(g);
+    }
+    g.motivos.push(h.message);
+  });
+
+  return React.createElement("div", { "data-testid": "expense-rule-hits-" + row.id, style: { minWidth: 280 } },
+    grupos.map(function(g, i) {
+      return React.createElement("div", { key: i, style: { marginTop: i ? 8 : 0 } },
+        React.createElement("div", { style: { fontWeight: 600, color: "var(--cm-primary, #2a3f53)" } },
+          React.createElement("i", { className: "fas fa-gavel", "aria-hidden": "true", style: { marginRight: 6, color: "#f5a623" } }),
+          g.rule
+        ),
+        g.motivos.map(function(m, j) {
+          return React.createElement("div", { key: j, style: { fontSize: 12, lineHeight: 1.4, marginTop: 2 } }, "• " + m);
+        })
+      );
+    })
+  );
+}
+
+// Quien decidio y cuando, o que falta. Un gasto rechazado lleva su motivo.
+function celdaDeDecision(row) {
+  var r = row.rules_report || {};
+  var lineas = [];
+  var cuando = function(fecha) { return fecha ? " · " + shortDate(fecha) : ""; };
+
+  if (row.operational_state === "rechazado") {
+    lineas.push("Rechazado" + (r.rejected_by ? " por " + r.rejected_by.names : "") + cuando(r.rejected_at));
+    if (r.rejection_reason) lineas.push("Motivo: " + r.rejection_reason);
+  } else {
+    var dos = r.second_by || row.operational_state === "pendiente_segunda";
+    if (r.first_by) lineas.push((dos ? "1ª aprobación: " : "Aprobado por ") + r.first_by.names + cuando(r.first_at));
+    if (r.second_by) lineas.push("2ª aprobación: " + r.second_by.names + cuando(r.second_at));
+    if (row.operational_state === "pendiente_segunda") lineas.push("Falta la 2ª aprobación");
+    if (!lineas.length) lineas.push(row.operational_state === "aceptado" ? "Aprobado" : "Pendiente de aprobación");
+  }
+
+  return React.createElement("div", { "data-testid": "expense-rule-decision-" + row.id, style: { minWidth: 180 } },
+    lineas.map(function(l, i) {
+      return React.createElement("div", { key: i, style: { fontSize: i ? 12 : 13, marginTop: i ? 2 : 0 } }, l);
+    })
+  );
+}
 
 // Por donde entro el gasto (2026-10-23): "whatsapp" lo que crea el agente,
 // "web" todo lo demas, tambien lo historico.
@@ -277,6 +341,9 @@ class ReportExpenseIndex extends React.Component {
       showFilters: false,
       isFiltering: false,
       filters: Object.assign({}, EMPTY_FILTERS),
+      // Los de la pestaña «Incumplen reglas» (2026-10-25). Aparte de `filters`
+      // porque no son del panel de filtros: se ven siempre en esa pestaña.
+      ruleFilters: Object.assign({}, RULE_FILTERS_VACIOS),
       filterCostCenter: null,
       filterCostCenterOptions: [],
       filterCostCenterLoading: false,
@@ -575,13 +642,12 @@ class ReportExpenseIndex extends React.Component {
   // gastos" y el servidor acepta miles porque el PATCH salio sin el filtro.
   filterParams = function() {
     var f = this.state.filters;
-    var out = [];
     // LA PESTAÑA VIAJA CON LOS FILTROS, y por eso vive aqui dentro y no en
     // loadData. Es un recorte de la lista igual que los demas, y las otras dos
     // salidas de esta funcion —el Excel y "Aceptar gastos"— tienen que
     // respetarlo: aceptar desde "Centros a mi cargo" sin mandar el scope
     // aceptaria todo lo que el permiso alcance, no lo que el usuario ve.
-    if (this.state.scope) out.push("scope=" + this.state.scope);
+    var out = this.paramsDePestana();
     if (f.cost_center_id) out.push("cost_center_id=" + f.cost_center_id);
     if (f.user_invoice_id) out.push("user_invoice_id=" + f.user_invoice_id);
     if (f.start_date) out.push("start_date=" + f.start_date);
@@ -591,6 +657,21 @@ class ReportExpenseIndex extends React.Component {
     if (f.currency) out.push("currency=" + f.currency);
     if (f.accounting_approved) out.push("accounting_approved=" + f.accounting_approved);
     if (f.origen) out.push("origen=" + f.origen);
+    return out;
+  }.bind(this);
+
+  // La pestaña y, en «Incumplen reglas» (2026-10-25), sus dos filtros. Los
+  // usan los filtros de arriba y la descarga de lo marcado: sin la regla y el
+  // estado, el servidor asume "pendientes" y lo marcado en "Aprobados" se
+  // descargaria vacio.
+  paramsDePestana = function() {
+    var out = [];
+    if (this.state.scope) out.push("scope=" + this.state.scope);
+    if (this.state.scope === "rule_hits") {
+      var rf = this.state.ruleFilters;
+      if (rf.rule_id) out.push("rule_id=" + rf.rule_id);
+      out.push("rule_state=" + (rf.rule_state || "pendientes"));
+    }
     return out;
   }.bind(this);
 
@@ -700,7 +781,7 @@ class ReportExpenseIndex extends React.Component {
   // guarde. Con fetch habria que materializar el blob en memoria para lo mismo.
   urlDeSeleccion = function(base) {
     var params = this.state.selectedIds.map(function(id) { return "ids[]=" + id; });
-    if (this.state.scope) params.push("scope=" + this.state.scope);
+    params = params.concat(this.paramsDePestana());
     return base + "?" + params.join("&");
   }.bind(this);
 
@@ -812,6 +893,72 @@ class ReportExpenseIndex extends React.Component {
     // La seleccion SI se limpia: los ids marcados eran de otro conjunto, y
     // exportarlos desde esta pestaña recortaria en silencio los que no caben.
     this.setState({ scope: scope, selectedIds: [] }, this.loadData.bind(this, 1));
+  }.bind(this);
+
+  // --- Informe «Incumplen reglas» (2026-10-25) -------------------------------
+
+  // Cambiar la regla o el estado recarga al instante: son dos selects a la
+  // vista, no un panel con boton de aplicar.
+  handleRuleFilterChange = function(e) {
+    var rf = Object.assign({}, this.state.ruleFilters);
+    rf[e.target.name] = e.target.value;
+    this.setState({ ruleFilters: rf, selectedIds: [] }, this.loadData.bind(this, 1));
+  }.bind(this);
+
+  // En esa pestaña la tabla suma dos columnas —las reglas con sus razones y
+  // quien decidio— y ADELANTA lo que se viene a revisar: de quien es, cuanto,
+  // que regla incumplio, el estado para decidir y quien lo aprobo. Con el orden
+  // de siempre las razones quedaban a la derecha del scroll horizontal. El
+  // resto de columnas sigue detras, en su orden. Se arman una vez y se reusan,
+  // para que la tabla no las vea como columnas nuevas en cada render.
+  columnasDeLaPestana = function() {
+    if (this.state.scope !== "rule_hits") return this.columns;
+    if (!this._columnasDeReglas) {
+      var porClave = {};
+      this.columns.forEach(function(c) { porClave[c.key] = c; });
+      porClave.rule_hits = { key: "rule_hits", label: "Reglas incumplidas", width: "340px", sortable: false, render: celdaDeReglas };
+      porClave.rule_decision = { key: "rule_decision", label: "Aprobación", width: "220px", sortable: false, render: celdaDeDecision };
+
+      var adelante = ["id", "user_invoice_name", "invoice_total", "rule_hits", "is_acepted", "rule_decision"]
+        .filter(function(k) { return porClave[k]; });
+      var resto = this.columns.filter(function(c) { return adelante.indexOf(c.key) === -1; });
+      this._columnasDeReglas = adelante.map(function(k) { return porClave[k]; }).concat(resto);
+    }
+    return this._columnasDeReglas;
+  }.bind(this);
+
+  renderRuleHitsBar = function() {
+    if (this.state.scope !== "rule_hits") return null;
+    var rf = this.state.ruleFilters;
+    var reglas = this.props.estados.rule_options || [];
+
+    return React.createElement("div", { "data-testid": "rule-hits-bar", style: { display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 16, marginBottom: 16 } },
+      React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0, minWidth: 260 } },
+        React.createElement("label", { className: "cm-label" },
+          React.createElement("i", { className: "fas fa-gavel", style: { marginRight: 6, opacity: 0.5 } }),
+          "Regla"
+        ),
+        React.createElement("select", { name: "rule_id", className: "cm-input", value: rf.rule_id, onChange: this.handleRuleFilterChange, "data-testid": "rule-hits-rule" },
+          React.createElement("option", { value: "" }, "Todas las reglas"),
+          reglas.map(function(r) { return React.createElement("option", { key: r.value, value: r.value }, r.label); })
+        )
+      ),
+      React.createElement("div", { className: "cm-form-group", style: { marginBottom: 0, minWidth: 200 } },
+        React.createElement("label", { className: "cm-label" },
+          React.createElement("i", { className: "fas fa-flag", style: { marginRight: 6, opacity: 0.5 } }),
+          "Estado"
+        ),
+        React.createElement("select", { name: "rule_state", className: "cm-input", value: rf.rule_state, onChange: this.handleRuleFilterChange, "data-testid": "rule-hits-state" },
+          React.createElement("option", { value: "pendientes" }, "Pendientes de aprobación"),
+          React.createElement("option", { value: "aprobados" }, "Aprobados"),
+          React.createElement("option", { value: "rechazados" }, "Rechazados"),
+          React.createElement("option", { value: "todos" }, "Todos")
+        )
+      ),
+      React.createElement("span", { className: "cm-hint", style: { paddingBottom: 10 } },
+        "Gastos que se guardaron incumpliendo alguna regla, con la razón y quién los aprobó."
+      )
+    );
   }.bind(this);
 
   openNewModal = function() {
@@ -1296,7 +1443,11 @@ class ReportExpenseIndex extends React.Component {
       form: f,
       extraction: { status: "done", message: null, filled: filled,
                     confidence: d.confidence || {}, warnings: d.warnings || [],
-                    policy: d.policy || null },
+                    policy: d.policy || null,
+                    // COTEJO DEL COMPROBANTE (2026-10-25): esta lectura,
+                    // firmada por el servidor, vuelve al guardar para no leer
+                    // el mismo archivo dos veces.
+                    readingToken: d.reading_token || null },
     };
     if (f.currency && f.currency !== "COP") newState.selectedCurrency = self.currencyOption(f.currency);
     // NADA SE GUARDA SOLO: la extraccion precarga y la persona pulsa Guardar.
@@ -1709,6 +1860,10 @@ class ReportExpenseIndex extends React.Component {
     // ausente significa "nadie lo juzgo" y no frena nada.
     var veredicto = veredictoParaGuardar((this.state.extraction || {}).policy);
     if (veredicto) fd.append("policy_verdict", veredicto);
+    // La lectura del comprobante para el cotejo. El servidor solo la usa si es
+    // de este mismo archivo; si no, lo lee otra vez.
+    var lectura = (this.state.extraction || {}).readingToken;
+    if (lectura && this.state.receiptFile instanceof File) fd.append("receipt_reading", lectura);
 
     this.setState({ saving: true });
 
@@ -1971,6 +2126,10 @@ class ReportExpenseIndex extends React.Component {
     // quien una regla nombra segundo aprobador o tiene algo pendiente.
     if (estados.second_approver) {
       tabs.push({ value: "second_approval", label: "Por aprobar (2ª)", icon: "fas fa-user-check" });
+    }
+    // INFORME «INCUMPLEN REGLAS» (2026-10-25): a quien tiene algo que revisar.
+    if (estados.rule_hits_tab) {
+      tabs.push({ value: "rule_hits", label: "Incumplen reglas", icon: "fas fa-exclamation-triangle" });
     }
 
     if (tabs.length < 2) return null;
@@ -3295,12 +3454,14 @@ class ReportExpenseIndex extends React.Component {
 
       this.renderScopeTabs(),
 
+      this.renderRuleHitsBar(),
+
       this.state.showFilters && this.renderFilters(),
 
       this.renderSelectionBar(),
 
       React.createElement(CmDataTable, {
-        columns: this.columns,
+        columns: this.columnasDeLaPestana(),
         data: this.state.data,
         loading: this.state.loading,
         serverPagination: true,
@@ -3324,7 +3485,9 @@ class ReportExpenseIndex extends React.Component {
           ? "Todavía no hay gastos en los centros de costo a su cargo"
           : this.state.scope === "mine"
             ? "Usted no tiene gastos registrados"
-            : "No hay gastos registrados",
+            : this.state.scope === "rule_hits"
+              ? "No hay gastos que incumplan reglas con estos filtros"
+              : "No hay gastos registrados",
       }),
 
       this.renderModal(),
