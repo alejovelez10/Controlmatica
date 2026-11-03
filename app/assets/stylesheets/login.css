@@ -44,9 +44,11 @@
   margin-bottom: 20px;
 }
 
+/* Logotipo horizontal (unas 10 veces mas ancho que alto): se fija por ancho. */
 .login-avatar img {
-  height: 90px;
-  width: auto;
+  width: 260px;
+  max-width: 100%;
+  height: auto;
 }
 
 /* ---------- Title ---------- */

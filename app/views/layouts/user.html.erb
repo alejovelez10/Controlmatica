@@ -8,7 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
-    <%= favicon_link_tag "https://controlmatica.com.co/templates/controlmatica_template_01_03/favicon.ico" %>
+    <%= favicon_link_tag "https://controlmatica.s3.us-east-2.amazonaws.com/branding/2026-11/favicon.ico" %>
+    <%= favicon_link_tag "https://controlmatica.s3.us-east-2.amazonaws.com/branding/2026-11/apple-touch-icon.png", rel: "apple-touch-icon", type: "image/png" %>
 
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -28,11 +29,12 @@
     </script>
     <!-- Sidebar menu-->
 
-    <!-- Mobile header with logo + hamburger -->
+    <!-- Mobile header with logo + hamburger.
+         El logotipo ya lleva el isotipo dentro de la "o": no se pone el isotipo
+         suelto al lado. Version con "Control" en blanco por el fondo oscuro. -->
     <div class="mobile-header">
       <a href="/" class="mobile-header__logo">
-        <img class="mobile-header__logo-icon" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png" alt="Controlmatica">
-        <img class="mobile-header__logo-text" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/593/controlmaticatexto.png" alt="Controlmatica">
+        <img class="mobile-header__logo-text" src="https://controlmatica.s3.us-east-2.amazonaws.com/branding/2026-11/controlmatica-logo-blanco.svg" alt="Controlmatica">
       </a>
       <button class="mobile-header__toggle" data-toggle="sidebar" aria-label="Menu">
         <i class="fas fa-bars"></i>
@@ -41,11 +43,12 @@
 
     <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
     <aside class="app-sidebar">
-      <!-- Logo in Sidebar -->
+      <!-- Logo in Sidebar: abierto muestra el logotipo (que ya trae el isotipo
+           en la "o"); colapsado, solo el isotipo. -->
       <div class="sidebar-logo">
         <a href="/" class="sidebar-logo__link">
-          <img class="sidebar-logo__icon" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/592/isotipo_cmtica_.png" alt="Controlmatica">
-          <img class="sidebar-logo__text" src="https://mybc1.s3.amazonaws.com/uploads/rseguimiento/evidencia/593/controlmaticatexto.png" alt="Controlmatica">
+          <img class="sidebar-logo__icon" src="https://controlmatica.s3.us-east-2.amazonaws.com/branding/2026-11/controlmatica-isotipo.svg" alt="Controlmatica">
+          <img class="sidebar-logo__text" src="https://controlmatica.s3.us-east-2.amazonaws.com/branding/2026-11/controlmatica-logo-blanco.svg" alt="Controlmatica">
         </a>
         <a class="sidebar-toggle" href="#" data-toggle="sidebar" aria-label="Toggle Sidebar">
           <i class="fas fa-bars"></i>
@@ -657,11 +660,12 @@
     text-decoration: none;
   }
   .sidebar-logo__icon {
+    display: none;
     height: 30px;
     width: auto;
   }
   .sidebar-logo__text {
-    height: 18px;
+    height: 16px;
     width: auto;
   }
   .sidebar-toggle {
@@ -683,9 +687,12 @@
     font-size: 14px;
   }
 
-  /* Hide text logo when sidebar is collapsed */
+  /* Collapsed sidebar: isotipo instead of the full logo */
   .sidenav-toggled .sidebar-logo__text {
     display: none;
+  }
+  .sidenav-toggled .sidebar-logo__icon {
+    display: block;
   }
   .sidenav-toggled .sidebar-logo {
     padding: 12px 10px;
@@ -1224,6 +1231,9 @@
   /* Mobile: when sidebar is open, show full sidebar (not collapsed) */
   body.is-mobile.sidenav-toggled .sidebar-logo__text {
     display: inline !important;
+  }
+  body.is-mobile.sidenav-toggled .sidebar-logo__icon {
+    display: none !important;
   }
   body.is-mobile.sidenav-toggled .sidebar-logo {
     justify-content: space-between !important;
