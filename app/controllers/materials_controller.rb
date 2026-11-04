@@ -2,8 +2,19 @@ class MaterialsController < ApplicationController
   before_action :set_material, only: [:destroy, :update]
   before_action :authenticate_user!
   include ApplicationHelper
+  include ExcelXls
 
   SORTABLE_COLUMNS = %w[sales_date sales_number amount description delivery_date sales_state].freeze
+
+  # Las columnas de la tabla en el mismo orden. Una fila por factura del
+  # material (o una sola si no tiene); el valor del material y el total
+  # facturado van solo en la primera, para que sumar en Excel no los duplique.
+  ENCABEZADOS_EXCEL = [
+    "Proveedor", "Centro de costo", "# Orden", "Valor", "Descripción", "Fecha de orden",
+    "Fecha de entrega", "Número de factura", "Valor de la factura", "Descripción de la factura",
+    "Valor facturas", "Estado", "Fecha de creación", "Creado por", "Última actualización",
+    "Actualizado por"
+  ].freeze
 
   def index
     mod = ModuleControl.find_by_name("Materiales")
@@ -21,37 +32,7 @@ class MaterialsController < ApplicationController
   end
 
   def get_materials
-    materials = Material.all.includes(:cost_center, :provider, :user, :last_user_edited, :material_invoices)
-
-    if params[:search].present?
-      term = "%#{params[:search].downcase}%"
-      materials = materials.joins(:cost_center, :provider).where(
-        "LOWER(materials.description) LIKE ? OR LOWER(materials.sales_number) LIKE ? OR LOWER(providers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?",
-        term, term, term, term
-      )
-    end
-
-    # Advanced filters
-    materials = materials.where(provider_id: params[:provider_id]) if params[:provider_id].present?
-    materials = materials.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
-    materials = materials.where(sales_state: params[:estado]) if params[:estado].present?
-    materials = materials.where(sales_number: params[:sales_number]) if params[:sales_number].present?
-    materials = materials.where("materials.sales_date >= ?", params[:date_desde]) if params[:date_desde].present?
-    materials = materials.where("materials.sales_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
-    if params[:description].present?
-      desc_term = "%#{params[:description].downcase}%"
-      materials = materials.where("LOWER(materials.description) LIKE ?", desc_term)
-    end
-    if params[:sales_date].present? && params[:date_desde].blank? && params[:date_hasta].blank?
-      materials = materials.where(sales_date: params[:sales_date])
-    end
-
-    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
-      direction = params[:dir] == "desc" ? :desc : :asc
-      materials = materials.order(params[:sort] => direction)
-    else
-      materials = materials.order(created_at: :desc)
-    end
+    materials = sorted_materials(filtered_materials(Material.all.includes(:cost_center, :provider, :user, :last_user_edited, :material_invoices)))
 
     page = (params[:page] || 1).to_i
     per_page = [(params[:per_page] || 50).to_i, 100].min
@@ -76,92 +57,18 @@ class MaterialsController < ApplicationController
     end
   end
 
+  # La misma consulta que la tabla (get_materials), sin paginar: el frontend
+  # manda los mismos parametros con que cargo la tabla.
   def download_file
-    if params[:ids] != "todos"
-      materials = Material.search(params[:provider_id], params[:sales_date], params[:description], params[:cost_center_id], params[:estado], params[:date_desde], params[:date_hasta], params[:sales_number]).order(created_at: :desc)
-    else
-      materials = Material.all
-    end
+    materials = sorted_materials(filtered_materials(
+      Material.includes(:cost_center, :provider, :user, :last_user_edited, :material_invoices)
+    ))
 
     respond_to do |format|
       format.xls do
-        task = Spreadsheet::Workbook.new
-        sheet = task.create_worksheet
-
-        rows_format = Spreadsheet::Format.new color: :black,
-                                              weight: :normal,
-                                              size: 13,
-                                              align: :left
-
-        materials.each.with_index(1) do |task, i|
-          position = sheet.row(i)
-
-          sheet.row(1).default_format = rows_format
-          position[0] = task.cost_center.present? ? task.cost_center.code : ""
-          position[1] = task.provider.present? ? task.provider.name : ""
-          position[2] = task.sales_number
-          position[3] = task.amount
-          position[4] = task.description
-          position[5] = task.sales_date
-          position[6] = task.delivery_date
-          position[7] = task.provider_invoice_value
-          position[8] = task.sales_state
-
-          sheet.row(i).height = 25
-          sheet.column(i).width = 40
-          sheet.row(i).default_format = rows_format
-        end
-
-        head_format = Spreadsheet::Format.new color: :white,
-                                              weight: :bold,
-                                              size: 12,
-                                              pattern_bg_color: :xls_color_10,
-                                              pattern: 2,
-                                              vertical_align: :middle,
-                                              align: :left
-
-        position = sheet.row(0)
-
-        position[0] = "Centro de costo"
-        position[1] = "Proveedor"
-        position[2] = "# Orden"
-        position[3] = "Valor"
-        position[4] = "Descripción"
-        position[5] = "Fecha de Orden"
-        position[6] = "Fecha Entrega"
-        position[7] = "Valor Factura"
-        position[8] = "Estado"
-
-        sheet.row(0).height = 20
-        sheet.column(0).width = 40
-
-        sheet.column(1).width = 40
-
-        sheet.column(2).width = 40
-
-        sheet.column(3).width = 40
-
-        sheet.column(4).width = 40
-
-        sheet.column(5).width = 40
-
-        sheet.column(6).width = 40
-
-        sheet.column(7).width = 40
-
-        sheet.column(8).width = 40
-
-        sheet.column(9).width = 40
-
-        sheet.column(10).width = 40
-
-        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
-
-        temp_file = StringIO.new
-
-        task.write(temp_file)
-
-        send_data(temp_file.string, :filename => "Materiales.xls", :disposition => "inline")
+        filas = materials.flat_map { |material| filas_excel_material(material) }
+        send_data(xls_libro(ENCABEZADOS_EXCEL, filas, anchos: { "Descripción" => 60 }),
+                  :filename => "Materiales.xls", :disposition => "inline")
       end
     end
   end
@@ -225,6 +132,60 @@ class MaterialsController < ApplicationController
 
   def set_material
     @material = Material.find(params[:id])
+  end
+
+  # Los filtros de la tabla. Los comparten la tabla (get_materials) y el Excel
+  # (download_file) para que el archivo traiga lo mismo que se ve en pantalla.
+  # Antes el Excel usaba Material.search, que reventaba con `downcase` de nil
+  # cuando el frontend no mandaba un filtro vacio (3-nov-2026).
+  def filtered_materials(materials)
+    if params[:search].present?
+      term = "%#{params[:search].downcase}%"
+      materials = materials.joins(:cost_center, :provider).where(
+        "LOWER(materials.description) LIKE ? OR LOWER(materials.sales_number) LIKE ? OR LOWER(providers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?",
+        term, term, term, term
+      )
+    end
+
+    materials = materials.where(provider_id: params[:provider_id]) if params[:provider_id].present?
+    materials = materials.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+    materials = materials.where(sales_state: params[:estado]) if params[:estado].present?
+    materials = materials.where(sales_number: params[:sales_number]) if params[:sales_number].present?
+    materials = materials.where("materials.sales_date >= ?", params[:date_desde]) if params[:date_desde].present?
+    materials = materials.where("materials.sales_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+    if params[:description].present?
+      desc_term = "%#{params[:description].downcase}%"
+      materials = materials.where("LOWER(materials.description) LIKE ?", desc_term)
+    end
+    if params[:sales_date].present? && params[:date_desde].blank? && params[:date_hasta].blank?
+      materials = materials.where(sales_date: params[:sales_date])
+    end
+
+    materials
+  end
+
+  def sorted_materials(materials)
+    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+      direction = params[:dir] == "desc" ? :desc : :asc
+      materials.order(params[:sort] => direction)
+    else
+      materials.order(created_at: :desc)
+    end
+  end
+
+  def filas_excel_material(m)
+    inicio = [m.provider&.name, m.cost_center&.code, m.sales_number]
+    final = [m.sales_state, xls_fecha_local(m.created_at), m.user&.names,
+             xls_fecha_local(m.updated_at), m.last_user_edited&.names]
+    facturas = m.material_invoices.sort_by { |f| [f.created_at.to_f, f.id] }
+    total = facturas.sum { |f| f.value.to_f }
+
+    return [inicio + [m.amount, m.description, m.sales_date, m.delivery_date, "", "", "", total] + final] if facturas.empty?
+
+    facturas.each_with_index.map do |f, k|
+      inicio + [k.zero? ? m.amount : 0, m.description, m.sales_date, m.delivery_date,
+                f.number, f.value, f.observation, k.zero? ? total : 0] + final
+    end
   end
 
   def material_object(material)

@@ -60,7 +60,10 @@ E2E_SCOPES = {
   # documento del 12 no los contemplaba (llegaron con el encargo), y meterlos en
   # un centro ajeno habria roto el aislamiento: una regla asignada a un
   # beneficiario que otro spec usa cambia el budget_status de SUS gastos.
-  "RULE"  => { code: "CM-E2E-RULE-2026", viatic: 3_000_000.0 }
+  "RULE"  => { code: "CM-E2E-RULE-2026", viatic: 3_000_000.0 },
+  # Noveno scope (2026-11-03): materiales, ordenes de compra y tableristas para
+  # specs/excel-export.spec.js (el Excel sale con la misma consulta que la tabla).
+  "EXP"   => { code: "CM-E2E-EXP-2026",  viatic: 1_000_000.0 }
 }.freeze
 
 SCOPE = ENV.fetch("E2E_SCOPE", "ALL").upcase
@@ -90,7 +93,12 @@ MODULOS = {
   "Presupuesto de gastos" => ["Ingreso al modulo", "Crear", "Editar", "Eliminar", "Ver todos"],
   "Contabilidad" => ["Ingreso al modulo", "Contabilizar", "Exportar a excel", "Ver todos"],
   "Reportes de servicios" => ["Ingreso al modulo"],
-  "Tablero de Ingenieros" => ["Ver tablero"]
+  "Tablero de Ingenieros" => ["Ver tablero"],
+  # Sin estas tres filas sus pantallas responden 500: el index hace .id sobre
+  # ModuleControl.find_by_name sin guarda de nil (specs/excel-export.spec.js).
+  "Materiales" => ["Ingreso al modulo", "Descargar excel"],
+  "Ordenes de Compra" => ["Ingreso al modulo", "Descargar excel"],
+  "Tableristas" => ["Ingreso al modulo", "Descargar excel"]
 }.freeze
 
 MODULOS.each do |nombre_modulo, acciones|
@@ -403,6 +411,17 @@ ExchangeRate.where(currency: %w[USD EUR]).delete_all if centros_e2e.key?("FX")
 # expense_rules_users y dejar el registro de auditoria.
 ExpenseRule.where("name LIKE 'E2E %'").destroy_all if centros_e2e.key?("RULE")
 
+# Materiales, ordenes y tableristas del scope EXP: siempre acotados a su centro.
+# `delete_all` porque se siembran con insert_all (sin callbacks ni auditoria).
+if centros_e2e.key?("EXP")
+  id_exp = centros_e2e["EXP"].id
+  MaterialInvoice.where(material_id: Material.where(cost_center_id: id_exp).select(:id)).delete_all
+  Material.where(cost_center_id: id_exp).delete_all
+  CustomerInvoice.where(sales_order_id: SalesOrder.where(cost_center_id: id_exp).select(:id)).delete_all
+  SalesOrder.where(cost_center_id: id_exp).delete_all
+  Contractor.where(cost_center_id: id_exp).delete_all
+end
+
 # --- 12. Datos por escenario ---------------------------------------------
 partidas_e2e = {}
 gastos_e2e   = {}
@@ -533,6 +552,42 @@ if centros_e2e["PAG"]
                valor: 10_000.0 + (n * 1_000), fecha: Date.new(2026, 5, 1) + n,
                tipo: tipo, pago: pago).id
   end
+end
+
+# Scope EXP: tres de cada uno, con textos "E2E EXP" para buscarlos. Van con
+# insert_all para no disparar los callbacks que recalculan el centro (piden
+# quotation_value, que este centro no tiene).
+if centros_e2e.key?("EXP")
+  exp = centros_e2e["EXP"]
+  ahora = Time.current
+  proveedor = Provider.find_or_create_by!(name: "PROVEEDOR E2E EXP") { |p| p.user_id = admin.id }
+  sello = ->(dias) { { created_at: ahora - dias.days, updated_at: ahora - dias.days } }
+
+  materiales = Material.insert_all!([
+    { sales_number: "OC-E2E-M1", description: "Cable E2E EXP", sales_date: Date.new(2026, 8, 10), amount: 500_000.0, sales_state: "PROCESADO", **sello.(3) },
+    { sales_number: "OC-E2E-M2", description: "Breaker E2E EXP", sales_date: Date.new(2026, 5, 1), amount: 200_000.0, sales_state: "INGRESADO TOTAL", **sello.(2) },
+    { sales_number: "OC-E2E-M3", description: "Tubo E2E EXP", sales_date: Date.new(2026, 9, 20), amount: 900_000.0, sales_state: "PROCESADO", **sello.(1) },
+  ].map { |m| m.merge(cost_center_id: exp.id, provider_id: proveedor.id, user_id: usuario.id) }, returning: %w[id sales_number])
+  m1 = materiales.rows.find { |_, numero| numero == "OC-E2E-M1" }.first
+  MaterialInvoice.insert_all!([
+    { material_id: m1, user_id: usuario.id, number: "FM-E2E-1", value: 300_000.0, observation: "Primer pago", **sello.(3) },
+    { material_id: m1, user_id: usuario.id, number: "FM-E2E-2", value: 200_000.0, observation: "Saldo", **sello.(2) },
+  ])
+
+  ordenes = SalesOrder.insert_all!([
+    { order_number: "OC-E2E-100", description: "Tablero E2E EXP", created_date: Date.new(2025, 3, 1), order_value: 1_000_000.0, **sello.(2) },
+    { order_number: "OC-E2E-200", description: "Mantenimiento E2E EXP", created_date: Date.new(2026, 6, 15), order_value: 2_000_000.0, **sello.(1) },
+  ].map { |o| o.merge(cost_center_id: exp.id, user_id: usuario.id) }, returning: %w[id order_number])
+  o100 = ordenes.rows.find { |_, numero| numero == "OC-E2E-100" }.first
+  CustomerInvoice.insert_all!([
+    { number_invoice: "FV-E2E-1", invoice_date: Date.new(2026, 2, 1), invoice_value: 600_000.0, engineering_value: 100_000.0, **sello.(2) },
+    { number_invoice: "FV-E2E-2", invoice_date: Date.new(2026, 3, 1), invoice_value: 400_000.0, engineering_value: 50_000.0, **sello.(1) },
+  ].map { |f| f.merge(cost_center_id: exp.id, sales_order_id: o100) })
+
+  Contractor.insert_all!([
+    { description: "Cableado E2E EXP", sales_date: Date.new(2026, 9, 1), hours: 8.0, **sello.(2) },
+    { description: "Pruebas E2E EXP", sales_date: Date.new(2026, 1, 1), hours: 4.0, **sello.(1) },
+  ].map { |c| c.merge(cost_center_id: exp.id, user_id: usuario.id, user_execute_id: usuario.id) })
 end
 
 # --- 13. Exportar test/e2e/.auth/seed-ids.json ---------------------------

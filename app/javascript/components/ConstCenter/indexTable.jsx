@@ -42,6 +42,8 @@ class indexTable extends React.Component {
       sortColumn: "created_at",
       sortDirection: "desc",
       searchTerm: "",
+      // Consulta de la ultima carga de la tabla; la usa el boton Exportar.
+      exportQuery: "",
 
       selectedOption: {
         customer_id: "",
@@ -167,13 +169,17 @@ class indexTable extends React.Component {
     const filterQuery = this.buildFilterQuery();
     const searchQuery = searchTerm ? `&descripcion=${encodeURIComponent(searchTerm)}` + (!this.state.filtering ? "&filtering=true" : "") : "";
 
-    const url =
-      `/get_cost_centers?page=${serverMeta.page}&per_page=${serverMeta.per_page}` +
-      `&sort_column=${sortColumn}&sort_direction=${sortDirection}` +
+    // Filtros, busqueda y orden: lo mismo que manda el boton Exportar, para
+    // que el Excel traiga exactamente lo que muestra la tabla (sin paginar).
+    const exportQuery =
+      `sort_column=${sortColumn}&sort_direction=${sortDirection}` +
       filterQuery +
       searchQuery;
 
-    this.setState({ loading: true });
+    const url =
+      `/get_cost_centers?page=${serverMeta.page}&per_page=${serverMeta.per_page}&` + exportQuery;
+
+    this.setState({ loading: true, exportQuery: exportQuery });
 
     fetch(url, {
       headers: {
@@ -1218,11 +1224,7 @@ class indexTable extends React.Component {
         {estados.download_file && (
           <a
             className="cm-btn cm-btn-outline cm-btn-sm"
-            href={`/download_file/cost_centers/${
-              !this.state.filtering
-                ? "todos.xls"
-                : `filtro.xls?descripcion=${this.state.formFilter.descripcion}&customer_id=${this.state.formFilter.customer_id || ""}&cost_center_id=${this.state.formFilter.cost_center_id || ""}&execution_state=${this.state.formFilter.execution_state}&service_type=${this.state.formFilter.service_type}&invoiced_state=${this.state.formFilter.invoiced_state}&date_desde=${this.state.formFilter.start_date}&date_hasta=${this.state.formFilter.end_date}&quotation_number=${this.state.formFilter.quotation_number}`
-            }`}
+            href={this.state.exportQuery ? `/download_file/cost_centers/filtro.xls?${this.state.exportQuery}` : "/download_file/cost_centers/todos.xls"}
             target="_blank"
           >
             <i className="fas fa-file-excel" /> Exportar

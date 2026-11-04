@@ -63,37 +63,6 @@ class SalesOrder < ApplicationRecord
     end
   end
 
-  def self.search(search1, search2, search3, search4, search5, search6, search7, search8, search9)
-    if search5.present?
-      search5 = CostCenter.where(invoiced_state: search5)
-    end
-
-    if search7.present?
-      search7 = CostCenter.where(customer_id: search7)
-    end
-
-    if search9.present?
-      search9 = CostCenter.where(quotation_number: search9)
-    end
-
-    if search8.present?
-      invoice = CustomerInvoice.find_by_number_invoice(search8)
-      search8 = SalesOrder.joins(:customer_invoices).where("customer_invoices.id = '#{invoice.id}'")
-    end
-
-    search1 != "" ? (scope :fdesdep, -> { where(["created_date >= ?", search1]) }) : (scope :fdesdep, -> { where.not(id: nil) })
-    search2 != "" ? (scope :fhastap, -> { where(["created_date <= ?", search2]) }) : (scope :fhastap, -> { where.not(id: nil) })
-    search3 != "" ? (scope :number, -> { where(order_number: search3) }) : (scope :number, -> { where.not(id: nil) })
-    search4 != "" ? (scope :centro, -> { where(cost_center_id: search4) }) : (scope :centro, -> { where.not(id: nil) })
-    search5 != "" ? (scope :estado, -> { where(cost_center_id: search5.present? ? search5.ids : nil) }) : (scope :estado, -> { where.not(id: nil) })
-    search6 != "" ? (scope :descripcion, -> { where("description like '%#{search6.downcase}%' or description like '%#{search6.upcase}%' or description like '%#{search6.capitalize}%' ") }) : (scope :descripcion, -> { where.not(id: nil) })
-    search7 != "" ? (scope :customer, -> { where(cost_center_id: search7.present? ? search7.ids : nil) }) : (scope :customer, -> { where.not(id: nil) })
-    search8 != "" ? (scope :number_invoice, -> { where(id: search8.present? ? search8.ids : nil) }) : (scope :number_invoice, -> { where.not(id: nil) })
-    search9 != "" ? (scope :quotation_number, -> { where(cost_center_id: search9.present? ? search9.ids : nil) }) : (scope :quotation_number, -> { where.not(id: nil) })
-
-    fdesdep.fhastap.number.centro.estado.descripcion.customer.number_invoice.quotation_number
-  end
-
   def change_state_cost_center_destroy
     cost_center = CostCenter.find(self.cost_center_id)
     sum_invoices = CustomerInvoice.where(cost_center_id: self.cost_center_id).sum(:invoice_value)

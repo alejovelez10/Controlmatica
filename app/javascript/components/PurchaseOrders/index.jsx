@@ -490,20 +490,10 @@ class index extends React.Component {
     if (this.props.onApplyFilters) this.props.onApplyFilters(this.state.filterForm);
   };
 
+  // La consulta de la ultima carga de la tabla (la arma packs/SalesOrders.js).
   getExportUrl = () => {
-    if (!this.props.filtering) return "/download_file/sales_orders/todos.xls";
-    var f = this.props.filters || {};
-    var params = [];
-    if (f.date_desde) params.push("date_desde=" + encodeURIComponent(f.date_desde));
-    if (f.date_hasta) params.push("date_hasta=" + encodeURIComponent(f.date_hasta));
-    if (f.number_order) params.push("number_order=" + encodeURIComponent(f.number_order));
-    if (f.cost_center_id) params.push("cost_center_id=" + encodeURIComponent(f.cost_center_id));
-    if (f.state) params.push("state=" + encodeURIComponent(f.state));
-    if (f.description) params.push("description=" + encodeURIComponent(f.description));
-    if (f.customer) params.push("customer=" + encodeURIComponent(f.customer));
-    if (f.number_invoice) params.push("number_invoice=" + encodeURIComponent(f.number_invoice));
-    if (f.quotation_number) params.push("quotation_number=" + encodeURIComponent(f.quotation_number));
-    return "/download_file/sales_orders/filtro.xls?" + params.join("&");
+    var q = this.props.exportQuery;
+    return q ? "/download_file/sales_orders/filtro.xls?" + q : "/download_file/sales_orders/todos.xls";
   };
 
   // ─── Hamburger menu ───

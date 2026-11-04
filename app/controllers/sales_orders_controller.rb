@@ -5,8 +5,20 @@ class SalesOrdersController < ApplicationController
   # GET /sales_orders
   # GET /sales_orders.json
   include SalesOrdersHelper
+  include ExcelXls
 
   SORTABLE_COLUMNS = %w[created_date order_number order_value description].freeze
+
+  # Las columnas de la tabla en el mismo orden ("Archivo" sale como Si/No).
+  # Una fila por factura de la orden (o una sola si no tiene); el valor de la
+  # orden y los totales van solo en la primera, para que sumar en Excel no los
+  # duplique.
+  ENCABEZADOS_EXCEL = [
+    "Centro de costo", "Cliente", "Fecha de orden", "# Orden", "# Cotización", "Valor",
+    "Número de factura", "Fecha de factura", "Valor de la factura", "Ingeniería de la factura",
+    "Total facturas", "Total ingeniería", "Descripción", "Estado CC", "Tiene archivo",
+    "Fecha de creación", "Creado por", "Última actualización", "Actualizado por"
+  ].freeze
 
   def index
     mod = ModuleControl.find_by_name("Ordenes de Compra")
@@ -45,157 +57,20 @@ class SalesOrdersController < ApplicationController
      @cost_center = CostCenter.find(@sales_order.cost_center_id)
   end
 
+  # La misma consulta que la tabla (get_sales_order), sin paginar: el frontend
+  # manda los mismos parametros con que cargo la tabla.
   def download_file
+    sales_orders = sorted_sales_orders(filtered_sales_orders(
+      SalesOrder.includes(:customer_invoices, :user, :last_user_edited, cost_center: :customer)
+    ))
+
     respond_to do |format|
-
       format.xls do
-
-        if params[:ids] == "filtro"
-          sales_orders = SalesOrder.search(params[:date_desde], params[:date_hasta], params[:number_order], params[:cost_center_id], params[:state], params[:description], params[:customer], params[:number_invoice], params[:quotation_number])
-        else
-          sales_orders = SalesOrder.all
-        end
-
-        task = Spreadsheet::Workbook.new
-        sheet = task.create_worksheet
-
-        rows_format = Spreadsheet::Format.new color: :black,
-        weight: :normal,
-        size: 13,
-        align: :left
-
-
-        state = false
-        i = 1
-        sales_orders.order(created_date: :desc).each.with_index(1) do |task, x|
-
-
-
-
-
-          facturas_count = 0
-          if task.customer_invoices.count > 0
-
-              task.customer_invoices.order(invoice_date: :desc).each do |invoice|
-              position = sheet.row(i)
-              sheet.row(1).default_format = rows_format
-              position[0] = invoice.sales_order.cost_center.code
-              position[1] = invoice.sales_order.cost_center.customer.name
-              position[2] = invoice.sales_order.order_number
-              position[3] = invoice.sales_order.created_date
-              position[4] = facturas_count == 0 ? invoice.sales_order.order_value : 0
-
-              position[5] = invoice.sales_order.description
-              position[6] = invoice.number_invoice
-              position[7] = invoice.invoice_date
-
-              position[8] = invoice.invoice_value
-              position[9] = facturas_count == 0 ? invoice.sales_order.customer_invoices.sum(:invoice_value) : 0
-              position[10] = invoice.sales_order.cost_center.invoiced_state
-              sheet.row(i).height = 25
-              sheet.column(i).width = 40
-              sheet.row(i).default_format = rows_format
-              i = (i + 1)
-
-
-              facturas_count = 1
-
-            end
-
-
-
-
-
-          else
-
-            position = sheet.row(i)
-            sheet.row(1).default_format = rows_format
-            position[0] = task.cost_center.code
-            position[1] = task.cost_center.customer.name
-            position[2] = task.order_number
-            position[3] = task.created_date
-            position[4] = task.order_value
-            position[5] = task.description
-            position[6] = ""
-            position[7] = ""
-            position[8] = ""
-            position[9] = task.customer_invoices.sum(:invoice_value)
-            position[10] = task.cost_center.invoiced_state
-            i = i + 1
-          end
-
-          sheet.row(i).height = 25
-          sheet.column(i).width = 40
-          sheet.row(i).default_format = rows_format
-
-        end
-
-
-
-        head_format = Spreadsheet::Format.new color: :white,
-        weight: :bold,
-        size: 12,
-        pattern_bg_color: :xls_color_10,
-        pattern: 2,
-        vertical_align: :middle,
-        align: :left
-
-
-
-        position = sheet.row(0)
-
-        position[0] = "Centro de costo"
-        position[1] = "Cliente"
-        position[2] = "Numero de Orden"
-        position[3] = "Fecha"
-        position[4] = "Valor"
-        position[5] = "Descripcion"
-        position[6] = "Numero Factura"
-        position[7] = "Fecha Factura"
-        position[8] = "Valor Factura"
-        position[9] = "Total Facturas"
-        position[10] = "Estado"
-
-
-
-
-
-        sheet.row(0).height = 20
-        sheet.column(0).width = 40
-
-
-
-        sheet.column(1).width = 40
-
-        sheet.column(2).width = 30
-
-        sheet.column(3).width = 30
-
-        sheet.column(4).width = 40
-
-        sheet.column(5).width = 40
-
-        sheet.column(6).width = 40
-
-        sheet.column(7).width = 30
-        sheet.column(8).width = 30
-        sheet.column(9).width = 30
-        sheet.column(10).width = 40
-
-
-        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
-
-
-
-        temp_file = StringIO.new
-
-        task.write(temp_file)
-
-        send_data(temp_file.string, :filename => "Ordenes_de_compra.xls", :disposition => 'inline')
-
-        end
+        filas = sales_orders.flat_map { |order| filas_excel_orden(order) }
+        send_data(xls_libro(ENCABEZADOS_EXCEL, filas, anchos: { "Descripción" => 60 }),
+                  :filename => "Ordenes_de_compra.xls", :disposition => 'inline')
+      end
     end
-
   end
 
 
@@ -226,56 +101,9 @@ class SalesOrdersController < ApplicationController
   end
 
   def get_sales_order
-    orders = SalesOrder.all.includes(:customer_invoices, :cost_center => :customer, :user => {}, :last_user_edited => {})
-
-    # Single search bar
-    if params[:search].present?
-      term = "%#{params[:search].downcase}%"
-      orders = orders.joins(cost_center: :customer)
-        .where("LOWER(sales_orders.order_number) LIKE ? OR LOWER(sales_orders.description) LIKE ? OR LOWER(customers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term, term, term)
-    end
-
-    # Advanced filters
-    if params[:date_desde].present?
-      orders = orders.where("sales_orders.created_date >= ?", params[:date_desde])
-    end
-    if params[:date_hasta].present?
-      orders = orders.where("sales_orders.created_date <= ?", params[:date_hasta])
-    end
-    if params[:number_order].present?
-      orders = orders.where(order_number: params[:number_order])
-    end
-    if params[:cost_center_id].present?
-      orders = orders.where(cost_center_id: params[:cost_center_id])
-    end
-    if params[:state].present?
-      cc_ids = CostCenter.where(invoiced_state: params[:state]).pluck(:id)
-      orders = orders.where(cost_center_id: cc_ids)
-    end
-    if params[:description].present?
-      desc_term = "%#{params[:description].downcase}%"
-      orders = orders.where("LOWER(sales_orders.description) LIKE ?", desc_term)
-    end
-    if params[:customer].present?
-      cc_ids = CostCenter.where(customer_id: params[:customer]).pluck(:id)
-      orders = orders.where(cost_center_id: cc_ids)
-    end
-    if params[:number_invoice].present?
-      so_ids = CustomerInvoice.where(number_invoice: params[:number_invoice]).pluck(:sales_order_id).compact
-      orders = orders.where(id: so_ids)
-    end
-    if params[:quotation_number].present?
-      cc_ids = CostCenter.where(quotation_number: params[:quotation_number]).pluck(:id)
-      orders = orders.where(cost_center_id: cc_ids)
-    end
-
-    # Sort
-    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
-      direction = params[:dir] == "desc" ? :desc : :asc
-      orders = orders.order(params[:sort] => direction)
-    else
-      orders = orders.order(created_at: :desc)
-    end
+    orders = sorted_sales_orders(filtered_sales_orders(
+      SalesOrder.all.includes(:customer_invoices, :cost_center => :customer, :user => {}, :last_user_edited => {})
+    ))
 
     page = (params[:page] || 1).to_i
     per_page = [(params[:per_page] || 50).to_i, 100].min
@@ -329,6 +157,83 @@ class SalesOrdersController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_sales_order
       @sales_order = SalesOrder.find(params[:id])
+    end
+
+    # Los filtros de la tabla. Los comparten la tabla (get_sales_order) y el
+    # Excel (download_file) para que el archivo traiga lo mismo que se ve en
+    # pantalla. Antes el Excel usaba SalesOrder.search, que reventaba con
+    # `downcase` de nil cuando el frontend no mandaba un filtro vacio (3-nov-2026).
+    def filtered_sales_orders(orders)
+      # Barra de busqueda
+      if params[:search].present?
+        term = "%#{params[:search].downcase}%"
+        orders = orders.joins(cost_center: :customer)
+          .where("LOWER(sales_orders.order_number) LIKE ? OR LOWER(sales_orders.description) LIKE ? OR LOWER(customers.name) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term, term, term)
+      end
+
+      # Filtros avanzados
+      if params[:date_desde].present?
+        orders = orders.where("sales_orders.created_date >= ?", params[:date_desde])
+      end
+      if params[:date_hasta].present?
+        orders = orders.where("sales_orders.created_date <= ?", params[:date_hasta])
+      end
+      if params[:number_order].present?
+        orders = orders.where(order_number: params[:number_order])
+      end
+      if params[:cost_center_id].present?
+        orders = orders.where(cost_center_id: params[:cost_center_id])
+      end
+      if params[:state].present?
+        cc_ids = CostCenter.where(invoiced_state: params[:state]).pluck(:id)
+        orders = orders.where(cost_center_id: cc_ids)
+      end
+      if params[:description].present?
+        desc_term = "%#{params[:description].downcase}%"
+        orders = orders.where("LOWER(sales_orders.description) LIKE ?", desc_term)
+      end
+      if params[:customer].present?
+        cc_ids = CostCenter.where(customer_id: params[:customer]).pluck(:id)
+        orders = orders.where(cost_center_id: cc_ids)
+      end
+      if params[:number_invoice].present?
+        so_ids = CustomerInvoice.where(number_invoice: params[:number_invoice]).pluck(:sales_order_id).compact
+        orders = orders.where(id: so_ids)
+      end
+      if params[:quotation_number].present?
+        cc_ids = CostCenter.where(quotation_number: params[:quotation_number]).pluck(:id)
+        orders = orders.where(cost_center_id: cc_ids)
+      end
+
+      orders
+    end
+
+    def sorted_sales_orders(orders)
+      if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+        direction = params[:dir] == "desc" ? :desc : :asc
+        orders.order(params[:sort] => direction)
+      else
+        orders.order(created_at: :desc)
+      end
+    end
+
+    def filas_excel_orden(order)
+      center = order.cost_center
+      inicio = [center&.code, center&.customer&.name, order.created_date, order.order_number,
+                center&.quotation_number]
+      final = [order.description, center&.invoiced_state, order[:order_file].present? ? "Sí" : "No",
+               xls_fecha_local(order.created_at), order.user&.names,
+               xls_fecha_local(order.updated_at), order.last_user_edited&.names]
+      facturas = order.customer_invoices.sort_by { |f| f.invoice_date.to_s }.reverse
+      total = facturas.sum { |f| f.invoice_value.to_f }
+      total_ingenieria = facturas.sum { |f| f.engineering_value.to_f }
+
+      return [inicio + [order.order_value, "", "", "", "", total, total_ingenieria] + final] if facturas.empty?
+
+      facturas.each_with_index.map do |f, k|
+        inicio + [k.zero? ? order.order_value : 0, f.number_invoice, f.invoice_date, f.invoice_value,
+                  f.engineering_value, k.zero? ? total : 0, k.zero? ? total_ingenieria : 0] + final
+      end
     end
 
     def set_cost_center

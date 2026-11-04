@@ -3,6 +3,7 @@ class ContractorsController < ApplicationController
   before_action :authenticate_user!
 
   include ApplicationHelper
+  include ExcelXls
 
   def index
     mod = ModuleControl.find_by_name("Tableristas")
@@ -21,32 +22,7 @@ class ContractorsController < ApplicationController
   SORTABLE_COLUMNS = %w[sales_date hours description ammount].freeze
 
   def get_contractors
-    contractors = Contractor.all.includes(:cost_center, :user_execute, :user, :last_user_edited)
-
-    if params[:search].present?
-      term = "%#{params[:search].downcase}%"
-      contractors = contractors.joins(:cost_center).where(
-        "LOWER(contractors.description) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term
-      )
-    end
-
-    # Advanced filters
-    contractors = contractors.where(user_execute_id: params[:user_execute_id]) if params[:user_execute_id].present?
-    contractors = contractors.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
-    contractors = contractors.where("contractors.sales_date >= ?", params[:date_desde]) if params[:date_desde].present?
-    contractors = contractors.where("contractors.sales_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
-    if params[:descripcion].present?
-      desc_term = "%#{params[:descripcion].downcase}%"
-      contractors = contractors.where("LOWER(contractors.description) LIKE ?", desc_term)
-    end
-
-    # sort
-    if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
-      direction = params[:dir] == "desc" ? :desc : :asc
-      contractors = contractors.order(params[:sort] => direction)
-    else
-      contractors = contractors.order(created_at: :desc)
-    end
+    contractors = sorted_contractors(filtered_contractors(Contractor.all.includes(:cost_center, :user_execute, :user, :last_user_edited)))
 
     page = (params[:page] || 1).to_i
     per_page = [(params[:per_page] || 50).to_i, 100].min
@@ -68,106 +44,32 @@ class ContractorsController < ApplicationController
     }
   end
 
-  def download_file
+  # Las columnas de la tabla en el mismo orden. El valor (ammount) no se
+  # muestra en la tabla y tampoco sale en el Excel.
+  ENCABEZADOS_EXCEL = [
+    "Fecha", "Centro de costo", "Horas", "Realizado por", "Descripción",
+    "Fecha de creación", "Creado por", "Última actualización", "Actualizado por"
+  ].freeze
 
-    if params[:ids] != "todos"
-      contractor = Contractor.search(params[:user_execute_id], params[:sales_date], params[:cost_center_id], params[:date_desde], params[:date_hasta], params[:descripcion]).order(created_at: :desc)
-    else
-      contractor = Contractor.all
-    end
+  # La misma consulta que la tabla (get_contractors), sin paginar: el frontend
+  # manda los mismos parametros con que cargo la tabla.
+  def download_file
+    contractors = sorted_contractors(filtered_contractors(
+      Contractor.includes(:cost_center, :user_execute, :user, :last_user_edited)
+    ))
 
     respond_to do |format|
-
       format.xls do
-
-        task = Spreadsheet::Workbook.new
-        sheet = task.create_worksheet
-
-        rows_format = Spreadsheet::Format.new color: :black,
-        weight: :normal,
-        size: 13,
-        align: :left
-
-        contractor.each.with_index(1) do |task, i|
-
-          position = sheet.row(i)
-
-          sheet.row(1).default_format = rows_format
-          position[0] = task.sales_date
-          position[1] = task.cost_center.present? ? task.cost_center.code : ""
-          position[2] = task.hours
-          position[3] = task.user_execute.present? ? task.user_execute.names : ""
-          position[4] = task.description
-
-
-
-          sheet.row(i).height = 25
-          sheet.column(i).width = 40
-          sheet.row(i).default_format = rows_format
-
+        filas = contractors.map do |c|
+          # Igual que la tabla: si nadie lo ha editado, muestra a quien lo creo.
+          actualizado_por = (c.last_user_edited || c.user)&.names
+          [c.sales_date, c.cost_center&.code, c.hours, c.user_execute&.names, c.description,
+           xls_fecha_local(c.created_at), c.user&.names, xls_fecha_local(c.updated_at), actualizado_por]
         end
-
-
-
-        head_format = Spreadsheet::Format.new color: :white,
-        weight: :bold,
-        size: 12,
-        pattern_bg_color: :xls_color_10,
-        pattern: 2,
-        vertical_align: :middle,
-        align: :left
-
-
-
-        position = sheet.row(0)
-
-        position[0] = "Fecha"
-        position[1] = "Centro de costo"
-        position[2] = "Horas"
-        position[3] = "Trabajo realizado por"
-        position[4] = "Descripcion"
-
-
-
-
-        sheet.row(0).height = 20
-        sheet.column(0).width = 40
-
-
-
-        sheet.column(1).width = 40
-
-        sheet.column(2).width = 40
-
-        sheet.column(3).width = 40
-
-        sheet.column(4).width = 40
-
-        sheet.column(5).width = 40
-
-        sheet.column(6).width = 40
-
-        sheet.column(7).width = 40
-
-        sheet.column(8).width = 40
-
-        sheet.column(9).width = 40
-
-        sheet.column(10).width = 40
-
-        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
-
-
-
-        temp_file = StringIO.new
-
-        task.write(temp_file)
-
-        send_data(temp_file.string, :filename => "Tableristas.xls", :disposition => 'inline')
-
-        end
+        send_data(xls_libro(ENCABEZADOS_EXCEL, filas, anchos: { "Descripción" => 60 }),
+                  :filename => "Tableristas.xls", :disposition => 'inline')
+      end
     end
-
   end
 
   def create
@@ -228,6 +130,39 @@ class ContractorsController < ApplicationController
 
     def set_contractor
       @contractor = Contractor.find(params[:id])
+    end
+
+    # Los filtros de la tabla. Los comparten la tabla (get_contractors) y el
+    # Excel (download_file) para que el archivo traiga lo mismo que se ve en
+    # pantalla. Antes el Excel usaba Contractor.search, que reventaba con
+    # `downcase` de nil cuando el frontend no mandaba un filtro vacio (3-nov-2026).
+    def filtered_contractors(contractors)
+      if params[:search].present?
+        term = "%#{params[:search].downcase}%"
+        contractors = contractors.joins(:cost_center).where(
+          "LOWER(contractors.description) LIKE ? OR LOWER(cost_centers.code) LIKE ?", term, term
+        )
+      end
+
+      contractors = contractors.where(user_execute_id: params[:user_execute_id]) if params[:user_execute_id].present?
+      contractors = contractors.where(cost_center_id: params[:cost_center_id]) if params[:cost_center_id].present?
+      contractors = contractors.where("contractors.sales_date >= ?", params[:date_desde]) if params[:date_desde].present?
+      contractors = contractors.where("contractors.sales_date <= ?", params[:date_hasta]) if params[:date_hasta].present?
+      if params[:descripcion].present?
+        desc_term = "%#{params[:descripcion].downcase}%"
+        contractors = contractors.where("LOWER(contractors.description) LIKE ?", desc_term)
+      end
+
+      contractors
+    end
+
+    def sorted_contractors(contractors)
+      if params[:sort].present? && SORTABLE_COLUMNS.include?(params[:sort])
+        direction = params[:dir] == "desc" ? :desc : :asc
+        contractors.order(params[:sort] => direction)
+      else
+        contractors.order(created_at: :desc)
+      end
     end
 
     def contractor_object(contractor)

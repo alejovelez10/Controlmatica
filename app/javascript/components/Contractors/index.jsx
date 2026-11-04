@@ -132,16 +132,20 @@ class index extends React.Component {
     var sk = sortKey !== undefined ? sortKey : self.state.sortKey;
     var sd = sortDir !== undefined ? sortDir : self.state.sortDir;
 
-    self.setState({ loading: true });
-
-    var url = "/get_contractors?page=" + p + "&per_page=" + pp;
-    if (term) url += "&search=" + encodeURIComponent(term);
-    if (sk) url += "&sort=" + encodeURIComponent(sk) + "&dir=" + sd;
-
+    // Busqueda, orden y filtros: lo mismo que manda el boton Exportar, para
+    // que el Excel traiga exactamente lo que muestra la tabla (sin paginar).
+    var parts = [];
+    if (term) parts.push("search=" + encodeURIComponent(term));
+    if (sk) parts.push("sort=" + encodeURIComponent(sk) + "&dir=" + sd);
     var filters = self.state.filters;
     Object.keys(filters).forEach(function (key) {
-      if (filters[key]) url += "&" + key + "=" + encodeURIComponent(filters[key]);
+      if (filters[key]) parts.push(key + "=" + encodeURIComponent(filters[key]));
     });
+    var exportQuery = parts.join("&");
+
+    self.setState({ loading: true, exportQuery: exportQuery });
+
+    var url = "/get_contractors?page=" + p + "&per_page=" + pp + (exportQuery ? "&" + exportQuery : "");
 
     fetch(url, { headers: { "X-CSRF-Token": csrfToken() } })
       .then(function (response) { return response.json(); })
@@ -228,15 +232,10 @@ class index extends React.Component {
     this.loadData(1, this.state.meta.per_page);
   }.bind(this);
 
+  // La consulta de la ultima carga de la tabla (ver loadData).
   getExportUrl = function () {
-    var filters = this.state.filters;
-    var hasFilters = Object.keys(filters).some(function (k) { return filters[k]; });
-    if (!hasFilters) return "/download_file/contractors/todos.xls";
-    var parts = [];
-    Object.keys(filters).forEach(function (key) {
-      if (filters[key]) parts.push(key + "=" + encodeURIComponent(filters[key]));
-    });
-    return "/download_file/contractors/filtro.xls?" + parts.join("&");
+    var q = this.state.exportQuery;
+    return q ? "/download_file/contractors/filtro.xls?" + q : "/download_file/contractors/todos.xls";
   }.bind(this);
 
   // ─── Modal ───

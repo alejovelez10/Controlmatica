@@ -31,6 +31,8 @@ class SalesOrders extends Component {
       dir: "asc",
       filters: Object.assign({}, EMPTY_FILTER),
       filtering: false,
+      // Consulta de la ultima carga de la tabla; la usa el boton Exportar.
+      exportQuery: "",
     };
   }
 
@@ -41,25 +43,26 @@ class SalesOrders extends Component {
   loadData = () => {
     var s = this.state;
     this.setState({ loading: true });
-    var url = "/get_sales_order?page=" + s.meta.page +
-      "&per_page=" + s.meta.per_page +
-      "&search=" + encodeURIComponent(s.search) +
-      "&sort=" + encodeURIComponent(s.sort) +
-      "&dir=" + encodeURIComponent(s.dir);
+    // Busqueda, orden y filtros: lo mismo que manda el boton Exportar, para
+    // que el Excel traiga exactamente lo que muestra la tabla (sin paginar).
+    var parts = [
+      "search=" + encodeURIComponent(s.search),
+      "sort=" + encodeURIComponent(s.sort),
+      "dir=" + encodeURIComponent(s.dir),
+    ];
 
-    // Append advanced filters
     if (s.filtering) {
       var f = s.filters;
-      if (f.date_desde) url += "&date_desde=" + encodeURIComponent(f.date_desde);
-      if (f.date_hasta) url += "&date_hasta=" + encodeURIComponent(f.date_hasta);
-      if (f.number_order) url += "&number_order=" + encodeURIComponent(f.number_order);
-      if (f.cost_center_id) url += "&cost_center_id=" + encodeURIComponent(f.cost_center_id);
-      if (f.state) url += "&state=" + encodeURIComponent(f.state);
-      if (f.description) url += "&description=" + encodeURIComponent(f.description);
-      if (f.customer) url += "&customer=" + encodeURIComponent(f.customer);
-      if (f.number_invoice) url += "&number_invoice=" + encodeURIComponent(f.number_invoice);
-      if (f.quotation_number) url += "&quotation_number=" + encodeURIComponent(f.quotation_number);
+      Object.keys(EMPTY_FILTER).forEach(function(key) {
+        if (f[key]) parts.push(key + "=" + encodeURIComponent(f[key]));
+      });
     }
+
+    var exportQuery = parts.join("&");
+    this.setState({ exportQuery: exportQuery });
+
+    var url = "/get_sales_order?page=" + s.meta.page +
+      "&per_page=" + s.meta.per_page + "&" + exportQuery;
 
     fetch(url, {
       method: "GET",
@@ -120,6 +123,7 @@ class SalesOrders extends Component {
         onPerPageChange={this.handlePerPageChange}
         filters={this.state.filters}
         filtering={this.state.filtering}
+        exportQuery={this.state.exportQuery}
         onApplyFilters={this.handleApplyFilters}
         onClearFilters={this.handleClearFilters}
       />

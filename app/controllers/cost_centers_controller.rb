@@ -4,6 +4,7 @@ class CostCentersController < ApplicationController
   before_action :authenticate_user!
   include ApplicationHelper
   include CostCentersHelper
+  include ExcelXls
 
   # GET /cost_centers
   # GET /cost_centers.json
@@ -67,31 +68,13 @@ class CostCentersController < ApplicationController
   end
 
   def get_cost_centers
-    permissions = load_permissions("Centro de Costos", "Ver todos")
-    validate = permissions["Ver todos"]
-
     per_page = [(params[:per_page] || 30).to_i, 100].min
     page = (params[:page] || 1).to_i
-    sort_column = params[:sort_column].presence || "created_at"
-    sort_direction = params[:sort_direction] == "asc" ? "asc" : "desc"
 
-    allowed_sort_columns = %w[code description service_type execution_state invoiced_state start_date created_at quotation_number customer_id sales_state]
-    sort_column = "created_at" unless allowed_sort_columns.include?(sort_column)
-
-    base_scope = validate ? CostCenter.all : CostCenter.where(user_id: current_user.id)
-
-    if params[:filtering] == "true"
-      base_scope = base_scope.search(
-        params[:descripcion], params[:customer_id], params[:execution_state],
-        params[:invoiced_state], params[:cost_center_id], params[:service_type],
-        params[:date_desde], params[:date_hasta], params[:quotation_number]
-      )
-    end
-
-    cost_centers_total = base_scope.count
-    cost_centers = base_scope
+    filtrados = filtered_cost_centers
+    cost_centers_total = filtrados.count
+    cost_centers = sorted_cost_centers(filtrados)
       .includes(:customer, :contact, :user, :user_owner, :last_user_edited, :sales_orders)
-      .order(sort_column => sort_direction.to_sym)
       .paginate(page: page, per_page: per_page)
 
     total_pages = (cost_centers_total.to_f / per_page).ceil
@@ -428,91 +411,39 @@ class CostCentersController < ApplicationController
     }
   end
 
-  def download_file
-    permissions = load_permissions("Centro de Costos", "Ver todos")
-    validate = permissions["Ver todos"]
+  # Las columnas de la tabla en el mismo orden, con cada indicador desglosado
+  # (cotizado / ejecutado / %), y al final propietario y fechas del centro.
+  # Antes salian 12 columnas y dos leian campos que ya nadie actualiza
+  # (sum_executed siempre en 0, sum_viatic sin los gastos): "sale mocho"
+  # (David, 3-nov-2026). El orden tiene que calzar con fila_excel_centro.
+  ENCABEZADOS_EXCEL = [
+    "Código", "Cliente", "Tipo", "Descripción", "Estado compras", "Estado de ejecución",
+    "Estado facturado", "Número de cotización",
+    "Ingeniería: horas cotizadas", "Ingeniería: horas ejecutadas", "Ingeniería: % avance",
+    "Ingeniería: $ cotizado", "Ingeniería: $ costo", "Ingeniería: % margen",
+    "Tableristas: horas cotizadas", "Tableristas: horas ejecutadas", "Tableristas: % avance",
+    "Tableristas: $ cotizado", "Tableristas: $ costo", "Tableristas: % margen",
+    "Desplazamiento: horas cotizadas", "Desplazamiento: horas ejecutadas", "Desplazamiento: % ejecución",
+    "Materiales: $ cotizados", "Materiales: $ comprados", "Materiales: % margen",
+    "Viáticos: $ cotizado", "Viáticos: $ gastado", "Viáticos: % avance",
+    "Facturación: $ cotizado", "Facturación: $ facturado", "Facturación: % avance",
+    "AIU actual: $", "AIU actual: %", "AIU cotizado: $", "AIU cotizado: %",
+    "$ Total legalizado", "$ Total cotizado",
+    "Fecha de creación", "Creado por", "Última actualización", "Actualizado por",
+    "Propietario", "Fecha de inicio", "Fecha de fin"
+  ].freeze
 
-    if validate
-      if params[:ids] == "filtro"
-        centro_show = CostCenter.search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
-      else
-        centro_show = CostCenter.all
-      end
-    else
-      if params[:ids] == "filtro"
-        centro_show = CostCenter.where(user_id: current_user.id).search(params[:descripcion], params[:customer_id], params[:execution_state], params[:invoiced_state], params[:cost_center_id], params[:service_type], params[:date_desde], params[:date_hasta], params[:quotation_number])
-      else
-        centro_show = CostCenter.where(user_id: current_user.id)
-      end
-    end
+  # La misma consulta que la tabla (get_cost_centers), sin paginar: el
+  # frontend manda los mismos parametros con que cargo la tabla.
+  def download_file
+    centros = sorted_cost_centers(filtered_cost_centers)
+      .includes(:customer, :user, :user_owner, :last_user_edited, :sales_orders)
 
     respond_to do |format|
       format.xls do
-        task = Spreadsheet::Workbook.new
-        sheet = task.create_worksheet
-
-        rows_format = Spreadsheet::Format.new color: :black,
-                                              weight: :normal,
-                                              size: 13,
-                                              align: :left
-
-        centro_show.each.with_index(1) do |task, i|
-          position = sheet.row(i)
-
-          sheet.row(1).default_format = rows_format
-          position[0] = task.code
-          position[1] = task.customer.present? ? task.customer.name : ""
-          position[2] = task.service_type
-          position[3] = task.description
-          position[4] = task.quotation_number
-
-          position[5] = task.engineering_value
-          position[6] = task.sum_executed
-          position[7] = task.viatic_value
-          position[8] = task.sum_viatic
-          position[9] = get_state_center(task)
-          position[10] = task.execution_state
-          position[11] = task.invoiced_state
-
-          sheet.row(i).height = 25
-          sheet.column(i).width = 40
-          sheet.row(i).default_format = rows_format
-        end
-
-        head_format = Spreadsheet::Format.new color: :white,
-                                              weight: :bold,
-                                              size: 12,
-                                              pattern_bg_color: :xls_color_10,
-                                              pattern: 2,
-                                              vertical_align: :middle,
-                                              align: :left
-
-        position = sheet.row(0)
-
-        position[0] = "Codigo"
-        position[1] = "Cliente"
-        position[2] = "Tipo"
-        position[3] = "Descripcion"
-        position[4] = "Número de cotización"
-        position[5] = "$ Ingeniería Cotizado"
-        position[6] = "$ Ingeniería Ejecutado"
-        position[7] = "$ Viaticos Cotizado"
-        position[8] = "$ Viaticos Real"
-        position[9] = "¿Finalizo?"
-        position[10] = "Estado de ejecución"
-        position[11] = "Estado facturado"
-
-        sheet.row(0).height = 20
-        (0..11).each { |col| sheet.column(col).width = 40 }
-        sheet.column(11).width = 45
-
-        sheet.row(0).each.with_index { |c, i| sheet.row(0).set_format(i, head_format) }
-
-        temp_file = StringIO.new
-
-        task.write(temp_file)
-
-        send_data(temp_file.string, :filename => "Centro_de_Costo.xls", :disposition => "inline")
+        filas = centros.map { |centro| fila_excel_centro(centro) }
+        send_data(xls_libro(ENCABEZADOS_EXCEL, filas, anchos: { "Descripción" => 60 }),
+                  :filename => "Centro_de_Costo.xls", :disposition => "inline")
       end
     end
   end
@@ -627,6 +558,56 @@ class CostCentersController < ApplicationController
   end
 
   # Load permissions for a module in 1 query instead of N queries
+  COLUMNAS_ORDENABLES = %w[code description service_type execution_state invoiced_state start_date created_at quotation_number customer_id sales_state].freeze
+
+  # Centros que ve el usuario, con los filtros y la busqueda de la tabla.
+  # Lo comparten la tabla (get_cost_centers) y el Excel (download_file).
+  # `ids == "filtro"` es la URL vieja del Excel, que no mandaba filtering=true.
+  def filtered_cost_centers
+    permissions = load_permissions("Centro de Costos", "Ver todos")
+    scope = permissions["Ver todos"] ? CostCenter.all : CostCenter.where(user_id: current_user.id)
+
+    if params[:filtering] == "true" || params[:ids] == "filtro"
+      scope = scope.search(
+        params[:descripcion], params[:customer_id], params[:execution_state],
+        params[:invoiced_state], params[:cost_center_id], params[:service_type],
+        params[:date_desde], params[:date_hasta], params[:quotation_number]
+      )
+    end
+
+    scope
+  end
+
+  def sorted_cost_centers(scope)
+    sort_column = params[:sort_column].presence || "created_at"
+    sort_column = "created_at" unless COLUMNAS_ORDENABLES.include?(sort_column)
+    sort_direction = params[:sort_direction] == "asc" ? :asc : :desc
+    scope.order(sort_column => sort_direction)
+  end
+
+  # Una fila del Excel de centros de costo, en el orden de ENCABEZADOS_EXCEL.
+  # Los valores son los mismos que pinta la tabla (get_cost_centers_item);
+  # "Ingeniería: $ cotizado" usa la misma suma que la pantalla (valor de
+  # ingeniería + horas de desplazamiento por su valor).
+  def fila_excel_centro(c)
+    [
+      c.code, c.customer&.name, c.service_type, c.description, c.sales_state, c.execution_state,
+      c.invoiced_state, c.quotation_number,
+      c.eng_hours, c.ing_horas_eje, c.ing_horas_porcentaje,
+      c.engineering_value.to_f + (c.displacement_hours.to_f * c.value_displacement_hours.to_f), c.ing_costo_real, c.ing_costo_porcentaje,
+      c.hours_contractor, c.cont_horas_eje, c.cont_horas_porcentaje,
+      c.work_force_contractor, c.cont_costo_real, c.cont_costo_porcentaje,
+      c.displacement_hours, c.desp_horas_eje, c.desp_horas_porcentaje,
+      c.materials_value, c.mat_costo_real, c.mat_costo_porcentaje,
+      c.viatic_value, c.viat_costo_real, c.viat_costo_porcentaje,
+      c.quotation_value, c.fact_real, c.fact_porcentaje,
+      c.aiu, c.aiu_percent, c.aiu_real, c.aiu_percent_real,
+      c.sales_orders.sum { |so| so.order_value.to_f }, c.quotation_value,
+      xls_fecha_local(c.created_at), c.user&.names, xls_fecha_local(c.updated_at), c.last_user_edited&.names,
+      c.user_owner&.names, c.start_date, c.end_date
+    ]
+  end
+
   def load_permissions(module_name, *action_names)
     is_admin = current_user.rol.name == "Administrador"
     return action_names.each_with_object({}) { |name, h| h[name] = true } if is_admin
