@@ -6,7 +6,7 @@ import NumberFormat from "react-number-format";
 import { CmDataTable, CmPageActions } from "../generalcomponents/ui";
 import { budgetStatusBadge, accountingBadge, shortDate, toNumber, budgetWarningIcon, operationalState } from "../generalcomponents/expenseIndicators";
 import { hallazgosVigentes, veredictoParaGuardar } from "../generalcomponents/agentVerdict";
-import { prepararLote, ACCEPT_LOTE, MAX_COMPROBANTES } from "../generalcomponents/receiptBatch";
+import { prepararLote, ACCEPT_LOTE } from "../generalcomponents/receiptBatch";
 import { Modal, ModalBody } from "reactstrap";
 
 function csrfToken() {
@@ -1514,10 +1514,14 @@ class ReportExpenseIndex extends React.Component {
   // (handleSubmit), asi que comprobante obligatorio, reglas, presupuesto y
   // correos funcionan igual que con uno solo.
   //
-  //   paso "inicio"  -> los archivos que entraron y los que no, y los datos
-  //                     comunes (centro, responsable, tipo, forma de pago);
   //   paso "revisar" -> el formulario, comprobante por comprobante;
   //   paso "resumen" -> cuantos se guardaron y cuales quedaron sin registrar.
+  //
+  // SIN PASO DE INICIO (2026-11-09, pedido del usuario): elegir los archivos
+  // abre de una el primer comprobante, y cada formulario pide sus datos (centro,
+  // responsable, tipo, medio de pago) como un gasto nuevo. Antes habia una
+  // pantalla de datos comunes que se ponian en todos; los archivos que no
+  // entraron, que se veian ahi, ahora salen en la barra de avance.
   //
   // LA LECTURA VA POR ADELANTADO, DOS A LA VEZ: mientras la persona revisa uno,
   // ya se estan leyendo los siguientes, y no tiene que esperar a la IA en cada
@@ -1551,15 +1555,8 @@ class ReportExpenseIndex extends React.Component {
       var items = res.items.map(function(it) {
         return Object.assign({}, it, { estado: "cola", lectura: null, error: null, gastoId: null });
       });
-      self.setState(Object.assign({
-        lote: { id: Date.now(), paso: "inicio", items: items, ignorados: res.ignorados, actual: 0, comunes: {} },
-        modal: true, modeEdit: false, editId: null, ErrorValues: true, saving: false,
-        form: Object.assign({}, EMPTY_FORM, { user_invoice_id: self.props.current_user.id }),
-        selectedCostCenter: null, formCostCenterOptions: [],
-        selectedUser: { value: self.props.current_user.id, label: self.props.current_user.names },
-        selectedType: null, selectedPayment: null,
-        selectedCurrency: self.currencyOption("COP"),
-      }, estadoComprobanteVacio()));
+      self.setState({ lote: { id: Date.now(), paso: "revisar", items: items, ignorados: res.ignorados, actual: 0 } },
+                    function() { self.cargarItemDelLote(0); });
     }).catch(function() {
       self.setState({ preparandoLote: false });
       Swal.fire({ icon: "error", title: "No se pudieron abrir los archivos", confirmButtonColor: "#2a3f53" });
@@ -1576,25 +1573,6 @@ class ReportExpenseIndex extends React.Component {
   // Lo que todavia falta por resolver: ni guardado ni omitido.
   pendientesDelLote = function(lote) {
     return ((lote && lote.items) || []).filter(function(i) { return i.estado !== "guardado" && i.estado !== "omitido"; });
-  }.bind(this);
-
-  // Los datos comunes salen del formulario: en el paso "inicio" y despues de
-  // cada guardado, para que el siguiente comprobante llegue con lo mismo que el
-  // anterior (casi siempre es el mismo centro, responsable y forma de pago).
-  comunesDelFormulario = function() {
-    var f = this.state.form;
-    return {
-      cost_center_id: f.cost_center_id || "", user_invoice_id: f.user_invoice_id || "",
-      type_identification_id: f.type_identification_id || "", payment_type_id: f.payment_type_id || "",
-      selectedCostCenter: this.state.selectedCostCenter, selectedUser: this.state.selectedUser,
-      selectedType: this.state.selectedType, selectedPayment: this.state.selectedPayment,
-    };
-  }.bind(this);
-
-  empezarLote = function() {
-    var self = this;
-    var lote = Object.assign({}, this.state.lote, { paso: "revisar", comunes: this.comunesDelFormulario() });
-    this.setState({ lote: lote }, function() { self.cargarItemDelLote(0); });
   }.bind(this);
 
   // Cambia UN comprobante del lote. Por funcion de estado previo y con el id del
@@ -1639,7 +1617,6 @@ class ReportExpenseIndex extends React.Component {
     var self = this;
     var lote = this.state.lote;
     var item = lote.items[idx];
-    var c = lote.comunes || {};
     // Se anota aparte y de inmediato, no solo en el estado: setState puede
     // llegar despues de que otro `bombearLecturas` del mismo tick lo vea en
     // "cola", y la IA leeria el mismo comprobante dos veces.
@@ -1649,9 +1626,6 @@ class ReportExpenseIndex extends React.Component {
 
     var fd = new FormData();
     fd.append("file", item.file);
-    if (c.cost_center_id) fd.append("cost_center_id", c.cost_center_id);
-    if (c.user_invoice_id) fd.append("user_invoice_id", c.user_invoice_id);
-    if (c.type_identification_id) fd.append("type_identification_id", c.type_identification_id);
 
     fetch("/extract_receipt/report_expenses", { method: "POST", body: fd, headers: { "X-CSRF-Token": csrfToken() } })
       .then(function(r) { return r.json(); })
@@ -1686,33 +1660,25 @@ class ReportExpenseIndex extends React.Component {
     });
   }.bind(this);
 
-  // Abre en el formulario el comprobante `idx`: los datos comunes, el archivo
-  // ya adjunto y, si ya se leyo, lo que encontro la IA.
+  // Abre en el formulario el comprobante `idx` como un gasto nuevo: el archivo
+  // ya adjunto y, si ya se leyo, lo que encontro la IA. El centro, el tipo y el
+  // medio de pago se piden en cada uno; el responsable arranca en quien carga,
+  // igual que en «Nuevo gasto».
   cargarItemDelLote = function(idx) {
     var self = this;
     var lote = this.state.lote;
     var item = lote.items[idx];
-    var c = lote.comunes || {};
-    var responsable = c.selectedUser || { value: self.props.current_user.id, label: self.props.current_user.names };
-    var form = Object.assign({}, EMPTY_FORM, {
-      cost_center_id: c.cost_center_id || "",
-      user_invoice_id: c.user_invoice_id || self.props.current_user.id,
-      type_identification_id: c.type_identification_id || "",
-      payment_type_id: c.payment_type_id || "",
-    });
-    // Un viatico propone a la persona responsable como nombre, igual que al
-    // elegir el tipo en el formulario.
-    form.invoice_name = self.nombreDeViatico(form, form.type_identification_id, responsable.label, responsable.label);
+    var form = Object.assign({}, EMPTY_FORM, { user_invoice_id: self.props.current_user.id });
 
     this.setState(Object.assign({
       lote: Object.assign({}, lote, { actual: idx }),
       modal: true, modeEdit: false, editId: null, ErrorValues: true, saving: false,
       form: form,
-      selectedCostCenter: c.selectedCostCenter || null,
-      formCostCenterOptions: c.selectedCostCenter ? [c.selectedCostCenter] : [],
-      selectedUser: responsable,
-      selectedType: c.selectedType || null,
-      selectedPayment: c.selectedPayment || null,
+      selectedCostCenter: null,
+      formCostCenterOptions: [],
+      selectedUser: { value: self.props.current_user.id, label: self.props.current_user.names },
+      selectedType: null,
+      selectedPayment: null,
       selectedCurrency: self.currencyOption("COP"),
     }, estadoComprobanteVacio(), {
       receiptFile: item.file, receiptFileName: item.name, receiptSize: item.file.size, receiptError: null,
@@ -1740,7 +1706,7 @@ class ReportExpenseIndex extends React.Component {
 
   irAItemDelLote = function(idx) {
     var lote = this.state.lote;
-    if (!lote || lote.paso === "inicio" || this.state.saving) return;
+    if (!lote || this.state.saving) return;
     if (lote.items[idx].estado === "guardado") return;
     if (lote.items[idx].estado === "omitido") this.actualizarItem(lote.id, idx, { estado: lote.items[idx].lectura ? "listo" : "cola" });
     this.setState({ lote: Object.assign({}, this.state.lote, { paso: "revisar" }) }, this.cargarItemDelLote.bind(this, idx));
@@ -1752,8 +1718,7 @@ class ReportExpenseIndex extends React.Component {
     this.actualizarItem(lote.id, lote.actual, { estado: "omitido" }, function() { self.irAlSiguienteDelLote(); });
   }.bind(this);
 
-  // Despues de guardar un comprobante del lote: queda "guardado", lo que se
-  // puso en el formulario pasa a ser lo comun del siguiente, y se avanza.
+  // Despues de guardar un comprobante del lote: queda "guardado" y se avanza.
   alGuardarItemDelLote = function(data) {
     var self = this;
     var lote = this.state.lote;
@@ -1761,7 +1726,7 @@ class ReportExpenseIndex extends React.Component {
     items[lote.actual] = Object.assign({}, items[lote.actual], {
       estado: "guardado", error: null, gastoId: data && data.register ? data.register.id : null,
     });
-    this.setState({ saving: false, lote: Object.assign({}, lote, { items: items, comunes: this.comunesDelFormulario() }) },
+    this.setState({ saving: false, lote: Object.assign({}, lote, { items: items }) },
                   function() {
                     self.loadData();
                     self.irAlSiguienteDelLote();
@@ -2763,6 +2728,17 @@ class ReportExpenseIndex extends React.Component {
       React.createElement("div", { style: { height: 6, background: "#e9ecef", borderRadius: 4, overflow: "hidden" } },
         React.createElement("div", { style: { width: avance + "%", height: "100%", background: "#28a745", transition: "width .3s" } })
       ),
+      // Los que no entraron (no son PDF ni imagen, repetidos, pasados del
+      // maximo). Plegado: se ve que hubo, y el detalle esta a un clic.
+      lote.ignorados && lote.ignorados.length ? React.createElement("details", { "data-testid": "batch-ignored", style: { fontSize: 12, marginTop: 6, color: "#856404" } },
+        React.createElement("summary", { style: { cursor: "pointer" } },
+          React.createElement("i", { className: "fas fa-exclamation-triangle" }),
+          " " + lote.ignorados.length + " archivo" + (lote.ignorados.length === 1 ? "" : "s") + " no se cargaron"
+        ),
+        React.createElement("ul", { style: { margin: "4px 0 0", paddingLeft: 18 } },
+          lote.ignorados.map(function(i, k) { return React.createElement("li", { key: k }, i.name + ": " + i.motivo); })
+        )
+      ) : null,
       React.createElement("div", { style: { display: "flex", gap: 6, overflowX: "auto", padding: "8px 0 2px" } },
         lote.items.map(function(it, idx) {
           var actual = idx === lote.actual;
@@ -2789,15 +2765,14 @@ class ReportExpenseIndex extends React.Component {
     );
   }.bind(this);
 
-  // El inicio y el resumen del lote.
+  // El resumen del lote.
   renderModalDelLote = function() {
     var self = this;
     var lote = this.state.lote;
-    var esInicio = lote.paso === "inicio";
     var guardados = lote.items.filter(function(i) { return i.estado === "guardado"; });
     var sinRegistrar = lote.items.filter(function(i) { return i.estado !== "guardado"; });
 
-    var cuerpo = esInicio ? this.renderInicioDelLote() : React.createElement("div", { "data-testid": "batch-summary" },
+    var cuerpo = React.createElement("div", { "data-testid": "batch-summary" },
       React.createElement("div", { className: "cm-alert cm-alert-success", style: { marginBottom: 12 } },
         React.createElement("i", { className: "fas fa-check-circle" }),
         " Se registraron ", React.createElement("strong", { "data-testid": "batch-summary-saved" }, guardados.length),
@@ -2831,10 +2806,8 @@ class ReportExpenseIndex extends React.Component {
         React.createElement("div", { className: "cm-modal-header" },
           React.createElement("div", { className: "cm-modal-header-content" },
             React.createElement("div", null,
-              React.createElement("h2", { className: "cm-modal-title" }, esInicio ? "Carga masiva de comprobantes" : "Carga masiva terminada"),
-              React.createElement("p", { className: "cm-modal-subtitle" },
-                esInicio ? lote.items.length + " comprobante" + (lote.items.length === 1 ? "" : "s") + " para registrar"
-                         : "Así quedó la carga")
+              React.createElement("h2", { className: "cm-modal-title" }, "Carga masiva terminada"),
+              React.createElement("p", { className: "cm-modal-subtitle" }, "Así quedó la carga")
             )
           ),
           React.createElement("button", { type: "button", className: "cm-modal-close", onClick: self.closeModal },
@@ -2843,71 +2816,8 @@ class ReportExpenseIndex extends React.Component {
         ),
         React.createElement(ModalBody, { className: "cm-modal-body cm-modal-scroll" }, cuerpo),
         React.createElement("div", { className: "cm-modal-footer" },
-          React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal },
-            esInicio ? "Cancelar" : "Cerrar"
-          ),
-          esInicio ? React.createElement("button", { type: "button", className: "cm-btn cm-btn-submit", onClick: self.empezarLote,
-                                                     "data-testid": "batch-start" },
-            "Empezar"
-          ) : null
+          React.createElement("button", { type: "button", className: "cm-btn cm-btn-cancel", onClick: self.closeModal }, "Cerrar")
         )
-      )
-    );
-  }.bind(this);
-
-  // Los archivos que entraron, los que no y por que, y los datos comunes. Los
-  // datos son los MISMOS campos del formulario (mismo estado): lo que se elija
-  // aqui llega puesto en cada comprobante, y se puede cambiar en cualquiera.
-  renderInicioDelLote = function() {
-    var self = this;
-    var lote = this.state.lote;
-    var form = this.state.form;
-
-    var campo = function(label, testid, select) {
-      return React.createElement("div", { className: "cm-form-group" },
-        React.createElement("label", { className: "cm-label" }, label),
-        React.createElement("div", { "data-testid": testid }, select)
-      );
-    };
-
-    return React.createElement("div", { "data-testid": "batch-start-step" },
-      React.createElement("div", { className: "cm-alert cm-alert-info", style: { marginBottom: 12 } },
-        React.createElement("i", { className: "fas fa-info-circle" }),
-        " Se abrirá el formulario de crear gasto con cada comprobante ya leído. Revise, complete lo que falte y guarde: ",
-        "pasa solo al siguiente. Lo que elija aquí abajo queda puesto en todos (se puede cambiar en cada uno)."
-      ),
-      lote.ignorados.length ? React.createElement("div", { className: "cm-alert cm-alert-warning", style: { marginBottom: 12 }, "data-testid": "batch-ignored" },
-        React.createElement("strong", null, lote.ignorados.length + " archivo" + (lote.ignorados.length === 1 ? "" : "s") + " no se cargaron:"),
-        React.createElement("ul", { style: { margin: "6px 0 0", paddingLeft: 18 } },
-          lote.ignorados.map(function(i, k) { return React.createElement("li", { key: k }, i.name + ": " + i.motivo); })
-        )
-      ) : null,
-      React.createElement("div", { className: "cm-form-grid-2" },
-        campo("Centro de costo (3 letras)", "batch-cost-center-select", React.createElement(Select, {
-          options: self.state.formCostCenterOptions, value: self.state.selectedCostCenter,
-          onChange: function(opt) { self.setState({ selectedCostCenter: opt, form: Object.assign({}, form, { cost_center_id: opt ? opt.value : "" }) }); },
-          onInputChange: self.handleFormCostCenterSearch, isLoading: self.state.formCostCenterLoading,
-          placeholder: "Buscar centro de costo...", noOptionsMessage: function() { return "Escribe al menos 3 letras"; },
-          isClearable: true, styles: selectStyles, menuPortalTarget: document.body,
-        })),
-        campo("Responsable", "batch-user-select", React.createElement(Select, {
-          options: self.userOptions, value: self.state.selectedUser,
-          onChange: function(opt) { self.setState({ selectedUser: opt, form: Object.assign({}, form, { user_invoice_id: opt ? opt.value : "" }) }); },
-          placeholder: "Seleccionar...", styles: selectStyles, menuPortalTarget: document.body,
-        })),
-        campo("Tipo", "batch-type-select", React.createElement(Select, {
-          options: self.typeOptions, value: self.state.selectedType,
-          onChange: function(opt) { self.setState({ selectedType: opt, form: Object.assign({}, form, { type_identification_id: opt ? opt.value : "" }) }); },
-          placeholder: "Varía en cada uno (opcional)", isClearable: true, styles: selectStyles, menuPortalTarget: document.body,
-        })),
-        campo("Medio de pago", "batch-payment-select", React.createElement(Select, {
-          options: self.paymentOptions, value: self.state.selectedPayment,
-          onChange: function(opt) { self.setState({ selectedPayment: opt, form: Object.assign({}, form, { payment_type_id: opt ? opt.value : "" }) }); },
-          placeholder: "Varía en cada uno (opcional)", isClearable: true, styles: selectStyles, menuPortalTarget: document.body,
-        }))
-      ),
-      React.createElement("p", { className: "cm-hint", style: { margin: "4px 0 0" } },
-        "Cada comprobante se lee con la inteligencia artificial (una lectura por comprobante). Máximo " + MAX_COMPROBANTES + " por carga."
       )
     );
   }.bind(this);
@@ -2922,8 +2832,8 @@ class ReportExpenseIndex extends React.Component {
 
     if (!this.state.modal) return null;
 
-    // CARGA DE VARIOS COMPROBANTES: el inicio y el resumen tienen su propio
-    // modal; el recorrido usa este mismo formulario.
+    // CARGA DE VARIOS COMPROBANTES: el resumen tiene su propio modal; el
+    // recorrido usa este mismo formulario.
     var lote = this.state.lote;
     if (lote && lote.paso !== "revisar") return this.renderModalDelLote();
     if (lote) {
