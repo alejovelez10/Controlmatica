@@ -348,7 +348,10 @@ class ExpenseRule < ApplicationRecord
     personas = second_approver_user ? [second_approver_user] : User.where(rol_id: second_approver_rol_id).to_a
     pendientes.each do |gasto|
       personas.each do |persona|
-        next if persona.email.blank? || persona.id == gasto.first_approved_by_id
+        next if persona.email.blank?
+        # Quien dio la primera solo se entera si su firma cuenta por las dos:
+        # es el único que puede cerrar el gasto.
+        next if persona.id == gasto.first_approved_by_id && !gasto.firma_que_cuenta_por_las_dos?(persona)
 
         ExpenseApprovalMailer.pending_second_approval(gasto, persona).deliver_later
       end
@@ -514,18 +517,18 @@ class ExpenseRule < ApplicationRecord
     avisar_segunda_aprobacion_a(gastos_reasignados)
   end
 
-  # Un gasto con la primera firma que se queda sin quién le dé la segunda: la
-  # misma persona no puede firmar dos veces, y un cargo puede estar vacío. No se
-  # decide nada solo; queda escrito para que alguien lo resuelva.
+  # Un gasto con la primera firma en el que nadie más puede dar la segunda. Si
+  # quien dio la primera es el nuevo aprobador, su firma cuenta por las dos y
+  # la confirma con «Aceptado». Si no, un cargo sin otra persona deja el gasto
+  # sin quién lo firme. No se decide nada solo: queda escrito.
   def aviso_sin_firma(gasto)
     return "" unless gasto.pendiente_segunda? && gasto.personas_para_segunda_aprobacion.empty?
 
-    motivo = if second_approver_user_id && second_approver_user_id == gasto.first_approved_by_id
-               "el nuevo aprobador dio la primera"
-             else
-               "no hay otra persona en ese cargo"
-             end
-    " — <b class='color-false'>nadie le puede dar la segunda aprobación: #{motivo}</b>"
+    if gasto.firma_que_cuenta_por_las_dos?
+      " — <b>quien dio la primera es el nuevo aprobador: su aprobación cuenta por las dos y la confirma con «Aceptado»</b>"
+    else
+      " — <b class='color-false'>nadie le puede dar la segunda aprobación: no hay otra persona en ese cargo</b>"
+    end
   end
 
   def segunda_aprobacion_coherente

@@ -2068,7 +2068,9 @@ class ReportExpenseIndex extends React.Component {
     var doble = row.double_approval;
     if (!doble || row.operational_state !== "pendiente_segunda") return false;
     var yo = this.props.current_user || {};
-    if (doble.first_by && doble.first_by.id === yo.id) return false;
+    // Salvo que su firma cuente por las dos: es el segundo aprobador y nadie
+    // mas puede darla (2026-11-09).
+    if (doble.first_by && doble.first_by.id === yo.id) return !!doble.first_counts_twice;
     return (doble.user_ids || []).indexOf(yo.id) !== -1 || (doble.rol_ids || []).indexOf(yo.rol_id) !== -1;
   }.bind(this);
 

@@ -33,10 +33,12 @@ namespace :gastos do
     cambios.each do |regla, gastos|
       puts "Regla ##{regla.id} #{regla.name} -> ahora la da #{regla.segundo_aprobador_label}"
       gastos.each do |g|
-        sin_firma = g.pendiente_segunda? && g.personas_para_segunda_aprobacion.empty?
+        nota = if !g.pendiente_segunda? || g.personas_para_segunda_aprobacion.any? then ""
+               elsif g.firma_que_cuenta_por_las_dos? then " | su firma cuenta por las dos: la confirma quien dio la primera"
+               else " | OJO: nadie le puede dar la segunda"
+               end
         puts "  gasto ##{g.id} | #{g.operational_state_label} | #{nombre.(g.user_invoice)} | " \
-             "#{ExpenseBudgetService.money(g.invoice_total)} | 1ª firma: #{nombre.(g.first_approved_by)}" \
-             "#{sin_firma ? " | OJO: nadie le puede dar la segunda" : ""}"
+             "#{ExpenseBudgetService.money(g.invoice_total)} | 1ª firma: #{nombre.(g.first_approved_by)}#{nota}"
       end
       regla.avisar_segunda_aprobacion_a(gastos) if aplicar
     end

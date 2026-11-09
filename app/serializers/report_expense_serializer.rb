@@ -168,7 +168,10 @@ class ReportExpenseSerializer < ActiveModel::Serializer
       rol_ids: object.segundos_aprobadores_rol_ids,
       reasons: reglas.map { |r| "Regla «#{r["rule"]}»: #{(Array(r["reasons"]) + Array(r["ia_reasons"])).join(" · ")}" },
       first_by: persona(object.first_approved_by), first_at: object.first_approved_at,
-      second_by: persona(object.second_approved_by), second_at: object.second_approved_at }
+      second_by: persona(object.second_approved_by), second_at: object.second_approved_at,
+      # Quien dio la primera puede confirmar la segunda: su firma cuenta por
+      # las dos (2026-11-09). Solo se calcula en lo que espera la segunda.
+      first_counts_twice: object.pendiente_segunda? && object.firma_que_cuenta_por_las_dos? }
   end
 
   # Las reglas que incumplio y quien decidio, para la pestaña «Incumplen

@@ -45,6 +45,18 @@ class ReportExpensesDobleAprobacionControllerTest < ActionDispatch::IntegrationT
     assert_equal @admin.id, @gasto.first_approved_by_id
   end
 
+  test "si quien acepta es el unico segundo aprobador, queda aceptado y lo dice" do
+    regla = ExpenseRule.activas.find_by!(name: "Montos altos")
+    as_user(@admin) { regla.update!(second_approver_rol: nil, second_approver_user: @admin) }
+
+    sign_in_as @admin
+    cambiar_estado(@gasto, "aceptado")
+
+    assert_equal "success", json["type"], json.inspect
+    assert_match "su aprobación cuenta por las dos", json["success"]
+    assert @gasto.reload.aceptado?
+  end
+
   test "el segundo aprobador acepta desde la tabla aunque no tenga permiso de aceptar gastos" do
     sign_in_as @admin
     cambiar_estado(@gasto, "aceptado")

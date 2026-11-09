@@ -180,6 +180,9 @@ class ReportExpenseDobleAprobacionTest < ActiveSupport::TestCase
   end
 
   test "quien dio la primera aprobacion no puede dar la segunda" do
+    # Otra persona en el cargo: sin ella, la firma de Beatriz contaria por las
+    # dos (ver «su firma cuenta por las dos»).
+    users(:contador).update_columns(rol_id: rols(:gerente).id)
     regla_doble
     gasto = crear(150_000)
     decidir(gasto, @gerente)
@@ -276,6 +279,57 @@ class ReportExpenseDobleAprobacionTest < ActiveSupport::TestCase
     assert_nil gasto.first_approved_by_id
     assert_nil gasto.second_approved_by_id
     assert_not columna_is_acepted(gasto)
+  end
+
+  # --- su firma cuenta por las dos (2026-11-09) ------------------------------------
+
+  test "si quien da la primera es el unico segundo aprobador, su firma cuenta por las dos" do
+    regla_doble(second_approver_rol: nil, second_approver_user: @dueno)
+    gasto = crear(150_000)
+
+    assert decidir(gasto, @dueno)
+    gasto.reload
+    assert gasto.aceptado?
+    assert_equal @dueno.id, gasto.first_approved_by_id
+    assert_equal @dueno.id, gasto.second_approved_by_id, "El rastro dice que fue una sola persona"
+    assert columna_is_acepted(gasto)
+  end
+
+  test "si otra persona del cargo puede dar la segunda, sigue haciendo falta" do
+    # El dueño del centro pasa al cargo Gerente, donde tambien esta Beatriz.
+    @dueno.update_columns(rol_id: rols(:gerente).id)
+    regla_doble
+    gasto = crear(150_000)
+    decidir(gasto, @dueno)
+
+    assert gasto.reload.pendiente_segunda?
+    assert_not gasto.firma_que_cuenta_por_las_dos?
+    assert_not decidir(gasto, @dueno)
+  end
+
+  test "un gasto que espera la segunda de quien dio la primera, y de nadie mas, lo confirma esa persona" do
+    # Caso #27653 de prod: la regla paso al mismo que habia dado la primera.
+    regla = regla_doble(second_approver_rol: nil, second_approver_user: @gerente)
+    gasto = crear(150_000)
+    decidir(gasto, @dueno)
+    as_user(@admin) { regla.update!(second_approver_user: @dueno) }
+
+    assert gasto.reload.pendiente_segunda?
+    assert gasto.firma_que_cuenta_por_las_dos?
+    assert decidir(gasto, @dueno)
+    assert gasto.reload.aceptado?
+    assert_equal @dueno.id, gasto.second_approved_by_id
+  end
+
+  test "cuando su firma cuenta por las dos no sale aviso de segunda aprobacion" do
+    regla_doble(second_approver_rol: nil, second_approver_user: @dueno)
+    gasto = crear(150_000)
+
+    con_aviso_de_aprobacion do
+      perform_enqueued_jobs { decidir(gasto, @dueno) }
+    end
+
+    assert_not ActionMailer::Base.deliveries.any? { |m| m.subject.include?("segunda aprobación") }
   end
 
   # --- los correos ---------------------------------------------------------------

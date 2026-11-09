@@ -158,7 +158,7 @@ class ExpenseRuleCambioDeAprobadorTest < ActiveSupport::TestCase
     assert gasto.reload.pendiente_segunda?
   end
 
-  test "queda escrito en el historial de la regla, con el gasto que nadie puede firmar" do
+  test "queda escrito en el historial de la regla; si el nuevo dio la primera, la confirma el" do
     regla = regla_doble
     gasto = crear(150_000)
     decidir(gasto, @dueno)
@@ -168,7 +168,20 @@ class ExpenseRuleCambioDeAprobadorTest < ActiveSupport::TestCase
     registro = RegisterEdit.where(module: "Reglas de gastos").order(:id).last
     assert_match "GASTOS QUE PASAN AL NUEVO SEGUNDO APROBADOR", registro.description
     assert_match "Gasto ##{gasto.id}", registro.description
-    assert_match "el nuevo aprobador dio la primera", registro.description
+    assert_match "su aprobación cuenta por las dos", registro.description
+  end
+
+  test "un cargo sin nadie que pueda firmar queda marcado en el historial" do
+    regla = regla_doble
+    gasto = crear(150_000)
+    decidir(gasto, @dueno)
+    vacio = Rol.create!(name: "Cargo sin gente")
+
+    cambiar_aprobador(regla, second_approver_user: nil, second_approver_rol: vacio)
+
+    registro = RegisterEdit.where(module: "Reglas de gastos").order(:id).last
+    assert_match "nadie le puede dar la segunda aprobación", registro.description
+    assert_not gasto.reload.firma_que_cuenta_por_las_dos?
   end
 
   test "al nuevo aprobador le llega el aviso de los que ya tienen la primera firma" do

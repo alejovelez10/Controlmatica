@@ -844,6 +844,9 @@ class ReportExpensesController < ApplicationController
   # de dos firmas, hay que decirlo: si no, cree que el gasto ya va para
   # Contabilidad.
   def mensaje_del_cambio_de_estado(gasto)
+    if gasto.aceptado? && gasto.first_approved_by_id.present? && gasto.first_approved_by_id == gasto.second_approved_by_id
+      return "Gasto aprobado. Usted es también el segundo aprobador: su aprobación cuenta por las dos."
+    end
     return "¡El registro fue actualizado con exito!" unless gasto.pendiente_segunda?
 
     "Primera aprobación registrada. Falta la segunda aprobación (#{gasto.segundos_aprobadores_label})."

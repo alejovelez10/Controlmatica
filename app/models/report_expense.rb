@@ -234,13 +234,34 @@ class ReportExpense < ApplicationRecord
 
   # Si `user` puede dar la segunda aprobacion de ESTE gasto: figura en la foto,
   # por persona o por cargo, y NO dio la primera. La misma persona firmando dos
-  # veces no es un segundo control.
+  # veces no es un segundo control... salvo que su firma cuente por las dos
+  # (ver `firma_que_cuenta_por_las_dos?`).
   def puede_dar_segunda_aprobacion?(user)
     return false if user.nil? || !pide_segunda_aprobacion?
-    return false if first_approved_by_id.present? && first_approved_by_id == user.id
+    return firma_que_cuenta_por_las_dos?(user) if first_approved_by_id.present? && first_approved_by_id == user.id
 
+    figura_como_segundo_aprobador?(user)
+  end
+
+  def figura_como_segundo_aprobador?(user)
     segundos_aprobadores_ids.include?(user.id) ||
       (user.rol_id.present? && segundos_aprobadores_rol_ids.include?(user.rol_id))
+  end
+
+  # SU FIRMA CUENTA POR LAS DOS (2026-11-09, pedido del usuario). Quien dio la
+  # primera aprobacion es tambien el segundo aprobador, y nadie mas podria dar
+  # la segunda. Pedir otra firma ahi deja el gasto pegado para siempre. Caso
+  # #27653: la regla de representacion pide a David, y David ya habia dado la
+  # primera. La regla pedia que David lo aprobara, y ya lo aprobo.
+  #
+  # Con otra persona que pueda dar la segunda (alguien mas del cargo, o el
+  # aprobador de otra regla del mismo gasto), sigue haciendo falta una segunda
+  # persona.
+  def firma_que_cuenta_por_las_dos?(user = first_approved_by)
+    return false if user.nil? || !pide_segunda_aprobacion?
+    return false unless first_approved_by_id == user.id
+
+    figura_como_segundo_aprobador?(user) && personas_para_segunda_aprobacion.empty?
   end
 
   # Las personas a las que se les avisa que hay una segunda aprobacion
@@ -1398,7 +1419,12 @@ class ReportExpense < ApplicationRecord
         self.first_approved_at = ahora
         self.second_approved_by_id = nil
         self.second_approved_at = nil
-        if pide_segunda_aprobacion?
+        if pide_segunda_aprobacion? && firma_que_cuenta_por_las_dos?(User.current)
+          # Queda Aceptado con las dos firmas a su nombre: el rastro dice que
+          # fue una sola persona.
+          self.second_approved_by_id = User.current.id
+          self.second_approved_at = ahora
+        elsif pide_segunda_aprobacion?
           self.operational_state = STATE_PENDIENTE_SEGUNDA
           @pide_segunda = true
         end

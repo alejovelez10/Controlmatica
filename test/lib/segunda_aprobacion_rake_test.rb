@@ -74,6 +74,19 @@ class SegundaAprobacionRakeTest < ActiveSupport::TestCase
     assert_equal [[@admin.email]], ActionMailer::Base.deliveries.map(&:to)
   end
 
+  test "si el aprobador de hoy dio la primera, lo dice, le avisa y el lo cierra" do
+    # El caso #27653: la regla paso a la misma persona que dio la primera.
+    @regla.update_columns(second_approver_user_id: @dueno.id)
+
+    salida = correr(aplicar: true)
+
+    assert_match "su firma cuenta por las dos", salida
+    assert_equal [[@dueno.email]], ActionMailer::Base.deliveries.map(&:to)
+    assert as_user(@dueno) { @gasto.reload.update(operational_state: ReportExpense::STATE_ACEPTADO) }
+    assert @gasto.reload.aceptado?
+    assert_equal @dueno.id, @gasto.second_approved_by_id
+  end
+
   test "correrla otra vez no cambia nada" do
     correr(aplicar: true)
     ActionMailer::Base.deliveries.clear
