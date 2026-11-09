@@ -497,7 +497,11 @@ class ExpenseRuleIndex extends Component {
         }
         self.setState({ modal: false, saving: false });
         self.loadData();
-        Swal.fire({ position: "center", icon: "success", title: data.success, showConfirmButton: false, timer: 1500 });
+        // Si cambiar al segundo aprobador movió gastos en camino, el mensaje lo
+        // dice y en 1,5 s no se alcanza a leer.
+        const largo = String(data.success || "").length > 45;
+        Swal.fire({ position: "center", icon: "success", title: data.success, showConfirmButton: false,
+                    timer: largo ? 5000 : 1500 });
       })
       .catch(function() {
         self.setState({ saving: false, formError: "No se pudo guardar la regla. Intente de nuevo." });

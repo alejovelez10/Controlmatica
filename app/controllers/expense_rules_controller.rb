@@ -186,7 +186,13 @@ class ExpenseRulesController < ApplicationController
     end
 
     if guardado
-      render json: { success: "¡La regla fue actualizada con exito!", type: "success",
+      mensaje = "¡La regla fue actualizada con exito!"
+      reasignados = @expense_rule.gastos_reasignados.size
+      if reasignados.positive?
+        mensaje += " #{reasignados == 1 ? "1 gasto en camino pasó" : "#{reasignados} gastos en camino pasaron"} " \
+                   "al nuevo segundo aprobador."
+      end
+      render json: { success: mensaje, type: "success",
                      register: ActiveModelSerializers::SerializableResource.new(@expense_rule, serializer: ExpenseRuleSerializer) }
     else
       validation_error(@expense_rule.errors.full_messages)

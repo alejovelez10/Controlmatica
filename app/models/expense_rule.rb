@@ -275,6 +275,88 @@ class ExpenseRule < ApplicationRecord
   before_update  :create_edit_register
   before_destroy :create_destroy_register
 
+  # === CAMBIAR AL SEGUNDO APROBADOR (2026-11-09) ===============================
+  #
+  # Cada gasto guarda en su foto (`ReportExpense#second_approval_rules`) quién
+  # da la segunda aprobación, y la foto se escribe al registrarlo. Antes, si
+  # después se cambiaba el aprobador en la regla, los gastos que estaban
+  # esperando seguían con el aprobador de antes, y nadie más, ni un
+  # administrador, los podía firmar. Así se quedó pegado un gasto en prod el
+  # 9-nov: la regla ya decía la persona nueva y el gasto seguía esperando a la
+  # anterior.
+  #
+  # SOLO CAMBIA QUIÉN FIRMA, NO SI HACE FALTA FIRMAR. La doble aprobación
+  # sigue siendo aditiva: prender la casilla no se la agrega a ningún gasto en
+  # camino, y apagarla no se la quita. Lo aceptado no se toca, porque su foto
+  # es el registro de a quién se le pidió. Lo rechazado sí, porque puede volver
+  # a «Creado» desde el desplegable, y ese cambio de estado no recalcula la foto.
+  #
+  # Usa `update_columns` a propósito: no es una edición del gasto. Con `save`
+  # el gasto volvería a «Creado» y perdería la primera firma, y además se
+  # reevaluaría el presupuesto.
+  after_update :reasignar_segunda_aprobacion
+  after_commit :avisar_segunda_aprobacion_reasignada, on: :update
+
+  # Los gastos que pasaron al nuevo aprobador en el último guardado. El
+  # controller los cuenta para decírselo a quien editó la regla.
+  def gastos_reasignados = Array(@gastos_reasignados)
+
+  # Pasa al aprobador de HOY los gastos en camino cuya foto dice otro, escribe
+  # el historial de la regla y devuelve los gastos que cambió. Lo usan el
+  # guardado de la regla y la tarea `gastos:poner_al_dia_segundo_aprobador`
+  # (para los gastos que se quedaron pegados antes del 9-nov). Solo toca lo
+  # que está desactualizado: correrlo dos veces no cambia nada la segunda.
+  def reasignar_gastos_en_camino!
+    # Apagar la doble aprobación también borra el aprobador, pero eso no es un
+    # cambio de aprobador: los gastos en camino se quedan con el suyo.
+    return [] unless pide_segunda_aprobacion?
+
+    nuevo = { "rol_id" => second_approver_rol_id, "user_id" => second_approver_user_id,
+              "approver" => segundo_aprobador_label }
+    estados = [ReportExpense::STATE_CREADO, ReportExpense::STATE_PENDIENTE_SEGUNDA, ReportExpense::STATE_RECHAZADO]
+    reasignados = []
+    ReportExpense.where(operational_state: estados)
+                 .where("second_approval_rules @> ?", [{ rule_id: id }].to_json)
+                 .find_each do |gasto|
+      foto = gasto.second_approval_rules.map { |f| f["rule_id"] == id ? f.merge(nuevo) : f }
+      next if foto == gasto.second_approval_rules
+
+      gasto.update_columns(second_approval_rules: foto)
+      reasignados << gasto
+    end
+    return [] if reasignados.empty?
+
+    filas = reasignados.map do |g|
+      responsable = g.user_invoice ? self.class.nombre_de_persona(g.user_invoice) : "sin responsable"
+      "<p>Gasto ##{g.id}: #{responsable}, #{ExpenseBudgetService.money(g.invoice_total)}, " \
+        "#{g.operational_state_label}#{aviso_sin_firma(g)}</p>"
+    end
+    escribir_register("<p><strong>(GASTOS QUE PASAN AL NUEVO SEGUNDO APROBADOR)</strong></p>" \
+                      "<p>Regla: <b>#{name}</b></p><p>Ahora la da: <b>#{segundo_aprobador_label}</b></p>" +
+                      filas.join, nil)
+    reasignados
+  end
+
+  # El aviso de la segunda aprobación, al aprobador de HOY, de los gastos que ya
+  # tienen la primera firma: el que les salió antes le llegó al aprobador
+  # anterior. Los «Creado» avisan solos cuando el dueño del centro los acepta.
+  # Mismas guardas que `ReportExpense#avisar_segunda_aprobacion`.
+  def avisar_segunda_aprobacion_a(gastos)
+    pendientes = Array(gastos).select(&:pendiente_segunda?)
+    return if pendientes.empty? || !ReportExpense.aviso_de_aprobacion?
+
+    personas = second_approver_user ? [second_approver_user] : User.where(rol_id: second_approver_rol_id).to_a
+    pendientes.each do |gasto|
+      personas.each do |persona|
+        next if persona.email.blank? || persona.id == gasto.first_approved_by_id
+
+        ExpenseApprovalMailer.pending_second_approval(gasto, persona).deliver_later
+      end
+    end
+  rescue StandardError => e
+    Rails.logger.error("[expense_rule] aviso de segunda aprobacion reasignada (regla ##{id}): #{e.class}: #{e.message}")
+  end
+
   # Etiquetas legibles para la auditoria y para la pantalla.
   def limite_antiguedad_label
     max_invoice_age_days.present? ? "#{max_invoice_age_days} días" : "Sin límite"
@@ -419,6 +501,31 @@ class ExpenseRule < ApplicationRecord
     end
 
     self.second_approver_rol_id = nil if second_approver_user_id.present?
+  end
+
+  def reasignar_segunda_aprobacion
+    @gastos_reasignados = []
+    return unless saved_change_to_second_approver_user_id? || saved_change_to_second_approver_rol_id?
+
+    @gastos_reasignados = reasignar_gastos_en_camino!
+  end
+
+  def avisar_segunda_aprobacion_reasignada
+    avisar_segunda_aprobacion_a(gastos_reasignados)
+  end
+
+  # Un gasto con la primera firma que se queda sin quién le dé la segunda: la
+  # misma persona no puede firmar dos veces, y un cargo puede estar vacío. No se
+  # decide nada solo; queda escrito para que alguien lo resuelva.
+  def aviso_sin_firma(gasto)
+    return "" unless gasto.pendiente_segunda? && gasto.personas_para_segunda_aprobacion.empty?
+
+    motivo = if second_approver_user_id && second_approver_user_id == gasto.first_approved_by_id
+               "el nuevo aprobador dio la primera"
+             else
+               "no hay otra persona en ese cargo"
+             end
+    " — <b class='color-false'>nadie le puede dar la segunda aprobación: #{motivo}</b>"
   end
 
   def segunda_aprobacion_coherente
