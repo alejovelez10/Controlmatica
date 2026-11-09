@@ -53,8 +53,8 @@ class E2eSeedTest < ActionDispatch::IntegrationTest
       2.times do |vuelta|
         load SEED
 
-        assert_equal 8, CostCenter.where("code LIKE 'CM-E2E-%'").count,
-                     "vuelta #{vuelta + 1}: deben quedar exactamente 8 centros E2E"
+        assert_equal 9, CostCenter.where("code LIKE 'CM-E2E-%'").count,
+                     "vuelta #{vuelta + 1}: deben quedar exactamente 9 centros E2E (el principal y uno por scope)"
         assert_equal 6, User.where(email: EMAILS_E2E).count,
                      "vuelta #{vuelta + 1}: deben quedar exactamente 6 usuarios E2E"
 
